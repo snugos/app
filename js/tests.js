@@ -529,6 +529,67 @@ TestRunner.test('Recording - stopAudioRecording is async', (t) => {
 });
 
 // ============================================
+// Day 72: Recording Integration Tests
+// ============================================
+TestRunner.test('Recording - RECORDING_SAMPLE_RATE is 44100', (t) => {
+    t.assertEqual(RECORDING_SAMPLE_RATE, 44100, 'Sample rate should be 44100 Hz');
+});
+
+TestRunner.test('Recording - RECORDING_NUM_CHANNELS is valid', (t) => {
+    t.assertEqual(RECORDING_NUM_CHANNELS, 1, 'Recording should be mono');
+    t.assertTruthy(RECORDING_NUM_CHANNELS >= 1, 'Channels should be at least 1');
+    t.assertTruthy(RECORDING_NUM_CHANNELS <= 2, 'Channels should be at most 2');
+});
+
+TestRunner.test('Recording - RECORDING_BIT_DEPTH is 16', (t) => {
+    t.assertEqual(RECORDING_BIT_DEPTH, 16, 'Bit depth should be 16-bit');
+});
+
+TestRunner.test('Recording - RECORDING_MIME_TYPE is valid browser format', (t) => {
+    const validTypes = ['audio/webm', 'audio/wav', 'audio/ogg'];
+    t.assertTruthy(validTypes.includes(RECORDING_MIME_TYPE), 'MIME type should be a valid browser audio format');
+});
+
+TestRunner.test('Recording - Input gain range constants are valid', (t) => {
+    t.assertTruthy(MIN_RECORDING_INPUT_GAIN >= 0, 'Min input gain should be >= 0');
+    t.assertTruthy(MAX_RECORDING_INPUT_GAIN > MIN_RECORDING_INPUT_GAIN, 'Max should be greater than min');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN >= MIN_RECORDING_INPUT_GAIN, 'Default should be >= min');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN <= MAX_RECORDING_INPUT_GAIN, 'Default should be <= max');
+});
+
+TestRunner.test('Recording - Monitoring volume range is valid', (t) => {
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME >= 0, 'Monitor volume should be >= 0');
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME <= 1, 'Monitor volume should be <= 1');
+});
+
+TestRunner.test('Recording - Max recording length is reasonable', (t) => {
+    t.assertTruthy(MAX_RECORDING_LENGTH_SECONDS >= 60, 'Max recording should be at least 60 seconds');
+    t.assertTruthy(MAX_RECORDING_LENGTH_SECONDS <= 3600, 'Max recording should be at most 1 hour');
+});
+
+TestRunner.test('Recording - Min recording length is valid', (t) => {
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS > 0, 'Min recording should be > 0');
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS < MAX_RECORDING_LENGTH_SECONDS, 'Min should be less than max');
+});
+
+TestRunner.test('Recording - Echo cancellation is disabled for clean recording', (t) => {
+    t.assertEqual(RECORDING_ECHO_CANCELLATION, false, 'Echo cancellation should be disabled');
+});
+
+TestRunner.test('Recording - Auto gain control is disabled for consistent levels', (t) => {
+    t.assertEqual(RECORDING_AUTO_GAIN_CONTROL, false, 'Auto gain control should be disabled');
+});
+
+TestRunner.test('Recording - Noise suppression is disabled for clean recording', (t) => {
+    t.assertEqual(RECORDING_NOISE_SUPPRESSION, false, 'Noise suppression should be disabled');
+});
+
+TestRunner.test('Recording - Latency hint is reasonable', (t) => {
+    t.assertTruthy(RECORDING_LATENCY_HINT > 0, 'Latency hint should be > 0');
+    t.assertTruthy(RECORDING_LATENCY_HINT <= 1, 'Latency hint should be <= 1 second');
+});
+
+// ============================================
 // Day 67: Audio Clip Tests
 // ============================================
 TestRunner.test('Audio Clip - DEFAULT_AUDIO_CLIP_GAIN is valid', (t) => {

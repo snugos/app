@@ -832,118 +832,33 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `Undo/Redo - redoLastActionInternal is async` - Verifies redo is async function
   - `js/constants.js`: Updated APP_VERSION to 0.58.5
 - **Feature Details**:
-  - Tests import and validate undo/redo state functions from `js/state.js`
-  - Tests verify undo/redo functions exist and are properly typed as async functions
-  - Tests verify stack getter functions return arrays (not undefined or null)
-  - Tests verify initial stack state is empty for fresh projects
-  - Total test count increased from 81 to 90 tests
-- **Backend Note**: The actual undo/redo state capture is implemented in `js/state.js` via `_captureUndoState()`, `undoLastActionInternal()`, and `redoLastActionInternal()`. The tests verify the API surface of these functions.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.58.5
-
-#### Day 65: Recording State Management Tests (2026-04-22)
-- **Feature**: Added 7 new unit tests for recording state management functions
-- **Issue**: The AGENTS.md mentioned "Recording: end-to-end test with real microphone" as an incomplete item. While Day 56 added constants tests for recording configuration, the recording state management functions (isTrackRecordingState, getRecordingTrackIdState, etc.) lacked unit test coverage.
-- **Files Modified**:
-  - `js/tests.js`: Added new imports and 7 new tests for recording state management:
-    - `Recording State - isTrackRecordingState is boolean` - Validates return type
-    - `Recording State - getRecordingTrackIdState returns null initially` - Validates initial state
-    - `Recording State - getRecordingStartTimeState returns number` - Validates return type
-    - `Recording State - setIsRecordingState updates state` - Tests setter/getter roundtrip
-    - `Recording State - setRecordingTrackIdState updates state` - Tests setter/getter roundtrip
-    - `Recording State - setRecordingStartTimeState updates state` - Tests setter/getter roundtrip
-    - `Recording State - recording state setters are functions` - Validates all setters are functions
-  - `js/constants.js`: Bumped APP_VERSION to 0.58.6
-- **Feature Details**:
   - Tests import and validate recording state functions from `js/state.js`
   - Tests verify recording state getters exist and return correct types
   - Tests verify state setters work correctly via roundtrip validation
-  - Total test count increased from 90 to 97 tests
-- **Backend Note**: The recording state management functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.58.6
-
-#### Day 66: Chord Mode/Time Signature/Ghost Track State Tests (2026-04-23)
-- **Feature**: Added 21 new unit tests for Chord Mode, Time Signature, Ghost Track, and Armed/Soloed Track state management functions
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The state management functions for Chord Mode, Time Signature, Ghost Track, and Armed/Soloed Track lacked unit test coverage.
-- **Files Modified**:
-  - `js/tests.js`: Added new imports and 21 new tests:
-    - Chord Mode tests: getChordModeState, getChordModeEnabledState, setChordModeEnabledState, getChordModeRootState, setChordModeRootState, getChordModeTypeState, setChordModeTypeState, getChordModeLockState, setChordModeLockState, getChordVoicingState, setChordVoicingState
-    - Time Signature tests: getTimeSignatureState, getTimeSignatureNumeratorState, setTimeSignatureNumeratorState, getTimeSignatureDenominatorState, setTimeSignatureDenominatorState
-    - Ghost Track tests: getGhostTrackIdState, setGhostTrackIdState
-    - Armed/Soloed Track tests: getArmedTrackIdState, getSoloedTrackIdState, setSoloedTrackIdState
-  - `js/constants.js`: Updated APP_VERSION to 0.59.1
-- **Feature Details**:
-  - Tests import and validate state functions from `js/state.js`
-  - Tests verify getter functions return correct types (object, boolean, number, string)
-  - Tests verify state setters work correctly via roundtrip validation
-  - Tests verify Chord Mode settings (enabled, root, type, lock, voicing)
-  - Tests verify Time Signature settings (numerator, denominator)
-  - Tests verify Ghost Track selection (null initially, can be set to track ID)
-  - Tests verify Armed/Soloed Track state management
-  - Total test count increased from 90 to 111 tests
-- **Backend Note**: The Chord Mode state manages chord-based note constraining for the sequencer. Time Signature state controls the beat division. Ghost Track state enables showing notes from another track as ghost notes. Armed/Soloed Track state manages track recording and solo status.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.59.1
-
-#### Day 67: Scale Mode State Tests (2026-04-23)
-- **Feature**: Added 9 new unit tests for Scale Mode state management functions
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Scale Mode state management functions (getScaleModeEnabledState, setScaleModeScaleState, etc.) lacked unit test coverage despite being implemented in Day 11.
-- **Files Modified**:
-  - `js/tests.js`: Added Scale Mode state function imports and 9 new tests:
-    - Scale Mode tests: getScaleModeState returns object, getScaleModeEnabledState returns boolean, setScaleModeEnabledState updates state, getScaleModeScaleState returns string, setScaleModeScaleState updates state, getScaleModeRootState returns string, setScaleModeRootState updates state, getScaleModeLockState returns boolean, setScaleModeLockState updates state
-  - `js/constants.js`: Bumped APP_VERSION to 0.59.2
-- **Feature Details**:
-  - Tests import and validate state functions from `js/state.js`
-  - Tests verify getter functions return correct types (object, boolean, string)
-  - Tests verify state setters work correctly via roundtrip validation
-  - Tests verify Scale Mode settings (enabled, scale, root, lock)
-  - Tests validate that scale names are valid using the SCALES constant
-  - Tests validate that root notes are valid using the SCALE_ROOTS constant
-- **Backend Note**: The Scale Mode state functions were implemented in Day 11 as part of the Scale Mode feature but lacked unit test coverage. These tests verify the state API without requiring the full UI.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.59.2
-
-#### Day 70: State Management Tests (2026-04-23)
-- **Feature**: Added 34 new unit tests for state management and constants validation
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. Many state management functions and constants lacked unit test coverage.
-- **Files Modified**:
-  - `js/tests.js`: Added 34 new TestRunner.test() calls:
-    - Metronome state tests: getMetronomeEnabledState, setMetronomeEnabledState, getMetronomeVolumeState, setMetronomeVolumeState
-    - Core state function tests: getPlaybackModeState, getTracksState, getTrackByIdState, getMasterGainValueState, getOpenWindowsState, getActiveSequencerTrackIdState, getHighestZState, getClipboardDataState
-    - computerKeySynthMap validation tests: structure, white key values (a=C4=60), black key values (w=C#4=61)
-    - TRACK_COLORS validation: is array, has expected colors, colors are valid hex
-    - CLIP_COLORS validation: is array, has expected count, colors are valid hex
-    - MARKER_COLORS validation: is array, has expected count, colors are valid hex
-    - AUTOMATION_LANE_COLORS validation: is array, has expected count, colors are valid hex
-    - CHORD_TYPES validation: is object, has major chord, has minor chord, chord intervals are valid
-    - Additional tests: getTrackSendLevelState edge case, getTrackSendsState return type, getTrackGroupByIdState unknown id handling
-  - `js/constants.js`: Bumped APP_VERSION to 0.59.3
-- **Feature Details**:
-  - Tests import and validate state functions from `js/state.js`
-  - Tests verify getter functions return correct types and valid ranges
-  - Tests verify state setters work correctly via roundtrip validation
-  - Tests validate constants from `js/constants.js` have proper structure and valid values
-  - Total test count increased from 120 to 154 tests
-- **Backend Note**: These tests expand coverage of the state management API and constants validation. Many state functions (getPlaybackModeState, getTracksState, etc.) were already implemented but had no unit tests.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.59.3
-
-#### Day 71: Loop Region and Swing State Tests (2026-04-23)
-- **Feature**: Added 14 new unit tests for Loop Region and Swing state management functions
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Loop Region and Swing state management functions lacked unit test coverage despite being used by the UI since Day 14.
-- **Files Modified**:
-  - `js/tests.js`: Added new imports and 14 new tests:
-    - Loop Region tests: getLoopRegionState returns object, getLoopRegionEnabledState returns boolean, getLoopRegionStartBarState returns number, getLoopRegionEndBarState returns number, setLoopRegionEnabledState updates state, setLoopRegionStartBarState updates state, setLoopRegionEndBarState updates state, setLoopRegionState updates full state
-    - Swing tests: getSwingState returns object, getSwingEnabledState returns boolean, getSwingAmountState returns number, setSwingEnabledState updates state, setSwingAmountState updates state (with clamping), setSwingState updates full state
-  - `js/constants.js`: Bumped APP_VERSION to 0.59.4
-- **Feature Details**:
-  - Tests import and validate state functions from `js/state.js`
-  - Tests verify getter functions return correct types (object, boolean, number)
-  - Tests verify state setters work correctly via roundtrip validation
   - Tests verify Swing amount clamping (0-100 range)
   - Tests verify full state update via setLoopRegionState and setSwingState
-  - Total test count increased from 154 to 168 tests
-- **Backend Note**: The Loop Region and Swing state functions were implemented in earlier versions but lacked unit test coverage. These tests verify the state API without requiring the full UI.
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording state management functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.4
+
+#### Day 72: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The recording system constants (sample rate, bit depth, input gain, monitoring settings, recording limits) lacked unit test coverage despite being used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js`.
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 72 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.5

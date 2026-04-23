@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.59.4'; // Day 71: Loop Region and Swing State Tests
+export const APP_VERSION = '0.59.5'; // Day 72: Recording Integration Tests
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
