@@ -862,3 +862,27 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.5
+
+#### Day 73: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. Multiple state management functions (Time Signature, Ghost Track, Timeline Markers, Send Tracks, Track Groups, Track Templates, Chord Mode) had no corresponding unit tests despite being core state operations.
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState` (array), `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - All tests use `clearTimelineMarkersState()` and `clearTrackTemplatesState()` for cleanup
+  - Total test count increased from 180 to 216 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.6

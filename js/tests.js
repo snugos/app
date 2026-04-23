@@ -1293,3 +1293,240 @@ TestRunner.test('Swing - setSwingState updates full state', (t) => {
     t.assertEqual(state.enabled, true, 'Enabled should be true');
     t.assertEqual(state.amount, 75, 'Amount should be 75');
 });
+
+// ============================================
+// Day 73: State Management Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Me', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Me', 'Found marker should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Name should be updated');
+    t.assertEqual(updated.bar, 10, 'Bar should be updated');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    addSendTrackState({ id: 'test-send-1', name: 'Test Send', color: '#ff0000' });
+    setSendTrackMutedState('test-send-1', true);
+    const send = getSendTrackByIdState('test-send-1');
+    t.assertEqual(send.muted, true, 'Send should be muted');
+    setSendTrackMutedState('test-send-1', false);
+    t.assertEqual(send.muted, false, 'Send should be unmuted');
+});
+
+TestRunner.test('Track Groups - getTrackGroupsState returns array', (t) => {
+    const groups = getTrackGroupsState();
+    t.assertTruthy(Array.isArray(groups), 'Track groups should be an array');
+});
+
+TestRunner.test('Track Groups - addTrackGroupState adds group', (t) => {
+    const group = addTrackGroupState({ name: 'Test Group', color: '#00ff00' });
+    t.assertTruthy(group, 'Group should be added');
+    t.assertTruthy(group.id, 'Group should have an id');
+    t.assertEqual(group.name, 'Test Group', 'Group name should match');
+    removeTrackGroupState(group.id);
+});
+
+TestRunner.test('Track Groups - setTrackGroupNameState updates group', (t) => {
+    const group = addTrackGroupState({ name: 'Original Group' });
+    setTrackGroupNameState(group.id, 'Renamed Group');
+    const updated = getTrackGroupByIdState(group.id);
+    t.assertEqual(updated.name, 'Renamed Group', 'Group name should be updated');
+    removeTrackGroupState(group.id);
+});
+
+TestRunner.test('Track Templates - getTrackTemplatesState returns array', (t) => {
+    const templates = getTrackTemplatesState();
+    t.assertTruthy(Array.isArray(templates), 'Track templates should be an array');
+});
+
+TestRunner.test('Track Templates - getTrackTemplateByIdState handles unknown id', (t) => {
+    const notFound = getTrackTemplateByIdState('nonexistent-template-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Track Templates - addTrackTemplateState adds template', (t) => {
+    clearTrackTemplatesState();
+    const template = addTrackTemplateState({
+        name: 'Test Template',
+        color: '#0000ff',
+        type: 'Synth',
+        synthParams: { attack: 0.01 },
+        activeEffects: [],
+        hasAutomation: false,
+        automationLanes: [],
+        instrumentSamplerSettings: null,
+        drumSamplerPads: null
+    });
+    t.assertTruthy(template, 'Template should be added');
+    t.assertTruthy(template.id, 'Template should have an id');
+    t.assertEqual(template.name, 'Test Template', 'Template name should match');
+    clearTrackTemplatesState();
+});
+
+TestRunner.test('Track Templates - updateTrackTemplateState updates template', (t) => {
+    clearTrackTemplatesState();
+    const template = addTrackTemplateState({ name: 'Original', color: '#0000ff', type: 'Synth' });
+    updateTrackTemplateState(template.id, { name: 'Updated' });
+    const updated = getTrackTemplateByIdState(template.id);
+    t.assertEqual(updated.name, 'Updated', 'Template name should be updated');
+    clearTrackTemplatesState();
+});
+
+TestRunner.test('Track Templates - removeTrackTemplateState removes template', (t) => {
+    clearTrackTemplatesState();
+    const template = addTrackTemplateState({ name: 'To Remove', color: '#ff0000', type: 'Synth' });
+    t.assertTruthy(getTrackTemplateByIdState(template.id), 'Template should exist');
+    removeTrackTemplateState(template.id);
+    t.assertEqual(getTrackTemplateByIdState(template.id), undefined, 'Template should be removed');
+    clearTrackTemplatesState();
+});
+
+TestRunner.test('Chord Mode - getChordModeState returns object', (t) => {
+    const state = getChordModeState();
+    t.assertTruthy(typeof state === 'object', 'getChordModeState should return an object');
+});
+
+TestRunner.test('Chord Mode - getChordModeEnabledState returns boolean', (t) => {
+    const enabled = getChordModeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Should return boolean');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState updates state', (t) => {
+    setChordModeEnabledState(true);
+    t.assertEqual(getChordModeEnabledState(), true, 'Chord mode should be enabled');
+    setChordModeEnabledState(false);
+    t.assertEqual(getChordModeEnabledState(), false, 'Chord mode should be disabled');
+});
+
+TestRunner.test('Chord Mode - getChordModeTypeState returns string', (t) => {
+    const type = getChordModeTypeState();
+    t.assertEqual(typeof type, 'string', 'Should return string');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState updates state', (t) => {
+    setChordModeTypeState('minor');
+    t.assertEqual(getChordModeTypeState(), 'minor', 'Chord type should be minor');
+    setChordModeTypeState('major');
+    t.assertEqual(getChordModeTypeState(), 'major', 'Chord type should be major');
+});
+
+TestRunner.test('Chord Mode - getChordVoicingState returns string', (t) => {
+    const voicing = getChordVoicingState();
+    t.assertEqual(typeof voicing, 'string', 'Should return string');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState updates state', (t) => {
+    setChordVoicingState('close');
+    t.assertEqual(getChordVoicingState(), 'close', 'Voicing should be close');
+    setChordVoicingState('open');
+    t.assertEqual(getChordVoicingState(), 'open', 'Voicing should be open');
+});
