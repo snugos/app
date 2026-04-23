@@ -410,12 +410,10 @@ const appServices = {
     setSendTrackMutedState,
     setSendTrackEffectsState,
     setTrackSendLevelState,
-    // Aliases for mixer
     addSendTrackState as addSendTrack,
     setSendTrackMutedState as setSendTrackMuted,
     setSendTrackLevelState as setSendTrackLevel,
     // Track Groups
-    getTrackGroupsState,
     addTrackGroupState,
     setTrackGroupNameState,
     setTrackGroupColorState,
