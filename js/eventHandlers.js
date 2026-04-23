@@ -214,6 +214,11 @@ export function initializePrimaryEventListeners(appContext) {
                     services.importFromMidi?.();
                 } catch(e) { console.error('[Menu] Import MIDI error:', e); }
             },
+            menuKeyboardShortcuts: () => {
+                try {
+                    services.showKeyboardShortcutsHelp?.();
+                } catch(e) { console.error('[Menu] Keyboard Shortcuts error:', e); }
+            },
             menuUndo: () => {
                 try {
                     services.undoLastAction?.();

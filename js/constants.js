@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.65.2'; // Day 98: Undo/Redo Coverage - Added undo capture to remaining state setters, added 16 verification tests
+export const APP_VERSION = '0.66.0'; // Day 99: Extended Undo/Redo Coverage - Added 17 verification tests for remaining state setters
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -446,3 +446,8 @@ export const MIDI_IMPORT_DEFAULT_VELOCITY = 100; // Default velocity when not sp
 export const MIDI_IMPORT_DEFAULT_PROBABILITY = 1.0; // Default note probability
 export const MIDI_IMPORT_SNAP_TO_GRID = true; // Snap imported notes to 16th grid
 export const MIDI_IMPORT_VELOCITY_SCALE = 1 / 127; // Scale MIDI velocity (127) to app velocity (0-1)
+
+// Keyboard Shortcuts Help Constants
+export const KEYBOARD_SHORTCUTS_HELP_TITLE = 'Keyboard Shortcuts';
+export const KEYBOARD_SHORTCUTS_HELP_WIDTH = 600; // Modal width in pixels
+export const KEYBOARD_SHORTCUTS_HELP_HEIGHT = 500; // Modal height in pixels

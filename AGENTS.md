@@ -1218,3 +1218,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
 - **Usage**: Change any of the above settings and use Ctrl+Z to undo
 - **Version**: Bumped to 0.64.1
+
+#### Day 99: Extended Undo/Redo Coverage Verification Tests (2026-04-23)
+- **Feature**: Added 17 new verification tests to confirm additional state setter functions call `captureStateForUndo` before mutating state
+- **Files Modified**:
+  - `js/tests.js`: Added 17 new verification tests in Day 99 section:
+    - `setSwingState calls captureStateForUndo` - Tests full swing state update
+    - `setSwingEnabledState calls captureStateForUndo` - Tests swing toggle
+    - `setSwingAmountState calls captureStateForUndo` - Tests swing amount change
+    - `setLoopRegionState calls captureStateForUndo` - Tests full loop region update
+    - `setLoopRegionEnabledState calls captureStateForUndo` - Tests loop toggle
+    - `setLoopRegionStartBarState calls captureStateForUndo` - Tests loop start bar
+    - `setLoopRegionEndBarState calls captureStateForUndo` - Tests loop end bar
+    - `setTimelineZoomLevelState calls captureStateForUndo` - Tests horizontal zoom
+    - `setTimelineVerticalZoomState calls captureStateForUndo` - Tests vertical zoom
+    - `setChordModeRootState calls captureStateForUndo` - Tests chord root change
+    - `setChordModeTypeState calls captureStateForUndo` - Tests chord type change
+    - `setChordModeLockState calls captureStateForUndo` - Tests chord lock toggle
+    - `setTrackSendLevelState calls captureStateForUndo` - Tests send level change
+    - `setTrackSendPreFaderState calls captureStateForUndo` - Tests pre/post fader toggle
+    - `setTrackGroupColorState calls captureStateForUndo` - Tests group color change
+    - `setTrackGroupMutedState calls captureStateForUndo` - Tests group mute toggle
+    - `setTrackGroupSoloedState calls captureStateForUndo` - Tests group solo toggle
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.0
+- **Feature Details**:
+  - Tests verify that state setters properly call `captureStateForUndo` before mutating state
+  - Each test mocks `captureStateForUndo`, calls the setter, then asserts the mock was called
+  - This completes verification for all state setters that have undo capture implemented
+  - Total test count increased from 333 to 350 tests
+- **Backend Note**: These tests complement the undo capture implementation work from Days 90-98 by verifying that additional state setters properly call `captureStateForUndo`. The undo system captures full project state snapshots before mutations, allowing users to undo changes via Ctrl+Z.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.0

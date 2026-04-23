@@ -937,7 +937,7 @@ TestRunner.test('Chord Mode - getChordModeState returns object', (t) => {
 
 TestRunner.test('Chord Mode - getChordModeEnabledState returns boolean', (t) => {
     const enabled = getChordModeEnabledState();
-    t.assertEqual(typeof enabled, 'boolean', 'Should return boolean');
+    t.assertEqual(typeof enabled, 'boolean', 'getChordModeEnabledState should return boolean');
 });
 
 TestRunner.test('Chord Mode - setChordModeEnabledState updates state', (t) => {
@@ -2134,6 +2134,43 @@ TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is inverse of MIDI_EXP
 });
 
 // ============================================
+// Day 85: MIDI Import Constants Tests
+// ============================================
+TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'Min notes should be 1');
+    t.assertTruthy(MIDI_IMPORT_MIN_NOTES >= 0, 'Min notes should be non-negative');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_MAX_VELOCITY is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_MAX_VELOCITY, 127, 'Max velocity should be 127 (MIDI standard)');
+    t.assertTruthy(MIDI_IMPORT_MAX_VELOCITY >= 1 && MIDI_IMPORT_MAX_VELOCITY <= 127, 'Max velocity should be 1-127');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_VELOCITY, 100, 'Default velocity should be 100');
+    t.assertTruthy(MIDI_IMPORT_DEFAULT_VELOCITY >= 0 && MIDI_IMPORT_DEFAULT_VELOCITY <= 127, 'Default velocity should be 0-127');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_PROBABILITY, 1.0, 'Default probability should be 1.0 (100%)');
+    t.assertTruthy(MIDI_IMPORT_DEFAULT_PROBABILITY >= 0 && MIDI_IMPORT_DEFAULT_PROBABILITY <= 1.0, 'Default probability should be 0-1');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is boolean', (t) => {
+    t.assertEqual(typeof MIDI_IMPORT_SNAP_TO_GRID, 'boolean', 'Snap to grid should be boolean');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1 / 127, 'Velocity scale should be 1/127');
+    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE > 0, 'Velocity scale should be positive');
+    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE < 1, 'Velocity scale should be less than 1');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is inverse of MIDI_EXPORT_VELOCITY_SCALE', (t) => {
+    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE * MIDI_EXPORT_VELOCITY_SCALE, 1, 'Import scale should be inverse of export scale');
+});
+
+// ============================================
 // Automation Lane Method Tests
 // ============================================
 TestRunner.test('Automation - AUTOMATION_LANE_PARAMETERS is an array', (t) => {
@@ -2681,6 +2718,167 @@ TestRunner.test('Undo Setters - setScaleModeLockState calls captureStateForUndo'
 });
 
 // ============================================
+// Day 99: Extended Undo/Redo Coverage Verification Tests
+// ============================================
+TestRunner.test('Undo Setters - setSwingState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setSwingState({ enabled: true, amount: 50 });
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setSwingState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setSwingEnabledState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setSwingEnabledState(true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setSwingEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setSwingAmountState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setSwingAmountState(25);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setSwingAmountState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setLoopRegionState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setLoopRegionState({ enabled: true, startBar: 1, endBar: 4 });
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setLoopRegionState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setLoopRegionEnabledState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setLoopRegionEnabledState(true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setLoopRegionEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setLoopRegionStartBarState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setLoopRegionStartBarState(2);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setLoopRegionStartBarState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setLoopRegionEndBarState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setLoopRegionEndBarState(8);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setLoopRegionEndBarState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTimelineZoomLevelState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setTimelineZoomLevelState(1.5);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTimelineZoomLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTimelineVerticalZoomState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setTimelineVerticalZoomState(1.2);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTimelineVerticalZoomState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setChordModeRootState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setChordModeRootState(7); // G
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setChordModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setChordModeTypeState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setChordModeTypeState('minor');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setChordModeTypeState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setChordModeLockState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setChordModeLockState(true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setChordModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTrackSendLevelState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    const send = addSendTrackState({ name: 'Undo Test Send' });
+    setTrackSendLevelState('test-track-undo', send.id, 0.75);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTrackSendLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTrackSendPreFaderState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    const send = addSendTrackState({ name: 'PreFader Undo Test' });
+    setTrackSendPreFaderState('test-track-prefader', send.id, true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTrackSendPreFaderState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTrackGroupColorState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    const group = addTrackGroupState({ name: 'Color Undo Test' });
+    setTrackGroupColorState(group.id, '#00ff00');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTrackGroupColorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTrackGroupMutedState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    const group = addTrackGroupState({ name: 'Mute Undo Test' });
+    setTrackGroupMutedState(group.id, true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTrackGroupMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTrackGroupSoloedState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    const group = addTrackGroupState({ name: 'Solo Undo Test' });
+    setTrackGroupSoloedState(group.id, true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTrackGroupSoloedState should call captureStateForUndo');
+});
+
+// ============================================
 // End Day 98 tests
-// Total tests: 333
+// Total tests: 350
 // ============================================

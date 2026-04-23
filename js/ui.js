@@ -5156,6 +5156,84 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
     return editorWindow;
 }
 
+export function showKeyboardShortcutsHelpWindow() {
+    const windowId = 'keyboardShortcutsHelp';
+    const { KEYBOARD_SHORTCUTS_HELP_TITLE, KEYBOARD_SHORTCUTS_HELP_WIDTH, KEYBOARD_SHORTCUTS_HELP_HEIGHT } = Constants;
+
+    // Check if already open
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId)) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    // Build shortcuts HTML content
+    const shortcutsContent = `
+        <div class="space-y-4 text-xs overflow-y-auto h-full dark:text-slate-300 p-2">
+            <h3 class="text-sm font-semibold text-gray-200 border-b border-slate-600 pb-1">Playback Controls</h3>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Space</kbd> <span class="text-slate-400">Play / Pause</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Enter</kbd> <span class="text-slate-400">Toggle Recording</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Escape</kbd> <span class="text-slate-400">Close Windows</span></div>
+            </div>
+
+            <h3 class="text-sm font-semibold text-gray-200 border-b border-slate-600 pb-1 mt-3">Transport & Tempo</h3>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">T</kbd> <span class="text-slate-400">Toggle Metronome</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">\`</kbd> <span class="text-slate-400">Tap Tempo</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">L</kbd> <span class="text-slate-400">Toggle Loop Region</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Q</kbd> <span class="text-slate-400">Toggle Scale Mode</span></div>
+            </div>
+
+            <h3 class="text-sm font-semibold text-gray-200 border-b border-slate-600 pb-1 mt-3">Track Controls (with armed track)</h3>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">M</kbd> <span class="text-slate-400">Toggle Mute</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">S</kbd> <span class="text-slate-400">Toggle Solo</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">R</kbd> <span class="text-slate-400">Toggle Record Arm</span></div>
+            </div>
+
+            <h3 class="text-sm font-semibold text-gray-200 border-b border-slate-600 pb-1 mt-3">Sequencer & Piano Roll</h3>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">C</kbd> <span class="text-slate-400">Toggle Chord Mode</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">X</kbd> <span class="text-slate-400">Octave Up</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Z</kbd> <span class="text-slate-400">Octave Down</span></div>
+            </div>
+
+            <h3 class="text-sm font-semibold text-gray-200 border-b border-slate-600 pb-1 mt-3">Edit Operations</h3>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+Z</kbd> <span class="text-slate-400">Undo</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+Y</kbd> <span class="text-slate-400">Redo</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+Shift+Z</kbd> <span class="text-slate-400">Redo (Alt)</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+S</kbd> <span class="text-slate-400">Save Project</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+O</kbd> <span class="text-slate-400">Load Project</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+E</kbd> <span class="text-slate-400">Export to WAV</span></div>
+            </div>
+
+            <h3 class="text-sm font-semibold text-gray-200 border-b border-slate-600 pb-1 mt-3">Computer Keyboard Piano</h3>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">A-L</kbd> <span class="text-slate-400">White keys (C3-B3)</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">W,E,T,Y,U</kbd> <span class="text-slate-400">Black keys</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">1-8</kbd> <span class="text-slate-400">Sampler slices</span></div>
+            </div>
+        </div>
+    `;
+
+    const contentHTML = `<div id="keyboardShortcutsHelpContent" class="h-full">${shortcutsContent}</div>`;
+    const options = {
+        width: KEYBOARD_SHORTCUTS_HELP_WIDTH,
+        height: KEYBOARD_SHORTCUTS_HELP_HEIGHT,
+        minWidth: 400,
+        minHeight: 300,
+        closable: true,
+        minimizable: false,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const helpWindow = localAppServices.createWindow(windowId, KEYBOARD_SHORTCUTS_HELP_TITLE, contentHTML, options);
+    return helpWindow;
+}
+
 export function openTimelineWindow(savedState = null) {
     const windowId = 'timeline';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
