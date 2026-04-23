@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.58.0"; // Day 60: Drag and Drop Audio Import/Export - Timeline clips draggable, Export Clip as WAV, desktop audio file drop import
+export const APP_VERSION = "0.58.1"; // Day 60: Drag and Drop Audio Import/Export - Timeline clips draggable, Export Clip as WAV, desktop audio file drop import
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

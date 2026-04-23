@@ -370,6 +370,7 @@ const appServices = {
     getSendTrackByIdState,
     getTrackSendsState,
     getTrackSendLevelState,
+    getTrackSendPreFaderState,
     // Aliases for mixer
     getSendTracksState as getSendTracks,
     getSendTrackByIdState as getSendTrackById,

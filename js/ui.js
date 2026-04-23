@@ -3900,6 +3900,23 @@ function initializeMixerEventHandlers(mixerElement) {
         });
     });
 
+    // Send pre/post fader toggle buttons
+    mixerElement.querySelectorAll('.send-pre-post-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const trackId = parseInt(e.target.dataset.trackId);
+            const sendId = parseInt(e.target.dataset.sendId);
+            const currentPreFader = localAppServices.getTrackSendPreFader ? localAppServices.getTrackSendPreFader(trackId, sendId) : false;
+            const newPreFader = !currentPreFader;
+            if (localAppServices.setTrackSendPreFader) {
+                localAppServices.setTrackSendPreFader(trackId, sendId, newPreFader);
+                // Update button appearance
+                e.target.textContent = newPreFader ? 'PRE' : 'POST';
+                e.target.className = `send-pre-post-btn text-[6px] mt-0.5 px-0.5 py-0 rounded ${newPreFader ? 'bg-cyan-700 text-cyan-300' : 'bg-[#3a3a3a] text-gray-500'} hover:bg-[#4a4a4a]`;
+                showNotification(`Send set to ${newPreFader ? 'pre-fader' : 'post-fader'}`, 1500);
+            }
+        });
+    });
+
     // Add Send Bus button
     const addSendBtn = mixerElement.querySelector('#addSendBusBtn');
     if (addSendBtn) {
