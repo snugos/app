@@ -452,6 +452,8 @@ const appServices = {
     setSendTrackMutedState as setSendTrackMuted,
     setSendTrackLevelState as setSendTrackLevel,
     // Track Groups
+    getTrackGroupsState,
+    getTrackGroupByIdState,
     addTrackGroupState,
     setTrackGroupNameState,
     setTrackGroupColorState,
@@ -563,7 +565,7 @@ const appServices = {
                     }
                 }
                 
-                if (track && track.type === 'Sampler' && !track.slicerIsPolyphonic && track.slicerMonoPlayer && track.slicerMonoEnvelope) {
+                if (track && track.type === 'Sampler' && track.slicerIsPolyphonic && track.slicerMonoPlayer && track.slicerMonoEnvelope) {
                     if (track.slicerMonoPlayer.state === 'started' && !track.slicerMonoPlayer.disposed) {
                         try { track.slicerMonoPlayer.stop(Tone.now()); } catch(e) { console.warn("Error stopping mono slicer player during panic", e); }
                     }

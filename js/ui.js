@@ -3973,7 +3973,7 @@ function buildMixerContentDOM() {
         <!-- Add Group Button -->
         <div class="flex flex-col items-center justify-center w-16 h-full bg-[#1a1a2e] border-r border-[#303050]">
             <button id="addGroupBtn" class="p-2 bg-[#3a3a5a] hover:bg-[#4a4a6a] rounded text-blue-300" title="Add Track Group">
-                <span class="text-lg">⚙</span>
+                <span class="text-lg">+</span>
             </button>
             <span class="text-[10px] mt-1 text-blue-400">Add Group</span>
         </div>
