@@ -62,7 +62,23 @@ import {
     getScaleModeRootState,
     setScaleModeRootState,
     getScaleModeLockState,
-    setScaleModeLockState
+    setScaleModeLockState,
+    // Loop Region state functions
+    getLoopRegionState,
+    setLoopRegionState,
+    getLoopRegionEnabledState,
+    setLoopRegionEnabledState,
+    getLoopRegionStartBarState,
+    setLoopRegionStartBarState,
+    getLoopRegionEndBarState,
+    setLoopRegionEndBarState,
+    // Swing state functions
+    getSwingState,
+    setSwingState,
+    getSwingEnabledState,
+    setSwingEnabledState,
+    getSwingAmountState,
+    setSwingAmountState
 } from './state.js';
 
 import { startAudioRecording, stopAudioRecording } from './audio.js';
@@ -547,7 +563,7 @@ TestRunner.test('Audio Clip - DEFAULT_AUDIO_CLIP_START_OFFSET and END_OFFSET are
 });
 
 // ============================================
-// Day 67: Monitoring State Tests
+// Day 67: Day 67: Monitoring State Tests
 // ============================================
 TestRunner.test('Monitoring State - isMonitoringEnabled default is false', (t) => {
     t.assertEqual(DEFAULT_RECORDING_MONITORING_ENABLED, false, 'Monitoring should be disabled by default');
@@ -1077,4 +1093,104 @@ TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
 TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
     const group = getTrackGroupByIdState('nonexistent-group-12345');
     t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
+    setLoopRegionEnabledState(true);
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
+    setLoopRegionEndBarState(8);
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
+});
+
+// ============================================
+// Day 71: Swing State Tests
+// ============================================
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
+});
+
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
+});
+
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
 });

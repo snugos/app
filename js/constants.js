@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.59.3'; // Day 70: State Management Tests - Added 34 new unit tests for state and constants validation
+export const APP_VERSION = '0.59.4'; // Day 71: Loop Region and Swing State Tests
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
