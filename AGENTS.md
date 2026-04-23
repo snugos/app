@@ -1143,3 +1143,36 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These constants are used by the Audio Clip Editor UI (`openAudioClipEditorWindow` in ui.js) to control fade, gain, playback rate, crossfade, and trim parameters for audio clips. The tests verify the configuration surface for these editing features.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.63.1
+
+#### Day 95: Extended Undo/Redo Coverage (2026-04-23)
+- **Feature**: Added undo state capture to remaining state setter functions in `js/state.js`
+- **Files Modified**:
+  - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
+    - `setLoopRegionState()` - Captures undo before changing loop region
+    - `setLoopRegionEnabledState()` - Captures undo before toggling loop
+    - `setLoopRegionStartBarState()` - Captures undo before setting start bar
+    - `setLoopRegionEndBarState()` - Captures undo before setting end bar
+    - `setTimelineZoomLevelState()` - Captures undo before horizontal zoom change
+    - `setTimelineVerticalZoomState()` - Captures undo before vertical zoom change
+    - `resetTimelineZoom()` - Captures undo before resetting zoom
+    - `setMetronomeEnabledState()` - Captures undo before toggling metronome
+    - `setMetronomeVolumeState()` - Captures undo before changing volume
+    - `setScaleModeEnabledState()` - Captures undo before toggling scale mode
+    - `setScaleModeScaleState()` - Captures undo before changing scale
+    - `setScaleModeRootState()` - Captures undo before changing root
+    - `setScaleModeLockState()` - Captures undo before toggling lock
+    - `setChordModeEnabledState()` - Captures undo before toggling chord mode
+    - `setChordModeTypeState()` - Captures undo before changing chord type
+    - `setChordVoicingState()` - Captures undo before changing voicing
+    - `setTimeSignatureNumeratorState()` - Captures undo before changing time sig
+    - `setTimeSignatureDenominatorState()` - Captures undo before changing denominator
+    - `setGhostTrackIdState()` - Captures undo before changing ghost track
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.1
+- **Feature Details**:
+  - This completes the undo/redo coverage for all major UI-affecting state setters
+  - Users can now undo changes to: Loop Region, Timeline Zoom, Metronome, Scale Mode, Chord Mode, Time Signature, and Ghost Track settings
+  - Undo descriptions are descriptive (e.g., "Toggle Loop Region On", "Set Timeline Zoom Level")
+  - The undo system captures full project state snapshots before mutations
+- **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
+- **Usage**: Change any of the above settings and use Ctrl+Z to undo
+- **Version**: Bumped to 0.64.1
