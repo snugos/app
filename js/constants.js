@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.62.0'; // Day 90: Extended Undo/Redo Coverage
+export const APP_VERSION = '0.62.1'; // Day 91: Complete Undo/Redo Coverage for Remaining State Functions
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

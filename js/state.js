@@ -623,6 +623,13 @@ export function addTrackTemplateState(templateData) {
 }
 
 export function updateTrackTemplateState(id, updates) {
+    // Capture undo state before modifying template
+    if (appServices.captureStateForUndo) {
+        const template = trackTemplatesState.find(t => t.id === id);
+        if (template) {
+            appServices.captureStateForUndo(`Update Track Template "${template.name}"`);
+        }
+    }
     const template = trackTemplatesState.find(t => t.id === id);
     if (template) {
         if (updates.name !== undefined) template.name = updates.name;
@@ -640,11 +647,22 @@ export function updateTrackTemplateState(id, updates) {
 }
 
 export function removeTrackTemplateState(id) {
+    // Capture undo state before removing template
+    if (appServices.captureStateForUndo) {
+        const template = trackTemplatesState.find(t => t.id === id);
+        if (template) {
+            appServices.captureStateForUndo(`Delete Track Template "${template.name}"`);
+        }
+    }
     trackTemplatesState = trackTemplatesState.filter(t => t.id !== id);
     return true;
 }
 
 export function clearTrackTemplatesState() {
+    // Capture undo state before clearing all templates (only if not already empty)
+    if (appServices.captureStateForUndo && trackTemplatesState.length > 0) {
+        appServices.captureStateForUndo(`Clear All Track Templates`);
+    }
     trackTemplatesState = [];
 }
 
@@ -657,6 +675,10 @@ export function incrementHighestZState() { return ++highestZ; }
 
 // --- Master Effects Chain Management ---
 export function addMasterEffectToState(effectType, initialParams) {
+    // Capture undo state before adding effect
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Add Master Effect "${effectType}"`);
+    }
     const effectId = `mastereffect_${effectType}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     const defaultParams = appServices.effectsRegistryAccess?.getEffectDefaultParams
         ? appServices.effectsRegistryAccess.getEffectDefaultParams(effectType)
@@ -671,6 +693,13 @@ export function addMasterEffectToState(effectType, initialParams) {
 }
 
 export function removeMasterEffectFromState(effectId) {
+    // Capture undo state before removing effect
+    if (appServices.captureStateForUndo) {
+        const effect = masterEffectsChainState.find(e => e.id === effectId);
+        if (effect) {
+            appServices.captureStateForUndo(`Remove Master Effect "${effect.type}"`);
+        }
+    }
     const effectIndex = masterEffectsChainState.findIndex(e => e.id === effectId);
     if (effectIndex > -1) {
         masterEffectsChainState.splice(effectIndex, 1);
@@ -678,6 +707,14 @@ export function removeMasterEffectFromState(effectId) {
 }
 
 export function updateMasterEffectParamInState(effectId, paramPath, value) {
+    // Capture undo state before modifying effect param
+    if (appServices.captureStateForUndo) {
+        const effect = masterEffectsChainState.find(e => e.id === effectId);
+        if (effect) {
+            const paramName = paramPath.split('.').pop();
+            appServices.captureStateForUndo(`Update Master Effect "${effect.type}" ${paramName}`);
+        }
+    }
     const effectWrapper = masterEffectsChainState.find(e => e.id === effectId);
     if (!effectWrapper || !effectWrapper.params) {
         console.warn(`[State updateMasterEffectParamInState] Effect wrapper or params not found for ID: ${effectId}`);
@@ -766,7 +803,6 @@ export async function undoLastActionInternal() {
     } catch (error) {
         console.error("[State undoLastActionInternal] Error during undo:", error);
         if (appServices.showNotification) appServices.showNotification(`Error during undo operation: ${error.message}. Project may be unstable.`, 4000);
-        // Potentially try to restore the popped state back to undoStack if reconstruction fails badly? Complex.
     } finally {
         if (appServices) appServices._isReconstructingDAW_flag = false;
         updateInternalUndoRedoState();
