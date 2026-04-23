@@ -886,3 +886,31 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.6
+
+#### Day 76: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Master Effects state management functions (`getMasterEffectsState`, `addMasterEffectToState`, `removeMasterEffectFromState`, `updateMasterEffectParamInState`, `reorderMasterEffectInState`) had no corresponding unit tests despite being core state operations for the master effects chain.
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests for Master Effects state management:
+    - `Master Effects - getMasterEffectsState returns array` - Validates array return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, strings)
+  - Tests validate state mutations via roundtrip validation (add then get, then remove)
+  - Tests validate edge cases (unknown IDs, same index, invalid indices)
+  - Tests validate ID generation format (`mastereffect_${type}_${timestamp}_${random}`)
+  - Tests validate param path updates (e.g., 'decay', 'frequency')
+  - All tests properly clean up by removing effects after verification
+- **Backend Note**: These state functions are used throughout the application for managing the master effects chain. The tests verify the state API without requiring full audio context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.9

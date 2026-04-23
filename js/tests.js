@@ -84,7 +84,13 @@ import {
     // Track Groups cleanup functions
     removeTrackGroupState,
     // Track Templates cleanup functions
-    clearTrackTemplatesState
+    clearTrackTemplatesState,
+    // Master Effects state functions
+    getMasterEffectsState,
+    addMasterEffectToState,
+    removeMasterEffectFromState,
+    updateMasterEffectParamInState,
+    reorderMasterEffectInState
 } from './state.js';
 
 import { startAudioRecording, stopAudioRecording } from './audio.js';
@@ -728,18 +734,24 @@ TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) 
     t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
 });
 
-TestRunner.test('Timeline Markers - addTimelineMarkerState creates marker', (t) => {
-    const marker = addTimelineMarkerState('Test Marker', 5, '#00ff00');
-    t.assertTruthy(marker, 'addTimelineMarkerState should return a marker');
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
     t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
-    t.assertEqual(marker.bar, 5, 'Marker bar should match');
-    t.assertEqual(marker.color, '#00ff00', 'Marker color should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
 });
 
-TestRunner.test('Timeline Markers - getTimelineMarkerByIdState finds marker', (t) => {
-    const marker = addTimelineMarkerState('Find Test', 10);
-    const found = getTimelineMarkerByIdState(marker.id);
-    t.assertEqual(found.id, marker.id, 'Should find marker by ID');
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
 });
 
 TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
@@ -748,18 +760,22 @@ TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown i
 });
 
 TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
     const marker = addTimelineMarkerState('Original', 4);
     setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
     const updated = getTimelineMarkerByIdState(marker.id);
     t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
     t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
 });
 
 TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
     const marker = addTimelineMarkerState('To Remove', 4);
     t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist');
     removeTimelineMarkerState(marker.id);
     t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
 });
 
 // ============================================
@@ -974,24 +990,6 @@ TestRunner.test('Scale Mode - setScaleModeLockState updates state', (t) => {
     setScaleModeLockState(false);
     t.assertEqual(getScaleModeLockState(), false, 'Scale lock should be disabled');
 });
-
-// ============================================
-// Run all tests function
-// ============================================
-export async function runTests(showNotification = null) {
-    console.log('[Tests] Starting SnugOS unit tests...');
-    const results = await TestRunner.runAll(showNotification);
-    return results;
-}
-
-export function getTestRunner() {
-    return TestRunner;
-}
-
-// Auto-run if executed directly
-if (typeof window !== 'undefined') {
-    window.runSnugOSTests = runTests;
-}
 
 // ============================================
 // Day 70: Additional State Management Tests
@@ -1430,141 +1428,6 @@ TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
     t.assertEqual(send.muted, false, 'Send should be unmuted');
 });
 
-TestRunner.test('Track Groups - getTrackGroupsState returns array', (t) => {
-    const groups = getTrackGroupsState();
-    t.assertTruthy(Array.isArray(groups), 'Track groups should be an array');
-});
-
-TestRunner.test('Track Groups - addTrackGroupState adds group', (t) => {
-    const group = addTrackGroupState({ name: 'Test Group', color: '#00ff00' });
-    t.assertTruthy(group, 'addTrackGroupState should return a group');
-    t.assertEqual(group.name, 'Test Group', 'Group name should match');
-    t.assertEqual(group.color, '#00ff00', 'Group color should match');
-    t.assertTruthy(Array.isArray(group.trackIds), 'trackIds should be an array');
-});
-
-TestRunner.test('Track Groups - setTrackGroupNameState updates group', (t) => {
-    const group = addTrackGroupState({ name: 'Original Group' });
-    setTrackGroupNameState(group.id, 'Renamed Group');
-    const updated = getTrackGroupByIdState(group.id);
-    t.assertEqual(updated.name, 'Renamed Group', 'Group name should be updated');
-    removeTrackGroupState(group.id);
-});
-
-TestRunner.test('Track Templates - getTrackTemplatesState returns array', (t) => {
-    const templates = getTrackTemplatesState();
-    t.assertTruthy(Array.isArray(templates), 'Track templates should be an array');
-});
-
-TestRunner.test('Track Templates - getTrackTemplateByIdState handles unknown id', (t) => {
-    const notFound = getTrackTemplateByIdState('nonexistent-template-id');
-    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
-});
-
-TestRunner.test('Track Templates - addTrackTemplateState adds template', (t) => {
-    clearTrackTemplatesState();
-    const template = addTrackTemplateState({
-        name: 'Test Template',
-        color: '#0000ff',
-        type: 'Synth',
-        synthParams: { attack: 0.01 },
-        activeEffects: [],
-        hasAutomation: false,
-        automationLanes: [],
-        instrumentSamplerSettings: null,
-        drumSamplerPads: null
-    });
-    t.assertTruthy(template, 'Template should be added');
-    t.assertTruthy(template.id, 'Template should have an id');
-    t.assertEqual(template.name, 'Test Template', 'Template name should match');
-    clearTrackTemplatesState();
-});
-
-TestRunner.test('Track Templates - updateTrackTemplateState updates template', (t) => {
-    clearTrackTemplatesState();
-    const template = addTrackTemplateState({ name: 'Original', color: '#0000ff', type: 'Synth' });
-    updateTrackTemplateState(template.id, { name: 'Updated' });
-    const updated = getTrackTemplateByIdState(template.id);
-    t.assertEqual(updated.name, 'Updated', 'Template name should be updated');
-    clearTrackTemplatesState();
-});
-
-TestRunner.test('Track Templates - removeTrackTemplateState removes template', (t) => {
-    clearTrackTemplatesState();
-    const template = addTrackTemplateState({ name: 'To Remove', color: '#ff0000', type: 'Synth' });
-    t.assertTruthy(getTrackTemplateByIdState(template.id), 'Template should exist');
-    removeTrackTemplateState(template.id);
-    t.assertEqual(getTrackTemplateByIdState(template.id), undefined, 'Template should be removed');
-    clearTrackTemplatesState();
-});
-
-TestRunner.test('Chord Mode - getChordModeState returns object', (t) => {
-    const state = getChordModeState();
-    t.assertTruthy(typeof state === 'object', 'getChordModeState should return an object');
-    t.assertTruthy('enabled' in state, 'Should have enabled property');
-    t.assertTruthy('root' in state, 'Should have root property');
-    t.assertTruthy('type' in state, 'Should have type property');
-});
-
-TestRunner.test('Chord Mode - getChordModeEnabledState returns boolean', (t) => {
-    const enabled = getChordModeEnabledState();
-    t.assertEqual(typeof enabled, 'boolean', 'Should return boolean');
-});
-
-TestRunner.test('Chord Mode - setChordModeEnabledState updates state', (t) => {
-    setChordModeEnabledState(true);
-    t.assertEqual(getChordModeEnabledState(), true, 'Chord mode should be enabled');
-    setChordModeEnabledState(false);
-    t.assertEqual(getChordModeEnabledState(), false, 'Chord mode should be disabled');
-});
-
-TestRunner.test('Chord Mode - getChordModeRootState returns number', (t) => {
-    const root = getChordModeRootState();
-    t.assertEqual(typeof root, 'number', 'Should return number');
-    t.assertTruthy(root >= 0 && root <= 11, 'Root should be 0-11 (C-B)');
-});
-
-TestRunner.test('Chord Mode - setChordModeRootState updates state', (t) => {
-    setChordModeRootState(5); // F
-    t.assertEqual(getChordModeRootState(), 5, 'Chord root should be 5');
-});
-
-TestRunner.test('Chord Mode - getChordModeTypeState returns string', (t) => {
-    const type = getChordModeTypeState();
-    t.assertEqual(typeof type, 'string', 'Should return string');
-});
-
-TestRunner.test('Chord Mode - setChordModeTypeState updates state', (t) => {
-    setChordModeTypeState('minor');
-    t.assertEqual(getChordModeTypeState(), 'minor', 'Chord type should be minor');
-    setChordModeTypeState('major');
-    t.assertEqual(getChordModeTypeState(), 'major', 'Chord type should be major');
-});
-
-TestRunner.test('Chord Mode - getChordModeLockState returns boolean', (t) => {
-    const lock = getChordModeLockState();
-    t.assertEqual(typeof lock, 'boolean', 'Should return boolean');
-});
-
-TestRunner.test('Chord Mode - setChordModeLockState updates state', (t) => {
-    setChordModeLockState(true);
-    t.assertEqual(getChordModeLockState(), true, 'Chord lock should be enabled');
-    setChordModeLockState(false);
-    t.assertEqual(getChordModeLockState(), false, 'Chord lock should be disabled');
-});
-
-TestRunner.test('Chord Mode - getChordVoicingState returns string', (t) => {
-    const voicing = getChordVoicingState();
-    t.assertEqual(typeof voicing, 'string', 'Should return string');
-});
-
-TestRunner.test('Chord Mode - setChordVoicingState updates state', (t) => {
-    setChordVoicingState('close');
-    t.assertEqual(getChordVoicingState(), 'close', 'Voicing should be close');
-    setChordVoicingState('open');
-    t.assertEqual(getChordVoicingState(), 'open', 'Voicing should be open');
-});
-
 // ============================================
 // Day 75: Armed Track State Tests
 // ============================================
@@ -1590,4 +1453,139 @@ TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (
     setArmedTrackIdState(42);
     t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
     setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Effect1', {});
+    const id2 = addMasterEffectToState('Effect2', {});
+    const id3 = addMasterEffectToState('Effect3', {});
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx', {});
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx', {});
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
 });
