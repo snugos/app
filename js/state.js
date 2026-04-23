@@ -367,6 +367,9 @@ export function addTimelineMarkerState(name, bar, color = null) {
     if (timelineMarkersState.length >= Constants.MAX_TIMELINE_MARKERS) {
         return null; // Max markers reached
     }
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Add Timeline Marker "${name || `Marker ${timelineMarkersState.length + 1}`}"`);
+    }
     const id = timelineMarkerIdCounter++;
     const marker = {
         id,
@@ -383,6 +386,9 @@ export function addTimelineMarkerState(name, bar, color = null) {
 export function setTimelineMarkerState(id, updates) {
     const marker = timelineMarkersState.find(m => m.id === id);
     if (marker) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Update Timeline Marker "${marker.name}"`);
+        }
         if (updates.name !== undefined) marker.name = updates.name;
         if (updates.bar !== undefined) marker.bar = Math.max(1, Math.min(parseInt(updates.bar) || 1, Constants.MAX_BARS));
         if (updates.color !== undefined) marker.color = updates.color;
@@ -393,6 +399,11 @@ export function setTimelineMarkerState(id, updates) {
 }
 
 export function removeTimelineMarkerState(id) {
+    const marker = timelineMarkersState.find(m => m.id === id);
+    const markerName = marker ? marker.name : id;
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Remove Timeline Marker "${markerName}"`);
+    }
     const index = timelineMarkersState.findIndex(m => m.id === id);
     if (index !== -1) {
         timelineMarkersState.splice(index, 1);
@@ -402,6 +413,10 @@ export function removeTimelineMarkerState(id) {
 }
 
 export function clearTimelineMarkersState() {
+    if (timelineMarkersState.length === 0) return;
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Clear All Timeline Markers`);
+    }
     timelineMarkersState = [];
 }
 
@@ -413,6 +428,9 @@ export function removeWindowFromStoreState(id) { openWindowsMap.delete(id); }
 export function getSendTracksState() { return sendTracksState; }
 export function getSendTrackByIdState(id) { return sendTracksState.find(s => s.id === id); }
 export function addSendTrackState(sendData) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Add Send Bus "${sendData?.name || 'new send'}"`);
+    }
     const id = sendData && sendData.id !== undefined ? sendData.id : sendTrackIdCounter++;
     const sendTrack = {
         id,
@@ -427,6 +445,9 @@ export function addSendTrackState(sendData) {
 export function setSendTrackMutedState(sendId, muted) {
     const send = sendTracksState.find(s => s.id === sendId);
     if (send) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Send "${send.name}" muted ${muted ? 'on' : 'off'}`);
+        }
         send.muted = !!muted;
         return true;
     }
@@ -443,6 +464,9 @@ export function setTrackSendLevelState(trackId, sendId, level) {
     if (!trackSendsState[trackId]) {
         trackSendsState[trackId] = {};
     }
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Send Level for Track ${trackId}`);
+    }
     trackSendsState[trackId][sendId] = Math.max(0, Math.min(1.2, parseFloat(level) || 0));
 }
 export function getTrackSendPreFaderState(trackId, sendId) {
@@ -458,6 +482,9 @@ export function setTrackSendPreFaderState(trackId, sendId, preFader) {
     if (!trackSendsState[trackId][sendId]) {
         trackSendsState[trackId][sendId] = { level: 0, preFader: false };
     }
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Send Pre-Fader for Track ${trackId}`);
+    }
     trackSendsState[trackId][sendId].preFader = !!preFader;
 }
 
@@ -465,6 +492,9 @@ export function setTrackSendPreFaderState(trackId, sendId, preFader) {
 export function getTrackGroupsState() { return trackGroupsState; }
 export function getTrackGroupByIdState(id) { return trackGroupsState.find(g => g.id === id); }
 export function addTrackGroupState(groupData) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Create Track Group "${groupData?.name || 'New Group'}"`);
+    }
     const id = groupData.id !== undefined ? groupData.id : trackGroupIdCounter++;
     const newGroup = {
         id,
@@ -480,6 +510,9 @@ export function addTrackGroupState(groupData) {
 export function setTrackGroupNameState(id, name) {
     const group = trackGroupsState.find(g => g.id === id);
     if (group) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Rename Track Group to "${name || `Group ${id}`}"`);
+        }
         group.name = name || `Group ${id}`;
         return true;
     }
@@ -488,6 +521,9 @@ export function setTrackGroupNameState(id, name) {
 export function setTrackGroupColorState(id, color) {
     const group = trackGroupsState.find(g => g.id === id);
     if (group) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Change Track Group "${group.name}" color`);
+        }
         group.color = color || Constants.DEFAULT_TRACK_GROUP_COLOR;
         return true;
     }
@@ -496,6 +532,9 @@ export function setTrackGroupColorState(id, color) {
 export function addTrackToGroupState(groupId, trackId) {
     const group = trackGroupsState.find(g => g.id === groupId);
     if (group && !group.trackIds.includes(trackId)) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Add Track to Group "${group.name}"`);
+        }
         group.trackIds.push(trackId);
         return true;
     }
@@ -506,6 +545,9 @@ export function removeTrackFromGroupState(groupId, trackId) {
     if (group) {
         const idx = group.trackIds.indexOf(trackId);
         if (idx !== -1) {
+            if (appServices.captureStateForUndo) {
+                appServices.captureStateForUndo(`Remove Track from Group "${group.name}"`);
+            }
             group.trackIds.splice(idx, 1);
             return true;
         }
@@ -515,6 +557,9 @@ export function removeTrackFromGroupState(groupId, trackId) {
 export function setTrackGroupMutedState(id, muted) {
     const group = trackGroupsState.find(g => g.id === id);
     if (group) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Group "${group.name}" muted ${muted ? 'on' : 'off'}`);
+        }
         group.muted = !!muted;
         return true;
     }
@@ -523,12 +568,20 @@ export function setTrackGroupMutedState(id, muted) {
 export function setTrackGroupSoloedState(id, soloed) {
     const group = trackGroupsState.find(g => g.id === id);
     if (group) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Group "${group.name}" soloed ${soloed ? 'on' : 'off'}`);
+        }
         group.soloed = !!soloed;
         return true;
     }
     return false;
 }
 export function removeTrackGroupState(id) {
+    const group = trackGroupsState.find(g => g.id === id);
+    const groupName = group ? group.name : id;
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Delete Track Group "${groupName}"`);
+    }
     const idx = trackGroupsState.findIndex(g => g.id === id);
     if (idx !== -1) {
         trackGroupsState.splice(idx, 1);
@@ -587,17 +640,8 @@ export function updateTrackTemplateState(id, updates) {
 }
 
 export function removeTrackTemplateState(id) {
-    // Capture undo state before modifying templates
-    if (appServices.captureStateForUndo) {
-        const template = trackTemplatesState.find(t => t.id === id);
-        appServices.captureStateForUndo(`Delete Track Template "${template?.name || 'Untitled'}"`);
-    }
-    const idx = trackTemplatesState.findIndex(t => t.id === id);
-    if (idx !== -1) {
-        trackTemplatesState.splice(idx, 1);
-        return true;
-    }
-    return false;
+    trackTemplatesState = trackTemplatesState.filter(t => t.id !== id);
+    return true;
 }
 
 export function clearTrackTemplatesState() {

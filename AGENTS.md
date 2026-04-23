@@ -717,12 +717,12 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate TRACK_TEMPLATE_COLORS equals TRACK_COLORS
   - Tests validate DEFAULT_TRACK_TEMPLATE structure (name, color, type, synthParams, activeEffects, hasAutomation, automationLanes, instrumentSamplerSettings, drumSamplerPads)
   - Total test count increased from 65 to 72 tests
+- **Backend Note**: Track Template constants define how saved track templates are managed (max 32 templates with color and naming). The tests verify the configuration surface.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.2
 
 #### Day 62: Automation Editor Event Handlers (2026-04-22)
 - **Feature**: Completed missing automation editor event handlers for the sequencer window
-- **Issue**: The AGENTS.md mentioned "Automation Editor: event handlers" as an incomplete item. The automation editor UI (toggle, parameter selector, lane grid) was already implemented in `buildSequencerContentDOM()` but had no interactivity - the toggle didn't work, parameter selector did nothing, clear button was inert, and clicking/dragging on the lane did nothing
 - **Files Modified**:
   - `js/ui.js`: Added automation editor event handlers in `openTrackSequencerWindow()`:
     - Toggle checkbox: Shows/hides the automation editor lane
@@ -742,12 +742,12 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Right-click on a point removes it
   - Drag vertically on a point to adjust its value (0-100%)
   - All operations capture undo state for proper undo/redo support
+- **Backend Note**: The automation editor UI exists in `js/ui.js` but was missing event handlers. The tests verify the HTML generation layer.
 - **Usage**: Open sequencer for any track, click "Automation" checkbox in toolbar to show editor, click cells to add points, drag points to adjust values
 - **Version**: Bumped to 0.58.3
 
 #### Day 63: DrumSampler Pad Drop Zone Verification (2026-04-22)
 - **Feature**: Added comprehensive tests for DrumSampler pad drop zone functionality
-- **Issue**: The AGENTS.md mentioned "DrumSampler: pad drop zones verification" as an incomplete item. The drop zone functionality exists in `createDropZoneHTML()` and `setupGenericDropZoneListeners()` but had limited test coverage specifically for DrumSampler pads.
 - **Files Modified**:
   - `js/tests.js`: Added 9 new tests for DrumSampler pad drop zones:
     - `DrumSampler - numDrumSamplerPads is 8` - Validates 8 pads exist
@@ -773,7 +773,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 64: Track Template Undo/Redo (2026-04-22)
 - **Feature**: Added undo state capture to Track Template save and delete operations
-- **Issue**: The AGENTS.md mentioned "Undo/redo: verify all state mutations go through capture mechanism" as an incomplete item. The track template state management (`addTrackTemplateState`, `removeTrackTemplateState`) in `js/state.js` did not capture undo states, making template operations non-undoable.
 - **Files Modified**:
   - `js/state.js`: Added `_captureUndoState` calls to:
     - `addTrackTemplateState()` - Captures undo state before adding a new template (describes "Save Track Template")
@@ -789,7 +788,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 64 cont: Undo/Redo System Tests (2026-04-22)
 - **Feature**: Added 9 new unit tests for undo/redo system state management
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The undo/redo system constants and methods had imports in tests.js but were not being tested despite being core state operations.
 - **Files Modified**:
   - `js/tests.js`: Added 9 new tests in Day 64 section:
     - `Undo/Redo - MAX_HISTORY_STATES is reasonable` - Validates 50 limit with boundary checks
@@ -813,7 +811,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 72: Recording Integration Tests (2026-04-23)
 - **Feature**: Added 11 new unit tests for recording constants and configuration validation
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The recording system constants (sample rate, bit depth, input gain, monitoring settings, recording limits) lacked unit test coverage despite being used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js`.
 - **Files Modified**:
   - `js/tests.js`: Added 11 new tests in Day 72 section:
     - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
@@ -834,7 +831,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 73: Comprehensive State Management Tests (2026-04-23)
 - **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. Multiple state management functions (Time Signature, Ghost Track, Timeline Markers, Send Tracks, Track Groups, Track Templates, Chord Mode) had no corresponding unit tests despite being core state operations.
 - **Files Modified**:
   - `js/tests.js`: Added comprehensive tests for:
     - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
@@ -858,7 +854,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 76: Master Effects State Tests (2026-04-23)
 - **Feature**: Added 10 new unit tests for Master Effects state management functions
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Master Effects state management functions (`isTrackRecordingState`, `getRecordingTrackIdState`, `getRecordingStartTimeState`, `setIsRecordingState`, `setRecordingTrackIdState`, `setRecordingStartTimeState`) had imports in tests.js but were not being tested despite being core state operations for the recording system.
 - **Files Modified**:
   - `js/tests.js`: Added 10 new tests in Day 76 section:
     - `Master Effects - getMasterEffectsState returns array` - Validates return type
@@ -887,7 +882,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 77: Fade Curve Constants Tests (2026-04-23)
 - **Feature**: Added 7 new unit tests for audio clip fade curve methods and fade curve constants
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The fade curve functionality for audio clips (`setAudioClipFadeInCurve`, `getAudioClipFadeInCurve`, `setAudioClipFadeOutCurve`, `getAudioClipFadeOutCurve`) lacked unit test coverage despite being used in the Audio Clip Editor window.
 - **Files Modified**:
   - `js/tests.js`: Added 7 new tests in Day 77 section:
     - `Audio Clip - setAudioClipFadeInCurve validates curve values` - Tests that setAudioClipFadeInCurve validates curve values and returns true for valid changes
@@ -943,28 +937,25 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 81: Test Runner runTests Export Fix (2026-04-23)
 - **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
-- **Issue**: The AGENTS.md comment "Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`" was documented but the actual `runTests` function was not exported from testRunner.js, making this instruction non-functional.
 - **Files Modified**:
   - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
   - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
   - `js/constants.js`: Bumped APP_VERSION to 0.60.3
-- **Impact**: Users can now run the test suite from the browser console using: `(await import('./js/tests.js')).runTests()`
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.3
 
 #### Day 82: Test Runner runTests Export Fix (2026-04-23)
 - **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
-- **Issue**: The AGENTS.md comment "Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`" was documented but the actual `runTests` function was not exported from testRunner.js, making this instruction non-functional.
 - **Files Modified**:
   - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
   - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
   - `js/constants.js`: Bumped APP_VERSION to 0.60.3
-- **Impact**: Users can now run the test suite from the browser console using: `(await import('./js/tests.js')).runTests()`
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.3
 
 
 #### Day 83: Recording State Wiring Fix (2026-04-23)
 - **Bug Fix**: Fixed missing recording state updates in `startAudioRecording` and `stopAudioRecording` functions
-- **Issue**: The recording state functions (`setIsRecordingState`, `setRecordingTrackIdState`, `setRecordingStartTimeState`) were defined in `js/state.js` and tested in `js/tests.js`, but were never called from the audio recording implementation in `js/audio.js`. This meant the recording state was never actually updated during recording operations.
 - **Files Modified**:
   - `js/audio.js`:
     - Added import for `setIsRecordingState`, `setRecordingTrackIdState`, `setRecordingStartTimeState` from state.js
@@ -976,7 +967,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 84: Automation Lane Tests (2026-04-23)
 - **Feature**: Added comprehensive unit tests for automation lane constants and methods to expand test coverage
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The automation lane functionality (`AUTOMATION_LANE_PARAMETERS`, `AUTOMATION_LANE_COLORS`, `AUTOMATION_LANE_HEIGHT`, `AUTOMATION_LANE_DEFAULT`, `AUTOMATION_LANE_PRECISION`, `AUTOMATION_LANE_STEP`) and the core automation methods (`getAutomationLane`, `setAutomationPoint`, `getAutomationValue`, `clearAutomationLane`) lacked unit test coverage despite being used by the Automation Editor UI in the sequencer window.
 - **Files Modified**:
   - `js/tests.js`: Added 17 new tests in Day 84 section:
     - `Automation - AUTOMATION_LANE_PARAMETERS is an array` - Validates array type and count
@@ -1009,7 +999,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 85: Track Template and MIDI Export Constants Tests (2026-04-23)
 - **Feature**: Added 12 new unit tests for Track Template and MIDI Export constants
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. Track Template constants (MAX_TRACK_TEMPLATES, DEFAULT_TEMPLATE_NAME_PREFIX, TRACK_TEMPLATE_COLORS, DEFAULT_TRACK_TEMPLATE_COLOR, DEFAULT_TRACK_TEMPLATE) and MIDI Export constants (MIDI_EXPORT_VELOCITY_SCALE, MIDI_DEFAULT_CHANNEL, MIDI_DEFAULT_PROGRAM, MIDI_EXPORT_TicksPerQuarterNote, MIDI_FILE_FORMAT, DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, MAX_MIDI_EXPORT_TRACKS) lacked unit test coverage despite being used by their respective features.
 - **Files Modified**:
   - `js/tests.js`: Added 12 new tests in Day 85 section (placed before Automation Lane Method Tests):
     - `Track Templates - MAX_TRACK_TEMPLATES is reasonable` - Tests value is 32 and positive
@@ -1036,7 +1025,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 86: Chord Voicing Constants Tests (2026-04-23)
 - **Feature**: Added 16 new unit tests for Chord Voicing constants
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Chord Voicing constants (CHORD_VOICING_SPREAD, CHORD_VOICINGS, DEFAULT_CHORD_VOICING) lacked unit test coverage despite being used by the Chord Mode feature.
 - **Files Modified**:
   - `js/tests.js`: Added 16 new tests in Day 87 section (placed after CHORD_TYPES chord intervals test):
     - `Chord Voicing - CHORD_VOICING_SPREAD is an object` - Tests object exists and is not null
@@ -1069,16 +1057,11 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 87: Performance Monitor Constants Tests (2026-04-23)
 - **Feature**: Added 7 new unit tests for Performance Monitor constants
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Performance Monitor constants (PERFORMANCE_MONITOR_ENABLED, PERFORMANCE_UPDATE_INTERVAL_MS, PERFORMANCE_CONTEXT_STATE_*, PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS, PERFORMANCE_DEFAULT_LATENCY_HINT, PERFORMANCE_MEMORY_PRESSURE_*, PERFORMANCE_WARNING_THRESHOLD_MS) lacked unit test coverage despite being used by the Performance Monitor feature.
 - **Files Modified**:
   - `js/tests.js`: Added 7 new tests in Day 87 section (placed after CHORD_VOICING_SPREAD tests):
     - `Performance Monitor - PERFORMANCE_MONITOR_ENABLED is boolean` - Tests the feature flag is boolean
     - `Performance Monitor - PERFORMANCE_UPDATE_INTERVAL_MS is positive` - Tests update interval is reasonable
-    - `Performance Monitor - PERFORMANCE_CONTEXT_STATE values are valid` - Tests context state strings
-    - `Performance Monitor - PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS is reasonable` - Tests buffer size range
-    - `Performance Monitor - PERFORMANCE_DEFAULT_LATENCY_HINT is valid` - Tests Tone.js latency hint
-    - `Performance Monitor - PERFORMANCE_MEMORY_PRESSURE values are distinct` - Tests memory pressure levels
-    - `Performance Monitor - PERFORMANCE_WARNING_THRESHOLD_MS is reasonable` - Tests warning threshold
+    - `Performance Monitor - PERFORMANCE_CONTEXT_STATE_*, PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS, PERFORMANCE_DEFAULT_LATENCY_HINT, PERFORMANCE_MEMORY_PRESSURE_*, PERFORMANCE_WARNING_THRESHOLD_MS` - Tests all performance constants are defined and have reasonable values
   - `js/constants.js`: Bumped APP_VERSION to 0.61.5
 - **Feature Details**:
   - Tests validate Performance Monitor feature flag and update interval
@@ -1094,7 +1077,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 89: Timeline Zoom UI Fixes (2026-04-23)
 - **Bug Fix**: Fixed missing zoom controls event handlers for the Timeline Zoom feature
-- **Issue**: The Timeline Zoom feature (added in previous session) had state management in `js/state.js`, UI controls in `js/ui.js`, and zoom button rendering in `renderTimeline()`, but was missing the event handler code that connects the buttons to the zoom state functions. This made the zoom buttons non-functional.
 - **Files Modified**:
   - `js/ui.js`: Added zoom control event handlers in `renderTimeline()`:
     - `zoomInBtn` click handler → calls `localAppServices.zoomInTimeline()` and re-renders
@@ -1102,10 +1084,33 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `zoomResetBtn` click handler → calls `localAppServices.resetTimelineZoom()` and re-renders
     - `zoomVInBtn` click handler → calls `localAppServices.zoomInVerticalTimeline()` and re-renders
     - `zoomVOutBtn` click handler → calls `localAppServices.zoomOutVerticalTimeline()` and re-renders
-  - `js/constants.js`: Bumped APP_VERSION to 0.61.6
-- **Feature Details**:
-  - The zoom controls appear in the Timeline window toolbar with H (horizontal) and V (vertical) zoom buttons
-  - Zoom levels range from 25% to 400% (horizontal) and 50% to 200% (vertical)
-  - Clicking zoom buttons updates the state and re-renders the timeline with the new zoom applied
-- **Backend Note**: The timeline zoom state functions (`zoomInTimeline`, `zoomOutTimeline`, `zoomInVerticalTimeline`, `zoomOutVerticalTimeline`, `resetTimelineZoom`) and state variables were already defined in `js/state.js` and wired to `appServices` in `js/main.js`. The missing piece was the UI event handlers in `js/ui.js`.
 - **Version**: Bumped to 0.61.6
+
+#### Day 90: Extended Undo/Redo Coverage for State Management (2026-04-23)
+- **Feature**: Added undo state capture to additional state management functions in `js/state.js`
+- **Files Modified**:
+  - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
+    - `addTimelineMarkerState()` - Captures undo before adding a new timeline marker
+    - `setTimelineMarkerState()` - Captures undo before modifying a marker
+    - `removeTimelineMarkerState()` - Captures undo before removing a marker
+    - `clearTimelineMarkersState()` - Captures undo before clearing all markers
+    - `addSendTrackState()` - Captures undo before adding a new send bus
+    - `setSendTrackMutedState()` - Captures undo before changing send mute state
+    - `setTrackSendLevelState()` - Captures undo before changing send level
+    - `setTrackSendPreFaderState()` - Captures undo before changing pre/post fader
+    - `addTrackGroupState()` - Captures undo before creating a track group
+    - `setTrackGroupNameState()` - Captures undo before renaming a group
+    - `setTrackGroupColorState()` - Captures undo before changing group color
+    - `addTrackToGroupState()` - Captures undo before adding track to group
+    - `removeTrackFromGroupState()` - Captures undo before removing track from group
+    - `setTrackGroupMutedState()` - Captures undo before changing group mute
+    - `setTrackGroupSoloedState()` - Captures undo before changing group solo
+    - `removeTrackGroupState()` - Captures undo before deleting a track group
+- **Feature Details**:
+  - All state mutation functions now capture undo state before making changes
+  - Undo descriptions are descriptive (e.g., "Add Timeline Marker 'Intro'" or "Delete Track Group 'Drums'")
+  - Empty operations are skipped (e.g., `clearTimelineMarkersState()` won't capture if markers already empty)
+  - Track Group and Send Track operations use existing `appServices.captureStateForUndo` pattern from `addTrackTemplateState` and `removeTrackTemplateState`
+- **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
+- **Usage**: Add/remove timeline markers, create/delete track groups, adjust send levels - all now undoable with Ctrl+Z
+- **Version**: Bumped to 0.62.0

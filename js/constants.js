@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.61.6'; // Day 89: Timeline Zoom UI Fixes
+export const APP_VERSION = '0.62.0'; // Day 90: Extended Undo/Redo Coverage
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
