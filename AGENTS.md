@@ -862,3 +862,22 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The recording state management functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.6
+
+#### Day 66: Send Tracks/Track Groups/Timeline Markers State Tests (2026-04-23)
+- **Feature**: Added 18 new unit tests for send tracks, track groups, and timeline markers state management
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The state management functions for Send Tracks, Track Groups, and Timeline Markers lacked unit test coverage.
+- **Files Modified**:
+  - `js/tests.js`: Added new imports and 18 new tests:
+    - Send Tracks tests: getSendTracksState, getTrackSendsState, getTrackSendLevelState, addSendTrackState, setSendTrackMutedState, getSendTrackByIdState
+    - Track Groups tests: getTrackGroupsState, addTrackGroupState, getTrackGroupByIdState, setTrackGroupNameState
+    - Timeline Markers tests: getTimelineMarkersState, addTimelineMarkerState, getTimelineMarkerByIdState, removeTimelineMarkerState
+  - `js/constants.js`: Bumped APP_VERSION to 0.58.7
+- **Feature Details**:
+  - Tests import and validate state functions from `js/state.js`
+  - Tests verify getter functions return correct types (array, object, number)
+  - Tests verify state setters work correctly via roundtrip validation
+  - Tests verify create/find/update/remove operations for all three state types
+  - Total test count increased from 97 to 115 tests
+- **Backend Note**: The send tracks state manages auxiliary send buses for effects routing. Track groups allow grouping related tracks. Timeline markers allow marking positions on the timeline ruler.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.58.7
