@@ -2,6 +2,12 @@
 // Run tests by opening browser console and calling: (await import('./js/tests.js')).runTests()
 
 import { TestRunner } from './testRunner.js';
+import {
+    getUndoStackState,
+    getRedoStackState,
+    undoLastActionInternal,
+    redoLastActionInternal
+} from './state.js';
 
 // ============================================
 // Constants Tests
@@ -529,6 +535,54 @@ TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE instrument settings de
     const def = DEFAULT_TRACK_TEMPLATE;
     t.assertEqual(def.instrumentSamplerSettings, null, 'instrumentSamplerSettings should be null');
     t.assertEqual(def.drumSamplerPads, null, 'drumSamplerPads should be null');
+});
+
+// ============================================
+// Day 64: Undo/Redo System Tests
+// ============================================
+TestRunner.test('Undo/Redo - MAX_HISTORY_STATES is reasonable', (t) => {
+    t.assertEqual(MAX_HISTORY_STATES, 50, 'Max history states should be 50');
+    t.assertTruthy(MAX_HISTORY_STATES >= 10, 'Max history states should be at least 10');
+    t.assertTruthy(MAX_HISTORY_STATES <= 200, 'Max history states should be at most 200');
+});
+
+TestRunner.test('Undo/Redo - getUndoStackState returns array', (t) => {
+    // getUndoStackState is imported from state.js, verify it returns an array
+    const stack = getUndoStackState();
+    t.assertTruthy(Array.isArray(stack), 'Undo stack should be an array');
+});
+
+TestRunner.test('Undo/Redo - getRedoStackState returns array', (t) => {
+    const stack = getRedoStackState();
+    t.assertTruthy(Array.isArray(stack), 'Redo stack should be an array');
+});
+
+TestRunner.test('Undo/Redo - undoStack starts empty on init', (t) => {
+    const stack = getUndoStackState();
+    t.assertEqual(stack.length, 0, 'Undo stack should start empty for new project');
+});
+
+TestRunner.test('Undo/Redo - redoStack starts empty on init', (t) => {
+    const stack = getRedoStackState();
+    t.assertEqual(stack.length, 0, 'Redo stack should start empty for new project');
+});
+
+TestRunner.test('Undo/Redo - undoLastActionInternal function exists', (t) => {
+    t.assertTruthy(typeof undoLastActionInternal === 'function', 'undoLastActionInternal should be a function');
+});
+
+TestRunner.test('Undo/Redo - redoLastActionInternal function exists', (t) => {
+    t.assertTruthy(typeof redoLastActionInternal === 'function', 'redoLastActionInternal should be a function');
+});
+
+TestRunner.test('Undo/Redo - undoLastActionInternal is async', (t) => {
+    const fn = undoLastActionInternal;
+    t.assertTruthy(fn.constructor.name === 'AsyncFunction', 'undoLastActionInternal should be async');
+});
+
+TestRunner.test('Undo/Redo - redoLastActionInternal is async', (t) => {
+    const fn = redoLastActionInternal;
+    t.assertTruthy(fn.constructor.name === 'AsyncFunction', 'redoLastActionInternal should be async');
 });
 
 // ============================================
