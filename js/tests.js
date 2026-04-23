@@ -424,6 +424,47 @@ TestRunner.test('Recording - Min recording length is reasonable', (t) => {
 });
 
 // ============================================
+// Track Template Constants Tests (Day 61)
+// ============================================
+TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES is 32', (t) => {
+    t.assertEqual(MAX_TRACK_TEMPLATES, 32, 'Max templates should be 32');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is Template', (t) => {
+    t.assertEqual(DEFAULT_TEMPLATE_NAME_PREFIX, 'Template', 'Default prefix should be Template');
+});
+
+TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS uses TRACK_COLORS', (t) => {
+    t.assertEqual(TRACK_TEMPLATE_COLORS, TRACK_COLORS, 'Template colors should match track colors');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex', (t) => {
+    t.assertTruthy(DEFAULT_TRACK_TEMPLATE_COLOR.startsWith('#'), 'Template color should be hex');
+    t.assertTruthy(TRACK_COLORS.includes(DEFAULT_TRACK_TEMPLATE_COLOR), 'Template color should be in track colors');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE structure', (t) => {
+    const def = DEFAULT_TRACK_TEMPLATE;
+    t.assertEqual(def.name, DEFAULT_TEMPLATE_NAME_PREFIX, 'Name should match prefix');
+    t.assertEqual(def.color, DEFAULT_TRACK_TEMPLATE_COLOR, 'Color should match default');
+    t.assertEqual(def.type, 'Synth', 'Default type should be Synth');
+    t.assertTruthy(typeof def.synthParams === 'object', 'synthParams should be object');
+    t.assertTruthy(Array.isArray(def.activeEffects), 'activeEffects should be array');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has no automation by default', (t) => {
+    const def = DEFAULT_TRACK_TEMPLATE;
+    t.assertEqual(def.hasAutomation, false, 'Has automation should be false');
+    t.assertTruthy(Array.isArray(def.automationLanes), 'automationLanes should be array');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE instrument settings default to null', (t) => {
+    const def = DEFAULT_TRACK_TEMPLATE;
+    t.assertEqual(def.instrumentSamplerSettings, null, 'instrumentSamplerSettings should be null');
+    t.assertEqual(def.drumSamplerPads, null, 'drumSamplerPads should be null');
+});
+
+// ============================================
 // Run all tests function
 // ============================================
 export async function runTests(showNotification = null) {
