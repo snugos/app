@@ -855,7 +855,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Feature Details**:
   - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
   - Tests validate input gain range (0-2.0, with default 1.0)
-  - Tests validate monitoring volume (0-1 range)
+  - Tests validate monitoring volume range (0-1 range)
   - Tests validate recording length limits (0.1s min, 600s max)
   - Tests validate audio processing constraints are disabled for clean recording
   - Total test count increased from 168 to 179 tests
@@ -911,6 +911,9 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate ID generation format (`mastereffect_${type}_${timestamp}_${random}`)
   - Tests validate param path updates (e.g., 'decay', 'frequency')
   - All tests properly clean up by removing effects after verification
+  - Total test count increased from 219 to 221 tests
 - **Backend Note**: These state functions are used throughout the application for managing the master effects chain. The tests verify the state API without requiring full audio context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.9
+
+#### Day 77: Fade Curve Constants Tests (2026-04-23)
