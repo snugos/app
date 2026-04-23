@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.60.4'; // Day 83: Recording State Wiring Fix
+export const APP_VERSION = '0.60.5'; // Day 84: Automation Lane Tests
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

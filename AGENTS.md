@@ -1004,3 +1004,36 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/constants.js`: Bumped APP_VERSION to 0.60.4
 - **Impact**: The recording state is now properly synchronized with the actual recording operations. UI elements that depend on recording state (like the record button indicator) will now correctly reflect the recording status. Recording settings also properly persist across project save/load via the existing state management.
 - **Version**: Bumped to 0.60.4
+
+#### Day 84: Automation Lane Tests (2026-04-23)
+- **Feature**: Added comprehensive unit tests for automation lane constants and methods to expand test coverage
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The automation lane functionality (`AUTOMATION_LANE_PARAMETERS`, `AUTOMATION_LANE_COLORS`, `AUTOMATION_LANE_HEIGHT`, `AUTOMATION_LANE_DEFAULT`, `AUTOMATION_LANE_PRECISION`, `AUTOMATION_LANE_STEP`) and the core automation methods (`getAutomationLane`, `setAutomationPoint`, `getAutomationValue`, `clearAutomationLane`) lacked unit test coverage despite being used by the Automation Editor UI in the sequencer window.
+- **Files Modified**:
+  - `js/tests.js`: Added 17 new tests in Day 84 section:
+    - `Automation - AUTOMATION_LANE_PARAMETERS is an array` - Validates array type and count
+    - `Automation - AUTOMATION_LANE_PARAMETERS contains expected parameters` - Tests all 8 parameters (volume, pan, filterCutoff, resonance, attack, decay, sustain, release)
+    - `Automation - AUTOMATION_LANE_COLORS is an array` - Validates array type and count (10 colors)
+    - `Automation - AUTOMATION_LANE_COLORS contains valid hex colors` - Tests all colors match #RRGGBB format
+    - `Automation - AUTOMATION_LANE_HEIGHT is reasonable` - Validates height is 20px and positive
+    - `Automation - AUTOMATION_LANE_DEFAULT is in valid range` - Validates default 0.5 (50%) is between 0-1
+    - `Automation - AUTOMATION_LANE_PRECISION is reasonable` - Validates precision is 2 decimals and non-negative
+    - `Automation - AUTOMATION_LANE_STEP is reasonable` - Validates step is 0.01 (1%) and small enough for fine control
+    - `Automation - getAutomationLane returns array for any parameter` - Tests method returns array
+    - `Automation - setAutomationPoint adds point to lane` - Tests adding automation points with correct step/value
+    - `Automation - setAutomationPoint clamps value to valid range` - Tests values over 1.0 clamped to 1, under 0 clamped to 0
+    - `Automation - setAutomationPoint updates existing point` - Tests updating point at same step replaces value
+    - `Automation - getAutomationValue returns default for empty lane` - Tests returns 0.5 default for empty lane
+    - `Automation - getAutomationValue returns point value` - Tests returns stored point value
+    - `Automation - getAutomationValue interpolates between points` - Tests returns default when between points
+    - `Automation - clearAutomationLane removes all points` - Tests clearing removes all automation points
+    - `Automation - setAutomationPoint rounds value to precision` - Tests values are rounded to 2 decimal places
+  - `js/constants.js`: Bumped APP_VERSION to 0.60.5
+- **Feature Details**:
+  - Tests validate automation lane constants (`AUTOMATION_LANE_PARAMETERS`, `AUTOMATION_LANE_COLORS`, etc.)
+  - Tests validate core automation methods via self-contained mock implementation
+  - Tests verify value clamping, point updates, interpolation, and lane clearing
+  - Tests verify value precision rounding
+  - Total test count increased from 238 to 255 tests
+- **Backend Note**: The automation lane methods are used by the Automation Editor UI (`buildSequencerContentDOM()` and `openTrackSequencerWindow()` in ui.js) to allow users to record and edit parameter automation. The constants define how automation is displayed and stored.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.60.5

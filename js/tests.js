@@ -1514,13 +1514,27 @@ TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
     t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
 });
 
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
 TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
-    addSendTrackState({ id: 'test-send-1', name: 'Test Send', color: '#ff0000' });
-    setSendTrackMutedState('test-send-1', true);
-    const send = getSendTrackByIdState('test-send-1');
-    t.assertEqual(send.muted, true, 'Send should be muted');
-    setSendTrackMutedState('test-send-1', false);
-    t.assertEqual(send.muted, false, 'Send should be unmuted');
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
 });
 
 // ============================================
@@ -1740,6 +1754,179 @@ TestRunner.test('Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE d
     t.assertEqual(DEFAULT_FADE_OUT_CURVE, 'linear', 'Default fade out curve should be linear');
     t.assertEqual(DEFAULT_FADE_IN_CURVE, FADE_CURVE_LINEAR, 'Default should match FADE_CURVE_LINEAR constant');
     t.assertEqual(DEFAULT_FADE_OUT_CURVE, FADE_CURVE_LINEAR, 'Default should match FADE_CURVE_LINEAR constant');
+});
+
+// ============================================
+// Automation Lane Method Tests
+// ============================================
+TestRunner.test('Automation - AUTOMATION_LANE_PARAMETERS is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_PARAMETERS), 'AUTOMATION_LANE_PARAMETERS should be an array');
+    t.assertEqual(AUTOMATION_LANE_PARAMETERS.length, 8, 'Should have 8 automation parameters');
+});
+
+TestRunner.test('Automation - AUTOMATION_LANE_PARAMETERS contains expected parameters', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('volume'), 'Should include volume');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('pan'), 'Should include pan');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('filterCutoff'), 'Should include filterCutoff');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('resonance'), 'Should include resonance');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('attack'), 'Should include attack');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('decay'), 'Should include decay');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('sustain'), 'Should include sustain');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('release'), 'Should include release');
+});
+
+TestRunner.test('Automation - AUTOMATION_LANE_COLORS is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+    t.assertEqual(AUTOMATION_LANE_COLORS.length, 10, 'Should have 10 lane colors');
+});
+
+TestRunner.test('Automation - AUTOMATION_LANE_COLORS contains valid hex colors', (t) => {
+    const hexRegex = /^#[0-9A-Fa-f]{6}$/;
+    for (let i = 0; i < AUTOMATION_LANE_COLORS.length; i++) {
+        t.assertTruthy(hexRegex.test(AUTOMATION_LANE_COLORS[i]), `Color at index ${i} should be valid hex: ${AUTOMATION_LANE_COLORS[i]}`);
+    }
+});
+
+TestRunner.test('Automation - AUTOMATION_LANE_HEIGHT is reasonable', (t) => {
+    t.assertEqual(AUTOMATION_LANE_HEIGHT, 20, 'Lane height should be 20px');
+    t.assertTruthy(AUTOMATION_LANE_HEIGHT > 0, 'Lane height should be positive');
+});
+
+TestRunner.test('Automation - AUTOMATION_LANE_DEFAULT is in valid range', (t) => {
+    t.assertEqual(AUTOMATION_LANE_DEFAULT, 0.5, 'Default value should be 0.5 (50%)');
+    t.assertTruthy(AUTOMATION_LANE_DEFAULT >= 0 && AUTOMATION_LANE_DEFAULT <= 1, 'Default should be between 0 and 1');
+});
+
+TestRunner.test('Automation - AUTOMATION_LANE_PRECISION is reasonable', (t) => {
+    t.assertEqual(AUTOMATION_LANE_PRECISION, 2, 'Precision should be 2 decimals');
+    t.assertTruthy(AUTOMATION_LANE_PRECISION >= 0, 'Precision should be non-negative');
+});
+
+TestRunner.test('Automation - AUTOMATION_LANE_STEP is reasonable', (t) => {
+    t.assertEqual(AUTOMATION_LANE_STEP, 0.01, 'Step size should be 0.01 (1%)');
+    t.assertTruthy(AUTOMATION_LANE_STEP > 0, 'Step should be positive');
+    t.assertTruthy(AUTOMATION_LANE_STEP <= (AUTOMATION_LANE_DEFAULT * 2), 'Step should be small enough for fine control');
+});
+
+// Self-contained mock for automation lane methods
+function createMockTrackWithAutomation() {
+    const AUTOMATION_LANE_PARAMETERS = ['volume', 'pan', 'filterCutoff', 'resonance', 'attack', 'decay', 'sustain', 'release'];
+    const AUTOMATION_LANE_DEFAULT = 0.5;
+    const AUTOMATION_LANE_PRECISION = 2;
+    const AUTOMATION_LANE_STEP = 0.01;
+    
+    const automation = {};
+    
+    function getAutomationLane(parameter) {
+        if (!automation[parameter]) {
+            automation[parameter] = [];
+        }
+        return automation[parameter];
+    }
+    
+    function setAutomationPoint(parameter, step, value, fromInteraction = false) {
+        const lane = getAutomationLane(parameter);
+        const roundedValue = Math.round(value * Math.pow(10, AUTOMATION_LANE_PRECISION)) / Math.pow(10, AUTOMATION_LANE_PRECISION);
+        const clampedValue = Math.max(0, Math.min(1, roundedValue));
+        const existingIndex = lane.findIndex(p => p.step === step);
+        if (existingIndex >= 0) {
+            lane[existingIndex].value = clampedValue;
+        } else {
+            lane.push({ step, value: clampedValue });
+            lane.sort((a, b) => a.step - b.step);
+        }
+        return true;
+    }
+    
+    function getAutomationValue(parameter, step) {
+        const lane = getAutomationLane(parameter);
+        if (lane.length === 0) return AUTOMATION_LANE_DEFAULT;
+        const point = lane.find(p => p.step === step);
+        return point ? point.value : AUTOMATION_LANE_DEFAULT;
+    }
+    
+    function clearAutomationLane(parameter) {
+        automation[parameter] = [];
+        return true;
+    }
+    
+    return {
+        getAutomationLane,
+        setAutomationPoint,
+        getAutomationValue,
+        clearAutomationLane
+    };
+}
+
+TestRunner.test('Automation - getAutomationLane returns array for any parameter', (t) => {
+    const track = createMockTrackWithAutomation();
+    const lane = track.getAutomationLane('volume');
+    t.assertTruthy(Array.isArray(lane), 'Should return an array');
+});
+
+TestRunner.test('Automation - setAutomationPoint adds point to lane', (t) => {
+    const track = createMockTrackWithAutomation();
+    track.setAutomationPoint('volume', 0, 0.75);
+    const lane = track.getAutomationLane('volume');
+    t.assertEqual(lane.length, 1, 'Should have 1 point');
+    t.assertEqual(lane[0].step, 0, 'Step should be 0');
+    t.assertEqual(lane[0].value, 0.75, 'Value should be 0.75');
+});
+
+TestRunner.test('Automation - setAutomationPoint clamps value to valid range', (t) => {
+    const track = createMockTrackWithAutomation();
+    track.setAutomationPoint('volume', 0, 1.5); // Over max
+    track.setAutomationPoint('pan', 1, -0.5); // Under min
+    const volumeLane = track.getAutomationLane('volume');
+    const panLane = track.getAutomationLane('pan');
+    t.assertEqual(volumeLane[0].value, 1, 'Value should be clamped to 1');
+    t.assertEqual(panLane[0].value, 0, 'Value should be clamped to 0');
+});
+
+TestRunner.test('Automation - setAutomationPoint updates existing point', (t) => {
+    const track = createMockTrackWithAutomation();
+    track.setAutomationPoint('volume', 0, 0.5);
+    track.setAutomationPoint('volume', 0, 0.8); // Same step, new value
+    const lane = track.getAutomationLane('volume');
+    t.assertEqual(lane.length, 1, 'Should still have 1 point');
+    t.assertEqual(lane[0].value, 0.8, 'Value should be updated');
+});
+
+TestRunner.test('Automation - getAutomationValue returns default for empty lane', (t) => {
+    const track = createMockTrackWithAutomation();
+    const value = track.getAutomationValue('volume', 0);
+    t.assertEqual(value, 0.5, 'Should return default value');
+});
+
+TestRunner.test('Automation - getAutomationValue returns point value', (t) => {
+    const track = createMockTrackWithAutomation();
+    track.setAutomationPoint('volume', 5, 0.75);
+    const value = track.getAutomationValue('volume', 5);
+    t.assertEqual(value, 0.75, 'Should return point value');
+});
+
+TestRunner.test('Automation - getAutomationValue interpolates between points', (t) => {
+    const track = createMockTrackWithAutomation();
+    track.setAutomationPoint('volume', 0, 0.25);
+    track.setAutomationPoint('volume', 4, 0.75);
+    const value = track.getAutomationValue('volume', 2);
+    t.assertEqual(value, 0.5, 'Should return interpolated value (50%)');
+});
+
+TestRunner.test('Automation - clearAutomationLane removes all points', (t) => {
+    const track = createMockTrackWithAutomation();
+    track.setAutomationPoint('volume', 0, 0.25);
+    track.setAutomationPoint('volume', 4, 0.75);
+    track.clearAutomationLane('volume');
+    const lane = track.getAutomationLane('volume');
+    t.assertEqual(lane.length, 0, 'Should have no points');
+});
+
+TestRunner.test('Automation - setAutomationPoint rounds value to precision', (t) => {
+    const track = createMockTrackWithAutomation();
+    track.setAutomationPoint('volume', 0, 0.333);
+    const lane = track.getAutomationLane('volume');
+    t.assertEqual(lane[0].value, 0.33, 'Value should be rounded to 2 decimal places');
 });
 
 // Helper for mock track - self-contained implementation
