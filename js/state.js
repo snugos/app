@@ -51,25 +51,24 @@ let metronomeVolume = 0.5; // Default volume (0-1 range)
 // Loop Region State
 let loopRegionState = { ...Constants.DEFAULT_LOOP_REGION };
 
+export function getLoopRegionState() { return { ...loopRegionState }; }
+export function setLoopRegionState(state) { loopRegionState = { ...state }; }
+export function getLoopRegionEnabledState() { return loopRegionState.enabled; }
+export function setLoopRegionEnabledState(enabled) { loopRegionState.enabled = !!enabled; }
+export function getLoopRegionStartBarState() { return loopRegionState.startBar; }
+export function setLoopRegionStartBarState(bar) { loopRegionState.startBar = Math.max(1, parseInt(bar) || 1); }
+export function getLoopRegionEndBarState() { return loopRegionState.endBar; }
+export function setLoopRegionEndBarState(bar) { loopRegionState.endBar = Math.max(loopRegionState.startBar, parseInt(bar) || 4); }
+
 // Swing/Groove State
 let swingState = { ...Constants.DEFAULT_SWING };
 
-// Send Tracks State (Aux Buses)
-let sendTracksState = []; // Array of { id, name, effects, level, muted }
-let sendTrackIdCounter = 0;
-let trackSendsState = {}; // Map: trackId -> { sendId: level } (level 0-1.2, 0 = off)
-
-// Track Groups State (for organizing/busing multiple tracks)
-let trackGroupsState = []; // Array of { id, name, color, trackIds: [], muted: false, soloed: false }
-let trackGroupIdCounter = 0;
-
-// Track Templates State (for saving/loading track configurations)
-let trackTemplatesState = []; // Array of template objects
-let trackTemplateIdCounter = 0;
-
-// Undo/Redo
-let undoStack = [];
-let redoStack = [];
+export function getSwingState() { return { ...swingState }; }
+export function setSwingState(state) { swingState = { ...state }; }
+export function getSwingEnabledState() { return swingState.enabled; }
+export function setSwingEnabledState(enabled) { swingState.enabled = !!enabled; }
+export function getSwingAmountState() { return swingState.amount; }
+export function setSwingAmountState(amount) { swingState.amount = Math.max(0, Math.min(100, parseInt(amount) || 0)); }
 
 // --- AppServices Placeholder (will be populated by main.js) ---
 let appServices = {}; // Populated by initializeStateModule

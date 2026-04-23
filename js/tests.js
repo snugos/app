@@ -870,3 +870,211 @@ export function getTestRunner() {
 if (typeof window !== 'undefined') {
     window.runSnugOSTests = runTests;
 }
+
+// ============================================
+// Day 70: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
+});
+
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
+});
+
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
+});
+
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
