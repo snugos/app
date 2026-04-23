@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.54.0"; // Day 56: Audio Recording Constants - Added recording-related constants
+export const APP_VERSION = "0.55.0"; // Day 57: Timeline Freeze/Bounce UI - Added Freeze Track and Bounce Track to timeline context menu
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

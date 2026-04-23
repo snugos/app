@@ -3073,6 +3073,52 @@ export function renderTimeline() {
             });
 
             menuItems.push({ separator: true });
+
+            // Freeze Track option (only for non-Audio tracks with sequence clips)
+            if (track.type !== 'Audio' && track.sequences && track.sequences.length > 0) {
+                menuItems.push({
+                    label: 'Freeze Track',
+                    action: () => {
+                        if (track.freezeTrack) {
+                            track.freezeTrack().then(result => {
+                                if (result) {
+                                    showNotification(`Track "${track.name}" frozen successfully`, 2000);
+                                }
+                            }).catch(err => {
+                                showNotification(`Freeze failed: ${err.message}`, 3000);
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Bounce Track option (available for all track types with content)
+            if ((track.timelineClips && track.timelineClips.length > 0) || (track.sequences && track.sequences.length > 0)) {
+                menuItems.push({
+                    label: 'Bounce Track',
+                    action: () => {
+                        if (track.bounceTrack) {
+                            track.bounceTrack().then(blob => {
+                                if (blob) {
+                                    // Download the bounced audio
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `${track.name}_bounce.wav`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                    URL.revokeObjectURL(url);
+                                    showNotification(`Track "${track.name}" bounced and downloaded`, 2000);
+                                }
+                            }).catch(err => {
+                                showNotification(`Bounce failed: ${err.message}`, 3000);
+                            });
+                        }
+                    }
+                });
+            }
+
             menuItems.push({
                 label: 'Track Settings',
                 action: () => {
