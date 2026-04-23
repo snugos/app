@@ -269,16 +269,41 @@ export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; 
 export function getClipboardDataState() { return clipboardDataGlobal; }
 
 export function getArmedTrackIdState() { return armedTrackId; }
-export function setArmedTrackIdState(id) { armedTrackId = id !== undefined && id !== null ? id : null; }
+export function setArmedTrackIdState(id) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Armed Track`);
+    }
+    armedTrackId = id !== undefined && id !== null ? id : null; 
+}
 export function getSoloedTrackIdState() { return soloedTrackId; }
-export function setSoloedTrackIdState(id) { soloedTrackId = id !== undefined && id !== null ? id : null; }
+export function setSoloedTrackIdState(id) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Soloed Track`);
+    }
+    soloedTrackId = id !== undefined && id !== null ? id : null; 
+}
 export function isTrackRecordingState() { return isRecordingGlobal; }
 export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
 export function getRecordingStartTimeState() { return recordingStartTime; }
-export function setIsRecordingState(val) { isRecordingGlobal = !!val; }
-export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
-export function setRecordingStartTimeState(t) { recordingStartTime = t; }
-export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
+export function setIsRecordingState(val) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Recording State`);
+    }
+    isRecordingGlobal = !!val; 
+}
+export function setRecordingTrackIdState(id) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Recording Track`);
+    }
+    recordingTrackIdGlobal = id; 
+}
+export function setRecordingStartTimeState(t) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Recording Start Time`);
+    }
+    recordingStartTime = t; 
+}
+
 export function getUndoStackState() { return undoStack; }
 export function getRedoStackState() { return redoStack; }
 export function getPlaybackModeState() { return globalPlaybackMode; }

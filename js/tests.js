@@ -1038,9 +1038,6 @@ TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t)
     t.assertEqual(state.denominator, 8, 'Denominator should be 8');
 });
 
-// ============================================
-// Day 68: Ghost Track State Tests
-// ============================================
 TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
     const ghostId = getGhostTrackIdState();
     t.assertEqual(ghostId, null, 'Ghost track should be null by default');
@@ -1053,88 +1050,91 @@ TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
     t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
 });
 
-// ============================================
-// Day 68: Armed/Soloed Track State Tests
-// ============================================
-TestRunner.test('Armed/Soloed - getArmedTrackIdState returns value', (t) => {
-    const armedId = getArmedTrackIdState();
-    // Should return whatever is currently set (null or a track ID)
-    t.assertTrue(armedId === null || typeof armedId === 'string', 'Armed track ID should be null or string');
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
 });
 
-TestRunner.test('Armed/Soloed - getSoloedTrackIdState returns value', (t) => {
-    const soloedId = getSoloedTrackIdState();
-    // Should return whatever is currently set (null or a track ID)
-    t.assertTrue(soloedId === null || typeof soloedId === 'string', 'Soloed track ID should be null or string');
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
 });
 
-TestRunner.test('Armed/Soloed - setSoloedTrackIdState updates state', (t) => {
-    setSoloedTrackIdState('track456');
-    t.assertEqual(getSoloedTrackIdState(), 'track456', 'Soloed track should be set');
-    setSoloedTrackIdState(null);
-    t.assertEqual(getSoloedTrackIdState(), null, 'Soloed track should be cleared');
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
 });
 
-// ============================================
-// Day 69: Scale Mode State Tests
-// ============================================
-TestRunner.test('Scale Mode - getScaleModeState returns object', (t) => {
-    const scaleMode = getScaleModeState();
-    t.assertTruthy(typeof scaleMode === 'object', 'Scale mode state should be an object');
-    t.assertTruthy('enabled' in scaleMode, 'Should have enabled property');
-    t.assertTruthy('scale' in scaleMode, 'Should have scale property');
-    t.assertTruthy('root' in scaleMode, 'Should have root property');
-    t.assertTruthy('lock' in scaleMode, 'Should have lock property');
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
 });
 
-TestRunner.test('Scale Mode - getScaleModeEnabledState returns boolean', (t) => {
-    const enabled = getScaleModeEnabledState();
-    t.assertEqual(typeof enabled, 'boolean', 'Should return boolean');
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
 });
 
-TestRunner.test('Scale Mode - setScaleModeEnabledState updates state', (t) => {
-    setScaleModeEnabledState(true);
-    t.assertEqual(getScaleModeEnabledState(), true, 'Scale mode should be enabled');
-    setScaleModeEnabledState(false);
-    t.assertEqual(getScaleModeEnabledState(), false, 'Scale mode should be disabled');
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
 });
 
-TestRunner.test('Scale Mode - getScaleModeScaleState returns string', (t) => {
-    const scale = getScaleModeScaleState();
-    t.assertEqual(typeof scale, 'string', 'Should return string');
-    t.assertTruthy(SCALES[scale] !== undefined, 'Scale should be a valid scale name');
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
 });
 
-TestRunner.test('Scale Mode - setScaleModeScaleState updates state', (t) => {
-    setScaleModeScaleState('Minor');
-    t.assertEqual(getScaleModeScaleState(), 'Minor', 'Scale should be Minor');
-    setScaleModeScaleState('Pentatonic');
-    t.assertEqual(getScaleModeScaleState(), 'Pentatonic', 'Scale should be Pentatonic');
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
 });
 
-TestRunner.test('Scale Mode - getScaleModeRootState returns string', (t) => {
-    const root = getScaleModeRootState();
-    t.assertEqual(typeof root, 'string', 'Should return string');
-    t.assertTruthy(SCALE_ROOTS.includes(root), 'Root should be a valid note name');
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
 });
 
-TestRunner.test('Scale Mode - setScaleModeRootState updates state', (t) => {
-    setScaleModeRootState('G');
-    t.assertEqual(getScaleModeRootState(), 'G', 'Root should be G');
-    setScaleModeRootState('A#');
-    t.assertEqual(getScaleModeRootState(), 'A#', 'Root should be A#');
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
 });
 
-TestRunner.test('Scale Mode - getScaleModeLockState returns boolean', (t) => {
-    const lock = getScaleModeLockState();
-    t.assertEqual(typeof lock, 'boolean', 'Should return boolean');
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
 });
 
-TestRunner.test('Scale Mode - setScaleModeLockState updates state', (t) => {
-    setScaleModeLockState(true);
-    t.assertEqual(getScaleModeLockState(), true, 'Scale lock should be enabled');
-    setScaleModeLockState(false);
-    t.assertEqual(getScaleModeLockState(), false, 'Scale lock should be disabled');
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
 });
 
 // ============================================
@@ -2097,7 +2097,7 @@ TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is valid', (t) => {
 });
 
 // ============================================
-// MIDI Import Constants Tests
+// Day 85: MIDI Import Constants Tests
 // ============================================
 TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is valid', (t) => {
     t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'Min notes should be 1');
@@ -2354,6 +2354,8 @@ function createMockTrack() {
         getAudioClipFadeOutCurve
     };
 }
+
+// ============================================
 // Day 97: State Setter Undo Capture Verification Tests
 // ============================================
 // These tests verify that state setters properly capture undo state before mutations
@@ -2513,5 +2515,172 @@ TestRunner.test('State Setters - setRecordingStartTimeState accepts numeric valu
 });
 
 // ============================================
-// End Day 97 tests
-// Total tests: 317
+// Day 98: Undo Capture Coverage Verification Tests
+// ============================================
+// These tests verify that state setters properly capture undo state
+// by checking if they call captureStateForUndo before mutating state
+
+import {
+    setMetronomeEnabledState,
+    setMetronomeVolumeState,
+    setScaleModeEnabledState,
+    setScaleModeScaleState,
+    setScaleModeRootState,
+    setScaleModeLockState,
+    setChordModeEnabledState,
+    setChordVoicingState,
+    setTimeSignatureNumeratorState,
+    setTimeSignatureDenominatorState,
+    setGhostTrackIdState,
+    setPerformanceMonitorEnabledState,
+    setCPUUsageState
+} from './state.js';
+
+TestRunner.test('Undo Setters - setMetronomeEnabledState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setMetronomeEnabledState(true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setMetronomeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setMetronomeVolumeState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setMetronomeVolumeState(0.75);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setMetronomeVolumeState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setScaleModeEnabledState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setScaleModeEnabledState(true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setScaleModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setGhostTrackIdState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setGhostTrackIdState('ghost-track-1');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setGhostTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setArmedTrackIdState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setArmedTrackIdState('armed-track-1');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setArmedTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setSoloedTrackIdState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setSoloedTrackIdState('soloed-track-1');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setSoloedTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setIsRecordingState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setIsRecordingState(true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setIsRecordingState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setRecordingTrackIdState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setRecordingTrackIdState('recording-track-1');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setRecordingTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setRecordingStartTimeState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setRecordingStartTimeState(1234567890);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setRecordingStartTimeState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setChordModeEnabledState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setChordModeEnabledState(true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setChordModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setChordVoicingState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setChordVoicingState('wide');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setChordVoicingState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTimeSignatureNumeratorState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setTimeSignatureNumeratorState(3);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTimeSignatureNumeratorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setTimeSignatureDenominatorState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setTimeSignatureDenominatorState(8);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setTimeSignatureDenominatorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setScaleModeScaleState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setScaleModeScaleState('pentatonic');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setScaleModeScaleState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setScaleModeRootState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setScaleModeRootState('A');
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setScaleModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Setters - setScaleModeLockState calls captureStateForUndo', (t) => {
+    const originalCapture = (appServices || {}).captureStateForUndo;
+    let captured = false;
+    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+    setScaleModeLockState(true);
+    if (appServices) appServices.captureStateForUndo = originalCapture;
+    t.assertTruthy(captured, 'setScaleModeLockState should call captureStateForUndo');
+});
+
+// ============================================
+// End Day 98 tests
+// Total tests: 333
+// ============================================

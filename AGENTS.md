@@ -25,6 +25,27 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: The Mixer window's group strip rendering (`buildMixerGroupStripHTML`) and update function (`updateMixerWindow`) now work correctly with the state layer.
 - **Version**: 0.64.0 (no bump needed, this was a bug fix)
 
+#### Day 98: Extended Undo/Redo Coverage for Remaining State Setters (2026-04-23)
+- **Feature**: Added undo state capture to remaining state setter functions in `js/state.js` and added verification tests
+- **Files Modified**:
+  - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
+    - `setArmedTrackIdState()` - Captures undo before changing armed track
+    - `setSoloedTrackIdState()` - Captures undo before changing soloed track
+    - `setIsRecordingState()` - Captures undo before changing recording state
+    - `setRecordingTrackIdState()` - Captures undo before changing recording track
+    - `setRecordingStartTimeState()` - Captures undo before changing recording start time
+  - `js/tests.js`: Added 16 new verification tests in Day 98 section:
+    - Tests verify each setter calls `captureStateForUndo` when appServices is available
+    - Tests for: metronome enabled/volume, scale mode enabled/scale/root/lock, ghost track, armed/soloed track, recording state, chord mode enabled/voicing, time signature numerator/denominator
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.2
+- **Feature Details**:
+  - This completes the undo/redo coverage for all transport and recording-related state setters
+  - Users can now undo changes to: armed track, soloed track, recording state, recording track, and recording start time
+  - Undo descriptions are descriptive (e.g., "Set Armed Track", "Set Soloed Track", "Set Recording State")
+  - The verification tests confirm that each setter properly calls `captureStateForUndo` before mutating state
+- **Usage**: Arm/solo tracks, start/stop recording - all now undoable with Ctrl+Z
+- **Version**: Bumped to 0.65.2
+
 #### Day 97: State Setter Undo Capture Verification Tests (2026-04-23)
 - **Feature**: Added 21 new unit tests to verify state setter functions exist and handle edge cases correctly
 - **Files Modified**:

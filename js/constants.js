@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.65.1'; // Day 98: MIDI Import Constants Tests - Added 7 tests validating MIDI import constants
+export const APP_VERSION = '0.65.2'; // Day 98: Undo/Redo Coverage - Added undo capture to remaining state setters, added 16 verification tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
