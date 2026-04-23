@@ -129,7 +129,7 @@ import {
     setSendBusMuted,
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
-    setTrackSendLevel as setTrackSendLevelFromAudio,
+    setTrackSendLevel: setTrackSendLevelFromAudio,
     getSendBusNodes,
     getTrackSendNodes
 } from './audio.js';
@@ -316,7 +316,7 @@ const appServices = {
     setSendBusMuted,
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
-    setTrackSendLevel as setTrackSendLevelFromAudio,
+    setTrackSendLevel: setTrackSendLevelFromAudio,
     getSendBusNodes,
     getTrackSendNodes,
     // Alias for mixer
