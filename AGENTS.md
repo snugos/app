@@ -13,6 +13,18 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
+#### Day 94: Fix Add Group Button Icon and Missing Track Group State Getters (2026-04-23)
+- **Bug Fix**: Fixed two issues with Track Groups in the Mixer window
+- **Files Modified**:
+  - `js/ui.js`: Fixed Add Group button icon from ⚙ (gear) to + to match Add Send Bus button style
+  - `js/main.js`: Added missing Track Group state getter imports:
+    - `getTrackGroupsState` - returns all track groups
+    - `getTrackGroupByIdState(id)` - returns a specific track group by ID
+- **Issue 1**: The Add Group button had a gear icon (⚙) which was confusing since gears are typically for settings/preferences, not for adding items. Changed to + to match the Add Send Bus button.
+- **Issue 2**: The Track Groups state getter functions were defined in `js/state.js` but were not imported into `js/main.js`, meaning they weren't available in `appServices`. This broke Mixer UI functionality that depends on reading track groups state.
+- **Impact**: The Mixer window's group strip rendering (`buildMixerGroupStripHTML`) and update function (`updateMixerWindow`) now work correctly with the state layer.
+- **Version**: 0.64.0 (no bump needed, this was a bug fix)
+
 #### Day 1: DrumSampler UI Implementation (2026-04-19)
 - **Feature**: Implemented complete DrumSampler UI controls
 - **Files Modified**:
@@ -963,36 +975,10 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.5
 
-#### Day 85: Track Template and MIDI Export Constants Tests (2026-04-23)
-- **Feature**: Added 12 new unit tests for Track Template and MIDI Export constants
-- **Files Modified**:
-  - `js/tests.js`: Added 12 new tests in Day 85 section (placed before CHORD_TYPES chord intervals test):
-    - `Track Templates - MAX_TRACK_TEMPLATES is reasonable` - Tests value is 32 and positive
-    - `Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is valid` - Tests value is 'Template' and non-empty
-    - `Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex` - Tests color is valid hex format
-    - `Track Templates - TRACK_TEMPLATE_COLORS is TRACK_COLORS` - Tests reference equality
-    - `Track Templates - DEFAULT_TRACK_TEMPLATE is valid object` - Tests object structure
-    - `MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is 127` - Tests MIDI standard velocity scale
-    - `MIDI Export - MIDI_DEFAULT_CHANNEL is valid` - Tests channel 0 with range 0-15
-    - `MIDI Export - MIDI_DEFAULT_PROGRAM is valid` - Tests program 0 with range 0-127
-    - `MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is reasonable` - Tests TPQN 480 with range 96-960
-    - `MIDI Export - MIDI_FILE_FORMAT is valid` - Tests format 0 with range 0-2
-    - `MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is valid` - Tests prefix is 'snugos-export'
-    - `MIDI Export - MAX_MIDI_EXPORT_TRACKS is valid` - Tests 64 (MIDI standard)
-  - `js/constants.js`: Bumped APP_VERSION to 0.61.3
-- **Feature Details**:
-  - Tests validate Track Template constants (MAX_TRACK_TEMPLATES, DEFAULT_TEMPLATE_NAME_PREFIX, etc.)
-  - Tests validate MIDI Export constants (MIDI_EXPORT_VELOCITY_SCALE, MIDI_DEFAULT_CHANNEL, etc.)
-  - Tests verify ranges, formats, and expected values match MIDI specification
-  - Total test count increased from 276 to 292 tests
-- **Backend Note**: Track Template constants define how saved track templates are managed (max 32 templates with color and naming). MIDI Export constants define how sequences are exported to Standard MIDI Files (TPQN=480, format 0, max 64 tracks).
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.61.3
-
-#### Day 86: Chord Voicing Constants Tests (2026-04-23)
+#### Day 85: Chord Voicing Constants Tests (2026-04-23)
 - **Feature**: Added 16 new unit tests for Chord Voicing constants
 - **Files Modified**:
-  - `js/tests.js`: Added 16 new tests in Day 87 section (placed after CHORD_TYPES chord intervals test):
+  - `js/tests.js`: Added 16 new tests in Day 87 section (placed before CHORD_TYPES chord intervals test):
     - `Chord Voicing - CHORD_VOICING_SPREAD is an object` - Tests object exists and is not null
     - `Chord Voicing - CHORD_VOICING_SPREAD has closed voicing` - Tests closed voicing array
     - `Chord Voicing - CHORD_VOICING_SPREAD has wide voicing` - Tests wide voicing array
@@ -1021,7 +1007,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.61.4
 
-#### Day 87: Performance Monitor Constants Tests (2026-04-23)
+#### Day 86: Performance Monitor Constants Tests (2026-04-23)
 - **Feature**: Added 7 new unit tests for Performance Monitor constants
 - **Files Modified**:
   - `js/tests.js`: Added 7 new tests in Day 87 section (placed after CHORD_VOICING_SPREAD tests):
@@ -1052,7 +1038,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `zoomVOutBtn` click handler → calls `localAppServices.zoomOutVerticalTimeline()` and re-renders
 - **Version**: Bumped to 0.61.6
 
-#### Day 90: Extended Undo/Redo Coverage for State Management (2026-04-23)
+#### Day 90: Extended Undo/Redo Coverage for State Functions (2026-04-23)
 - **Feature**: Added undo state capture to additional state management functions in `js/state.js`
 - **Files Modified**:
   - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
@@ -1086,7 +1072,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Files Modified**:
   - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
     - `updateTrackTemplateState()` - Captures undo before updating template name/color/props
-    - `removeTrackTemplateState()` - Captures undo before deleting template
+    - `removeTrackTemplateState()` - Captures undo before deleting a template
     - `clearTrackTemplatesState()` - Captures undo before clearing all templates (only if non-empty)
     - `addMasterEffectToState()` - Captures undo before adding master effect
     - `removeMasterEffectFromState()` - Captures undo before removing master effect
