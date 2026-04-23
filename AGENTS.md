@@ -703,7 +703,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 #### Day 61: Track Template Constants Tests (2026-04-22)
 - **Feature**: Added 7 new unit tests for Track Template constants to expand test coverage
 - **Files Modified**:
-  - `js/tests.js`: Added Track Template Constants Tests section with 7 tests:
+  - `js/tests.js`: Added 7 new tests for Track Template constants:
     - `Track Templates - MAX_TRACK_TEMPLATES is 32`
     - `Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is Template`
     - `Track Templates - TRACK_TEMPLATE_COLORS uses TRACK_COLORS`
@@ -901,41 +901,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.2
 
-#### Day 80: MIDI Export Feature (2026-04-23)
-- **Feature**: Added MIDI Export functionality to export sequences as Standard MIDI Files
-- **Files Modified**:
-  - `js/constants.js`: Added MIDI Export constants:
-    - `MIDI_EXPORT_VELOCITY_SCALE` (127) - Scale velocity from 0-1 to 0-127
-    - `MIDI_DEFAULT_CHANNEL` (0) - Default MIDI channel
-    - `MIDI_DEFAULT_PROGRAM` (0) - Default program change
-    - `MIDI_EXPORT_TicksPerQuarterNote` (480) - Standard resolution for MIDI files
-    - `MIDI_FILE_FORMAT` (0) - Single track format
-    - `DEFAULT_MIDI_EXPORT_FILENAME_PREFIX` - Default filename prefix
-    - `MAX_MIDI_EXPORT_TRACKS` (64) - MIDI standard max tracks
-  - `js/state.js`: Added `exportToMidiInternal()` function:
-    - Collects all notes from all tracks (Synth, InstrumentSampler, Sampler, DrumSampler)
-    - Converts note data (pitch, velocity, duration) to MIDI events
-    - Builds Standard MIDI File format 0 with tempo and time signature events
-    - Includes Note On/Off events with proper delta timing
-    - Downloads exported file as .mid file
-  - `js/eventHandlers.js`: Added:
-    - `menuExportMidi` handler in `menuActions` object
-    - `Ctrl+E` keyboard shortcut for quick MIDI export
-  - `js/main.js`: Added `exportToMidi: exportToMidiInternal` to appServices
-  - `index.html`: Added "Export to MIDI" menu item
-- **Feature Details**:
-  - Exports all notes from all tracks to a single MIDI file (Format 0)
-  - Preserves tempo and time signature in the MIDI file
-  - Converts note velocities (0-1 range to 0-127 MIDI velocity)
-  - Supports all track types with sequences: Synth, InstrumentSampler, Sampler, DrumSampler
-  - Pitch mapping: Synth rows map to MIDI notes, DrumSampler pads map to MIDI notes 36-43
-  - Downloads with timestamped filename (e.g., snugos-export-2026-04-23T06-35-00.mid)
-- **Usage**: 
-  - Menu: Start > Export to MIDI
-  - Keyboard: Ctrl+E
-- **Version**: Bumped to 0.60.0
-
-#### Day 81: Test Runner runTests Export Fix (2026-04-23)
+#### Day 80: Test Runner runTests Export Fix (2026-04-23)
 - **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
 - **Files Modified**:
   - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
@@ -944,7 +910,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.3
 
-#### Day 82: Test Runner runTests Export Fix (2026-04-23)
+#### Day 81: Test Runner runTests Export Fix (2026-04-23)
 - **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
 - **Files Modified**:
   - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
@@ -1000,7 +966,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 #### Day 85: Track Template and MIDI Export Constants Tests (2026-04-23)
 - **Feature**: Added 12 new unit tests for Track Template and MIDI Export constants
 - **Files Modified**:
-  - `js/tests.js`: Added 12 new tests in Day 85 section (placed before Automation Lane Method Tests):
+  - `js/tests.js`: Added 12 new tests in Day 85 section (placed before CHORD_TYPES chord intervals test):
     - `Track Templates - MAX_TRACK_TEMPLATES is reasonable` - Tests value is 32 and positive
     - `Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is valid` - Tests value is 'Template' and non-empty
     - `Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex` - Tests color is valid hex format
@@ -1093,7 +1059,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `addTimelineMarkerState()` - Captures undo before adding a new timeline marker
     - `setTimelineMarkerState()` - Captures undo before modifying a marker
     - `removeTimelineMarkerState()` - Captures undo before removing a marker
-    - `clearTimelineMarkersState()` - Captures undo before clearing all markers
+    - `clearTimelineMarkersState()` - Captures undo before clearing all markers (only if non-empty)
     - `addSendTrackState()` - Captures undo before adding a new send bus
     - `setSendTrackMutedState()` - Captures undo before changing send mute state
     - `setTrackSendLevelState()` - Captures undo before changing send level
@@ -1107,13 +1073,13 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `setTrackGroupSoloedState()` - Captures undo before changing group solo
     - `removeTrackGroupState()` - Captures undo before deleting a track group
 - **Feature Details**:
-  - All state mutation functions now capture undo state before making changes
-  - Undo descriptions are descriptive (e.g., "Add Timeline Marker 'Intro'" or "Delete Track Group 'Drums'")
-  - Empty operations are skipped (e.g., `clearTimelineMarkersState()` won't capture if markers already empty)
-  - Track Group and Send Track operations use existing `appServices.captureStateForUndo` pattern from `addTrackTemplateState` and `removeTrackTemplateState`
+  - This completes the undo/redo coverage for all state mutation functions in state.js
+  - Users can now undo changes to track templates (save, update, delete) and master effects (add, remove, modify params)
+  - Undo descriptions are descriptive (e.g., "Update Track Template 'Bass Synth'" or "Remove Master Effect Reverb")
+  - The empty check for `clearTrackTemplatesState` prevents capturing when there's nothing to clear
 - **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
-- **Usage**: Add/remove timeline markers, create/delete track groups, adjust send levels - all now undoable with Ctrl+Z
-- **Version**: Bumped to 0.62.0
+- **Usage**: Save/update/delete track templates, add/remove/modify master effects - all now undoable with Ctrl+Z
+- **Version**: Bumped to 0.62.1
 
 #### Day 91: Complete Undo/Redo Coverage for Remaining State Functions (2026-04-23)
 - **Feature**: Added undo state capture to remaining state mutation functions in `js/state.js`
@@ -1170,3 +1136,24 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Menu: Start > Import MIDI...
   - The imported notes appear in a new Synth track in the sequencer
 - **Version**: Bumped to 0.63.0
+
+#### Day 93: Audio Clip Editor UI Tests (2026-04-23)
+- **Feature**: Added 8 new unit tests for Audio Clip Editor constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 8 new tests in Day 93 section:
+    - `Audio Clip Editor - crossfade constants are valid` - Tests DEFAULT_AUDIO_CLIP_CROSSFADE (0), MIN_AUDIO_CLIP_CROSSFADE (0), MAX_AUDIO_CLIP_CROSSFADE (5)
+    - `Audio Clip Editor - gain constants are valid` - Tests DEFAULT_AUDIO_CLIP_GAIN (1.0), MIN_AUDIO_CLIP_GAIN (0), MAX_AUDIO_CLIP_GAIN (4.0)
+    - `Audio Clip Editor - playback rate constants are valid` - Tests DEFAULT_AUDIO_CLIP_PLAYBACK_RATE (1.0), MIN (0.25x), MAX (4.0x)
+    - `Audio Clip Editor - start/end offset constants are valid` - Tests start offset (0), end offset (-1 = use full audio), MIN constants
+    - `Audio Clip Editor - reverse constant is boolean` - Tests DEFAULT_AUDIO_CLIP_REVERSE (false)
+    - `Audio Clip Editor - fade constants are valid` - Tests DEFAULT_AUDIO_CLIP_FADE_IN/OUT (0), MAX_AUDIO_CLIP_FADE (10)
+    - `Audio Clip Editor - FADE_CURVES array has correct options` - Tests FADE_CURVES contains ['linear', 'exponential']
+    - `Audio Clip Editor - crossfade range is reasonable` - Tests MIN >= 0, MAX <= 10s
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.1
+- **Feature Details**:
+  - Tests validate Audio Clip Editor constants for crossfade, gain, playback rate, start/end offsets, reverse, and fade parameters
+  - Tests verify ranges, defaults, and constraints are reasonable for audio editing
+  - Total test count increased from 299 to 307 tests
+- **Backend Note**: These constants are used by the Audio Clip Editor UI (`openAudioClipEditorWindow` in ui.js) to control fade, gain, playback rate, crossfade, and trim parameters for audio clips. The tests verify the configuration surface for these editing features.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.1
