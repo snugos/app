@@ -3888,8 +3888,8 @@ function buildMixerTrackStripHTML(track, sendTracks) {
         <!-- Track Color Indicator -->
         <div class="w-full h-1 rounded-sm mb-1" style="background:${track.color || '#666'};"></div>
         
-        <!-- Track Name -->
-        <div class="text-[10px] text-gray-300 truncate w-full text-center mb-1" title="${track.name}" style="border-left: 2px solid ${track.color || '#666'}; padding-left: 2px;">${track.name}</div>
+        <!-- Track Name (click to rename) -->
+        <div class="text-[10px] text-gray-300 truncate w-full text-center mb-1 mixer-track-name" title="${track.name} (double-click to rename)" style="border-left: 2px solid ${track.color || '#666'}; padding-left: 2px; cursor:pointer;" data-track-id="${track.id}" data-current-name="${track.name}">${track.name}</div>
         
         <!-- Mute/Solo/Arm Buttons -->
         <div class="flex gap-0.5 mb-1">
@@ -4301,6 +4301,21 @@ function initializeMixerEventHandlers(mixerElement) {
                             showNotification(`Created new group with "${track.name}"`, 1500);
                         }
                     }, 50);
+                }
+            });
+            
+            // Rename track
+            menuItems.push({
+                label: 'Rename Track...',
+                action: () => {
+                    const newName = prompt('Enter new track name:', track.name);
+                    if (newName && newName.trim()) {
+                        if (track.setTrackName) {
+                            track.setTrackName(newName.trim());
+                            updateMixerWindow();
+                            showNotification(`Track renamed to "${newName.trim()}"`, 1500);
+                        }
+                    }
                 }
             });
             

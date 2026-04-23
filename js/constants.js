@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.60.5'; // Day 84: Automation Lane Tests
+export const APP_VERSION = '0.61.0'; // Day 85: Mixer Track Rename Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
