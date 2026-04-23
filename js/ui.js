@@ -3059,7 +3059,7 @@ export function renderTimeline() {
                 const clipLeft = clip.startTime * pixelsPerSecond;
                 const clipWidth = clip.duration * pixelsPerSecond;
                 const clipColor = clip.color || (clip.type === 'audio' ? '#4a9eff' : '#9f4aff');
-                lanesHTML += `<div class="timeline-clip" data-clip-id="${clip.id}" style="position:absolute;top:4px;left:${clipLeft}px;width:${clipWidth}px;height:${trackHeight - 8}px;background:${clipColor};border-radius:4px;cursor:pointer;overflow:hidden;box-shadow:0 0 4px rgba(0,0,0,0.5);">
+                lanesHTML += `<div class="timeline-clip" data-clip-id="${clip.id}" data-track-id="${track.id}" draggable="true" style="position:absolute;top:4px;left:${clipLeft}px;width:${clipWidth}px;height:${trackHeight - 8}px;background:${clipColor};border-radius:4px;cursor:grab;overflow:hidden;box-shadow:0 0 4px rgba(0,0,0,0.5);">
                     <span style="padding:2px 4px;font-size:10px;color:white;text-shadow:0 1px 2px black;">${clip.name || 'Clip'}</span>
                 </div>`;
             });
@@ -3149,8 +3149,71 @@ export function renderTimeline() {
                         }
                     }
                 }},
+                { label: 'Export Clip as WAV', action: async () => {
+                    if (!trackId) return;
+                    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+                    if (!track) return;
+                    const clip = track.timelineClips?.find(c => c.id === clipId);
+                    if (!clip) return;
+                    
+                    // Get audio blob from IndexedDB
+                    if (clip.sourceId) {
+                        try {
+                            const audioBlob = await getAudio(clip.sourceId);
+                            if (audioBlob) {
+                                const url = URL.createObjectURL(audioBlob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${clip.name || 'clip'}.wav`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                                showNotification('Clip exported as WAV', 2000);
+                            } else {
+                                showNotification('No audio data found for clip', 2000);
+                            }
+                        } catch (err) {
+                            console.error('[Timeline] Export clip error:', err);
+                            showNotification('Failed to export clip', 2000);
+                        }
+                    } else {
+                        showNotification('No audio data found for clip', 2000);
+                    }
+                }},
             ];
             createContextMenu(e, menuItems, localAppServices);
+        });
+        
+        // Drag out to export clip as audio file
+        clipEl.addEventListener('dragstart', async (e) => {
+            e.stopPropagation();
+            const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+            if (!track) return;
+            const clip = track.timelineClips?.find(c => c.id === clipId);
+            if (!clip) return;
+            
+            // Store drag data for cross-window drops
+            const dragData = {
+                type: 'timeline-clip-drag',
+                clipId: clipId,
+                trackId: trackId,
+                clipName: clip.name || 'Clip'
+            };
+            e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+            e.dataTransfer.effectAllowed = 'copy';
+            
+            // For external drag-out, we'll provide the audio blob after async processing
+            if (clip.sourceId) {
+                try {
+                    const audioBlob = await getAudio(clip.sourceId);
+                    if (audioBlob) {
+                        e.dataTransfer.items.add(audioBlob);
+                    }
+                } catch (err) {
+                    console.warn('[Timeline Clip] Could not attach audio for drag-out:', err);
+                }
+            }
         });
     });
 

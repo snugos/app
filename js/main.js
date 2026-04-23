@@ -127,7 +127,7 @@ import {
     setSendBusMuted,
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
-    setTrackSendLevel,
+    setTrackSendLevel as setTrackSendLevelFromAudio,
     getSendBusNodes,
     getTrackSendNodes
 } from './audio.js';
@@ -314,7 +314,7 @@ const appServices = {
     setSendBusMuted,
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
-    setTrackSendLevel,
+    setTrackSendLevel as setTrackSendLevelFromAudio,
     getSendBusNodes,
     getTrackSendNodes,
     // Alias for mixer
@@ -662,7 +662,7 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingingDAW_flag === true, 
+    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
@@ -734,6 +734,7 @@ const appServices = {
     getTrackSendNodes
 };
 
+// --- Internal helpers (avoid name collisions) ---
 function handleTrackUIUpdate(trackId, reason, detail) {
     if (!getTrackByIdState) { console.warn("[Main UI Update] getTrackByIdState service not available."); return; }
     const track = getTrackByIdState(trackId);
