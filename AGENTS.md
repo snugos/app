@@ -928,3 +928,22 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These tests expand coverage of the state management API and constants validation. Many state functions (getPlaybackModeState, getTracksState, etc.) were already implemented but had no unit tests.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.3
+
+#### Day 71: Loop Region and Swing State Tests (2026-04-23)
+- **Feature**: Added 14 new unit tests for Loop Region and Swing state management functions
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Loop Region and Swing state management functions lacked unit test coverage despite being used by the UI since Day 14.
+- **Files Modified**:
+  - `js/tests.js`: Added new imports and 14 new tests:
+    - Loop Region tests: getLoopRegionState returns object, getLoopRegionEnabledState returns boolean, getLoopRegionStartBarState returns number, getLoopRegionEndBarState returns number, setLoopRegionEnabledState updates state, setLoopRegionStartBarState updates state, setLoopRegionEndBarState updates state, setLoopRegionState updates full state
+    - Swing tests: getSwingState returns object, getSwingEnabledState returns boolean, getSwingAmountState returns number, setSwingEnabledState updates state, setSwingAmountState updates state (with clamping), setSwingState updates full state
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.4
+- **Feature Details**:
+  - Tests import and validate state functions from `js/state.js`
+  - Tests verify getter functions return correct types (object, boolean, number)
+  - Tests verify state setters work correctly via roundtrip validation
+  - Tests verify Swing amount clamping (0-100 range)
+  - Tests verify full state update via setLoopRegionState and setSwingState
+  - Total test count increased from 154 to 168 tests
+- **Backend Note**: The Loop Region and Swing state functions were implemented in earlier versions but lacked unit test coverage. These tests verify the state API without requiring the full UI.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.4
