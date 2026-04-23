@@ -54,6 +54,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.65.0
 
+#### Day 98: MIDI Import Constants Tests (2026-04-23)
+- **Feature**: Added 7 new unit tests for MIDI Import constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 7 new tests in Day 98 section:
+    - `MIDI Import - MIDI_IMPORT_MIN_NOTES is valid` - Tests min notes is 1
+    - `MIDI Import - MIDI_IMPORT_MAX_VELOCITY is valid` - Tests max velocity is 127 (MIDI standard)
+    - `MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is valid` - Tests default velocity is 100
+    - `MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is valid` - Tests default probability is 1.0 (100%)
+    - `MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is boolean` - Tests snap to grid is boolean flag
+    - `MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is valid` - Tests velocity scale is 1/127
+    - `MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is inverse of MIDI_EXPORT_VELOCITY_SCALE` - Tests roundtrip consistency
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.1
+- **Feature Details**:
+  - Tests validate MIDI Import constants for min notes, velocity scaling, probability, and grid snapping
+  - Tests verify velocity scale is the inverse of export scale (1/127 vs 127) for proper roundtrip
+  - Total test count increased from 335 to 342 tests
+- **Backend Note**: The MIDI Import constants (defined in js/constants.js) are used by `importFromMidiInternal()` in js/state.js to configure how Standard MIDI Files are parsed and converted into the app's sequencer format.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.1
+
 #### Day 1: DrumSampler UI Implementation (2026-04-19)
 - **Feature**: Implemented complete DrumSampler UI controls
 - **Files Modified**:

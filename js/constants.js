@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.65.0'; // Day 97: State Setter Undo Capture Verification Tests - Added 21 tests verifying state setter functions exist and handle edge cases correctly
+export const APP_VERSION = '0.65.1'; // Day 98: MIDI Import Constants Tests - Added 7 tests validating MIDI import constants
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

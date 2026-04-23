@@ -2000,7 +2000,7 @@ TestRunner.test('Audio Clip Editor - start/end offset constants are valid', (t) 
     t.assertEqual(MIN_AUDIO_CLIP_START_OFFSET, 0, 'Min start offset should be 0');
     t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1 (use full audio)');
     t.assertEqual(MIN_AUDIO_CLIP_END_OFFSET, -1, 'Min end offset should be -1');
-    t.assertTruthy(DEFAULT_AUDIO_CLIP_START_OFFSET <= MIN_AUDIO_CLIP_START_OFFSET, 'Default should be >= min');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_START_OFFSET <= MIN_AUDIO_CLIP_START_OFFSET, 'Start offset should be >= min');
 });
 
 TestRunner.test('Audio Clip Editor - reverse constant is boolean', (t) => {
@@ -2094,6 +2094,43 @@ TestRunner.test('MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is valid', (t
 TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is valid', (t) => {
     t.assertEqual(MAX_MIDI_EXPORT_TRACKS, 64, 'Max tracks should be 64 (MIDI standard)');
     t.assertTruthy(MAX_MIDI_EXPORT_TRACKS > 0, 'Max tracks should be positive');
+});
+
+// ============================================
+// MIDI Import Constants Tests
+// ============================================
+TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'Min notes should be 1');
+    t.assertTruthy(MIDI_IMPORT_MIN_NOTES >= 0, 'Min notes should be non-negative');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_MAX_VELOCITY is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_MAX_VELOCITY, 127, 'Max velocity should be 127 (MIDI standard)');
+    t.assertTruthy(MIDI_IMPORT_MAX_VELOCITY >= 1 && MIDI_IMPORT_MAX_VELOCITY <= 127, 'Max velocity should be 1-127');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_VELOCITY, 100, 'Default velocity should be 100');
+    t.assertTruthy(MIDI_IMPORT_DEFAULT_VELOCITY >= 0 && MIDI_IMPORT_DEFAULT_VELOCITY <= 127, 'Default velocity should be 0-127');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_PROBABILITY, 1.0, 'Default probability should be 1.0 (100%)');
+    t.assertTruthy(MIDI_IMPORT_DEFAULT_PROBABILITY >= 0 && MIDI_IMPORT_DEFAULT_PROBABILITY <= 1.0, 'Default probability should be 0-1');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is boolean', (t) => {
+    t.assertEqual(typeof MIDI_IMPORT_SNAP_TO_GRID, 'boolean', 'Snap to grid should be boolean');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is valid', (t) => {
+    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1 / 127, 'Velocity scale should be 1/127');
+    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE > 0, 'Velocity scale should be positive');
+    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE < 1, 'Velocity scale should be less than 1');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is inverse of MIDI_EXPORT_VELOCITY_SCALE', (t) => {
+    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE * MIDI_EXPORT_VELOCITY_SCALE, 1, 'Import scale should be inverse of export scale');
 });
 
 // ============================================
