@@ -601,18 +601,15 @@ TestRunner.test('Recording - stopAudioRecording is async', (t) => {
 // Day 79: Recording State Tests
 // ============================================
 TestRunner.test('Recording State - isTrackRecordingState returns boolean', (t) => {
-    const result = isTrackRecordingState();
-    t.assertEqual(typeof result, 'boolean', 'isTrackRecordingState should return a boolean');
+    t.assertTruthy(typeof isTrackRecordingState() === 'boolean', 'isTrackRecordingState should return a boolean');
 });
 
 TestRunner.test('Recording State - getRecordingTrackIdState initial value', (t) => {
-    const result = getRecordingTrackIdState();
-    t.assertEqual(result, null, 'Initial recording track ID should be null');
+    t.assertEqual(getRecordingTrackIdState(), null, 'Initial recording track ID should be null');
 });
 
 TestRunner.test('Recording State - getRecordingStartTimeState initial value', (t) => {
-    const result = getRecordingStartTimeState();
-    t.assertEqual(result, null, 'Initial recording start time should be null');
+    t.assertEqual(getRecordingStartTimeState(), null, 'Initial recording start time should be null');
 });
 
 TestRunner.test('Recording State - setIsRecordingState updates value', (t) => {
@@ -1925,7 +1922,7 @@ TestRunner.test('Audio Clip - getAudioClipFadeOutCurve returns default when unse
 });
 
 TestRunner.test('Audio Clip - fade curves array contains valid options', (t) => {
-    t.assertEqual(FADE_CURVES.length, 2, 'Should have exactly 2 curve options');
+    t.assertEqual(FADE_CURVES.length, 2, 'Should have exactly 2 fade curve options');
     t.assertTruthy(FADE_CURVES.includes('linear'), 'Should include linear');
     t.assertTruthy(FADE_CURVES.includes('exponential'), 'Should include exponential');
 });
@@ -1940,6 +1937,27 @@ TestRunner.test('Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE d
     t.assertEqual(DEFAULT_FADE_OUT_CURVE, 'linear', 'Default fade out curve should be linear');
     t.assertEqual(DEFAULT_FADE_IN_CURVE, FADE_CURVE_LINEAR, 'Default should match FADE_CURVE_LINEAR constant');
     t.assertEqual(DEFAULT_FADE_OUT_CURVE, FADE_CURVE_LINEAR, 'Default should match FADE_CURVE_LINEAR constant');
+});
+
+// ============================================
+// Day 94: Recording Monitoring Tests
+// ============================================
+TestRunner.test('Recording Monitoring - DEFAULT_RECORDING_MONITORING_ENABLED is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_RECORDING_MONITORING_ENABLED, 'boolean', 'DEFAULT_RECORDING_MONITORING_ENABLED should be boolean');
+});
+
+TestRunner.test('Recording Monitoring - DEFAULT_RECORDING_MONITORING_ENABLED is false', (t) => {
+    t.assertEqual(DEFAULT_RECORDING_MONITORING_ENABLED, false, 'Monitoring should be disabled by default for clean recording');
+});
+
+TestRunner.test('Recording Monitoring - DEFAULT_RECORDING_MONITORING_VOLUME is in valid range', (t) => {
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME >= 0 && DEFAULT_RECORDING_MONITORING_VOLUME <= 1, 
+        'DEFAULT_RECORDING_MONITORING_VOLUME should be between 0 and 1');
+});
+
+TestRunner.test('Recording Monitoring - DEFAULT_RECORDING_MONITORING_VOLUME is reasonable', (t) => {
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME > 0 && DEFAULT_RECORDING_MONITORING_VOLUME < 1, 
+        'DEFAULT_RECORDING_MONITORING_VOLUME should be between 0 and 1 for practical monitoring levels');
 });
 
 // ============================================

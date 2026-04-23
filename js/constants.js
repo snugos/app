@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.63.1'; // Day 93: Audio Clip Editor UI Tests - 8 new tests for crossfade, gain, playback rate, offset, reverse, and fade constants
+export const APP_VERSION = '0.64.0'; // Day 94: Recording Monitoring Tests - 4 new tests for monitoring constants
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
