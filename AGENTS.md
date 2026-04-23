@@ -840,3 +840,25 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The actual undo/redo state capture is implemented in `js/state.js` via `_captureUndoState()`, `undoLastActionInternal()`, and `redoLastActionInternal()`. The tests verify the API surface of these functions.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.5
+
+#### Day 65: Recording State Management Tests (2026-04-22)
+- **Feature**: Added 7 new unit tests for recording state management functions
+- **Issue**: The AGENTS.md mentioned "Recording: end-to-end test with real microphone" as an incomplete item. While Day 56 added constants tests for recording configuration, the recording state management functions (isTrackRecordingState, getRecordingTrackIdState, etc.) lacked unit test coverage.
+- **Files Modified**:
+  - `js/tests.js`: Added new imports and 7 new tests for recording state management:
+    - `Recording State - isTrackRecordingState is boolean` - Validates return type
+    - `Recording State - getRecordingTrackIdState returns null initially` - Validates initial state
+    - `Recording State - getRecordingStartTimeState returns number` - Validates return type
+    - `Recording State - setIsRecordingState updates state` - Tests setter/getter roundtrip
+    - `Recording State - setRecordingTrackIdState updates state` - Tests setter/getter roundtrip
+    - `Recording State - setRecordingStartTimeState updates state` - Tests setter/getter roundtrip
+    - `Recording State - recording state setters are functions` - Validates all setters are functions
+  - `js/constants.js`: Bumped APP_VERSION to 0.58.6
+- **Feature Details**:
+  - Tests import and validate recording state functions from `js/state.js`
+  - Tests verify recording state getters exist and return correct types
+  - Tests verify state setters work correctly via roundtrip validation
+  - Total test count increased from 90 to 97 tests
+- **Backend Note**: The recording state management functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.58.6

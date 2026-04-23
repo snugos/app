@@ -6,7 +6,13 @@ import {
     getUndoStackState,
     getRedoStackState,
     undoLastActionInternal,
-    redoLastActionInternal
+    redoLastActionInternal,
+    isTrackRecordingState,
+    getRecordingTrackIdState,
+    getRecordingStartTimeState,
+    setIsRecordingState,
+    setRecordingTrackIdState,
+    setRecordingStartTimeState
 } from './state.js';
 
 // ============================================
@@ -583,6 +589,53 @@ TestRunner.test('Undo/Redo - undoLastActionInternal is async', (t) => {
 TestRunner.test('Undo/Redo - redoLastActionInternal is async', (t) => {
     const fn = redoLastActionInternal;
     t.assertTruthy(fn.constructor.name === 'AsyncFunction', 'redoLastActionInternal should be async');
+});
+
+// ============================================
+// Day 65: Recording State Management Tests
+// ============================================
+TestRunner.test('Recording State - isTrackRecordingState is boolean', (t) => {
+    const result = isTrackRecordingState();
+    t.assertEqual(typeof result, 'boolean', 'isTrackRecordingState should return boolean');
+});
+
+TestRunner.test('Recording State - getRecordingTrackIdState returns null initially', (t) => {
+    const result = getRecordingTrackIdState();
+    t.assertEqual(result, null, 'Recording track ID should be null initially');
+});
+
+TestRunner.test('Recording State - getRecordingStartTimeState returns number', (t) => {
+    const result = getRecordingStartTimeState();
+    t.assertEqual(typeof result, 'number', 'Recording start time should be a number');
+});
+
+TestRunner.test('Recording State - setIsRecordingState updates state', (t) => {
+    setIsRecordingState(true);
+    t.assertEqual(isTrackRecordingState(), true, 'isTrackRecordingState should be true after setting');
+    setIsRecordingState(false);
+    t.assertEqual(isTrackRecordingState(), false, 'isTrackRecordingState should be false after setting');
+});
+
+TestRunner.test('Recording State - setRecordingTrackIdState updates state', (t) => {
+    const testId = 'test-track-123';
+    setRecordingTrackIdState(testId);
+    t.assertEqual(getRecordingTrackIdState(), testId, 'Recording track ID should match set value');
+    setRecordingTrackIdState(null);
+    t.assertEqual(getRecordingTrackIdState(), null, 'Recording track ID should be null after reset');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState updates state', (t) => {
+    const testTime = 1234567890;
+    setRecordingStartTimeState(testTime);
+    t.assertEqual(getRecordingStartTimeState(), testTime, 'Recording start time should match set value');
+    setRecordingStartTimeState(0);
+    t.assertEqual(getRecordingStartTimeState(), 0, 'Recording start time should be 0 after reset');
+});
+
+TestRunner.test('Recording State - recording state setters are functions', (t) => {
+    t.assertTruthy(typeof setIsRecordingState === 'function', 'setIsRecordingState should be a function');
+    t.assertTruthy(typeof setRecordingTrackIdState === 'function', 'setRecordingTrackIdState should be a function');
+    t.assertTruthy(typeof setRecordingStartTimeState === 'function', 'setRecordingStartTimeState should be a function');
 });
 
 // ============================================
