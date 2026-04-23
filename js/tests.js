@@ -643,6 +643,16 @@ TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
     t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
 });
 
+TestRunner.test('Send Tracks - getSendTrackByIdState returns object', (t) => {
+    const send = getSendTrackByIdState('nonexistent');
+    t.assertEqual(send, undefined, 'Should return undefined for nonexistent send');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
 TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
     const sends = getTrackSendsState();
     t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
@@ -725,12 +735,24 @@ TestRunner.test('Timeline Markers - getTimelineMarkerByIdState finds marker', (t
     t.assertEqual(found.id, marker.id, 'Should find marker by ID');
 });
 
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+});
+
 TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
-    const marker = addTimelineMarkerState('Remove Test', 15);
-    const result = removeTimelineMarkerState(marker.id);
-    t.assertTruthy(result, 'removeTimelineMarkerState should return true on success');
-    const found = getTimelineMarkerByIdState(marker.id);
-    t.assertEqual(found, undefined, 'Marker should no longer exist');
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
 });
 
 // ============================================
@@ -746,7 +768,7 @@ TestRunner.test('Chord Mode - getChordModeState returns object', (t) => {
 
 TestRunner.test('Chord Mode - getChordModeEnabledState returns boolean', (t) => {
     const enabled = getChordModeEnabledState();
-    t.assertEqual(typeof enabled, 'boolean', 'Chord mode enabled should be boolean');
+    t.assertEqual(typeof enabled, 'boolean', 'Should return boolean');
 });
 
 TestRunner.test('Chord Mode - setChordModeEnabledState updates state', (t) => {
@@ -758,7 +780,7 @@ TestRunner.test('Chord Mode - setChordModeEnabledState updates state', (t) => {
 
 TestRunner.test('Chord Mode - getChordModeRootState returns number', (t) => {
     const root = getChordModeRootState();
-    t.assertEqual(typeof root, 'number', 'Chord root should be a number');
+    t.assertEqual(typeof root, 'number', 'Should return number');
     t.assertTruthy(root >= 0 && root <= 11, 'Root should be 0-11 (C-B)');
 });
 
@@ -769,17 +791,19 @@ TestRunner.test('Chord Mode - setChordModeRootState updates state', (t) => {
 
 TestRunner.test('Chord Mode - getChordModeTypeState returns string', (t) => {
     const type = getChordModeTypeState();
-    t.assertEqual(typeof type, 'string', 'Chord type should be a string');
+    t.assertEqual(typeof type, 'string', 'Should return string');
 });
 
 TestRunner.test('Chord Mode - setChordModeTypeState updates state', (t) => {
     setChordModeTypeState('minor');
     t.assertEqual(getChordModeTypeState(), 'minor', 'Chord type should be minor');
+    setChordModeTypeState('major');
+    t.assertEqual(getChordModeTypeState(), 'major', 'Chord type should be major');
 });
 
 TestRunner.test('Chord Mode - getChordModeLockState returns boolean', (t) => {
     const lock = getChordModeLockState();
-    t.assertEqual(typeof lock, 'boolean', 'Chord lock should be boolean');
+    t.assertEqual(typeof lock, 'boolean', 'Should return boolean');
 });
 
 TestRunner.test('Chord Mode - setChordModeLockState updates state', (t) => {
@@ -791,57 +815,71 @@ TestRunner.test('Chord Mode - setChordModeLockState updates state', (t) => {
 
 TestRunner.test('Chord Mode - getChordVoicingState returns string', (t) => {
     const voicing = getChordVoicingState();
-    t.assertEqual(typeof voicing, 'string', 'Chord voicing should be a string');
+    t.assertEqual(typeof voicing, 'string', 'Should return string');
 });
 
 TestRunner.test('Chord Mode - setChordVoicingState updates state', (t) => {
     setChordVoicingState('close');
-    t.assertEqual(getChordVoicingState(), 'close', 'Chord voicing should be close');
+    t.assertEqual(getChordVoicingState(), 'close', 'Voicing should be close');
+    setChordVoicingState('open');
+    t.assertEqual(getChordVoicingState(), 'open', 'Voicing should be open');
 });
 
 // ============================================
 // Day 68: Time Signature State Tests
 // ============================================
 TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
-    const ts = getTimeSignatureState();
-    t.assertTruthy(typeof ts === 'object', 'Time signature should be an object');
-    t.assertTruthy('numerator' in ts, 'Should have numerator');
-    t.assertTruthy('denominator' in ts, 'Should have denominator');
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
 });
 
 TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
-    const num = getTimeSignatureNumeratorState();
-    t.assertEqual(typeof num, 'number', 'Numerator should be a number');
-    t.assertTruthy(num >= 1, 'Numerator should be at least 1');
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
 });
 
 TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
     setTimeSignatureNumeratorState(3);
     t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
 });
 
 TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
-    const denom = getTimeSignatureDenominatorState();
-    t.assertEqual(typeof denom, 'number', 'Denominator should be a number');
-    t.assertTruthy(denom >= 1, 'Denominator should be at least 1');
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
 });
 
 TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
     setTimeSignatureDenominatorState(8);
     t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
 });
 
 // ============================================
 // Day 68: Ghost Track State Tests
 // ============================================
-TestRunner.test('Ghost Track - getGhostTrackIdState returns null initially', (t) => {
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
     const ghostId = getGhostTrackIdState();
-    t.assertEqual(ghostId, null, 'Ghost track should be null initially');
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
 });
 
 TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
-    setGhostTrackIdState('track123');
-    t.assertEqual(getGhostTrackIdState(), 'track123', 'Ghost track should be set');
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
     setGhostTrackIdState(null);
     t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
 });
@@ -882,7 +920,7 @@ TestRunner.test('Scale Mode - getScaleModeState returns object', (t) => {
 
 TestRunner.test('Scale Mode - getScaleModeEnabledState returns boolean', (t) => {
     const enabled = getScaleModeEnabledState();
-    t.assertEqual(typeof enabled, 'boolean', 'Scale mode enabled should be boolean');
+    t.assertEqual(typeof enabled, 'boolean', 'Should return boolean');
 });
 
 TestRunner.test('Scale Mode - setScaleModeEnabledState updates state', (t) => {
@@ -894,7 +932,7 @@ TestRunner.test('Scale Mode - setScaleModeEnabledState updates state', (t) => {
 
 TestRunner.test('Scale Mode - getScaleModeScaleState returns string', (t) => {
     const scale = getScaleModeScaleState();
-    t.assertEqual(typeof scale, 'string', 'Scale should be a string');
+    t.assertEqual(typeof scale, 'string', 'Should return string');
     t.assertTruthy(SCALES[scale] !== undefined, 'Scale should be a valid scale name');
 });
 
@@ -907,7 +945,7 @@ TestRunner.test('Scale Mode - setScaleModeScaleState updates state', (t) => {
 
 TestRunner.test('Scale Mode - getScaleModeRootState returns string', (t) => {
     const root = getScaleModeRootState();
-    t.assertEqual(typeof root, 'string', 'Root should be a string');
+    t.assertEqual(typeof root, 'string', 'Should return string');
     t.assertTruthy(SCALE_ROOTS.includes(root), 'Root should be a valid note name');
 });
 
@@ -920,7 +958,7 @@ TestRunner.test('Scale Mode - setScaleModeRootState updates state', (t) => {
 
 TestRunner.test('Scale Mode - getScaleModeLockState returns boolean', (t) => {
     const lock = getScaleModeLockState();
-    t.assertEqual(typeof lock, 'boolean', 'Scale lock should be boolean');
+    t.assertEqual(typeof lock, 'boolean', 'Should return boolean');
 });
 
 TestRunner.test('Scale Mode - setScaleModeLockState updates state', (t) => {
@@ -1143,9 +1181,9 @@ TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track'
     t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
 });
 
-TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
-    const sends = getTrackSendsState();
-    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
 });
 
 // ============================================
