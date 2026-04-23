@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.56.0"; // Day 58: Send Track ID Auto-Generation Bug Fix - Fixed addSendTrackState to auto-generate ID when not provided (was always assigning undefined)
+export const APP_VERSION = "0.57.0"; // Day 59: Track Templates Feature - Constants and State Management
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -382,3 +382,23 @@ export const DEFAULT_RECORDING_MONITORING_VOLUME = 0.5; // Monitor volume (0-1)
 // Recording limits
 export const MAX_RECORDING_LENGTH_SECONDS = 600; // 10 minute max recording
 export const MIN_RECORDING_LENGTH_SECONDS = 0.1; // Minimum 100ms recording
+
+// ============================================
+// Track Template Constants
+// ============================================
+export const MAX_TRACK_TEMPLATES = 32; // Maximum number of saved track templates
+export const DEFAULT_TEMPLATE_NAME_PREFIX = 'Template'; // Default name for new templates
+export const TRACK_TEMPLATE_COLORS = TRACK_COLORS; // Templates can use same color palette as tracks
+export const DEFAULT_TRACK_TEMPLATE_COLOR = '#54a0ff'; // Default template color (blue)
+
+export const DEFAULT_TRACK_TEMPLATE = {
+    name: DEFAULT_TEMPLATE_NAME_PREFIX,
+    color: DEFAULT_TRACK_TEMPLATE_COLOR,
+    type: 'Synth', // Default track type
+    synthParams: {},
+    instrumentSamplerSettings: null,
+    drumSamplerPads: null,
+    activeEffects: [],
+    hasAutomation: false,
+    automationLanes: []
+};

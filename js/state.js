@@ -57,6 +57,10 @@ let trackSendsState = {}; // Map: trackId -> { sendId: level } (level 0-1.2, 0 =
 let trackGroupsState = []; // Array of { id, name, color, trackIds: [], muted: false, soloed: false }
 let trackGroupIdCounter = 0;
 
+// Track Templates State (for saving/loading track configurations)
+let trackTemplatesState = []; // Array of template objects
+let trackTemplateIdCounter = 0;
+
 // Undo/Redo
 let undoStack = [];
 let redoStack = [];
@@ -379,6 +383,64 @@ export function removeTrackGroupState(id) {
     return false;
 }
 
+// --- Track Templates State Management ---
+export function getTrackTemplatesState() { return trackTemplatesState; }
+
+export function getTrackTemplateByIdState(id) { 
+    return trackTemplatesState.find(t => t.id === id); 
+}
+
+export function addTrackTemplateState(templateData) {
+    if (trackTemplatesState.length >= Constants.MAX_TRACK_TEMPLATES) {
+        return null; // Max templates reached
+    }
+    const id = templateData && templateData.id !== undefined ? templateData.id : trackTemplateIdCounter++;
+    const template = {
+        id,
+        name: templateData?.name || `${Constants.DEFAULT_TEMPLATE_NAME_PREFIX} ${trackTemplatesState.length + 1}`,
+        color: templateData?.color || Constants.DEFAULT_TRACK_TEMPLATE_COLOR,
+        type: templateData?.type || 'Synth',
+        synthParams: templateData?.synthParams || {},
+        instrumentSamplerSettings: templateData?.instrumentSamplerSettings || null,
+        drumSamplerPads: templateData?.drumSamplerPads || null,
+        activeEffects: templateData?.activeEffects || [],
+        hasAutomation: templateData?.hasAutomation || false,
+        automationLanes: templateData?.automationLanes || []
+    };
+    trackTemplatesState.push(template);
+    return template;
+}
+
+export function updateTrackTemplateState(id, updates) {
+    const template = trackTemplatesState.find(t => t.id === id);
+    if (template) {
+        if (updates.name !== undefined) template.name = updates.name;
+        if (updates.color !== undefined) template.color = updates.color;
+        if (updates.type !== undefined) template.type = updates.type;
+        if (updates.synthParams !== undefined) template.synthParams = updates.synthParams;
+        if (updates.instrumentSamplerSettings !== undefined) template.instrumentSamplerSettings = updates.instrumentSamplerSettings;
+        if (updates.drumSamplerPads !== undefined) template.drumSamplerPads = updates.drumSamplerPads;
+        if (updates.activeEffects !== undefined) template.activeEffects = updates.activeEffects;
+        if (updates.hasAutomation !== undefined) template.hasAutomation = updates.hasAutomation;
+        if (updates.automationLanes !== undefined) template.automationLanes = updates.automationLanes;
+        return template;
+    }
+    return null;
+}
+
+export function removeTrackTemplateState(id) {
+    const idx = trackTemplatesState.findIndex(t => t.id === id);
+    if (idx !== -1) {
+        trackTemplatesState.splice(idx, 1);
+        return true;
+    }
+    return false;
+}
+
+export function clearTrackTemplatesState() {
+    trackTemplatesState = [];
+}
+
 // --- Window Management ---
 export function getOpenWindowsState() { return openWindowsMap; }
 export function getWindowByIdState(id) { return openWindowsMap.get(id); }
@@ -492,7 +554,7 @@ export async function undoLastActionInternal() {
         }
 
         if (appServices.showNotification) appServices.showNotification(`Undoing: ${stateToRestore.description || 'last action'}...`, 2000);
-        if (appServices) appServices._isReconstructingingDAW_flag = true; // Signal reconstruction globally
+        if (appServices) appServices._isReconstructingDAW_flag = true; // Signal reconstruction globally
         await reconstructDAWInternal(stateToRestore, true); // true for isUndoRedo
     } catch (error) {
         console.error("[State undoLastActionInternal] Error during undo:", error);
@@ -657,7 +719,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     if (!projectData) {
         console.error("[State reconstructDAWInternal] projectData is null or undefined. Aborting reconstruction.");
         if (appServices.showNotification) appServices.showNotification("Error: No project data to load.", 3000);
-        if (appServices) appServices._isReconstructingingDAW_flag = false;
+        if (appServices) appServices._isReconstructingDAW_flag = false;
         return;
     }
     
@@ -682,7 +744,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error during global reset phase:", error);
         if (appServices.showNotification) appServices.showNotification("Critical error during project reset.", 5000);
-        if (appServices) appServices._isReconstructingingDAW_flag = false;
+        if (appServices) appServices._isReconstructingDAW_flag = false;
         return; // Abort further reconstruction
     }
 

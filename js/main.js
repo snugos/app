@@ -134,6 +134,7 @@ import {
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
     openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openSoundBrowserWindow,
+    openTrackTemplatesWindow,
     renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep,
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI, renderDrumSamplerPads,
     renderEffectsList, renderEffectControls, createKnob,
@@ -421,6 +422,12 @@ const appServices = {
     setTrackGroupMutedState,
     setTrackGroupSoloedState,
     removeTrackGroupState,
+    // Track Templates
+    getTrackTemplatesState,
+    getTrackTemplateByIdState,
+    addTrackTemplateState,
+    updateTrackTemplateState,
+    removeTrackTemplateState,
     // Event Handler Passthroughs
     selectMIDIInput: eventSelectMIDIInput, 
     handleTrackMute: eventHandleTrackMute,

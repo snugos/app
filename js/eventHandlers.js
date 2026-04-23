@@ -218,6 +218,65 @@ export function initializePrimaryEventListeners(appContext) {
                 try {
                     toggleFullScreen();
                 } catch(e) { console.error('[Menu] Toggle Full Screen error:', e); }
+            },
+            menuSaveTrackAsTemplate: () => {
+                try {
+                    // Get the currently selected/active track to save as template
+                    const tracks = services.getTracksState ? services.getTracksState() : [];
+                    if (tracks.length === 0) {
+                        services.showNotification?.('No track selected to save as template.', 2000);
+                        return;
+                    }
+                    // Use the last interacted track or first track
+                    const trackToSave = services.getActiveTrackForInteraction ? services.getActiveTrackForInteraction() : tracks[0];
+                    if (!trackToSave) {
+                        services.showNotification?.('No track available to save as template.', 2000);
+                        return;
+                    }
+                    
+                    // Prompt for template name
+                    const templateName = prompt('Enter name for this template:', `${trackToSave.name} Template`);
+                    if (!templateName) return; // User cancelled
+                    
+                    // Build template data from track
+                    const templateData = {
+                        name: templateName,
+                        color: trackToSave.color || Constants.DEFAULT_TRACK_TEMPLATE_COLOR,
+                        type: trackToSave.type,
+                        synthParams: trackToSave.synthParams ? JSON.parse(JSON.stringify(trackToSave.synthParams)) : {},
+                        instrumentSamplerSettings: trackToSave.instrumentSamplerSettings ? JSON.parse(JSON.stringify(trackToSave.instrumentSamplerSettings)) : null,
+                        drumSamplerPads: trackToSave.drumSamplerPads ? trackToSave.drumSamplerPads.map(p => ({
+                            volume: p.volume,
+                            pitchShift: p.pitchShift,
+                            envelope: p.envelope ? JSON.parse(JSON.stringify(p.envelope)) : { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 }
+                        })) : null,
+                        activeEffects: (trackToSave.activeEffects || []).map(e => ({
+                            type: e.type,
+                            params: e.params ? JSON.parse(JSON.stringify(e.params)) : {}
+                        })),
+                        hasAutomation: !!(trackToSave.automation && Object.keys(trackToSave.automation).length > 0),
+                        automationLanes: trackToSave.automation ? JSON.parse(JSON.stringify(trackToSave.automation)) : []
+                    };
+                    
+                    const result = services.addTrackTemplateState?.(templateData);
+                    if (result) {
+                        services.showNotification?.(`Template "${templateName}" saved successfully.`, 2000);
+                    } else {
+                        services.showNotification?.('Failed to save template. Maximum templates reached?', 3000);
+                    }
+                } catch(e) { console.error('[Menu] Save Track as Template error:', e); }
+            },
+            menuOpenTrackTemplates: () => {
+                try {
+                    if (services.openTrackTemplatesWindow) {
+                        services.openTrackTemplatesWindow();
+                    } else {
+                        // Fallback: show template browser in a modal-like window
+                        services.showNotification?.('Opening Track Templates...', 1500);
+                        const templates = services.getTrackTemplatesState ? services.getTrackTemplatesState() : [];
+                        showTrackTemplatesModal(services, templates);
+                    }
+                } catch(e) { console.error('[Menu] Open Track Templates error:', e); }
             }
         };
 

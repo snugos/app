@@ -1120,6 +1120,154 @@ export function openSoundBrowserWindow(savedState = null) {
     return browserWindow;
 }
 
+export function openTrackTemplatesWindow(savedState = null) {
+    const windowId = 'trackTemplates';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        updateTrackTemplatesWindowContent();
+        return openWindows.get(windowId);
+    }
+
+    const contentHTML = `<div id="trackTemplatesContent" class="p-3 space-y-3 text-xs overflow-y-auto h-full dark:text-slate-300">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-semibold text-gray-200">Track Templates</h3>
+            <button id="closeTemplatesBtn" class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">Close</button>
+        </div>
+        <div id="templatesGrid" class="grid grid-cols-2 gap-2">
+            <p class="text-gray-500 col-span-2 italic text-center py-4">Loading templates...</p>
+        </div>
+    </div>`;
+    const options = { width: 500, height: 400, minWidth: 400, minHeight: 300, initialContentKey: windowId };
+    if (savedState) Object.assign(options, { x: parseInt(savedState.left, 10), y: parseInt(savedState.top, 10), width: parseInt(savedState.width, 10), height: parseInt(savedState.height, 10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+
+    const templatesWindow = localAppServices.createWindow(windowId, 'Track Templates', contentHTML, options);
+
+    if (templatesWindow?.element) {
+        templatesWindow.element.querySelector('#closeTemplatesBtn').addEventListener('click', () => {
+            templatesWindow.close();
+        });
+        templatesWindow.element.querySelector('#templatesGrid').addEventListener('click', (e) => {
+            const card = e.target.closest('.template-card');
+            if (card) {
+                const templateId = parseInt(card.dataset.templateId, 10);
+                const template = localAppServices.getTrackTemplateByIdState ? localAppServices.getTrackTemplateByIdState(templateId) : null;
+                if (template) {
+                    applyTrackTemplate(template);
+                }
+            }
+        });
+        templatesWindow.element.querySelector('#templatesGrid').addEventListener('contextmenu', (e) => {
+            const card = e.target.closest('.template-card');
+            if (card) {
+                e.preventDefault();
+                const templateId = parseInt(card.dataset.templateId, 10);
+                showTemplateContextMenu(templateId, e.clientX, e.clientY);
+            }
+        });
+    }
+
+    updateTrackTemplatesWindowContent(templatesWindow?.element);
+    return templatesWindow;
+}
+
+function updateTrackTemplatesWindowContent(winElement) {
+    const element = winElement || (localAppServices.getWindowById ? localAppServices.getWindowById('trackTemplates')?.element : null);
+    if (!element) return;
+
+    const grid = element.querySelector('#templatesGrid');
+    if (!grid) return;
+
+    const templates = localAppServices.getTrackTemplatesState ? localAppServices.getTrackTemplatesState() : [];
+    if (templates.length === 0) {
+        grid.innerHTML = `<p class="text-gray-500 col-span-2 italic text-center py-8">No templates saved yet.</p>
+            <p class="text-gray-500 col-span-2 text-center text-[10px]">Use Menu > Save Track as Template to save your first template.</p>`;
+    } else {
+        grid.innerHTML = templates.map(t => `
+            <div class="template-card p-2 rounded cursor-pointer bg-[#2a2a3a] hover:bg-[#3a3a4a] border border-[#3a3a4a] hover:border-[#4a4a5a]"
+                 data-template-id="${t.id}" title="${t.name}">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-3 h-3 rounded" style="background-color: ${t.color}"></div>
+                    <span class="text-xs font-medium text-gray-200 truncate">${t.name}</span>
+                </div>
+                <div class="text-[10px] text-gray-400">${t.type}</div>
+                <div class="text-[10px] text-gray-500">${t.activeEffects?.length || 0} effects${t.hasAutomation ? ' • auto' : ''}</div>
+            </div>
+        `).join('');
+    }
+}
+
+function applyTrackTemplate(template) {
+    try {
+        const newTrack = localAppServices.createTrack ? localAppServices.createTrack(template.type) : null;
+        if (!newTrack) {
+            localAppServices.showNotification?.('Failed to create track from template.', 2000);
+            return;
+        }
+        newTrack.color = template.color || '#54a0ff';
+        if (template.synthParams && newTrack.synthParams) {
+            Object.assign(newTrack.synthParams, template.synthParams);
+        }
+        if (template.instrumentSamplerSettings && newTrack.instrumentSamplerSettings) {
+            Object.assign(newTrack.instrumentSamplerSettings, template.instrumentSamplerSettings);
+        }
+        if (template.drumSamplerPads && newTrack.drumSamplerPads) {
+            template.drumSamplerPads.forEach((p, i) => {
+                if (newTrack.drumSamplerPads[i]) {
+                    newTrack.drumSamplerPads[i].volume = p.volume;
+                    newTrack.drumSamplerPads[i].pitchShift = p.pitchShift;
+                    if (p.envelope) {
+                        newTrack.drumSamplerPads[i].envelope = { ...p.envelope };
+                    }
+                }
+            });
+        }
+        if (template.automationLanes && newTrack.automation) {
+            template.automationLanes.forEach(lane => {
+                if (lane && lane.paramName) {
+                    newTrack.automation[lane.paramName] = [...lane.points];
+                }
+            });
+        }
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(`Template "${template.name}" applied to new track.`, 2000);
+        }
+        if (localAppServices.updateUI) localAppServices.updateUI();
+    } catch(e) {
+        console.error('[UI applyTrackTemplate] Error:', e);
+        localAppServices.showNotification?.('Error applying template.', 2000);
+    }
+}
+
+function showTemplateContextMenu(templateId, x, y) {
+    const existingMenu = document.querySelector('.template-context-menu');
+    if (existingMenu) existingMenu.remove();
+
+    const menu = document.createElement('div');
+    menu.className = 'template-context-menu fixed bg-[#2a2a3a] border border-[#4a4a5a] rounded shadow-lg z-50 text-xs';
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.innerHTML = `
+        <div class="context-menu-item px-3 py-2 hover:bg-[#3a3a4a] cursor-pointer text-red-400" data-action="delete">Delete Template</div>
+    `;
+    menu.querySelector('[data-action="delete"]').addEventListener('click', () => {
+        if (localAppServices.removeTrackTemplateState) {
+            localAppServices.removeTrackTemplateState(templateId);
+            updateTrackTemplatesWindowContent();
+            localAppServices.showNotification?.('Template deleted.', 1500);
+        }
+        menu.remove();
+    });
+    document.body.appendChild(menu);
+    const closeMenu = (e) => {
+        if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', closeMenu), 10);
+}
+
 export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) {
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
 
