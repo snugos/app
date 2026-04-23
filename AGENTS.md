@@ -863,46 +863,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.6
 
-#### Day 66: Send Tracks/Track Groups/Timeline Markers State Tests (2026-04-23)
-- **Feature**: Added 18 new unit tests for send tracks, track groups, and timeline markers state management
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The state management functions for Send Tracks, Track Groups, and Timeline Markers lacked unit test coverage.
-- **Files Modified**:
-  - `js/tests.js`: Added new imports and 18 new tests:
-    - Send Tracks tests: getSendTracksState, getTrackSendsState, getTrackSendLevelState, addSendTrackState, setSendTrackMutedState, getSendTrackByIdState
-    - Track Groups tests: getTrackGroupsState, addTrackGroupState, getTrackGroupByIdState, setTrackGroupNameState
-    - Timeline Markers tests: getTimelineMarkersState, addTimelineMarkerState, getTimelineMarkerByIdState, removeTimelineMarkerState
-  - `js/constants.js`: Bumped APP_VERSION to 0.58.7
-- **Feature Details**:
-  - Tests import and validate state functions from `js/state.js`
-  - Tests verify getter functions return correct types (array, object, number)
-  - Tests verify state setters work correctly via roundtrip validation
-  - Tests verify create/find/update/remove operations for all three state types
-  - Total test count increased from 90 to 115 tests
-- **Backend Note**: The send tracks state manages auxiliary send buses for effects routing. Track groups allow grouping related tracks. Timeline markers allow marking positions on the timeline ruler.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.58.7
-
-#### Day 67: Recording Function Tests (2026-04-23)
-- **Feature**: Added 16 new unit tests for audio recording functions and audio clip constants
-- **Issue**: The AGENTS.md mentioned "Recording: end-to-end test with real microphone" as an incomplete item. While Day 56 added constants tests and Day 65 added state management tests for recording, the actual recording functions (`startAudioRecording`, `stopAudioRecording`) lacked test coverage.
-- **Files Modified**:
-  - `js/tests.js`: Added import for `startAudioRecording` and `stopAudioRecording` from `./audio.js`
-  - Added new tests for recording functions and audio clip constants:
-    - Recording Function tests: startAudioRecording exists, stopAudioRecording exists, async verification
-    - Audio Clip tests: gain, playback rate, crossfade, fade in/out, offsets
-    - Monitoring State tests: default monitoring settings
-  - `js/constants.js`: Bumped APP_VERSION to 0.59.0
-- **Feature Details**:
-  - Tests verify `startAudioRecording` and `stopAudioRecording` functions exist in `js/audio.js`
-  - Tests verify these functions are async (return Promises)
-  - Tests validate audio clip constants for gain, playback rate, crossfade, fade, and offsets
-  - Tests verify monitoring defaults (disabled by default, volume 0.5)
-  - Total test count increased from 115 to 131 tests
-- **Backend Note**: The recording functions use Tone.js UserMedia and Recorder classes for microphone capture. The tests verify the function API without requiring actual microphone access (async/Promise verification only).
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.59.0
-
-#### Day 68: Chord Mode/Time Signature/Ghost Track State Tests (2026-04-23)
+#### Day 66: Chord Mode/Time Signature/Ghost Track State Tests (2026-04-23)
 - **Feature**: Added 21 new unit tests for Chord Mode, Time Signature, Ghost Track, and Armed/Soloed Track state management functions
 - **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The state management functions for Chord Mode, Time Signature, Ghost Track, and Armed/Soloed Track lacked unit test coverage.
 - **Files Modified**:
@@ -924,3 +885,21 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Chord Mode state manages chord-based note constraining for the sequencer. Time Signature state controls the beat division. Ghost Track state enables showing notes from another track as ghost notes. Armed/Soloed Track state manages track recording and solo status.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.1
+
+#### Day 67: Scale Mode State Tests (2026-04-23)
+- **Feature**: Added 9 new unit tests for Scale Mode state management functions
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Scale Mode state management functions (getScaleModeEnabledState, setScaleModeScaleState, etc.) lacked unit test coverage despite being implemented in Day 11.
+- **Files Modified**:
+  - `js/tests.js`: Added Scale Mode state function imports and 9 new tests:
+    - Scale Mode tests: getScaleModeState returns object, getScaleModeEnabledState returns boolean, setScaleModeEnabledState updates state, getScaleModeScaleState returns string, setScaleModeScaleState updates state, getScaleModeRootState returns string, setScaleModeRootState updates state, getScaleModeLockState returns boolean, setScaleModeLockState updates state
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.2
+- **Feature Details**:
+  - Tests import and validate state functions from `js/state.js`
+  - Tests verify getter functions return correct types (object, boolean, string)
+  - Tests verify state setters work correctly via roundtrip validation
+  - Tests verify Scale Mode settings (enabled, scale, root, lock)
+  - Tests validate that scale names are valid using the SCALES constant
+  - Tests validate that root notes are valid using the SCALE_ROOTS constant
+- **Backend Note**: The Scale Mode state functions were implemented in Day 11 as part of the Scale Mode feature but lacked unit test coverage. These tests verify the state API without requiring the full UI.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.2

@@ -52,7 +52,17 @@ import {
     // Armed/Soloed Track state functions
     getArmedTrackIdState,
     getSoloedTrackIdState,
-    setSoloedTrackIdState
+    setSoloedTrackIdState,
+    // Scale Mode state functions
+    getScaleModeState,
+    getScaleModeEnabledState,
+    setScaleModeEnabledState,
+    getScaleModeScaleState,
+    setScaleModeScaleState,
+    getScaleModeRootState,
+    setScaleModeRootState,
+    getScaleModeLockState,
+    setScaleModeLockState
 } from './state.js';
 
 import { startAudioRecording, stopAudioRecording } from './audio.js';
@@ -779,6 +789,68 @@ TestRunner.test('Armed/Soloed - setSoloedTrackIdState updates state', (t) => {
     t.assertEqual(getSoloedTrackIdState(), 'track456', 'Soloed track should be set');
     setSoloedTrackIdState(null);
     t.assertEqual(getSoloedTrackIdState(), null, 'Soloed track should be cleared');
+});
+
+// ============================================
+// Day 69: Scale Mode State Tests
+// ============================================
+TestRunner.test('Scale Mode - getScaleModeState returns object', (t) => {
+    const scaleMode = getScaleModeState();
+    t.assertTruthy(typeof scaleMode === 'object', 'Scale mode state should be an object');
+    t.assertTruthy('enabled' in scaleMode, 'Should have enabled property');
+    t.assertTruthy('scale' in scaleMode, 'Should have scale property');
+    t.assertTruthy('root' in scaleMode, 'Should have root property');
+    t.assertTruthy('lock' in scaleMode, 'Should have lock property');
+});
+
+TestRunner.test('Scale Mode - getScaleModeEnabledState returns boolean', (t) => {
+    const enabled = getScaleModeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Scale mode enabled should be boolean');
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState updates state', (t) => {
+    setScaleModeEnabledState(true);
+    t.assertEqual(getScaleModeEnabledState(), true, 'Scale mode should be enabled');
+    setScaleModeEnabledState(false);
+    t.assertEqual(getScaleModeEnabledState(), false, 'Scale mode should be disabled');
+});
+
+TestRunner.test('Scale Mode - getScaleModeScaleState returns string', (t) => {
+    const scale = getScaleModeScaleState();
+    t.assertEqual(typeof scale, 'string', 'Scale should be a string');
+    t.assertTruthy(SCALES[scale] !== undefined, 'Scale should be a valid scale name');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState updates state', (t) => {
+    setScaleModeScaleState('Minor');
+    t.assertEqual(getScaleModeScaleState(), 'Minor', 'Scale should be Minor');
+    setScaleModeScaleState('Pentatonic');
+    t.assertEqual(getScaleModeScaleState(), 'Pentatonic', 'Scale should be Pentatonic');
+});
+
+TestRunner.test('Scale Mode - getScaleModeRootState returns string', (t) => {
+    const root = getScaleModeRootState();
+    t.assertEqual(typeof root, 'string', 'Root should be a string');
+    t.assertTruthy(SCALE_ROOTS.includes(root), 'Root should be a valid note name');
+});
+
+TestRunner.test('Scale Mode - setScaleModeRootState updates state', (t) => {
+    setScaleModeRootState('G');
+    t.assertEqual(getScaleModeRootState(), 'G', 'Root should be G');
+    setScaleModeRootState('A#');
+    t.assertEqual(getScaleModeRootState(), 'A#', 'Root should be A#');
+});
+
+TestRunner.test('Scale Mode - getScaleModeLockState returns boolean', (t) => {
+    const lock = getScaleModeLockState();
+    t.assertEqual(typeof lock, 'boolean', 'Scale lock should be boolean');
+});
+
+TestRunner.test('Scale Mode - setScaleModeLockState updates state', (t) => {
+    setScaleModeLockState(true);
+    t.assertEqual(getScaleModeLockState(), true, 'Scale lock should be enabled');
+    setScaleModeLockState(false);
+    t.assertEqual(getScaleModeLockState(), false, 'Scale lock should be disabled');
 });
 
 // ============================================

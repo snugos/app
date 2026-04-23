@@ -48,6 +48,12 @@ let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
 let metronomeEnabled = false;
 let metronomeVolume = 0.5; // Default volume (0-1 range)
 
+// Loop Region State
+let loopRegionState = { ...Constants.DEFAULT_LOOP_REGION };
+
+// Swing/Groove State
+let swingState = { ...Constants.DEFAULT_SWING };
+
 // Send Tracks State (Aux Buses)
 let sendTracksState = []; // Array of { id, name, effects, level, muted }
 let sendTrackIdCounter = 0;
