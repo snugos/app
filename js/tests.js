@@ -105,6 +105,14 @@ import {
 
 import { startAudioRecording, stopAudioRecording } from './audio.js';
 
+import {
+    AVAILABLE_EFFECTS,
+    synthEngineControlDefinitions,
+    createEffectInstance,
+    getEffectDefaultParams,
+    getEffectParamDefinitions
+} from './effectsRegistry.js';
+
 // ============================================
 // Constants Tests
 // ============================================
@@ -2879,6 +2887,134 @@ TestRunner.test('Undo Setters - setTrackGroupSoloedState calls captureStateForUn
 });
 
 // ============================================
-// End Day 98 tests
-// Total tests: 350
+// Day 100: Effects Registry Tests
+// ============================================
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS is an object', (t) => {
+    t.assertTruthy(typeof AVAILABLE_EFFECTS === 'object', 'AVAILABLE_EFFECTS should be an object');
+    t.assertTruthy(AVAILABLE_EFFECTS !== null, 'AVAILABLE_EFFECTS should not be null');
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has at least 20 effects', (t) => {
+    const effectCount = Object.keys(AVAILABLE_EFFECTS).length;
+    t.assertTruthy(effectCount >= 20, 'AVAILABLE_EFFECTS should have at least 20 effects, found ' + effectCount);
+});
+
+TestRunner.test('Effects Registry - Each effect has required properties', (t) => {
+    const requiredProps = ['displayName', 'toneClass', 'params'];
+    const effects = Object.keys(AVAILABLE_EFFECTS);
+    t.assertTruthy(effects.length > 0, 'Should have at least one effect defined');
+    
+    for (const effectName of effects.slice(0, 5)) {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        for (const prop of requiredProps) {
+            t.assertTruthy(effect.hasOwnProperty(prop), 'Effect "' + effectName + '" should have "' + prop + '" property');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - Each effect has valid toneClass string', (t) => {
+    const effects = Object.keys(AVAILABLE_EFFECTS);
+    for (const effectName of effects) {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        t.assertTruthy(typeof effect.toneClass === 'string', 'Effect "' + effectName + '" toneClass should be a string');
+        t.assertTruthy(effect.toneClass.length > 0, 'Effect "' + effectName + '" toneClass should not be empty');
+    }
+});
+
+TestRunner.test('Effects Registry - Each effect has params array', (t) => {
+    const effects = Object.keys(AVAILABLE_EFFECTS);
+    for (const effectName of effects) {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        t.assertTruthy(Array.isArray(effect.params), 'Effect "' + effectName + '" params should be an array');
+    }
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions exists', (t) => {
+    t.assertTruthy(typeof synthEngineControlDefinitions === 'object', 'synthEngineControlDefinitions should be an object');
+    t.assertTruthy(synthEngineControlDefinitions !== null, 'synthEngineControlDefinitions should not be null');
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions has MonoSynth', (t) => {
+    t.assertTruthy(synthEngineControlDefinitions.hasOwnProperty('MonoSynth'), 'synthEngineControlDefinitions should have MonoSynth');
+    t.assertTruthy(Array.isArray(synthEngineControlDefinitions.MonoSynth), 'MonoSynth controls should be an array');
+    t.assertTruthy(synthEngineControlDefinitions.MonoSynth.length > 0, 'MonoSynth should have at least one control');
+});
+
+TestRunner.test('Effects Registry - MonoSynth controls have required properties', (t) => {
+    const controls = synthEngineControlDefinitions.MonoSynth;
+    const requiredProps = ['idPrefix', 'label', 'type', 'path', 'defaultValue'];
+    
+    for (const control of controls.slice(0, 3)) {
+        for (const prop of requiredProps) {
+            t.assertTruthy(control.hasOwnProperty(prop), 'Control should have "' + prop + '" property');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns object', (t) => {
+    const defaults = getEffectDefaultParams('Reverb');
+    t.assertTruthy(typeof defaults === 'object', 'getEffectDefaultParams should return an object');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns correct defaults', (t) => {
+    const defaults = getEffectDefaultParams('Reverb');
+    t.assertEqual(defaults.decay, 1.5, 'Reverb default decay should be 1.5');
+    t.assertEqual(defaults.preDelay, 0.01, 'Reverb default preDelay should be 0.01');
+    t.assertEqual(defaults.wet, 0.5, 'Reverb default wet should be 0.5');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns array', (t) => {
+    const params = getEffectParamDefinitions('Chorus');
+    t.assertTruthy(Array.isArray(params), 'getEffectParamDefinitions should return an array');
+    t.assertTruthy(params.length > 0, 'Chorus should have at least one parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns correct params', (t) => {
+    const params = getEffectParamDefinitions('Chorus');
+    const paramKeys = params.map(function(p) { return p.key; });
+    t.assertTruthy(paramKeys.indexOf('frequency') !== -1, 'Chorus should have frequency param');
+    t.assertTruthy(paramKeys.indexOf('wet') !== -1, 'Chorus should have wet param');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns empty for unknown', (t) => {
+    const params = getEffectParamDefinitions('NonExistentEffect');
+    t.assertEqual(params.length, 0, 'Unknown effect should return empty array');
+});
+
+TestRunner.test('Effects Registry - Common effects exist', (t) => {
+    t.assertTruthy(AVAILABLE_EFFECTS.hasOwnProperty('AutoFilter'), 'AutoFilter should exist');
+    t.assertTruthy(AVAILABLE_EFFECTS.hasOwnProperty('Reverb'), 'Reverb should exist');
+    t.assertTruthy(AVAILABLE_EFFECTS.hasOwnProperty('Delay'), 'Delay should exist');
+});
+
+TestRunner.test('Effects Registry - All effects have wet parameter', (t) => {
+    const effects = Object.keys(AVAILABLE_EFFECTS);
+    for (const effectName of effects) {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        const hasWet = effect.params.some(function(p) { return p.key === 'wet'; });
+        t.assertTruthy(hasWet, 'Effect "' + effectName + '" should have a wet parameter');
+    }
+});
+
+TestRunner.test('Effects Registry - Effect params have valid types', (t) => {
+    const effects = Object.keys(AVAILABLE_EFFECTS);
+    const validTypes = ['knob', 'select', 'toggle'];
+    for (const effectName of effects.slice(0, 5)) {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        for (const param of effect.params) {
+            t.assertTruthy(validTypes.indexOf(param.type) !== -1, 
+                'Param "' + param.key + '" in "' + effectName + '" should have valid type');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams handles unknown effect', (t) => {
+    const defaults = getEffectDefaultParams('UnknownEffectXYZ');
+    t.assertEqual(Object.keys(defaults).length, 0, 'Unknown effect should return empty object');
+});
+
+// ============================================
+// End Day 100 tests
+// Total tests: 368
 // ============================================

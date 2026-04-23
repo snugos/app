@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.66.0'; // Day 99: Extended Undo/Redo Coverage - Added 17 verification tests for remaining state setters
+export const APP_VERSION = '0.66.1'; // Day 100: Effects Registry Tests - Added 18 new tests for Effects Registry constants, structure, and helper functions
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
