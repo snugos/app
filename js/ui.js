@@ -257,6 +257,35 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     </div>`;
 }
 
+function buildAudioTrackInspectorDOM(track) {
+    return `<div class="audio-track-controls p-1 space-y-2">
+        <div class="recording-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
+            <h4 class="text-xs font-semibold dark:text-slate-200">Recording Input</h4>
+            <div class="space-y-1">
+                <div>
+                    <label for="audioInputDevice-${track.id}" class="block text-xs font-medium dark:text-slate-300">Input Device:</label>
+                    <select id="audioInputDevice-${track.id}" class="w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
+                        <option value="">Default Microphone</option>
+                    </select>
+                </div>
+                <div id="inputGainKnob-${track.id}-placeholder" class="flex items-center gap-1">
+                    <span class="text-xs dark:text-slate-300">Gain:</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <label for="monitoringVolume-${track.id}" class="text-xs font-medium dark:text-slate-300">Monitor:</label>
+                    <input type="range" id="monitoringVolume-${track.id}" min="0" max="1" step="0.01" 
+                           value="${track.monitoringVolume !== undefined ? track.monitoringVolume : 0.5}" 
+                           class="flex-1 h-2 bg-gray-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer">
+                    <span id="monitoringVolumeLabel-${track.id}" class="text-xs w-8 text-right dark:text-slate-300">${Math.round((track.monitoringVolume !== undefined ? track.monitoringVolume : 0.5) * 100)}%</span>
+                </div>
+            </div>
+        </div>
+        <div id="recordingStatus-${track.id}" class="text-xs text-center p-1 rounded ${track.isRecording ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' : 'bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400'}">
+            ${track.isRecording ? '🔴 Recording...' : 'Ready to Record'}
+        </div>
+    </div>`;
+}
+
 // --- Specific Inspector Control Initializers ---
 function buildSynthEngineControls(track, container, engineType) {
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
