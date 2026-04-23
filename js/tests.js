@@ -81,7 +81,16 @@ import {
     setSwingAmountState,
     // Timeline Markers cleanup functions
     clearTimelineMarkersState,
-    // Track Groups cleanup functions
+    // Track Groups state functions
+    getTrackGroupsState,
+    getTrackGroupByIdState,
+    addTrackGroupState,
+    setTrackGroupNameState,
+    addTrackToGroupState,
+    removeTrackFromGroupState,
+    setTrackGroupColorState,
+    setTrackGroupMutedState,
+    setTrackGroupSoloedState,
     removeTrackGroupState,
     // Track Templates cleanup functions
     clearTrackTemplatesState,
@@ -3015,6 +3024,95 @@ TestRunner.test('Effects Registry - getEffectDefaultParams handles unknown effec
 });
 
 // ============================================
-// End Day 100 tests
-// Total tests: 368
+// Day 101: Track Groups State Tests
+// ============================================
+TestRunner.test('Track Groups - addTrackToGroupState function exists', (t) => {
+    t.assertTruthy(typeof addTrackToGroupState === 'function', 'addTrackToGroupState should be a function');
+});
+
+TestRunner.test('Track Groups - removeTrackFromGroupState function exists', (t) => {
+    t.assertTruthy(typeof removeTrackFromGroupState === 'function', 'removeTrackFromGroupState should be a function');
+});
+
+TestRunner.test('Track Groups - addTrackToGroupState adds track to group', (t) => {
+    const group = addTrackGroupState({ name: 'Add Track Test' });
+    const result = addTrackToGroupState(group.id, 'test-track-123');
+    t.assertTruthy(result, 'addTrackToGroupState should return true on success');
+    const updated = getTrackGroupByIdState(group.id);
+    t.assertTruthy(updated.trackIds.includes('test-track-123'), 'Track should be in group');
+    removeTrackGroupState(group.id);
+});
+
+TestRunner.test('Track Groups - addTrackToGroupState prevents duplicates', (t) => {
+    const group = addTrackGroupState({ name: 'Duplicate Test' });
+    addTrackToGroupState(group.id, 'dup-track');
+    const result = addTrackToGroupState(group.id, 'dup-track');
+    t.assertEqual(result, false, 'Should return false for duplicate track');
+    removeTrackGroupState(group.id);
+});
+
+TestRunner.test('Track Groups - addTrackToGroupState handles unknown group', (t) => {
+    const result = addTrackToGroupState('nonexistent-group-123', 'some-track');
+    t.assertEqual(result, false, 'Should return false for unknown group');
+});
+
+TestRunner.test('Track Groups - removeTrackFromGroupState removes track', (t) => {
+    const group = addTrackGroupState({ name: 'Remove Track Test' });
+    addTrackToGroupState(group.id, 'track-to-remove');
+    const result = removeTrackFromGroupState(group.id, 'track-to-remove');
+    t.assertTruthy(result, 'removeTrackFromGroupState should return true on success');
+    const updated = getTrackGroupByIdState(group.id);
+    t.assertTruthy(!updated.trackIds.includes('track-to-remove'), 'Track should not be in group');
+    removeTrackGroupState(group.id);
+});
+
+TestRunner.test('Track Groups - removeTrackFromGroupState handles unknown track', (t) => {
+    const group = addTrackGroupState({ name: 'Unknown Track Test' });
+    const result = removeTrackFromGroupState(group.id, 'nonexistent-track');
+    t.assertEqual(result, false, 'Should return false for unknown track');
+    removeTrackGroupState(group.id);
+});
+
+TestRunner.test('Track Groups - removeTrackFromGroupState handles unknown group', (t) => {
+    const result = removeTrackFromGroupState('nonexistent-group', 'some-track');
+    t.assertEqual(result, false, 'Should return false for unknown group');
+});
+
+TestRunner.test('Track Groups - removeTrackGroupState deletes group', (t) => {
+    const group = addTrackGroupState({ name: 'Delete Test' });
+    const groupId = group.id;
+    const result = removeTrackGroupState(groupId);
+    t.assertTruthy(result, 'removeTrackGroupState should return true on success');
+    const found = getTrackGroupByIdState(groupId);
+    t.assertEqual(found, undefined, 'Group should no longer exist');
+});
+
+TestRunner.test('Track Groups - removeTrackGroupState handles unknown group', (t) => {
+    const result = removeTrackGroupState('nonexistent-group-xyz');
+    t.assertEqual(result, false, 'Should return false for unknown group');
+});
+
+TestRunner.test('Track Groups - setTrackGroupNameState handles unknown group', (t) => {
+    const result = setTrackGroupNameState('nonexistent-group-abc', 'New Name');
+    t.assertEqual(result, false, 'Should return false for unknown group');
+});
+
+TestRunner.test('Track Groups - setTrackGroupColorState handles unknown group', (t) => {
+    const result = setTrackGroupColorState('nonexistent-group-xyz', '#ff0000');
+    t.assertEqual(result, false, 'Should return false for unknown group');
+});
+
+TestRunner.test('Track Groups - setTrackGroupMutedState handles unknown group', (t) => {
+    const result = setTrackGroupMutedState('nonexistent-group-123', true);
+    t.assertEqual(result, false, 'Should return false for unknown group');
+});
+
+TestRunner.test('Track Groups - setTrackGroupSoloedState handles unknown group', (t) => {
+    const result = setTrackGroupSoloedState('nonexistent-group-456', true);
+    t.assertEqual(result, false, 'Should return false for unknown group');
+});
+
+// ============================================
+// End Day 101 tests
+// Total tests: 382
 // ============================================

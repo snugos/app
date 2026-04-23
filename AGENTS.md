@@ -1249,3 +1249,42 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These tests complement the undo capture implementation work from Days 90-98 by verifying that additional state setters properly call `captureStateForUndo`. The undo system captures full project state snapshots before mutations, allowing users to undo changes via Ctrl+Z.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.66.0
+
+#### Day 100: Effects Registry Tests (2026-04-23)
+- **Feature**: Added 18 new tests for Effects Registry constants, structure, and helper functions
+- **Files Modified**:
+  - `js/tests.js`: Added 18 new tests covering:
+    - `AVAILABLE_EFFECTS` structure validation
+    - Effect required properties and toneClass validation
+    - Parameter definitions for common effects
+    - `synthEngineControlDefinitions` structure
+    - Default params and param definitions helper functions
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.1
+- **Feature Details**:
+  - Tests validate AVAILABLE_EFFECTS has at least 20 effects
+  - Tests verify each effect has required properties (displayName, toneClass, params)
+  - Tests verify synthEngineControlDefinitions has MonoSynth with correct structure
+  - Tests verify getEffectDefaultParams and getEffectParamDefinitions helper functions
+  - Total test count increased from 350 to 368 tests
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.1
+
+#### Day 101: Track Groups State Tests (2026-04-23)
+- **Feature**: Added 14 new tests for Track Groups state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added imports for Track Groups state functions and 14 new tests:
+    - `addTrackToGroupState` and `removeTrackFromGroupState` function existence
+    - Adding tracks to groups and duplicate prevention
+    - Removing tracks from groups
+    - Unknown group/track handling for all functions
+    - `removeTrackGroupState` delete operation and unknown group handling
+    - Edge case handling for setTrackGroupNameState, setTrackGroupColorState, setTrackGroupMutedState, setTrackGroupSoloedState with unknown group IDs
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.2
+- **Feature Details**:
+  - Tests validate return types and behavior for Track Groups CRUD operations
+  - Tests verify proper boolean returns for success/failure cases
+  - Tests verify edge case handling (unknown IDs, duplicate additions)
+  - Total test count increased from 368 to 382 tests
+- **Backend Note**: The Track Groups state functions are used by the Mixer window and Timeline window for managing track groupings. The tests verify the state API without requiring UI context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.2

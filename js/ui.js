@@ -752,6 +752,32 @@ function initializeCommonInspectorControls(track, winEl) {
             showNotification(`Track color changed`, 1500);
         });
     });
+
+    // Track name input - inline rename
+    const trackNameInput = winEl.querySelector(`#trackNameInput-${track.id}`);
+    if (trackNameInput) {
+        trackNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const newName = trackNameInput.value;
+                if (track.setTrackName(newName)) {
+                    showNotification(`Track renamed to "${newName}"`, 1500);
+                } else {
+                    // Revert to current name if validation failed
+                    trackNameInput.value = track.name;
+                }
+            }
+        });
+        trackNameInput.addEventListener('blur', () => {
+            const newName = trackNameInput.value;
+            if (newName !== track.name) {
+                if (!track.setTrackName(newName)) {
+                    // Revert to current name if validation failed
+                    trackNameInput.value = track.name;
+                }
+            }
+        });
+    }
 }
 
 

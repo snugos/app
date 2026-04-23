@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.66.1'; // Day 100: Effects Registry Tests - Added 18 new tests for Effects Registry constants, structure, and helper functions
+export const APP_VERSION = '0.67.0'; // Day 102: Inline Track Name Rename - Added event handler for track name input in inspector
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
