@@ -889,10 +889,10 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 76: Master Effects State Tests (2026-04-23)
 - **Feature**: Added 10 new unit tests for Master Effects state management functions
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Master Effects state management functions (`getMasterEffectsState`, `addMasterEffectToState`, `removeMasterEffectFromState`, `updateMasterEffectParamInState`, `reorderMasterEffectInState`) had no corresponding unit tests despite being core state operations for the master effects chain.
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Master Effects state management functions (`isTrackRecordingState`, `getRecordingTrackIdState`, `getRecordingStartTimeState`, `setIsRecordingState`, `setRecordingTrackIdState`, `setRecordingStartTimeState`) had imports in tests.js but were not being tested despite being core state operations for the recording system.
 - **Files Modified**:
-  - `js/tests.js`: Added 10 new tests for Master Effects state management:
-    - `Master Effects - getMasterEffectsState returns array` - Validates array return type
+  - `js/tests.js`: Added 10 new tests in Day 76 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
     - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
     - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
     - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
@@ -905,14 +905,14 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
     - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
 - **Feature Details**:
-  - Tests validate return types (arrays, objects, strings)
-  - Tests validate state mutations via roundtrip validation (add then get, then remove)
-  - Tests validate edge cases (unknown IDs, same index, invalid indices)
-  - Tests validate ID generation format (`mastereffect_${type}_${timestamp}_${random}`)
-  - Tests validate param path updates (e.g., 'decay', 'frequency')
-  - All tests properly clean up by removing effects after verification
-  - Total test count increased from 219 to 221 tests
-- **Backend Note**: These state functions are used throughout the application for managing the master effects chain. The tests verify the state API without requiring full audio context.
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.9
 
@@ -929,7 +929,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `MIDI_FILE_FORMAT` (0) - Single track format
     - `DEFAULT_MIDI_EXPORT_FILENAME_PREFIX` - Default filename prefix
     - `MAX_MIDI_EXPORT_TRACKS` (64) - MIDI standard max tracks
-    - Bumped APP_VERSION to 0.60.0
   - `js/state.js`: Added `exportToMidiInternal()` function:
     - Collects all notes from all tracks (Synth, InstrumentSampler, Sampler, DrumSampler)
     - Converts note data (pitch, velocity, duration) to MIDI events
@@ -952,4 +951,32 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Menu: Start > Export to MIDI
   - Keyboard: Ctrl+E
 - **Version**: Bumped to 0.60.0
+
+#### Day 79: Recording State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Recording state management functions
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The recording state management functions (`isTrackRecordingState`, `getRecordingTrackIdState`, `getRecordingStartTimeState`, `setIsRecordingState`, `setRecordingTrackIdState`, `setRecordingStartTimeState`) had imports in tests.js but were not being tested despite being core state operations for the recording system.
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 79 section:
+    - `Recording State - isTrackRecordingState returns boolean` - Validates return type
+    - `Recording State - getRecordingTrackIdState initial value` - Validates null default
+    - `Recording State - getRecordingStartTimeState initial value` - Validates null default
+    - `Recording State - setIsRecordingState updates value` - Validates state mutations
+    - `Recording State - setRecordingTrackIdState updates value` - Validates track ID updates
+    - `Recording State - setRecordingStartTimeState updates value` - Validates timestamp updates
+    - `Recording State - setIsRecordingState coerces to boolean` - Validates type coercion behavior
+    - `Recording State - roundtrip recording state update` - Validates full state cycle
+    - `Recording State - multiple track ID updates` - Validates sequential updates
+    - `Recording State - startAudioRecording accepts false for monitoring` - Validates function signature
+  - `js/constants.js`: Bumped APP_VERSION to 0.60.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.60.1
 

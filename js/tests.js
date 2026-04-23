@@ -554,6 +554,88 @@ TestRunner.test('Recording - stopAudioRecording is async', (t) => {
 });
 
 // ============================================
+// Day 79: Recording State Tests
+// ============================================
+TestRunner.test('Recording State - isTrackRecordingState returns boolean', (t) => {
+    const result = isTrackRecordingState();
+    t.assertEqual(typeof result, 'boolean', 'isTrackRecordingState should return a boolean');
+});
+
+TestRunner.test('Recording State - getRecordingTrackIdState initial value', (t) => {
+    const result = getRecordingTrackIdState();
+    t.assertEqual(result, null, 'Initial recording track ID should be null');
+});
+
+TestRunner.test('Recording State - getRecordingStartTimeState initial value', (t) => {
+    const result = getRecordingStartTimeState();
+    t.assertEqual(result, null, 'Initial recording start time should be null');
+});
+
+TestRunner.test('Recording State - setIsRecordingState updates value', (t) => {
+    setIsRecordingState(true);
+    t.assertEqual(isTrackRecordingState(), true, 'Should be recording after setIsRecordingState(true)');
+    setIsRecordingState(false);
+    t.assertEqual(isTrackRecordingState(), false, 'Should not be recording after setIsRecordingState(false)');
+});
+
+TestRunner.test('Recording State - setRecordingTrackIdState updates value', (t) => {
+    setRecordingTrackIdState('track123');
+    t.assertEqual(getRecordingTrackIdState(), 'track123', 'Recording track ID should be updated');
+    setRecordingTrackIdState(null);
+    t.assertEqual(getRecordingTrackIdState(), null, 'Recording track ID should be cleared');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState updates value', (t) => {
+    const testTime = Date.now();
+    setRecordingStartTimeState(testTime);
+    t.assertEqual(getRecordingStartTimeState(), testTime, 'Recording start time should be updated');
+    setRecordingStartTimeState(null);
+    t.assertEqual(getRecordingStartTimeState(), null, 'Recording start time should be cleared');
+});
+
+TestRunner.test('Recording State - setIsRecordingState coerces to boolean', (t) => {
+    setIsRecordingState('true');
+    t.assertEqual(isTrackRecordingState(), true, 'String "true" should coerce to boolean true');
+    setIsRecordingState(0);
+    t.assertEqual(isTrackRecordingState(), false, 'Number 0 should coerce to boolean false');
+    setIsRecordingState('');
+    t.assertEqual(isTrackRecordingState(), false, 'Empty string should coerce to boolean false');
+});
+
+TestRunner.test('Recording State - roundtrip recording state update', (t) => {
+    const trackId = 'test-track-' + Date.now();
+    const startTime = Date.now();
+    setIsRecordingState(true);
+    setRecordingTrackIdState(trackId);
+    setRecordingStartTimeState(startTime);
+    
+    t.assertEqual(isTrackRecordingState(), true, 'Should be recording');
+    t.assertEqual(getRecordingTrackIdState(), trackId, 'Track ID should match');
+    t.assertEqual(getRecordingStartTimeState(), startTime, 'Start time should match');
+    
+    // Cleanup
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    setRecordingStartTimeState(null);
+});
+
+TestRunner.test('Recording State - multiple track ID updates', (t) => {
+    const trackIds = ['track1', 'track2', 'track3'];
+    for (const trackId of trackIds) {
+        setRecordingTrackIdState(trackId);
+        t.assertEqual(getRecordingTrackIdState(), trackId, `Track ID should be ${trackId}`);
+    }
+    // Cleanup
+    setRecordingTrackIdState(null);
+});
+
+TestRunner.test('Recording State - startAudioRecording accepts false for monitoring', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const result = startAudioRecording(null, false);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise');
+});
+
+// ============================================
 // Day 72: Recording Integration Tests
 // ============================================
 TestRunner.test('Recording - RECORDING_SAMPLE_RATE is 44100', (t) => {

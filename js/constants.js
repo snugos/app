@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.60.0'; // Day 78: MIDI Export Feature
+export const APP_VERSION = '0.60.1'; // Day 79: Recording State Tests
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
