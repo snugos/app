@@ -95,6 +95,11 @@ const TestRunner = {
     }
 };
 
+// Export for browser console access
+export async function runTests() {
+    return await TestRunner.runAll(window.showNotification);
+}
+
 // Export for use in other modules
 export { TestRunner };
 export default TestRunner;

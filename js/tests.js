@@ -867,7 +867,7 @@ TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) 
 TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
     clearTimelineMarkersState();
     const marker = addTimelineMarkerState('To Remove', 4);
-    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist');
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
     removeTimelineMarkerState(marker.id);
     t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
     clearTimelineMarkersState();
@@ -1493,7 +1493,7 @@ TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) 
 TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
     clearTimelineMarkersState();
     const marker = addTimelineMarkerState('To Remove', 4);
-    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist');
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
     removeTimelineMarkerState(marker.id);
     t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
     clearTimelineMarkersState();

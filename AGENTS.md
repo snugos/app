@@ -838,7 +838,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify Swing amount clamping (0-100 range)
   - Tests verify full state update via setLoopRegionState and setSwingState
   - Total test count increased from 168 to 179 tests
-- **Backend Note**: The recording state management functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.4
 
@@ -871,7 +871,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
     - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
     - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
-    - Send Tracks: `getSendTracksState` (array), `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
     - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
     - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
     - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
@@ -882,7 +882,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate edge cases (nonexistent IDs, null defaults)
   - Tests validate clamping behavior (swing amount, chord root)
   - All tests use `clearTimelineMarkersState()` and `clearTrackTemplatesState()` for cleanup
-  - Total test count increased from 180 to 216 tests
+  - Total test count increased from 237 to 247 tests
 - **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.6
@@ -938,7 +938,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.2
 
-#### Day 78: MIDI Export Feature (2026-04-23)
+#### Day 80: MIDI Export Feature (2026-04-23)
 - **Feature**: Added MIDI Export functionality to export sequences as Standard MIDI Files
 - **Files Modified**:
   - `js/constants.js`: Added MIDI Export constants:
@@ -972,53 +972,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Keyboard: Ctrl+E
 - **Version**: Bumped to 0.60.0
 
-#### Day 79: Recording State Tests (2026-04-23)
-- **Feature**: Added 10 new unit tests for Recording state management functions
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The recording state management functions (`isTrackRecordingState`, `getRecordingTrackIdState`, `getRecordingStartTimeState`, `setIsRecordingState`, `setRecordingTrackIdState`, `setRecordingStartTimeState`) had imports in tests.js but were not being tested despite being core state operations for the recording system.
+#### Day 81: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Issue**: The AGENTS.md comment "Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`" was documented but the actual `runTests` function was not exported from testRunner.js, making this instruction non-functional.
 - **Files Modified**:
-  - `js/tests.js`: Added 10 new tests in Day 79 section:
-    - `Recording State - isTrackRecordingState returns boolean` - Validates return type
-    - `Recording State - getRecordingTrackIdState initial value` - Validates null default
-    - `Recording State - getRecordingStartTimeState initial value` - Validates null default
-    - `Recording State - setIsRecordingState updates value` - Validates state mutations
-    - `Recording State - setRecordingTrackIdState updates value` - Validates track ID updates
-    - `Recording State - setRecordingStartTimeState updates value` - Validates timestamp updates
-    - `Recording State - setIsRecordingState coerces to boolean` - Validates type coercion behavior
-    - `Recording State - roundtrip recording state update` - Validates full state cycle
-    - `Recording State - multiple track ID updates` - Validates sequential updates
-    - `Recording State - startAudioRecording accepts false for monitoring` - Validates function signature
-  - `js/constants.js`: Bumped APP_VERSION to 0.60.1
-- **Feature Details**:
-  - Tests validate return types (boolean, string/null, number/null)
-  - Tests validate initial state values (all null/false by default)
-  - Tests validate state mutations via roundtrip validation (set then get)
-  - Tests validate type coercion (strings, numbers coerce to booleans)
-  - Tests validate multiple sequential updates
-  - All tests use state functions imported from `js/state.js`
-  - Total test count increased from 237 to 247 tests
-- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.60.1
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.60.3
+- **Impact**: Users can now run the test suite from the browser console using: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.60.3
 
-#### Day 81: Fade Curve Methods Tests (2026-04-23)
-- **Feature**: Added 7 new unit tests for audio clip fade curve methods and fade curve constants
-- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The fade curve functionality for audio clips (`setAudioClipFadeInCurve`, `getAudioClipFadeInCurve`, `setAudioClipFadeOutCurve`, `getAudioClipFadeOutCurve`) lacked unit test coverage despite being used in the Audio Clip Editor window.
+#### Day 82: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Issue**: The AGENTS.md comment "Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`" was documented but the actual `runTests` function was not exported from testRunner.js, making this instruction non-functional.
 - **Files Modified**:
-  - `js/tests.js`: Added 7 new tests in Day 81 section:
-    - `Audio Clip - setAudioClipFadeInCurve validates curve values` - Tests that setAudioClipFadeInCurve validates curve values and returns true for valid changes
-    - `Audio Clip - getAudioClipFadeInCurve returns default when unset` - Tests default value ('linear') is returned for nonexistent clips
-    - `Audio Clip - setAudioClipFadeOutCurve validates curve values` - Tests that setAudioClipFadeOutCurve validates curve values
-    - `Audio Clip - getAudioClipFadeOutCurve returns default when unset` - Tests default value ('linear') is returned
-    - `Audio Clip - fade curves array contains valid options` - Tests FADE_CURVES array has exactly 2 options (linear, exponential)
-    - `Audio Clip - FADE_CURVE_LINEAR and FADE_CURVE_EXPONENTIAL are correct strings` - Tests the curve type constants
-    - `Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE default to linear` - Tests both defaults match FADE_CURVE_LINEAR
-- **Feature Details**:
-  - Tests validate fade curve setter/getter behavior using a self-contained mock track implementation
-  - Tests validate that invalid curve values default to 'linear' gracefully
-  - Tests validate the FADE_CURVES array contains exactly 'linear' and 'exponential'
-  - Tests validate that defaults match the FADE_CURVE_LINEAR constant
-  - Mock implementation mirrors the actual Track.js behavior for accuracy
-- **Backend Note**: The fade curve methods in Track.js are used by the Audio Clip Editor UI (openAudioClipEditorWindow in ui.js) to allow users to select fade curve types for audio clips. The constants (FADE_CURVE_LINEAR, FADE_CURVE_EXPONENTIAL, FADE_CURVES, DEFAULT_FADE_IN_CURVE, DEFAULT_FADE_OUT_CURVE) are defined in js/constants.js.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.60.2
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.60.3
+- **Impact**: Users can now run the test suite from the browser console using: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.60.3
 

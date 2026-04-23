@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.60.2'; // Day 81: Fade Curve Methods Tests
+export const APP_VERSION = '0.60.3'; // Day 82: Test Runner runTests Export Fix
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
