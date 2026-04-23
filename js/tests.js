@@ -1286,6 +1286,67 @@ TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t)
     t.assertEqual(level, 0, 'Should return 0 for unknown send');
 });
 
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
 // ============================================
 // Day 70: Track Groups Additional Tests
 // ============================================

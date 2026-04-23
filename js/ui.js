@@ -4319,6 +4319,43 @@ function initializeMixerEventHandlers(mixerElement) {
                 }
             });
             
+            // Color submenu
+            const colorItems = Constants.TRACK_COLORS.map(color => ({
+                label: color,
+                action: () => {
+                    if (track.setTrackColor) {
+                        track.setTrackColor(color);
+                        updateMixerWindow();
+                        showNotification(`Track color changed`, 1500);
+                    }
+                }
+            }));
+            menuItems.push({ label: 'Color', submenu: colorItems });
+            
+            // Delete track
+            menuItems.push({ separator: true });
+            menuItems.push({
+                label: 'Delete Track',
+                action: () => {
+                    if (typeof handleRemoveTrack === 'function') {
+                        handleRemoveTrack(trackId);
+                    } else if (localAppServices.removeTrack) {
+                        localAppServices.removeTrack(trackId);
+                    }
+                }
+            });
+            
+            // Duplicate track
+            menuItems.push({
+                label: 'Duplicate Track',
+                action: () => {
+                    if (track.duplicateTrack) {
+                        track.duplicateTrack();
+                        showNotification(`Track "${track.name}" duplicated`, 1500);
+                    }
+                }
+            });
+
             createContextMenu(e, menuItems, localAppServices);
         });
     });

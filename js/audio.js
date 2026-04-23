@@ -24,6 +24,7 @@ let metronomeInitialized = false;
 // Variables for audio recording
 let mic = null;
 let recorder = null;
+let recordingInputGainNode = null; // Gain node for recording input level control
 
 // Send Bus Audio Nodes
 let sendBusNodes = new Map(); // Map: sendId -> { inputGain, effectsChain, outputGain }
@@ -499,7 +500,7 @@ export function getMimeTypeFromFilename(filename) {
 }
 
 async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint, padIndex = null) {
-    const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingDAW() : false;
+    const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingingDAW() : false;
 
     if (localAppServices.captureStateForUndo && !isReconstructinging) {
         const targetName = trackTypeHint === 'DrumSampler' && padIndex !== null ?
@@ -968,6 +969,13 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         mic = null;
     }
 
+    if (recordingInputGainNode) {
+        if (!recordingInputGainNode.disposed) {
+            try { recordingInputGainNode.dispose(); } catch(e) { console.warn("[Audio startAudioRecording] Error disposing recordingInputGainNode:", e.message); }
+        }
+        recordingInputGainNode = null;
+    }
+
     if (recorder) {
         if (recorder.state === "started") {
             try { recorder.stop(); } catch(e) { console.warn("[Audio startAudioRecording] Error stopping existing recorder:", e.message); }
@@ -1011,13 +1019,21 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         // Disconnect mic from everything first to be safe
         try { mic.disconnect(); } catch(e) { /* ignore if not connected */ }
 
-        if (isMonitoringEnabled) {
-            mic.connect(track.inputChannel);
+        // Create recording input gain node with track's gain setting (default 1.0, range 0-2)
+        if (!recordingInputGainNode || recordingInputGainNode.disposed) {
+            recordingInputGainNode = new Tone.Gain(track.recordingInputGain !== undefined ? track.recordingInputGain : Constants.DEFAULT_RECORDING_INPUT_GAIN);
         } else {
-            // Ensure mic is not connected to the inputChannel if monitoring is off.
-            // This might be redundant if disconnect above worked, but explicit check is safer.
+            recordingInputGainNode.gain.value = track.recordingInputGain !== undefined ? track.recordingInputGain : Constants.DEFAULT_RECORDING_INPUT_GAIN;
         }
-        mic.connect(recorder);
+
+        // Connect mic -> recordingInputGainNode -> recorder
+        mic.connect(recordingInputGainNode);
+        recordingInputGainNode.connect(recorder);
+
+        // If monitoring is enabled, also connect to track's input channel for hear-back
+        if (isMonitoringEnabled) {
+            recordingInputGainNode.connect(track.inputChannel);
+        }
 
         await recorder.start();
 
@@ -1077,7 +1093,7 @@ export async function stopAudioRecording() {
     if (mic) {
         if (mic.state === "started") {
             try {
-                mic.disconnect(recorder); // Disconnect from recorder first
+                mic.disconnect(recordingInputGainNode); // Disconnect from recorder first
                 if (localAppServices.getRecordingTrackId) { // Disconnect from track input if monitoring was on
                     const recTrack = localAppServices.getTrackById(localAppServices.getRecordingTrackId());
                     if (recTrack && recTrack.inputChannel && !recTrack.inputChannel.disposed) {
@@ -1439,6 +1455,14 @@ export function setSendBusMuted(sendId, muted) {
     if (busData.outputGain && !busData.outputGain.disposed) {
         busData.outputGain.gain.value = muted ? 0 : 1;
     }
+}
+
+export function setRecordingInputGain(gainValue) {
+    const clampedGain = Math.max(Constants.MIN_RECORDING_INPUT_GAIN, Math.min(Constants.MAX_RECORDING_INPUT_GAIN, gainValue));
+    if (recordingInputGainNode && !recordingInputGainNode.disposed) {
+        recordingInputGainNode.gain.value = clampedGain;
+    }
+    return clampedGain;
 }
 
 function rebuildSendBusChain(sendId) {

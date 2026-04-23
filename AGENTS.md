@@ -694,7 +694,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 #### Day 57: Timeline Freeze/Bounce UI (2026-04-22)
 - **Feature**: Added Freeze Track and Bounce Track options to timeline track lane right-click context menu
 - **Files Modified**:
-  - `js/ui.js`: Added context menu items in timeline track lane right-click handler:
+  - `js/ui.js`: Added to the timeline track lane right-click handler:
     - "Freeze Track" - Renders track audio offline and replaces sequence clips with frozen audio clip (only shown for non-Audio tracks with sequences)
     - "Bounce Track" - Renders track audio to WAV and downloads file (shown for all track types with content)
     - Both options call the existing `track.freezeTrack()` and `track.bounceTrack()` methods in Track.js
@@ -1037,3 +1037,20 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The automation lane methods are used by the Automation Editor UI (`buildSequencerContentDOM()` and `openTrackSequencerWindow()` in ui.js) to allow users to record and edit parameter automation. The constants define how automation is displayed and stored.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.5
+
+#### Day 86: Mixer Track Context Menu - Delete/Duplicate (2026-04-23)
+- **Feature**: Added Delete Track and Duplicate Track options to the Mixer track strip right-click context menu
+- **Issue**: The Mixer window track strips had a context menu for group management but lacked common track operations like delete and duplicate. Users had to use the timeline or track inspector to perform these actions.
+- **Files Modified**:
+  - `js/ui.js`: Added to the mixer track strip context menu in `initializeMixerEventHandlers()`:
+    - "Delete Track" menu item - calls `handleRemoveTrack()` if available, falls back to `localAppServices.removeTrack()`
+    - "Duplicate Track" menu item - calls `track.duplicateTrack()` directly and shows notification
+    - Both items are separated from group management items by a separator line
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.2
+- **Feature Details**:
+  - Delete Track: Shows confirmation dialog before removing the track (uses existing handleRemoveTrack function which captures undo state)
+  - Duplicate Track: Creates a copy of the track with "(Copy)" suffix, captures undo state for the duplication
+  - Works alongside existing group management options (Add to Group, Remove from Group, Create Group)
+  - Context menu appears on right-click of any track strip in the Mixer window
+- **Usage**: Click the FX button in any track strip in the Mixer window
+- **Version**: Bumped to 0.61.2

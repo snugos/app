@@ -109,6 +109,7 @@ export function getClipboardDataState() { return clipboardDataGlobal; }
 export function getArmedTrackIdState() { return armedTrackId; }
 export function setArmedTrackIdState(id) { armedTrackId = id !== undefined && id !== null ? id : null; }
 export function getSoloedTrackIdState() { return soloedTrackId; }
+export function setSoloedTrackIdState(id) { soloedTrackId = id !== undefined && id !== null ? id : null; }
 export function isTrackRecordingState() { return isRecordingGlobal; }
 export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
 export function getRecordingStartTimeState() { return recordingStartTime; }
@@ -1173,14 +1174,9 @@ function pitchToRow(rowIndex, trackType) {
         // synthPitches[0] is last (highest), so rowIndex needs mapping
         // The actual pitch for row 0 is at synthPitches[0] which is the FIRST element of the reversed array
         // synthPitches was reversed, so first element is highest pitch (B6)
-        // But actual row 0 is HIGHEST, so let's use a simpler mapping
-        // Synth row 0 = highest pitch = B6 = 95 (MIDI)
-        // Each row down = -1 semitone
-        // With synthPitches having 72 rows (C1 to B6)
-        // Row 0 = B6 (95), Row 71 = C1 (36)
-        // So MIDI note = 95 - rowIndex
-        const maxNote = 95; // B6
-        return maxNote - rowIndex;
+        // But actual row 0 is HIGHEST, so let's use a similar approach to synth, starting from a base
+        const baseNote = 48; // C3 as base
+        return baseNote + rowIndex;
     } else if (trackType === 'DrumSampler') {
         // DrumSampler rows map to pads 0-7, which map to MIDI notes 36-43
         return 36 + rowIndex; // Rows 0-7 = MIDI 36-43
