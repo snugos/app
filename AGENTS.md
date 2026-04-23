@@ -799,3 +799,19 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The actual drop zone functionality is implemented in `js/utils.js` (`createDropZoneHTML` and `setupGenericDropZoneListeners`) and called from `js/ui.js` (`updateDrumPadControlsUI`). The tests verify the HTML generation layer.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.4
+
+#### Day 64: Track Template Undo/Redo (2026-04-22)
+- **Feature**: Added undo state capture to Track Template save and delete operations
+- **Issue**: The AGENTS.md mentioned "Undo/redo: verify all state mutations go through capture mechanism" as an incomplete item. The track template state management (`addTrackTemplateState`, `removeTrackTemplateState`) in `js/state.js` did not capture undo states, making template operations non-undoable.
+- **Files Modified**:
+  - `js/state.js`: Added `_captureUndoState` calls to:
+    - `addTrackTemplateState()` - Captures undo state before adding a new template (describes "Save Track Template")
+    - `removeTrackTemplateState()` - Captures undo state before removing a template (describes "Delete Track Template")
+  - `js/constants.js`: Bumped APP_VERSION to 0.58.5
+- **Feature Details**:
+  - Save/Undo: Creating a new track template is now an undoable action
+  - Delete/Undo: Deleting a track template is now an undoable action  
+  - Undo Description: Clear descriptions help users understand what will be undone
+  - Backend Note: The `updateTrackTemplateState()` function was not modified since it only updates existing template properties (name, color, etc.) rather than adding/removing templates
+- **Usage**: Save a track as template via Menu > Save Track as Template, then undo if needed with Ctrl+Z
+- **Version**: Bumped to 0.58.5

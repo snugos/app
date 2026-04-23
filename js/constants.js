@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.58.4"; // Day 63: DrumSampler Pad Drop Zone Verification - Added comprehensive tests for pad drop zone HTML generation and status handling
+export const APP_VERSION = "0.58.5"; // Day 64: Track Template Undo/Redo - Added undo state capture to addTrackTemplateState and removeTrackTemplateState
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

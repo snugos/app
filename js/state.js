@@ -409,6 +409,10 @@ export function addTrackTemplateState(templateData) {
     if (trackTemplatesState.length >= Constants.MAX_TRACK_TEMPLATES) {
         return null; // Max templates reached
     }
+    // Capture undo state before modifying templates
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Save Track Template "${templateData?.name || 'Untitled'}"`);
+    }
     const id = templateData && templateData.id !== undefined ? templateData.id : trackTemplateIdCounter++;
     const template = {
         id,
@@ -444,6 +448,11 @@ export function updateTrackTemplateState(id, updates) {
 }
 
 export function removeTrackTemplateState(id) {
+    // Capture undo state before modifying templates
+    if (appServices.captureStateForUndo) {
+        const template = trackTemplatesState.find(t => t.id === id);
+        appServices.captureStateForUndo(`Delete Track Template "${template?.name || 'Untitled'}"`);
+    }
     const idx = trackTemplatesState.findIndex(t => t.id === id);
     if (idx !== -1) {
         trackTemplatesState.splice(idx, 1);
