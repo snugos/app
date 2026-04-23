@@ -9443,6 +9443,36 @@ export class Track {
         const clip = this._getAudioClip(clipId);
         return clip ? (clip.reverse !== undefined ? clip.reverse : false) : false;
     }
+    // Set audio clip start time (position on timeline) with undo capture
+    setAudioClipStartTime(clipId, startTime) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) return false;
+        const newTime = Math.max(0, parseFloat(startTime));
+        if (clip.startTime === newTime) return false;
+        this._captureUndoState(`Move clip "${clip.name}" on ${this.name}`);
+        clip.startTime = newTime;
+        return true;
+    }
+    // Get audio clip start time
+    getAudioClipStartTime(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? clip.startTime : 0;
+    }
+    // Set audio clip duration with undo capture
+    setAudioClipDuration(clipId, duration) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) return false;
+        const newDuration = Math.max(0.01, parseFloat(duration));
+        if (clip.duration === newDuration) return false;
+        this._captureUndoState(`Resize clip "${clip.name}" on ${this.name}`);
+        clip.duration = newDuration;
+        return true;
+    }
+    // Get audio clip duration
+    getAudioClipDuration(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? clip.duration : 0;
+    }
     // Delete a timeline clip with undo capture
     deleteTimelineClip(clipId) {
         const clip = this._getAudioClip(clipId);

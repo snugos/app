@@ -4374,7 +4374,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 if (track.setAudioClipFadeInCurve) track.setAudioClipFadeInCurve(clipId, newFadeInCurve);
                 if (track.setAudioClipFadeOutCurve) track.setAudioClipFadeOutCurve(clipId, newFadeOutCurve);
                 if (track.setAudioClipCrossfade) track.setAudioClipCrossfade(clipId, newCrossfade);
-                if (track.updateAudioClipPosition) track.updateAudioClipPosition(clipId, newStartTime);
+                if (track.setAudioClipStartTime) track.setAudioClipStartTime(clipId, newStartTime);
                 if (track.setAudioClipGain) track.setAudioClipGain(clipId, newGain);
                 if (track.setAudioClipName) track.setAudioClipName(clipId, newName);
                 if (track.setAudioClipReverse) track.setAudioClipReverse(clipId, newReverse);
