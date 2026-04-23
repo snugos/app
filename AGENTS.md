@@ -748,3 +748,28 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Total test count increased from 65 to 72 tests
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.2
+
+#### Day 62: Automation Editor Event Handlers (2026-04-22)
+- **Feature**: Completed missing automation editor event handlers for the sequencer window
+- **Issue**: The automation editor UI (toggle, parameter selector, lane grid) was already implemented in `buildSequencerContentDOM()` but had no interactivity - the toggle didn't work, parameter selector did nothing, clear button was inert, and clicking/dragging on the lane did nothing
+- **Files Modified**:
+  - `js/ui.js`: Added automation editor event handlers in `openTrackSequencerWindow()`:
+    - Toggle checkbox: Shows/hides the automation editor lane
+    - Parameter selector: Re-renders the lane when user selects a different parameter (volume, pan, filterCutoff, etc.)
+    - Clear Lane button: Confirms and clears all automation points for the selected parameter
+    - Click to add points: Click on an empty cell to add an automation point at that step
+    - Right-click/Shift-click to remove: Right-click or Shift+click on a point to remove it
+    - Drag to move points: Click and drag vertically on existing points to adjust their value
+    - Undo support: Captures undo state before adding/removing points
+    - Visual feedback: Orange dot appears on points, bar height reflects value (0-100%)
+  - `js/constants.js`: Bumped APP_VERSION to 0.58.3
+- **Feature Details**:
+  - Automation Editor toggle shows/hides the automation lane in the sequencer
+  - Parameter selector allows choosing which parameter to automate (volume, pan, filterCutoff, etc.)
+  - Clear Lane button removes all automation points for the selected parameter
+  - Click on empty cell adds a point at default value (50%)
+  - Right-click on a point removes it
+  - Drag vertically on a point to adjust its value (0-100%)
+  - All operations capture undo state for proper undo/redo support
+- **Usage**: Open sequencer for any track, click "Automation" checkbox in toolbar to show editor, click cells to add points, drag points to adjust values
+- **Version**: Bumped to 0.58.3
