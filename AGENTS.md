@@ -728,3 +728,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Export: Right-click on timeline clip, select "Export Clip as WAV"
   - Drag: Drag timeline clips to reorder or export to other apps
 - **Version**: Bumped to 0.58.0
+
+#### Day 61: Track Template Constants Tests (2026-04-22)
+- **Feature**: Added 7 new unit tests for Track Template constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added Track Template Constants Tests section with 7 tests:
+    - `Track Templates - MAX_TRACK_TEMPLATES is 32`
+    - `Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is Template`
+    - `Track Templates - TRACK_TEMPLATE_COLORS uses TRACK_COLORS`
+    - `Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex`
+    - `Track Templates - DEFAULT_TRACK_TEMPLATE structure`
+    - `Track Templates - DEFAULT_TRACK_TEMPLATE has no automation by default`
+    - `Track Templates - DEFAULT_TRACK_TEMPLATE instrument settings default to null`
+  - `js/constants.js`: Bumped APP_VERSION to 0.58.2
+- **Feature Details**:
+  - Tests validate MAX_TRACK_TEMPLATES (32), DEFAULT_TEMPLATE_NAME_PREFIX ('Template')
+  - Tests validate TRACK_TEMPLATE_COLORS equals TRACK_COLORS
+  - Tests validate DEFAULT_TRACK_TEMPLATE structure (name, color, type, synthParams, activeEffects, hasAutomation, automationLanes, instrumentSamplerSettings, drumSamplerPads)
+  - Total test count increased from 65 to 72 tests
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.58.2
