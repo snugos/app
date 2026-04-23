@@ -815,3 +815,28 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Backend Note: The `updateTrackTemplateState()` function was not modified since it only updates existing template properties (name, color, etc.) rather than adding/removing templates
 - **Usage**: Save a track as template via Menu > Save Track as Template, then undo if needed with Ctrl+Z
 - **Version**: Bumped to 0.58.5
+
+#### Day 64 cont: Undo/Redo System Tests (2026-04-22)
+- **Feature**: Added 9 new unit tests for undo/redo system state management
+- **Issue**: The AGENTS.md mentioned "Undo/redo: verify all state mutations go through capture mechanism" as an incomplete item. While undo/redo functionality was implemented over multiple days, there were limited unit tests specifically for the undo/redo state management functions.
+- **Files Modified**:
+  - `js/tests.js`: Added 9 new tests for undo/redo system:
+    - `Undo/Redo - MAX_HISTORY_STATES is reasonable` - Validates 50 limit with boundary checks
+    - `Undo/Redo - getUndoStackState returns array` - Verifies undo stack getter returns array
+    - `Undo/Redo - getRedoStackState returns array` - Verifies redo stack getter returns array
+    - `Undo/Redo - undoStack starts empty on init` - Verifies stacks start empty for new projects
+    - `Undo/Redo - redoStack starts empty on init` - Verifies redo stack starts empty
+    - `Undo/Redo - undoLastActionInternal function exists` - Verifies undo function exists
+    - `Undo/Redo - redoLastActionInternal function exists` - Verifies redo function exists
+    - `Undo/Redo - undoLastActionInternal is async` - Verifies undo is async function
+    - `Undo/Redo - redoLastActionInternal is async` - Verifies redo is async function
+  - `js/constants.js`: Updated APP_VERSION to 0.58.5
+- **Feature Details**:
+  - Tests import and validate undo/redo state functions from `js/state.js`
+  - Tests verify undo/redo functions exist and are properly typed as async functions
+  - Tests verify stack getter functions return arrays (not undefined or null)
+  - Tests verify initial stack state is empty for fresh projects
+  - Total test count increased from 81 to 90 tests
+- **Backend Note**: The actual undo/redo state capture is implemented in `js/state.js` via `_captureUndoState()`, `undoLastActionInternal()`, and `redoLastActionInternal()`. The tests verify the API surface of these functions.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.58.5
