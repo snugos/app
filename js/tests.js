@@ -1943,6 +1943,65 @@ TestRunner.test('Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE d
 });
 
 // ============================================
+// Day 93: Audio Clip Editor UI Tests
+// ============================================
+TestRunner.test('Audio Clip Editor - crossfade constants are valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'Default crossfade should be 0');
+    t.assertEqual(MIN_AUDIO_CLIP_CROSSFADE, 0, 'Min crossfade should be 0');
+    t.assertEqual(MAX_AUDIO_CLIP_CROSSFADE, 5, 'Max crossfade should be 5 seconds');
+    t.assertTruthy(MAX_AUDIO_CLIP_CROSSFADE > DEFAULT_AUDIO_CLIP_CROSSFADE, 'Max should be greater than default');
+});
+
+TestRunner.test('Audio Clip Editor - gain constants are valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'Default gain should be 1.0 (0dB)');
+    t.assertEqual(MIN_AUDIO_CLIP_GAIN, 0, 'Min gain should be 0 (silence)');
+    t.assertEqual(MAX_AUDIO_CLIP_GAIN, 4.0, 'Max gain should be 4.0 (12dB boost)');
+    t.assertTruthy(MAX_AUDIO_CLIP_GAIN > DEFAULT_AUDIO_CLIP_GAIN, 'Max should be greater than default');
+});
+
+TestRunner.test('Audio Clip Editor - playback rate constants are valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'Default rate should be 1.0 (normal)');
+    t.assertEqual(MIN_AUDIO_CLIP_PLAYBACK_RATE, 0.25, 'Min rate should be 0.25x');
+    t.assertEqual(MAX_AUDIO_CLIP_PLAYBACK_RATE, 4.0, 'Max rate should be 4.0x');
+    t.assertTruthy(MIN_AUDIO_CLIP_PLAYBACK_RATE < 1, 'Min should be less than normal speed');
+    t.assertTruthy(MAX_AUDIO_CLIP_PLAYBACK_RATE > 1, 'Max should be greater than normal speed');
+});
+
+TestRunner.test('Audio Clip Editor - start/end offset constants are valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'Default start offset should be 0 (beginning)');
+    t.assertEqual(MIN_AUDIO_CLIP_START_OFFSET, 0, 'Min start offset should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1 (use full audio)');
+    t.assertEqual(MIN_AUDIO_CLIP_END_OFFSET, -1, 'Min end offset should be -1');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_START_OFFSET <= MIN_AUDIO_CLIP_START_OFFSET, 'Default should be >= min');
+});
+
+TestRunner.test('Audio Clip Editor - reverse constant is boolean', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_REVERSE, false, 'Default reverse should be false (forward)');
+    t.assertEqual(typeof DEFAULT_AUDIO_CLIP_REVERSE, 'boolean', 'Should be boolean type');
+});
+
+TestRunner.test('Audio Clip Editor - fade constants are valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0 seconds');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0 seconds');
+    t.assertEqual(MAX_AUDIO_CLIP_FADE, 10, 'Max fade should be 10 seconds');
+    t.assertTruthy(MAX_AUDIO_CLIP_FADE > DEFAULT_AUDIO_CLIP_FADE_IN, 'Max should be greater than default');
+});
+
+TestRunner.test('Audio Clip Editor - FADE_CURVES array has correct options', (t) => {
+    t.assertEqual(FADE_CURVES.length, 2, 'Should have exactly 2 fade curve options');
+    t.assertTruthy(FADE_CURVES.includes('linear'), 'Should include linear');
+    t.assertTruthy(FADE_CURVES.includes('exponential'), 'Should include exponential');
+    t.assertEqual(FADE_CURVES[0], 'linear', 'First option should be linear');
+    t.assertEqual(FADE_CURVES[1], 'exponential', 'Second option should be exponential');
+});
+
+TestRunner.test('Audio Clip Editor - crossfade range is reasonable', (t) => {
+    t.assertTruthy(MIN_AUDIO_CLIP_CROSSFADE >= 0, 'Min crossfade should be non-negative');
+    t.assertTruthy(MAX_AUDIO_CLIP_CROSSFADE <= 10, 'Max crossfade should be <= 10 seconds');
+    t.assertTruthy(MAX_AUDIO_CLIP_CROSSFADE > MIN_AUDIO_CLIP_CROSSFADE, 'Max should be greater than min');
+});
+
+// ============================================
 // Day 85: Track Template Constants Tests
 // ============================================
 TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES is reasonable', (t) => {

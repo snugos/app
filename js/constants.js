@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.63.0'; // Day 92: MIDI Import Feature - Import Standard MIDI Files into new Synth tracks
+export const APP_VERSION = '0.63.1'; // Day 93: Audio Clip Editor UI Tests - 8 new tests for crossfade, gain, playback rate, offset, reverse, and fade constants
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
