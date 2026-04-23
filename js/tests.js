@@ -78,7 +78,13 @@ import {
     getSwingEnabledState,
     setSwingEnabledState,
     getSwingAmountState,
-    setSwingAmountState
+    setSwingAmountState,
+    // Timeline Markers cleanup functions
+    clearTimelineMarkersState,
+    // Track Groups cleanup functions
+    removeTrackGroupState,
+    // Track Templates cleanup functions
+    clearTrackTemplatesState
 } from './state.js';
 
 import { startAudioRecording, stopAudioRecording } from './audio.js';
@@ -711,6 +717,7 @@ TestRunner.test('Track Groups - setTrackGroupNameState updates name', (t) => {
     t.assertTruthy(result, 'setTrackGroupNameState should return true on success');
     const updated = getTrackGroupByIdState(group.id);
     t.assertEqual(updated.name, 'New Name', 'Group name should be updated');
+    removeTrackGroupState(group.id);
 });
 
 // ============================================
@@ -760,7 +767,7 @@ TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (
 // ============================================
 TestRunner.test('Chord Mode - getChordModeState returns object', (t) => {
     const chordMode = getChordModeState();
-    t.assertTruthy(typeof chordMode === 'object', 'Chord mode state should be an object');
+    t.assertTruthy(typeof chordMode === 'object', 'getChordModeState should return an object');
     t.assertTruthy('enabled' in chordMode, 'Should have enabled property');
     t.assertTruthy('root' in chordMode, 'Should have root property');
     t.assertTruthy('type' in chordMode, 'Should have type property');
@@ -1362,15 +1369,16 @@ TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => 
     t.assertTruthy(marker.id, 'Marker should have an id');
     t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
     t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
     clearTimelineMarkersState();
 });
 
 TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
     clearTimelineMarkersState();
-    const added = addTimelineMarkerState('Find Me', 8);
+    const added = addTimelineMarkerState('Find Test', 8);
     const found = getTimelineMarkerByIdState(added.id);
     t.assertTruthy(found, 'Marker should be found');
-    t.assertEqual(found.name, 'Find Me', 'Found marker should match');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
     clearTimelineMarkersState();
 });
 
@@ -1384,8 +1392,8 @@ TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) 
     const marker = addTimelineMarkerState('Original', 4);
     setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
     const updated = getTimelineMarkerByIdState(marker.id);
-    t.assertEqual(updated.name, 'Updated', 'Name should be updated');
-    t.assertEqual(updated.bar, 10, 'Bar should be updated');
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
     clearTimelineMarkersState();
 });
 
@@ -1429,10 +1437,10 @@ TestRunner.test('Track Groups - getTrackGroupsState returns array', (t) => {
 
 TestRunner.test('Track Groups - addTrackGroupState adds group', (t) => {
     const group = addTrackGroupState({ name: 'Test Group', color: '#00ff00' });
-    t.assertTruthy(group, 'Group should be added');
-    t.assertTruthy(group.id, 'Group should have an id');
+    t.assertTruthy(group, 'addTrackGroupState should return a group');
     t.assertEqual(group.name, 'Test Group', 'Group name should match');
-    removeTrackGroupState(group.id);
+    t.assertEqual(group.color, '#00ff00', 'Group color should match');
+    t.assertTruthy(Array.isArray(group.trackIds), 'trackIds should be an array');
 });
 
 TestRunner.test('Track Groups - setTrackGroupNameState updates group', (t) => {
@@ -1493,6 +1501,9 @@ TestRunner.test('Track Templates - removeTrackTemplateState removes template', (
 TestRunner.test('Chord Mode - getChordModeState returns object', (t) => {
     const state = getChordModeState();
     t.assertTruthy(typeof state === 'object', 'getChordModeState should return an object');
+    t.assertTruthy('enabled' in state, 'Should have enabled property');
+    t.assertTruthy('root' in state, 'Should have root property');
+    t.assertTruthy('type' in state, 'Should have type property');
 });
 
 TestRunner.test('Chord Mode - getChordModeEnabledState returns boolean', (t) => {
@@ -1507,6 +1518,17 @@ TestRunner.test('Chord Mode - setChordModeEnabledState updates state', (t) => {
     t.assertEqual(getChordModeEnabledState(), false, 'Chord mode should be disabled');
 });
 
+TestRunner.test('Chord Mode - getChordModeRootState returns number', (t) => {
+    const root = getChordModeRootState();
+    t.assertEqual(typeof root, 'number', 'Should return number');
+    t.assertTruthy(root >= 0 && root <= 11, 'Root should be 0-11 (C-B)');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState updates state', (t) => {
+    setChordModeRootState(5); // F
+    t.assertEqual(getChordModeRootState(), 5, 'Chord root should be 5');
+});
+
 TestRunner.test('Chord Mode - getChordModeTypeState returns string', (t) => {
     const type = getChordModeTypeState();
     t.assertEqual(typeof type, 'string', 'Should return string');
@@ -1517,6 +1539,18 @@ TestRunner.test('Chord Mode - setChordModeTypeState updates state', (t) => {
     t.assertEqual(getChordModeTypeState(), 'minor', 'Chord type should be minor');
     setChordModeTypeState('major');
     t.assertEqual(getChordModeTypeState(), 'major', 'Chord type should be major');
+});
+
+TestRunner.test('Chord Mode - getChordModeLockState returns boolean', (t) => {
+    const lock = getChordModeLockState();
+    t.assertEqual(typeof lock, 'boolean', 'Should return boolean');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState updates state', (t) => {
+    setChordModeLockState(true);
+    t.assertEqual(getChordModeLockState(), true, 'Chord lock should be enabled');
+    setChordModeLockState(false);
+    t.assertEqual(getChordModeLockState(), false, 'Chord lock should be disabled');
 });
 
 TestRunner.test('Chord Mode - getChordVoicingState returns string', (t) => {
