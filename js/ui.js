@@ -3576,6 +3576,21 @@ export function renderTimeline() {
                 });
             }
 
+            // Change Track Color submenu
+            if (typeof Constants !== 'undefined' && Constants.TRACK_COLORS) {
+                const colorItems = Constants.TRACK_COLORS.map(color => ({
+                    label: `<span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:${color};margin-right:6px;"></span>`,
+                    action: () => {
+                        if (track.setTrackColor) {
+                            track.setTrackColor(color);
+                            showNotification(`Track color changed`, 1500);
+                            if (localAppServices.renderTimeline) localAppServices.renderTimeline();
+                        }
+                    }
+                }));
+                menuItems.push({ label: 'Change Track Color', submenu: colorItems });
+            }
+
             menuItems.push({
                 label: 'Track Settings',
                 action: () => {

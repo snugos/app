@@ -176,6 +176,19 @@ TestRunner.test('Constants - MAX_HISTORY_STATES is sufficient', (t) => {
     t.assertTruthy(MAX_HISTORY_STATES >= 20, 'MAX_HISTORY_STATES should be at least 20');
 });
 
+TestRunner.test('Constants - Audio clip fade curve constants are valid', (t) => {
+    t.assertEqual(FADE_CURVE_LINEAR, 'linear', 'Linear curve should be linear');
+    t.assertEqual(FADE_CURVE_EXPONENTIAL, 'exponential', 'Exponential curve should be exponential');
+    t.assertDeepEqual(FADE_CURVES, ['linear', 'exponential'], 'Fade curves array should have both options');
+    t.assertEqual(DEFAULT_FADE_IN_CURVE, FADE_CURVE_LINEAR, 'Default fade in curve should be linear');
+    t.assertEqual(DEFAULT_FADE_OUT_CURVE, FADE_CURVE_LINEAR, 'Default fade out curve should be linear');
+});
+
+TestRunner.test('Constants - MAX_AUDIO_CLIP_FADE is valid', (t) => {
+    t.assertEqual(MAX_AUDIO_CLIP_FADE, 10, 'Max fade should be 10 seconds');
+    t.assertTruthy(MAX_AUDIO_CLIP_FADE > 0, 'Max fade should be positive');
+});
+
 // ============================================
 // Utility Function Tests
 // ============================================

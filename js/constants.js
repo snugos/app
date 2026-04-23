@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.59.9'; // Day 76: Master Effects State Tests
+export const APP_VERSION = '0.59.10'; // Day 77: Fade Curve Constants Tests
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
