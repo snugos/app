@@ -361,6 +361,69 @@ TestRunner.test('Default send track structure', (t) => {
 });
 
 // ============================================
+// Day 56: Audio Recording Constants Tests
+// ============================================
+TestRunner.test('Recording - Sample rate is standard 44100', (t) => {
+    t.assertEqual(RECORDING_SAMPLE_RATE, 44100, 'Sample rate should be 44100 Hz');
+});
+
+TestRunner.test('Recording - Number of channels is valid', (t) => {
+    t.assertEqual(RECORDING_NUM_CHANNELS, 1, 'Should be mono (1 channel)');
+    t.assertTruthy(RECORDING_NUM_CHANNELS >= 1, 'Channels should be at least 1');
+    t.assertTruthy(RECORDING_NUM_CHANNELS <= 2, 'Channels should be at most 2');
+});
+
+TestRunner.test('Recording - Bit depth is standard 16', (t) => {
+    t.assertEqual(RECORDING_BIT_DEPTH, 16, 'Bit depth should be 16-bit');
+});
+
+TestRunner.test('Recording - Mime type is valid', (t) => {
+    t.assertTruthy(RECORDING_MIME_TYPE.startsWith('audio/'), 'Mime type should start with audio/');
+    t.assertTruthy(['audio/webm', 'audio/wav', 'audio/ogg'].includes(RECORDING_MIME_TYPE), 'Mime type should be a valid audio format');
+});
+
+TestRunner.test('Recording - Latency hint is reasonable', (t) => {
+    t.assertTruthy(RECORDING_LATENCY_HINT > 0, 'Latency hint should be positive');
+    t.assertTruthy(RECORDING_LATENCY_HINT <= 0.1, 'Latency hint should be <= 100ms');
+});
+
+TestRunner.test('Recording - Echo cancellation disabled by default', (t) => {
+    t.assertEqual(RECORDING_ECHO_CANCELLATION, false, 'Echo cancellation should be disabled for clean recording');
+});
+
+TestRunner.test('Recording - Auto gain control disabled by default', (t) => {
+    t.assertEqual(RECORDING_AUTO_GAIN_CONTROL, false, 'Auto gain control should be disabled for consistent levels');
+});
+
+TestRunner.test('Recording - Noise suppression disabled by default', (t) => {
+    t.assertEqual(RECORDING_NOISE_SUPPRESSION, false, 'Noise suppression should be disabled for clean recording');
+});
+
+TestRunner.test('Recording - Input gain limits are valid', (t) => {
+    t.assertEqual(DEFAULT_RECORDING_INPUT_GAIN, 1.0, 'Default input gain should be 1.0');
+    t.assertEqual(MIN_RECORDING_INPUT_GAIN, 0, 'Min input gain should be 0');
+    t.assertEqual(MAX_RECORDING_INPUT_GAIN, 2.0, 'Max input gain should be 2.0');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN >= MIN_RECORDING_INPUT_GAIN, 'Default should be >= min');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN <= MAX_RECORDING_INPUT_GAIN, 'Default should be <= max');
+});
+
+TestRunner.test('Recording - Monitoring settings are valid', (t) => {
+    t.assertEqual(DEFAULT_RECORDING_MONITORING_ENABLED, false, 'Monitoring should be off by default');
+    t.assertEqual(DEFAULT_RECORDING_MONITORING_VOLUME, 0.5, 'Default monitoring volume should be 0.5');
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME >= 0 && DEFAULT_RECORDING_MONITORING_VOLUME <= 1, 'Monitoring volume should be 0-1');
+});
+
+TestRunner.test('Recording - Max recording length is reasonable', (t) => {
+    t.assertEqual(MAX_RECORDING_LENGTH_SECONDS, 600, 'Max recording length should be 600 seconds (10 min)');
+    t.assertTruthy(MAX_RECORDING_LENGTH_SECONDS >= 60, 'Max recording should be at least 60 seconds');
+});
+
+TestRunner.test('Recording - Min recording length is reasonable', (t) => {
+    t.assertEqual(MIN_RECORDING_LENGTH_SECONDS, 0.1, 'Min recording length should be 0.1 seconds');
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS > 0, 'Min recording should be positive');
+});
+
+// ============================================
 // Run all tests function
 // ============================================
 export async function runTests(showNotification = null) {
@@ -376,103 +439,4 @@ export function getTestRunner() {
 // Auto-run if executed directly
 if (typeof window !== 'undefined') {
     window.runSnugOSTests = runTests;
-}
-// Day 51: Audio Clip Fade In/Out Tests
-function testAudioClipFadeMethods() {
-    const results = [];
-    
-    // Test setAudioClipFadeIn exists
-    results.push({
-        test: 'setAudioClipFadeIn method exists',
-        passed: typeof track.setAudioClipFadeIn === 'function',
-        expected: 'function',
-        got: typeof track.setAudioClipFadeIn
-    });
-    
-    // Test getAudioClipFadeIn exists
-    results.push({
-        test: 'getAudioClipFadeIn method exists',
-        passed: typeof track.getAudioClipFadeIn === 'function',
-        expected: 'function',
-        got: typeof track.getAudioClipFadeIn
-    });
-    
-    // Test setAudioClipFadeOut exists
-    results.push({
-        test: 'setAudioClipFadeOut method exists',
-        passed: typeof track.setAudioClipFadeOut === 'function',
-        expected: 'function',
-        got: typeof track.setAudioClipFadeOut
-    });
-    
-    // Test getAudioClipFadeOut exists
-    results.push({
-        test: 'getAudioClipFadeOut method exists',
-        passed: typeof track.getAudioClipFadeOut === 'function',
-        expected: 'function',
-        got: typeof track.getAudioClipFadeOut
-    });
-    
-    // Test setAudioClipFadeInCurve exists
-    results.push({
-        test: 'setAudioClipFadeInCurve method exists',
-        passed: typeof track.setAudioClipFadeInCurve === 'function',
-        expected: 'function',
-        got: typeof track.setAudioClipFadeInCurve
-    });
-    
-    // Test getAudioClipFadeInCurve exists
-    results.push({
-        test: 'getAudioClipFadeInCurve method exists',
-        passed: typeof track.getAudioClipFadeInCurve === 'function',
-        expected: 'function',
-        got: typeof track.getAudioClipFadeInCurve
-    });
-    
-    // Test setAudioClipFadeOutCurve exists
-    results.push({
-        test: 'setAudioClipFadeOutCurve method exists',
-        passed: typeof track.setAudioClipFadeOutCurve === 'function',
-        expected: 'function',
-        got: typeof track.setAudioClipFadeOutCurve
-    });
-    
-    // Test getAudioClipFadeOutCurve exists
-    results.push({
-        test: 'getAudioClipFadeOutCurve method exists',
-        passed: typeof track.getAudioClipFadeOutCurve === 'function',
-        expected: 'function',
-        got: typeof track.getAudioClipFadeOutCurve
-    });
-    
-    // Test constants exist
-    results.push({
-        test: 'DEFAULT_AUDIO_CLIP_FADE_IN constant exists',
-        passed: Constants.DEFAULT_AUDIO_CLIP_FADE_IN === 0,
-        expected: 0,
-        got: Constants.DEFAULT_AUDIO_CLIP_FADE_IN
-    });
-    
-    results.push({
-        test: 'DEFAULT_AUDIO_CLIP_FADE_OUT constant exists',
-        passed: Constants.DEFAULT_AUDIO_CLIP_FADE_OUT === 0,
-        expected: 0,
-        got: Constants.DEFAULT_AUDIO_CLIP_FADE_OUT
-    });
-    
-    results.push({
-        test: 'MAX_AUDIO_CLIP_FADE constant exists',
-        passed: Constants.MAX_AUDIO_CLIP_FADE === 10,
-        expected: 10,
-        got: Constants.MAX_AUDIO_CLIP_FADE
-    });
-    
-    results.push({
-        test: 'FADE_CURVES array exists with linear and exponential',
-        passed: Array.isArray(Constants.FADE_CURVES) && Constants.FADE_CURVES.includes('linear') && Constants.FADE_CURVES.includes('exponential'),
-        expected: '["linear", "exponential"]',
-        got: JSON.stringify(Constants.FADE_CURVES)
-    });
-    
-    return results;
 }

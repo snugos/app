@@ -163,6 +163,14 @@ export function setChordModeTypeState(type) { chordModeState.type = type || 'maj
 export function getChordModeLockState() { return chordModeState.lockChord; }
 export function setChordModeLockState(lock) { chordModeState.lockChord = !!lock; }
 
+// Chord Voicing State
+export function getChordVoicingState() {
+    return chordModeState.voicing || Constants.DEFAULT_CHORD_VOICING;
+}
+export function setChordVoicingState(voicing) {
+    chordModeState.voicing = (voicing && Constants.CHORD_VOICINGS.includes(voicing)) ? voicing : Constants.DEFAULT_CHORD_VOICING;
+}
+
 // Time Signature State
 let timeSignatureState = { ...Constants.DEFAULT_TIME_SIGNATURE };
 
@@ -483,7 +491,7 @@ export async function undoLastActionInternal() {
         }
 
         if (appServices.showNotification) appServices.showNotification(`Undoing: ${stateToRestore.description || 'last action'}...`, 2000);
-        if (appServices) appServices._isReconstructingDAW_flag = true; // Signal reconstruction globally
+        if (appServices) appServices._isReconstructingingDAW_flag = true; // Signal reconstruction globally
         await reconstructDAWInternal(stateToRestore, true); // true for isUndoRedo
     } catch (error) {
         console.error("[State undoLastActionInternal] Error during undo:", error);
@@ -648,7 +656,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     if (!projectData) {
         console.error("[State reconstructDAWInternal] projectData is null or undefined. Aborting reconstruction.");
         if (appServices.showNotification) appServices.showNotification("Error: No project data to load.", 3000);
-        if (appServices) appServices._isReconstructingDAW_flag = false;
+        if (appServices) appServices._isReconstructingingDAW_flag = false;
         return;
     }
     
@@ -673,7 +681,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error during global reset phase:", error);
         if (appServices.showNotification) appServices.showNotification("Critical error during project reset.", 5000);
-        if (appServices) appServices._isReconstructingDAW_flag = false;
+        if (appServices) appServices._isReconstructingingDAW_flag = false;
         return; // Abort further reconstruction
     }
 

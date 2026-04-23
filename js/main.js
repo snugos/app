@@ -41,6 +41,7 @@ import {
     getChordModeRootState,
     getChordModeTypeState,
     getChordModeLockState,
+    getChordVoicingState,
     // Ghost Track state
     getGhostTrackIdState,
     // Swing state
@@ -346,6 +347,7 @@ const appServices = {
     getChordModeRootState,
     getChordModeTypeState,
     getChordModeLockState,
+    getChordVoicingState,
     // Ghost Track state
     getGhostTrackId: getGhostTrackIdState,
     setGhostTrackId: setGhostTrackIdState,
@@ -613,7 +615,7 @@ const appServices = {
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
                 const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-                if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
+                if (!isReconstructConstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
                 if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();

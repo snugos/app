@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.53.2"; // Day 55 final: Mixer Track FX Button - Add FX button to open effects rack directly from mixer
+export const APP_VERSION = "0.54.0"; // Day 56: Audio Recording Constants - Added recording-related constants
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -308,6 +308,16 @@ export const DEFAULT_CHORD_MODE = {
     lockChord: false
 };
 
+// Chord Voicing constants - defines how chord voicings are spread across the keyboard
+export const CHORD_VOICING_SPREAD = {
+    'closed': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],   // All notes in tight position
+    'wide': [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14],  // Wider spread with octave jumps
+    'drop2': [0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 13, 15], // Drop 2 voicing (adds 3rd octave)
+    'rootless': [2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21] // Rootless voicings
+};
+export const CHORD_VOICINGS = Object.keys(CHORD_VOICING_SPREAD);
+export const DEFAULT_CHORD_VOICING = 'closed';
+
 // Timeline Markers constants
 export const MAX_TIMELINE_MARKERS = 64; // Maximum number of markers
 export const DEFAULT_MARKER_COLOR = '#ff9f43'; // Default marker color (orange)
@@ -344,3 +354,31 @@ export const AUTOMATION_LANE_COLORS = [
     '#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#ff9ff3',
     '#f368e0', '#ff9f43', '#54a0ff', '#5f27cd', '#c8d6e5'
 ];
+
+// ============================================
+// Audio Recording Constants
+// ============================================
+// Recording quality and format
+export const RECORDING_SAMPLE_RATE = 44100; // Standard audio sample rate
+export const RECORDING_NUM_CHANNELS = 1; // Mono recording (1 = mono, 2 = stereo)
+export const RECORDING_BIT_DEPTH = 16; // Bits per sample (16-bit is standard for recordings)
+export const RECORDING_MIME_TYPE = 'audio/webm'; // Browser-compatible recording format
+
+// Recording input constraints
+export const RECORDING_LATENCY_HINT = 0.01; // Suggested latency in seconds (10ms)
+export const RECORDING_ECHO_CANCELLATION = false; // Disable for clean recording
+export const RECORDING_AUTO_GAIN_CONTROL = false; // Disable for consistent levels
+export const RECORDING_NOISE_SUPPRESSION = false; // Disable for clean recording
+
+// Recording input gain (if supported by device)
+export const DEFAULT_RECORDING_INPUT_GAIN = 1.0; // 0-1 range for software gain
+export const MIN_RECORDING_INPUT_GAIN = 0;
+export const MAX_RECORDING_INPUT_GAIN = 2.0; // Can boost input gain
+
+// Monitoring settings
+export const DEFAULT_RECORDING_MONITORING_ENABLED = false; // Monitoring off by default
+export const DEFAULT_RECORDING_MONITORING_VOLUME = 0.5; // Monitor volume (0-1)
+
+// Recording limits
+export const MAX_RECORDING_LENGTH_SECONDS = 600; // 10 minute max recording
+export const MIN_RECORDING_LENGTH_SECONDS = 0.1; // Minimum 100ms recording

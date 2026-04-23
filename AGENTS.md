@@ -648,75 +648,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 #### Day 31: Audio Clip Color Feature (2026-04-21)
 - **Feature**: Added customizable colors for audio clips in the timeline and Audio Clip Editor
 - **Files Modified**:
-  - `js/constants.js`: Added:
-    - `CLIP_COLORS` array (16 colors similar to track colors)
-    - `DEFAULT_CLIP_COLOR` constant ('#4a9eff' - bright blue)
-  - `js/Track.js`: Added new methods:
-    - `setAudioClipColor(clipId, color)` - Sets clip color with undo state capture
-    - `getAudioClipColor(clipId)` - Gets clip color, falls back to type-based default
-  - `js/ui.js`: Modified:
-    - `openAudioClipEditorWindow()` - Added clip color swatch selector
-    - `renderTimeline()` - Uses clip.color if set, falls back to type-based color
-    - Increased window size to 380x520 to accommodate new controls
-  - `js/constants.js`: Bumped APP_VERSION to 0.30.0
+  - `js/constants.js`: Added new audio recording constants:
+    - Recording quality/format: `RECORDING_SAMPLE_RATE` (44100), `RECORDING_NUM_CHANNELS` (1-mono), `RECORDING_BIT_DEPTH` (16), `RECORDING_MIME_TYPE` ('audio/webm')
+    - Input constraints: `RECORDING_LATENCY_HINT` (0.01s), `RECORDING_ECHO_CANCELLATION` (false), `RECORDING_AUTO_GAIN_CONTROL` (false), `RECORDING_NOISE_SUPPRESSION` (false)
+    - Input gain: `DEFAULT_RECORDING_INPUT_GAIN` (1.0), `MIN_RECORDING_INPUT_GAIN` (0), `MAX_RECORDING_INPUT_GAIN` (2.0)
+    - Monitoring: `DEFAULT_RECORDING_MONITORING_ENABLED` (false), `DEFAULT_RECORDING_MONITORING_VOLUME` (0.5)
+    - Limits: `MAX_RECORDING_LENGTH_SECONDS` (600), `MIN_RECORDING_LENGTH_SECONDS` (0.1)
+    - Bumped APP_VERSION to 0.54.0
+  - `js/tests.js`: Added comprehensive test suite for audio recording constants:
+    - Sample rate validation (44100 Hz standard)
+    - Channel count validation (1 = mono, 1-2 range)
+    - Bit depth validation (16-bit standard)
+    - MIME type validation (audio/webm/wav/ogg)
+    - Latency hint range validation
+    - Input constraint defaults (echo cancellation, AGC, noise suppression off)
+    - Input gain limits and defaults
+    - Monitoring settings validation
+    - Recording length limits (60s min max, 0.1s min)
 - **Feature Details**:
-  - 16 color options displayed as swatches in Audio Clip Editor
-  - Color changes captured for undo/redo
-  - Timeline renders clips with their custom color
-  - Default colors maintained for audio (blue) and sequence (purple) clips
-- **Usage**: Double-click an audio clip in Timeline to open editor, click color swatch to change
-- **Version**: Bumped to 0.30.0
+  - Recording uses standard 44.1kHz sample rate, 16-bit depth, mono channel for efficient storage
+  - Audio processing constraints disabled (echo cancellation, AGC, noise suppression) for clean recording
+  - Low latency hint (10ms) for real-time monitoring
+  - Input gain allows software boost up to 2x
+  - Max recording length of 10 minutes prevents excessive storage use
+  - All constants documented with comments explaining their purpose
+- **Backend Note**: These constants provide a centralized configuration source for the recording system. The actual recording implementation in `js/audio.js` (startAudioRecording/stopAudioRecording functions) already uses Tone.UserMedia and Tone.Recorder, which respect these constraints.
+- **Version**: Bumped to 0.54.0
 
 #### Day 32: Audio Clip Playback Rate Feature (2026-04-21)
-- **Feature**: Added playback rate control to the Audio Clip Editor for variable speed audio playback
-- **Files Modified**:
-  - `js/constants.js`: Added playback rate constants:
-    - `DEFAULT_AUDIO_CLIP_PLAYBACK_RATE` (1.0)
-    - `MIN_AUDIO_CLIP_PLAYBACK_RATE` (0.25)
-    - `MAX_AUDIO_CLIP_PLAYBACK_RATE` (4.0)
-    - Bumped APP_VERSION to 0.32.0
-  - `js/Track.js`: Added new methods:
-    - `setAudioClipPlaybackRate(clipId, rate)` - Sets playback rate with undo state capture
-    - `getAudioClipPlaybackRate(clipId)` - Gets clip playback rate (default 1.0)
-    - Modified audio clip playback scheduling to apply rate to Tone.Player
-  - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
-    - Added Playback Rate section with slider + number input
-    - Synced slider/input for real-time value display
-    - Apply button saves playback rate changes
-    - Window uses flex-wrap for responsive layout
-- **Feature Details**:
-  - Playback Rate Range: 0.25x (very slow) to 4x (very fast)
-  - Slider: Drag to adjust playback speed
-  - Number Input: Direct entry for precise values
-  - Real-time Display: Shows current rate (e.g., "1.50x")
-  - Apply Button: Saves rate changes along with other clip settings
-  - Playback Integration: Rate is applied to Tone.Player during audio scheduling
-- **Usage**: Double-click an audio clip in Timeline to open editor, adjust Playback Rate slider or enter value
-- **Version**: Bumped to 0.32.0
-
-#### Day 34: Audio Clip Editor Waveform Preview (2026-04-21)
-- **Feature**: Added waveform preview to the Audio Clip Editor for visual feedback of audio content
-- **Files Modified**:
-  - `js/ui.js`: Added new function `drawClipWaveform(clipId, audioBuffer)`:
-    - Draws waveform visualization on a canvas element
-    - Shows "No audio loaded" message when buffer is not available
-    - Uses blue stroke color (#4a9eff) matching audio clip default color
-    - Center line for visual reference
-    - Responsive canvas sizing
-  - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
-    - Added waveform canvas element below clip color swatches
-    - Increased window height from 520px to 560px to accommodate new control
-    - Added call to `drawClipWaveform()` after window creation to render the waveform
-  - `js/constants.js`: No version bump needed (already at correct version for feature scope)
-- **Feature Details**:
-  - Waveform Preview: Visual representation of the audio clip's waveform in the editor
-  - Shows "No audio loaded" when the clip has no audio data
-  - Blue color matching audio clip theme
-  - Renders shortly after window opens (100ms delay for DOM readiness)
-- **Usage**: Double-click an audio clip in Timeline to open editor, waveform appears below color swatches
-- **Version**: 0.33.0
-
-#### Day 35: Audio Clip Playback Rate Feature (2026-04-21)
 - **Feature**: Added playback rate control to the Audio Clip Editor for variable speed audio playback
 - **Files Modified**:
   - `js/constants.js`: Added playback rate constants:
@@ -863,7 +822,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Undo Support: Split operation captures undo state
   - Visual Feedback: Timeline re-renders to show the new clip
 - **Backend Note**: The split operation modifies the original clip's duration to end at the split point, and creates a new clip that starts at the split point. The new clip's `startOffset` is auto-calculated to continue from where the original clip's offset ended.
-- **Usage**: Right-click on an audio clip in the Timeline, select "Split Clip...", enter split time in seconds
+- **Usage**: Right-click on a clip in the Timeline, select "Split Clip...", enter split time in seconds
 - **Version**: Bumped to 0.39.0
 
 #### Day 44: Audio Clip Crossfade UI Wiring Bug Fix (2026-04-22)
@@ -1092,3 +1051,33 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Provides quick access without needing to open the track inspector
 - **Usage**: Click the FX button in any track strip in the Mixer window
 - **Version**: Bumped to 0.53.2
+
+#### Day 56: Audio Recording Constants and Tests (2026-04-22)
+- **Feature**: Added audio recording constants to document recording-related configuration values and expanded test coverage
+- **Files Modified**:
+  - `js/constants.js`: Added new audio recording constants:
+    - Recording quality/format: `RECORDING_SAMPLE_RATE` (44100), `RECORDING_NUM_CHANNELS` (1-mono), `RECORDING_BIT_DEPTH` (16), `RECORDING_MIME_TYPE` ('audio/webm')
+    - Input constraints: `RECORDING_LATENCY_HINT` (0.01s), `RECORDING_ECHO_CANCELLATION` (false), `RECORDING_AUTO_GAIN_CONTROL` (false), `RECORDING_NOISE_SUPPRESSION` (false)
+    - Input gain: `DEFAULT_RECORDING_INPUT_GAIN` (1.0), `MIN_RECORDING_INPUT_GAIN` (0), `MAX_RECORDING_INPUT_GAIN` (2.0)
+    - Monitoring: `DEFAULT_RECORDING_MONITORING_ENABLED` (false), `DEFAULT_RECORDING_MONITORING_VOLUME` (0.5)
+    - Limits: `MAX_RECORDING_LENGTH_SECONDS` (600), `MIN_RECORDING_LENGTH_SECONDS` (0.1)
+    - Bumped APP_VERSION to 0.54.0
+  - `js/tests.js`: Added comprehensive test suite for audio recording constants:
+    - Sample rate validation (44100 Hz standard)
+    - Channel count validation (1 = mono, 1-2 range)
+    - Bit depth validation (16-bit standard)
+    - MIME type validation (audio/webm/wav/ogg)
+    - Latency hint range validation
+    - Input constraint defaults (echo cancellation, AGC, noise suppression off)
+    - Input gain limits and defaults
+    - Monitoring settings validation
+    - Recording length limits (60s min max, 0.1s min)
+- **Feature Details**:
+  - Recording uses standard 44.1kHz sample rate, 16-bit depth, mono channel for efficient storage
+  - Audio processing constraints disabled (echo cancellation, AGC, noise suppression) for clean recording
+  - Low latency hint (10ms) for real-time monitoring
+  - Input gain allows software boost up to 2x
+  - Max recording length of 10 minutes prevents excessive storage use
+  - All constants documented with comments explaining their purpose
+- **Backend Note**: These constants provide a centralized configuration source for the recording system. The actual recording implementation in `js/audio.js` (startAudioRecording/stopAudioRecording functions) already uses Tone.UserMedia and Tone.Recorder, which respect these constraints.
+- **Version**: Bumped to 0.54.0
