@@ -12,7 +12,22 @@ import {
     getRecordingStartTimeState,
     setIsRecordingState,
     setRecordingTrackIdState,
-    setRecordingStartTimeState
+    setRecordingStartTimeState,
+    getSendTracksState,
+    getSendTrackByIdState,
+    getTrackSendsState,
+    getTrackSendLevelState,
+    addSendTrackState,
+    setSendTrackMutedState,
+    setTrackSendLevelState,
+    getTrackGroupsState,
+    getTrackGroupByIdState,
+    addTrackGroupState,
+    setTrackGroupNameState,
+    getTimelineMarkersState,
+    getTimelineMarkerByIdState,
+    addTimelineMarkerState,
+    removeTimelineMarkerState
 } from './state.js';
 
 // ============================================
@@ -636,6 +651,104 @@ TestRunner.test('Recording State - recording state setters are functions', (t) =
     t.assertTruthy(typeof setIsRecordingState === 'function', 'setIsRecordingState should be a function');
     t.assertTruthy(typeof setRecordingTrackIdState === 'function', 'setRecordingTrackIdState should be a function');
     t.assertTruthy(typeof setRecordingStartTimeState === 'function', 'setRecordingStartTimeState should be a function');
+});
+
+// ============================================
+// Day 66: Send Tracks State Management Tests
+// ============================================
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates muted', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState finds send', (t) => {
+    const send = addSendTrackState({ name: 'Find Test' });
+    const found = getSendTrackByIdState(send.id);
+    t.assertEqual(found.id, send.id, 'Should find send by ID');
+});
+
+// ============================================
+// Day 66: Track Groups State Management Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupsState returns array', (t) => {
+    const groups = getTrackGroupsState();
+    t.assertTruthy(Array.isArray(groups), 'Track groups should be an array');
+});
+
+TestRunner.test('Track Groups - addTrackGroupState creates group', (t) => {
+    const group = addTrackGroupState({ name: 'Test Group', color: '#ff0000' });
+    t.assertTruthy(group, 'addTrackGroupState should return a group');
+    t.assertEqual(group.name, 'Test Group', 'Group name should match');
+    t.assertEqual(group.color, '#ff0000', 'Group color should match');
+    t.assertTruthy(Array.isArray(group.trackIds), 'trackIds should be an array');
+});
+
+TestRunner.test('Track Groups - getTrackGroupByIdState finds group', (t) => {
+    const group = addTrackGroupState({ name: 'Find Group' });
+    const found = getTrackGroupByIdState(group.id);
+    t.assertEqual(found.id, group.id, 'Should find group by ID');
+});
+
+TestRunner.test('Track Groups - setTrackGroupNameState updates name', (t) => {
+    const group = addTrackGroupState({ name: 'Original Name' });
+    const result = setTrackGroupNameState(group.id, 'New Name');
+    t.assertTruthy(result, 'setTrackGroupNameState should return true on success');
+    const updated = getTrackGroupByIdState(group.id);
+    t.assertEqual(updated.name, 'New Name', 'Group name should be updated');
+});
+
+// ============================================
+// Day 66: Timeline Markers State Management Tests
+// ============================================
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState creates marker', (t) => {
+    const marker = addTimelineMarkerState('Test Marker', 5, '#00ff00');
+    t.assertTruthy(marker, 'addTimelineMarkerState should return a marker');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 5, 'Marker bar should match');
+    t.assertEqual(marker.color, '#00ff00', 'Marker color should match');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState finds marker', (t) => {
+    const marker = addTimelineMarkerState('Find Test', 10);
+    const found = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(found.id, marker.id, 'Should find marker by ID');
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    const marker = addTimelineMarkerState('Remove Test', 15);
+    const result = removeTimelineMarkerState(marker.id);
+    t.assertTruthy(result, 'removeTimelineMarkerState should return true on success');
+    const found = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(found, undefined, 'Marker should no longer exist');
 });
 
 // ============================================
