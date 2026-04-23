@@ -98,7 +98,8 @@ import {
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
     gatherProjectDataInternal, reconstructDAWInternal, saveProjectInternal,
-    loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal
+    loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal,
+    exportToMidiInternal
 } from './state.js';
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
@@ -445,6 +446,7 @@ const appServices = {
     loadProject: loadProjectInternal,
     handleProjectFileLoad: handleProjectFileLoadInternal,
     exportToWav: exportToWavInternal,
+    exportToMidi: exportToMidiInternal,
 
     // Undo/Redo
     undoLastAction: undoLastActionInternal,

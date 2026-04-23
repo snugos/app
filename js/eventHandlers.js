@@ -204,6 +204,11 @@ export function initializePrimaryEventListeners(appContext) {
                     services.exportToWav?.();
                 } catch(e) { console.error('[Menu] Export WAV error:', e); }
             },
+            menuExportMidi: () => {
+                try {
+                    services.exportToMidi?.();
+                } catch(e) { console.error('[Menu] Export MIDI error:', e); }
+            },
             menuUndo: () => {
                 try {
                     services.undoLastAction?.();
@@ -813,6 +818,11 @@ document.addEventListener('keydown', (event) => {
         if (key === 'o' && (event.ctrlKey || event.metaKey)) {
             event.preventDefault();
             if (localAppServices.loadProject) localAppServices.loadProject();
+            return;
+        }
+        if (key === 'e' && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            if (localAppServices.exportToMidi) localAppServices.exportToMidi();
             return;
         }
         if (key === 'x' && !(event.ctrlKey || event.metaKey)) {

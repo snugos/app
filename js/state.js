@@ -758,18 +758,18 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     try {
         Tone.Transport.stop();
         Tone.Transport.cancel(0);
-        if (appServices.initAudioContextAndMasterMeter) await appServices.initAudioContextAndMasterMeter(true); // Ensure audio context is running, true for user initiated context
+        if (appServices && appServices.initAudioContextAndMasterMeter) await appServices.initAudioContextAndMasterMeter(true); // Ensure audio context is running, true for user initiated context
         (getTracksState() || []).forEach(track => { if (track && typeof track.dispose === 'function') track.dispose(); });
         tracks = [];
         trackIdCounter = 0;
-        if (appServices.clearAllMasterEffectNodes) appServices.clearAllMasterEffectNodes(); else console.warn("clearAllMasterEffectNodes service missing");
+        if (appServices && appServices.clearAllMasterEffectNodes) appServices.clearAllMasterEffectNodes(); else console.warn("clearAllMasterEffectNodes service missing");
         masterEffectsChainState = [];
-        if (appServices.closeAllWindows) appServices.closeAllWindows(true); else console.warn("closeAllWindows service missing");
-        if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); else console.warn("clearOpenWindowsMap service missing");
+        if (appServices && appServices.closeAllWindows) appServices.closeAllWindows(true); else console.warn("closeAllWindows service missing");
+        if (appServices && appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); else console.warn("clearOpenWindowsMap service missing");
         highestZ = 100;
         setArmedTrackIdState(null); setSoloedTrackIdState(null); setActiveSequencerTrackIdState(null);
         setIsRecordingState(false); setRecordingTrackIdState(null);
-        if (appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(false);
+        if (appServices && appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(false);
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error during global reset phase:", error);
         if (appServices.showNotification) appServices.showNotification("Critical error during project reset.", 5000);
@@ -788,9 +788,9 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             setTimeSignatureState(4, 4); // Default to 4/4
         }
         setMasterGainValueState(Number.isFinite(gs.masterVolume) ? gs.masterVolume : (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0);
-        if (appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
+        if (appServices && appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
         setPlaybackModeStateInternal(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');
-        if (appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
+        if (appServices && appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
         setHighestZState(Number.isFinite(gs.highestZIndex) ? gs.highestZIndex : 100);
         // Armed and Soloed will be set after tracks are created
     } catch (error) {
@@ -1151,6 +1151,326 @@ export async function exportToWavInternal() {
         Tone.Transport.stop();
         Tone.Transport.cancel(0);
     }
+}
+
+// MIDI Note name to MIDI note number mapping (C4 = 60)
+const noteNameToMidi = {
+    'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5, 'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
+};
+
+function noteNameToMidiNumber(noteName, octave) {
+    // MIDI note number = (octave + 1) * 12 + noteNameToMidi[noteNameWithoutOctave]
+    // Middle C (C4) = 60
+    const baseNote = noteName.replace(/\d+$/, ''); // Remove octave number
+    const noteNum = noteNameToMidi[baseNote];
+    if (noteNum === undefined) return 60; // Default to middle C
+    return (octave + 1) * 12 + noteNum;
+}
+
+function pitchToRow(rowIndex, trackType) {
+    if (trackType === 'Synth' || trackType === 'InstrumentSampler') {
+        // synthPitches is reversed, so we need to map properly
+        // synthPitches[0] is last (highest), so rowIndex needs mapping
+        // The actual pitch for row 0 is at synthPitches[0] which is the FIRST element of the reversed array
+        // synthPitches was reversed, so first element is highest pitch (B6)
+        // But actual row 0 is HIGHEST, so let's use a simpler mapping
+        // Synth row 0 = highest pitch = B6 = 95 (MIDI)
+        // Each row down = -1 semitone
+        // With synthPitches having 72 rows (C1 to B6)
+        // Row 0 = B6 (95), Row 71 = C1 (36)
+        // So MIDI note = 95 - rowIndex
+        const maxNote = 95; // B6
+        return maxNote - rowIndex;
+    } else if (trackType === 'DrumSampler') {
+        // DrumSampler rows map to pads 0-7, which map to MIDI notes 36-43
+        return 36 + rowIndex; // Rows 0-7 = MIDI 36-43
+    } else if (trackType === 'Sampler') {
+        // Sampler rows map to slices
+        // Use a similar approach to synth, starting from a base
+        const baseNote = 48; // C3 as base
+        return baseNote + rowIndex;
+    }
+    return 60; // Default to middle C
+}
+
+// Convert tempo and time signature to ticks
+function tempoToTicks(tempo, ticksPerQuarterNote) {
+    // We use fixed tempo at the resolution for simplicity
+    // MIDI delta time is in ticks, and tempo is embedded
+    return ticksPerQuarterNote; // Always ticks per quarter note
+}
+
+// ============================================
+// Export to MIDI - Main Function
+// ============================================
+export async function exportToMidiInternal() {
+    if (!appServices.showNotification) {
+        console.error("[State exportToMidiInternal] Required appServices not available.");
+        alert("Export MIDI feature is currently unavailable due to an internal error.");
+        return;
+    }
+
+    const { getTempoState, getTimeSignatureState, getTracksState, getPlaybackModeState, getSequencesState } = await import('./state.js');
+
+    try {
+        const tempo = getTempoState() || 120;
+        const timeSig = getTimeSignatureState() || { numerator: 4, denominator: 4 };
+        const tracks = getTracksState() || [];
+        const playbackMode = getPlaybackModeState() || 'sequence';
+
+        // Collect all notes from all tracks
+        const allNotes = [];
+        const trackInfo = [];
+
+        for (const track of tracks) {
+            if (!track || track.type === 'Audio') continue;
+
+            let sequences = [];
+
+            if (playbackMode === 'sequence') {
+                // Get the active sequence for this track
+                const activeSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                if (activeSeq) {
+                    sequences = [activeSeq];
+                }
+            } else {
+                // timeline mode - get all sequences from timeline clips (simplified for now)
+                sequences = track.sequences || [];
+            }
+
+            for (const seq of sequences) {
+                if (!seq || !seq.data) continue;
+
+                const trackRowOffset = allNotes.length > 0 ? allNotes.length : 0;
+
+                for (let row = 0; row < seq.data.length; row++) {
+                    const rowData = seq.data[row];
+                    if (!rowData) continue;
+
+                    for (let col = 0; col < rowData.length; col++) {
+                        const cell = rowData[col];
+                        if (!cell || !cell.active) continue;
+
+                        const midiNote = pitchToRow(row, track.type);
+                        const velocity = cell.velocity !== undefined ? Math.round(cell.velocity * Constants.MIDI_EXPORT_VELOCITY_SCALE) : 100;
+                        const probability = cell.probability !== undefined ? cell.probability : 1.0;
+
+                        // Calculate time position
+                        // Each step = 1/16th note (since STEPS_PER_BAR = 16)
+                        // In ticks, with 480 TicksPerQuarterNote, a 16th note = 120 ticks
+                        const stepDurationTicks = Constants.MIDI_EXPORT_TicksPerQuarterNote / 4; // 120 ticks per 16th note
+                        const startTicks = col * stepDurationTicks;
+                        const noteLengthTicks = (cell.length || 1) * stepDurationTicks;
+
+                        // Calculate bar from step
+                        const stepsPerBar = 16; // STEPS_PER_BAR
+                        const bar = Math.floor(col / stepsPerBar);
+                        const beatInBar = (col % stepsPerBar) / 4; // 4 steps per beat
+                        const quarterNotesPerBar = 4; // Assuming 4/4 time
+                        const ticksPerBar = Constants.MIDI_EXPORT_TicksPerQuarterNote * quarterNotesPerBar;
+
+                        const absoluteTicks = bar * ticksPerBar + beatInBar * Constants.MIDI_EXPORT_TicksPerQuarterNote;
+
+                        allNotes.push({
+                            time: absoluteTicks,
+                            duration: noteLengthTicks,
+                            note: midiNote,
+                            velocity: velocity,
+                            probability: probability,
+                            track: track.name,
+                            trackId: track.id
+                        });
+
+                        trackInfo.push({ trackId: track.id, trackName: track.name, trackType: track.type });
+                    }
+                }
+            }
+        }
+
+        if (allNotes.length === 0) {
+            appServices.showNotification("Nothing to export. Add some notes first.", 3000);
+            return;
+        }
+
+        appServices.showNotification(`Exporting ${allNotes.length} notes to MIDI...`, 2000);
+
+        // Build MIDI file structure
+        // MIDI File Format 0 (single track)
+        // Header Chunk: MThd
+        // Track Chunk: MTrk
+
+        const ticksPerQuarter = Constants.MIDI_EXPORT_TicksPerQuarterNote;
+
+        // Build track events
+        // We'll put all notes in a single track (format 0)
+        const trackEvents = [];
+
+        // Set tempo event (meta event 0xFF 0x51)
+        // Tempo in microseconds per quarter note
+        const microsecondsPerQuarter = Math.round(60000000 / tempo);
+        trackEvents.push({ tick: 0, type: 'tempo', value: microsecondsPerQuarter });
+
+        // Time signature event (meta event 0xFF 0x58)
+        trackEvents.push({ tick: 0, type: 'timeSig', numerator: timeSig.numerator || 4, denominator: timeSig.denominator || 4 });
+
+        // Track name event
+        trackEvents.push({ tick: 0, type: 'trackName', name: 'SnugOS Export' });
+
+        // Add note events (sorted by time)
+        allNotes.sort((a, b) => a.time - b.time);
+
+        let lastTick = 0;
+        for (const note of allNotes) {
+            // Note On event
+            trackEvents.push({
+                tick: note.time - lastTick,
+                type: 'noteOn',
+                channel: Constants.MIDI_DEFAULT_CHANNEL,
+                note: note.note,
+                velocity: note.velocity
+            });
+            lastTick = note.time;
+
+            // Note Off event
+            trackEvents.push({
+                tick: note.duration,
+                type: 'noteOff',
+                channel: Constants.MIDI_DEFAULT_CHANNEL,
+                note: note.note,
+                velocity: 0
+            });
+        }
+
+        // End of track event
+        trackEvents.push({ tick: 0, type: 'endOfTrack' });
+
+        // Build MIDI file
+        const midiData = buildMidiFile(trackEvents, ticksPerQuarter);
+
+        // Download
+        const blob = new Blob([midiData], { type: 'audio/midi' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${Constants.DEFAULT_MIDI_EXPORT_FILENAME_PREFIX}-${new Date().toISOString().replace(/[:.]/g, '-')}.mid`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        appServices.showNotification(`Export to MIDI successful! (${allNotes.length} notes)`, 3000);
+
+    } catch (error) {
+        console.error("[State exportToMidiInternal] Error:", error);
+        appServices.showNotification(`Export error: ${error.message}`, 5000);
+    }
+}
+
+function buildMidiFile(events, ticksPerQuarter) {
+    // Build variable-length quantity (delta time) for MIDI
+    function toVLQ(value) {
+        if (value === 0) return [0];
+
+        const bytes = [];
+        let v = value;
+        bytes.unshift(v & 0x7F);
+        v >>= 7;
+        while (v > 0) {
+            bytes.unshift((v & 0x7F) | 0x80);
+            v >>= 7;
+        }
+        // Clear the high bit of the last byte
+        bytes[bytes.length - 1] &= 0x7F;
+        return bytes;
+    }
+
+    function writeVarInt(buffer, value) {
+        const vlq = toVLQ(value);
+        for (const b of vlq) {
+            buffer.push(b);
+        }
+    }
+
+    function writeString(buffer, str) {
+        for (let i = 0; i < str.length; i++) {
+            buffer.push(str.charCodeAt(i));
+        }
+    }
+
+    function intToVLQ(value) {
+        return toVLQ(value);
+    }
+
+    const buffer = [];
+
+    // MIDI Header Chunk: MThd
+    writeString(buffer, 'MThd');
+    buffer.push(0, 0, 0, 6); // Chunk length (6 bytes)
+    buffer.push(0, 0); // Format 0
+    buffer.push(0, 1); // 1 track
+    buffer.push((ticksPerQuarter >> 8) & 0xFF, ticksPerQuarter & 0xFF); // Division (ticks per quarter note)
+
+    // Build track data first
+    const trackBuffer = [];
+    let lastTick = 0;
+
+    for (const event of events) {
+        const deltaTick = event.tick - lastTick;
+        lastTick = event.tick;
+
+        writeVarInt(trackBuffer, deltaTick);
+
+        switch (event.type) {
+            case 'tempo':
+                trackBuffer.push(0xFF, 0x51, 0x03);
+                trackBuffer.push((event.value >> 16) & 0xFF);
+                trackBuffer.push((event.value >> 8) & 0xFF);
+                trackBuffer.push(event.value & 0xFF);
+                break;
+
+            case 'timeSig':
+                trackBuffer.push(0xFF, 0x58, 0x04);
+                trackBuffer.push(event.numerator);
+                trackBuffer.push(Math.log2(event.denominator));
+                trackBuffer.push(24); // Clocks per metronome click
+                trackBuffer.push(8); // 32nd notes per quarter note
+                break;
+
+            case 'trackName':
+                trackBuffer.push(0xFF, 0x03);
+                const nameBytes = new TextEncoder().encode(event.name);
+                trackBuffer.push(nameBytes.length);
+                for (const b of nameBytes) trackBuffer.push(b);
+                break;
+
+            case 'noteOn':
+                trackBuffer.push(0x90 | event.channel);
+                trackBuffer.push(event.note & 0x7F);
+                trackBuffer.push(event.velocity & 0x7F);
+                break;
+
+            case 'noteOff':
+                trackBuffer.push(0x80 | event.channel);
+                trackBuffer.push(event.note & 0x7F);
+                trackBuffer.push(0);
+                break;
+
+            case 'endOfTrack':
+                trackBuffer.push(0xFF, 0x2F, 0x00);
+                break;
+        }
+    }
+
+    // MIDI Track Chunk: MTrk
+    writeString(buffer, 'MTrk');
+    const trackLength = trackBuffer.length;
+    buffer.push((trackLength >> 24) & 0xFF);
+    buffer.push((trackLength >> 16) & 0xFF);
+    buffer.push((trackLength >> 8) & 0xFF);
+    buffer.push(trackLength & 0xFF);
+    for (const b of trackBuffer) buffer.push(b);
+
+    return new Uint8Array(buffer);
 }
 
 

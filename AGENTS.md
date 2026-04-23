@@ -917,3 +917,39 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Version**: Bumped to 0.59.9
 
 #### Day 77: Fade Curve Constants Tests (2026-04-23)
+
+#### Day 78: MIDI Export Feature (2026-04-23)
+- **Feature**: Added MIDI Export functionality to export sequences as Standard MIDI Files
+- **Files Modified**:
+  - `js/constants.js`: Added MIDI Export constants:
+    - `MIDI_EXPORT_VELOCITY_SCALE` (127) - Scale velocity from 0-1 to 0-127
+    - `MIDI_DEFAULT_CHANNEL` (0) - Default MIDI channel
+    - `MIDI_DEFAULT_PROGRAM` (0) - Default program change
+    - `MIDI_EXPORT_TicksPerQuarterNote` (480) - Standard resolution for MIDI files
+    - `MIDI_FILE_FORMAT` (0) - Single track format
+    - `DEFAULT_MIDI_EXPORT_FILENAME_PREFIX` - Default filename prefix
+    - `MAX_MIDI_EXPORT_TRACKS` (64) - MIDI standard max tracks
+    - Bumped APP_VERSION to 0.60.0
+  - `js/state.js`: Added `exportToMidiInternal()` function:
+    - Collects all notes from all tracks (Synth, InstrumentSampler, Sampler, DrumSampler)
+    - Converts note data (pitch, velocity, duration) to MIDI events
+    - Builds Standard MIDI File format 0 with tempo and time signature events
+    - Includes Note On/Off events with proper delta timing
+    - Downloads exported file as .mid file
+  - `js/eventHandlers.js`: Added:
+    - `menuExportMidi` handler in `menuActions` object
+    - `Ctrl+E` keyboard shortcut for quick MIDI export
+  - `js/main.js`: Added `exportToMidi: exportToMidiInternal` to appServices
+  - `index.html`: Added "Export to MIDI" menu item
+- **Feature Details**:
+  - Exports all notes from all tracks to a single MIDI file (Format 0)
+  - Preserves tempo and time signature in the MIDI file
+  - Converts note velocities (0-1 range to 0-127 MIDI velocity)
+  - Supports all track types with sequences: Synth, InstrumentSampler, Sampler, DrumSampler
+  - Pitch mapping: Synth rows map to MIDI notes, DrumSampler pads map to MIDI notes 36-43
+  - Downloads with timestamped filename (e.g., snugos-export-2026-04-23T06-35-00.mid)
+- **Usage**: 
+  - Menu: Start > Export to MIDI
+  - Keyboard: Ctrl+E
+- **Version**: Bumped to 0.60.0
+

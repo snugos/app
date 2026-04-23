@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.59.10'; // Day 77: Fade Curve Constants Tests
+export const APP_VERSION = '0.60.0'; // Day 78: MIDI Export Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -404,3 +404,13 @@ export const DEFAULT_TRACK_TEMPLATE = {
     hasAutomation: false,
     automationLanes: []
 };
+
+// MIDI Export Constants
+export const MIDI_EXPORT_VELOCITY_SCALE = 127; // Scale velocity from 0-1 to 0-127
+export const MIDI_DEFAULT_CHANNEL = 0; // 0-indexed, will be 1 in MIDI (MIDI Ch 1)
+export const MIDI_DEFAULT_PROGRAM = 0; // Default instrument program change
+export const MIDI_EXPORT_TicksPerQuarterNote = 480; // Standard resolution for MIDI files
+export const MIDI_FILE_FORMAT = 0; // Single track format
+export const MIDI_FILE_TYPE_NAMES = ['Standard MIDI File Type 0 (Single Track)'];
+export const DEFAULT_MIDI_EXPORT_FILENAME_PREFIX = 'snugos-export';
+export const MAX_MIDI_EXPORT_TRACKS = 64; // MIDI standard max tracks
