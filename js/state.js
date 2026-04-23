@@ -466,9 +466,9 @@ export function clearTrackTemplatesState() {
 }
 
 // --- Window Management ---
-export function getOpenWindowsState() { return openWindowsMap; }
-export function getWindowByIdState(id) { return openWindowsMap.get(id); }
-export function getHighestZState() { return highestZ; }
+// Note: getOpenWindowsState and getWindowByIdState are already declared above (lines 89-90)
+// to avoid circular dependency issues with window management
+
 export function setHighestZState(value) { highestZ = Number.isFinite(value) ? value : 100; }
 export function incrementHighestZState() { return ++highestZ; }
 
