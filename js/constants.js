@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.59.0"; // Day 67: Recording Function Tests - Added 16 new unit tests for audio recording functions and audio clip constants
+export const APP_VERSION = '0.59.1'; // Day 68: Chord Mode/Time Signature/Ghost Track State Tests - Added 21 new unit tests for state management functions
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

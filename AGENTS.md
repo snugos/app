@@ -672,7 +672,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Limits: `MAX_RECORDING_LENGTH_SECONDS` (600), `MIN_RECORDING_LENGTH_SECONDS` (0.1)
     - Bumped APP_VERSION to 0.54.0
   - `js/tests.js`: Added comprehensive test suite for audio recording constants:
-    - Sample rate validation (44100 Hz standard)
+    - Sample rate validation (44.1kHz standard)
     - Channel count validation (1 = mono, 1-2 range)
     - Bit depth validation (16-bit standard)
     - MIME type validation (audio/webm/wav/ogg)
@@ -751,7 +751,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 62: Automation Editor Event Handlers (2026-04-22)
 - **Feature**: Completed missing automation editor event handlers for the sequencer window
-- **Issue**: The automation editor UI (toggle, parameter selector, lane grid) was already implemented in `buildSequencerContentDOM()` but had no interactivity - the toggle didn't work, parameter selector did nothing, clear button was inert, and clicking/dragging on the lane did nothing
+- **Issue**: The AGENTS.md mentioned "Automation Editor: event handlers" as an incomplete item. The automation editor UI (toggle, parameter selector, lane grid) was already implemented in `buildSequencerContentDOM()` but had no interactivity - the toggle didn't work, parameter selector did nothing, clear button was inert, and clicking/dragging on the lane did nothing
 - **Files Modified**:
   - `js/ui.js`: Added automation editor event handlers in `openTrackSequencerWindow()`:
     - Toggle checkbox: Shows/hides the automation editor lane
@@ -877,7 +877,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify getter functions return correct types (array, object, number)
   - Tests verify state setters work correctly via roundtrip validation
   - Tests verify create/find/update/remove operations for all three state types
-  - Total test count increased from 97 to 115 tests
+  - Total test count increased from 90 to 115 tests
 - **Backend Note**: The send tracks state manages auxiliary send buses for effects routing. Track groups allow grouping related tracks. Timeline markers allow marking positions on the timeline ruler.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.7
@@ -901,3 +901,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The recording functions use Tone.js UserMedia and Recorder classes for microphone capture. The tests verify the function API without requiring actual microphone access (async/Promise verification only).
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.0
+
+#### Day 68: Chord Mode/Time Signature/Ghost Track State Tests (2026-04-23)
+- **Feature**: Added 21 new unit tests for Chord Mode, Time Signature, Ghost Track, and Armed/Soloed Track state management functions
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The state management functions for Chord Mode, Time Signature, Ghost Track, and Armed/Soloed Track lacked unit test coverage.
+- **Files Modified**:
+  - `js/tests.js`: Added new imports and 21 new tests:
+    - Chord Mode tests: getChordModeState, getChordModeEnabledState, setChordModeEnabledState, getChordModeRootState, setChordModeRootState, getChordModeTypeState, setChordModeTypeState, getChordModeLockState, setChordModeLockState, getChordVoicingState, setChordVoicingState
+    - Time Signature tests: getTimeSignatureState, getTimeSignatureNumeratorState, setTimeSignatureNumeratorState, getTimeSignatureDenominatorState, setTimeSignatureDenominatorState
+    - Ghost Track tests: getGhostTrackIdState, setGhostTrackIdState
+    - Armed/Soloed Track tests: getArmedTrackIdState, getSoloedTrackIdState, setSoloedTrackIdState
+  - `js/constants.js`: Updated APP_VERSION to 0.59.1
+- **Feature Details**:
+  - Tests import and validate state functions from `js/state.js`
+  - Tests verify getter functions return correct types (object, boolean, number, string)
+  - Tests verify state setters work correctly via roundtrip validation
+  - Tests verify Chord Mode settings (enabled, root, type, lock, voicing)
+  - Tests verify Time Signature settings (numerator, denominator)
+  - Tests verify Ghost Track selection (null initially, can be set to track ID)
+  - Tests verify Armed/Soloed Track state management
+  - Total test count increased from 90 to 111 tests
+- **Backend Note**: The Chord Mode state manages chord-based note constraining for the sequencer. Time Signature state controls the beat division. Ghost Track state enables showing notes from another track as ghost notes. Armed/Soloed Track state manages track recording and solo status.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.1

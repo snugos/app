@@ -27,7 +27,32 @@ import {
     getTimelineMarkersState,
     getTimelineMarkerByIdState,
     addTimelineMarkerState,
-    removeTimelineMarkerState
+    removeTimelineMarkerState,
+    // Chord Mode state functions
+    getChordModeState,
+    getChordModeEnabledState,
+    setChordModeEnabledState,
+    getChordModeRootState,
+    setChordModeRootState,
+    getChordModeTypeState,
+    setChordModeTypeState,
+    getChordModeLockState,
+    setChordModeLockState,
+    getChordVoicingState,
+    setChordVoicingState,
+    // Time Signature state functions
+    getTimeSignatureState,
+    getTimeSignatureNumeratorState,
+    setTimeSignatureNumeratorState,
+    getTimeSignatureDenominatorState,
+    setTimeSignatureDenominatorState,
+    // Ghost Track state functions
+    getGhostTrackIdState,
+    setGhostTrackIdState,
+    // Armed/Soloed Track state functions
+    getArmedTrackIdState,
+    getSoloedTrackIdState,
+    setSoloedTrackIdState
 } from './state.js';
 
 import { startAudioRecording, stopAudioRecording } from './audio.js';
@@ -619,6 +644,141 @@ TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (
     t.assertTruthy(result, 'removeTimelineMarkerState should return true on success');
     const found = getTimelineMarkerByIdState(marker.id);
     t.assertEqual(found, undefined, 'Marker should no longer exist');
+});
+
+// ============================================
+// Day 68: Chord Mode State Tests
+// ============================================
+TestRunner.test('Chord Mode - getChordModeState returns object', (t) => {
+    const chordMode = getChordModeState();
+    t.assertTruthy(typeof chordMode === 'object', 'Chord mode state should be an object');
+    t.assertTruthy('enabled' in chordMode, 'Should have enabled property');
+    t.assertTruthy('root' in chordMode, 'Should have root property');
+    t.assertTruthy('type' in chordMode, 'Should have type property');
+});
+
+TestRunner.test('Chord Mode - getChordModeEnabledState returns boolean', (t) => {
+    const enabled = getChordModeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Chord mode enabled should be boolean');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState updates state', (t) => {
+    setChordModeEnabledState(true);
+    t.assertEqual(getChordModeEnabledState(), true, 'Chord mode should be enabled');
+    setChordModeEnabledState(false);
+    t.assertEqual(getChordModeEnabledState(), false, 'Chord mode should be disabled');
+});
+
+TestRunner.test('Chord Mode - getChordModeRootState returns number', (t) => {
+    const root = getChordModeRootState();
+    t.assertEqual(typeof root, 'number', 'Chord root should be a number');
+    t.assertTruthy(root >= 0 && root <= 11, 'Root should be 0-11 (C-B)');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState updates state', (t) => {
+    setChordModeRootState(5); // F
+    t.assertEqual(getChordModeRootState(), 5, 'Chord root should be 5');
+});
+
+TestRunner.test('Chord Mode - getChordModeTypeState returns string', (t) => {
+    const type = getChordModeTypeState();
+    t.assertEqual(typeof type, 'string', 'Chord type should be a string');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState updates state', (t) => {
+    setChordModeTypeState('minor');
+    t.assertEqual(getChordModeTypeState(), 'minor', 'Chord type should be minor');
+});
+
+TestRunner.test('Chord Mode - getChordModeLockState returns boolean', (t) => {
+    const lock = getChordModeLockState();
+    t.assertEqual(typeof lock, 'boolean', 'Chord lock should be boolean');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState updates state', (t) => {
+    setChordModeLockState(true);
+    t.assertEqual(getChordModeLockState(), true, 'Chord lock should be enabled');
+    setChordModeLockState(false);
+    t.assertEqual(getChordModeLockState(), false, 'Chord lock should be disabled');
+});
+
+TestRunner.test('Chord Mode - getChordVoicingState returns string', (t) => {
+    const voicing = getChordVoicingState();
+    t.assertEqual(typeof voicing, 'string', 'Chord voicing should be a string');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState updates state', (t) => {
+    setChordVoicingState('close');
+    t.assertEqual(getChordVoicingState(), 'close', 'Chord voicing should be close');
+});
+
+// ============================================
+// Day 68: Time Signature State Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const ts = getTimeSignatureState();
+    t.assertTruthy(typeof ts === 'object', 'Time signature should be an object');
+    t.assertTruthy('numerator' in ts, 'Should have numerator');
+    t.assertTruthy('denominator' in ts, 'Should have denominator');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const num = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof num, 'number', 'Numerator should be a number');
+    t.assertTruthy(num >= 1, 'Numerator should be at least 1');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denom = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denom, 'number', 'Denominator should be a number');
+    t.assertTruthy(denom >= 1, 'Denominator should be at least 1');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+// ============================================
+// Day 68: Ghost Track State Tests
+// ============================================
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null initially', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null initially');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('track123');
+    t.assertEqual(getGhostTrackIdState(), 'track123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+// ============================================
+// Day 68: Armed/Soloed Track State Tests
+// ============================================
+TestRunner.test('Armed/Soloed - getArmedTrackIdState returns value', (t) => {
+    const armedId = getArmedTrackIdState();
+    // Should return whatever is currently set (null or a track ID)
+    t.assertTrue(armedId === null || typeof armedId === 'string', 'Armed track ID should be null or string');
+});
+
+TestRunner.test('Armed/Soloed - getSoloedTrackIdState returns value', (t) => {
+    const soloedId = getSoloedTrackIdState();
+    // Should return whatever is currently set (null or a track ID)
+    t.assertTrue(soloedId === null || typeof soloedId === 'string', 'Soloed track ID should be null or string');
+});
+
+TestRunner.test('Armed/Soloed - setSoloedTrackIdState updates state', (t) => {
+    setSoloedTrackIdState('track456');
+    t.assertEqual(getSoloedTrackIdState(), 'track456', 'Soloed track should be set');
+    setSoloedTrackIdState(null);
+    t.assertEqual(getSoloedTrackIdState(), null, 'Soloed track should be cleared');
 });
 
 // ============================================
