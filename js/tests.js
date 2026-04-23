@@ -1818,6 +1818,73 @@ TestRunner.test('Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE d
 });
 
 // ============================================
+// Day 85: Track Template Constants Tests
+// ============================================
+TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES is reasonable', (t) => {
+    t.assertEqual(MAX_TRACK_TEMPLATES, 32, 'Max templates should be 32');
+    t.assertTruthy(MAX_TRACK_TEMPLATES > 0, 'Max templates should be positive');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is valid', (t) => {
+    t.assertEqual(DEFAULT_TEMPLATE_NAME_PREFIX, 'Template', 'Default prefix should be "Template"');
+    t.assertTruthy(DEFAULT_TEMPLATE_NAME_PREFIX.length > 0, 'Prefix should be non-empty');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex', (t) => {
+    const hexRegex = /^#[0-9A-Fa-f]{6}$/;
+    t.assertTruthy(hexRegex.test(DEFAULT_TRACK_TEMPLATE_COLOR), 'Default template color should be valid hex');
+});
+
+TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS is TRACK_COLORS', (t) => {
+    t.assertEqual(TRACK_TEMPLATE_COLORS, TRACK_COLORS, 'Template colors should reference TRACK_COLORS');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE is valid object', (t) => {
+    t.assertTruthy(typeof DEFAULT_TRACK_TEMPLATE === 'object', 'Default template should be an object');
+    t.assertTruthy(DEFAULT_TRACK_TEMPLATE.name, 'Template should have name');
+    t.assertTruthy(DEFAULT_TRACK_TEMPLATE.color, 'Template should have color');
+    t.assertTruthy(DEFAULT_TRACK_TEMPLATE.type, 'Template should have type');
+});
+
+// ============================================
+// Day 85: MIDI Export Constants Tests
+// ============================================
+TestRunner.test('MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is 127', (t) => {
+    t.assertEqual(MIDI_EXPORT_VELOCITY_SCALE, 127, 'Velocity scale should be 127 (MIDI standard)');
+});
+
+TestRunner.test('MIDI Export - MIDI_DEFAULT_CHANNEL is valid', (t) => {
+    t.assertEqual(MIDI_DEFAULT_CHANNEL, 0, 'Default channel should be 0 (MIDI Ch 1)');
+    t.assertTruthy(MIDI_DEFAULT_CHANNEL >= 0 && MIDI_DEFAULT_CHANNEL <= 15, 'Channel should be 0-15');
+});
+
+TestRunner.test('MIDI Export - MIDI_DEFAULT_PROGRAM is valid', (t) => {
+    t.assertEqual(MIDI_DEFAULT_PROGRAM, 0, 'Default program should be 0');
+    t.assertTruthy(MIDI_DEFAULT_PROGRAM >= 0 && MIDI_DEFAULT_PROGRAM <= 127, 'Program should be 0-127');
+});
+
+TestRunner.test('MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is reasonable', (t) => {
+    t.assertEqual(MIDI_EXPORT_TicksPerQuarterNote, 480, 'TPQN should be 480');
+    t.assertTruthy(MIDI_EXPORT_TicksPerQuarterNote >= 96, 'TPQN should be at least 96 (MIDI standard min)');
+    t.assertTruthy(MIDI_EXPORT_TicksPerQuarterNote <= 960, 'TPQN should be at most 960 (high resolution)');
+});
+
+TestRunner.test('MIDI Export - MIDI_FILE_FORMAT is valid', (t) => {
+    t.assertEqual(MIDI_FILE_FORMAT, 0, 'Format should be 0 (single track)');
+    t.assertTruthy(MIDI_FILE_FORMAT >= 0 && MIDI_FILE_FORMAT <= 2, 'Format should be 0-2');
+});
+
+TestRunner.test('MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is valid', (t) => {
+    t.assertEqual(DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, 'snugos-export', 'Default prefix should be snugos-export');
+    t.assertTruthy(DEFAULT_MIDI_EXPORT_FILENAME_PREFIX.length > 0, 'Prefix should be non-empty');
+});
+
+TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is valid', (t) => {
+    t.assertEqual(MAX_MIDI_EXPORT_TRACKS, 64, 'Max tracks should be 64 (MIDI standard)');
+    t.assertTruthy(MAX_MIDI_EXPORT_TRACKS > 0, 'Max tracks should be positive');
+});
+
+// ============================================
 // Automation Lane Method Tests
 // ============================================
 TestRunner.test('Automation - AUTOMATION_LANE_PARAMETERS is an array', (t) => {

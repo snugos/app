@@ -1033,24 +1033,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate core automation methods via self-contained mock implementation
   - Tests verify value clamping, point updates, interpolation, and lane clearing
   - Tests verify value precision rounding
-  - Total test count increased from 238 to 255 tests
+  - Total test count increased from 264 to 276 tests
 - **Backend Note**: The automation lane methods are used by the Automation Editor UI (`buildSequencerContentDOM()` and `openTrackSequencerWindow()` in ui.js) to allow users to record and edit parameter automation. The constants define how automation is displayed and stored.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.5
 
-#### Day 86: Mixer Track Context Menu - Delete/Duplicate (2026-04-23)
-- **Feature**: Added Delete Track and Duplicate Track options to the Mixer track strip right-click context menu
-- **Issue**: The Mixer window track strips had a context menu for group management but lacked common track operations like delete and duplicate. Users had to use the timeline or track inspector to perform these actions.
+#### Day 86: Track Template and MIDI Export Constants Tests (2026-04-23)
+- **Feature**: Added 12 new unit tests for Track Template and MIDI Export constants
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. Track Template constants (MAX_TRACK_TEMPLATES, DEFAULT_TEMPLATE_NAME_PREFIX, TRACK_TEMPLATE_COLORS, DEFAULT_TRACK_TEMPLATE_COLOR, DEFAULT_TRACK_TEMPLATE) and MIDI Export constants (MIDI_EXPORT_VELOCITY_SCALE, MIDI_DEFAULT_CHANNEL, MIDI_DEFAULT_PROGRAM, MIDI_EXPORT_TicksPerQuarterNote, MIDI_FILE_FORMAT, DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, MAX_MIDI_EXPORT_TRACKS) lacked unit test coverage despite being used by their respective features.
 - **Files Modified**:
-  - `js/ui.js`: Added to the mixer track strip context menu in `initializeMixerEventHandlers()`:
-    - "Delete Track" menu item - calls `handleRemoveTrack()` if available, falls back to `localAppServices.removeTrack()`
-    - "Duplicate Track" menu item - calls `track.duplicateTrack()` directly and shows notification
-    - Both items are separated from group management items by a separator line
-  - `js/constants.js`: Bumped APP_VERSION to 0.61.2
+  - `js/tests.js`: Added 12 new tests in Day 85 section (placed before Automation Lane Method Tests):
+    - `Track Templates - MAX_TRACK_TEMPLATES is reasonable` - Tests value is 32 and positive
+    - `Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is valid` - Tests value is 'Template' and non-empty
+    - `Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex` - Tests color is valid hex format
+    - `Track Templates - TRACK_TEMPLATE_COLORS is TRACK_COLORS` - Tests reference equality
+    - `Track Templates - DEFAULT_TRACK_TEMPLATE is valid object` - Tests object structure
+    - `MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is 127` - Tests MIDI standard velocity scale
+    - `MIDI Export - MIDI_DEFAULT_CHANNEL is valid` - Tests channel 0 with range 0-15
+    - `MIDI Export - MIDI_DEFAULT_PROGRAM is valid` - Tests program 0 with range 0-127
+    - `MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is reasonable` - Tests TPQN 480 with range 96-960
+    - `MIDI Export - MIDI_FILE_FORMAT is valid` - Tests format 0 with range 0-2
+    - `MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is valid` - Tests prefix is 'snugos-export'
+    - `MIDI Export - MAX_MIDI_EXPORT_TRACKS is valid` - Tests 64 (MIDI standard)
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.3
 - **Feature Details**:
-  - Delete Track: Shows confirmation dialog before removing the track (uses existing handleRemoveTrack function which captures undo state)
-  - Duplicate Track: Creates a copy of the track with "(Copy)" suffix, captures undo state for the duplication
-  - Works alongside existing group management options (Add to Group, Remove from Group, Create Group)
-  - Context menu appears on right-click of any track strip in the Mixer window
-- **Usage**: Click the FX button in any track strip in the Mixer window
-- **Version**: Bumped to 0.61.2
+  - Tests validate Track Template constants (MAX_TRACK_TEMPLATES, DEFAULT_TEMPLATE_NAME_PREFIX, etc.)
+  - Tests validate MIDI Export constants (MIDI_EXPORT_VELOCITY_SCALE, MIDI_DEFAULT_CHANNEL, etc.)
+  - Tests verify ranges, formats, and expected values match MIDI specification
+  - Total test count increased from 264 to 276 tests
+- **Backend Note**: Track Template constants define how saved track templates are managed (max 32 templates with color and naming). MIDI Export constants define how sequences are exported to Standard MIDI Files (TPQN=480, format 0, max 64 tracks).
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.3
