@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.58.7"; // Day 66: Send Tracks/Track Groups/Timeline Markers State Tests - Added 18 new unit tests for send tracks, track groups, and timeline markers state management functions
+export const APP_VERSION = "0.59.0"; // Day 67: Recording Function Tests - Added 16 new unit tests for audio recording functions and audio clip constants
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

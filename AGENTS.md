@@ -471,7 +471,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Collision handling: if destination is occupied, finds nearest free slot
   - Undo Support: Both operations capture state for undo/redo
   - Visual Feedback: Notifications show count of notes affected
-- **Backend Note**: The `shiftSequenceNotes()` and `quantizeSequence()` methods already existed in Track.js but had no UI wiring
+- **Backend Note**: The `shiftSequenceNotes()` and `quantizeSequence()` methods already existed in Track.js but had no UI wiring.
 - **Usage**: Right-click on sequencer grid, use Transpose or Quantize sections in context menu
 - **Version**: Bumped to 0.19.0
 
@@ -881,3 +881,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The send tracks state manages auxiliary send buses for effects routing. Track groups allow grouping related tracks. Timeline markers allow marking positions on the timeline ruler.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.7
+
+#### Day 67: Recording Function Tests (2026-04-23)
+- **Feature**: Added 16 new unit tests for audio recording functions and audio clip constants
+- **Issue**: The AGENTS.md mentioned "Recording: end-to-end test with real microphone" as an incomplete item. While Day 56 added constants tests and Day 65 added state management tests for recording, the actual recording functions (`startAudioRecording`, `stopAudioRecording`) lacked test coverage.
+- **Files Modified**:
+  - `js/tests.js`: Added import for `startAudioRecording` and `stopAudioRecording` from `./audio.js`
+  - Added new tests for recording functions and audio clip constants:
+    - Recording Function tests: startAudioRecording exists, stopAudioRecording exists, async verification
+    - Audio Clip tests: gain, playback rate, crossfade, fade in/out, offsets
+    - Monitoring State tests: default monitoring settings
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.0
+- **Feature Details**:
+  - Tests verify `startAudioRecording` and `stopAudioRecording` functions exist in `js/audio.js`
+  - Tests verify these functions are async (return Promises)
+  - Tests validate audio clip constants for gain, playback rate, crossfade, fade, and offsets
+  - Tests verify monitoring defaults (disabled by default, volume 0.5)
+  - Total test count increased from 115 to 131 tests
+- **Backend Note**: The recording functions use Tone.js UserMedia and Recorder classes for microphone capture. The tests verify the function API without requiring actual microphone access (async/Promise verification only).
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.0

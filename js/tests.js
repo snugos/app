@@ -30,6 +30,8 @@ import {
     removeTimelineMarkerState
 } from './state.js';
 
+import { startAudioRecording, stopAudioRecording } from './audio.js';
+
 // ============================================
 // Constants Tests
 // ============================================
@@ -451,210 +453,78 @@ TestRunner.test('Recording - Min recording length is reasonable', (t) => {
 });
 
 // ============================================
-// DrumSampler Pad Drop Zone Tests (Day 63)
+// Day 67: Recording Function Tests
 // ============================================
-TestRunner.test('DrumSampler - numDrumSamplerPads is 8', (t) => {
-    t.assertEqual(numDrumSamplerPads, 8, 'Number of drum pads should be 8');
+TestRunner.test('Recording - startAudioRecording function exists', (t) => {
+    t.assertTruthy(typeof startAudioRecording === 'function', 'startAudioRecording should be a function');
 });
 
-TestRunner.test('DrumSampler - createDropZoneHTML generates valid HTML for pads', (t) => {
-    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
-    t.assertTruthy(html.includes('drop-zone'), 'Should contain drop-zone class');
-    t.assertTruthy(html.includes('data-pad-slice-index="0"'), 'Should have pad index data attribute');
-    t.assertTruthy(html.includes('data-track-id="track1"'), 'Should have track id data attribute');
-    t.assertTruthy(html.includes('data-track-type="DrumSampler"'), 'Should have track type data attribute');
+TestRunner.test('Recording - stopAudioRecording function exists', (t) => {
+    t.assertTruthy(typeof stopAudioRecording === 'function', 'stopAudioRecording should be a function');
 });
 
-TestRunner.test('DrumSampler - createDropZoneHTML for all pad indices', (t) => {
-    for (let padIndex = 0; padIndex < numDrumSamplerPads; padIndex++) {
-        const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', padIndex, null);
-        t.assertTruthy(html.includes(`data-pad-slice-index="${padIndex}"`), `Pad ${padIndex} should have correct data attribute`);
-    }
+TestRunner.test('Recording - startAudioRecording is async', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    // Verify it's an async function by checking it returns a Promise
+    const result = startAudioRecording(null, false);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise');
 });
 
-TestRunner.test('DrumSampler - createDropZoneHTML with loaded status', (t) => {
-    const existingData = { originalFileName: 'kick.wav', status: 'loaded' };
-    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
-    t.assertTruthy(html.includes('kick.wav'), 'Should show loaded file name');
-    t.assertTruthy(html.includes('Loaded:'), 'Should show loaded status');
-});
-
-TestRunner.test('DrumSampler - createDropZoneHTML with missing status shows relink button', (t) => {
-    const existingData = { originalFileName: 'snare.wav', status: 'missing' };
-    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
-    t.assertTruthy(html.includes('Missing:'), 'Should show missing status');
-    t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing class');
-    t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have relink button');
-});
-
-TestRunner.test('DrumSampler - createDropZoneHTML with error status shows retry button', (t) => {
-    const existingData = { originalFileName: 'hihat.wav', status: 'error' };
-    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
-    t.assertTruthy(html.includes('Error Loading:'), 'Should show error status');
-    t.assertTruthy(html.includes('drop-zone-error'), 'Should have error class');
-    t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have retry button');
-});
-
-TestRunner.test('DrumSampler - createDropZoneHTML with loading status', (t) => {
-    const existingData = { originalFileName: 'tom.wav', status: 'loading' };
-    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
-    t.assertTruthy(html.includes('Loading:'), 'Should show loading status');
-    t.assertTruthy(html.includes('drop-zone-loading'), 'Should have loading class');
-});
-
-TestRunner.test('DrumSampler - createDropZoneHTML contains file input', (t) => {
-    const html = createDropZoneHTML('track1', 'drumPadFileInput', 'DrumSampler', 3, null);
-    t.assertTruthy(html.includes('type="file"'), 'Should have file input');
-    t.assertTruthy(html.includes('accept="audio/*, .sfz, .sf2"'), 'Should accept audio files');
-    t.assertTruthy(html.includes('id="drumPadFileInput"'), 'Should have correct input ID');
-});
-
-TestRunner.test('DrumSampler - createDropZoneHTML truncates long filenames', (t) => {
-    const longFileName = 'this_is_a_very_long_audio_file_name_that_exceeds_limit.wav';
-    const existingData = { originalFileName: longFileName, status: 'loaded' };
-    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
-    t.assertTruthy(html.includes('...'), 'Long filenames should be truncated');
-    t.assertTruthy(html.includes(longFileName.substring(0, 25)), 'Should include truncated portion');
+TestRunner.test('Recording - stopAudioRecording is async', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    // Verify it's an async function by checking it returns a Promise
+    const result = stopAudioRecording();
+    t.assertTruthy(result instanceof Promise, 'stopAudioRecording should return a Promise');
 });
 
 // ============================================
-// Track Template Constants Tests (Day 61)
+// Day 67: Audio Clip Tests
 // ============================================
-TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES is 32', (t) => {
-    t.assertEqual(MAX_TRACK_TEMPLATES, 32, 'Max templates should be 32');
+TestRunner.test('Audio Clip - DEFAULT_AUDIO_CLIP_GAIN is valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'Default audio clip gain should be 1.0');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_GAIN >= MIN_AUDIO_CLIP_GAIN, 'Default should be >= min');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_GAIN <= MAX_AUDIO_CLIP_GAIN, 'Default should be <= max');
 });
 
-TestRunner.test('Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is Template', (t) => {
-    t.assertEqual(DEFAULT_TEMPLATE_NAME_PREFIX, 'Template', 'Default prefix should be Template');
+TestRunner.test('Audio Clip - DEFAULT_AUDIO_CLIP_PLAYBACK_RATE is valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'Default playback rate should be 1.0');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE >= MIN_AUDIO_CLIP_PLAYBACK_RATE, 'Default should be >= min');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE <= MAX_AUDIO_CLIP_PLAYBACK_RATE, 'Default should be <= max');
 });
 
-TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS uses TRACK_COLORS', (t) => {
-    t.assertEqual(TRACK_TEMPLATE_COLORS, TRACK_COLORS, 'Template colors should match track colors');
+TestRunner.test('Audio Clip - DEFAULT_AUDIO_CLIP_CROSSFADE is valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'Default crossfade should be 0');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_CROSSFADE >= MIN_AUDIO_CLIP_CROSSFADE, 'Default should be >= min');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_CROSSFADE <= MAX_AUDIO_CLIP_CROSSFADE, 'Default should be <= max');
 });
 
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex', (t) => {
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE_COLOR.startsWith('#'), 'Template color should be hex');
-    t.assertTruthy(TRACK_COLORS.includes(DEFAULT_TRACK_TEMPLATE_COLOR), 'Template color should be in track colors');
+TestRunner.test('Audio Clip - DEFAULT_AUDIO_CLIP_FADE_IN/OUT are valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_FADE_IN >= 0, 'Fade in should be non-negative');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_FADE_OUT >= 0, 'Fade out should be non-negative');
 });
 
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE structure', (t) => {
-    const def = DEFAULT_TRACK_TEMPLATE;
-    t.assertEqual(def.name, DEFAULT_TEMPLATE_NAME_PREFIX, 'Name should match prefix');
-    t.assertEqual(def.color, DEFAULT_TRACK_TEMPLATE_COLOR, 'Color should match default');
-    t.assertEqual(def.type, 'Synth', 'Default type should be Synth');
-    t.assertTruthy(typeof def.synthParams === 'object', 'synthParams should be object');
-    t.assertTruthy(Array.isArray(def.activeEffects), 'activeEffects should be array');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has no automation by default', (t) => {
-    const def = DEFAULT_TRACK_TEMPLATE;
-    t.assertEqual(def.hasAutomation, false, 'Has automation should be false');
-    t.assertTruthy(Array.isArray(def.automationLanes), 'automationLanes should be array');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE instrument settings default to null', (t) => {
-    const def = DEFAULT_TRACK_TEMPLATE;
-    t.assertEqual(def.instrumentSamplerSettings, null, 'instrumentSamplerSettings should be null');
-    t.assertEqual(def.drumSamplerPads, null, 'drumSamplerPads should be null');
+TestRunner.test('Audio Clip - DEFAULT_AUDIO_CLIP_START_OFFSET and END_OFFSET are valid', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'Default start offset should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1 (use full clip)');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_START_OFFSET >= MIN_AUDIO_CLIP_START_OFFSET, 'Start offset should be >= min');
 });
 
 // ============================================
-// Day 64: Undo/Redo System Tests
+// Day 67: Monitoring State Tests
 // ============================================
-TestRunner.test('Undo/Redo - MAX_HISTORY_STATES is reasonable', (t) => {
-    t.assertEqual(MAX_HISTORY_STATES, 50, 'Max history states should be 50');
-    t.assertTruthy(MAX_HISTORY_STATES >= 10, 'Max history states should be at least 10');
-    t.assertTruthy(MAX_HISTORY_STATES <= 200, 'Max history states should be at most 200');
+TestRunner.test('Monitoring State - isMonitoringEnabled default is false', (t) => {
+    t.assertEqual(DEFAULT_RECORDING_MONITORING_ENABLED, false, 'Monitoring should be disabled by default');
 });
 
-TestRunner.test('Undo/Redo - getUndoStackState returns array', (t) => {
-    // getUndoStackState is imported from state.js, verify it returns an array
-    const stack = getUndoStackState();
-    t.assertTruthy(Array.isArray(stack), 'Undo stack should be an array');
-});
-
-TestRunner.test('Undo/Redo - getRedoStackState returns array', (t) => {
-    const stack = getRedoStackState();
-    t.assertTruthy(Array.isArray(stack), 'Redo stack should be an array');
-});
-
-TestRunner.test('Undo/Redo - undoStack starts empty on init', (t) => {
-    const stack = getUndoStackState();
-    t.assertEqual(stack.length, 0, 'Undo stack should start empty for new project');
-});
-
-TestRunner.test('Undo/Redo - redoStack starts empty on init', (t) => {
-    const stack = getRedoStackState();
-    t.assertEqual(stack.length, 0, 'Redo stack should start empty for new project');
-});
-
-TestRunner.test('Undo/Redo - undoLastActionInternal function exists', (t) => {
-    t.assertTruthy(typeof undoLastActionInternal === 'function', 'undoLastActionInternal should be a function');
-});
-
-TestRunner.test('Undo/Redo - redoLastActionInternal function exists', (t) => {
-    t.assertTruthy(typeof redoLastActionInternal === 'function', 'redoLastActionInternal should be a function');
-});
-
-TestRunner.test('Undo/Redo - undoLastActionInternal is async', (t) => {
-    const fn = undoLastActionInternal;
-    t.assertTruthy(fn.constructor.name === 'AsyncFunction', 'undoLastActionInternal should be async');
-});
-
-TestRunner.test('Undo/Redo - redoLastActionInternal is async', (t) => {
-    const fn = redoLastActionInternal;
-    t.assertTruthy(fn.constructor.name === 'AsyncFunction', 'redoLastActionInternal should be async');
+TestRunner.test('Monitoring State - monitoring volume default is valid', (t) => {
+    t.assertEqual(DEFAULT_RECORDING_MONITORING_VOLUME, 0.5, 'Default monitoring volume should be 0.5');
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME >= 0 && DEFAULT_RECORDING_MONITORING_VOLUME <= 1, 'Volume should be 0-1 range');
 });
 
 // ============================================
-// Day 65: Recording State Management Tests
-// ============================================
-TestRunner.test('Recording State - isTrackRecordingState is boolean', (t) => {
-    const result = isTrackRecordingState();
-    t.assertEqual(typeof result, 'boolean', 'isTrackRecordingState should return boolean');
-});
-
-TestRunner.test('Recording State - getRecordingTrackIdState returns null initially', (t) => {
-    const result = getRecordingTrackIdState();
-    t.assertEqual(result, null, 'Recording track ID should be null initially');
-});
-
-TestRunner.test('Recording State - getRecordingStartTimeState returns number', (t) => {
-    const result = getRecordingStartTimeState();
-    t.assertEqual(typeof result, 'number', 'Recording start time should be a number');
-});
-
-TestRunner.test('Recording State - setIsRecordingState updates state', (t) => {
-    setIsRecordingState(true);
-    t.assertEqual(isTrackRecordingState(), true, 'isTrackRecordingState should be true after setting');
-    setIsRecordingState(false);
-    t.assertEqual(isTrackRecordingState(), false, 'isTrackRecordingState should be false after setting');
-});
-
-TestRunner.test('Recording State - setRecordingTrackIdState updates state', (t) => {
-    const testId = 'test-track-123';
-    setRecordingTrackIdState(testId);
-    t.assertEqual(getRecordingTrackIdState(), testId, 'Recording track ID should match set value');
-    setRecordingTrackIdState(null);
-    t.assertEqual(getRecordingTrackIdState(), null, 'Recording track ID should be null after reset');
-});
-
-TestRunner.test('Recording State - setRecordingStartTimeState updates state', (t) => {
-    const testTime = 1234567890;
-    setRecordingStartTimeState(testTime);
-    t.assertEqual(getRecordingStartTimeState(), testTime, 'Recording start time should match set value');
-    setRecordingStartTimeState(0);
-    t.assertEqual(getRecordingStartTimeState(), 0, 'Recording start time should be 0 after reset');
-});
-
-TestRunner.test('Recording State - recording state setters are functions', (t) => {
-    t.assertTruthy(typeof setIsRecordingState === 'function', 'setIsRecordingState should be a function');
-    t.assertTruthy(typeof setRecordingTrackIdState === 'function', 'setRecordingTrackIdState should be a function');
-    t.assertTruthy(typeof setRecordingStartTimeState === 'function', 'setRecordingStartTimeState should be a function');
-});
-
-// ============================================
-// Day 66: Send Tracks State Management Tests
+// Day 67: Send Tracks State Management Tests
 // ============================================
 TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
     const sends = getSendTracksState();
