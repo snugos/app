@@ -484,6 +484,7 @@ const appServices = {
     handleProjectFileLoad: handleProjectFileLoadInternal,
     exportToWav: exportToWavInternal,
     exportToMidi: exportToMidiInternal,
+    importFromMidi: importFromMidiInternal,
 
     // Undo/Redo
     undoLastAction: undoLastActionInternal,

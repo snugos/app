@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.62.1'; // Day 91: Complete Undo/Redo Coverage for Remaining State Functions
+export const APP_VERSION = '0.63.0'; // Day 92: MIDI Import Feature - Import Standard MIDI Files into new Synth tracks
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -438,3 +438,11 @@ export const MIDI_FILE_FORMAT = 0; // Single track format
 export const MIDI_FILE_TYPE_NAMES = ['Standard MIDI File Type 0 (Single Track)'];
 export const DEFAULT_MIDI_EXPORT_FILENAME_PREFIX = 'snugos-export';
 export const MAX_MIDI_EXPORT_TRACKS = 64; // MIDI standard max tracks
+
+// MIDI Import Constants
+export const MIDI_IMPORT_MIN_NOTES = 1; // Minimum notes required for import
+export const MIDI_IMPORT_MAX_VELOCITY = 127; // Maximum velocity value
+export const MIDI_IMPORT_DEFAULT_VELOCITY = 100; // Default velocity when not specified
+export const MIDI_IMPORT_DEFAULT_PROBABILITY = 1.0; // Default note probability
+export const MIDI_IMPORT_SNAP_TO_GRID = true; // Snap imported notes to 16th grid
+export const MIDI_IMPORT_VELOCITY_SCALE = 1 / 127; // Scale MIDI velocity (127) to app velocity (0-1)

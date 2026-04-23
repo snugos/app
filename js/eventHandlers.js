@@ -209,6 +209,11 @@ export function initializePrimaryEventListeners(appContext) {
                     services.exportToMidi?.();
                 } catch(e) { console.error('[Menu] Export MIDI error:', e); }
             },
+            menuImportMidi: () => {
+                try {
+                    services.importFromMidi?.();
+                } catch(e) { console.error('[Menu] Import MIDI error:', e); }
+            },
             menuUndo: () => {
                 try {
                     services.undoLastAction?.();

@@ -1134,3 +1134,39 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
 - **Usage**: Save/update/delete track templates, add/remove/modify master effects - all now undoable with Ctrl+Z
 - **Version**: Bumped to 0.62.1
+
+#### Day 92: MIDI Import Feature (2026-04-23)
+- **Feature**: Added MIDI Import functionality to import Standard MIDI Files into new Synth tracks
+- **Files Modified**:
+  - `js/constants.js`: Added MIDI Import constants:
+    - `MIDI_IMPORT_MIN_NOTES` (1) - Minimum notes required for import
+    - `MIDI_IMPORT_MAX_VELOCITY` (127) - Maximum velocity value
+    - `MIDI_IMPORT_DEFAULT_VELOCITY` (100) - Default velocity when not specified
+    - `MIDI_IMPORT_DEFAULT_PROBABILITY` (1.0) - Default note probability
+    - `MIDI_IMPORT_SNAP_TO_GRID` (true) - Snap imported notes to 16th grid
+    - `MIDI_IMPORT_VELOCITY_SCALE` (1/127) - Scale MIDI velocity to app velocity
+    - Bumped APP_VERSION to 0.63.0
+  - `js/state.js`: Added `importFromMidiInternal()` function:
+    - Opens file picker for .mid/.midi/.smf files
+    - Parses MIDI file format 0 and 1 (single/multiple tracks)
+    - Extracts Note On/Off events, tempo, and time signature
+    - Creates new Synth track with imported notes placed in grid
+    - Handles variable-length quantities and running status
+    - Maps MIDI notes to app row indices (inverse of export)
+    - Adds helper functions `parseMidiFile()` and `readVarLen()`
+  - `js/eventHandlers.js`: Added `menuImportMidi` handler
+  - `js/main.js`: Added `importFromMidi: importFromMidiInternal` to appServices
+  - `index.html`: Added "Import MIDI..." menu item
+- **Feature Details**:
+  - Import creates a new Synth track populated with notes from the MIDI file
+  - Supports Standard MIDI File formats 0 and 1
+  - Parses tempo and time signature from MIDI meta events
+  - Converts MIDI velocities (0-127) to app velocities (0-1)
+  - Notes are placed at calculated step positions based on tick timing
+  - Note lengths are computed from Note Off events
+  - Empty MIDI files show notification "No notes found in MIDI file"
+- **Backend Note**: The import uses the same binary MIDI parsing logic as export. The `parseMidiFile` function extracts note events from all tracks and maps them to the app's row/step grid system. The `pitchToRow` inverse mapping allows notes to be correctly positioned in the piano roll.
+- **Usage**: 
+  - Menu: Start > Import MIDI...
+  - The imported notes appear in a new Synth track in the sequencer
+- **Version**: Bumped to 0.63.0
