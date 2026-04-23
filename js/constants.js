@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.58.2"; // Day 61: Track Template Constants Tests - 7 new tests for template constants, test count now 72
+export const APP_VERSION = "0.58.3"; // Day 62: Automation Editor Event Handlers - Complete missing toggle, param select, clear button, and click/drag automation point editing
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

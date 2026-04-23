@@ -2590,6 +2590,236 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             });
         }
 
+        // Automation Editor event handlers
+        const automationEditorToggle = sequencerWindow.element.querySelector(`#automationEditorToggle-${track.id}`);
+        const automationEditorLane = sequencerWindow.element.querySelector(`#automationEditor-${track.id}`);
+        const automationParamSelect = sequencerWindow.element.querySelector(`#automationParamSelect-${track.id}`);
+        const clearAutomationBtn = sequencerWindow.element.querySelector(`#clearAutomationBtn-${track.id}`);
+
+        if (automationEditorToggle && automationEditorLane) {
+            automationEditorToggle.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    automationEditorLane.classList.remove('hidden');
+                } else {
+                    automationEditorLane.classList.add('hidden');
+                }
+            });
+
+            // Automation parameter selector - re-render lane when parameter changes
+            if (automationParamSelect) {
+                automationParamSelect.addEventListener('change', (e) => {
+                    const newParam = e.target.value;
+                    const lane = automationEditorLane.querySelector('.automation-editor-grid');
+                    if (!lane) return;
+                    const automationLane = track.getAutomationLane ? track.getAutomationLane(newParam) : [];
+                    const cells = lane.querySelectorAll('.automation-cell');
+                    cells.forEach(cell => {
+                        const col = parseInt(cell.dataset.col, 10);
+                        const point = automationLane.find(p => p.step === col);
+                        const hasPoint = !!point;
+                        const pointValue = point ? point.value : Constants.AUTOMATION_LANE_DEFAULT;
+                        const barHeight = Math.round(pointValue * 56);
+                        const bar = cell.querySelector('.automation-bar');
+                        if (bar) {
+                            bar.style.height = `${barHeight}px`;
+                            bar.style.backgroundColor = hasPoint ? '#ff9f43' : '#333333';
+                            bar.style.opacity = hasPoint ? '1' : '0.3';
+                        }
+                        cell.dataset.hasPoint = hasPoint;
+                        cell.dataset.value = pointValue.toFixed(2);
+                        cell.title = `Step ${col + 1}: ${hasPoint ? Math.round(pointValue * 100) + '%' : 'No point'}`;
+                        // Toggle dot visibility
+                        const existingDot = cell.querySelector('.automation-point-dot');
+                        if (existingDot) existingDot.remove();
+                        if (hasPoint) {
+                            const dot = document.createElement('div');
+                            dot.className = 'automation-point-dot absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-orange-500 border border-white pointer-events-none';
+                            cell.appendChild(dot);
+                        }
+                    });
+                });
+            }
+
+            // Clear automation lane button
+            if (clearAutomationBtn) {
+                clearAutomationBtn.addEventListener('click', () => {
+                    const autoParam = automationParamSelect ? automationParamSelect.value : 'volume';
+                    showConfirmationDialog(`Clear Automation Lane`, `Clear all automation points for ${autoParam}? This can be undone.`, () => {
+                        if (track.clearAutomationLane) {
+                            track.clearAutomationLane(autoParam);
+                            showNotification(`Automation lane for ${autoParam} cleared.`, 2000);
+                            // Update UI
+                            const laneGrid = automationEditorLane.querySelector('.automation-editor-grid');
+                            if (laneGrid) {
+                                const cells = laneGrid.querySelectorAll('.automation-cell');
+                                cells.forEach(cell => {
+                                    const col = parseInt(cell.dataset.col, 10);
+                                    const bar = cell.querySelector('.automation-bar');
+                                    if (bar) {
+                                        bar.style.height = '0px';
+                                        bar.style.backgroundColor = '#333333';
+                                        bar.style.opacity = '0.3';
+                                    }
+                                    cell.dataset.hasPoint = false;
+                                    cell.dataset.value = Constants.AUTOMATION_LANE_DEFAULT.toFixed(2);
+                                    const existingDot = cell.querySelector('.automation-point-dot');
+                                    if (existingDot) existingDot.remove();
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Automation cell click to add/move points
+            const automationCells = automationEditorLane.querySelectorAll('.automation-cell');
+            automationCells.forEach(cell => {
+                cell.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const col = parseInt(cell.dataset.col, 10);
+                    const autoParam = automationParamSelect ? automationParamSelect.value : 'volume';
+                    
+                    // Determine if we're adding or removing a point
+                    const currentHasPoint = cell.dataset.hasPoint === 'true';
+                    
+                    if (currentHasPoint) {
+                        // Remove the automation point on right-click or second click
+                        if (e.button === 2 || e.shiftKey) {
+                            if (track.removeAutomationPoint) {
+                                track.removeAutomationPoint(autoParam, col);
+                                showNotification(`Automation point removed at step ${col + 1}.`, 1500);
+                                // Update UI
+                                const bar = cell.querySelector('.automation-bar');
+                                if (bar) {
+                                    bar.style.height = '0px';
+                                    bar.style.backgroundColor = '#333333';
+                                    bar.style.opacity = '0.3';
+                                }
+                                cell.dataset.hasPoint = false;
+                                cell.dataset.value = Constants.AUTOMATION_LANE_DEFAULT.toFixed(2);
+                                const existingDot = cell.querySelector('.automation-point-dot');
+                                if (existingDot) existingDot.remove();
+                            }
+                        }
+                    } else {
+                        // Add automation point at this step
+                        const currentValue = parseFloat(cell.dataset.value) || Constants.AUTOMATION_LANE_DEFAULT;
+                        
+                        // Capture undo state before adding point
+                        if (localAppServices.captureStateForUndo) {
+                            localAppServices.captureStateForUndo(`Add automation point at step ${col + 1} on ${track.name}`);
+                        }
+                        
+                        if (track.setAutomationPoint) {
+                            track.setAutomationPoint(autoParam, col, currentValue, true);
+                            showNotification(`Automation point added at step ${col + 1}.`, 1500);
+                            // Update UI
+                            const barHeight = Math.round(currentValue * 56);
+                            const bar = cell.querySelector('.automation-bar');
+                            if (bar) {
+                                bar.style.height = `${barHeight}px`;
+                                bar.style.backgroundColor = '#ff9f43';
+                                bar.style.opacity = '1';
+                            }
+                            cell.dataset.hasPoint = true;
+                            const existingDot = cell.querySelector('.automation-point-dot');
+                            if (!existingDot) {
+                                const dot = document.createElement('div');
+                                dot.className = 'automation-point-dot absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-orange-500 border border-white pointer-events-none';
+                                cell.appendChild(dot);
+                            }
+                        }
+                    }
+                });
+
+                cell.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    const col = parseInt(cell.dataset.col, 10);
+                    const autoParam = automationParamSelect ? automationParamSelect.value : 'volume';
+                    
+                    if (cell.dataset.hasPoint === 'true' && track.removeAutomationPoint) {
+                        track.removeAutomationPoint(autoParam, col);
+                        showNotification(`Automation point removed at step ${col + 1}.`, 1500);
+                        const bar = cell.querySelector('.automation-bar');
+                        if (bar) {
+                            bar.style.height = '0px';
+                            bar.style.backgroundColor = '#333333';
+                            bar.style.opacity = '0.3';
+                        }
+                        cell.dataset.hasPoint = false;
+                        cell.dataset.value = Constants.AUTOMATION_LANE_DEFAULT.toFixed(2);
+                        const existingDot = cell.querySelector('.automation-point-dot');
+                        if (existingDot) existingDot.remove();
+                    }
+                });
+
+                // Drag to move automation points vertically
+                let isDraggingAutomation = false;
+                let dragStartY = 0;
+                let dragStartValue = 0;
+                let dragCol = -1;
+
+                const handleAutomationDrag = (e) => {
+                    if (!isDraggingAutomation) return;
+                    e.preventDefault();
+                    
+                    const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    const deltaY = dragStartY - currentY;
+                    const sensitivity = 0.005;
+                    let newValue = dragStartValue + (deltaY * sensitivity);
+                    newValue = Math.max(0, Math.min(1, newValue));
+                    
+                    const autoParam = automationParamSelect ? automationParamSelect.value : 'volume';
+                    
+                    // Update the automation point value
+                    if (track.setAutomationPoint) {
+                        track.setAutomationPoint(autoParam, dragCol, newValue, true);
+                    }
+                    
+                    // Update UI
+                    const barHeight = Math.round(newValue * 56);
+                    const bar = automationEditorLane.querySelector(`.automation-bar[data-col="${dragCol}"]`);
+                    if (bar) {
+                        bar.style.height = `${barHeight}px`;
+                    }
+                    const cell = automationEditorLane.querySelector(`.automation-cell[data-col="${dragCol}"]`);
+                    if (cell) {
+                        cell.dataset.value = newValue.toFixed(2);
+                        cell.title = `Step ${dragCol + 1}: ${Math.round(newValue * 100)}%`;
+                    }
+                };
+
+                const handleAutomationDragEnd = () => {
+                    if (isDraggingAutomation) {
+                        isDraggingAutomation = false;
+                        document.removeEventListener('mousemove', handleAutomationDrag);
+                        document.removeEventListener('mouseup', handleAutomationDragEnd);
+                        document.removeEventListener('touchmove', handleAutomationDrag);
+                        document.removeEventListener('touchend', handleAutomationDragEnd);
+                    }
+                };
+
+                cell.addEventListener('mousemove', (e) => {
+                    if (e.buttons === 1 && cell.dataset.hasPoint === 'true') {
+                        if (!isDraggingAutomation) {
+                            isDraggingAutomation = true;
+                            dragStartY = e.clientY;
+                            dragStartValue = parseFloat(cell.dataset.value) || Constants.AUTOMATION_LANE_DEFAULT;
+                            dragCol = parseInt(cell.dataset.col, 10);
+                            document.addEventListener('mousemove', handleAutomationDrag);
+                            document.addEventListener('mouseup', handleAutomationDragEnd);
+                        }
+                    }
+                });
+
+                cell.addEventListener('mouseleave', () => {
+                    if (isDraggingAutomation) {
+                        handleAutomationDragEnd();
+                    }
+                });
+            });
+        }
+
     }
     return sequencerWindow;
 }

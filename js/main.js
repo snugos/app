@@ -95,6 +95,7 @@ import {
     addSendTrackState as addSendTrack,
     setSendTrackMutedState as setSendTrackMuted,
     setSendTrackLevelState as setSendTrackLevel,
+    setTrackSendLevelState as setTrackSendLevelStateFn,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
