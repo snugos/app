@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.64.1'; // Day 95: Extended Undo/Redo Coverage - Added undo capture to Loop Region, Timeline Zoom, Metronome, Scale Mode, Chord Mode, Time Signature, and Ghost Track setters
+export const APP_VERSION = '0.65.0'; // Day 97: State Setter Undo Capture Verification Tests - Added 21 tests verifying state setter functions exist and handle edge cases correctly
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

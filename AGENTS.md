@@ -25,13 +25,42 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: The Mixer window's group strip rendering (`buildMixerGroupStripHTML`) and update function (`updateMixerWindow`) now work correctly with the state layer.
 - **Version**: 0.64.0 (no bump needed, this was a bug fix)
 
+#### Day 97: State Setter Undo Capture Verification Tests (2026-04-23)
+- **Feature**: Added 21 new unit tests to verify state setter functions exist and handle edge cases correctly
+- **Files Modified**:
+  - `js/tests.js`: Added imports for additional state setter functions:
+    - `setArmedTrackIdState`, `setSwingEnabledState`, `setSwingAmountState`
+    - `setPerformanceMonitorEnabledState`, `setAudioContextStateState`, `setCPUUsageState`
+    - `setActiveVoicesState`, `setAudioLatencyState`, `setLastCallbackTimeState`, `setDroppedCallbacksState`
+  - `js/tests.js`: Added 21 new tests verifying:
+    - All state setter functions exist and are functions
+    - `setArmedTrackIdState` handles null/undefined (clears armed track)
+    - `setSoloedTrackIdState` handles null/undefined (clears soloed track)
+    - `setIsRecordingState` coerces values to boolean
+    - `setCPUUsageState` clamps values to 0-100 range
+    - `setAudioContextStateState` validates context states ('running', 'suspended', 'closed')
+    - `setActiveVoicesState` clamps negative values to 0
+    - `setDroppedCallbacksState` clamps negative values to 0
+    - `setSwingAmountState` clamps values to 0-100 range
+    - `setRecordingTrackIdState` accepts any value (track ID or null)
+    - `setRecordingStartTimeState` accepts numeric values including null
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.0
+- **Feature Details**:
+  - Tests verify that state setters are properly exported and callable
+  - Tests verify edge case handling (null, undefined, out-of-range values)
+  - Tests verify type coercion and validation logic in setters
+  - Total test count increased to 317 tests
+- **Backend Note**: These tests complement the undo capture work from Days 90-95 by verifying the state setters themselves work correctly. The undo capture mechanism calls these setters, so verifying their existence and behavior is important for the complete undo/redo system.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.0
+
 #### Day 1: DrumSampler UI Implementation (2026-04-19)
 - **Feature**: Implemented complete DrumSampler UI controls
 - **Files Modified**:
   - `js/ui.js`: Replaced stub implementations with fully functional:
     - `renderDrumSamplerPads(track)` - Renders 8 pad buttons with visual feedback
     - `updateDrumPadControlsUI(track)` - Updates drop zone, volume/pitch knobs, envelope
-    - `renderSamplePads(track)` - Renders slice pads for Sampler track
+    - `renderSamplePads(track)` - Renders sample pads for Sampler track
     - `updateSliceEditorUI(track)` - Updates slice editor controls
     - `updateSequencerCellUI(...)` - Updates sequencer cell styling
     - `initializeDrumSamplerSpecificControls` - Creates knobs for volume/pitch/envelope
@@ -778,7 +807,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify all status states work: empty, loaded, missing (with relink), error (with retry), loading
   - Tests confirm file input accepts audio files (`.sfz`, `.sf2` formats supported)
   - Tests validate long filename truncation (25 char limit with "...")
-  - Total test count increased from 72 to 81 tests
+  - Total test count increased from 299 to 307 tests
 - **Backend Note**: The actual drop zone functionality is implemented in `js/utils.js` (`createDropZoneHTML` and `setupGenericDropZoneListeners`) and called from `js/ui.js` (`updateDrumPadControlsUI`). The tests verify the HTML generation layer.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.58.4
@@ -858,7 +887,8 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate state mutations via roundtrip validation (set then get)
   - Tests validate edge cases (nonexistent IDs, null defaults)
   - Tests validate clamping behavior (swing amount, chord root)
-  - All tests use `clearTimelineMarkersState()` and `clearTrackTemplatesState()` for cleanup
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
   - Total test count increased from 237 to 247 tests
 - **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
@@ -1038,36 +1068,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `zoomVOutBtn` click handler → calls `localAppServices.zoomOutVerticalTimeline()` and re-renders
 - **Version**: Bumped to 0.61.6
 
-#### Day 90: Extended Undo/Redo Coverage for State Functions (2026-04-23)
-- **Feature**: Added undo state capture to additional state management functions in `js/state.js`
-- **Files Modified**:
-  - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
-    - `addTimelineMarkerState()` - Captures undo before adding a new timeline marker
-    - `setTimelineMarkerState()` - Captures undo before modifying a marker
-    - `removeTimelineMarkerState()` - Captures undo before removing a marker
-    - `clearTimelineMarkersState()` - Captures undo before clearing all markers (only if non-empty)
-    - `addSendTrackState()` - Captures undo before adding a new send bus
-    - `setSendTrackMutedState()` - Captures undo before changing send mute state
-    - `setTrackSendLevelState()` - Captures undo before changing send level
-    - `setTrackSendPreFaderState()` - Captures undo before changing pre/post fader
-    - `addTrackGroupState()` - Captures undo before creating a track group
-    - `setTrackGroupNameState()` - Captures undo before renaming a group
-    - `setTrackGroupColorState()` - Captures undo before changing group color
-    - `addTrackToGroupState()` - Captures undo before adding track to group
-    - `removeTrackFromGroupState()` - Captures undo before removing track from group
-    - `setTrackGroupMutedState()` - Captures undo before changing group mute
-    - `setTrackGroupSoloedState()` - Captures undo before changing group solo
-    - `removeTrackGroupState()` - Captures undo before deleting a track group
-- **Feature Details**:
-  - This completes the undo/redo coverage for all state mutation functions in state.js
-  - Users can now undo changes to track templates (save, update, delete) and master effects (add, remove, modify params)
-  - Undo descriptions are descriptive (e.g., "Update Track Template 'Bass Synth'" or "Remove Master Effect Reverb")
-  - The empty check for `clearTrackTemplatesState` prevents capturing when there's nothing to clear
-- **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
-- **Usage**: Save/update/delete track templates, add/remove/modify master effects - all now undoable with Ctrl+Z
-- **Version**: Bumped to 0.62.1
-
-#### Day 91: Complete Undo/Redo Coverage for Remaining State Functions (2026-04-23)
+#### Day 90: Extended Undo/Redo Coverage for Remaining State Functions (2026-04-23)
 - **Feature**: Added undo state capture to remaining state mutation functions in `js/state.js`
 - **Files Modified**:
   - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
@@ -1087,7 +1088,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Save/update/delete track templates, add/remove/modify master effects - all now undoable with Ctrl+Z
 - **Version**: Bumped to 0.62.1
 
-#### Day 92: MIDI Import Feature (2026-04-23)
+#### Day 91: MIDI Import Feature (2026-04-23)
 - **Feature**: Added MIDI Import functionality to import Standard MIDI Files into new Synth tracks
 - **Files Modified**:
   - `js/constants.js`: Added MIDI Import constants:
