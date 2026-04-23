@@ -1564,3 +1564,30 @@ TestRunner.test('Chord Mode - setChordVoicingState updates state', (t) => {
     setChordVoicingState('open');
     t.assertEqual(getChordVoicingState(), 'open', 'Voicing should be open');
 });
+
+// ============================================
+// Day 75: Armed Track State Tests
+// ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});

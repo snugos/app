@@ -107,8 +107,8 @@ export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; 
 export function getClipboardDataState() { return clipboardDataGlobal; }
 
 export function getArmedTrackIdState() { return armedTrackId; }
+export function setArmedTrackIdState(id) { armedTrackId = id !== undefined && id !== null ? id : null; }
 export function getSoloedTrackIdState() { return soloedTrackId; }
-export function setSoloedTrackIdState(id) { soloedTrackId = id; }
 export function isTrackRecordingState() { return isRecordingGlobal; }
 export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
 export function getRecordingStartTimeState() { return recordingStartTime; }
@@ -327,7 +327,7 @@ export function setTrackSendPreFaderState(trackId, sendId, preFader) {
     trackSendsState[trackId][sendId].preFader = !!preFader;
 }
 
-// --- Track Groups State Getters and Setters ---
+// --- Track Groups State Management ---
 export function getTrackGroupsState() { return trackGroupsState; }
 export function getTrackGroupByIdState(id) { return trackGroupsState.find(g => g.id === id); }
 export function addTrackGroupState(groupData) {
