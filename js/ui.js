@@ -1229,6 +1229,22 @@ function applyTrackTemplate(template) {
                 }
             });
         }
+        // Restore effects from template: add each effect type and restore its params
+        if (template.activeEffects && template.activeEffects.length > 0) {
+            const effectsRegistry = localAppServices.effectsRegistryAccess;
+            template.activeEffects.forEach(effectData => {
+                if (effectsRegistry && effectsRegistry.AVAILABLE_EFFECTS && effectsRegistry.AVAILABLE_EFFECTS[effectData.type]) {
+                    newTrack.addEffect(effectData.type);
+                    // After addEffect, the new effect is at the end of activeEffects array
+                    const newEffectWrapper = newTrack.activeEffects[newTrack.activeEffects.length - 1];
+                    if (newEffectWrapper && effectData.params) {
+                        Object.keys(effectData.params).forEach(paramPath => {
+                            newTrack.updateEffectParam(newEffectWrapper.id, paramPath, effectData.params[paramPath]);
+                        });
+                    }
+                }
+            });
+        }
         if (localAppServices.showNotification) {
             localAppServices.showNotification(`Template "${template.name}" applied to new track.`, 2000);
         }
@@ -3602,13 +3618,17 @@ function buildMixerTrackStripHTML(track, sendTracks) {
     let sendKnobsHTML = '';
     sendTracks.forEach(send => {
         const sendLevel = localAppServices.getTrackSendLevel ? localAppServices.getTrackSendLevel(track.id, send.id) : 0;
+        const isPreFader = localAppServices.getTrackSendPreFader ? localAppServices.getTrackSendPreFader(track.id, send.id) : false;
+        const preFaderLabel = isPreFader ? 'PRE' : 'POST';
         sendKnobsHTML += `
             <div class="flex flex-col items-center mb-1">
                 <span class="text-[9px] text-gray-500 truncate w-10 text-center" title="${send.name}">${send.name.substring(0, 4)}</span>
-                <div class="send-knob-container" data-track-id="${track.id}" data-send-id="${send.id}">
+                <div class="send-knob-container flex flex-col items-center" data-track-id="${track.id}" data-send-id="${send.id}">
                     <input type="range" min="0" max="100" value="${Math.round(sendLevel * 100)}" 
                         class="send-level-slider w-8 h-1 bg-[#404040] rounded appearance-none cursor-pointer"
                         data-track-id="${track.id}" data-send-id="${send.id}">
+                    <button class="send-pre-post-btn text-[6px] mt-0.5 px-0.5 py-0 rounded ${isPreFader ? 'bg-cyan-700 text-cyan-300' : 'bg-[#3a3a3a] text-gray-500'} hover:bg-[#4a4a4a]" 
+                        data-track-id="${track.id}" data-send-id="${send.id}" title="${isPreFader ? 'Pre-Fader (before volume)' : 'Post-Fader (after volume)'}">${preFaderLabel}</button>
                 </div>
             </div>`;
     });

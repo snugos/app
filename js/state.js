@@ -306,6 +306,21 @@ export function setTrackSendLevelState(trackId, sendId, level) {
     }
     trackSendsState[trackId][sendId] = Math.max(0, Math.min(1.2, parseFloat(level) || 0));
 }
+export function getTrackSendPreFaderState(trackId, sendId) {
+    if (trackSendsState[trackId] && trackSendsState[trackId][sendId] !== undefined) {
+        return trackSendsState[trackId][sendId].preFader || false;
+    }
+    return false; // Default to post-fader
+}
+export function setTrackSendPreFaderState(trackId, sendId, preFader) {
+    if (!trackSendsState[trackId]) {
+        trackSendsState[trackId] = {};
+    }
+    if (!trackSendsState[trackId][sendId]) {
+        trackSendsState[trackId][sendId] = { level: 0, preFader: false };
+    }
+    trackSendsState[trackId][sendId].preFader = !!preFader;
+}
 
 // --- Track Groups State Getters and Setters ---
 export function getTrackGroupsState() { return trackGroupsState; }

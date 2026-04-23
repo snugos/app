@@ -163,6 +163,8 @@ export const DEFAULT_SEND_LEVEL = 0; // Default send level (0 = off, -infinity d
 export const SEND_LEVEL_MIN = 0;
 export const SEND_LEVEL_MAX = 1.2; // 0dB = 1.0, can boost slightly above unity
 export const SEND_LEVEL_POST_FADER = true; // Sends are post-fader by default (after volume)
+export const DEFAULT_SEND_PRE_FADER = false; // Default to post-fader (after volume)
+export const SEND_PRE_FADER_ENABLED = true; // Feature flag to enable pre/post toggle UI
 
 // Track Group Constants
 export const MAX_TRACK_GROUPS = 16; // Maximum number of track groups

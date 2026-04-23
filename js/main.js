@@ -90,6 +90,8 @@ import {
     removeSendTrackState,
     setSendTrackNameState,
     setTrackSendLevelState as setTrackSendLevel,
+    setTrackSendPreFaderState as setTrackSendPreFader,
+    getTrackSendPreFaderState as getTrackSendPreFader,
     addSendTrackState as addSendTrack,
     setSendTrackMutedState as setSendTrackMuted,
     setSendTrackLevelState as setSendTrackLevel,
