@@ -578,6 +578,60 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     }
 }
 
+function initializeAudioTrackInspectorControls(track, winEl) {
+    // Populate input device selector with available audio input devices
+    const inputDeviceSelect = winEl.querySelector(`#audioInputDevice-${track.id}`);
+    if (inputDeviceSelect && Tone.UserMedia && Tone.UserMedia.enumerateDevices) {
+        Tone.UserMedia.enumerateDevices().then(devices => {
+            const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+            inputDeviceSelect.innerHTML = '<option value="">Default Microphone</option>';
+            audioInputDevices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.textContent = device.label || `Microphone ${inputDeviceSelect.options.length}`;
+                inputDeviceSelect.appendChild(option);
+            });
+        }).catch(err => {
+            console.warn('[UI] Failed to enumerate audio input devices:', err);
+        });
+    }
+
+    // Set up input gain knob
+    const inputGainPlaceholder = winEl.querySelector(`#inputGainKnob-${track.id}-placeholder`);
+    if (inputGainPlaceholder) {
+        const currentGain = track.recordingInputGain !== undefined ? track.recordingInputGain : Constants.DEFAULT_RECORDING_INPUT_GAIN;
+        const gainKnob = createKnob({
+            label: 'Gain',
+            min: Constants.MIN_RECORDING_INPUT_GAIN,
+            max: Constants.MAX_RECORDING_INPUT_GAIN,
+            step: 0.01,
+            initialValue: currentGain,
+            decimals: 2,
+            trackRef: track,
+            onValueChange: (val) => {
+                track.recordingInputGain = val;
+                showNotification(`Recording input gain: ${Math.round(val * 100)}%`, 1500);
+            }
+        });
+        inputGainPlaceholder.innerHTML = '';
+        inputGainPlaceholder.appendChild(gainKnob.element);
+        track.inspectorControls.recordingInputGain = gainKnob;
+    }
+
+    // Set up monitoring volume slider
+    const monitoringVolumeSlider = winEl.querySelector(`#monitoringVolume-${track.id}`);
+    const monitoringVolumeLabel = winEl.querySelector(`#monitoringVolumeLabel-${track.id}`);
+    if (monitoringVolumeSlider) {
+        monitoringVolumeSlider.addEventListener('input', (e) => {
+            const volume = parseFloat(e.target.value);
+            track.monitoringVolume = volume;
+            if (monitoringVolumeLabel) {
+                monitoringVolumeLabel.textContent = `${Math.round(volume * 100)}%`;
+            }
+        });
+    }
+}
+
 
 // --- Track Inspector Window (Entry Point) ---
 function buildTrackInspectorContentDOM(track) {
@@ -587,6 +641,7 @@ function buildTrackInspectorContentDOM(track) {
     else if (track.type === 'Sampler') specificControlsHTML = buildSamplerSpecificInspectorDOM(track);
     else if (track.type === 'DrumSampler') specificControlsHTML = buildDrumSamplerSpecificInspectorDOM(track);
     else if (track.type === 'InstrumentSampler') specificControlsHTML = buildInstrumentSamplerSpecificInspectorDOM(track);
+    else if (track.type === 'Audio') specificControlsHTML = buildAudioTrackInspectorDOM(track);
 
     const armedTrackId = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null;
     let sequencerButtonHTML = '';
@@ -705,6 +760,7 @@ function initializeTypeSpecificInspectorControls(track, winEl) {
     else if (track.type === 'Sampler') initializeSamplerSpecificControls(track, winEl);
     else if (track.type === 'DrumSampler') initializeDrumSamplerSpecificControls(track, winEl);
     else if (track.type === 'InstrumentSampler') initializeInstrumentSamplerSpecificControls(track, winEl);
+    else if (track.type === 'Audio') initializeAudioTrackInspectorControls(track, winEl);
 }
 
 
