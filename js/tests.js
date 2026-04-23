@@ -424,6 +424,73 @@ TestRunner.test('Recording - Min recording length is reasonable', (t) => {
 });
 
 // ============================================
+// DrumSampler Pad Drop Zone Tests (Day 63)
+// ============================================
+TestRunner.test('DrumSampler - numDrumSamplerPads is 8', (t) => {
+    t.assertEqual(numDrumSamplerPads, 8, 'Number of drum pads should be 8');
+});
+
+TestRunner.test('DrumSampler - createDropZoneHTML generates valid HTML for pads', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should contain drop-zone class');
+    t.assertTruthy(html.includes('data-pad-slice-index="0"'), 'Should have pad index data attribute');
+    t.assertTruthy(html.includes('data-track-id="track1"'), 'Should have track id data attribute');
+    t.assertTruthy(html.includes('data-track-type="DrumSampler"'), 'Should have track type data attribute');
+});
+
+TestRunner.test('DrumSampler - createDropZoneHTML for all pad indices', (t) => {
+    for (let padIndex = 0; padIndex < numDrumSamplerPads; padIndex++) {
+        const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', padIndex, null);
+        t.assertTruthy(html.includes(`data-pad-slice-index="${padIndex}"`), `Pad ${padIndex} should have correct data attribute`);
+    }
+});
+
+TestRunner.test('DrumSampler - createDropZoneHTML with loaded status', (t) => {
+    const existingData = { originalFileName: 'kick.wav', status: 'loaded' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('kick.wav'), 'Should show loaded file name');
+    t.assertTruthy(html.includes('Loaded:'), 'Should show loaded status');
+});
+
+TestRunner.test('DrumSampler - createDropZoneHTML with missing status shows relink button', (t) => {
+    const existingData = { originalFileName: 'snare.wav', status: 'missing' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('Missing:'), 'Should show missing status');
+    t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing class');
+    t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have relink button');
+});
+
+TestRunner.test('DrumSampler - createDropZoneHTML with error status shows retry button', (t) => {
+    const existingData = { originalFileName: 'hihat.wav', status: 'error' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('Error Loading:'), 'Should show error status');
+    t.assertTruthy(html.includes('drop-zone-error'), 'Should have error class');
+    t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have retry button');
+});
+
+TestRunner.test('DrumSampler - createDropZoneHTML with loading status', (t) => {
+    const existingData = { originalFileName: 'tom.wav', status: 'loading' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('Loading:'), 'Should show loading status');
+    t.assertTruthy(html.includes('drop-zone-loading'), 'Should have loading class');
+});
+
+TestRunner.test('DrumSampler - createDropZoneHTML contains file input', (t) => {
+    const html = createDropZoneHTML('track1', 'drumPadFileInput', 'DrumSampler', 3, null);
+    t.assertTruthy(html.includes('type="file"'), 'Should have file input');
+    t.assertTruthy(html.includes('accept="audio/*, .sfz, .sf2"'), 'Should accept audio files');
+    t.assertTruthy(html.includes('id="drumPadFileInput"'), 'Should have correct input ID');
+});
+
+TestRunner.test('DrumSampler - createDropZoneHTML truncates long filenames', (t) => {
+    const longFileName = 'this_is_a_very_long_audio_file_name_that_exceeds_limit.wav';
+    const existingData = { originalFileName: longFileName, status: 'loaded' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('...'), 'Long filenames should be truncated');
+    t.assertTruthy(html.includes(longFileName.substring(0, 25)), 'Should include truncated portion');
+});
+
+// ============================================
 // Track Template Constants Tests (Day 61)
 // ============================================
 TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES is 32', (t) => {
