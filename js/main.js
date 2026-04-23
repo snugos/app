@@ -89,13 +89,11 @@ import {
     // Send Tracks setters
     removeSendTrackState,
     setSendTrackNameState,
-    setTrackSendLevelState as setTrackSendLevel,
     setTrackSendPreFaderState as setTrackSendPreFader,
     getTrackSendPreFaderState as getTrackSendPreFader,
     addSendTrackState as addSendTrack,
     setSendTrackMutedState as setSendTrackMuted,
     setSendTrackLevelState as setSendTrackLevel,
-    setTrackSendLevelState as setTrackSendLevelStateFn,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
