@@ -1114,3 +1114,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
 - **Usage**: Add/remove timeline markers, create/delete track groups, adjust send levels - all now undoable with Ctrl+Z
 - **Version**: Bumped to 0.62.0
+
+#### Day 91: Complete Undo/Redo Coverage for Remaining State Functions (2026-04-23)
+- **Feature**: Added undo state capture to remaining state mutation functions in `js/state.js`
+- **Files Modified**:
+  - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
+    - `updateTrackTemplateState()` - Captures undo before updating template name/color/props
+    - `removeTrackTemplateState()` - Captures undo before deleting template
+    - `clearTrackTemplatesState()` - Captures undo before clearing all templates (only if non-empty)
+    - `addMasterEffectToState()` - Captures undo before adding master effect
+    - `removeMasterEffectFromState()` - Captures undo before removing master effect
+    - `updateMasterEffectParamInState()` - Captures undo before modifying effect parameter
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.1
+- **Feature Details**:
+  - This completes the undo/redo coverage for all state mutation functions in state.js
+  - Users can now undo changes to track templates (save, update, delete) and master effects (add, remove, modify params)
+  - Undo descriptions are descriptive (e.g., "Update Track Template 'Bass Synth'" or "Remove Master Effect Reverb")
+  - The empty check for `clearTrackTemplatesState` prevents capturing when there's nothing to clear
+- **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
+- **Usage**: Save/update/delete track templates, add/remove/modify master effects - all now undoable with Ctrl+Z
+- **Version**: Bumped to 0.62.1
