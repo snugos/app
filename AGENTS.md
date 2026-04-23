@@ -903,3 +903,28 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Scale Mode state functions were implemented in Day 11 as part of the Scale Mode feature but lacked unit test coverage. These tests verify the state API without requiring the full UI.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.59.2
+
+#### Day 70: State Management Tests (2026-04-23)
+- **Feature**: Added 34 new unit tests for state management and constants validation
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. Many state management functions and constants lacked unit test coverage.
+- **Files Modified**:
+  - `js/tests.js`: Added 34 new TestRunner.test() calls:
+    - Metronome state tests: getMetronomeEnabledState, setMetronomeEnabledState, getMetronomeVolumeState, setMetronomeVolumeState
+    - Core state function tests: getPlaybackModeState, getTracksState, getTrackByIdState, getMasterGainValueState, getOpenWindowsState, getActiveSequencerTrackIdState, getHighestZState, getClipboardDataState
+    - computerKeySynthMap validation tests: structure, white key values (a=C4=60), black key values (w=C#4=61)
+    - TRACK_COLORS validation: is array, has expected colors, colors are valid hex
+    - CLIP_COLORS validation: is array, has expected count, colors are valid hex
+    - MARKER_COLORS validation: is array, has expected count, colors are valid hex
+    - AUTOMATION_LANE_COLORS validation: is array, has expected count, colors are valid hex
+    - CHORD_TYPES validation: is object, has major chord, has minor chord, chord intervals are valid
+    - Additional tests: getTrackSendLevelState edge case, getTrackSendsState return type, getTrackGroupByIdState unknown id handling
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.3
+- **Feature Details**:
+  - Tests import and validate state functions from `js/state.js`
+  - Tests verify getter functions return correct types and valid ranges
+  - Tests verify state setters work correctly via roundtrip validation
+  - Tests validate constants from `js/constants.js` have proper structure and valid values
+  - Total test count increased from 120 to 154 tests
+- **Backend Note**: These tests expand coverage of the state management API and constants validation. Many state functions (getPlaybackModeState, getTracksState, etc.) were already implemented but had no unit tests.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.3
