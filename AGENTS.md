@@ -992,3 +992,15 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: Users can now run the test suite from the browser console using: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.3
 
+
+#### Day 83: Recording State Wiring Fix (2026-04-23)
+- **Bug Fix**: Fixed missing recording state updates in `startAudioRecording` and `stopAudioRecording` functions
+- **Issue**: The recording state functions (`setIsRecordingState`, `setRecordingTrackIdState`, `setRecordingStartTimeState`) were defined in `js/state.js` and tested in `js/tests.js`, but were never called from the audio recording implementation in `js/audio.js`. This meant the recording state was never actually updated during recording operations.
+- **Files Modified**:
+  - `js/audio.js`:
+    - Added import for `setIsRecordingState`, `setRecordingTrackIdState`, `setRecordingStartTimeState` from state.js
+    - Added recording state updates to `startAudioRecording()`: Sets `isRecording=true`, `recordingTrackId`, and `recordingStartTime` when recording starts successfully
+    - Added recording state clearing to `stopAudioRecording()`: Resets all recording state variables when recording stops
+  - `js/constants.js`: Bumped APP_VERSION to 0.60.4
+- **Impact**: The recording state is now properly synchronized with the actual recording operations. UI elements that depend on recording state (like the record button indicator) will now correctly reflect the recording status. Recording settings also properly persist across project save/load via the existing state management.
+- **Version**: Bumped to 0.60.4

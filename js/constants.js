@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.60.3'; // Day 82: Test Runner runTests Export Fix
+export const APP_VERSION = '0.60.4'; // Day 83: Recording State Wiring Fix
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

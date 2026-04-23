@@ -4,7 +4,7 @@ import * as Constants from './constants.js';
 // import { showNotification } from './utils.js'; // Not directly imported, accessed via appServices
 import { createEffectInstance } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
-import { getRecordingStartTimeState } from './state.js';
+import { getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState } from './state.js';
 
 
 let masterEffectsBusInputNode = null;
@@ -501,7 +501,7 @@ export function getMimeTypeFromFilename(filename) {
 async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint, padIndex = null) {
     const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingDAW() : false;
 
-    if (localAppServices.captureStateForUndo && !isReconstructing) {
+    if (localAppServices.captureStateForUndo && !isReconstructinging) {
         const targetName = trackTypeHint === 'DrumSampler' && padIndex !== null ?
             `Pad ${padIndex + 1} on ${track.name}` :
             track.name;
@@ -1020,6 +1020,12 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         mic.connect(recorder);
 
         await recorder.start();
+
+        // Update recording state
+        setIsRecordingState(true);
+        setRecordingTrackIdState(track.id);
+        setRecordingStartTimeState(Tone.Transport.seconds);
+
         return true;
 
     } catch (error) {
@@ -1119,6 +1125,11 @@ export async function stopAudioRecording() {
     } else if (!blob && recorder?.state === "started") { // Should be caught by try/catch around recorder.stop()
         console.warn("[Audio stopAudioRecording] Recorder was in 'started' state but stop() did not yield a blob.");
     }
+
+    // Clear recording state
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    setRecordingStartTimeState(0);
 }
 
 // --- Metronome Functions ---
