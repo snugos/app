@@ -48,6 +48,107 @@ let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
 let metronomeEnabled = false;
 let metronomeVolume = 0.5; // Default volume (0-1 range)
 
+// Performance Monitor State
+let performanceMonitorState = {
+    enabled: false,
+    audioContextState: 'unknown', // 'running', 'suspended', 'closed', 'unknown'
+    cpuUsage: 0, // Percentage 0-100 (estimated from Tone.context)
+    memoryPressure: 'none', // 'none', 'low', 'medium', 'high'
+    activeVoices: 0, // Count of active voices/notes
+    audioLatency: 0, // Current audio latency in seconds
+    lastCallbackTime: 0, // Last audio callback duration in ms
+    droppedCallbacks: 0 // Number of dropped/late audio callbacks
+};
+
+export function getPerformanceMonitorState() {
+    return { ...performanceMonitorState };
+}
+
+export function getPerformanceMonitorEnabledState() {
+    return performanceMonitorState.enabled;
+}
+
+export function setPerformanceMonitorEnabledState(enabled) {
+    performanceMonitorState.enabled = !!enabled;
+}
+
+export function getAudioContextStateState() {
+    return performanceMonitorState.audioContextState;
+}
+
+export function setAudioContextStateState(contextState) {
+    if (['running', 'suspended', 'closed', 'unknown'].includes(contextState)) {
+        performanceMonitorState.audioContextState = contextState;
+    }
+}
+
+export function getCPUUsageState() {
+    return performanceMonitorState.cpuUsage;
+}
+
+export function setCPUUsageState(cpuUsage) {
+    performanceMonitorState.cpuUsage = Math.max(0, Math.min(100, parseFloat(cpuUsage) || 0));
+}
+
+export function getMemoryPressureState() {
+    return performanceMonitorState.memoryPressure;
+}
+
+export function setMemoryPressureState(pressure) {
+    if (['none', 'low', 'medium', 'high'].includes(pressure)) {
+        performanceMonitorState.memoryPressure = pressure;
+    }
+}
+
+export function getActiveVoicesState() {
+    return performanceMonitorState.activeVoices;
+}
+
+export function setActiveVoicesState(voices) {
+    performanceMonitorState.activeVoices = Math.max(0, parseInt(voices) || 0);
+}
+
+export function getAudioLatencyState() {
+    return performanceMonitorState.audioLatency;
+}
+
+export function setAudioLatencyState(latency) {
+    performanceMonitorState.audioLatency = Math.max(0, parseFloat(latency) || 0);
+}
+
+export function getLastCallbackTimeState() {
+    return performanceMonitorState.lastCallbackTime;
+}
+
+export function setLastCallbackTimeState(timeMs) {
+    performanceMonitorState.lastCallbackTime = Math.max(0, parseFloat(timeMs) || 0);
+}
+
+export function getDroppedCallbacksState() {
+    return performanceMonitorState.droppedCallbacks;
+}
+
+export function setDroppedCallbacksState(count) {
+    performanceMonitorState.droppedCallbacks = Math.max(0, parseInt(count) || 0);
+}
+
+export function incrementDroppedCallbacksState() {
+    performanceMonitorState.droppedCallbacks++;
+}
+
+export function resetPerformanceMonitorState() {
+    performanceMonitorState = {
+        enabled: false,
+        audioContextState: 'unknown',
+        cpuUsage: 0,
+        memoryPressure: 'none',
+        activeVoices: 0,
+        audioLatency: 0,
+        lastCallbackTime: 0,
+        droppedCallbacks: 0
+    };
+}
+
 // Loop Region State
 let loopRegionState = { ...Constants.DEFAULT_LOOP_REGION };
 

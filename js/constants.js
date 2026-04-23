@@ -1,6 +1,20 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.61.3'; // Day 86: Track Template and MIDI Export Constants Tests
+export const APP_VERSION = '0.61.4'; // Day 87: Performance Monitor
+
+// Performance Monitor Constants
+export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
+export const PERFORMANCE_UPDATE_INTERVAL_MS = 500; // Update every 500ms
+export const PERFORMANCE_CONTEXT_STATE_OK = 'running'; // Tone.context.state should be 'running'
+export const PERFORMANCE_CONTEXT_STATE_SUSPENDED = 'suspended';
+export const PERFORMANCE_CONTEXT_STATE_CLOSED = 'closed';
+export const PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS = 4; // Tone.js default buffer latency is ~3-4 blocks
+export const PERFORMANCE_DEFAULT_LATENCY_HINT = 'interactive'; // Tone.js context latency hint
+export const PERFORMANCE_MEMORY_PRESSURE_NONE = 'none';
+export const PERFORMANCE_MEMORY_PRESSURE_LOW = 'low';
+export const PERFORMANCE_MEMORY_PRESSURE_MEDIUM = 'medium';
+export const PERFORMANCE_MEMORY_PRESSURE_HIGH = 'high';
+export const PERFORMANCE_WARNING_THRESHOLD_MS = 50; // If callback takes >50ms, warn about audio glitch risk
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

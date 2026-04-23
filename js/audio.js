@@ -502,7 +502,7 @@ export function getMimeTypeFromFilename(filename) {
 async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint, padIndex = null) {
     const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingingDAW() : false;
 
-    if (localAppServices.captureStateForUndo && !isReconstructinging) {
+    if (localAppServices.captureStateForUndo && !isReconstructing) {
         const targetName = trackTypeHint === 'DrumSampler' && padIndex !== null ?
             `Pad ${padIndex + 1} on ${track.name}` :
             track.name;
@@ -1649,4 +1649,133 @@ export function panicAllAudio() {
     if (localAppServices.showNotification) {
         localAppServices.showNotification('⚠ PANIC - All audio stopped', 2000);
     }
+}
+
+// ============================================
+// Performance Monitor Functions
+// ============================================
+
+let performanceMonitorIntervalId = null;
+
+/**
+ * Starts the performance monitoring loop
+ * Updates Tone.context state and estimates audio performance metrics
+ */
+export function startPerformanceMonitor() {
+    if (performanceMonitorIntervalId !== null) {
+        return; // Already running
+    }
+
+    const intervalMs = Constants.PERFORMANCE_UPDATE_INTERVAL_MS || 500;
+
+    performanceMonitorIntervalId = setInterval(() => {
+        if (!localAppServices || !localAppServices.setAudioContextStateState) return;
+
+        // Update audio context state
+        if (Tone && Tone.context) {
+            const contextState = Tone.context.state || 'unknown';
+            localAppServices.setAudioContextStateState(contextState);
+
+            // Update audio latency if available
+            if (contextState === 'running' && Tone.context.latency !== undefined) {
+                localAppServices.setAudioLatencyState(Tone.context.latency);
+            }
+
+            // Estimate CPU usage based on context state and active voices
+            // Note: Web Audio API doesn't expose direct CPU usage, but we can estimate
+            // based on number of active nodes and callback timing
+            let estimatedCPU = 0;
+
+            // Count active voices across all tracks
+            let activeVoices = 0;
+            const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+            if (tracks && Array.isArray(tracks)) {
+                tracks.forEach(track => {
+                    if (!track) return;
+                    // Synth tracks
+                    if (track.toneSynth && track.toneSynth.activeVoices) {
+                        activeVoices += track.toneSynth.activeVoices;
+                    }
+                    // Sampler tracks
+                    if (track.toneSampler && !track.toneSampler.disposed) {
+                        // Count active notes
+                        if (track.toneSampler._activeVoices) {
+                            activeVoices += Object.keys(track.toneSampler._activeVoices).length;
+                        }
+                    }
+                    // Drum sampler tracks
+                    if (track.drumPadPlayers && Array.isArray(track.drumPadPlayers)) {
+                        track.drumPadPlayers.forEach(player => {
+                            if (player && !player.disposed && player.state === 'started') {
+                                activeVoices++;
+                            }
+                        });
+                    }
+                });
+            }
+            localAppServices.setActiveVoicesState(activeVoices);
+
+            // Estimate CPU based on active voices and context state
+            // This is a rough estimate - real CPU depends on sample rate, buffer size, etc.
+            if (contextState === 'running') {
+                estimatedCPU = Math.min(100, (activeVoices * 5) + (activeVoices > 10 ? 20 : 0));
+                // Add some baseline for the transport and effect chain
+                estimatedCPU = Math.min(100, estimatedCPU + 5);
+            }
+            localAppServices.setCPUUsageState(estimatedCPU);
+
+            // Determine memory pressure (simplified heuristic)
+            let memoryPressure = 'none';
+            const numTracks = tracks ? tracks.length : 0;
+            if (numTracks > 20 || activeVoices > 50) {
+                memoryPressure = 'high';
+            } else if (numTracks > 10 || activeVoices > 20) {
+                memoryPressure = 'medium';
+            } else if (numTracks > 5 || activeVoices > 5) {
+                memoryPressure = 'low';
+            }
+            localAppServices.setMemoryPressureState(memoryPressure);
+        }
+    }, intervalMs);
+}
+
+/**
+ * Stops the performance monitoring loop
+ */
+export function stopPerformanceMonitor() {
+    if (performanceMonitorIntervalId !== null) {
+        clearInterval(performanceMonitorIntervalId);
+        performanceMonitorIntervalId = null;
+    }
+}
+
+/**
+ * Gets the current performance metrics
+ * Returns an object with context state, CPU estimate, memory pressure, etc.
+ */
+export function getPerformanceMetrics() {
+    const metrics = {
+        audioContextState: 'unknown',
+        cpuUsage: 0,
+        memoryPressure: 'none',
+        activeVoices: 0,
+        audioLatency: 0,
+        droppedCallbacks: 0
+    };
+
+    if (Tone && Tone.context) {
+        metrics.audioContextState = Tone.context.state || 'unknown';
+        if (Tone.context.latency !== undefined) {
+            metrics.audioLatency = Tone.context.latency;
+        }
+    }
+
+    if (localAppServices) {
+        metrics.cpuUsage = localAppServices.getCPUUsageState ? localAppServices.getCPUUsageState() : 0;
+        metrics.memoryPressure = localAppServices.getMemoryPressureState ? localAppServices.getMemoryPressureState() : 'none';
+        metrics.activeVoices = localAppServices.getActiveVoicesState ? localAppServices.getActiveVoicesState() : 0;
+        metrics.droppedCallbacks = localAppServices.getDroppedCallbacksState ? localAppServices.getDroppedCallbacksState() : 0;
+    }
+
+    return metrics;
 }

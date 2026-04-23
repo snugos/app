@@ -94,6 +94,17 @@ import {
     addSendTrackState as addSendTrack,
     setSendTrackMutedState as setSendTrackMuted,
     setSendTrackLevelState as setSendTrackLevel,
+    // Performance Monitor state
+    getPerformanceMonitorState,
+    getPerformanceMonitorEnabledState,
+    setPerformanceMonitorEnabledState,
+    getAudioContextStateState,
+    getCPUUsageState,
+    getMemoryPressureState,
+    getActiveVoicesState,
+    getAudioLatencyState,
+    getLastCallbackTimeState,
+    getDroppedCallbacksState,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -131,7 +142,11 @@ import {
     disconnectTrackFromSendBus,
     setTrackSendLevel: setTrackSendLevelFromAudio,
     getSendBusNodes,
-    getTrackSendNodes
+    getTrackSendNodes,
+    // Performance Monitor functions
+    startPerformanceMonitor,
+    stopPerformanceMonitor,
+    getPerformanceMetrics
 } from './audio.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,

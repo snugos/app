@@ -1274,6 +1274,87 @@ TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
 });
 
 // ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
 // Day 70: Send Tracks Additional Tests
 // ============================================
 TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
