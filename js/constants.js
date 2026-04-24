@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.83.0'; // Day 200: SnugWindow Class Instance Tests
+export const APP_VERSION = '0.84.0'; // Day 199: DrumSampler Pad UI Functions Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
