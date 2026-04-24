@@ -2251,3 +2251,41 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Tap Tempo constants (TAP_TEMPO_TIMEOUT_MS, TAP_TEMPO_MIN_TAPS, etc.) are used by `handleTapTempo()` and `resetTapTempo()` in `js/ui.js` to detect tempo from user taps on a button. The tests verify the constant values without requiring actual UI interaction.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.77.0
+
+#### Day 195: Audio Recording Function Tests (2026-04-24)
+- **Feature**: Added 30 new unit tests for Audio Recording functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 30 new tests in Day 195 section:
+    - `startAudioRecording accepts track and monitoring params` - Tests function returns Promise
+    - `startAudioRecording handles null track gracefully` - Tests null track handling
+    - `startAudioRecording handles undefined track` - Tests undefined track handling
+    - `startAudioRecording accepts true for monitoring` - Tests monitoring enabled
+    - `startAudioRecording accepts false for monitoring` - Tests monitoring disabled
+    - `stopAudioRecording returns Promise` - Tests async return
+    - `stopAudioRecording can be called multiple times safely` - Tests idempotent calls
+    - `setRecordingInputGain function exists` - Tests function availability
+    - `setRecordingInputGain accepts one parameter` - Tests function signature
+    - `startAudioRecording accepts at least 2 parameters` - Tests parameter count
+    - `mic variable is defined in audio module` - Tests module state
+    - `recorder variable is defined in audio module` - Tests module state
+    - `recordingInputGainNode is accessible in audio module` - Tests module state
+    - `state functions for recording are available` - Tests all 6 state functions exist
+    - `state functions are callable` - Tests return types for state getters
+    - `setIsRecordingState coerces non-boolean values` - Tests type coercion
+    - `setRecordingTrackIdState accepts string IDs` - Tests track ID handling
+    - `setRecordingStartTimeState accepts numeric times` - Tests time handling
+    - `recording state roundtrip works correctly` - Tests full state cycle
+    - `multiple recording cycles work` - Tests repeated recording
+  - `js/constants.js`: Bumped APP_VERSION to 0.79.0
+- **Feature Details**:
+  - Tests verify startAudioRecording accepts track (null/undefined) and isMonitoringEnabled (true/false) parameters
+  - Tests verify stopAudioRecording returns Promise and is safe to call multiple times
+  - Tests verify setRecordingInputGain function signature and existence
+  - Tests verify recording state functions (isTrackRecordingState, getRecordingTrackIdState, etc.)
+  - Tests verify type coercion for setIsRecordingState (string/number/null/undefined to boolean)
+  - Tests verify roundtrip behavior for recording state (set then get)
+  - Tests verify multiple recording cycles work correctly
+  - Total test count increased from 1033 to 1063 tests
+- **Backend Note**: The recording functions (startAudioRecording, stopAudioRecording, setRecordingInputGain) in audio.js handle microphone access, Tone.js recorder management, and audio blob creation. The state functions track recording status across the application. Tests verify the API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.79.0
