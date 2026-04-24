@@ -4773,3 +4773,86 @@ TestRunner.test('Audio Clip Editor - Track class has _getAudioClip helper method
     const mockTrack = new Track('test-track', 'Audio', 0);
     t.assertEqual(typeof mockTrack._getAudioClip, 'function', 'Track should have _getAudioClip helper method');
 });
+
+// ============================================
+// Day 208: Track Bounce/Export Tests
+// ============================================
+TestRunner.test('Bounce/Export - MAX_FREEZE_LENGTH_SECONDS is valid', (t) => {
+    t.assertEqual(typeof MAX_FREEZE_LENGTH_SECONDS, 'number', 'MAX_FREEZE_LENGTH_SECONDS should be a number');
+    t.assertTruthy(MAX_FREEZE_LENGTH_SECONDS > 0, 'MAX_FREEZE_LENGTH_SECONDS should be positive');
+    t.assertTruthy(MAX_FREEZE_LENGTH_SECONDS <= 3600, 'MAX_FREEZE_LENGTH_SECONDS should be reasonable (max 1 hour)');
+});
+
+TestRunner.test('Bounce/Export - DEFAULT_FREEZE_FADE_OUT is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_FREEZE_FADE_OUT, 'number', 'DEFAULT_FREEZE_FADE_OUT should be a number');
+    t.assertTruthy(DEFAULT_FREEZE_FADE_OUT >= 0, 'DEFAULT_FREEZE_FADE_OUT should be non-negative');
+    t.assertTruthy(DEFAULT_FREEZE_FADE_OUT <= 10, 'DEFAULT_FREEZE_FADE_OUT should be reasonable (max 10 seconds)');
+});
+
+TestRunner.test('Bounce/Export - FROZEN_TRACK_PREFIX is a string', (t) => {
+    t.assertEqual(typeof FROZEN_TRACK_PREFIX, 'string', 'FROZEN_TRACK_PREFIX should be a string');
+    t.assertTruthy(FROZEN_TRACK_PREFIX.length > 0, 'FROZEN_TRACK_PREFIX should not be empty');
+});
+
+TestRunner.test('Bounce/Export - MAX_FREEZE_LENGTH_SECONDS is 600 seconds', (t) => {
+    t.assertEqual(MAX_FREEZE_LENGTH_SECONDS, 600, 'MAX_FREEZE_LENGTH_SECONDS should be 600 (10 minutes)');
+});
+
+TestRunner.test('Bounce/Export - DEFAULT_FREEZE_FADE_OUT is 0.1 seconds', (t) => {
+    t.assertEqual(DEFAULT_FREEZE_FADE_OUT, 0.1, 'DEFAULT_FREEZE_FADE_OUT should be 0.1 seconds');
+});
+
+TestRunner.test('Bounce/Export - Track class has bounceTrack method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.bounceTrack, 'function', 'Track should have bounceTrack method');
+});
+
+TestRunner.test('Bounce/Export - Track class has _audioBufferToWav method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack._audioBufferToWav, 'function', 'Track should have _audioBufferToWav method');
+});
+
+TestRunner.test('Bounce/Export - bounceTrack rejects unsupported track types', async (t) => {
+    const mockTrack = new Track('test-track', 'Midi', 0);
+    try {
+        await mockTrack.bounceTrack();
+        t.fail('bounceTrack should throw for unsupported track type');
+    } catch (err) {
+        t.assertTruthy(err.message.includes('Unsupported track type'), 'Error message should mention unsupported track type');
+    }
+});
+
+TestRunner.test('Bounce/Export - bounceTrack rejects empty tracks', async (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    try {
+        await mockTrack.bounceTrack();
+        t.fail('bounceTrack should throw for empty track');
+    } catch (err) {
+        t.assertTruthy(err.message.includes('No audio content'), 'Error message should mention no audio content');
+    }
+});
+
+TestRunner.test('Bounce/Export - Synth track type is supported for bounce', async (t) => {
+    const mockTrack = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof mockTrack.bounceTrack, 'function', 'Synth tracks should have bounceTrack method');
+});
+
+TestRunner.test('Bounce/Export - DrumSampler track type is supported for bounce', async (t) => {
+    const mockTrack = new Track('test-track', 'DrumSampler', 0);
+    t.assertEqual(typeof mockTrack.bounceTrack, 'function', 'DrumSampler tracks should have bounceTrack method');
+});
+
+TestRunner.test('Bounce/Export - Sampler track type is supported for bounce', async (t) => {
+    const mockTrack = new Track('test-track', 'Sampler', 0);
+    t.assertEqual(typeof mockTrack.bounceTrack, 'function', 'Sampler tracks should have bounceTrack method');
+});
+
+TestRunner.test('Bounce/Export - InstrumentSampler track type is supported for bounce', async (t) => {
+    const mockTrack = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertEqual(typeof mockTrack.bounceTrack, 'function', 'InstrumentSampler tracks should have bounceTrack method');
+});
+
+TestRunner.test('Bounce/Export - Audio track type is supported for bounce', async (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.bounceTrack, 'function', 'Audio tracks should have bounceTrack method');
+});

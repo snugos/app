@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.92.0'; // Day 207: Recording Workflow Tests
+export const APP_VERSION = '0.93.0'; // Day 208: Track Bounce/Export Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

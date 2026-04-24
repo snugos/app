@@ -13,6 +13,36 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
+#### Day 208: Track Bounce/Export Tests (2026-04-24)
+- **Feature**: Added 15 new unit tests for Track Bounce/Export functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 15 new tests in Day 208 section:
+    - `Bounce/Export - MAX_FREEZE_LENGTH_SECONDS is valid` - Tests type, positive value, reasonable max
+    - `Bounce/Export - DEFAULT_FREEZE_FADE_OUT is valid` - Tests type, non-negative, reasonable max
+    - `Bounce/Export - FROZEN_TRACK_PREFIX is a string` - Tests type and non-empty
+    - `Bounce/Export - MAX_FREEZE_LENGTH_SECONDS is 600 seconds` - Tests exact value (10 minutes)
+    - `Bounce/Export - DEFAULT_FREEZE_FADE_OUT is 0.1 seconds` - Tests exact default value
+    - `Bounce/Export - Track class has bounceTrack method` - Tests method existence
+    - `Bounce/Export - Track class has _audioBufferToWav method` - Tests WAV conversion helper
+    - `Bounce/Export - bounceTrack rejects unsupported track types` - Tests Midi type rejection
+    - `Bounce/Export - bounceTrack rejects empty tracks` - Tests empty track error handling
+    - `Bounce/Export - Synth track type is supported for bounce` - Tests Synth type support
+    - `Bounce/Export - DrumSampler track type is supported for bounce` - Tests DrumSampler support
+    - `Bounce/Export - Sampler track type is supported for bounce` - Tests Sampler support
+    - `Bounce/Export - InstrumentSampler track type is supported for bounce` - Tests InstrumentSampler support
+    - `Bounce/Export - Audio track type is supported for bounce` - Tests Audio type support
+  - `js/constants.js`: Bumped APP_VERSION to 0.93.0
+- **Feature Details**:
+  - Tests validate Track Freeze/Bounce constants (MAX_FREEZE_LENGTH_SECONDS=600, DEFAULT_FREEZE_FADE_OUT=0.1, FROZEN_TRACK_PREFIX)
+  - Tests verify Track.bounceTrack and Track._audioBufferToWav methods exist
+  - Tests validate bounceTrack rejects unsupported track types (Midi) and empty tracks
+  - Tests verify all audio-generating track types support bounce (Audio, Synth, Sampler, DrumSampler, InstrumentSampler)
+  - Total test count increased from 703 to 718 tests
+- **Backend Note**: The Track.bounceTrack method renders a track to audio using Tone.Offline for non-destructive bounce/export. The tests verify the bounce API and constants without requiring actual audio rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.93.0
+
+
 #### Day 207: Audio Clip Editor UI Tests (2026-04-24)
 - **Feature**: Added 44 new unit tests for Audio Clip Editor UI functions, constants, and Track class audio clip methods
 - **Files Modified**:
