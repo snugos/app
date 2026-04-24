@@ -263,6 +263,7 @@ export const TRACK_COLORS = [
 ];
 
 export const DEFAULT_TRACK_COLOR_INDEX = 0; // Default to first color (red)
+export const DEFAULT_TRACK_COLOR = TRACK_COLORS[DEFAULT_TRACK_COLOR_INDEX] || TRACK_COLORS[0]; // Derived default track color
 
 // Clip Color constants
 export const CLIP_COLORS = [
