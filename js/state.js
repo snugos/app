@@ -270,11 +270,26 @@ export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
 // MIDI Learn state functions
 export function getMidiLearnMappingsState() { return [...midiLearnMappings]; }
 export function getMidiLearnModeState() { return midiLearnMode; }
-export function setMidiLearnModeState(mode) { midiLearnMode = !!mode; }
+export function setMidiLearnModeState(mode) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set MIDI Learn Mode ${mode ? 'On' : 'Off'}`);
+    }
+    midiLearnMode = !!mode; 
+}
+
 export function getMidiLearnPendingParamState() { return midiLearnPendingParam; }
-export function setMidiLearnPendingParamState(param) { midiLearnPendingParam = param; }
+
+export function setMidiLearnPendingParamState(param) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set MIDI Learn Pending Param`);
+    }
+    midiLearnPendingParam = param; 
+}
 
 export function addMidiLearnMapping(mapping) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Add MIDI Learn Mapping`);
+    }
     if (midiLearnMappings.length >= Constants.MAX_MIDI_LEARN_MAPPINGS) {
         console.warn("[State] Max MIDI Learn mappings reached");
         return false;
@@ -285,6 +300,9 @@ export function addMidiLearnMapping(mapping) {
 }
 
 export function removeMidiLearnMapping(index) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Remove MIDI Learn Mapping`);
+    }
     if (index >= 0 && index < midiLearnMappings.length) {
         midiLearnMappings.splice(index, 1);
         return true;
@@ -293,6 +311,9 @@ export function removeMidiLearnMapping(index) {
 }
 
 export function clearMidiLearnMappings() {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Clear All MIDI Learn Mappings`);
+    }
     midiLearnMappings = [];
 }
 
@@ -2010,8 +2031,8 @@ export async function importFromMidiInternal() {
 
                     // Determine how many bars we need
                     const maxCol = Math.max(...parsed.notes.map(n => n.startStep + n.length));
-                    const barsNeeded = Math.ceil(maxCol / 16);
-                    const targetBars = Math.max(1, Math.min(barsNeeded, Constants.MAX_BARS));
+                    const targetBars = Math.ceil(maxCol / 16);
+                    const barsNeeded = Math.max(1, Math.min(targetBars, Constants.MAX_BARS));
 
                     // Extend sequence if needed
                     while (sequence.data[0].length < targetBars * 16) {

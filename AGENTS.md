@@ -5216,3 +5216,9 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Version**: Bumped to 0.70.4
 
 #### Day 352: Master Effects State
+#### Day 186: MIDI Learn undo/redo support
+- **Feature**: Added undo/redo support for MIDI Learn state mutations
+- **Files Modified**:
+  - `js/state.js`: Added `captureStateForUndo` calls to setMidiLearnModeState, setMidiLearnPendingParamState, addMidiLearnMapping, removeMidiLearnMapping, clearMidiLearnMappings
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.0
+- **Version**: Bumped to 0.71.0
