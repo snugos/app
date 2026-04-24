@@ -4238,6 +4238,21 @@ function initializeMixerEventHandlers(mixerElement) {
         fader.addEventListener('input', (e) => {
             const trackId = parseInt(e.target.dataset.trackId);
             const value = parseInt(e.target.value) / 100;
+            // MIDI Learn: If mode is active and no pending param, set volume as target
+            const midiLearnMode = localAppServices.getMidiLearnModeState ? localAppServices.getMidiLearnModeState() : false;
+            const pendingParam = localAppServices.getMidiLearnPendingParamState ? localAppServices.getMidiLearnPendingParamState() : null;
+            if (midiLearnMode && !pendingParam) {
+                const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+                localAppServices.setMidiLearnPendingParamState({
+                    trackId: trackId,
+                    paramType: 'trackVolume',
+                    trackName: track?.name || 'Track ' + trackId,
+                    min: 0,
+                    max: 1
+                });
+                showNotification(`MIDI Learn: Click a CC knob to assign volume`, 3000);
+                return;
+            }
             handleMixerVolumeChange(trackId, value);
         });
     });
@@ -4247,6 +4262,21 @@ function initializeMixerEventHandlers(mixerElement) {
         knob.addEventListener('input', (e) => {
             const trackId = parseInt(e.target.dataset.trackId);
             const value = parseInt(e.target.value) / 50; // -1 to 1
+            // MIDI Learn: If mode is active and no pending param, set pan as target
+            const midiLearnMode = localAppServices.getMidiLearnModeState ? localAppServices.getMidiLearnModeState() : false;
+            const pendingParam = localAppServices.getMidiLearnPendingParamState ? localAppServices.getMidiLearnPendingParamState() : null;
+            if (midiLearnMode && !pendingParam) {
+                const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+                localAppServices.setMidiLearnPendingParamState({
+                    trackId: trackId,
+                    paramType: 'trackPan',
+                    trackName: track?.name || 'Track ' + trackId,
+                    min: -1,
+                    max: 1
+                });
+                showNotification(`MIDI Learn: Click a CC knob to assign pan`, 3000);
+                return;
+            }
             handleMixerPanChange(trackId, value);
         });
     });
@@ -4621,6 +4651,11 @@ function handleMixerGroupAction(groupId, action) {
 }
 
 function handleMixerVolumeChange(trackId, value) {
+    // Capture undo state before mutating
+    if (localAppServices.captureStateForUndo) {
+        const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+        localAppServices.captureStateForUndo(`Set volume on ${track?.name || 'Track ' + trackId}`);
+    }
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (track && track.setVolume) {
         track.setVolume(value);
@@ -4628,6 +4663,11 @@ function handleMixerVolumeChange(trackId, value) {
 }
 
 function handleMixerPanChange(trackId, value) {
+    // Capture undo state before mutating
+    if (localAppServices.captureStateForUndo) {
+        const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+        localAppServices.captureStateForUndo(`Set pan on ${track?.name || 'Track ' + trackId}`);
+    }
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (track && track.setPan) {
         track.setPan(value, true);

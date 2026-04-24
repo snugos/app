@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.70.0'; // Day 108: DrumSampler Pad Drop Zone Verification - Added 8 new tests for DrumSampler pad drop zone verification
+export const APP_VERSION = '0.70.1'; // Day 182: MIDI Learn mixer integration - Added undo capture and MIDI Learn binding support for mixer volume and pan controls
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
