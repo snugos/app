@@ -2387,3 +2387,24 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The SnugWindow class is the core window management component for the DAW UI. These tests complement the existing SnugWindow constants tests (Day 104) by testing the actual class instance behavior. The tests use mock DOM elements to create actual SnugWindow instances in a controlled environment.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.83.0
+
+#### Day 199: DrumSampler Pad UI Functions Tests (2026-04-24)
+- **Feature**: Added 37 new unit tests for DrumSampler pad UI functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for renderDrumSamplerPads and updateDrumPadControlsUI functions and 37 new tests:
+    - `renderDrumSamplerPads function verification` - Tests for null/non-DrumSampler track handling, container checks, numDrumSamplerPads constant usage, pad loop iteration, button creation, selectedDrumPadForEdit checking, drumSamplerPads data checking, loaded status appearance, and click handler setup
+    - `updateDrumPadControlsUI function verification` - Tests for null track handling, pad info display updates, drop zone container updates, createDropZoneHTML calls, setupGenericDropZoneListeners calls, volume/pitch/envelope knob updates, fallback values handling, file input onchange handlers
+    - `DrumSampler UI workflow verification` - Tests for pad selection workflow, envelope handling with ADSR parameters, 0-indexed internal vs 1-indexed user display, container ID renaming on fallback path, default values for volume and pitch
+  - `js/constants.js`: Bumped APP_VERSION to 0.84.0
+- **Feature Details**:
+  - Tests verify renderDrumSamplerPads handles null and non-DrumSampler tracks gracefully
+  - Tests verify the pad grid renders all 8 pads using numDrumSamplerPads constant
+  - Tests verify pad selection changes selectedDrumPadForEdit and triggers UI update
+  - Tests verify updateDrumPadControlsUI updates drop zone HTML for the selected pad
+  - Tests verify setupGenericDropZoneListeners receives correct pad index
+  - Tests verify envelope knobs (attack, decay, sustain, release) are updated
+  - Tests verify default values for pad volume (0.7) and fallback envelope values
+  - Total test count increased from 1121 to 1158 tests
+- **Backend Note**: The DrumSampler pad UI functions are used by the Track Inspector window to display and edit individual drum pads. The tests verify the UI update workflow without requiring actual DOM rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.84.0
