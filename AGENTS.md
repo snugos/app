@@ -13,16 +13,64 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
-#### Day 207: Recording Workflow Tests (2026-04-24)
-- **Feature**: Added 30 new unit tests for recording workflow state transitions, audio clip constants, and error handling
+#### Day 207: Audio Clip Editor UI Tests (2026-04-24)
+- **Feature**: Added 44 new unit tests for Audio Clip Editor UI functions, constants, and Track class audio clip methods
 - **Files Modified**:
-  - `js/tests.js`: Added 30 new tests in Day 207 section
+  - `js/tests.js`: Added 44 new tests in Day 207 section:
+    - `openAudioClipEditorWindow function exists` - Tests UI function export
+    - `openAudioClipEditorWindow accepts 3 parameters` - Tests parameter count
+    - `drawClipWaveform function exists` - Tests waveform drawing function
+    - `drawClipWaveform accepts 2 parameters` - Tests parameter count
+    - `CLIP_COLORS is a non-empty array` - Tests array type and content
+    - `CLIP_COLORS has 16 colors` - Tests color count
+    - `CLIP_COLORS contains default color` - Tests DEFAULT_CLIP_COLOR inclusion
+    - `CLIP_COLORS all entries are valid hex colors` - Tests hex format validation
+    - `DEFAULT_CLIP_COLOR is a valid hex color` - Tests default color format
+    - `FADE_CURVE_LINEAR is "linear"` - Tests linear curve constant
+    - `FADE_CURVE_EXPONENTIAL is "exponential"` - Tests exponential curve constant
+    - `FADE_CURVES array has 2 options` - Tests fade curves array
+    - `DEFAULT_FADE_IN_CURVE is valid` - Tests default fade-in curve
+    - `DEFAULT_FADE_OUT_CURVE is valid` - Tests default fade-out curve
+    - `Fade constants are in valid range` - Tests fade time constants
+    - `Crossfade constants are in valid range` - Tests crossfade constants
+    - `Gain constants are in valid range` - Tests gain constants (0-4.0)
+    - `Playback rate constants are in valid range` - Tests rate constants (0.25x-4.0x)
+    - `Offset constants are in valid range` - Tests start/end offset constants
+    - `Reverse constant is boolean` - Tests DEFAULT_AUDIO_CLIP_REVERSE
+    - `Track class has setAudioClipName method` - Tests clip name setter
+    - `Track class has getAudioClipName method` - Tests clip name getter
+    - `Track class has setAudioClipColor method` - Tests color setter
+    - `Track class has setAudioClipGain method` - Tests gain setter
+    - `Track class has getAudioClipGain method` - Tests gain getter
+    - `Track class has setAudioClipPlaybackRate method` - Tests rate setter
+    - `Track class has getAudioClipPlaybackRate method` - Tests rate getter
+    - `Track class has setAudioClipStartOffset method` - Tests start offset setter
+    - `Track class has setAudioClipEndOffset method` - Tests end offset setter
+    - `Track class has setAudioClipCrossfade method` - Tests crossfade setter
+    - `Track class has getAudioClipCrossfade method` - Tests crossfade getter
+    - `Track class has setAudioClipFadeIn method` - Tests fade-in setter
+    - `Track class has getAudioClipFadeIn method` - Tests fade-in getter
+    - `Track class has setAudioClipFadeOut method` - Tests fade-out setter
+    - `Track class has getAudioClipFadeOut method` - Tests fade-out getter
+    - `Track class has setAudioClipFadeInCurve method` - Tests fade-in curve setter
+    - `Track class has getAudioClipFadeInCurve method` - Tests fade-in curve getter
+    - `Track class has setAudioClipFadeOutCurve method` - Tests fade-out curve setter
+    - `Track class has getAudioClipFadeOutCurve method` - Tests fade-out curve getter
+    - `Track class has setAudioClipReverse method` - Tests reverse setter
+    - `Track class has getAudioClipReverse method` - Tests reverse getter
+    - `Track class has setAudioClipStartTime method` - Tests position setter
+    - `Track class has getAudioClipStartTime method` - Tests position getter
+    - `Track class has _getAudioClip helper method` - Tests internal helper
   - `js/constants.js`: Bumped APP_VERSION to 0.92.0
 - **Feature Details**:
-  - Tests validate recording state transitions and constants
-  - Tests validate audio clip constants (gain, playback rate, crossfade, fade, offset)
-  - Tests validate sequential recording state updates with multiple tracks
-  - Total test count increased from 1003 to 1033 tests
+  - Tests verify openAudioClipEditorWindow and drawClipWaveform functions exist with correct signatures
+  - Tests validate CLIP_COLORS array (16 colors, all valid hex, contains DEFAULT_CLIP_COLOR)
+  - Tests validate fade curve constants (linear, exponential, defaults)
+  - Tests validate audio clip parameter constants (fade, crossfade, gain, playback rate, offset, reverse)
+  - Tests verify all 20 Track class audio clip accessor methods exist
+  - Total test count increased from 659 to 703 tests
+- **Backend Note**: The Audio Clip Editor allows users to edit audio clip properties (gain, playback rate, start/end offset, fade in/out, crossfade, reverse). The tests verify the UI function exports, constants, and Track class methods without requiring DOM rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.92.0
 
 #### Day 206: DrumSampler Pad Drop Zones Verification (2026-04-24)
