@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.86.0'; // Day 201: Performance Monitor State Tests - Added 22 tests for performance monitor state functions
+export const APP_VERSION = '0.87.0'; // Day 202: DrumSampler Pad Methods and Initialization Tests - Added 20 tests covering pad methods, initialization, and UI functions
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
