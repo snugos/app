@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.85.0'; // Day 200: Audio Clip Editor Methods Tests - Added 33 tests for audio clip editor set/get methods
+export const APP_VERSION = '0.86.0'; // Day 201: Performance Monitor State Tests - Added 22 tests for performance monitor state functions
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

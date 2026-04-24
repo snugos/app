@@ -289,6 +289,157 @@ TestRunner.test('Performance Monitor - PERFORMANCE_WARNING_THRESHOLD_MS is reaso
     t.assertTruthy(PERFORMANCE_WARNING_THRESHOLD_MS > 0, 'Warning threshold should be positive');
     t.assertTruthy(PERFORMANCE_WARNING_THRESHOLD_MS <= 200, 'Warning threshold should be reasonable (<200ms)');
 });
+// Day 201: Performance Monitor State Tests
+// ===========================================
+TestRunner.test('Performance Monitor State - getPerformanceMonitorState returns object', (t) => {
+    const state = getPerformanceMonitorState();
+    t.assertEqual(typeof state, 'object', 'Should return an object');
+    t.assertTruthy(state !== null, 'Should not be null');
+});
+
+TestRunner.test('Performance Monitor State - getPerformanceMonitorEnabledState returns boolean', (t) => {
+    const enabled = getPerformanceMonitorEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Should return a boolean');
+});
+
+TestRunner.test('Performance Monitor State - setPerformanceMonitorEnabledState accepts boolean', (t) => {
+    setPerformanceMonitorEnabledState(true);
+    t.assertEqual(getPerformanceMonitorEnabledState(), true, 'Should be enabled');
+    setPerformanceMonitorEnabledState(false);
+    t.assertEqual(getPerformanceMonitorEnabledState(), false, 'Should be disabled');
+});
+
+TestRunner.test('Performance Monitor State - getAudioContextStateState returns string', (t) => {
+    const state = getAudioContextStateState();
+    t.assertEqual(typeof state, 'string', 'Should return a string');
+});
+
+TestRunner.test('Performance Monitor State - setAudioContextStateState validates values', (t) => {
+    setAudioContextStateState('running');
+    t.assertEqual(getAudioContextStateState(), 'running', 'Should accept running');
+    setAudioContextStateState('suspended');
+    t.assertEqual(getAudioContextStateState(), 'suspended', 'Should accept suspended');
+    setAudioContextStateState('closed');
+    t.assertEqual(getAudioContextStateState(), 'closed', 'Should accept closed');
+});
+
+TestRunner.test('Performance Monitor State - setAudioContextStateState ignores invalid values', (t) => {
+    setAudioContextStateState('running');
+    setAudioContextStateState('invalid_value');
+    t.assertEqual(getAudioContextStateState(), 'running', 'Should ignore invalid values');
+});
+
+TestRunner.test('Performance Monitor State - getCPUUsageState returns number', (t) => {
+    const usage = getCPUUsageState();
+    t.assertEqual(typeof usage, 'number', 'Should return a number');
+});
+
+TestRunner.test('Performance Monitor State - setCPUUsageState clamps values', (t) => {
+    setCPUUsageState(50);
+    t.assertEqual(getCPUUsageState(), 50, 'Should accept normal value');
+    setCPUUsageState(150);
+    t.assertEqual(getCPUUsageState(), 100, 'Should clamp to 100');
+    setCPUUsageState(-10);
+    t.assertEqual(getCPUUsageState(), 0, 'Should clamp to 0');
+});
+
+TestRunner.test('Performance Monitor State - getMemoryPressureState returns string', (t) => {
+    const pressure = getMemoryPressureState();
+    t.assertEqual(typeof pressure, 'string', 'Should return a string');
+});
+
+TestRunner.test('Performance Monitor State - setMemoryPressureState validates values', (t) => {
+    setMemoryPressureState('none');
+    t.assertEqual(getMemoryPressureState(), 'none', 'Should accept none');
+    setMemoryPressureState('low');
+    t.assertEqual(getMemoryPressureState(), 'low', 'Should accept low');
+    setMemoryPressureState('medium');
+    t.assertEqual(getMemoryPressureState(), 'medium', 'Should accept medium');
+    setMemoryPressureState('high');
+    t.assertEqual(getMemoryPressureState(), 'high', 'Should accept high');
+});
+
+TestRunner.test('Performance Monitor State - setMemoryPressureState ignores invalid values', (t) => {
+    setMemoryPressureState('none');
+    setMemoryPressureState('invalid');
+    t.assertEqual(getMemoryPressureState(), 'none', 'Should ignore invalid pressure values');
+});
+
+TestRunner.test('Performance Monitor State - getActiveVoicesState returns number', (t) => {
+    const voices = getActiveVoicesState();
+    t.assertEqual(typeof voices, 'number', 'Should return a number');
+});
+
+TestRunner.test('Performance Monitor State - setActiveVoicesState clamps values', (t) => {
+    setActiveVoicesState(10);
+    t.assertEqual(getActiveVoicesState(), 10, 'Should accept normal value');
+    setActiveVoicesState(-5);
+    t.assertEqual(getActiveVoicesState(), 0, 'Should clamp to 0');
+});
+
+TestRunner.test('Performance Monitor State - getAudioLatencyState returns number', (t) => {
+    const latency = getAudioLatencyState();
+    t.assertEqual(typeof latency, 'number', 'Should return a number');
+});
+
+TestRunner.test('Performance Monitor State - setAudioLatencyState accepts values', (t) => {
+    setAudioLatencyState(0.05);
+    t.assertEqual(getAudioLatencyState(), 0.05, 'Should accept latency value');
+    setAudioLatencyState(-10);
+    t.assertEqual(getAudioLatencyState(), 0, 'Should clamp negative to 0');
+});
+
+TestRunner.test('Performance Monitor State - getLastCallbackTimeState returns number', (t) => {
+    const time = getLastCallbackTimeState();
+    t.assertEqual(typeof time, 'number', 'Should return a number');
+});
+
+TestRunner.test('Performance Monitor State - setLastCallbackTimeState accepts values', (t) => {
+    setLastCallbackTimeState(100);
+    t.assertEqual(getLastCallbackTimeState(), 100, 'Should accept time value');
+    setLastCallbackTimeState(-50);
+    t.assertEqual(getLastCallbackTimeState(), 0, 'Should clamp negative to 0');
+});
+
+TestRunner.test('Performance Monitor State - getDroppedCallbacksState returns number', (t) => {
+    const count = getDroppedCallbacksState();
+    t.assertEqual(typeof count, 'number', 'Should return a number');
+});
+
+TestRunner.test('Performance Monitor State - setDroppedCallbacksState accepts values', (t) => {
+    setDroppedCallbacksState(5);
+    t.assertEqual(getDroppedCallbacksState(), 5, 'Should accept count');
+    setDroppedCallbacksState(-3);
+    t.assertEqual(getDroppedCallbacksState(), 0, 'Should clamp negative to 0');
+});
+
+TestRunner.test('Performance Monitor State - incrementDroppedCallbacksState increments', (t) => {
+    setDroppedCallbacksState(0);
+    incrementDroppedCallbacksState();
+    t.assertEqual(getDroppedCallbacksState(), 1, 'Should increment by 1');
+    incrementDroppedCallbacksState();
+    t.assertEqual(getDroppedCallbacksState(), 2, 'Should increment again');
+});
+
+TestRunner.test('Performance Monitor State - resetPerformanceMonitorState resets all values', (t) => {
+    setPerformanceMonitorEnabledState(true);
+    setAudioContextStateState('running');
+    setCPUUsageState(75);
+    setMemoryPressureState('high');
+    setActiveVoicesState(20);
+    setAudioLatencyState(0.1);
+    setLastCallbackTimeState(50);
+    setDroppedCallbacksState(10);
+    resetPerformanceMonitorState();
+    const state = getPerformanceMonitorState();
+    t.assertEqual(state.enabled, false, 'Should reset enabled');
+    t.assertEqual(state.audioContextState, 'unknown', 'Should reset audioContextState');
+    t.assertEqual(state.cpuUsage, 0, 'Should reset cpuUsage');
+    t.assertEqual(state.memoryPressure, 'none', 'Should reset memoryPressure');
+    t.assertEqual(state.activeVoices, 0, 'Should reset activeVoices');
+    t.assertEqual(state.audioLatency, 0, 'Should reset audioLatency');
+    t.assertEqual(state.droppedCallbacks, 0, 'Should reset droppedCallbacks');
+});
 
 // ============================================
 // Utility Function Tests
