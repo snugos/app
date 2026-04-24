@@ -5201,4 +5201,18 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.77.0
 
+#### Day 185: DrumSampler pad drop zone container fix and additional tests
+- **Bug Fix**: Fixed `updateDrumPadControlsUI` in `js/ui.js` to correctly target the pad-specific drop zone container
+- **Files Modified**:
+  - `js/ui.js`: Changed container query to use specific pad index (`#drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`) instead of generic prefix match. Added fallback for legacy behavior.
+  - `js/tests.js`: Added 11 new tests for DrumSampler pad drop zone functionality
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.4
+- **Feature Details**:
+  - Tests verify `createDropZoneHTML` includes correct `data-pad-slice-index` attribute
+  - Tests verify drop zone ID format includes pad index
+  - Tests verify status handling for all 6 pad statuses (empty, loaded, loading, missing, missing_db, error)
+  - Tests verify relink/retry button rendering for missing/error states
+  - Tests verify `setupGenericDropZoneListeners` handles DrumSampler pad index correctly
+- **Version**: Bumped to 0.70.4
+
 #### Day 352: Master Effects State
