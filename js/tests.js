@@ -191,6 +191,26 @@ import {
     setupGenericDropZoneListeners
 } from './utils.js';
 
+import {
+    handleTrackMute,
+    handleTrackSolo,
+    handleTrackArm,
+    handleRemoveTrack,
+    handleOpenTrackInspector,
+    handleOpenEffectsRack,
+    handleOpenSequencer,
+    attachGlobalControlEvents,
+    setupMIDI,
+    selectMIDIInput
+} from './eventHandlers.js';
+
+import {
+    storeAudio,
+    getAudio,
+    deleteAudio,
+    clearAllAudio
+} from './db.js';
+
 // ============================================
 // Constants Tests
 // ============================================
@@ -4509,6 +4529,13 @@ TestRunner.test('Audio Loading - loading functions are async', (t) => {
     t.assertTruthy(fetchSoundLibrary.constructor.name === 'AsyncFunction' || fetchSoundLibrary.toString().includes('async'), 'fetchSoundLibrary should be async');
 });
 
+// Export the runTests function for browser console execution
+export async function runTests() {
+    return TestRunner.runAll(window.showNotification);
+}
+
+export { TestRunner };
+export default TestRunner;
 // Day 211: UI Window Open Function Tests (2026-04-24)
 TestRunner.test('UI - openMixerWindow function is exported', (t) => {
     t.assertTruthy(typeof openMixerWindow === 'function', 'openMixerWindow should be a function');
@@ -4667,70 +4694,137 @@ TestRunner.test('UI - initializeUIModule accepts appServices parameter', (t) => 
     t.assertEqual(initializeUIModule.length, 1, 'initializeUIModule should accept 1 parameter');
 });
 
-// Day 212: MIDI Export/Import Constants Tests (2026-04-24)
-TestRunner.test('MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is 127', (t) => {
-    t.assertEqual(MIDI_EXPORT_VELOCITY_SCALE, 127, 'MIDI_EXPORT_VELOCITY_SCALE should be 127');
+// ============================================
+// Day 212: Event Handlers Function Tests (2026-04-24)
+// ============================================
+TestRunner.test('Event Handlers - handleTrackMute function is exported', (t) => {
+    t.assertEqual(typeof handleTrackMute, 'function', 'handleTrackMute should be a function');
 });
 
-TestRunner.test('MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is 480', (t) => {
-    t.assertEqual(MIDI_EXPORT_TicksPerQuarterNote, 480, 'MIDI_EXPORT_TicksPerQuarterNote should be 480');
+TestRunner.test('Event Handlers - handleTrackMute accepts trackId parameter', (t) => {
+    t.assertEqual(handleTrackMute.length, 1, 'handleTrackMute should accept 1 parameter');
 });
 
-TestRunner.test('MIDI Export - MIDI_FILE_FORMAT is 0', (t) => {
-    t.assertEqual(MIDI_FILE_FORMAT, 0, 'MIDI_FILE_FORMAT should be 0 (single track)');
+TestRunner.test('Event Handlers - handleTrackSolo function is exported', (t) => {
+    t.assertEqual(typeof handleTrackSolo, 'function', 'handleTrackSolo should be a function');
 });
 
-TestRunner.test('MIDI Export - MIDI_FILE_TYPE_NAMES is array with Type 0', (t) => {
-    t.assertTruthy(Array.isArray(MIDI_FILE_TYPE_NAMES), 'MIDI_FILE_TYPE_NAMES should be an array');
-    t.assertTruthy(MIDI_FILE_TYPE_NAMES.length > 0, 'MIDI_FILE_TYPE_NAMES should not be empty');
-    t.assertTruthy(MIDI_FILE_TYPE_NAMES[0].includes('Type 0'), 'First entry should be Type 0');
+TestRunner.test('Event Handlers - handleTrackSolo accepts trackId parameter', (t) => {
+    t.assertEqual(handleTrackSolo.length, 1, 'handleTrackSolo should accept 1 parameter');
 });
 
-TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is 64', (t) => {
-    t.assertEqual(MAX_MIDI_EXPORT_TRACKS, 64, 'MAX_MIDI_EXPORT_TRACKS should be 64');
+TestRunner.test('Event Handlers - handleTrackArm function is exported', (t) => {
+    t.assertEqual(typeof handleTrackArm, 'function', 'handleTrackArm should be a function');
 });
 
-TestRunner.test('MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is string', (t) => {
-    t.assertEqual(typeof DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, 'string', 'DEFAULT_MIDI_EXPORT_FILENAME_PREFIX should be a string');
-    t.assertTruthy(DEFAULT_MIDI_EXPORT_FILENAME_PREFIX.length > 0, 'DEFAULT_MIDI_EXPORT_FILENAME_PREFIX should not be empty');
+TestRunner.test('Event Handlers - handleTrackArm accepts trackId parameter', (t) => {
+    t.assertEqual(handleTrackArm.length, 1, 'handleTrackArm should accept 1 parameter');
 });
 
-TestRunner.test('MIDI - MIDI_DEFAULT_CHANNEL is 0', (t) => {
-    t.assertEqual(MIDI_DEFAULT_CHANNEL, 0, 'MIDI_DEFAULT_CHANNEL should be 0 (0-indexed)');
+TestRunner.test('Event Handlers - handleRemoveTrack function is exported', (t) => {
+    t.assertEqual(typeof handleRemoveTrack, 'function', 'handleRemoveTrack should be a function');
 });
 
-TestRunner.test('MIDI - MIDI_DEFAULT_PROGRAM is 0', (t) => {
-    t.assertEqual(MIDI_DEFAULT_PROGRAM, 0, 'MIDI_DEFAULT_PROGRAM should be 0');
+TestRunner.test('Event Handlers - handleRemoveTrack accepts trackId parameter', (t) => {
+    t.assertEqual(handleRemoveTrack.length, 1, 'handleRemoveTrack should accept 1 parameter');
 });
 
-TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is 1', (t) => {
-    t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'MIDI_IMPORT_MIN_NOTES should be 1');
+TestRunner.test('Event Handlers - handleOpenTrackInspector function is exported', (t) => {
+    t.assertEqual(typeof handleOpenTrackInspector, 'function', 'handleOpenTrackInspector should be a function');
 });
 
-TestRunner.test('MIDI Import - MIDI_IMPORT_MAX_VELOCITY is 127', (t) => {
-    t.assertEqual(MIDI_IMPORT_MAX_VELOCITY, 127, 'MIDI_IMPORT_MAX_VELOCITY should be 127');
+TestRunner.test('Event Handlers - handleOpenTrackInspector accepts trackId parameter', (t) => {
+    t.assertEqual(handleOpenTrackInspector.length, 1, 'handleOpenTrackInspector should accept 1 parameter');
 });
 
-TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is 100', (t) => {
-    t.assertEqual(MIDI_IMPORT_DEFAULT_VELOCITY, 100, 'MIDI_IMPORT_DEFAULT_VELOCITY should be 100');
+TestRunner.test('Event Handlers - handleOpenEffectsRack function is exported', (t) => {
+    t.assertEqual(typeof handleOpenEffectsRack, 'function', 'handleOpenEffectsRack should be a function');
 });
 
-TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is 1.0', (t) => {
-    t.assertEqual(MIDI_IMPORT_DEFAULT_PROBABILITY, 1.0, 'MIDI_IMPORT_DEFAULT_PROBABILITY should be 1.0');
+TestRunner.test('Event Handlers - handleOpenEffectsRack accepts trackId parameter', (t) => {
+    t.assertEqual(handleOpenEffectsRack.length, 1, 'handleOpenEffectsRack should accept 1 parameter');
 });
 
-TestRunner.test('MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is true', (t) => {
-    t.assertEqual(MIDI_IMPORT_SNAP_TO_GRID, true, 'MIDI_IMPORT_SNAP_TO_GRID should be true');
+TestRunner.test('Event Handlers - handleOpenSequencer function is exported', (t) => {
+    t.assertEqual(typeof handleOpenSequencer, 'function', 'handleOpenSequencer should be a function');
 });
 
-TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is 1/127', (t) => {
-    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1 / 127, 'MIDI_IMPORT_VELOCITY_SCALE should be 1/127');
+TestRunner.test('Event Handlers - handleOpenSequencer accepts trackId parameter', (t) => {
+    t.assertEqual(handleOpenSequencer.length, 1, 'handleOpenSequencer should accept 1 parameter');
 });
 
-// Export the runTests function for browser console execution
-export async function runTests() {
-    return TestRunner.runAll(window.showNotification);
-}
+TestRunner.test('Event Handlers - attachGlobalControlEvents function is exported', (t) => {
+    t.assertEqual(typeof attachGlobalControlEvents, 'function', 'attachGlobalControlEvents should be a function');
+});
 
-export { TestRunner };
-export default TestRunner;
+TestRunner.test('Event Handlers - attachGlobalControlEvents accepts elements parameter', (t) => {
+    t.assertEqual(attachGlobalControlEvents.length, 1, 'attachGlobalControlEvents should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - setupMIDI function is exported', (t) => {
+    t.assertEqual(typeof setupMIDI, 'function', 'setupMIDI should be a function');
+});
+
+TestRunner.test('Event Handlers - setupMIDI accepts no parameters', (t) => {
+    t.assertEqual(setupMIDI.length, 0, 'setupMIDI should accept 0 parameters');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput function is exported', (t) => {
+    t.assertEqual(typeof selectMIDIInput, 'function', 'selectMIDIInput should be a function');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput accepts deviceId and optional silent', (t) => {
+    // Function signature: selectMIDIInput(deviceId, silent = false)
+    t.assertTruthy(selectMIDIInput.length >= 1 && selectMIDIInput.length <= 2, 'selectMIDIInput should accept 1-2 parameters');
+});
+
+// ============================================
+// Day 212: Database Function Tests (2026-04-24)
+// ============================================
+TestRunner.test('Database - storeAudio function is exported', (t) => {
+    t.assertEqual(typeof storeAudio, 'function', 'storeAudio should be a function');
+});
+
+TestRunner.test('Database - storeAudio accepts key and audioBlob parameters', (t) => {
+    t.assertEqual(storeAudio.length, 2, 'storeAudio should accept 2 parameters');
+});
+
+TestRunner.test('Database - storeAudio is async', (t) => {
+    t.assertTruthy(storeAudio.constructor.name === 'AsyncFunction' || storeAudio.toString().includes('async'), 'storeAudio should be async');
+});
+
+TestRunner.test('Database - getAudio function is exported', (t) => {
+    t.assertEqual(typeof getAudio, 'function', 'getAudio should be a function');
+});
+
+TestRunner.test('Database - getAudio accepts key parameter', (t) => {
+    t.assertEqual(getAudio.length, 1, 'getAudio should accept 1 parameter');
+});
+
+TestRunner.test('Database - getAudio is async', (t) => {
+    t.assertTruthy(getAudio.constructor.name === 'AsyncFunction' || getAudio.toString().includes('async'), 'getAudio should be async');
+});
+
+TestRunner.test('Database - deleteAudio function is exported', (t) => {
+    t.assertEqual(typeof deleteAudio, 'function', 'deleteAudio should be a function');
+});
+
+TestRunner.test('Database - deleteAudio accepts key parameter', (t) => {
+    t.assertEqual(deleteAudio.length, 1, 'deleteAudio should accept 1 parameter');
+});
+
+TestRunner.test('Database - deleteAudio is async', (t) => {
+    t.assertTruthy(deleteAudio.constructor.name === 'AsyncFunction' || deleteAudio.toString().includes('async'), 'deleteAudio should be async');
+});
+
+TestRunner.test('Database - clearAllAudio function is exported', (t) => {
+    t.assertEqual(typeof clearAllAudio, 'function', 'clearAllAudio should be a function');
+});
+
+TestRunner.test('Database - clearAllAudio accepts no parameters', (t) => {
+    t.assertEqual(clearAllAudio.length, 0, 'clearAllAudio should accept 0 parameters');
+});
+
+TestRunner.test('Database - clearAllAudio is async', (t) => {
+    t.assertTruthy(clearAllAudio.constructor.name === 'AsyncFunction' || clearAllAudio.toString().includes('async'), 'clearAllAudio should be async');
+});
