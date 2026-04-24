@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.95.0'; // Day 211: UI Window Open Function Tests
+export const APP_VERSION = '0.96.0'; // Day 212: MIDI Export/Import Constants Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
