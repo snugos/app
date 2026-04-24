@@ -150,7 +150,6 @@ import {
     setSendBusMuted,
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
-    setTrackSendLevel: setTrackSendLevelFromAudio,
     getSendBusNodes,
     getTrackSendNodes,
     // Performance Monitor functions
