@@ -2344,3 +2344,19 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The MIDI Learn CC mapping application tests complement the existing MIDI Learn tests (Days 107, 193, 196) by validating the parameter handling and value mapping that happens when CC messages are received from MIDI controllers.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.81.0
+
+#### Day 198: MIDI Learn Keyboard Shortcut 'K' (2026-04-24)
+- **Feature**: Added keyboard shortcut 'K' to toggle MIDI Learn mode
+- **Files Modified**:
+  - `js/constants.js`: Added `MIDI_LEARN_SHORTCUT_KEY = 'k'` constant for the keyboard shortcut
+  - `js/eventHandlers.js`: Added 'k' key handler in keydown listener to toggle MIDI Learn mode with undo capture and notification
+  - `js/ui.js`: Added 'K' shortcut entry to Keyboard Shortcuts Help window in Transport & Tempo section
+  - `js/constants.js`: Bumped APP_VERSION to 0.82.0
+- **Feature Details**:
+  - Users can now press 'K' to toggle MIDI Learn mode on/off without needing to open the Global Controls window
+  - The shortcut properly captures undo state before toggling, allowing users to undo MIDI Learn changes
+  - Notification confirms the current state when toggled
+  - The keyboard shortcut is documented in the Keyboard Shortcuts Help window (press F1 or access via menu)
+  - MIDI Learn allows users to map physical MIDI controller knobs/faders to DAW parameters
+- **Usage**: Press 'K' anytime (when not in an input field) to toggle MIDI Learn mode
+- **Version**: Bumped to 0.82.0
