@@ -1,3 +1,4 @@
+// force rebuild
 // js/main.js - Main Application Logic Orchestrator
 
 // --- Module Imports ---
