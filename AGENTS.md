@@ -2200,3 +2200,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The swing/groove system delays every other 16th note by a configurable amount (0-100%). Users need to be able to undo swing changes to experiment freely.
 - **Usage**: Change swing settings and use Ctrl+Z to undo
 - **Version**: Bumped to 0.74.0
+#### Day 191: Track Templates State Tests (2026-04-24)
+- **Feature**: Added 10 new unit tests for Track Templates state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added imports for Track Templates state functions (getTrackTemplatesState, getTrackTemplateByIdState, addTrackTemplateState, updateTrackTemplateState, removeTrackTemplateState) and 10 new tests:
+    - `Track Templates - getTrackTemplatesState returns array` - Tests return type
+    - `Track Templates - addTrackTemplateState creates template` - Tests template creation with custom name and type
+    - `Track Templates - getTrackTemplateByIdState finds template` - Tests finding templates by ID
+    - `Track Templates - getTrackTemplateByIdState handles unknown id` - Tests graceful handling of unknown IDs
+    - `Track Templates - updateTrackTemplateState updates template` - Tests updating template name
+    - `Track Templates - removeTrackTemplateState removes template` - Tests removing templates
+    - `Track Templates - clearTrackTemplatesState clears all` - Tests clearing all templates
+    - `Track Templates - addTrackTemplateState with default values` - Tests default values
+    - `Track Templates - multiple templates can be added` - Tests bulk add operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.0
+- **Feature Details**:
+  - Tests validate return types and behavior for Track Templates CRUD operations
+  - Tests verify proper return values for success/failure cases
+  - Tests verify edge case handling (unknown IDs, empty clear)
+  - Tests verify default values when creating templates without data
+  - Total test count increased from 1012 to 1022 tests
+- **Backend Note**: The Track Templates state functions are used by the Sound Library for saving and loading track templates. The tests verify the state API without requiring UI context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.0

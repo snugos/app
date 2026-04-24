@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.74.0'; // Day 190: Swing State Undo/Redo - Added captureStateForUndo calls to setSwingState, setSwingEnabledState, and setSwingAmountState
+export const APP_VERSION = '0.75.0'; // Day 191: Track Templates State Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

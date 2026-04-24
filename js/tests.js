@@ -94,6 +94,11 @@ import {
     removeTrackGroupState,
     // Track Templates cleanup functions
     clearTrackTemplatesState,
+    getTrackTemplatesState,
+    getTrackTemplateByIdState,
+    addTrackTemplateState,
+    updateTrackTemplateState,
+    removeTrackTemplateState,
     // Master Effects state functions
     getMasterEffectsState,
     addMasterEffectToState,
@@ -6909,4 +6914,84 @@ TestRunner.test('Timeline - TIMELINE_HEADER_HEIGHT is positive', (t) => {
 TestRunner.test('Timeline - MAX_TIMELINE_MARKERS is positive', (t) => {
     t.assertTruthy(MAX_TIMELINE_MARKERS > 0, 'MAX_TIMELINE_MARKERS should be positive');
     t.assertTruthy(MAX_TIMELINE_MARKERS <= 1000, 'MAX_TIMELINE_MARKERS should be reasonable (<= 1000)');
+});
+
+// ============================================
+// Day 191: Track Templates State Tests
+// ============================================
+TestRunner.test('Track Templates - getTrackTemplatesState returns array', (t) => {
+    const templates = getTrackTemplatesState();
+    t.assertTruthy(Array.isArray(templates), 'Track templates should be an array');
+});
+
+TestRunner.test('Track Templates - addTrackTemplateState creates template', (t) => {
+    clearTrackTemplatesState();
+    const template = addTrackTemplateState({ name: 'Test Template', type: 'Synth' });
+    t.assertTruthy(template, 'addTrackTemplateState should return a template');
+    t.assertEqual(template.name, 'Test Template', 'Template name should match');
+    t.assertEqual(template.type, 'Synth', 'Template type should match');
+    clearTrackTemplatesState();
+});
+
+TestRunner.test('Track Templates - getTrackTemplateByIdState finds template', (t) => {
+    clearTrackTemplatesState();
+    const added = addTrackTemplateState({ name: 'Find Template' });
+    const found = getTrackTemplateByIdState(added.id);
+    t.assertTruthy(found, 'Template should be found');
+    t.assertEqual(found.id, added.id, 'Found template ID should match');
+    clearTrackTemplatesState();
+});
+
+TestRunner.test('Track Templates - getTrackTemplateByIdState handles unknown id', (t) => {
+    const notFound = getTrackTemplateByIdState('nonexistent-template-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Track Templates - updateTrackTemplateState updates template', (t) => {
+    clearTrackTemplatesState();
+    const template = addTrackTemplateState({ name: 'Original' });
+    const result = updateTrackTemplateState(template.id, { name: 'Updated' });
+    t.assertTruthy(result, 'updateTrackTemplateState should return updated template');
+    t.assertEqual(result.name, 'Updated', 'Template name should be updated');
+    clearTrackTemplatesState();
+});
+
+TestRunner.test('Track Templates - removeTrackTemplateState removes template', (t) => {
+    clearTrackTemplatesState();
+    const template = addTrackTemplateState({ name: 'To Remove' });
+    const result = removeTrackTemplateState(template.id);
+    t.assertTruthy(result, 'removeTrackTemplateState should return true');
+    const found = getTrackTemplateByIdState(template.id);
+    t.assertEqual(found, undefined, 'Template should be removed');
+    clearTrackTemplatesState();
+});
+
+TestRunner.test('Track Templates - clearTrackTemplatesState clears all', (t) => {
+    clearTrackTemplatesState();
+    addTrackTemplateState({ name: 'Template 1' });
+    addTrackTemplateState({ name: 'Template 2' });
+    let templates = getTrackTemplatesState();
+    t.assertTruthy(templates.length >= 2, 'Should have at least 2 templates');
+    clearTrackTemplatesState();
+    templates = getTrackTemplatesState();
+    t.assertEqual(templates.length, 0, 'Should have no templates after clear');
+});
+
+TestRunner.test('Track Templates - addTrackTemplateState with default values', (t) => {
+    clearTrackTemplatesState();
+    const template = addTrackTemplateState({});
+    t.assertTruthy(template, 'Should create template with defaults');
+    t.assertTruthy(template.name, 'Should have default name');
+    t.assertEqual(template.type, 'Synth', 'Default type should be Synth');
+    clearTrackTemplatesState();
+});
+
+TestRunner.test('Track Templates - multiple templates can be added', (t) => {
+    clearTrackTemplatesState();
+    const t1 = addTrackTemplateState({ name: 'Template 1' });
+    const t2 = addTrackTemplateState({ name: 'Template 2' });
+    const t3 = addTrackTemplateState({ name: 'Template 3' });
+    const templates = getTrackTemplatesState();
+    t.assertTruthy(templates.length >= 3, 'Should have at least 3 templates');
+    clearTrackTemplatesState();
 });
