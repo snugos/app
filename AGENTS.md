@@ -13,6 +13,43 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
+#### Day 204: Undo/Redo Capture Verification Tests (2026-04-24)
+- **Feature**: Added 23 new unit tests to verify undo/redo capture mechanism for state setters
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests in Day 204 section:
+    - `Undo/Redo - setArmedTrackIdState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setSoloedTrackIdState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setIsRecordingState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setRecordingTrackIdState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setRecordingStartTimeState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - addTimelineMarkerState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setTimelineMarkerState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - removeTimelineMarkerState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - clearTimelineMarkersState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setGhostTrackIdState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setArmedTrackIdState uses descriptive undo label` - Tests "Set Armed Track" label
+    - `Undo/Redo - setSoloedTrackIdState uses descriptive undo label` - Tests capture pattern
+    - `Undo/Redo - addTimelineMarkerState uses descriptive undo label` - Tests "Timeline Marker" label
+    - `Undo/Redo - removeTimelineMarkerState uses descriptive undo label` - Tests marker removal
+    - `Undo/Redo - setGhostTrackIdState uses descriptive undo label` - Tests ghost track label
+    - `Undo/Redo - setIsRecordingState uses descriptive undo label` - Tests "Recording" label
+    - `Undo/Redo - setRecordingTrackIdState uses descriptive undo label` - Tests capture pattern
+    - `Undo/Redo - setRecordingStartTimeState uses descriptive undo label` - Tests capture pattern
+    - `Undo/Redo - setTimelineMarkerState uses descriptive undo label` - Tests marker update
+    - `Undo/Redo - clearTimelineMarkersState uses descriptive undo label` - Tests "Markers" label
+    - `Undo/Redo - setGhostTrackIdState handles null vs set with different labels` - Tests "Clear Ghost Track" vs "Set Ghost Track"
+    - `Undo/Redo - state setters guard against missing appServices` - Tests all setters check appServices.captureStateForUndo exists before calling
+  - `js/constants.js`: Bumped APP_VERSION to 0.89.0
+- **Feature Details**:
+  - Tests verify all state setters call `captureStateForUndo` before mutating state
+  - Tests validate descriptive undo labels are used (e.g., "Set Armed Track", "Add Timeline Marker")
+  - Tests verify setters guard against missing `appServices.captureStateForUndo` function
+  - Tests validate `setGhostTrackIdState` handles null vs set with different labels
+  - Total test count increased from 1974 to 1997 tests
+- **Backend Note**: The undo system uses `appServices.captureStateForUndo()` to snapshot state before mutations. These tests verify the capture pattern is properly implemented for recording, timeline marker, armed/soloed track, and ghost track state setters.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.89.0
+
 #### Day 107: MIDI Learn (2026-04-24)
 - **Feature**: Added MIDI Learn infrastructure for mapping MIDI CC controllers to DAW parameters
 - **Files Modified**:
