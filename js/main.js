@@ -139,7 +139,6 @@ import {
     initializeMetronome,
     startMetronome,
     stopMetronome,
-    setMetronomeVolumeState,
     // Send Bus functions
     createSendBusInAudio,
     deleteSendBusFromAudio,
