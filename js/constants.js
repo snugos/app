@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.69.1'; // Day 107: MIDI Learn Tests - Added 36 new tests for MIDI Learn constants and state functions
+export const APP_VERSION = '0.70.0'; // Day 108: DrumSampler Pad Drop Zone Verification - Added 8 new tests for DrumSampler pad drop zone verification
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

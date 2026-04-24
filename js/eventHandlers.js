@@ -638,6 +638,91 @@ export function attachGlobalControlEvents(elements) {
             } catch (error) { console.error("[EventHandlers PlaybackModeToggle] Error:", error); }
         });
     } else { console.warn("[EventHandlers] playbackModeToggleBtnGlobal not found."); }
+
+    // MIDI Learn button handler
+    const midiLearnBtnGlobal = elements.midiLearnBtnGlobal;
+    const midiLearnMappingsListGlobal = elements.midiLearnMappingsListGlobal;
+    const midiLearnClearBtnGlobal = elements.midiLearnClearBtnGlobal;
+    const midiLearnStatusGlobal = elements.midiLearnStatusGlobal;
+
+    if (midiLearnBtnGlobal) {
+        midiLearnBtnGlobal.addEventListener('click', () => {
+            try {
+                const currentMode = getMidiLearnModeState();
+                const newMode = !currentMode;
+                setMidiLearnModeState(newMode);
+                midiLearnBtnGlobal.textContent = newMode ? 'Learn: On' : 'Learn: Off';
+                midiLearnBtnGlobal.classList.toggle('bg-green-400', newMode);
+                midiLearnBtnGlobal.classList.toggle('hover:bg-green-500', newMode);
+                midiLearnBtnGlobal.classList.toggle('dark:bg-green-500', newMode);
+                midiLearnBtnGlobal.classList.toggle('text-white', newMode);
+                if (midiLearnStatusGlobal) {
+                    if (newMode) {
+                        midiLearnStatusGlobal.textContent = 'Click a param to learn...';
+                        midiLearnStatusGlobal.classList.remove('hidden');
+                    } else {
+                        midiLearnStatusGlobal.classList.add('hidden');
+                        setMidiLearnPendingParamState(null);
+                    }
+                }
+                if (newMode && localAppServices.showNotification) {
+                    localAppServices.showNotification('MIDI Learn: Move a control on your MIDI device', 3000);
+                }
+            } catch (error) { console.error("[EventHandlers MIDI Learn Toggle] Error:", error); }
+        });
+    } else { console.warn("[EventHandlers] midiLearnBtnGlobal not found."); }
+
+    // MIDI Learn Clear All button handler
+    if (midiLearnClearBtnGlobal) {
+        midiLearnClearBtnGlobal.addEventListener('click', () => {
+            try {
+                clearMidiLearnMappings();
+                updateMidiLearnMappingsListUI();
+                if (localAppServices.showNotification) {
+                    localAppServices.showNotification('All MIDI Learn mappings cleared', 2000);
+                }
+            } catch (error) { console.error("[EventHandlers MIDI Learn Clear] Error:", error); }
+        });
+    } else { console.warn("[EventHandlers] midiLearnClearBtnGlobal not found."); }
+
+    // Helper function to update MIDI Learn mappings list UI
+    function updateMidiLearnMappingsListUI() {
+        if (!midiLearnMappingsListGlobal) return;
+        const mappings = getMidiLearnMappingsState();
+        if (!mappings || mappings.length === 0) {
+            midiLearnMappingsListGlobal.innerHTML = '<div class="text-gray-400 dark:text-slate-500 italic">No mappings</div>';
+            return;
+        }
+        let html = '';
+        mappings.forEach((mapping, index) => {
+            const paramStr = mapping.paramType || 'unknown';
+            const trackStr = mapping.trackId ? ` (Track)` : '';
+            html += `<div class="flex justify-between items-center p-1 bg-slate-100 dark:bg-slate-700 rounded">
+                <span class="truncate">Ch${mapping.channel + 1} CC${mapping.cc} → ${paramStr}${trackStr}</span>
+                <button class="midiLearnRemoveBtn text-red-500 hover:text-red-700 ml-1" data-index="${index}" title="Remove mapping">×</button>
+            </div>`;
+        });
+        midiLearnMappingsListGlobal.innerHTML = html;
+        // Attach remove handlers
+        midiLearnMappingsListGlobal.querySelectorAll('.midiLearnRemoveBtn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.dataset.index, 10);
+                removeMidiLearnMapping(idx);
+                updateMidiLearnMappingsListUI();
+                if (localAppServices.showNotification) {
+                    localAppServices.showNotification('MIDI Learn mapping removed', 2000);
+                }
+            });
+        });
+    }
+
+    // Initial update of MIDI Learn mappings list
+    updateMidiLearnMappingsListUI();
+
+    // Expose update function for external calls
+    if (localAppServices.updateMidiLearnMappingsList) {
+        localAppServices.updateMidiLearnMappingsList = updateMidiLearnMappingsListUI;
+    }
 }
 
 export function setupMIDI() {
