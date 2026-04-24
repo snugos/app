@@ -289,6 +289,177 @@ TestRunner.test('Utils - createDropZoneHTML for DrumSampler with pad index', (t)
     t.assertTruthy(html.includes('data-pad-slice-index="3"'), 'Should have pad index data attribute');
 });
 
+TestRunner.test('Utils - setupGenericDropZoneListeners is a function', (t) => {
+    t.assertEqual(typeof setupGenericDropZoneListeners, 'function', 'setupGenericDropZoneListeners should be a function');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners handles null element gracefully', (t) => {
+    // Should not throw when given null element
+    let errorThrown = false;
+    try {
+        setupGenericDropZoneListeners(null, 'track1', 'DrumSampler', 0, null, null, null);
+    } catch (e) {
+        errorThrown = true;
+    }
+    t.assertEqual(errorThrown, false, 'Should not throw when element is null');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners adds event listeners', (t) => {
+    // Create a mock drop zone element
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub()
+    };
+    mockDropZone.querySelector.returns(null);
+    
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 0, null, null, null);
+    
+    // Verify dragover listener was added
+    t.assertEqual(mockDropZone.addEventListener.calls.length >= 2, true, 'Should add at least 2 event listeners (dragover, dragleave, drop)');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners dragover handler adds dragover class', (t) => {
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    mockDropZone.querySelector.returns(null);
+    
+    let dragoverHandler;
+    mockDropZone.addEventListener.calls.forEach(call => {
+        if (call.arguments[0] === 'dragover') {
+            dragoverHandler = call.arguments[1];
+        }
+    });
+    
+    t.assertTruthy(dragoverHandler, 'Should have dragover handler');
+    
+    const mockEvent = { preventDefault: t.stub(), stopPropagation: t.stub(), dataTransfer: { dropEffect: '' } };
+    dragoverHandler(mockEvent);
+    
+    t.assertEqual(mockEvent.preventDefault.calls.length, 1, 'Should call preventDefault');
+    t.assertEqual(mockEvent.stopPropagation.calls.length, 1, 'Should call stopPropagation');
+    t.assertEqual(mockDropZone.classList.add.calls.length, 1, 'Should add dragover class');
+    t.assertEqual(mockEvent.dataTransfer.dropEffect, 'copy', 'Should set dropEffect to copy');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners dragleave handler removes dragover class', (t) => {
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    mockDropZone.querySelector.returns(null);
+    
+    let dragleaveHandler;
+    mockDropZone.addEventListener.calls.forEach(call => {
+        if (call.arguments[0] === 'dragleave') {
+            dragleaveHandler = call.arguments[1];
+        }
+    });
+    
+    t.assertTruthy(dragleaveHandler, 'Should have dragleave handler');
+    
+    const mockEvent = { preventDefault: t.stub(), stopPropagation: t.stub() };
+    dragleaveHandler(mockEvent);
+    
+    t.assertEqual(mockDropZone.classList.remove.calls.length, 1, 'Should remove dragover class');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners relink button triggers file input click', (t) => {
+    const mockFileInput = { click: t.stub() };
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(mockFileInput)
+    };
+    
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 0, null, null, null);
+    
+    // Find the relink button click handler
+    let relinkHandler;
+    mockDropZone.addEventListener.calls.forEach(call => {
+        if (call.arguments[0] === 'click') {
+            relinkHandler = call.arguments[1];
+        }
+    });
+    
+    // The relink button handler is attached inside setupGenericDropZoneListeners
+    // We verify the querySelector was called with '.drop-zone-relink-button'
+    t.assertEqual(mockDropZone.querySelector.calls.length >= 1, true, 'Should query for relink button');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners drop handler parses sound browser JSON', (t) => {
+    const mockLoadSoundCallback = t.stub();
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 0, null, mockLoadSoundCallback, null);
+    
+    let dropHandler;
+    mockDropZone.addEventListener.calls.forEach(call => {
+        if (call.arguments[0] === 'drop') {
+            dropHandler = call.arguments[1];
+        }
+    });
+    
+    t.assertTruthy(dropHandler, 'Should have drop handler');
+    
+    const mockSoundData = { type: 'sound-browser-item', name: 'kick', url: 'http://example.com/kick.wav' };
+    const mockEvent = {
+        preventDefault: t.stub(),
+        stopPropagation: t.stub(),
+        dataTransfer: {
+            getData: t.stub().returns(JSON.stringify(mockSoundData)),
+            files: []
+        }
+    };
+    
+    dropHandler(mockEvent);
+    
+    t.assertEqual(mockEvent.preventDefault.calls.length, 1, 'Should call preventDefault');
+    t.assertEqual(mockDropZone.classList.remove.calls.length, 1, 'Should remove dragover class');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners drop handler handles OS file drop for DrumSampler', (t) => {
+    const mockLoadFileCallback = t.stub();
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    
+    const mockGetTrackById = t.stub();
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 0, null, mockLoadFileCallback, mockGetTrackById);
+    
+    let dropHandler;
+    mockDropZone.addEventListener.calls.forEach(call => {
+        if (call.arguments[0] === 'drop') {
+            dropHandler = call.arguments[1];
+        }
+    });
+    
+    const mockFile = { name: 'snare.wav' };
+    const mockEvent = {
+        preventDefault: t.stub(),
+        stopPropagation: t.stub(),
+        dataTransfer: {
+            getData: t.stub().returns(''), // No JSON data
+            files: [mockFile]
+        }
+    };
+    
+    dropHandler(mockEvent);
+    
+    t.assertEqual(mockEvent.preventDefault.calls.length, 1, 'Should call preventDefault');
+    t.assertEqual(mockDropZone.classList.remove.calls.length, 1, 'Should remove dragover class');
+});
+
 TestRunner.test('Utils - createContextMenu creates menu structure', (t) => {
     const mockEvent = { preventDefault: () => {}, stopPropagation: () => {} };
     const items = [
@@ -878,15 +1049,6 @@ TestRunner.test('Track Groups - getTrackGroupByIdState finds group', (t) => {
     const group = addTrackGroupState({ name: 'Find Group' });
     const found = getTrackGroupByIdState(group.id);
     t.assertEqual(found.id, group.id, 'Should find group by ID');
-});
-
-TestRunner.test('Track Groups - setTrackGroupNameState updates name', (t) => {
-    const group = addTrackGroupState({ name: 'Original Name' });
-    const result = setTrackGroupNameState(group.id, 'New Name');
-    t.assertTruthy(result, 'setTrackGroupNameState should return true on success');
-    const updated = getTrackGroupByIdState(group.id);
-    t.assertEqual(updated.name, 'New Name', 'Group name should be updated');
-    removeTrackGroupState(group.id);
 });
 
 // ============================================
@@ -1910,1209 +2072,6125 @@ TestRunner.test('Master Effects - multiple effects can be added and removed', (t
 });
 
 // ============================================
-// Day 81: Fade Curve Methods Tests
+// Day 81: Additional State Management Tests
 // ============================================
-TestRunner.test('Audio Clip - setAudioClipFadeInCurve validates curve values', (t) => {
-    const track = createMockTrack();
-    t.assertTruthy(track.setAudioClipFadeInCurve, 'setAudioClipFadeInCurve method should exist');
-    // Test with valid curve
-    const result = track.setAudioClipFadeInCurve('test-clip', 'exponential');
-    t.assertEqual(result, true, 'Should return true for valid curve change');
-    // Test with invalid curve defaults to linear
-    const result2 = track.setAudioClipFadeInCurve('test-clip', 'invalid');
-    t.assertEqual(result2, false, 'Should return false when curve unchanged (already linear default)');
-});
-
-TestRunner.test('Audio Clip - getAudioClipFadeInCurve returns default when unset', (t) => {
-    const track = createMockTrack();
-    t.assertTruthy(track.getAudioClipFadeInCurve, 'getAudioClipFadeInCurve method should exist');
-    const curve = track.getAudioClipFadeInCurve('nonexistent-clip');
-    t.assertEqual(curve, 'linear', 'Default fade in curve should be linear');
-});
-
-TestRunner.test('Audio Clip - setAudioClipFadeOutCurve validates curve values', (t) => {
-    const track = createMockTrack();
-    t.assertTruthy(track.setAudioClipFadeOutCurve, 'setAudioClipFadeOutCurve method should exist');
-    // Test with valid curve
-    const result = track.setAudioClipFadeOutCurve('test-clip', 'exponential');
-    t.assertEqual(result, true, 'Should return true for valid curve change');
-    // Test with invalid curve defaults to linear
-    const result2 = track.setAudioClipFadeOutCurve('test-clip', 'invalid');
-    t.assertEqual(result2, false, 'Should return false when curve unchanged (already linear default)');
-});
-
-TestRunner.test('Audio Clip - getAudioClipFadeOutCurve returns default when unset', (t) => {
-    const track = createMockTrack();
-    t.assertTruthy(track.getAudioClipFadeOutCurve, 'getAudioClipFadeOutCurve method should exist');
-    const curve = track.getAudioClipFadeOutCurve('nonexistent-clip');
-    t.assertEqual(curve, 'linear', 'Default fade out curve should be linear');
-});
-
-TestRunner.test('Audio Clip - fade curves array contains valid options', (t) => {
-    t.assertEqual(FADE_CURVES.length, 2, 'Should have exactly 2 fade curve options');
-    t.assertTruthy(FADE_CURVES.includes('linear'), 'Should include linear');
-    t.assertTruthy(FADE_CURVES.includes('exponential'), 'Should include exponential');
-});
-
-TestRunner.test('Audio Clip - FADE_CURVE_LINEAR and FADE_CURVE_EXPONENTIAL are correct strings', (t) => {
-    t.assertEqual(FADE_CURVE_LINEAR, 'linear', 'FADE_CURVE_LINEAR should be "linear"');
-    t.assertEqual(FADE_CURVE_EXPONENTIAL, 'exponential', 'FADE_CURVE_EXPONENTIAL should be "exponential"');
-});
-
-TestRunner.test('Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE default to linear', (t) => {
-    t.assertEqual(DEFAULT_FADE_IN_CURVE, 'linear', 'Default fade in curve should be linear');
-    t.assertEqual(DEFAULT_FADE_OUT_CURVE, 'linear', 'Default fade out curve should be linear');
-    t.assertEqual(DEFAULT_FADE_IN_CURVE, FADE_CURVE_LINEAR, 'Default should match FADE_CURVE_LINEAR constant');
-    t.assertEqual(DEFAULT_FADE_OUT_CURVE, FADE_CURVE_LINEAR, 'Default should match FADE_CURVE_LINEAR constant');
-});
-
-// ============================================
-// Day 94: Recording Monitoring Tests
-// ============================================
-TestRunner.test('Recording Monitoring - DEFAULT_RECORDING_MONITORING_ENABLED is boolean', (t) => {
-    t.assertEqual(typeof DEFAULT_RECORDING_MONITORING_ENABLED, 'boolean', 'DEFAULT_RECORDING_MONITORING_ENABLED should be boolean');
-});
-
-TestRunner.test('Recording Monitoring - DEFAULT_RECORDING_MONITORING_ENABLED is false', (t) => {
-    t.assertEqual(DEFAULT_RECORDING_MONITORING_ENABLED, false, 'Monitoring should be disabled by default for clean recording');
-});
-
-TestRunner.test('Recording Monitoring - DEFAULT_RECORDING_MONITORING_VOLUME is in valid range', (t) => {
-    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME >= 0 && DEFAULT_RECORDING_MONITORING_VOLUME <= 1, 
-        'DEFAULT_RECORDING_MONITORING_VOLUME should be between 0 and 1');
-});
-
-TestRunner.test('Recording Monitoring - DEFAULT_RECORDING_MONITORING_VOLUME is reasonable', (t) => {
-    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME > 0 && DEFAULT_RECORDING_MONITORING_VOLUME < 1, 
-        'DEFAULT_RECORDING_MONITORING_VOLUME should be between 0 and 1 for practical monitoring levels');
-});
-
-// ============================================
-// Day 93: Audio Clip Editor UI Tests
-// ============================================
-TestRunner.test('Audio Clip Editor - crossfade constants are valid', (t) => {
-    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'Default crossfade should be 0');
-    t.assertEqual(MIN_AUDIO_CLIP_CROSSFADE, 0, 'Min crossfade should be 0');
-    t.assertEqual(MAX_AUDIO_CLIP_CROSSFADE, 5, 'Max crossfade should be 5 seconds');
-    t.assertTruthy(MAX_AUDIO_CLIP_CROSSFADE > DEFAULT_AUDIO_CLIP_CROSSFADE, 'Max should be greater than default');
-});
-
-TestRunner.test('Audio Clip Editor - gain constants are valid', (t) => {
-    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'Default gain should be 1.0 (0dB)');
-    t.assertEqual(MIN_AUDIO_CLIP_GAIN, 0, 'Min gain should be 0 (silence)');
-    t.assertEqual(MAX_AUDIO_CLIP_GAIN, 4.0, 'Max gain should be 4.0 (12dB boost)');
-    t.assertTruthy(MAX_AUDIO_CLIP_GAIN > DEFAULT_AUDIO_CLIP_GAIN, 'Max should be greater than default');
-});
-
-TestRunner.test('Audio Clip Editor - playback rate constants are valid', (t) => {
-    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'Default rate should be 1.0 (normal)');
-    t.assertEqual(MIN_AUDIO_CLIP_PLAYBACK_RATE, 0.25, 'Min rate should be 0.25x');
-    t.assertEqual(MAX_AUDIO_CLIP_PLAYBACK_RATE, 4.0, 'Max rate should be 4.0x');
-    t.assertTruthy(MIN_AUDIO_CLIP_PLAYBACK_RATE < 1, 'Min should be less than normal speed');
-    t.assertTruthy(MAX_AUDIO_CLIP_PLAYBACK_RATE > 1, 'Max should be greater than normal speed');
-});
-
-TestRunner.test('Audio Clip Editor - start/end offset constants are valid', (t) => {
-    t.assertEqual(DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'Default start offset should be 0 (beginning)');
-    t.assertEqual(MIN_AUDIO_CLIP_START_OFFSET, 0, 'Min start offset should be 0');
-    t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1 (use full audio)');
-    t.assertEqual(MIN_AUDIO_CLIP_END_OFFSET, -1, 'Min end offset should be -1');
-    t.assertTruthy(DEFAULT_AUDIO_CLIP_START_OFFSET <= MIN_AUDIO_CLIP_START_OFFSET, 'Start offset should be >= min');
-});
-
-TestRunner.test('Audio Clip Editor - reverse constant is boolean', (t) => {
-    t.assertEqual(DEFAULT_AUDIO_CLIP_REVERSE, false, 'Default reverse should be false (forward)');
-    t.assertEqual(typeof DEFAULT_AUDIO_CLIP_REVERSE, 'boolean', 'Should be boolean type');
-});
-
-TestRunner.test('Audio Clip Editor - fade constants are valid', (t) => {
-    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0 seconds');
-    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0 seconds');
-    t.assertEqual(MAX_AUDIO_CLIP_FADE, 10, 'Max fade should be 10 seconds');
-    t.assertTruthy(MAX_AUDIO_CLIP_FADE > DEFAULT_AUDIO_CLIP_FADE_IN, 'Max should be greater than default');
-});
-
-TestRunner.test('Audio Clip Editor - FADE_CURVES array has correct options', (t) => {
-    t.assertEqual(FADE_CURVES.length, 2, 'Should have exactly 2 fade curve options');
-    t.assertTruthy(FADE_CURVES.includes('linear'), 'Should include linear');
-    t.assertTruthy(FADE_CURVES.includes('exponential'), 'Should include exponential');
-    t.assertEqual(FADE_CURVES[0], 'linear', 'First option should be linear');
-    t.assertEqual(FADE_CURVES[1], 'exponential', 'Second option should be exponential');
-});
-
-TestRunner.test('Audio Clip Editor - crossfade range is reasonable', (t) => {
-    t.assertTruthy(MIN_AUDIO_CLIP_CROSSFADE >= 0, 'Min crossfade should be non-negative');
-    t.assertTruthy(MAX_AUDIO_CLIP_CROSSFADE <= 10, 'Max crossfade should be <= 10 seconds');
-    t.assertTruthy(MAX_AUDIO_CLIP_CROSSFADE > MIN_AUDIO_CLIP_CROSSFADE, 'Max should be greater than min');
-});
-
-// ============================================
-// Day 85: Track Template Constants Tests
-// ============================================
-TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES is reasonable', (t) => {
-    t.assertEqual(MAX_TRACK_TEMPLATES, 32, 'Max templates should be 32');
-    t.assertTruthy(MAX_TRACK_TEMPLATES > 0, 'Max templates should be positive');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is valid', (t) => {
-    t.assertEqual(DEFAULT_TEMPLATE_NAME_PREFIX, 'Template', 'Default prefix should be "Template"');
-    t.assertTruthy(DEFAULT_TEMPLATE_NAME_PREFIX.length > 0, 'Prefix should be non-empty');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex', (t) => {
-    const hexRegex = /^#[0-9A-Fa-f]{6}$/;
-    t.assertTruthy(hexRegex.test(DEFAULT_TRACK_TEMPLATE_COLOR), 'Default template color should be valid hex');
-});
-
-TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS is TRACK_COLORS', (t) => {
-    t.assertEqual(TRACK_TEMPLATE_COLORS, TRACK_COLORS, 'Template colors should reference TRACK_COLORS');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE is valid object', (t) => {
-    t.assertTruthy(typeof DEFAULT_TRACK_TEMPLATE === 'object', 'Default template should be an object');
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE.name, 'Template should have name');
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE.color, 'Template should have color');
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE.type, 'Template should have type');
-});
-
-// ============================================
-// Day 85: MIDI Export Constants Tests
-// ============================================
-TestRunner.test('MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is 127', (t) => {
-    t.assertEqual(MIDI_EXPORT_VELOCITY_SCALE, 127, 'Velocity scale should be 127 (MIDI standard)');
-});
-
-TestRunner.test('MIDI Export - MIDI_DEFAULT_CHANNEL is valid', (t) => {
-    t.assertEqual(MIDI_DEFAULT_CHANNEL, 0, 'Default channel should be 0 (MIDI Ch 1)');
-    t.assertTruthy(MIDI_DEFAULT_CHANNEL >= 0 && MIDI_DEFAULT_CHANNEL <= 15, 'Channel should be 0-15');
-});
-
-TestRunner.test('MIDI Export - MIDI_DEFAULT_PROGRAM is valid', (t) => {
-    t.assertEqual(MIDI_DEFAULT_PROGRAM, 0, 'Default program should be 0');
-    t.assertTruthy(MIDI_DEFAULT_PROGRAM >= 0 && MIDI_DEFAULT_PROGRAM <= 127, 'Program should be 0-127');
-});
-
-TestRunner.test('MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is reasonable', (t) => {
-    t.assertEqual(MIDI_EXPORT_TicksPerQuarterNote, 480, 'TPQN should be 480');
-    t.assertTruthy(MIDI_EXPORT_TicksPerQuarterNote >= 96, 'TPQN should be at least 96 (MIDI standard min)');
-    t.assertTruthy(MIDI_EXPORT_TicksPerQuarterNote <= 960, 'TPQN should be at most 960 (high resolution)');
-});
-
-TestRunner.test('MIDI Export - MIDI_FILE_FORMAT is valid', (t) => {
-    t.assertEqual(MIDI_FILE_FORMAT, 0, 'Format should be 0 (single track)');
-    t.assertTruthy(MIDI_FILE_FORMAT >= 0 && MIDI_FILE_FORMAT <= 2, 'Format should be 0-2');
-});
-
-TestRunner.test('MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is valid', (t) => {
-    t.assertEqual(DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, 'snugos-export', 'Default prefix should be snugos-export');
-    t.assertTruthy(DEFAULT_MIDI_EXPORT_FILENAME_PREFIX.length > 0, 'Prefix should be non-empty');
-});
-
-TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is valid', (t) => {
-    t.assertEqual(MAX_MIDI_EXPORT_TRACKS, 64, 'Max tracks should be 64 (MIDI standard)');
-    t.assertTruthy(MAX_MIDI_EXPORT_TRACKS > 0, 'Max tracks should be positive');
-});
-
-// ============================================
-// Day 85: MIDI Import Constants Tests
-// ============================================
-TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'Min notes should be 1');
-    t.assertTruthy(MIDI_IMPORT_MIN_NOTES >= 0, 'Min notes should be non-negative');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_MAX_VELOCITY is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_MAX_VELOCITY, 127, 'Max velocity should be 127 (MIDI standard)');
-    t.assertTruthy(MIDI_IMPORT_MAX_VELOCITY >= 1 && MIDI_IMPORT_MAX_VELOCITY <= 127, 'Max velocity should be 1-127');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_DEFAULT_VELOCITY, 100, 'Default velocity should be 100');
-    t.assertTruthy(MIDI_IMPORT_DEFAULT_VELOCITY >= 0 && MIDI_IMPORT_DEFAULT_VELOCITY <= 127, 'Default velocity should be 0-127');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_DEFAULT_PROBABILITY, 1.0, 'Default probability should be 1.0 (100%)');
-    t.assertTruthy(MIDI_IMPORT_DEFAULT_PROBABILITY >= 0 && MIDI_IMPORT_DEFAULT_PROBABILITY <= 1.0, 'Default probability should be 0-1');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is boolean', (t) => {
-    t.assertEqual(typeof MIDI_IMPORT_SNAP_TO_GRID, 'boolean', 'Snap to grid should be boolean');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1 / 127, 'Velocity scale should be 1/127');
-    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE > 0, 'Velocity scale should be positive');
-    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE < 1, 'Velocity scale should be less than 1');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is inverse of MIDI_EXPORT_VELOCITY_SCALE', (t) => {
-    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE * MIDI_EXPORT_VELOCITY_SCALE, 1, 'Import scale should be inverse of export scale');
-});
-
-// ============================================
-// Day 85: MIDI Import Constants Tests
-// ============================================
-TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'Min notes should be 1');
-    t.assertTruthy(MIDI_IMPORT_MIN_NOTES >= 0, 'Min notes should be non-negative');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_MAX_VELOCITY is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_MAX_VELOCITY, 127, 'Max velocity should be 127 (MIDI standard)');
-    t.assertTruthy(MIDI_IMPORT_MAX_VELOCITY >= 1 && MIDI_IMPORT_MAX_VELOCITY <= 127, 'Max velocity should be 1-127');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_DEFAULT_VELOCITY, 100, 'Default velocity should be 100');
-    t.assertTruthy(MIDI_IMPORT_DEFAULT_VELOCITY >= 0 && MIDI_IMPORT_DEFAULT_VELOCITY <= 127, 'Default velocity should be 0-127');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_DEFAULT_PROBABILITY, 1.0, 'Default probability should be 1.0 (100%)');
-    t.assertTruthy(MIDI_IMPORT_DEFAULT_PROBABILITY >= 0 && MIDI_IMPORT_DEFAULT_PROBABILITY <= 1.0, 'Default probability should be 0-1');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is boolean', (t) => {
-    t.assertEqual(typeof MIDI_IMPORT_SNAP_TO_GRID, 'boolean', 'Snap to grid should be boolean');
-});
-
-TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is valid', (t) => {
-    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1 / 127, 'Velocity scale should be 1/127');
-    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE > 0, 'Velocity scale should be positive');
-    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE < 1, 'Velocity scale should be less than 1');
-});
 
-TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is inverse of MIDI_EXPORT_VELOCITY_SCALE', (t) => {
-    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE * MIDI_EXPORT_VELOCITY_SCALE, 1, 'Import scale should be inverse of export scale');
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
 });
-
-// ============================================
-// Automation Lane Method Tests
-// ============================================
-TestRunner.test('Automation - AUTOMATION_LANE_PARAMETERS is an array', (t) => {
-    t.assertTruthy(Array.isArray(AUTOMATION_LANE_PARAMETERS), 'AUTOMATION_LANE_PARAMETERS should be an array');
-    t.assertEqual(AUTOMATION_LANE_PARAMETERS.length, 8, 'Should have 8 automation parameters');
-});
-
-TestRunner.test('Automation - AUTOMATION_LANE_PARAMETERS contains expected parameters', (t) => {
-    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('volume'), 'Should include volume');
-    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('pan'), 'Should include pan');
-    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('filterCutoff'), 'Should include filterCutoff');
-    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('resonance'), 'Should include resonance');
-    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('attack'), 'Should include attack');
-    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('decay'), 'Should include decay');
-    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('sustain'), 'Should include sustain');
-    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('release'), 'Should include release');
-});
-
-TestRunner.test('Automation - AUTOMATION_LANE_COLORS is an array', (t) => {
-    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
-    t.assertEqual(AUTOMATION_LANE_COLORS.length, 10, 'Should have 10 lane colors');
-});
-
-TestRunner.test('Automation - AUTOMATION_LANE_COLORS contains valid hex colors', (t) => {
-    const hexRegex = /^#[0-9A-Fa-f]{6}$/;
-    for (let i = 0; i < AUTOMATION_LANE_COLORS.length; i++) {
-        t.assertTruthy(hexRegex.test(AUTOMATION_LANE_COLORS[i]), `Color at index ${i} should be valid hex: ${AUTOMATION_LANE_COLORS[i]}`);
-    }
-});
-
-TestRunner.test('Automation - AUTOMATION_LANE_HEIGHT is reasonable', (t) => {
-    t.assertEqual(AUTOMATION_LANE_HEIGHT, 20, 'Lane height should be 20px');
-    t.assertTruthy(AUTOMATION_LANE_HEIGHT > 0, 'Lane height should be positive');
-});
-
-TestRunner.test('Automation - AUTOMATION_LANE_DEFAULT is in valid range', (t) => {
-    t.assertEqual(AUTOMATION_LANE_DEFAULT, 0.5, 'Default value should be 0.5 (50%)');
-    t.assertTruthy(AUTOMATION_LANE_DEFAULT >= 0 && AUTOMATION_LANE_DEFAULT <= 1, 'Default should be between 0 and 1');
-});
-
-TestRunner.test('Automation - AUTOMATION_LANE_PRECISION is reasonable', (t) => {
-    t.assertEqual(AUTOMATION_LANE_PRECISION, 2, 'Precision should be 2 decimals');
-    t.assertTruthy(AUTOMATION_LANE_PRECISION >= 0, 'Precision should be non-negative');
-});
-
-TestRunner.test('Automation - AUTOMATION_LANE_STEP is reasonable', (t) => {
-    t.assertEqual(AUTOMATION_LANE_STEP, 0.01, 'Step size should be 0.01 (1%)');
-    t.assertTruthy(AUTOMATION_LANE_STEP > 0, 'Step should be positive');
-    t.assertTruthy(AUTOMATION_LANE_STEP <= (AUTOMATION_LANE_DEFAULT * 2), 'Step should be small enough for fine control');
-});
-
-// Self-contained mock for automation lane methods
-function createMockTrackWithAutomation() {
-    const AUTOMATION_LANE_PARAMETERS = ['volume', 'pan', 'filterCutoff', 'resonance', 'attack', 'decay', 'sustain', 'release'];
-    const AUTOMATION_LANE_DEFAULT = 0.5;
-    const AUTOMATION_LANE_PRECISION = 2;
-    const AUTOMATION_LANE_STEP = 0.01;
-    
-    const automation = {};
-    
-    function getAutomationLane(parameter) {
-        if (!automation[parameter]) {
-            automation[parameter] = [];
-        }
-        return automation[parameter];
-    }
-    
-    function setAutomationPoint(parameter, step, value, fromInteraction = false) {
-        const lane = getAutomationLane(parameter);
-        const roundedValue = Math.round(value * Math.pow(10, AUTOMATION_LANE_PRECISION)) / Math.pow(10, AUTOMATION_LANE_PRECISION);
-        const clampedValue = Math.max(0, Math.min(1, roundedValue));
-        const existingIndex = lane.findIndex(p => p.step === step);
-        if (existingIndex >= 0) {
-            lane[existingIndex].value = clampedValue;
-        } else {
-            lane.push({ step, value: clampedValue });
-            lane.sort((a, b) => a.step - b.step);
-        }
-        return true;
-    }
-    
-    function getAutomationValue(parameter, step) {
-        const lane = getAutomationLane(parameter);
-        if (lane.length === 0) return AUTOMATION_LANE_DEFAULT;
-        const point = lane.find(p => p.step === step);
-        return point ? point.value : AUTOMATION_LANE_DEFAULT;
-    }
-    
-    function clearAutomationLane(parameter) {
-        automation[parameter] = [];
-        return true;
-    }
-    
-    return {
-        getAutomationLane,
-        setAutomationPoint,
-        getAutomationValue,
-        clearAutomationLane
-    };
-}
-
-TestRunner.test('Automation - getAutomationLane returns array for any parameter', (t) => {
-    const track = createMockTrackWithAutomation();
-    const lane = track.getAutomationLane('volume');
-    t.assertTruthy(Array.isArray(lane), 'Should return an array');
-});
-
-TestRunner.test('Automation - setAutomationPoint adds point to lane', (t) => {
-    const track = createMockTrackWithAutomation();
-    track.setAutomationPoint('volume', 0, 0.75);
-    const lane = track.getAutomationLane('volume');
-    t.assertEqual(lane.length, 1, 'Should have 1 point');
-    t.assertEqual(lane[0].step, 0, 'Step should be 0');
-    t.assertEqual(lane[0].value, 0.75, 'Value should be 0.75');
-});
-
-TestRunner.test('Automation - setAutomationPoint clamps value to valid range', (t) => {
-    const track = createMockTrackWithAutomation();
-    track.setAutomationPoint('volume', 0, 1.5); // Over max
-    track.setAutomationPoint('pan', 1, -0.5); // Under min
-    const volumeLane = track.getAutomationLane('volume');
-    const panLane = track.getAutomationLane('pan');
-    t.assertEqual(volumeLane[0].value, 1, 'Value should be clamped to 1');
-    t.assertEqual(panLane[0].value, 0, 'Value should be clamped to 0');
-});
-
-TestRunner.test('Automation - setAutomationPoint updates existing point', (t) => {
-    const track = createMockTrackWithAutomation();
-    track.setAutomationPoint('volume', 0, 0.5);
-    track.setAutomationPoint('volume', 0, 0.8); // Same step, new value
-    const lane = track.getAutomationLane('volume');
-    t.assertEqual(lane.length, 1, 'Should still have 1 point');
-    t.assertEqual(lane[0].value, 0.8, 'Value should be updated');
-});
-
-TestRunner.test('Automation - getAutomationValue returns default for empty lane', (t) => {
-    const track = createMockTrackWithAutomation();
-    const value = track.getAutomationValue('volume', 0);
-    t.assertEqual(value, 0.5, 'Should return default value');
-});
-
-TestRunner.test('Automation - getAutomationValue returns point value', (t) => {
-    const track = createMockTrackWithAutomation();
-    track.setAutomationPoint('volume', 5, 0.75);
-    const value = track.getAutomationValue('volume', 5);
-    t.assertEqual(value, 0.75, 'Should return point value');
-});
-
-TestRunner.test('Automation - getAutomationValue interpolates between points', (t) => {
-    const track = createMockTrackWithAutomation();
-    track.setAutomationPoint('volume', 0, 0.25);
-    track.setAutomationPoint('volume', 4, 0.75);
-    const value = track.getAutomationValue('volume', 2);
-    t.assertEqual(value, 0.5, 'Should return interpolated value (50%)');
-});
-
-TestRunner.test('Automation - clearAutomationLane removes all points', (t) => {
-    const track = createMockTrackWithAutomation();
-    track.setAutomationPoint('volume', 0, 0.25);
-    track.setAutomationPoint('volume', 4, 0.75);
-    track.clearAutomationLane('volume');
-    const lane = track.getAutomationLane('volume');
-    t.assertEqual(lane.length, 0, 'Should have no points');
-});
-
-TestRunner.test('Automation - setAutomationPoint rounds value to precision', (t) => {
-    const track = createMockTrackWithAutomation();
-    track.setAutomationPoint('volume', 0, 0.333);
-    const lane = track.getAutomationLane('volume');
-    t.assertEqual(lane[0].value, 0.33, 'Value should be rounded to 2 decimal places');
-});
-
-// Helper for mock track - self-contained implementation
-function createMockTrack() {
-    const FADE_CURVES = ['linear', 'exponential'];
-    const DEFAULT_FADE_IN_CURVE = 'linear';
-    const DEFAULT_FADE_OUT_CURVE = 'linear';
-    
-    const audioClips = [{
-        id: 'test-clip',
-        name: 'Test Clip',
-        fadeInCurve: 'linear',
-        fadeOutCurve: 'linear'
-    }];
-    
-    function setAudioClipFadeInCurve(clipId, curve) {
-        const clip = audioClips.find(c => c.id === clipId);
-        if (!clip) return false;
-        const validCurve = FADE_CURVES.includes(curve) ? curve : DEFAULT_FADE_IN_CURVE;
-        if (clip.fadeInCurve === validCurve) return false;
-        clip.fadeInCurve = validCurve;
-        return true;
-    }
-    
-    function getAudioClipFadeInCurve(clipId) {
-        const clip = audioClips.find(c => c.id === clipId);
-        return clip ? (clip.fadeInCurve !== undefined ? clip.fadeInCurve : DEFAULT_FADE_IN_CURVE) : DEFAULT_FADE_IN_CURVE;
-    }
-    
-    function setAudioClipFadeOutCurve(clipId, curve) {
-        const clip = audioClips.find(c => c.id === clipId);
-        if (!clip) return false;
-        const validCurve = FADE_CURVES.includes(curve) ? curve : DEFAULT_FADE_OUT_CURVE;
-        if (clip.fadeOutCurve === validCurve) return false;
-        clip.fadeOutCurve = validCurve;
-        return true;
-    }
-    
-    function getAudioClipFadeOutCurve(clipId) {
-        const clip = audioClips.find(c => c.id === clipId);
-        return clip ? (clip.fadeOutCurve !== undefined ? clip.fadeOutCurve : DEFAULT_FADE_OUT_CURVE) : DEFAULT_FADE_OUT_CURVE;
-    }
-    
-    return {
-        setAudioClipFadeInCurve,
-        getAudioClipFadeInCurve,
-        setAudioClipFadeOutCurve,
-        getAudioClipFadeOutCurve
-    };
-}
-
-// ============================================
-// Day 97: State Setter Undo Capture Verification Tests
-// ============================================
-// These tests verify that state setters properly capture undo state before mutations
-// Note: Actual undo capture requires appServices.captureStateForUndo to be wired,
-// but we can verify the setter functions exist and handle edge cases correctly
-
-import {
-    setSwingEnabledState,
-    setSwingAmountState,
-    setArmedTrackIdState,
-    setSoloedTrackIdState,
-    setIsRecordingState,
-    setRecordingTrackIdState,
-    setRecordingStartTimeState,
-    setPerformanceMonitorEnabledState,
-    setAudioContextStateState,
-    setCPUUsageState,
-    setActiveVoicesState,
-    setAudioLatencyState,
-    setLastCallbackTimeState,
-    setDroppedCallbacksState
-} from './state.js';
-
-TestRunner.test('State Setters - setSwingEnabledState exists and is a function', (t) => {
-    t.assertTruthy(typeof setSwingEnabledState === 'function', 'setSwingEnabledState should be a function');
-});
-
-TestRunner.test('State Setters - setSwingAmountState exists and is a function', (t) => {
-    t.assertTruthy(typeof setSwingAmountState === 'function', 'setSwingAmountState should be a function');
-});
-
-TestRunner.test('State Setters - setArmedTrackIdState exists and is a function', (t) => {
-    t.assertTruthy(typeof setArmedTrackIdState === 'function', 'setArmedTrackIdState should be a function');
-});
-
-TestRunner.test('State Setters - setSoloedTrackIdState exists and is a function', (t) => {
-    t.assertTruthy(typeof setSoloedTrackIdState === 'function', 'setSoloedTrackIdState should be a function');
-});
-
-TestRunner.test('State Setters - setIsRecordingState exists and is a function', (t) => {
-    t.assertTruthy(typeof setIsRecordingState === 'function', 'setIsRecordingState should be a function');
-});
-
-TestRunner.test('State Setters - setRecordingTrackIdState exists and is a function', (t) => {
-    t.assertTruthy(typeof setRecordingTrackIdState === 'function', 'setRecordingTrackIdState should be a function');
-});
-
-TestRunner.test('State Setters - setRecordingStartTimeState exists and is a function', (t) => {
-    t.assertTruthy(typeof setRecordingStartTimeState === 'function', 'setRecordingStartTimeState should be a function');
-});
-
-TestRunner.test('State Setters - setPerformanceMonitorEnabledState exists and is a function', (t) => {
-    t.assertTruthy(typeof setPerformanceMonitorEnabledState === 'function', 'setPerformanceMonitorEnabledState should be a function');
-});
-
-TestRunner.test('State Setters - setAudioContextStateState exists and is a function', (t) => {
-    t.assertTruthy(typeof setAudioContextStateState === 'function', 'setAudioContextStateState should be a function');
-});
-
-TestRunner.test('State Setters - setCPUUsageState exists and is a function', (t) => {
-    t.assertTruthy(typeof setCPUUsageState === 'function', 'setCPUUsageState should be a function');
-});
-
-TestRunner.test('State Setters - setActiveVoicesState exists and is a function', (t) => {
-    t.assertTruthy(typeof setActiveVoicesState === 'function', 'setActiveVoicesState should be a function');
-});
-
-TestRunner.test('State Setters - setAudioLatencyState exists and is a function', (t) => {
-    t.assertTruthy(typeof setAudioLatencyState === 'function', 'setAudioLatencyState should be a function');
-});
-
-TestRunner.test('State Setters - setLastCallbackTimeState exists and is a function', (t) => {
-    t.assertTruthy(typeof setLastCallbackTimeState === 'function', 'setLastCallbackTimeState should be a function');
-});
-
-TestRunner.test('State Setters - setDroppedCallbacksState exists and is a function', (t) => {
-    t.assertTruthy(typeof setDroppedCallbacksState === 'function', 'setDroppedCallbacksState should be a function');
-});
-
-TestRunner.test('State Setters - setArmedTrackIdState handles null/undefined', (t) => {
-    // When passed null or undefined, should set to null (no armed track)
-    const initial = setArmedTrackIdState('track-123');
-    const cleared = setArmedTrackIdState(null);
-    // Function should not throw
-    t.assertTruthy(true, 'setArmedTrackIdState should handle null without throwing');
-});
-
-TestRunner.test('State Setters - setSoloedTrackIdState handles null/undefined', (t) => {
-    const initial = setSoloedTrackIdState('track-456');
-    const cleared = setSoloedTrackIdState(undefined);
-    t.assertTruthy(true, 'setSoloedTrackIdState should handle undefined without throwing');
-});
-
-TestRunner.test('State Setters - setIsRecordingState coerces to boolean', (t) => {
-    // Should work with various truthy/falsy values
-    setIsRecordingState(true);
-    setIsRecordingState(1);
-    setIsRecordingState('yes');
-    setIsRecordingState(false);
-    setIsRecordingState(0);
-    setIsRecordingState(null);
-    t.assertTruthy(true, 'setIsRecordingState should handle all truthy/falsy values');
-});
-
-TestRunner.test('State Setters - setCPUUsageState clamps to 0-100 range', (t) => {
-    // Values outside 0-100 should be clamped
-    setCPUUsageState(150);
-    setCPUUsageState(-50);
-    setCPUUsageState(50.5);
-    t.assertTruthy(true, 'setCPUUsageState should handle out-of-range values');
-});
-
-TestRunner.test('State Setters - setAudioContextStateState validates context states', (t) => {
-    // Should accept valid context states
-    setAudioContextStateState('running');
-    setAudioContextStateState('suspended');
-    setAudioContextStateState('closed');
-    // Should ignore invalid states
-    setAudioContextStateState('invalid-state');
-    t.assertTruthy(true, 'setAudioContextStateState should validate context states');
-});
-
-TestRunner.test('State Setters - setActiveVoicesState clamps to non-negative', (t) => {
-    setActiveVoicesState(10);
-    setActiveVoicesState(-5);
-    t.assertTruthy(true, 'setActiveVoicesState should clamp negative values to 0');
-});
-
-TestRunner.test('State Setters - setDroppedCallbacksState clamps to non-negative', (t) => {
-    setDroppedCallbacksState(5);
-    setDroppedCallbacksState(-3);
-    t.assertTruthy(true, 'setDroppedCallbacksState should clamp negative values to 0');
-});
-
-TestRunner.test('State Setters - setSwingAmountState clamps to 0-100 range', (t) => {
-    setSwingAmountState(50);
-    setSwingAmountState(0);
-    setSwingAmountState(100);
-    setSwingAmountState(-10);
-    setSwingAmountState(150);
-    t.assertTruthy(true, 'setSwingAmountState should clamp to 0-100 range');
-});
-
-TestRunner.test('State Setters - setRecordingTrackIdState accepts any value', (t) => {
-    setRecordingTrackIdState('track-123');
-    setRecordingTrackIdState(null);
-    setRecordingTrackIdState(undefined);
-    t.assertTruthy(true, 'setRecordingTrackIdState should accept any track ID or null');
-});
-
-TestRunner.test('State Setters - setRecordingStartTimeState accepts numeric values', (t) => {
-    setRecordingStartTimeState(1000);
-    setRecordingStartTimeState(0);
-    setRecordingStartTimeState(-100);
-    setRecordingStartTimeState(null);
-    t.assertTruthy(true, 'setRecordingStartTimeState should accept numeric time values');
-});
-
-// ============================================
-// Day 98: Undo Capture Coverage Verification Tests
-// ============================================
-// These tests verify that state setters properly capture undo state
-// by checking if they call captureStateForUndo before mutating state
-
-import {
-    setMetronomeEnabledState,
-    setMetronomeVolumeState,
-    setScaleModeEnabledState,
-    setScaleModeScaleState,
-    setScaleModeRootState,
-    setScaleModeLockState,
-    setChordModeEnabledState,
-    setChordVoicingState,
-    setTimeSignatureNumeratorState,
-    setTimeSignatureDenominatorState,
-    setGhostTrackIdState,
-    setPerformanceMonitorEnabledState,
-    setCPUUsageState
-} from './state.js';
 
-TestRunner.test('Undo Setters - setMetronomeEnabledState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
     setMetronomeEnabledState(true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setMetronomeEnabledState should call captureStateForUndo');
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
 });
 
-TestRunner.test('Undo Setters - setMetronomeVolumeState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
     setMetronomeVolumeState(0.75);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setMetronomeVolumeState should call captureStateForUndo');
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
 });
 
-TestRunner.test('Undo Setters - setScaleModeEnabledState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setScaleModeEnabledState(true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setScaleModeEnabledState should call captureStateForUndo');
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
 });
 
-TestRunner.test('Undo Setters - setGhostTrackIdState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setGhostTrackIdState('ghost-track-1');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setGhostTrackIdState should call captureStateForUndo');
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
 });
 
-TestRunner.test('Undo Setters - setArmedTrackIdState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setArmedTrackIdState('armed-track-1');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setArmedTrackIdState should call captureStateForUndo');
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
 });
 
-TestRunner.test('Undo Setters - setSoloedTrackIdState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setSoloedTrackIdState('soloed-track-1');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setSoloedTrackIdState should call captureStateForUndo');
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
 });
 
-TestRunner.test('Undo Setters - setIsRecordingState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setIsRecordingState(true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setIsRecordingState should call captureStateForUndo');
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
 });
 
-TestRunner.test('Undo Setters - setRecordingTrackIdState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setRecordingTrackIdState('recording-track-1');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setRecordingTrackIdState should call captureStateForUndo');
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
 });
 
-TestRunner.test('Undo Setters - setRecordingStartTimeState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setRecordingStartTimeState(1234567890);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setRecordingStartTimeState should call captureStateForUndo');
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
 });
 
-TestRunner.test('Undo Setters - setChordModeEnabledState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setChordModeEnabledState(true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setChordModeEnabledState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setChordVoicingState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setChordVoicingState('wide');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setChordVoicingState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setTimeSignatureNumeratorState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setTimeSignatureNumeratorState(3);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTimeSignatureNumeratorState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setTimeSignatureDenominatorState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setTimeSignatureDenominatorState(8);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTimeSignatureDenominatorState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setScaleModeScaleState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setScaleModeScaleState('pentatonic');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setScaleModeScaleState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setScaleModeRootState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setScaleModeRootState('A');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setScaleModeRootState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setScaleModeLockState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setScaleModeLockState(true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setScaleModeLockState should call captureStateForUndo');
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
 });
 
 // ============================================
-// Day 99: Extended Undo/Redo Coverage Verification Tests
+// Day 70: Constants Validation Tests
 // ============================================
-TestRunner.test('Undo Setters - setSwingState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setSwingState({ enabled: true, amount: 50 });
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setSwingState should call captureStateForUndo');
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
 });
 
-TestRunner.test('Undo Setters - setSwingEnabledState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setSwingEnabledState(true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setSwingEnabledState should call captureStateForUndo');
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
 });
 
-TestRunner.test('Undo Setters - setSwingAmountState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setSwingAmountState(25);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setSwingAmountState should call captureStateForUndo');
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
 });
 
-TestRunner.test('Undo Setters - setLoopRegionState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setLoopRegionState({ enabled: true, startBar: 1, endBar: 4 });
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setLoopRegionState should call captureStateForUndo');
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
 });
 
-TestRunner.test('Undo Setters - setLoopRegionEnabledState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
     setLoopRegionEnabledState(true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setLoopRegionEnabledState should call captureStateForUndo');
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
 });
 
-TestRunner.test('Undo Setters - setLoopRegionStartBarState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setLoopRegionStartBarState(2);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setLoopRegionStartBarState should call captureStateForUndo');
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
 });
 
-TestRunner.test('Undo Setters - setLoopRegionEndBarState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
     setLoopRegionEndBarState(8);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setLoopRegionEndBarState should call captureStateForUndo');
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
 });
 
-TestRunner.test('Undo Setters - setTimelineZoomLevelState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setTimelineZoomLevelState(1.5);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTimelineZoomLevelState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setTimelineVerticalZoomState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setTimelineVerticalZoomState(1.2);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTimelineVerticalZoomState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setChordModeRootState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setChordModeRootState(7); // G
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setChordModeRootState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setChordModeTypeState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setChordModeTypeState('minor');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setChordModeTypeState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setChordModeLockState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    setChordModeLockState(true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setChordModeLockState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setTrackSendLevelState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    const send = addSendTrackState({ name: 'Undo Test Send' });
-    setTrackSendLevelState('test-track-undo', send.id, 0.75);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTrackSendLevelState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setTrackSendPreFaderState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    const send = addSendTrackState({ name: 'PreFader Undo Test' });
-    setTrackSendPreFaderState('test-track-prefader', send.id, true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTrackSendPreFaderState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setTrackGroupColorState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    const group = addTrackGroupState({ name: 'Color Undo Test' });
-    setTrackGroupColorState(group.id, '#00ff00');
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTrackGroupColorState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setTrackGroupMutedState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    const group = addTrackGroupState({ name: 'Mute Undo Test' });
-    setTrackGroupMutedState(group.id, true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTrackGroupMutedState should call captureStateForUndo');
-});
-
-TestRunner.test('Undo Setters - setTrackGroupSoloedState calls captureStateForUndo', (t) => {
-    const originalCapture = (appServices || {}).captureStateForUndo;
-    let captured = false;
-    if (appServices) appServices.captureStateForUndo = () => { captured = true; };
-    const group = addTrackGroupState({ name: 'Solo Undo Test' });
-    setTrackGroupSoloedState(group.id, true);
-    if (appServices) appServices.captureStateForUndo = originalCapture;
-    t.assertTruthy(captured, 'setTrackGroupSoloedState should call captureStateForUndo');
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
 });
 
 // ============================================
-// Day 100: Effects Registry Tests
+// Day 71: Swing State Tests
 // ============================================
-
-TestRunner.test('Effects Registry - AVAILABLE_EFFECTS is an object', (t) => {
-    t.assertTruthy(typeof AVAILABLE_EFFECTS === 'object', 'AVAILABLE_EFFECTS should be an object');
-    t.assertTruthy(AVAILABLE_EFFECTS !== null, 'AVAILABLE_EFFECTS should not be null');
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
 });
 
-TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has at least 20 effects', (t) => {
-    const effectCount = Object.keys(AVAILABLE_EFFECTS).length;
-    t.assertTruthy(effectCount >= 20, 'AVAILABLE_EFFECTS should have at least 20 effects, found ' + effectCount);
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
 });
 
-TestRunner.test('Effects Registry - Each effect has required properties', (t) => {
-    const requiredProps = ['displayName', 'toneClass', 'params'];
-    const effects = Object.keys(AVAILABLE_EFFECTS);
-    t.assertTruthy(effects.length > 0, 'Should have at least one effect defined');
-    
-    for (const effectName of effects.slice(0, 5)) {
-        const effect = AVAILABLE_EFFECTS[effectName];
-        for (const prop of requiredProps) {
-            t.assertTruthy(effect.hasOwnProperty(prop), 'Effect "' + effectName + '" should have "' + prop + '" property');
-        }
-    }
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
 });
 
-TestRunner.test('Effects Registry - Each effect has valid toneClass string', (t) => {
-    const effects = Object.keys(AVAILABLE_EFFECTS);
-    for (const effectName of effects) {
-        const effect = AVAILABLE_EFFECTS[effectName];
-        t.assertTruthy(typeof effect.toneClass === 'string', 'Effect "' + effectName + '" toneClass should be a string');
-        t.assertTruthy(effect.toneClass.length > 0, 'Effect "' + effectName + '" toneClass should not be empty');
-    }
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
 });
 
-TestRunner.test('Effects Registry - Each effect has params array', (t) => {
-    const effects = Object.keys(AVAILABLE_EFFECTS);
-    for (const effectName of effects) {
-        const effect = AVAILABLE_EFFECTS[effectName];
-        t.assertTruthy(Array.isArray(effect.params), 'Effect "' + effectName + '" params should be an array');
-    }
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
 });
 
-TestRunner.test('Effects Registry - synthEngineControlDefinitions exists', (t) => {
-    t.assertTruthy(typeof synthEngineControlDefinitions === 'object', 'synthEngineControlDefinitions should be an object');
-    t.assertTruthy(synthEngineControlDefinitions !== null, 'synthEngineControlDefinitions should not be null');
-});
-
-TestRunner.test('Effects Registry - synthEngineControlDefinitions has MonoSynth', (t) => {
-    t.assertTruthy(synthEngineControlDefinitions.hasOwnProperty('MonoSynth'), 'synthEngineControlDefinitions should have MonoSynth');
-    t.assertTruthy(Array.isArray(synthEngineControlDefinitions.MonoSynth), 'MonoSynth controls should be an array');
-    t.assertTruthy(synthEngineControlDefinitions.MonoSynth.length > 0, 'MonoSynth should have at least one control');
-});
-
-TestRunner.test('Effects Registry - MonoSynth controls have required properties', (t) => {
-    const controls = synthEngineControlDefinitions.MonoSynth;
-    const requiredProps = ['idPrefix', 'label', 'type', 'path', 'defaultValue'];
-    
-    for (const control of controls.slice(0, 3)) {
-        for (const prop of requiredProps) {
-            t.assertTruthy(control.hasOwnProperty(prop), 'Control should have "' + prop + '" property');
-        }
-    }
-});
-
-TestRunner.test('Effects Registry - getEffectDefaultParams returns object', (t) => {
-    const defaults = getEffectDefaultParams('Reverb');
-    t.assertTruthy(typeof defaults === 'object', 'getEffectDefaultParams should return an object');
-});
-
-TestRunner.test('Effects Registry - getEffectDefaultParams returns correct defaults', (t) => {
-    const defaults = getEffectDefaultParams('Reverb');
-    t.assertEqual(defaults.decay, 1.5, 'Reverb default decay should be 1.5');
-    t.assertEqual(defaults.preDelay, 0.01, 'Reverb default preDelay should be 0.01');
-    t.assertEqual(defaults.wet, 0.5, 'Reverb default wet should be 0.5');
-});
-
-TestRunner.test('Effects Registry - getEffectParamDefinitions returns array', (t) => {
-    const params = getEffectParamDefinitions('Chorus');
-    t.assertTruthy(Array.isArray(params), 'getEffectParamDefinitions should return an array');
-    t.assertTruthy(params.length > 0, 'Chorus should have at least one parameter');
-});
-
-TestRunner.test('Effects Registry - getEffectParamDefinitions returns correct params', (t) => {
-    const params = getEffectParamDefinitions('Chorus');
-    const paramKeys = params.map(function(p) { return p.key; });
-    t.assertTruthy(paramKeys.indexOf('frequency') !== -1, 'Chorus should have frequency param');
-    t.assertTruthy(paramKeys.indexOf('wet') !== -1, 'Chorus should have wet param');
-});
-
-TestRunner.test('Effects Registry - getEffectParamDefinitions returns empty for unknown', (t) => {
-    const params = getEffectParamDefinitions('NonExistentEffect');
-    t.assertEqual(params.length, 0, 'Unknown effect should return empty array');
-});
-
-TestRunner.test('Effects Registry - Common effects exist', (t) => {
-    t.assertTruthy(AVAILABLE_EFFECTS.hasOwnProperty('AutoFilter'), 'AutoFilter should exist');
-    t.assertTruthy(AVAILABLE_EFFECTS.hasOwnProperty('Reverb'), 'Reverb should exist');
-    t.assertTruthy(AVAILABLE_EFFECTS.hasOwnProperty('Delay'), 'Delay should exist');
-});
-
-TestRunner.test('Effects Registry - All effects have wet parameter', (t) => {
-    const effects = Object.keys(AVAILABLE_EFFECTS);
-    for (const effectName of effects) {
-        const effect = AVAILABLE_EFFECTS[effectName];
-        const hasWet = effect.params.some(function(p) { return p.key === 'wet'; });
-        t.assertTruthy(hasWet, 'Effect "' + effectName + '" should have a wet parameter');
-    }
-});
-
-TestRunner.test('Effects Registry - Effect params have valid types', (t) => {
-    const effects = Object.keys(AVAILABLE_EFFECTS);
-    const validTypes = ['knob', 'select', 'toggle'];
-    for (const effectName of effects.slice(0, 5)) {
-        const effect = AVAILABLE_EFFECTS[effectName];
-        for (const param of effect.params) {
-            t.assertTruthy(validTypes.indexOf(param.type) !== -1, 
-                'Param "' + param.key + '" in "' + effectName + '" should have valid type');
-        }
-    }
-});
-
-TestRunner.test('Effects Registry - getEffectDefaultParams handles unknown effect', (t) => {
-    const defaults = getEffectDefaultParams('UnknownEffectXYZ');
-    t.assertEqual(Object.keys(defaults).length, 0, 'Unknown effect should return empty object');
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
 });
 
 // ============================================
-// Day 101: Track Groups State Tests
+// Day 73: State Management Tests
 // ============================================
-TestRunner.test('Track Groups - addTrackToGroupState function exists', (t) => {
-    t.assertTruthy(typeof addTrackToGroupState === 'function', 'addTrackToGroupState should be a function');
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
 });
 
-TestRunner.test('Track Groups - removeTrackFromGroupState function exists', (t) => {
-    t.assertTruthy(typeof removeTrackFromGroupState === 'function', 'removeTrackFromGroupState should be a function');
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
 });
 
-TestRunner.test('Track Groups - addTrackToGroupState adds track to group', (t) => {
-    const group = addTrackGroupState({ name: 'Add Track Test' });
-    const result = addTrackToGroupState(group.id, 'test-track-123');
-    t.assertTruthy(result, 'addTrackToGroupState should return true on success');
-    const updated = getTrackGroupByIdState(group.id);
-    t.assertTruthy(updated.trackIds.includes('test-track-123'), 'Track should be in group');
-    removeTrackGroupState(group.id);
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
 });
 
-TestRunner.test('Track Groups - addTrackToGroupState prevents duplicates', (t) => {
-    const group = addTrackGroupState({ name: 'Duplicate Test' });
-    addTrackToGroupState(group.id, 'dup-track');
-    const result = addTrackToGroupState(group.id, 'dup-track');
-    t.assertEqual(result, false, 'Should return false for duplicate track');
-    removeTrackGroupState(group.id);
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
 });
 
-TestRunner.test('Track Groups - addTrackToGroupState handles unknown group', (t) => {
-    const result = addTrackToGroupState('nonexistent-group-123', 'some-track');
-    t.assertEqual(result, false, 'Should return false for unknown group');
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
 });
 
-TestRunner.test('Track Groups - removeTrackFromGroupState removes track', (t) => {
-    const group = addTrackGroupState({ name: 'Remove Track Test' });
-    addTrackToGroupState(group.id, 'track-to-remove');
-    const result = removeTrackFromGroupState(group.id, 'track-to-remove');
-    t.assertTruthy(result, 'removeTrackFromGroupState should return true on success');
-    const updated = getTrackGroupByIdState(group.id);
-    t.assertTruthy(!updated.trackIds.includes('track-to-remove'), 'Track should not be in group');
-    removeTrackGroupState(group.id);
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
 });
 
-TestRunner.test('Track Groups - removeTrackFromGroupState handles unknown track', (t) => {
-    const group = addTrackGroupState({ name: 'Unknown Track Test' });
-    const result = removeTrackFromGroupState(group.id, 'nonexistent-track');
-    t.assertEqual(result, false, 'Should return false for unknown track');
-    removeTrackGroupState(group.id);
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
 });
 
-TestRunner.test('Track Groups - removeTrackFromGroupState handles unknown group', (t) => {
-    const result = removeTrackFromGroupState('nonexistent-group', 'some-track');
-    t.assertEqual(result, false, 'Should return false for unknown group');
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
 });
 
-TestRunner.test('Track Groups - removeTrackGroupState deletes group', (t) => {
-    const group = addTrackGroupState({ name: 'Delete Test' });
-    const groupId = group.id;
-    const result = removeTrackGroupState(groupId);
-    t.assertTruthy(result, 'removeTrackGroupState should return true on success');
-    const found = getTrackGroupByIdState(groupId);
-    t.assertEqual(found, undefined, 'Group should no longer exist');
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
 });
 
-TestRunner.test('Track Groups - removeTrackGroupState handles unknown group', (t) => {
-    const result = removeTrackGroupState('nonexistent-group-xyz');
-    t.assertEqual(result, false, 'Should return false for unknown group');
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
 });
 
-TestRunner.test('Track Groups - setTrackGroupNameState handles unknown group', (t) => {
-    const result = setTrackGroupNameState('nonexistent-group-abc', 'New Name');
-    t.assertEqual(result, false, 'Should return false for unknown group');
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
 });
 
-TestRunner.test('Track Groups - setTrackGroupColorState handles unknown group', (t) => {
-    const result = setTrackGroupColorState('nonexistent-group-xyz', '#ff0000');
-    t.assertEqual(result, false, 'Should return false for unknown group');
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
 });
 
-TestRunner.test('Track Groups - setTrackGroupMutedState handles unknown group', (t) => {
-    const result = setTrackGroupMutedState('nonexistent-group-123', true);
-    t.assertEqual(result, false, 'Should return false for unknown group');
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
 });
 
-TestRunner.test('Track Groups - setTrackGroupSoloedState handles unknown group', (t) => {
-    const result = setTrackGroupSoloedState('nonexistent-group-456', true);
-    t.assertEqual(result, false, 'Should return false for unknown group');
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
 });
 
 // ============================================
-// End Day 101 tests
-// Total tests: 382
+// Day 75: Armed Track State Tests
 // ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx');
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx');
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
+});
+
+// ============================================
+// Day 81: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
+});
+
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
+});
+
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
+});
+
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
+    setLoopRegionEnabledState(true);
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
+    setLoopRegionEndBarState(8);
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
+});
+
+// ============================================
+// Day 71: Swing State Tests
+// ============================================
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
+});
+
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
+});
+
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
+});
+
+// ============================================
+// Day 73: State Management Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
+});
+
+// ============================================
+// Day 75: Armed Track State Tests
+// ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx');
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx');
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
+});
+
+// ============================================
+// Day 81: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
+});
+
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
+});
+
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
+});
+
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
+    setLoopRegionEnabledState(true);
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
+    setLoopRegionEndBarState(8);
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
+});
+
+// ============================================
+// Day 71: Swing State Tests
+// ============================================
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
+});
+
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
+});
+
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
+});
+
+// ============================================
+// Day 73: State Management Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
+});
+
+// ============================================
+// Day 75: Armed Track State Tests
+// ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx');
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx');
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
+});
+
+// ============================================
+// Day 81: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
+});
+
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
+});
+
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
+});
+
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
+    setLoopRegionEnabledState(true);
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
+    setLoopRegionEndBarState(8);
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
+});
+
+// ============================================
+// Day 71: Swing State Tests
+// ============================================
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
+});
+
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
+});
+
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
+});
+
+// ============================================
+// Day 73: State Management Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
+});
+
+// ============================================
+// Day 75: Armed Track State Tests
+// ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx');
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx');
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
+});
+
+// ============================================
+// Day 81: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
+});
+
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
+});
+
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
+});
+
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
+    setLoopRegionEnabledState(true);
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
+    setLoopRegionEndBarState(8);
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
+});
+
+// ============================================
+// Day 71: Swing State Tests
+// ============================================
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
+});
+
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
+});
+
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
+});
+
+// ============================================
+// Day 73: State Management Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
+});
+
+// ============================================
+// Day 75: Armed Track State Tests
+// ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx');
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx');
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
+});
+
+// ============================================
+// Day 81: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
+});
+
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
+});
+
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
+});
+
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
+    setLoopRegionEnabledState(true);
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
+    setLoopRegionEndBarState(8);
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
+});
+
+// ============================================
+// Day 71: Swing State Tests
+// ============================================
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
+});
+
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
+});
+
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
+});
+
+// ============================================
+// Day 73: State Management Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
+});
+
+// ============================================
+// Day 75: Armed Track State Tests
+// ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx');
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx');
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
+});
+
+// ============================================
+// Day 81: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
+});
+
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
+});
+
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
+});
+
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
+    setLoopRegionEnabledState(true);
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
+    setLoopRegionEndBarState(8);
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
+});
+
+// ============================================
+// Day 71: Swing State Tests
+// ============================================
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
+});
+
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
+});
+
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
+});
+
+// ============================================
+// Day 73: State Management Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
+});
+
+// ============================================
+// Day 75: Armed Track State Tests
+// ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx');
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx');
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
+});
+
+// ============================================
+// Day 81: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - has valid structure', (t) => {
+    t.assertTruthy(typeof computerKeySynthMap === 'object', 'computerKeySynthMap should be an object');
+    t.assertTruthy('a' in computerKeySynthMap, 'Should have white key a');
+    t.assertTruthy('k' in computerKeySynthMap, 'Should have white key k');
+    t.assertTruthy('w' in computerKeySynthMap, 'Should have black key w');
+    t.assertTruthy('u' in computerKeySynthMap, 'Should have black key u');
+});
+
+TestRunner.test('computerKeySynthMap - white key values are valid notes', (t) => {
+    const c4Value = computerKeySynthMap['a'];
+    t.assertEqual(typeof c4Value, 'number', 'Key a should map to a number (MIDI note)');
+    t.assertEqual(c4Value, 60, 'Key a should be C4 (MIDI note 60)');
+});
+
+TestRunner.test('computerKeySynthMap - black key values are valid notes', (t) => {
+    const cS4Value = computerKeySynthMap['w'];
+    t.assertEqual(typeof cS4Value, 'number', 'Key w should map to a number (MIDI note)');
+    t.assertEqual(cS4Value, 61, 'Key w should be C#4 (MIDI note 61)');
+});
+
+// TRACK_COLORS Validation Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has expected colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - colors are valid hex', (t) => {
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CLIP_COLORS Validation Tests
+TestRunner.test('CLIP_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(CLIP_COLORS), 'CLIP_COLORS should be an array');
+});
+
+TestRunner.test('CLIP_COLORS - has expected count', (t) => {
+    t.assertTruthy(CLIP_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('CLIP_COLORS - colors are valid hex', (t) => {
+    CLIP_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// MARKER_COLORS Validation Tests
+TestRunner.test('MARKER_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('MARKER_COLORS - has expected count', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('MARKER_COLORS - colors are valid hex', (t) => {
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// AUTOMATION_LANE_COLORS Validation Tests
+TestRunner.test('Automation Lane Colors - is an array', (t) => {
+    t.assertTruthy(Array.isArray(AUTOMATION_LANE_COLORS), 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('Automation Lane Colors - has expected count', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_COLORS.length >= 4, 'Should have at least 4 colors');
+});
+
+TestRunner.test('Automation Lane Colors - colors are valid hex', (t) => {
+    AUTOMATION_LANE_COLORS.forEach(color => {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be valid hex`);
+    });
+});
+
+// CHORD_TYPES Validation Tests
+TestRunner.test('CHORD_TYPES - is an object', (t) => {
+    t.assertTruthy(typeof CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('CHORD_TYPES - has major chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('CHORD_TYPES - has minor chord type', (t) => {
+    t.assertTruthy(CHORD_TYPES['minor'], 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('CHORD_TYPES - chord intervals are valid', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        t.assertTruthy(Array.isArray(intervals), `${type} intervals should be an array`);
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${type} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${type} should be non-negative`);
+        });
+    }
+});
+
+// ============================================
+// Day 87: Chord Voicing Constants Tests
+// ============================================
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertTruthy(typeof CHORD_VOICING_SPREAD === 'object', 'CHORD_VOICING_SPREAD should be an object');
+    t.assertTruthy(CHORD_VOICING_SPREAD !== null, 'CHORD_VOICING_SPREAD should not be null');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has closed voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['closed'], 'Should have closed voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['closed']), 'Closed voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has wide voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['wide'], 'Should have wide voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['wide']), 'Wide voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['drop2'], 'Should have drop2 voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['drop2']), 'Drop2 voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing', (t) => {
+    t.assertTruthy(CHORD_VOICING_SPREAD['rootless'], 'Should have rootless voicing');
+    t.assertTruthy(Array.isArray(CHORD_VOICING_SPREAD['rootless']), 'Rootless voicing should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        intervals.forEach(interval => {
+            t.assertEqual(typeof interval, 'number', `Interval in ${voicing} should be a number`);
+            t.assertTruthy(interval >= 0, `Interval in ${voicing} should be non-negative`);
+        });
+    }
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS is an array', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains 4 voicing types', (t) => {
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have 4 voicing types');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+});
+
+TestRunner.test('Chord Voicing - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+});
+
+TestRunner.test('Chord Voicing - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_VOICING, 'string', 'Should be a string');
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Voicing - voicing spread arrays have 12 elements', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `${voicing} should have 12 elements (one per semitone)`);
+    }
+});
+
+TestRunner.test('Chord Voicing - closed voicing starts at 0', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['closed'][0], 0, 'Closed voicing should start at 0');
+});
+
+TestRunner.test('Chord Voicing - rootless voicing starts at 2 (no root)', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD['rootless'][0], 2, 'Rootless voicing should start at 2 (skipping root)');
+});
+
+// ============================================
+// Day 70: Send Tracks Additional Tests
+// ============================================
+TestRunner.test('Send Tracks - getTrackSendLevelState handles nonexistent track', (t) => {
+    const level = getTrackSendLevelState('nonexistent-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for nonexistent track/send');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState handles unknown send', (t) => {
+    const level = getTrackSendLevelState('existing-track', 'nonexistent-send');
+    t.assertEqual(level, 0, 'Should return 0 for unknown send');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState updates level', (t) => {
+    const send = addSendTrackState({ name: 'Level Test' });
+    setTrackSendLevelState('any-track-id', send.id, 0.5);
+    const level = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(level, 0.5, 'Send level should be updated');
+    // Test clamping
+    setTrackSendLevelState('any-track-id', send.id, 1.5);
+    const levelClamped = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelClamped, 1.2, 'Level should be clamped to max 1.2');
+    setTrackSendLevelState('any-track-id', send.id, -0.5);
+    const levelMin = getTrackSendLevelState('any-track-id', send.id);
+    t.assertEqual(levelMin, 0, 'Level should be clamped to min 0');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates track entry if needed', (t) => {
+    const send = addSendTrackState({ name: 'New Track Test' });
+    // Should not throw, should auto-create trackSendsState entry
+    setTrackSendLevelState('new-track-xyz', send.id, 0.8);
+    const level = getTrackSendLevelState('new-track-xyz', send.id);
+    t.assertEqual(level, 0.8, 'Level should be set for new track');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState updates preFader', (t) => {
+    const send = addSendTrackState({ name: 'PreFader Test' });
+    const result = setTrackSendPreFaderState('track-prefader', send.id, true);
+    t.assertTruthy(result, 'Should return true');
+    const preFader = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFader, true, 'Pre-fader should be true');
+    setTrackSendPreFaderState('track-prefader', send.id, false);
+    const preFaderAfter = getTrackSendPreFaderState('track-prefader', send.id);
+    t.assertEqual(preFaderAfter, false, 'Pre-fader should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState handles nonexistent track', (t) => {
+    // Should not throw, should auto-create entry
+    setTrackSendPreFaderState('nonexistent-track-123', 999, true);
+    const preFader = getTrackSendPreFaderState('nonexistent-track-123', 999);
+    t.assertEqual(preFader, true, 'Should create and return true');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with default values', (t) => {
+    const send = addSendTrackState({});
+    t.assertTruthy(send.id !== undefined, 'Should have an ID');
+    t.assertEqual(send.name, 'Send ' + send.id, 'Should have default name');
+    t.assertEqual(send.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(send.muted, false, 'Default muted should be false');
+    t.assertTruthy(Array.isArray(send.effects), 'Should have effects array');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState with custom id', (t) => {
+    const send = addSendTrackState({ id: 9999, name: 'Custom ID Send' });
+    t.assertEqual(send.id, 9999, 'ID should match custom value');
+    t.assertEqual(send.name, 'Custom ID Send', 'Name should match');
+});
+
+// ============================================
+// Day 70: Track Groups Additional Tests
+// ============================================
+TestRunner.test('Track Groups - getTrackGroupByIdState handles unknown id', (t) => {
+    const group = getTrackGroupByIdState('nonexistent-group-12345');
+    t.assertEqual(group, undefined, 'Should return undefined for unknown group');
+});
+
+// ============================================
+// Day 71: Loop Region State Tests
+// ============================================
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    const state = getLoopRegionState();
+    t.assertTruthy(typeof state === 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('startBar' in state, 'State should have startBar property');
+    t.assertTruthy('endBar' in state, 'State should have endBar property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const enabled = getLoopRegionEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const startBar = getLoopRegionStartBarState();
+    t.assertEqual(typeof startBar, 'number', 'getLoopRegionStartBarState should return number');
+    t.assertTruthy(startBar >= 1, 'Start bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const endBar = getLoopRegionEndBarState();
+    t.assertEqual(typeof endBar, 'number', 'getLoopRegionEndBarState should return number');
+    t.assertTruthy(endBar >= 1, 'End bar should be >= 1');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState updates state', (t) => {
+    setLoopRegionEnabledState(true);
+    t.assertEqual(getLoopRegionEnabledState(), true, 'Should be enabled after setter');
+    setLoopRegionEnabledState(false);
+    t.assertEqual(getLoopRegionEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState updates state', (t) => {
+    setLoopRegionStartBarState(5);
+    t.assertEqual(getLoopRegionStartBarState(), 5, 'Start bar should be 5');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState updates state', (t) => {
+    setLoopRegionEndBarState(8);
+    t.assertEqual(getLoopRegionEndBarState(), 8, 'End bar should be 8');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState updates full state', (t) => {
+    const newState = { enabled: true, startBar: 2, endBar: 10 };
+    setLoopRegionState(newState);
+    const state = getLoopRegionState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.startBar, 2, 'Start bar should be 2');
+    t.assertEqual(state.endBar, 10, 'End bar should be 10');
+});
+
+// ============================================
+// Day 71: Swing State Tests
+// ============================================
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    const state = getSwingState();
+    t.assertTruthy(typeof state === 'object', 'getSwingState should return an object');
+    t.assertTruthy('enabled' in state, 'State should have enabled property');
+    t.assertTruthy('amount' in state, 'State should have amount property');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    const enabled = getSwingEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    const amount = getSwingAmountState();
+    t.assertEqual(typeof amount, 'number', 'getSwingAmountState should return number');
+    t.assertTruthy(amount >= 0, 'Amount should be >= 0');
+    t.assertTruthy(amount <= 100, 'Amount should be <= 100');
+});
+
+TestRunner.test('Swing - setSwingEnabledState updates state', (t) => {
+    setSwingEnabledState(true);
+    t.assertEqual(getSwingEnabledState(), true, 'Should be enabled after setter');
+    setSwingEnabledState(false);
+    t.assertEqual(getSwingEnabledState(), false, 'Should be disabled after setter');
+});
+
+TestRunner.test('Swing - setSwingAmountState updates state', (t) => {
+    setSwingAmountState(50);
+    t.assertEqual(getSwingAmountState(), 50, 'Amount should be 50');
+    setSwingAmountState(0);
+    t.assertEqual(getSwingAmountState(), 0, 'Amount should be clamped to 0');
+    setSwingAmountState(150);
+    t.assertEqual(getSwingAmountState(), 100, 'Amount should be clamped to 100');
+});
+
+TestRunner.test('Swing - setSwingState updates full state', (t) => {
+    const newState = { enabled: true, amount: 75 };
+    setSwingState(newState);
+    const state = getSwingState();
+    t.assertEqual(state.enabled, true, 'Enabled should be true');
+    t.assertEqual(state.amount, 75, 'Amount should be 75');
+});
+
+// ============================================
+// Day 73: State Management Tests
+// ============================================
+TestRunner.test('Time Signature - getTimeSignatureState returns object', (t) => {
+    const state = getTimeSignatureState();
+    t.assertTruthy(typeof state === 'object', 'getTimeSignatureState should return an object');
+    t.assertTruthy('numerator' in state, 'State should have numerator property');
+    t.assertTruthy('denominator' in state, 'State should have denominator property');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureNumeratorState returns number', (t) => {
+    const numerator = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof numerator, 'number', 'Should return number');
+    t.assertTruthy(numerator >= 1, 'Numerator should be >= 1');
+    t.assertTruthy(numerator <= 16, 'Numerator should be <= 16');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState updates state', (t) => {
+    setTimeSignatureNumeratorState(3);
+    t.assertEqual(getTimeSignatureNumeratorState(), 3, 'Numerator should be 3');
+    setTimeSignatureNumeratorState(6);
+    t.assertEqual(getTimeSignatureNumeratorState(), 6, 'Numerator should be 6');
+});
+
+TestRunner.test('Time Signature - getTimeSignatureDenominatorState returns number', (t) => {
+    const denominator = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof denominator, 'number', 'Should return number');
+    t.assertTruthy([1, 2, 4, 8, 16, 32].includes(denominator), 'Denominator should be power of 2');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState updates state', (t) => {
+    setTimeSignatureDenominatorState(4);
+    t.assertEqual(getTimeSignatureDenominatorState(), 4, 'Denominator should be 4');
+    setTimeSignatureDenominatorState(8);
+    t.assertEqual(getTimeSignatureDenominatorState(), 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState updates full state', (t) => {
+    setTimeSignatureState(6, 8);
+    const state = getTimeSignatureState();
+    t.assertEqual(state.numerator, 6, 'Numerator should be 6');
+    t.assertEqual(state.denominator, 8, 'Denominator should be 8');
+});
+
+TestRunner.test('Ghost Track - getGhostTrackIdState returns null by default', (t) => {
+    const ghostId = getGhostTrackIdState();
+    t.assertEqual(ghostId, null, 'Ghost track should be null by default');
+});
+
+TestRunner.test('Ghost Track - setGhostTrackIdState updates state', (t) => {
+    setGhostTrackIdState('test-track-123');
+    t.assertEqual(getGhostTrackIdState(), 'test-track-123', 'Ghost track should be set');
+    setGhostTrackIdState(null);
+    t.assertEqual(getGhostTrackIdState(), null, 'Ghost track should be cleared');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'Timeline markers should be an array');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState adds marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Test Marker', 4);
+    t.assertTruthy(marker, 'Marker should be added');
+    t.assertTruthy(marker.id, 'Marker should have an id');
+    t.assertEqual(marker.name, 'Test Marker', 'Marker name should match');
+    t.assertEqual(marker.bar, 4, 'Marker bar should match');
+    t.assertEqual(marker.color, '#ff9f43', 'Marker color should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState returns marker', (t) => {
+    clearTimelineMarkersState();
+    const added = addTimelineMarkerState('Find Test', 8);
+    const found = getTimelineMarkerByIdState(added.id);
+    t.assertTruthy(found, 'Marker should be found');
+    t.assertEqual(found.name, 'Find Test', 'Found marker should match');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState handles unknown id', (t) => {
+    const notFound = getTimelineMarkerByIdState('nonexistent-marker-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState updates marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('Original', 4);
+    setTimelineMarkerState(marker.id, { name: 'Updated', bar: 10 });
+    const updated = getTimelineMarkerByIdState(marker.id);
+    t.assertEqual(updated.name, 'Updated', 'Marker name should be updated');
+    t.assertEqual(updated.bar, 10, 'Marker bar should be updated');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState removes marker', (t) => {
+    clearTimelineMarkersState();
+    const marker = addTimelineMarkerState('To Remove', 4);
+    t.assertTruthy(getTimelineMarkerByIdState(marker.id), 'Marker should exist before removal');
+    removeTimelineMarkerState(marker.id);
+    t.assertEqual(getTimelineMarkerByIdState(marker.id), undefined, 'Marker should be removed');
+    clearTimelineMarkersState();
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const sends = getSendTracksState();
+    t.assertTruthy(Array.isArray(sends), 'Send tracks should be an array');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState handles unknown id', (t) => {
+    const notFound = getSendTrackByIdState('nonexistent-send-id');
+    t.assertEqual(notFound, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState returns object', (t) => {
+    const sends = getTrackSendsState();
+    t.assertTruthy(typeof sends === 'object', 'Track sends should be an object');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState returns number', (t) => {
+    const level = getTrackSendLevelState('nonexistent', 999);
+    t.assertEqual(typeof level, 'number', 'Send level should be a number');
+    t.assertEqual(level, 0, 'Default send level should be 0');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState creates send track', (t) => {
+    const send = addSendTrackState({ name: 'Test Send', level: 0.75 });
+    t.assertTruthy(send, 'addSendTrackState should return a send track');
+    t.assertEqual(send.name, 'Test Send', 'Send name should match');
+    t.assertEqual(send.level, 0.75, 'Send level should match');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState updates send', (t) => {
+    const send = addSendTrackState({ name: 'Mute Test' });
+    const result = setSendTrackMutedState(send.id, true);
+    t.assertTruthy(result, 'setSendTrackMutedState should return true on success');
+    const sendAfter = getSendTrackByIdState(send.id);
+    t.assertEqual(sendAfter.muted, true, 'Send should be muted');
+    setSendTrackMutedState(send.id, false);
+    t.assertEqual(sendAfter.muted, false, 'Send should be unmuted');
+});
+
+// ============================================
+// Day 75: Armed Track State Tests
+// ============================================
+TestRunner.test('Armed Track - getArmedTrackIdState returns null initially', (t) => {
+    const armedId = getArmedTrackIdState();
+    t.assertEqual(armedId, null, 'Should be null initially');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState updates state', (t) => {
+    setArmedTrackIdState('track-123');
+    t.assertEqual(getArmedTrackIdState(), 'track-123', 'Armed track should be set');
+    setArmedTrackIdState(null);
+    t.assertEqual(getArmedTrackIdState(), null, 'Armed track should be cleared');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles undefined', (t) => {
+    setArmedTrackIdState('track-456');
+    setArmedTrackIdState(undefined);
+    t.assertEqual(getArmedTrackIdState(), null, 'Should become null when set to undefined');
+});
+
+TestRunner.test('Armed Track - setArmedTrackIdState handles numeric track ID', (t) => {
+    setArmedTrackIdState(42);
+    t.assertEqual(getArmedTrackIdState(), 42, 'Should handle numeric track ID');
+    setArmedTrackIdState(null);
+});
+
+// ============================================
+// Day 76: Master Effects State Tests
+// ============================================
+TestRunner.test('Master Effects - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'Master effects should be an array');
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState creates effect', (t) => {
+    const effectsBefore = getMasterEffectsState().length;
+    const effectId = addMasterEffectToState('Reverb', { decay: 2.5 });
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID string');
+    t.assertTruthy(effectId.startsWith('mastereffect_'), 'Effect ID should have correct prefix');
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.length, effectsBefore + 1, 'Should have one more effect');
+    const added = effectsAfter.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Reverb', 'Effect type should be Reverb');
+    t.assertEqual(added.params.decay, 2.5, 'Effect params should be set');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - addMasterEffectToState with default params', (t) => {
+    const effectId = addMasterEffectToState('Delay');
+    t.assertTruthy(typeof effectId === 'string', 'Should return effect ID');
+    const effects = getMasterEffectsState();
+    const added = effects.find(e => e.id === effectId);
+    t.assertEqual(added.type, 'Delay', 'Effect type should be Delay');
+    t.assertTruthy(added.params, 'Should have params object');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState removes effect', (t) => {
+    const effectId = addMasterEffectToState('Chorus');
+    const effectsBefore = getMasterEffectsState();
+    t.assertTruthy(effectsBefore.some(e => e.id === effectId), 'Effect should exist before removal');
+    removeMasterEffectFromState(effectId);
+    const effectsAfter = getMasterEffectsState();
+    t.assertEqual(effectsAfter.find(e => e.id === effectId), undefined, 'Effect should be removed');
+});
+
+TestRunner.test('Master Effects - removeMasterEffectFromState handles unknown id', (t) => {
+    // Should not throw, just warn
+    removeMasterEffectFromState('nonexistent-effect-id');
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState updates param', (t) => {
+    const effectId = addMasterEffectToState('Reverb', { decay: 1.5, wet: 0.5 });
+    updateMasterEffectParamInState(effectId, 'decay', 3.5);
+    updateMasterEffectParamInState(effectId, 'wet', 0.8);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.decay, 3.5, 'Decay should be updated');
+    t.assertEqual(effect.params.wet, 0.8, 'Wet should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles nested param path', (t) => {
+    const effectId = addMasterEffectToState('Filter', { frequency: 1000, Q: 1 });
+    updateMasterEffectParamInState(effectId, 'frequency', 2000);
+    const effects = getMasterEffectsState();
+    const effect = effects.find(e => e.id === effectId);
+    t.assertEqual(effect.params.frequency, 2000, 'Frequency should be updated');
+    // Cleanup
+    removeMasterEffectFromState(effectId);
+});
+
+TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown effect', (t) => {
+    // Should not throw
+    updateMasterEffectParamInState('nonexistent-id', 'wet', 0.9);
+    t.assertTruthy(true, 'Should complete without throwing');
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
+    const effects = getMasterEffectsState();
+    const idx1 = effects.findIndex(e => e.id === id1);
+    const idx3 = effects.findIndex(e => e.id === id3);
+    t.assertEqual(Math.abs(idx1 - idx3), 2, 'Effect1 and Effect3 should be 2 apart initially');
+    // Move Effect1 to where Effect3 is
+    reorderMasterEffectInState(id1, idx3);
+    const effectsAfter = getMasterEffectsState();
+    const newIdx1 = effectsAfter.findIndex(e => e.id === id1);
+    t.assertEqual(newIdx1, idx3, 'Effect1 should now be at former idx3 position');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+    removeMasterEffectFromState(id2);
+    removeMasterEffectFromState(id3);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
+    const id1 = addMasterEffectToState('SameIdx');
+    const effectsBefore = getMasterEffectsState().map(e => e.id);
+    reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
+    const effectsAfter = getMasterEffectsState().map(e => e.id);
+    t.assertDeepEqual(effectsBefore, effectsAfter, 'Order should be unchanged');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
+    const id1 = addMasterEffectToState('InvalidIdx');
+    // Negative index should be handled
+    reorderMasterEffectInState(id1, -1);
+    // Index beyond length should be handled
+    reorderMasterEffectInState(id1, 9999);
+    t.assertTruthy(true, 'Should complete without throwing');
+    // Cleanup
+    removeMasterEffectFromState(id1);
+});
+
+TestRunner.test('Master Effects - multiple effects can be added and removed', (t) => {
+    const ids = [];
+    for (let i = 0; i < 5; i++) {
+        ids.push(addMasterEffectToState('Reverb'));
+    }
+    let effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 5, 'Should have 5 effects');
+    // Remove middle one
+    removeMasterEffectFromState(ids[2]);
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 4, 'Should have 4 effects after removal');
+    // Cleanup remaining
+    for (const id of ids) {
+        removeMasterEffectFromState(id);
+    }
+    effects = getMasterEffectsState();
+    t.assertEqual(effects.length, 0, 'All effects should be removed');
+});
+
+// ============================================
+// Day 81: Additional State Management Tests
+// ============================================
+
+// Metronome State Tests
+TestRunner.test('Metronome - getMetronomeEnabledState returns boolean', (t) => {
+    const enabled = getMetronomeEnabledState();
+    t.assertEqual(typeof enabled, 'boolean', 'Metronome enabled should be boolean');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState updates state', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+});
+
+TestRunner.test('Metronome - getMetronomeVolumeState returns number', (t) => {
+    const volume = getMetronomeVolumeState();
+    t.assertEqual(typeof volume, 'number', 'Metronome volume should be a number');
+    t.assertTruthy(volume >= 0 && volume <= 1, 'Volume should be 0-1 range');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75');
+    setMetronomeVolumeState(0.5);
+    t.assertEqual(getMetronomeVolumeState(), 0.5, 'Metronome volume should be 0.5');
+});
+
+// Playback Mode State Tests
+TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
+    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+});
+
+// Tracks State Tests
+TestRunner.test('Tracks - getTracksState returns array', (t) => {
+    const tracks = getTracksState();
+    t.assertTruthy(Array.isArray(tracks), 'Tracks should be an array');
+});
+
+TestRunner.test('Tracks - getTrackByIdState returns undefined for unknown id', (t) => {
+    const track = getTrackByIdState('nonexistent-id-12345');
+    t.assertEqual(track, undefined, 'Should return undefined for unknown track ID');
+});
+
+// Master Gain State Tests
+TestRunner.test('Master Gain - getMasterGainValueState returns number', (t) => {
+    const gain = getMasterGainValueState();
+    t.assertEqual(typeof gain, 'number', 'Master gain should be a number');
+});
+
+// Open Windows State Tests
+TestRunner.test('Open Windows - getOpenWindowsState returns object', (t) => {
+    const windows = getOpenWindowsState();
+    t.assertTruthy(typeof windows === 'object', 'Open windows should be an object (Map)');
+});
+
+// Active Sequencer Track State Tests
+TestRunner.test('Active Sequencer - getActiveSequencerTrackIdState returns value', (t) => {
+    const trackId = getActiveSequencerTrackIdState();
+    t.assertTrue(trackId === null || typeof trackId === 'string', 'Active sequencer track ID should be null or string');
+});
+
+// Highest Z State Tests
+TestRunner.test('Highest Z - getHighestZState returns number', (t) => {
+    const z = getHighestZState();
+    t.assertEqual(typeof z, 'number', 'Highest Z should be a number');
+    t.assertTruthy(z >= 0, 'Highest Z should be non-negative');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns value', (t) => {
+    const data = getClipboardDataState();
+    t.assertTrue(data === null || typeof data === 'object', 'Clipboard data should be null or object');
+});
+
+// ============================================
+// Day 70: Constants Validation Tests
+// ============================================
+

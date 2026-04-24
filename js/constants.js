@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.67.0'; // Day 102: Inline Track Name Rename - Added event handler for track name input in inspector
+export const APP_VERSION = '0.67.1'; // Day 103: Drop Zone Listeners Tests - Added 11 tests for setupGenericDropZoneListeners
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
