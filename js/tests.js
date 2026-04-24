@@ -156,6 +156,27 @@ import {
 import { Track } from './Track.js';
 
 import {
+
+import {
+    openMixerWindow,
+    openGlobalControlsWindow,
+    showKeyboardShortcutsHelpWindow,
+    openTimelineWindow,
+    openTrackSequencerWindow,
+    openSoundBrowserWindow,
+    openTrackTemplatesWindow,
+    openTrackInspectorWindow,
+    openMasterEffectsRackWindow,
+    openSendEffectsWindow,
+    openTrackEffectsRackWindow,
+    updateMixerWindow,
+    renderTimeline,
+    updatePlayheadPosition,
+    handleTapTempo,
+    resetTapTempo,
+    createKnob,
+    initializeUIModule
+} from './ui.js';
     showNotification,
     showCustomModal,
     showConfirmationDialog,
@@ -4378,3 +4399,160 @@ export async function runTests() {
 
 export { TestRunner };
 export default TestRunner;
+// Day 211: UI Window Open Function Tests (2026-04-24)
+TestRunner.test('UI - openMixerWindow function is exported', (t) => {
+    t.assertTruthy(typeof openMixerWindow === 'function', 'openMixerWindow should be a function');
+});
+
+TestRunner.test('UI - openMixerWindow accepts optional savedState parameter', (t) => {
+    // Function signature: openMixerWindow(savedState = null)
+    // The function should accept 0 or 1 arguments
+    t.assertTruthy(openMixerWindow.length <= 1, 'openMixerWindow should accept at most 1 parameter');
+});
+
+TestRunner.test('UI - openGlobalControlsWindow function is exported', (t) => {
+    t.assertTruthy(typeof openGlobalControlsWindow === 'function', 'openGlobalControlsWindow should be a function');
+});
+
+TestRunner.test('UI - openGlobalControlsWindow accepts onReadyCallback and optional savedState', (t) => {
+    // Function signature: openGlobalControlsWindow(onReadyCallback, savedState = null)
+    // The function should accept 1-2 arguments
+    t.assertTruthy(openGlobalControlsWindow.length <= 2, 'openGlobalControlsWindow should accept at most 2 parameters');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow function is exported', (t) => {
+    t.assertTruthy(typeof showKeyboardShortcutsHelpWindow === 'function', 'showKeyboardShortcutsHelpWindow should be a function');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow accepts no parameters', (t) => {
+    t.assertEqual(showKeyboardShortcutsHelpWindow.length, 0, 'showKeyboardShortcutsHelpWindow should accept 0 parameters');
+});
+
+TestRunner.test('UI - openTimelineWindow function is exported', (t) => {
+    t.assertTruthy(typeof openTimelineWindow === 'function', 'openTimelineWindow should be a function');
+});
+
+TestRunner.test('UI - openTimelineWindow accepts optional savedState parameter', (t) => {
+    // Function signature: openTimelineWindow(savedState = null)
+    t.assertTruthy(openTimelineWindow.length <= 1, 'openTimelineWindow should accept at most 1 parameter');
+});
+
+TestRunner.test('UI - openTrackSequencerWindow function is exported', (t) => {
+    t.assertTruthy(typeof openTrackSequencerWindow === 'function', 'openTrackSequencerWindow should be a function');
+});
+
+TestRunner.test('UI - openTrackSequencerWindow accepts trackId and optional parameters', (t) => {
+    // Function signature: openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null)
+    t.assertTruthy(openTrackSequencerWindow.length <= 3, 'openTrackSequencerWindow should accept at most 3 parameters');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow function is exported', (t) => {
+    t.assertTruthy(typeof openSoundBrowserWindow === 'function', 'openSoundBrowserWindow should be a function');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow accepts optional savedState parameter', (t) => {
+    // Function signature: openSoundBrowserWindow(savedState = null)
+    t.assertTruthy(openSoundBrowserWindow.length <= 1, 'openSoundBrowserWindow should accept at most 1 parameter');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow function is exported', (t) => {
+    t.assertTruthy(typeof openTrackTemplatesWindow === 'function', 'openTrackTemplatesWindow should be a function');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow accepts optional savedState parameter', (t) => {
+    t.assertTruthy(openTrackTemplatesWindow.length <= 1, 'openTrackTemplatesWindow should accept at most 1 parameter');
+});
+
+TestRunner.test('UI - openTrackInspectorWindow function is exported', (t) => {
+    t.assertTruthy(typeof openTrackInspectorWindow === 'function', 'openTrackInspectorWindow should be a function');
+});
+
+TestRunner.test('UI - openTrackInspectorWindow accepts trackId and optional savedState', (t) => {
+    // Function signature: openTrackInspectorWindow(trackId, savedState = null)
+    t.assertTruthy(openTrackInspectorWindow.length <= 2, 'openTrackInspectorWindow should accept at most 2 parameters');
+});
+
+TestRunner.test('UI - openMasterEffectsRackWindow function is exported', (t) => {
+    t.assertTruthy(typeof openMasterEffectsRackWindow === 'function', 'openMasterEffectsRackWindow should be a function');
+});
+
+TestRunner.test('UI - openMasterEffectsRackWindow accepts optional savedState parameter', (t) => {
+    // Function signature: openMasterEffectsRackWindow(savedState = null)
+    t.assertTruthy(openMasterEffectsRackWindow.length <= 1, 'openMasterEffectsRackWindow should accept at most 1 parameter');
+});
+
+TestRunner.test('UI - openSendEffectsWindow function is exported', (t) => {
+    t.assertTruthy(typeof openSendEffectsWindow === 'function', 'openSendEffectsWindow should be a function');
+});
+
+TestRunner.test('UI - openSendEffectsWindow accepts sendId and optional savedState', (t) => {
+    // Function signature: openSendEffectsWindow(sendId, savedState = null)
+    t.assertTruthy(openSendEffectsWindow.length <= 2, 'openSendEffectsWindow should accept at most 2 parameters');
+});
+
+TestRunner.test('UI - openTrackEffectsRackWindow function is exported', (t) => {
+    t.assertTruthy(typeof openTrackEffectsRackWindow === 'function', 'openTrackEffectsRackWindow should be a function');
+});
+
+TestRunner.test('UI - openTrackEffectsRackWindow accepts trackId and optional savedState', (t) => {
+    // Function signature: openTrackEffectsRackWindow(trackId, savedState = null)
+    t.assertTruthy(openTrackEffectsRackWindow.length <= 2, 'openTrackEffectsRackWindow should accept at most 2 parameters');
+});
+
+TestRunner.test('UI - updateMixerWindow function is exported', (t) => {
+    t.assertTruthy(typeof updateMixerWindow === 'function', 'updateMixerWindow should be a function');
+});
+
+TestRunner.test('UI - updateMixerWindow accepts no parameters', (t) => {
+    t.assertEqual(updateMixerWindow.length, 0, 'updateMixerWindow should accept 0 parameters');
+});
+
+TestRunner.test('UI - renderTimeline function is exported', (t) => {
+    t.assertTruthy(typeof renderTimeline === 'function', 'renderTimeline should be a function');
+});
+
+TestRunner.test('UI - renderTimeline accepts no parameters', (t) => {
+    t.assertEqual(renderTimeline.length, 0, 'renderTimeline should accept 0 parameters');
+});
+
+TestRunner.test('UI - updatePlayheadPosition function is exported', (t) => {
+    t.assertTruthy(typeof updatePlayheadPosition === 'function', 'updatePlayheadPosition should be a function');
+});
+
+TestRunner.test('UI - updatePlayheadPosition accepts no parameters', (t) => {
+    t.assertEqual(updatePlayheadPosition.length, 0, 'updatePlayheadPosition should accept 0 parameters');
+});
+
+TestRunner.test('UI - handleTapTempo function is exported', (t) => {
+    t.assertTruthy(typeof handleTapTempo === 'function', 'handleTapTempo should be a function');
+});
+
+TestRunner.test('UI - handleTapTempo accepts no parameters', (t) => {
+    t.assertEqual(handleTapTempo.length, 0, 'handleTapTempo should accept 0 parameters');
+});
+
+TestRunner.test('UI - resetTapTempo function is exported', (t) => {
+    t.assertTruthy(typeof resetTapTempo === 'function', 'resetTapTempo should be function');
+});
+
+TestRunner.test('UI - resetTapTempo accepts no parameters', (t) => {
+    t.assertEqual(resetTapTempo.length, 0, 'resetTapTempo should accept 0 parameters');
+});
+
+TestRunner.test('UI - createKnob function is exported', (t) => {
+    t.assertTruthy(typeof createKnob === 'function', 'createKnob should be a function');
+});
+
+TestRunner.test('UI - createKnob accepts options object parameter', (t) => {
+    // Function signature: createKnob(options)
+    t.assertTruthy(createKnob.length >= 1, 'createKnob should accept at least 1 parameter');
+});
+
+TestRunner.test('UI - initializeUIModule function is exported', (t) => {
+    t.assertTruthy(typeof initializeUIModule === 'function', 'initializeUIModule should be a function');
+});
+
+TestRunner.test('UI - initializeUIModule accepts appServices parameter', (t) => {
+    // Function signature: initializeUIModule(appServicesFromMain)
+    t.assertEqual(initializeUIModule.length, 1, 'initializeUIModule should accept 1 parameter');
+});

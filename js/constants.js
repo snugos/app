@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.94.1'; // Day 210: Track addAudioClip Function Tests
+export const APP_VERSION = '0.95.0'; // Day 211: UI Window Open Function Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
