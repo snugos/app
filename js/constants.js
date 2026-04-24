@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.72.0'; // Day 187: Metronome constants - Added DEFAULT_METRONOME_ENABLED, DEFAULT_METRONOME_VOLUME, MIN/MAX_METRONOME_VOLUME
+export const APP_VERSION = '0.72.1'; // Day 188: MIDI Learn UI Bug Fix - Fixed updateMidiLearnMappingsUI to use correct variable reference (appServices vs localAppServices)
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

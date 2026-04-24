@@ -1187,8 +1187,8 @@ export function initializeMetronome() {
         
         metronomeClickPlayer = new Tone.Player(clickBuffer);
         metronomeAccentPlayer = new Tone.Player(accentBuffer);
-        metronomeClickPlayer.volume.value = Tone.gainToDb(Constants.METRONOME_VOLUME || 0.5);
-        metronomeAccentPlayer.volume.value = Tone.gainToDb(Constants.METRONOME_VOLUME || 0.5);
+        metronomeClickPlayer.volume.value = Tone.gainToDb(Constants.DEFAULT_METRONOME_VOLUME);
+        metronomeAccentPlayer.volume.value = Tone.gainToDb(Constants.DEFAULT_METRONOME_VOLUME);
         
         // Connect to master bus
         metronomeClickPlayer.connect(getMasterEffectsBusInputNode());
@@ -1677,7 +1677,7 @@ export function startPerformanceMonitor() {
             localAppServices.setAudioContextStateState(contextState);
 
             // Update audio latency if available
-            if (contextState === 'running' && Tone.context.latency !== undefined) {
+            if (Tone.context.latency !== undefined) {
                 localAppServices.setAudioLatencyState(Tone.context.latency);
             }
 

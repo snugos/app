@@ -402,8 +402,10 @@ import {
     },
     updateMidiLearnMappingsUI: () => {
         try {
-            if (localAppServices.updateMidiLearnMappingsList) {
-                localAppServices.updateMidiLearnMappingsList();
+            if (appServices.updateMidiLearnMappingsList) {
+                appServices.updateMidiLearnMappingsList();
+            } else {
+                console.warn("[Main updateMidiLearnMappingsUI] updateMidiLearnMappingsList not available");
             }
         } catch (error) { console.warn("[Main updateMidiLearnMappingsUI] Error:", error); }
     },
