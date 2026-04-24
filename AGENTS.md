@@ -2408,3 +2408,40 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The DrumSampler pad UI functions are used by the Track Inspector window to display and edit individual drum pads. The tests verify the UI update workflow without requiring actual DOM rendering.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.84.0
+
+#### Day 201: Performance Monitor State Tests (2026-04-24)
+- **Feature**: Added 22 new unit tests for Performance Monitor state management functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 22 new tests in Day 201 section:
+    - `getPerformanceMonitorState returns object` - Tests return type and non-null
+    - `getPerformanceMonitorEnabledState returns boolean` - Tests return type
+    - `setPerformanceMonitorEnabledState accepts boolean` - Tests enable/disable
+    - `getAudioContextStateState returns string` - Tests return type
+    - `setAudioContextStateState validates values` - Tests 'running', 'suspended', 'closed' acceptance
+    - `setAudioContextStateState ignores invalid values` - Tests invalid input handling
+    - `getCPUUsageState returns number` - Tests return type
+    - `setCPUUsageState clamps values` - Tests 0-100 range clamping
+    - `getMemoryPressureState returns string` - Tests return type
+    - `setMemoryPressureState validates values` - Tests 'none', 'low', 'medium', 'high' acceptance
+    - `setMemoryPressureState ignores invalid values` - Tests invalid input handling
+    - `getActiveVoicesState returns number` - Tests return type
+    - `setActiveVoicesState clamps values` - Tests non-negative clamping
+    - `getAudioLatencyState returns number` - Tests return type
+    - `setAudioLatencyState accepts values` - Tests positive value handling
+    - `getLastCallbackTimeState returns number` - Tests return type
+    - `setLastCallbackTimeState accepts values` - Tests positive value handling
+    - `getDroppedCallbacksState returns number` - Tests return type
+    - `setDroppedCallbacksState accepts values` - Tests count values
+    - `incrementDroppedCallbacksState increments` - Tests increment behavior
+    - `resetPerformanceMonitorState resets all values` - Tests full state reset
+  - `js/constants.js`: Bumped APP_VERSION to 0.86.0
+- **Feature Details**:
+  - Tests validate all Performance Monitor state getter/setter functions
+  - Tests verify value clamping for cpuUsage (0-100), activeVoices (>=0), latency (>=0), etc.
+  - Tests verify validation of allowed values for audioContextState and memoryPressure
+  - Tests verify incrementDroppedCallbacksState() increments the counter
+  - Tests verify resetPerformanceMonitorState() resets all values to defaults
+  - Total test count increased from 1194 to 1215 tests
+- **Backend Note**: The Performance Monitor state functions track real-time DAW performance metrics (CPU usage, memory pressure, audio latency, dropped callbacks). The tests verify the state API without requiring actual Tone.js context monitoring.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.86.0
