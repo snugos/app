@@ -5222,3 +5222,18 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/state.js`: Added `captureStateForUndo` calls to setMidiLearnModeState, setMidiLearnPendingParamState, addMidiLearnMapping, removeMidiLearnMapping, clearMidiLearnMappings
   - `js/constants.js`: Bumped APP_VERSION to 0.71.0
 - **Version**: Bumped to 0.71.0
+
+#### Day 187: Metronome Constants (2026-04-24)
+- **Feature**: Added metronome constants to js/constants.js for consistent configuration
+- **Files Modified**:
+  - `js/constants.js`: Added metronome constants:
+    - `DEFAULT_METRONOME_ENABLED` (false) - Metronome off by default
+    - `DEFAULT_METRONOME_VOLUME` (0.5) - Default volume in 0-1 range
+    - `MIN_METRONOME_VOLUME` (0) - Minimum volume
+    - `MAX_METRONOME_VOLUME` (1) - Maximum volume
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.0
+- **Feature Details**:
+  - These constants provide centralized configuration for metronome settings
+  - The audio.js metronome already used `Constants.METRONOME_VOLUME || 0.5` pattern, now that fallback is properly defined as a constant
+  - Constants are used by audio.js for initializing metronome volume
+- **Version**: Bumped to 0.72.0
