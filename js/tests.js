@@ -7197,6 +7197,57 @@ TestRunner.test('MIDI Learn - updateMidiLearnMapping handles negative index', (t
     t.assertEqual(result, false, 'Should return false for negative index');
 });
 
+TestRunner.test('MIDI Learn - removeMidiLearnMapping uses undo capture', (t) => {
+    const originalAppServices = window.appServices;
+    let undoCaptureCalled = false;
+    window.appServices = {
+        ...originalAppServices,
+        captureStateForUndo: (desc) => {
+            undoCaptureCalled = true;
+        }
+    };
+    clearMidiLearnMappings();
+    addMidiLearnMapping({ channel: 0, ccNumber: 1, paramType: 'trackVolume', trackId: 'test-track', paramPath: 'volume' });
+    const mappings = getMidiLearnMappingsState();
+    t.assertTruthy(mappings.length > 0, 'Should have at least one mapping');
+    const result = removeMidiLearnMapping(0);
+    t.assertTruthy(result, 'Remove should succeed');
+    t.assertTruthy(undoCaptureCalled, 'Undo capture should have been called');
+    clearMidiLearnMappings();
+    window.appServices = originalAppServices;
+});
+
+TestRunner.test('MIDI Learn - removeMidiLearnMapping handles unknown index', (t) => {
+    const result = removeMidiLearnMapping(999);
+    t.assertEqual(result, false, 'Should return false for unknown index');
+});
+
+TestRunner.test('MIDI Learn - removeMidiLearnMapping handles negative index', (t) => {
+    const result = removeMidiLearnMapping(-1);
+    t.assertEqual(result, false, 'Should return false for negative index');
+});
+
+TestRunner.test('MIDI Learn - clearMidiLearnMappings uses undo capture', (t) => {
+    const originalAppServices = window.appServices;
+    let undoCaptureCalled = false;
+    window.appServices = {
+        ...originalAppServices,
+        captureStateForUndo: (desc) => {
+            undoCaptureCalled = true;
+        }
+    };
+    clearMidiLearnMappings();
+    addMidiLearnMapping({ channel: 0, ccNumber: 1, paramType: 'masterVolume' });
+    addMidiLearnMapping({ channel: 1, ccNumber: 2, paramType: 'tempo' });
+    const mappings = getMidiLearnMappingsState();
+    t.assertTruthy(mappings.length >= 2, 'Should have at least two mappings');
+    const result = clearMidiLearnMappings();
+    t.assertTruthy(undoCaptureCalled, 'Undo capture should have been called');
+    const remaining = getMidiLearnMappingsState();
+    t.assertEqual(remaining.length, 0, 'All mappings should be cleared');
+    window.appServices = originalAppServices;
+});
+
 // ============================================
 // Day 193: Tap Tempo Tests
 // ============================================
@@ -7618,4 +7669,329 @@ TestRunner.test('Effect Presets - update handles unknown id gracefully', (t) => 
     clearEffectPresetsState();
     const result = updateEffectPresetState(99999, { name: 'New Name' });
     t.assertEqual(result, null, 'Should return null for unknown id');
+});
+
+// ============================================
+// Day 196: Track addAudioClip Return Value Tests
+// ============================================
+
+TestRunner.test('Audio Clip - addAudioClip stores clip in timelineClips array', async (t) => {
+    const mockBlob = new Blob(['test audio data'], { type: 'audio/webm' });
+    const originalStoreAudio = window.storeAudio;
+    window.storeAudio = async () => {};
+    
+    const testTrack = {
+        id: 'test-track-1',
+        name: 'Test Track',
+        type: 'Audio',
+        timelineClips: [],
+        appServices: { updateTrackUI: null, renderTimeline: null },
+        _captureUndoState: function() {}
+    };
+    
+    async function addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) return null;
+        const dbKey = 'rec_' + Date.now();
+        await window.storeAudio(dbKey, blob);
+        this._captureUndoState('Add recorded clip on ' + this.name);
+        const clipId = 'audioclip_' + Date.now();
+        const clipName = 'Rec ' + (this.timelineClips.filter(function(c) { return c.type === 'audio'; }).length + 1);
+        const newClip = {
+            id: clipId, type: 'audio', sourceId: dbKey,
+            startTime: startTime || 0, duration: 0, name: clipName,
+            color: '#3b82f6', gain: 1.0, playbackRate: 1.0,
+            startOffset: 0, endOffset: -1, crossfade: 0,
+            fadeIn: 0, fadeOut: 0, fadeInCurve: 'linear',
+            fadeOutCurve: 'linear', reverse: false
+        };
+        this.timelineClips.push(newClip);
+        return newClip;
+    }
+    testTrack.addAudioClip = addAudioClip;
+    
+    const result = await testTrack.addAudioClip(mockBlob, 0);
+    window.storeAudio = originalStoreAudio;
+    
+    t.assertTruthy(result !== null, 'Should return clip');
+    t.assertEqual(testTrack.timelineClips.length, 1, 'Should have 1 clip in timeline');
+    t.assertEqual(testTrack.timelineClips[0].id, result.id, 'Clip ID should match');
+});
+
+TestRunner.test('Audio Clip - addAudioClip generates unique clip IDs', async (t) => {
+    const mockBlob = new Blob(['test'], { type: 'audio/webm' });
+    const originalStoreAudio = window.storeAudio;
+    window.storeAudio = async () => {};
+    
+    const testTrack = {
+        id: 'test-track-2',
+        name: 'Test Track',
+        type: 'Audio',
+        timelineClips: [],
+        appServices: { updateTrackUI: null, renderTimeline: null },
+        _captureUndoState: function() {}
+    };
+    
+    async function addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) return null;
+        const dbKey = 'rec_' + Date.now();
+        await window.storeAudio(dbKey, blob);
+        this._captureUndoState('Add recorded clip');
+        const clipId = 'audioclip_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        const newClip = {
+            id: clipId, type: 'audio', sourceId: dbKey,
+            startTime: startTime || 0, duration: 0, name: 'Rec 1',
+            color: '#3b82f6', gain: 1.0, playbackRate: 1.0,
+            startOffset: 0, endOffset: -1, crossfade: 0,
+            fadeIn: 0, fadeOut: 0, fadeInCurve: 'linear',
+            fadeOutCurve: 'linear', reverse: false
+        };
+        this.timelineClips.push(newClip);
+        return newClip;
+    }
+    testTrack.addAudioClip = addAudioClip;
+    
+    const clip1 = await testTrack.addAudioClip(mockBlob, 0);
+    const clip2 = await testTrack.addAudioClip(mockBlob, 1);
+    window.storeAudio = originalStoreAudio;
+    
+    t.assertNotEqual(clip1.id, clip2.id, 'Each clip should have unique ID');
+});
+
+TestRunner.test('Audio Clip - addAudioClip uses default startTime when not provided', async (t) => {
+    const mockBlob = new Blob(['test'], { type: 'audio/webm' });
+    const originalStoreAudio = window.storeAudio;
+    window.storeAudio = async () => {};
+    
+    const testTrack = {
+        id: 'test-track-3',
+        name: 'Test Track',
+        type: 'Audio',
+        timelineClips: [],
+        appServices: { updateTrackUI: null, renderTimeline: null },
+        _captureUndoState: function() {}
+    };
+    
+    async function addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) return null;
+        const dbKey = 'rec_' + Date.now();
+        await window.storeAudio(dbKey, blob);
+        this._captureUndoState('Add recorded clip');
+        const clipId = 'audioclip_' + Date.now();
+        const newClip = {
+            id: clipId, type: 'audio', sourceId: dbKey,
+            startTime: startTime || 0, duration: 0, name: 'Rec 1',
+            color: '#3b82f6', gain: 1.0, playbackRate: 1.0,
+            startOffset: 0, endOffset: -1, crossfade: 0,
+            fadeIn: 0, fadeOut: 0, fadeInCurve: 'linear',
+            fadeOutCurve: 'linear', reverse: false
+        };
+        this.timelineClips.push(newClip);
+        return newClip;
+    }
+    testTrack.addAudioClip = addAudioClip;
+    
+    const result = await testTrack.addAudioClip(mockBlob);
+    window.storeAudio = originalStoreAudio;
+    
+    t.assertEqual(result.startTime, 0, 'Default startTime should be 0');
+});
+
+TestRunner.test('Audio Clip - addAudioClip stores sourceId in clip', async (t) => {
+    const mockBlob = new Blob(['test'], { type: 'audio/webm' });
+    const originalStoreAudio = window.storeAudio;
+    window.storeAudio = async () => {};
+    
+    const testTrack = {
+        id: 'test-track-4',
+        name: 'Test Track',
+        type: 'Audio',
+        timelineClips: [],
+        appServices: { updateTrackUI: null, renderTimeline: null },
+        _captureUndoState: function() {}
+    };
+    
+    async function addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) return null;
+        const dbKey = 'rec_' + Date.now();
+        await window.storeAudio(dbKey, blob);
+        this._captureUndoState('Add recorded clip');
+        const clipId = 'audioclip_' + Date.now();
+        const newClip = {
+            id: clipId, type: 'audio', sourceId: dbKey,
+            startTime: startTime || 0, duration: 0, name: 'Rec 1',
+            color: '#3b82f6', gain: 1.0, playbackRate: 1.0,
+            startOffset: 0, endOffset: -1, crossfade: 0,
+            fadeIn: 0, fadeOut: 0, fadeInCurve: 'linear',
+            fadeOutCurve: 'linear', reverse: false
+        };
+        this.timelineClips.push(newClip);
+        return newClip;
+    }
+    testTrack.addAudioClip = addAudioClip;
+    
+    const result = await testTrack.addAudioClip(mockBlob, 0);
+    window.storeAudio = originalStoreAudio;
+    
+    t.assertTruthy(result.sourceId.startsWith('rec_'), 'sourceId should start with rec_ prefix');
+});
+
+TestRunner.test('Audio Clip - addAudioClip sets duration to 0 initially', async (t) => {
+    const mockBlob = new Blob(['test'], { type: 'audio/webm' });
+    const originalStoreAudio = window.storeAudio;
+    window.storeAudio = async () => {};
+    
+    const testTrack = {
+        id: 'test-track-5',
+        name: 'Test Track',
+        type: 'Audio',
+        timelineClips: [],
+        appServices: { updateTrackUI: null, renderTimeline: null },
+        _captureUndoState: function() {}
+    };
+    
+    async function addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) return null;
+        const dbKey = 'rec_' + Date.now();
+        await window.storeAudio(dbKey, blob);
+        this._captureUndoState('Add recorded clip');
+        const clipId = 'audioclip_' + Date.now();
+        const newClip = {
+            id: clipId, type: 'audio', sourceId: dbKey,
+            startTime: startTime || 0, duration: 0, name: 'Rec 1',
+            color: '#3b82f6', gain: 1.0, playbackRate: 1.0,
+            startOffset: 0, endOffset: -1, crossfade: 0,
+            fadeIn: 0, fadeOut: 0, fadeInCurve: 'linear',
+            fadeOutCurve: 'linear', reverse: false
+        };
+        this.timelineClips.push(newClip);
+        return newClip;
+    }
+    testTrack.addAudioClip = addAudioClip;
+    
+    const result = await testTrack.addAudioClip(mockBlob, 0);
+    window.storeAudio = originalStoreAudio;
+    
+    t.assertEqual(result.duration, 0, 'Duration should initially be 0 (set when clip is placed)');
+});
+
+TestRunner.test('Audio Clip - addAudioClip handles negative startTime', async (t) => {
+    const mockBlob = new Blob(['test'], { type: 'audio/webm' });
+    const originalStoreAudio = window.storeAudio;
+    window.storeAudio = async () => {};
+    
+    const testTrack = {
+        id: 'test-track-6',
+        name: 'Test Track',
+        type: 'Audio',
+        timelineClips: [],
+        appServices: { updateTrackUI: null, renderTimeline: null },
+        _captureUndoState: function() {}
+    };
+    
+    async function addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) return null;
+        const dbKey = 'rec_' + Date.now();
+        await window.storeAudio(dbKey, blob);
+        this._captureUndoState('Add recorded clip');
+        const clipId = 'audioclip_' + Date.now();
+        const newClip = {
+            id: clipId, type: 'audio', sourceId: dbKey,
+            startTime: startTime || 0, duration: 0, name: 'Rec 1',
+            color: '#3b82f6', gain: 1.0, playbackRate: 1.0,
+            startOffset: 0, endOffset: -1, crossfade: 0,
+            fadeIn: 0, fadeOut: 0, fadeInCurve: 'linear',
+            fadeOutCurve: 'linear', reverse: false
+        };
+        this.timelineClips.push(newClip);
+        return newClip;
+    }
+    testTrack.addAudioClip = addAudioClip;
+    
+    const result = await testTrack.addAudioClip(mockBlob, -4);
+    window.storeAudio = originalStoreAudio;
+    
+    t.assertEqual(result.startTime, -4, 'Should accept negative startTime');
+});
+
+TestRunner.test('Audio Clip - addAudioClip calls _captureUndoState', async (t) => {
+    const mockBlob = new Blob(['test'], { type: 'audio/webm' });
+    const originalStoreAudio = window.storeAudio;
+    window.storeAudio = async () => {};
+    
+    let undoCaptured = false;
+    const testTrack = {
+        id: 'test-track-7',
+        name: 'Test Track',
+        type: 'Audio',
+        timelineClips: [],
+        appServices: { updateTrackUI: null, renderTimeline: null },
+        _captureUndoState: function(desc) {
+            undoCaptured = true;
+        }
+    };
+    
+    async function addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) return null;
+        const dbKey = 'rec_' + Date.now();
+        await window.storeAudio(dbKey, blob);
+        this._captureUndoState('Add recorded clip on ' + this.name);
+        const clipId = 'audioclip_' + Date.now();
+        const newClip = {
+            id: clipId, type: 'audio', sourceId: dbKey,
+            startTime: startTime || 0, duration: 0, name: 'Rec 1',
+            color: '#3b82f6', gain: 1.0, playbackRate: 1.0,
+            startOffset: 0, endOffset: -1, crossfade: 0,
+            fadeIn: 0, fadeOut: 0, fadeInCurve: 'linear',
+            fadeOutCurve: 'linear', reverse: false
+        };
+        this.timelineClips.push(newClip);
+        return newClip;
+    }
+    testTrack.addAudioClip = addAudioClip;
+    
+    await testTrack.addAudioClip(mockBlob, 0);
+    window.storeAudio = originalStoreAudio;
+    
+    t.assertTruthy(undoCaptured, '_captureUndoState should be called');
+});
+
+TestRunner.test('Audio Clip - addAudioClip accepts large blob', async (t) => {
+    const largeData = new Uint8Array(1024 * 100);
+    const mockBlob = new Blob([largeData], { type: 'audio/webm' });
+    const originalStoreAudio = window.storeAudio;
+    window.storeAudio = async () => {};
+    
+    const testTrack = {
+        id: 'test-track-8',
+        name: 'Test Track',
+        type: 'Audio',
+        timelineClips: [],
+        appServices: { updateTrackUI: null, renderTimeline: null },
+        _captureUndoState: function() {}
+    };
+    
+    async function addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) return null;
+        const dbKey = 'rec_' + Date.now();
+        await window.storeAudio(dbKey, blob);
+        this._captureUndoState('Add recorded clip');
+        const clipId = 'audioclip_' + Date.now();
+        const newClip = {
+            id: clipId, type: 'audio', sourceId: dbKey,
+            startTime: startTime || 0, duration: 0, name: 'Rec 1',
+            color: '#3b82f6', gain: 1.0, playbackRate: 1.0,
+            startOffset: 0, endOffset: -1, crossfade: 0,
+            fadeIn: 0, fadeOut: 0, fadeInCurve: 'linear',
+            fadeOutCurve: 'linear', reverse: false
+        };
+        this.timelineClips.push(newClip);
+        return newClip;
+    }
+    testTrack.addAudioClip = addAudioClip;
+    
+    const result = await testTrack.addAudioClip(mockBlob, 0);
+    window.storeAudio = originalStoreAudio;
+    
+    t.assertTruthy(result !== null, 'Should handle large blob');
+    t.assertEqual(result.type, 'audio', 'Clip type should be audio');
 });

@@ -2289,3 +2289,21 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The recording functions (startAudioRecording, stopAudioRecording, setRecordingInputGain) in audio.js handle microphone access, Tone.js recorder management, and audio blob creation. The state functions track recording status across the application. Tests verify the API without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.79.0
+
+#### Day 196: MIDI Learn Remove/Clear Undo Tests (2026-04-24)
+- **Feature**: Added 4 new unit tests for MIDI Learn remove and clear undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 4 new tests in Day 196 section (after Day 193 MIDI Learn tests, before Tap Tempo tests):
+    - `MIDI Learn - removeMidiLearnMapping uses undo capture` - Tests removeMidiLearnMapping calls captureStateForUndo
+    - `MIDI Learn - removeMidiLearnMapping handles unknown index` - Tests graceful handling of invalid index
+    - `MIDI Learn - removeMidiLearnMapping handles negative index` - Tests graceful handling of negative index
+    - `MIDI Learn - clearMidiLearnMappings uses undo capture` - Tests clearMidiLearnMappings calls captureStateForUndo
+  - `js/constants.js`: Bumped APP_VERSION to 0.80.0
+- **Feature Details**:
+  - Tests verify that removeMidiLearnMapping and clearMidiLearnMappings properly call captureStateForUndo before mutating state
+  - Tests verify edge case handling for unknown and negative indices on removeMidiLearnMapping
+  - Tests verify clearMidiLearnMappings properly clears all mappings and triggers undo capture
+  - Total test count increased from 1063 to 1067 tests
+- **Backend Note**: These tests complement the existing MIDI Learn undo capture tests (Day 193) by verifying remove and clear operations also capture state for undo. The undo system captures full project state snapshots before mutations, allowing users to undo MIDI Learn changes via Ctrl+Z.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.80.0
