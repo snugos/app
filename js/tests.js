@@ -1301,7 +1301,7 @@ TestRunner.test('Chord Mode - getChordVoicingState returns string', (t) => {
 });
 
 TestRunner.test('Chord Mode - setChordVoicingState updates state', (t) => {
-    setChordVoicingState('close');
+    setChordVoicingState('closed');
     t.assertEqual(getChordVoicingState(), 'close', 'Voicing should be close');
     setChordVoicingState('open');
     t.assertEqual(getChordVoicingState(), 'open', 'Voicing should be open');
