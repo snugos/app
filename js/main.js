@@ -324,7 +324,7 @@ import {
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
                 const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-                if (!isReconstructConstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
+                if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
                 if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -341,7 +341,7 @@ import {
     reorderMasterEffect: (effectId, newIndex) => {
         try {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructConstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
