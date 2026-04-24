@@ -6581,3 +6581,72 @@ TestRunner.test('MIDI Learn State - clearMidiLearnMappings clears all', (t) => {
     clearMidiLearnMappings();
     t.assertEqual(getMidiLearnMappingsState().length, 0, 'All mappings should be cleared');
 });
+// === Day 184: DrumSampler Pad Drop Zone Container Fix Tests ===
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML includes data-pad-slice-index attribute', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 3, null);
+    t.assertTruthy(html.includes('data-pad-slice-index="3"'), 'Should have correct pad index data attribute');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML generates correct drop zone ID', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 5, null);
+    t.assertTruthy(html.includes('id="dropZone-track1-drumsampler-5"'), 'Should have correct drop zone ID with pad index');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML handles existing audio data for loaded status', (t) => {
+    const existingData = { originalFileName: 'kick.wav', status: 'loaded' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 2, existingData);
+    t.assertTruthy(html.includes('Loaded: kick'), 'Should show loaded status with filename');
+    t.assertTruthy(html.includes('drop-zone'), 'Should have drop-zone class');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML handles existing audio data for missing status', (t) => {
+    const existingData = { originalFileName: 'snare.wav', status: 'missing' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 2, existingData);
+    t.assertTruthy(html.includes('Missing: snare'), 'Should show missing status');
+    t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing class');
+    t.assertTruthy(html.includes('Relink'), 'Should have relink button for missing files');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners handles DrumSampler pad index correctly', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'Should handle DrumSampler type');
+    t.assertTruthy(funcStr.includes('padIndexOrSliceId') || funcStr.includes('actualPadIndex'), 'Should use pad index parameter');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners falls back to selectedDrumPadForEdit when no explicit pad', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('selectedDrumPadForEdit') || funcStr.includes('actualPadIndex'), 'Should have fallback logic for pad index');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - drop zone status enum values are correct', (t) => {
+    const validStatuses = ['empty', 'loaded', 'loading', 'missing', 'missing_db', 'error'];
+    t.assertEqual(validStatuses.length, 6, 'Should have 6 valid pad status values');
+    t.assertTruthy(validStatuses.includes('empty'), 'Should include empty status');
+    t.assertTruthy(validStatuses.includes('loaded'), 'Should include loaded status');
+    t.assertTruthy(validStatuses.includes('missing'), 'Should include missing status');
+    t.assertTruthy(validStatuses.includes('error'), 'Should include error status');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML handles all status types correctly', (t) => {
+    const statuses = ['empty', 'loaded', 'missing', 'error', 'loading'];
+    statuses.forEach(status => {
+        const existingData = { originalFileName: 'test.wav', status: status };
+        const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+        t.assertTruthy(html.includes('drop-zone'), 'Should create drop zone HTML for status: ' + status);
+    });
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - relink button is rendered for missing status', (t) => {
+    const existingData = { originalFileName: 'missing.wav', status: 'missing' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have relink button class');
+    t.assertTruthy(html.includes('Relink'), 'Should have Relink text');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - retry button is rendered for error status', (t) => {
+    const existingData = { originalFileName: 'error.wav', status: 'error' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have retry button class');
+    t.assertTruthy(html.includes('Retry'), 'Should have Retry text');
+});

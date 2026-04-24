@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.70.2'; // Day 183: MIDI Learn - Added project save/load persistence for MIDI Learn mappings
+export const APP_VERSION = '0.70.3'; // Day 183: MIDI Learn - Added project save/load persistence for MIDI Learn mappings
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

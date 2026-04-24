@@ -3153,21 +3153,20 @@ export function updateDrumPadControlsUI(track) {
     if (padInfo) padInfo.textContent = selectedPadIndex + 1;
 
     // Update drop zone for selected pad
-    const oldDropZoneContainer = winEl.querySelector(`[id^="drumPadDropZoneContainer-${track.id}"]`);
-    if (oldDropZoneContainer) {
-        const newContainerId = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`;
-        oldDropZoneContainer.id = newContainerId;
-        
-        const existingAudioData = { 
-            originalFileName: padData.originalFileName, 
+    // Find the SPECIFIC container for the current selected pad index
+    const dropZoneContainer = winEl.querySelector(`#drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`);
+    if (dropZoneContainer) {
+        // Container already has correct ID - update its content
+        const existingAudioData = {
+            originalFileName: padData.originalFileName,
             status: padData.status || (padData.dbKey ? 'loaded' : (padData.originalFileName ? 'missing' : 'empty'))
         };
         const inputId = `drumPadFileInput-${track.id}-${selectedPadIndex}`;
-        oldDropZoneContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', selectedPadIndex, existingAudioData);
-        
-        const dzEl = oldDropZoneContainer.querySelector('.drop-zone');
-        const fileInputEl = oldDropZoneContainer.querySelector(`#${inputId}`);
-        
+        dropZoneContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', selectedPadIndex, existingAudioData);
+
+        const dzEl = dropZoneContainer.querySelector('.drop-zone');
+        const fileInputEl = dropZoneContainer.querySelector(`#${inputId}`);
+
         if (dzEl) {
             setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile, localAppServices.getTrackById);
         }
@@ -3175,6 +3174,32 @@ export function updateDrumPadControlsUI(track) {
             fileInputEl.onchange = (e) => {
                 localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex);
             };
+        }
+    } else {
+        // Fallback: find any existing container and update it (legacy behavior for edge cases)
+        const oldDropZoneContainer = winEl.querySelector(`[id^="drumPadDropZoneContainer-${track.id}"]`);
+        if (oldDropZoneContainer) {
+            // Rename to correct pad index
+            oldDropZoneContainer.id = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`;
+
+            const existingAudioData = {
+                originalFileName: padData.originalFileName,
+                status: padData.status || (padData.dbKey ? 'loaded' : (padData.originalFileName ? 'missing' : 'empty'))
+            };
+            const inputId = `drumPadFileInput-${track.id}-${selectedPadIndex}`;
+            oldDropZoneContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', selectedPadIndex, existingAudioData);
+
+            const dzEl = oldDropZoneContainer.querySelector('.drop-zone');
+            const fileInputEl = oldDropZoneContainer.querySelector(`#${inputId}`);
+
+            if (dzEl) {
+                setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile, localAppServices.getTrackById);
+            }
+            if (fileInputEl) {
+                fileInputEl.onchange = (e) => {
+                    localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex);
+                };
+            }
         }
     }
 
