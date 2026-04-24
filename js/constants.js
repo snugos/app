@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.75.0'; // Day 191: Track Templates State Tests
+export const APP_VERSION = '0.76.0'; // Day 192: Tap Tempo Constants
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -28,6 +28,13 @@ export const DEFAULT_METRONOME_ENABLED = false; // Metronome off by default
 export const DEFAULT_METRONOME_VOLUME = 0.5; // Default volume (0-1 range)
 export const MIN_METRONOME_VOLUME = 0; // Minimum volume
 export const MAX_METRONOME_VOLUME = 1; // Maximum volume
+
+// Tap Tempo Constants
+export const TAP_TEMPO_TIMEOUT_MS = 2000; // Reset tap buffer after 2 seconds of inactivity
+export const TAP_TEMPO_MIN_TAPS = 2; // Minimum taps needed to calculate tempo
+export const TAP_TEMPO_MAX_TAPS = 8; // Maximum taps to keep for averaging
+export const TAP_TEMPO_MIN_BPM = 20; // Minimum acceptable BPM
+export const TAP_TEMPO_MAX_BPM = 300; // Maximum acceptable BPM
 
 // Time Signature constants
 export const TIME_SIG_MIN_NUMERATOR = 1;
