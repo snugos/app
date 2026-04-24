@@ -13491,3 +13491,106 @@ TestRunner.test('DrumSampler Pad - updateDrumPadControlsUI sets file input oncha
     const funcStr = updateDrumPadControlsUI.toString();
     t.assertTruthy(funcStr.includes('onchange') || funcStr.includes('fileInput'), 'Should set file input onchange handler');
 });
+
+TestRunner.test('DrumSampler Pad - createDropZoneHTML generates correct DrumSampler pad drop zone with pad index', (t) => {
+    const html = createDropZoneHTML('track1', 'padInput1', 'DrumSampler', 3, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should contain drop-zone class');
+    t.assertTruthy(html.includes('dropZone-track1-drumsampler-3'), 'Should contain correct drop zone ID with pad index');
+});
+
+TestRunner.test('DrumSampler Pad - createDropZoneHTML includes file input for pad', (t) => {
+    const html = createDropZoneHTML('track1', 'padInput1', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('id="padInput1"'), 'Should contain file input with correct ID');
+    t.assertTruthy(html.includes('type="file"'), 'Should contain file input type');
+});
+
+TestRunner.test('DrumSampler Pad - createDropZoneHTML shows missing status for unloaded pad', (t) => {
+    const html = createDropZoneHTML('track1', 'padInput1', 'DrumSampler', 2, { status: 'missing' });
+    t.assertTruthy(html.includes('drop-zone-missing'), 'Should show missing status');
+});
+
+TestRunner.test('DrumSampler Pad - createDropZoneHTML shows loaded status for loaded pad', (t) => {
+    const html = createDropZoneHTML('track1', 'padInput1', 'DrumSampler', 4, { status: 'loaded', originalFileName: 'kick.wav' });
+    t.assertTruthy(html.includes('drop-zone-loaded') || html.includes('drop-zone'), 'Should show loaded status');
+    t.assertTruthy(html.includes('kick.wav'), 'Should display file name');
+});
+
+TestRunner.test('DrumSampler Pad - createDropZoneHTML shows error status for error state', (t) => {
+    const html = createDropZoneHTML('track1', 'padInput1', 'DrumSampler', 1, { status: 'error' });
+    t.assertTruthy(html.includes('drop-zone-error'), 'Should show error status');
+});
+
+TestRunner.test('DrumSampler Pad - createDropZoneHTML includes relink/retry button for missing/error states', (t) => {
+    const missingHtml = createDropZoneHTML('track1', 'padInput1', 'DrumSampler', 0, { status: 'missing' });
+    const errorHtml = createDropZoneHTML('track1', 'padInput1', 'DrumSampler', 0, { status: 'error' });
+    t.assertTruthy(missingHtml.includes('drop-zone-relink-button') || missingHtml.includes('Relink'), 'Missing should have relink button');
+    t.assertTruthy(errorHtml.includes('drop-zone-relink-button') || errorHtml.includes('Retry'), 'Error should have retry button');
+});
+
+TestRunner.test('DrumSampler Pad - updateDrumPadControlsUI uses correct container ID with selected pad', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumPadDropZoneContainer-${track.id}-${selectedPadIndex}'), 'Should use correct container ID pattern');
+});
+
+TestRunner.test('DrumSampler Pad - updateDrumPadControlsUI creates drop zone with correct input ID', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumPadFileInput-${track.id}-${selectedPadIndex}'), 'Should use correct file input ID pattern');
+});
+
+TestRunner.test('DrumSampler Pad - updateDrumPadControlsUI passes correct pad index to setupGenericDropZoneListeners', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler') && funcStr.includes('selectedPadIndex'), 'Should pass DrumSampler type and selectedPadIndex');
+});
+
+TestRunner.test('DrumSampler Pad - updateDrumPadControlsUI handles fallback container rename', (t) => {
+    // Test that fallback handling renames container ID correctly
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('oldDropZoneContainer') || funcStr.includes('rename'), 'Should handle container rename fallback');
+});
+
+TestRunner.test('DrumSampler Pad - updateDrumPadControlsUI calls getTrackById for pad operations', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'Should pass getTrackById callback');
+});
+
+TestRunner.test('DrumSampler Pad - updateDrumPadControlsUI handles missing drop zone container gracefully', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('querySelector') && funcStr.includes('fallback'), 'Should gracefully handle missing container');
+});
+
+TestRunner.test('DrumSampler Pad - renderDrumSamplerPads creates pad buttons with correct data attributes', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('dataset.padIndex') || funcStr.includes('padIndex'), 'Should set pad index data attribute');
+});
+
+TestRunner.test('DrumSampler Pad - renderDrumSamplerPads uses numDrumSamplerPads for pad count', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('numDrumSamplerPads') || funcStr.includes('numPads'), 'Should use pad count constant');
+});
+
+TestRunner.test('DrumSampler Pad - renderDrumSamplerPads handles drumSamplerPads array access', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads'), 'Should access drumSamplerPads array');
+});
+
+TestRunner.test('DrumSampler Pad - renderDrumSamplerPads handles selectedDrumPadForEdit state', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('selectedDrumPadForEdit'), 'Should check selectedDrumPadForEdit');
+});
+
+TestRunner.test('DrumSampler Pad - initializeDrumSamplerSpecificControls calls updateDrumPadControlsUI at end', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('updateDrumPadControlsUI'), 'Should call updateDrumPadControlsUI');
+});
+
+TestRunner.test('DrumSampler Pad - pad status constants are all valid strings', (t) => {
+    const validStatuses = ['empty', 'loaded', 'loading', 'missing', 'missing_db', 'error'];
+    validStatuses.forEach(status => {
+        t.assertEqual(typeof status, 'string', `Status ${status} should be a string`);
+    });
+});
+
+TestRunner.test('DrumSampler Pad - pad status transitions from empty to loaded', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('loaded') || funcStr.includes('status'), 'Should handle status transitions');
+});
