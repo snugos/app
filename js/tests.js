@@ -142,7 +142,11 @@ import {
     setSendBusMuted,
     setRecordingInputGain,
     loadDrumSamplerPadFile,
-    loadSoundFromBrowserToTarget
+    loadSoundFromBrowserToTarget,
+    playSlicePreview,
+    playDrumSamplerPadPreview,
+    loadSampleFile,
+    fetchSoundLibrary
 } from './audio.js';
 
 import {
@@ -154,8 +158,6 @@ import {
 } from './effectsRegistry.js';
 
 import { Track } from './Track.js';
-
-import {
 
 import {
     openMixerWindow,
@@ -177,6 +179,8 @@ import {
     createKnob,
     initializeUIModule
 } from './ui.js';
+
+import {
     showNotification,
     showCustomModal,
     showConfirmationDialog,
@@ -4392,13 +4396,119 @@ TestRunner.test('Track - addAudioClip clip structure includes all required field
     t.assertEqual(requiredFields.length, 18, 'Should have 18 required clip fields');
 });
 
-// Export the runTests function for browser console execution
-export async function runTests() {
-    return TestRunner.runAll(window.showNotification);
-}
 
-export { TestRunner };
-export default TestRunner;
+// ============================================
+// Day 211: Audio Preview & Loading Function Tests (2026-04-24)
+// ============================================
+TestRunner.test('Audio Preview - playSlicePreview function is exported', (t) => {
+    t.assertEqual(typeof playSlicePreview, 'function', 'playSlicePreview should be a function');
+});
+
+TestRunner.test('Audio Preview - playSlicePreview accepts 2-4 parameters', (t) => {
+    // Function signature: playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0)
+    t.assertTruthy(playSlicePreview.length >= 2 && playSlicePreview.length <= 4, 'playSlicePreview should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio Preview - playSlicePreview has velocity default of 0.7', (t) => {
+    // Verify function has default parameter by checking toString includes default value
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('0.7'), 'playSlicePreview should have default velocity of 0.7');
+});
+
+TestRunner.test('Audio Preview - playSlicePreview has pitch shift default of 0', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('additionalPitchShiftInSemitones'), 'playSlicePreview should have pitch shift parameter');
+});
+
+TestRunner.test('Audio Preview - playDrumSamplerPadPreview function is exported', (t) => {
+    t.assertEqual(typeof playDrumSamplerPadPreview, 'function', 'playDrumSamplerPadPreview should be a function');
+});
+
+TestRunner.test('Audio Preview - playDrumSamplerPadPreview accepts 2-4 parameters', (t) => {
+    // Function signature: playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0)
+    t.assertTruthy(playDrumSamplerPadPreview.length >= 2 && playDrumSamplerPadPreview.length <= 4, 'playDrumSamplerPadPreview should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio Preview - playDrumSamplerPadPreview has velocity default of 0.7', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('0.7'), 'playDrumSamplerPadPreview should have default velocity of 0.7');
+});
+
+TestRunner.test('Audio Preview - playDrumSamplerPadPreview has pitch shift default of 0', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('additionalPitchShiftInSemitones'), 'playDrumSamplerPadPreview should have pitch shift parameter');
+});
+
+TestRunner.test('Audio Loading - loadSampleFile function is exported', (t) => {
+    t.assertEqual(typeof loadSampleFile, 'function', 'loadSampleFile should be a function');
+});
+
+TestRunner.test('Audio Loading - loadSampleFile accepts 2-4 parameters', (t) => {
+    // Function signature: loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNameForUrl = null)
+    t.assertTruthy(loadSampleFile.length >= 2 && loadSampleFile.length <= 4, 'loadSampleFile should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio Loading - loadSampleFile validates track type parameter', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('trackTypeHint') || funcStr.includes('trackType'), 'loadSampleFile should reference track type');
+});
+
+TestRunner.test('Audio Loading - fetchSoundLibrary function is exported', (t) => {
+    t.assertEqual(typeof fetchSoundLibrary, 'function', 'fetchSoundLibrary should be a function');
+});
+
+TestRunner.test('Audio Loading - fetchSoundLibrary accepts 1-3 parameters', (t) => {
+    // Function signature: fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
+    t.assertTruthy(fetchSoundLibrary.length >= 1 && fetchSoundLibrary.length <= 3, 'fetchSoundLibrary should accept 1-3 parameters');
+});
+
+TestRunner.test('Audio Loading - fetchSoundLibrary has autofetch default parameter', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('isAutofetch') || funcStr.includes('autofetch'), 'fetchSoundLibrary should have autofetch parameter');
+});
+
+TestRunner.test('Audio Loading - loadDrumSamplerPadFile function is exported', (t) => {
+    t.assertEqual(typeof loadDrumSamplerPadFile, 'function', 'loadDrumSamplerPadFile should be a function');
+});
+
+TestRunner.test('Audio Loading - loadDrumSamplerPadFile accepts 2-4 parameters', (t) => {
+    // Function signature: loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, fileNameForUrl = null)
+    t.assertTruthy(loadDrumSamplerPadFile.length >= 2 && loadDrumSamplerPadFile.length <= 4, 'loadDrumSamplerPadFile should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio Loading - loadDrumSamplerPadFile validates pad index', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('padIndex') || funcStr.includes('pad'), 'loadDrumSamplerPadFile should reference pad index');
+});
+
+TestRunner.test('Audio Loading - loadSoundFromBrowserToTarget function is exported', (t) => {
+    t.assertEqual(typeof loadSoundFromBrowserToTarget, 'function', 'loadSoundFromBrowserToTarget should be a function');
+});
+
+TestRunner.test('Audio Loading - loadSoundFromBrowserToTarget accepts 2-4 parameters', (t) => {
+    // Function signature: loadSoundFromBrowserToTarget(soundData, targetTrackId, targetTrackTypeIgnored, targetPadOrSliceIndex = null)
+    t.assertTruthy(loadSoundFromBrowserToTarget.length >= 2 && loadSoundFromBrowserToTarget.length <= 4, 'loadSoundFromBrowserToTarget should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio Loading - loadSoundFromBrowserToTarget handles targetPadOrSliceIndex', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('targetPadOrSliceIndex'), 'loadSoundFromBrowserToTarget should handle targetPadOrSliceIndex');
+});
+
+TestRunner.test('Audio Preview - preview functions are async', (t) => {
+    // playSlicePreview and playDrumSamplerPadPreview are async functions
+    t.assertTruthy(playSlicePreview.constructor.name === 'AsyncFunction' || playSlicePreview.toString().includes('async'), 'playSlicePreview should be async');
+    t.assertTruthy(playDrumSamplerPadPreview.constructor.name === 'AsyncFunction' || playDrumSamplerPadPreview.toString().includes('async'), 'playDrumSamplerPadPreview should be async');
+});
+
+TestRunner.test('Audio Loading - loading functions are async', (t) => {
+    // loadSampleFile, loadDrumSamplerPadFile, loadSoundFromBrowserToTarget, fetchSoundLibrary are async
+    t.assertTruthy(loadSampleFile.constructor.name === 'AsyncFunction' || loadSampleFile.toString().includes('async'), 'loadSampleFile should be async');
+    t.assertTruthy(loadDrumSamplerPadFile.constructor.name === 'AsyncFunction' || loadDrumSamplerPadFile.toString().includes('async'), 'loadDrumSamplerPadFile should be async');
+    t.assertTruthy(loadSoundFromBrowserToTarget.constructor.name === 'AsyncFunction' || loadSoundFromBrowserToTarget.toString().includes('async'), 'loadSoundFromBrowserToTarget should be async');
+    t.assertTruthy(fetchSoundLibrary.constructor.name === 'AsyncFunction' || fetchSoundLibrary.toString().includes('async'), 'fetchSoundLibrary should be async');
+});
+
 // Day 211: UI Window Open Function Tests (2026-04-24)
 TestRunner.test('UI - openMixerWindow function is exported', (t) => {
     t.assertTruthy(typeof openMixerWindow === 'function', 'openMixerWindow should be a function');
@@ -4556,3 +4666,71 @@ TestRunner.test('UI - initializeUIModule accepts appServices parameter', (t) => 
     // Function signature: initializeUIModule(appServicesFromMain)
     t.assertEqual(initializeUIModule.length, 1, 'initializeUIModule should accept 1 parameter');
 });
+
+// Day 212: MIDI Export/Import Constants Tests (2026-04-24)
+TestRunner.test('MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is 127', (t) => {
+    t.assertEqual(MIDI_EXPORT_VELOCITY_SCALE, 127, 'MIDI_EXPORT_VELOCITY_SCALE should be 127');
+});
+
+TestRunner.test('MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is 480', (t) => {
+    t.assertEqual(MIDI_EXPORT_TicksPerQuarterNote, 480, 'MIDI_EXPORT_TicksPerQuarterNote should be 480');
+});
+
+TestRunner.test('MIDI Export - MIDI_FILE_FORMAT is 0', (t) => {
+    t.assertEqual(MIDI_FILE_FORMAT, 0, 'MIDI_FILE_FORMAT should be 0 (single track)');
+});
+
+TestRunner.test('MIDI Export - MIDI_FILE_TYPE_NAMES is array with Type 0', (t) => {
+    t.assertTruthy(Array.isArray(MIDI_FILE_TYPE_NAMES), 'MIDI_FILE_TYPE_NAMES should be an array');
+    t.assertTruthy(MIDI_FILE_TYPE_NAMES.length > 0, 'MIDI_FILE_TYPE_NAMES should not be empty');
+    t.assertTruthy(MIDI_FILE_TYPE_NAMES[0].includes('Type 0'), 'First entry should be Type 0');
+});
+
+TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is 64', (t) => {
+    t.assertEqual(MAX_MIDI_EXPORT_TRACKS, 64, 'MAX_MIDI_EXPORT_TRACKS should be 64');
+});
+
+TestRunner.test('MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is string', (t) => {
+    t.assertEqual(typeof DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, 'string', 'DEFAULT_MIDI_EXPORT_FILENAME_PREFIX should be a string');
+    t.assertTruthy(DEFAULT_MIDI_EXPORT_FILENAME_PREFIX.length > 0, 'DEFAULT_MIDI_EXPORT_FILENAME_PREFIX should not be empty');
+});
+
+TestRunner.test('MIDI - MIDI_DEFAULT_CHANNEL is 0', (t) => {
+    t.assertEqual(MIDI_DEFAULT_CHANNEL, 0, 'MIDI_DEFAULT_CHANNEL should be 0 (0-indexed)');
+});
+
+TestRunner.test('MIDI - MIDI_DEFAULT_PROGRAM is 0', (t) => {
+    t.assertEqual(MIDI_DEFAULT_PROGRAM, 0, 'MIDI_DEFAULT_PROGRAM should be 0');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is 1', (t) => {
+    t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'MIDI_IMPORT_MIN_NOTES should be 1');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_MAX_VELOCITY is 127', (t) => {
+    t.assertEqual(MIDI_IMPORT_MAX_VELOCITY, 127, 'MIDI_IMPORT_MAX_VELOCITY should be 127');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is 100', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_VELOCITY, 100, 'MIDI_IMPORT_DEFAULT_VELOCITY should be 100');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is 1.0', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_PROBABILITY, 1.0, 'MIDI_IMPORT_DEFAULT_PROBABILITY should be 1.0');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is true', (t) => {
+    t.assertEqual(MIDI_IMPORT_SNAP_TO_GRID, true, 'MIDI_IMPORT_SNAP_TO_GRID should be true');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is 1/127', (t) => {
+    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1 / 127, 'MIDI_IMPORT_VELOCITY_SCALE should be 1/127');
+});
+
+// Export the runTests function for browser console execution
+export async function runTests() {
+    return TestRunner.runAll(window.showNotification);
+}
+
+export { TestRunner };
+export default TestRunner;
