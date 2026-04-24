@@ -112,7 +112,19 @@ import {
     setDroppedCallbacksState
 } from './state.js';
 
-import { startAudioRecording, stopAudioRecording } from './audio.js';
+import {
+    startAudioRecording,
+    stopAudioRecording,
+    createSendBusInAudio,
+    deleteSendBusFromAudio,
+    addEffectToSendBus,
+    removeEffectFromSendBus,
+    reorderEffectInSendBus,
+    updateSendBusEffectParam,
+    setSendBusLevel,
+    setSendBusMuted,
+    setRecordingInputGain
+} from './audio.js';
 
 import {
     AVAILABLE_EFFECTS,
@@ -9555,3 +9567,78 @@ TestRunner.test('Synth Engine - synthEngineControlDefinitions.MonoSynth has cont
 // Day 70: Constants Validation Tests
 // ============================================
 
+
+// ============================================
+// Day 105: Send Bus Audio Functions Tests
+// ============================================
+TestRunner.test('Send Bus Audio - createSendBusInAudio function exists', (t) => {
+    t.assertEqual(typeof createSendBusInAudio, 'function', 'createSendBusInAudio should be a function');
+});
+
+TestRunner.test('Send Bus Audio - deleteSendBusFromAudio function exists', (t) => {
+    t.assertEqual(typeof deleteSendBusFromAudio, 'function', 'deleteSendBusFromAudio should be a function');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus function exists', (t) => {
+    t.assertEqual(typeof addEffectToSendBus, 'function', 'addEffectToSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus function exists', (t) => {
+    t.assertEqual(typeof removeEffectFromSendBus, 'function', 'removeEffectFromSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus function exists', (t) => {
+    t.assertEqual(typeof reorderEffectInSendBus, 'function', 'reorderEffectInSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam function exists', (t) => {
+    t.assertEqual(typeof updateSendBusEffectParam, 'function', 'updateSendBusEffectParam should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel function exists', (t) => {
+    t.assertEqual(typeof setSendBusLevel, 'function', 'setSendBusLevel should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted function exists', (t) => {
+    t.assertEqual(typeof setSendBusMuted, 'function', 'setSendBusMuted should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setRecordingInputGain function exists', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setRecordingInputGain accepts one parameter', (t) => {
+    t.assertEqual(setRecordingInputGain.length, 1, 'setRecordingInputGain should accept 1 parameter');
+});
+
+TestRunner.test('Send Bus Audio - createSendBusInAudio accepts one parameter', (t) => {
+    t.assertEqual(createSendBusInAudio.length, 1, 'createSendBusInAudio should accept 1 parameter');
+});
+
+TestRunner.test('Send Bus Audio - deleteSendBusFromAudio accepts one parameter', (t) => {
+    t.assertEqual(deleteSendBusFromAudio.length, 1, 'deleteSendBusFromAudio should accept 1 parameter');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus accepts three parameters', (t) => {
+    t.assertEqual(addEffectToSendBus.length, 3, 'addEffectToSendBus should accept 3 parameters');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus accepts two parameters', (t) => {
+    t.assertEqual(removeEffectFromSendBus.length, 2, 'removeEffectFromSendBus should accept 2 parameters');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus accepts three parameters', (t) => {
+    t.assertEqual(reorderEffectInSendBus.length, 3, 'reorderEffectInSendBus should accept 3 parameters');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam accepts four parameters', (t) => {
+    t.assertEqual(updateSendBusEffectParam.length, 4, 'updateSendBusEffectParam should accept 4 parameters');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel accepts two parameters', (t) => {
+    t.assertEqual(setSendBusLevel.length, 2, 'setSendBusLevel should accept 2 parameters');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted accepts two parameters', (t) => {
+    t.assertEqual(setSendBusMuted.length, 2, 'setSendBusMuted should accept 2 parameters');
+});
