@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.70.3'; // Day 183: MIDI Learn - Added project save/load persistence for MIDI Learn mappings
+export const APP_VERSION = '0.70.4'; // Day 185: DrumSampler pad drop zone container fix and additional tests - Fixed updateDrumPadControlsUI to correctly target pad-specific drop zone container
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
