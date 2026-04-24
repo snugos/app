@@ -6837,3 +6837,76 @@ TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML handles missing_
     t.assertTruthy(html.includes('Relink'), 'Should have relink button for missing_db files');
     t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing class');
 });
+
+// === Day 190: Timeline Zoom Constants Tests ===
+TestRunner.test('Timeline Zoom - TIMELINE_ZOOM_MIN is reasonable', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_MIN > 0, 'TIMELINE_ZOOM_MIN should be positive');
+    t.assertTruthy(TIMELINE_ZOOM_MIN < 1, 'TIMELINE_ZOOM_MIN should be less than 1 (zoom out)');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_ZOOM_MAX is reasonable', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_MAX >= 1, 'TIMELINE_ZOOM_MAX should be at least 1 (no zoom or zoom in)');
+    t.assertTruthy(TIMELINE_ZOOM_MAX <= 10, 'TIMELINE_ZOOM_MAX should be reasonable (<= 10)');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_ZOOM_STEP is positive', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_STEP > 0, 'TIMELINE_ZOOM_STEP should be positive');
+    t.assertTruthy(TIMELINE_ZOOM_STEP <= 1, 'TIMELINE_ZOOM_STEP should be small (<= 1)');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_ZOOM_DEFAULT is within range', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_DEFAULT >= TIMELINE_ZOOM_MIN, 'TIMELINE_ZOOM_DEFAULT should be >= min');
+    t.assertTruthy(TIMELINE_ZOOM_DEFAULT <= TIMELINE_ZOOM_MAX, 'TIMELINE_ZOOM_DEFAULT should be <= max');
+    t.assertEqual(TIMELINE_ZOOM_DEFAULT, 1.0, 'TIMELINE_ZOOM_DEFAULT should be 1.0 (100%)');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_VERTICAL_ZOOM_MIN is reasonable', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_MIN > 0, 'TIMELINE_VERTICAL_ZOOM_MIN should be positive');
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_MIN <= 1, 'TIMELINE_VERTICAL_ZOOM_MIN should be <= 1');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_VERTICAL_ZOOM_MAX is reasonable', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_MAX >= 1, 'TIMELINE_VERTICAL_ZOOM_MAX should be >= 1');
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_MAX <= 5, 'TIMELINE_VERTICAL_ZOOM_MAX should be reasonable (<= 5)');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_VERTICAL_ZOOM_STEP is positive', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_STEP > 0, 'TIMELINE_VERTICAL_ZOOM_STEP should be positive');
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_STEP <= 1, 'TIMELINE_VERTICAL_ZOOM_STEP should be small (<= 1)');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_VERTICAL_ZOOM_DEFAULT is within range', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_DEFAULT >= TIMELINE_VERTICAL_ZOOM_MIN, 'VERTICAL_ZOOM_DEFAULT should be >= min');
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_DEFAULT <= TIMELINE_VERTICAL_ZOOM_MAX, 'VERTICAL_ZOOM_DEFAULT should be <= max');
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_DEFAULT, 1.0, 'VERTICAL_ZOOM_DEFAULT should be 1.0 (100%)');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_ZOOM_MIN < TIMELINE_ZOOM_MAX', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_MIN < TIMELINE_ZOOM_MAX, 'Zoom min should be less than zoom max');
+});
+
+TestRunner.test('Timeline Zoom - TIMELINE_VERTICAL_ZOOM_MIN < TIMELINE_VERTICAL_ZOOM_MAX', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_MIN < TIMELINE_VERTICAL_ZOOM_MAX, 'Vertical zoom min should be less than vertical zoom max');
+});
+
+TestRunner.test('Timeline - TIMELINE_BEAT_WIDTH is positive', (t) => {
+    t.assertTruthy(TIMELINE_BEAT_WIDTH > 0, 'TIMELINE_BEAT_WIDTH should be positive');
+    t.assertTruthy(TIMELINE_BEAT_WIDTH >= 10, 'TIMELINE_BEAT_WIDTH should be at least 10px');
+    t.assertTruthy(TIMELINE_BEAT_WIDTH <= 200, 'TIMELINE_BEAT_WIDTH should be reasonable (<= 200px)');
+});
+
+TestRunner.test('Timeline - TIMELINE_TRACK_HEIGHT is positive', (t) => {
+    t.assertTruthy(TIMELINE_TRACK_HEIGHT > 0, 'TIMELINE_TRACK_HEIGHT should be positive');
+    t.assertTruthy(TIMELINE_TRACK_HEIGHT >= 20, 'TIMELINE_TRACK_HEIGHT should be at least 20px');
+    t.assertTruthy(TIMELINE_TRACK_HEIGHT <= 200, 'TIMELINE_TRACK_HEIGHT should be reasonable (<= 200px)');
+});
+
+TestRunner.test('Timeline - TIMELINE_HEADER_HEIGHT is positive', (t) => {
+    t.assertTruthy(TIMELINE_HEADER_HEIGHT > 0, 'TIMELINE_HEADER_HEIGHT should be positive');
+    t.assertTruthy(TIMELINE_HEADER_HEIGHT <= 100, 'TIMELINE_HEADER_HEIGHT should be reasonable (<= 100px)');
+});
+
+TestRunner.test('Timeline - MAX_TIMELINE_MARKERS is positive', (t) => {
+    t.assertTruthy(MAX_TIMELINE_MARKERS > 0, 'MAX_TIMELINE_MARKERS should be positive');
+    t.assertTruthy(MAX_TIMELINE_MARKERS <= 1000, 'MAX_TIMELINE_MARKERS should be reasonable (<= 1000)');
+});
