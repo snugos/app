@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.72.1'; // Day 188: MIDI Learn UI Bug Fix - Fixed updateMidiLearnMappingsUI to use correct variable reference (appServices vs localAppServices)
+export const APP_VERSION = '0.73.0'; // Day 189: DrumSampler Pad Drop Zone Verification Tests - Added comprehensive tests for pad drop zones - Fixed updateMidiLearnMappingsUI to use correct variable reference (appServices vs localAppServices)
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

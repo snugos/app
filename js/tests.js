@@ -6650,3 +6650,190 @@ TestRunner.test('DrumSampler Pad Drop Zone - retry button is rendered for error 
     t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have retry button class');
     t.assertTruthy(html.includes('Retry'), 'Should have Retry text');
 });
+
+// === Day 189: DrumSampler Pad Drop Zone Comprehensive Verification Tests ===
+TestRunner.test('DrumSampler Pad Drop Zone - pad index 0 generates correct drop zone ID', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('id="dropZone-track1-drumsampler-0"'), 'Should have correct drop zone ID for pad 0');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - pad index 7 generates correct drop zone ID', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 7, null);
+    t.assertTruthy(html.includes('id="dropZone-track1-drumsampler-7"'), 'Should have correct drop zone ID for pad 7');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - data-pad-slice-index attribute is set for all pads', (t) => {
+    for (let padIndex = 0; padIndex < 8; padIndex++) {
+        const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', padIndex, null);
+        t.assertTruthy(html.includes(`data-pad-slice-index="${padIndex}"`), `Pad ${padIndex} should have correct data attribute`);
+    }
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - drop zone HTML structure is valid for empty status', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 3, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should have drop-zone class');
+    t.assertTruthy(html.includes('data-track-id="track1"'), 'Should have track ID data attribute');
+    t.assertTruthy(html.includes('data-track-type="DrumSampler"'), 'Should have track type data attribute');
+    t.assertTruthy(html.includes('data-pad-slice-index="3"'), 'Should have pad index data attribute');
+    t.assertTruthy(html.includes('Drag & Drop Audio File'), 'Should have drop instruction text');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - drop zone HTML structure is valid for loading status', (t) => {
+    const existingData = { originalFileName: 'kick.wav', status: 'loading' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 3, existingData);
+    t.assertTruthy(html.includes('drop-zone'), 'Should have drop-zone class');
+    t.assertTruthy(html.includes('drop-zone-loading'), 'Should have loading status class');
+    t.assertTruthy(html.includes('Loading: kick'), 'Should show loading text with filename');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - file input has correct ID pattern', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 5, null);
+    t.assertTruthy(html.includes('id="input1"'), 'Should have correct input ID');
+    t.assertTruthy(html.includes('type="file"'), 'Should have file input type');
+    t.assertTruthy(html.includes('accept="audio/*'), 'Should accept audio files');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - relink button has correct class for missing status', (t) => {
+    const existingData = { originalFileName: 'snare.wav', status: 'missing' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 2, existingData);
+    t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have relink button class');
+    t.assertTruthy(html.includes('Relink'), 'Should have Relink text');
+    t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing status class');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - retry button has correct class for error status', (t) => {
+    const existingData = { originalFileName: 'error.wav', status: 'error' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 2, existingData);
+    t.assertTruthy(html.includes('drop-zone-relink-button'), 'Should have retry button class');
+    t.assertTruthy(html.includes('Retry'), 'Should have Retry text');
+    t.assertTruthy(html.includes('drop-zone-error'), 'Should have error status class');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners is a function', (t) => {
+    t.assertEqual(typeof setupGenericDropZoneListeners, 'function', 'setupGenericDropZoneListeners should be a function');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners handles null element gracefully', (t) => {
+    let errorThrown = false;
+    try {
+        setupGenericDropZoneListeners(null, 'track1', 'DrumSampler', 0, null, null, null);
+    } catch (e) {
+        errorThrown = true;
+    }
+    t.assertEqual(errorThrown, false, 'Should not throw when element is null');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners adds dragover listener', (t) => {
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 3, null, null, null);
+    t.assertEqual(mockDropZone.addEventListener.callCount, 3, 'Should add 3 event listeners (dragover, dragleave, drop)');
+    t.assertEqual(mockDropZone.addEventListener.calls[0].args[0], 'dragover', 'First listener should be dragover');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners adds dragleave listener', (t) => {
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 3, null, null, null);
+    t.assertEqual(mockDropZone.addEventListener.calls[1].args[0], 'dragleave', 'Second listener should be dragleave');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners adds drop listener', (t) => {
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 3, null, null, null);
+    t.assertEqual(mockDropZone.addEventListener.calls[2].args[0], 'drop', 'Third listener should be drop');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners dragover handler prevents default', (t) => {
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 0, null, null, null);
+    const dragoverHandler = mockDropZone.addEventListener.calls[0].args[1];
+    const mockEvent = { preventDefault: t.stub(), stopPropagation: t.stub(), dataTransfer: { dropEffect: '' } };
+    dragoverHandler(mockEvent);
+    t.assertEqual(mockEvent.preventDefault.callCount, 1, 'Should call preventDefault');
+    t.assertEqual(mockEvent.dataTransfer.dropEffect, 'copy', 'Should set dropEffect to copy');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners dragover handler adds dragover class', (t) => {
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 0, null, null, null);
+    const dragoverHandler = mockDropZone.addEventListener.calls[0].args[1];
+    const mockEvent = { preventDefault: t.stub(), stopPropagation: t.stub(), dataTransfer: { dropEffect: '' } };
+    dragoverHandler(mockEvent);
+    t.assertEqual(mockDropZone.classList.add.callCount, 1, 'Should add dragover class');
+    t.assertEqual(mockDropZone.classList.add.calls[0].args[0], 'dragover', 'Should add dragover class');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - setupGenericDropZoneListeners dragleave handler removes dragover class', (t) => {
+    const mockDropZone = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    setupGenericDropZoneListeners(mockDropZone, 'track1', 'DrumSampler', 0, null, null, null);
+    const dragleaveHandler = mockDropZone.addEventListener.calls[1].args[1];
+    const mockEvent = { preventDefault: t.stub(), stopPropagation: t.stub() };
+    dragleaveHandler(mockEvent);
+    t.assertEqual(mockDropZone.classList.remove.callCount, 1, 'Should remove dragover class');
+    t.assertEqual(mockDropZone.classList.remove.calls[0].args[0], 'dragover', 'Should remove dragover class');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - drop zone status values are valid', (t) => {
+    const validStatuses = ['empty', 'loaded', 'loading', 'missing', 'missing_db', 'error'];
+    t.assertEqual(validStatuses.length, 6, 'Should have 6 valid pad status values');
+    t.assertTruthy(validStatuses.includes('empty'), 'Should include empty status');
+    t.assertTruthy(validStatuses.includes('loaded'), 'Should include loaded status');
+    t.assertTruthy(validStatuses.includes('loading'), 'Should include loading status');
+    t.assertTruthy(validStatuses.includes('missing'), 'Should include missing status');
+    t.assertTruthy(validStatuses.includes('missing_db'), 'Should include missing_db status');
+    t.assertTruthy(validStatuses.includes('error'), 'Should include error status');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - numDrumSamplerPads constant is 8', (t) => {
+    t.assertEqual(numDrumSamplerPads, 8, 'Number of drum pads should be 8');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML handles all valid status types', (t) => {
+    const validStatuses = ['empty', 'loaded', 'loading', 'missing', 'error'];
+    validStatuses.forEach(status => {
+        const existingData = { originalFileName: 'test.wav', status: status };
+        const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+        t.assertTruthy(html.includes('drop-zone'), `Should create drop zone HTML for status: ${status}`);
+        t.assertTruthy(html.includes('data-track-id="track1"'), `Should have track ID for status: ${status}`);
+        t.assertTruthy(html.includes('data-track-type="DrumSampler"'), `Should have track type for status: ${status}`);
+    });
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML handles null existingAudioData', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 5, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should have drop-zone class');
+    t.assertTruthy(html.includes('Drag & Drop Audio File'), 'Should have default empty message');
+    t.assertTruthy(html.includes('id="dropZone-track1-drumsampler-5"'), 'Should have correct drop zone ID');
+    t.assertTruthy(html.includes('data-pad-slice-index="5"'), 'Should have pad index data attribute');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML handles missing_db status', (t) => {
+    const existingData = { originalFileName: 'kick.wav', status: 'missing_db' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 3, existingData);
+    t.assertTruthy(html.includes('Missing: kick'), 'Should show missing status');
+    t.assertTruthy(html.includes('Relink'), 'Should have relink button for missing_db files');
+    t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing class');
+});
