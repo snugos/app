@@ -13,6 +13,36 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
+#### Day 212: MIDI Export/Import Constants Tests (2026-04-24)
+- **Feature**: Added 14 new unit tests for MIDI Export/Import constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 14 new tests in Day 212 section:
+    - `MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is 127` - Tests velocity scaling factor
+    - `MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is 480` - Tests standard MIDI resolution
+    - `MIDI Export - MIDI_FILE_FORMAT is 0` - Tests single track format
+    - `MIDI Export - MIDI_FILE_TYPE_NAMES is array with Type 0` - Tests type names array
+    - `MIDI Export - MAX_MIDI_EXPORT_TRACKS is 64` - Tests MIDI standard max
+    - `MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is string` - Tests filename prefix
+    - `MIDI - MIDI_DEFAULT_CHANNEL is 0` - Tests default MIDI channel
+    - `MIDI - MIDI_DEFAULT_PROGRAM is 0` - Tests default program change
+    - `MIDI Import - MIDI_IMPORT_MIN_NOTES is 1` - Tests minimum notes requirement
+    - `MIDI Import - MIDI_IMPORT_MAX_VELOCITY is 127` - Tests max velocity value
+    - `MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is 100` - Tests default velocity
+    - `MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is 1.0` - Tests default probability
+    - `MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is true` - Tests grid snap setting
+    - `MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is 1/127` - Tests velocity scale factor
+  - `js/constants.js`: Bumped APP_VERSION to 0.96.0
+- **Feature Details**:
+  - Tests validate MIDI export constants (velocity scale, ticks per quarter note, file format, filename prefix, max tracks)
+  - Tests validate MIDI import constants (min notes, velocity range, defaults, grid snap)
+  - Tests verify MIDI default settings (channel 0, program 0)
+  - Total test count increased from 699 to 713 tests
+- **Backend Note**: The MIDI Export/Import constants define how MIDI files are exported and imported. Tests verify the configuration surface without requiring actual MIDI file processing.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.96.0
+
+#### Day 211: UI Window Open Function Tests (2026-04-24)
+
 #### Day 208: Track Bounce/Export Tests (2026-04-24)
 - **Feature**: Added 15 new unit tests for Track Bounce/Export functionality to expand test coverage
 - **Files Modified**:
