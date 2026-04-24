@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.76.0'; // Day 192: Tap Tempo Constants
+export const APP_VERSION = '0.77.0'; // Day 193: Tap Tempo Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -525,4 +525,15 @@ export const DEFAULT_MIDI_LEARN_MAPPING = {
     paramPath: null, // Path to parameter (e.g., 'effects.0.params.decay')
     min: 0,          // Input range min
     max: 1           // Input range max
+};
+
+// ============================================
+// Effect Preset Constants
+// ============================================
+export const MAX_EFFECT_PRESETS = 64; // Maximum number of saved effect presets per effect type
+export const DEFAULT_PRESET_NAME_PREFIX = 'Preset'; // Default name for new presets
+export const DEFAULT_EFFECT_PRESET = {
+    name: DEFAULT_PRESET_NAME_PREFIX,
+    effectType: null,  // The effect type (e.g., 'Reverb', 'Chorus')
+    params: {}         // The effect parameters
 };

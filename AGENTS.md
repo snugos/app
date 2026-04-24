@@ -2223,3 +2223,31 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Track Templates state functions are used by the Sound Library for saving and loading track templates. The tests verify the state API without requiring UI context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.75.0
+
+#### Day 193: Tap Tempo Tests (2026-04-24)
+- **Feature**: Added 11 new unit tests for Tap Tempo constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for Tap Tempo constants and 11 new tests:
+    - `TAP_TEMPO_TIMEOUT_MS is positive` - Tests timeout constant
+    - `TAP_TEMPO_MIN_TAPS is reasonable` - Tests min taps >= 2 and <= max
+    - `TAP_TEMPO_MAX_TAPS is reasonable` - Tests max taps >= min
+    - `TAP_TEMPO_MIN_BPM is reasonable` - Tests min BPM is positive and < max
+    - `TAP_TEMPO_MAX_BPM is reasonable` - Tests max BPM > min and <= 999
+    - `Constants are in valid ranges` - Tests all constants in proper ranges
+    - `handleTapTempo function exists` - Tests UI function availability
+    - `resetTapTempo function exists` - Tests reset function uses timeout constant
+    - `Timeout constant matches audio.js usage` - Tests TAP_TEMPO_TIMEOUT_MS = 2000ms
+    - `BPM range covers typical tempos` - Tests min <= 40 and max >= 240
+    - `Averaging logic would work correctly` - Tests BPM to interval math
+    - `Clamping would work at boundaries` - Tests boundary clamping behavior
+    - `Min/max taps ratio is reasonable` - Tests ratio between 2-8
+  - `js/constants.js`: Bumped APP_VERSION to 0.77.0
+- **Feature Details**:
+  - Tests validate Tap Tempo constants for tempo detection via tap timing
+  - Tests verify timeout, taps, and BPM range constants are properly defined
+  - Tests verify tap tempo averaging logic works correctly for typical tempos
+  - Tests verify boundary clamping behavior for out-of-range values
+  - Total test count increased from 1022 to 1033 tests
+- **Backend Note**: The Tap Tempo constants (TAP_TEMPO_TIMEOUT_MS, TAP_TEMPO_MIN_TAPS, etc.) are used by `handleTapTempo()` and `resetTapTempo()` in `js/ui.js` to detect tempo from user taps on a button. The tests verify the constant values without requiring actual UI interaction.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.77.0

@@ -74,6 +74,9 @@ export function getPerformanceMonitorEnabledState() {
 }
 
 export function setPerformanceMonitorEnabledState(enabled) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Performance Monitor ${enabled ? 'On' : 'Off'}`);
+    }
     performanceMonitorState.enabled = !!enabled;
 }
 
@@ -82,6 +85,9 @@ export function getAudioContextStateState() {
 }
 
 export function setAudioContextStateState(contextState) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Audio Context State`);
+    }
     if (['running', 'suspended', 'closed', 'unknown'].includes(contextState)) {
         performanceMonitorState.audioContextState = contextState;
     }
@@ -92,6 +98,9 @@ export function getCPUUsageState() {
 }
 
 export function setCPUUsageState(cpuUsage) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set CPU Usage`);
+    }
     performanceMonitorState.cpuUsage = Math.max(0, Math.min(100, parseFloat(cpuUsage) || 0));
 }
 
@@ -100,6 +109,9 @@ export function getMemoryPressureState() {
 }
 
 export function setMemoryPressureState(pressure) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Memory Pressure`);
+    }
     if (['none', 'low', 'medium', 'high'].includes(pressure)) {
         performanceMonitorState.memoryPressure = pressure;
     }
@@ -110,6 +122,9 @@ export function getActiveVoicesState() {
 }
 
 export function setActiveVoicesState(voices) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Active Voices`);
+    }
     performanceMonitorState.activeVoices = Math.max(0, parseInt(voices) || 0);
 }
 
@@ -118,6 +133,9 @@ export function getAudioLatencyState() {
 }
 
 export function setAudioLatencyState(latency) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Audio Latency`);
+    }
     performanceMonitorState.audioLatency = Math.max(0, parseFloat(latency) || 0);
 }
 
@@ -126,6 +144,9 @@ export function getLastCallbackTimeState() {
 }
 
 export function setLastCallbackTimeState(timeMs) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Last Callback Time`);
+    }
     performanceMonitorState.lastCallbackTime = Math.max(0, parseFloat(timeMs) || 0);
 }
 
@@ -134,6 +155,9 @@ export function getDroppedCallbacksState() {
 }
 
 export function setDroppedCallbacksState(count) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Dropped Callbacks`);
+    }
     performanceMonitorState.droppedCallbacks = Math.max(0, parseInt(count) || 0);
 }
 
@@ -819,7 +843,7 @@ export function addTrackTemplateState(templateData) {
     if (trackTemplatesState.length >= Constants.MAX_TRACK_TEMPLATES) {
         return null; // Max templates reached
     }
-    // Capture undo state before modifying templates
+    // Capture undo state before modifying template
     if (appServices.captureStateForUndo) {
         appServices.captureStateForUndo(`Save Track Template "${templateData?.name || 'Untitled'}"`);
     }
@@ -884,11 +908,93 @@ export function clearTrackTemplatesState() {
     trackTemplatesState = [];
 }
 
+// --- Effect Presets State Management ---
+let effectPresetsState = []; // Array of effect presets: { id, name, effectType, params }
+let effectPresetIdCounter = 0;
+
+export function getEffectPresetsState() { return effectPresetsState; }
+
+export function getEffectPresetByIdState(id) {
+    return effectPresetsState.find(p => p.id === id);
+}
+
+export function getEffectPresetsByTypeState(effectType) {
+    return effectPresetsState.filter(p => p.effectType === effectType);
+}
+
+export function addEffectPresetState(presetData) {
+    if (effectPresetsState.length >= Constants.MAX_EFFECT_PRESETS) {
+        if (appServices.showNotification) {
+            appServices.showNotification(`Maximum effect presets (${Constants.MAX_EFFECT_PRESETS}) reached.`, 3000);
+        }
+        return null;
+    }
+    // Capture undo state before adding preset
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Save Effect Preset "${presetData?.name || 'Untitled'}"`);
+    }
+    const id = presetData && presetData.id !== undefined ? presetData.id : effectPresetIdCounter++;
+    const preset = {
+        id,
+        name: presetData?.name || `${Constants.DEFAULT_PRESET_NAME_PREFIX} ${effectPresetsState.length + 1}`,
+        effectType: presetData?.effectType || null,
+        params: presetData?.params || {}
+    };
+    effectPresetsState.push(preset);
+    return preset;
+}
+
+export function updateEffectPresetState(id, updates) {
+    // Capture undo state before modifying preset
+    if (appServices.captureStateForUndo) {
+        const preset = effectPresetsState.find(p => p.id === id);
+        if (preset) {
+            appServices.captureStateForUndo(`Update Effect Preset "${preset.name}"`);
+        }
+    }
+    const preset = effectPresetsState.find(p => p.id === id);
+    if (preset) {
+        if (updates.name !== undefined) preset.name = updates.name;
+        if (updates.effectType !== undefined) preset.effectType = updates.effectType;
+        if (updates.params !== undefined) preset.params = updates.params;
+        return preset;
+    }
+    return null;
+}
+
+export function removeEffectPresetState(id) {
+    // Capture undo state before removing preset
+    if (appServices.captureStateForUndo) {
+        const preset = effectPresetsState.find(p => p.id === id);
+        if (preset) {
+            appServices.captureStateForUndo(`Delete Effect Preset "${preset.name}"`);
+        }
+    }
+    const index = effectPresetsState.findIndex(p => p.id === id);
+    if (index !== -1) {
+        effectPresetsState.splice(index, 1);
+        return true;
+    }
+    return false;
+}
+
+export function clearEffectPresetsState() {
+    if (appServices.captureStateForUndo && effectPresetsState.length > 0) {
+        appServices.captureStateForUndo(`Clear All Effect Presets`);
+    }
+    effectPresetsState = [];
+}
+
 // --- Window Management ---
 // Note: getOpenWindowsState and getWindowByIdState are already declared above (lines 89-90)
 // to avoid circular dependency issues with window management
 
-export function setHighestZState(value) { highestZ = Number.isFinite(value) ? value : 100; }
+export function setHighestZState(value) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Window Z-Index`);
+    }
+    highestZ = Number.isFinite(value) ? value : 100; 
+}
 export function incrementHighestZState() { return ++highestZ; }
 
 // --- Master Effects Chain Management ---

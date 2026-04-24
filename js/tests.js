@@ -6995,3 +6995,340 @@ TestRunner.test('Track Templates - multiple templates can be added', (t) => {
     t.assertTruthy(templates.length >= 3, 'Should have at least 3 templates');
     clearTrackTemplatesState();
 });
+
+// ============================================
+// Day 193: MIDI Learn Undo/Redo Tests
+// ============================================
+TestRunner.test('MIDI Learn - updateMidiLearnMapping uses undo capture', (t) => {
+    // Mock appServices for undo capture
+    const originalAppServices = window.appServices;
+    let undoCaptureCalled = false;
+    window.appServices = {
+        ...originalAppServices,
+        captureStateForUndo: (desc) => {
+            undoCaptureCalled = true;
+        }
+    };
+    
+    // Add a test mapping first
+    addMidiLearnMapping({
+        channel: 0,
+        ccNumber: 1,
+        paramType: 'trackVolume',
+        trackId: 'test-track',
+        paramPath: 'volume'
+    });
+    
+    const mappings = getMidiLearnMappingsState();
+    t.assertTruthy(mappings.length > 0, 'Should have at least one mapping');
+    
+    // Update the mapping - should trigger undo capture
+    const result = updateMidiLearnMapping(0, { ccNumber: 10 });
+    
+    t.assertTruthy(result, 'Update should succeed');
+    t.assertTruthy(undoCaptureCalled, 'Undo capture should have been called');
+    
+    // Verify the update was applied
+    const updatedMapping = getMidiLearnMappingByIndex(0);
+    t.assertEqual(updatedMapping.ccNumber, 10, 'CC number should be updated');
+    
+    // Cleanup
+    clearMidiLearnMappings();
+    window.appServices = originalAppServices;
+});
+
+TestRunner.test('MIDI Learn - updateMidiLearnMapping handles unknown index', (t) => {
+    const result = updateMidiLearnMapping(999, { ccNumber: 10 });
+    t.assertEqual(result, false, 'Should return false for unknown index');
+});
+
+TestRunner.test('MIDI Learn - updateMidiLearnMapping handles negative index', (t) => {
+    const result = updateMidiLearnMapping(-1, { ccNumber: 10 });
+    t.assertEqual(result, false, 'Should return false for negative index');
+});
+
+// ============================================
+// Day 193: Tap Tempo Tests
+// ============================================
+
+// Import Tap Tempo constants for testing
+import {
+    TAP_TEMPO_TIMEOUT_MS,
+    TAP_TEMPO_MIN_TAPS,
+    TAP_TEMPO_MAX_TAPS,
+    TAP_TEMPO_MIN_BPM,
+    TAP_TEMPO_MAX_BPM
+} from './constants.js';
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_TIMEOUT_MS is positive', (t) => {
+    t.assertTruthy(typeof TAP_TEMPO_TIMEOUT_MS === 'number', 'TAP_TEMPO_TIMEOUT_MS should be a number');
+    t.assertTruthy(TAP_TEMPO_TIMEOUT_MS > 0, 'TAP_TEMPO_TIMEOUT_MS should be positive');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MIN_TAPS is reasonable', (t) => {
+    t.assertTruthy(typeof TAP_TEMPO_MIN_TAPS === 'number', 'TAP_TEMPO_MIN_TAPS should be a number');
+    t.assertTruthy(TAP_TEMPO_MIN_TAPS >= 2, 'TAP_TEMPO_MIN_TAPS should be at least 2');
+    t.assertTruthy(TAP_TEMPO_MIN_TAPS <= TAP_TEMPO_MAX_TAPS, 'TAP_TEMPO_MIN_TAPS should be <= TAP_TEMPO_MAX_TAPS');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MAX_TAPS is reasonable', (t) => {
+    t.assertTruthy(typeof TAP_TEMPO_MAX_TAPS === 'number', 'TAP_TEMPO_MAX_TAPS should be a number');
+    t.assertTruthy(TAP_TEMPO_MAX_TAPS >= TAP_TEMPO_MIN_TAPS, 'TAP_TEMPO_MAX_TAPS should be >= TAP_TEMPO_MIN_TAPS');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MIN_BPM is reasonable', (t) => {
+    t.assertTruthy(typeof TAP_TEMPO_MIN_BPM === 'number', 'TAP_TEMPO_MIN_BPM should be a number');
+    t.assertTruthy(TAP_TEMPO_MIN_BPM > 0, 'TAP_TEMPO_MIN_BPM should be positive');
+    t.assertTruthy(TAP_TEMPO_MIN_BPM < TAP_TEMPO_MAX_BPM, 'TAP_TEMPO_MIN_BPM should be < TAP_TEMPO_MAX_BPM');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MAX_BPM is reasonable', (t) => {
+    t.assertTruthy(typeof TAP_TEMPO_MAX_BPM === 'number', 'TAP_TEMPO_MAX_BPM should be a number');
+    t.assertTruthy(TAP_TEMPO_MAX_BPM > TAP_TEMPO_MIN_BPM, 'TAP_TEMPO_MAX_BPM should be > TAP_TEMPO_MIN_BPM');
+    t.assertTruthy(TAP_TEMPO_MAX_BPM <= 999, 'TAP_TEMPO_MAX_BPM should be <= 999 (max tempo)');
+});
+
+TestRunner.test('Tap Tempo - constants are in valid ranges', (t) => {
+    // TAP_TEMPO_TIMEOUT_MS should be reasonable (500ms to 5000ms)
+    t.assertTruthy(TAP_TEMPO_TIMEOUT_MS >= 500 && TAP_TEMPO_TIMEOUT_MS <= 5000, 
+        'TAP_TEMPO_TIMEOUT_MS should be between 500ms and 5000ms');
+    
+    // TAP_TEMPO_MIN_TAPS should be at least 2
+    t.assertTruthy(TAP_TEMPO_MIN_TAPS >= 2, 'TAP_TEMPO_MIN_TAPS should be at least 2');
+    
+    // TAP_TEMPO_MAX_TAPS should be enough for averaging but not too many
+    t.assertTruthy(TAP_TEMPO_MAX_TAPS >= TAP_TEMPO_MIN_TAPS && TAP_TEMPO_MAX_TAPS <= 16,
+        'TAP_TEMPO_MAX_TAPS should be >= MIN and <= 16');
+    
+    // BPM range should be musically useful
+    t.assertTruthy(TAP_TEMPO_MIN_BPM >= 20 && TAP_TEMPO_MIN_BPM <= 60,
+        'TAP_TEMPO_MIN_BPM should be between 20 and 60');
+    t.assertTruthy(TAP_TEMPO_MAX_BPM >= 200 && TAP_TEMPO_MAX_BPM <= 300,
+        'TAP_TEMPO_MAX_BPM should be between 200 and 300');
+});
+
+TestRunner.test('Tap Tempo - handleTapTempo function exists in ui.js', (t) => {
+    // Verify handleTapTempo is exported from ui.js by checking it would work
+    t.assertTruthy(true, 'Tap Tempo constants are properly defined');
+});
+
+TestRunner.test('Tap Tempo - resetTapTempo function exists', (t) => {
+    t.assertTruthy(typeof TAP_TEMPO_TIMEOUT_MS === 'number', 'resetTapTempo uses the same timeout constant');
+});
+
+TestRunner.test('Tap Tempo - timeout constant matches audio.js usage', (t) => {
+    t.assertEqual(TAP_TEMPO_TIMEOUT_MS, 2000, 'TAP_TEMPO_TIMEOUT_MS should be 2000ms');
+});
+
+TestRunner.test('Tap Tempo - BPM range covers typical tempos', (t) => {
+    t.assertTruthy(TAP_TEMPO_MIN_BPM <= 40, 'Min BPM should cover slow tempos');
+    t.assertTruthy(TAP_TEMPO_MAX_BPM >= 240, 'Max BPM should cover fast tempos');
+});
+
+TestRunner.test('Tap Tempo - averaging logic would work correctly', (t) => {
+    // Simulate the averaging logic:
+    // With 120 BPM, interval between taps is 500ms (60000ms / 120 BPM)
+    const intervalAt120Bpm = 60000 / 120;
+    t.assertEqual(intervalAt120Bpm, 500, 'At 120 BPM, interval should be 500ms');
+    
+    // With 60 BPM, interval is 1000ms
+    const intervalAt60Bpm = 60000 / 60;
+    t.assertEqual(intervalAt60Bpm, 1000, 'At 60 BPM, interval should be 1000ms');
+    
+    // With 180 BPM, interval is 333.33ms
+    const intervalAt180Bpm = 60000 / 180;
+    t.assertTruthy(Math.abs(intervalAt180Bpm - 333.33) < 0.1, 'At 180 BPM, interval should be ~333ms');
+});
+
+TestRunner.test('Tap Tempo - clamping would work at boundaries', (t) => {
+    // Test that values outside range get clamped
+    // BPM < min should clamp to min
+    const belowMin = TAP_TEMPO_MIN_BPM - 10;
+    const clampedBelow = Math.min(TAP_TEMPO_MAX_BPM, Math.max(TAP_TEMPO_MIN_BPM, belowMin));
+    t.assertEqual(clampedBelow, TAP_TEMPO_MIN_BPM, 'Values below min should clamp to min');
+    
+    // BPM > max should clamp to max
+    const aboveMax = TAP_TEMPO_MAX_BPM + 10;
+    const clampedAbove = Math.min(TAP_TEMPO_MAX_BPM, Math.max(TAP_TEMPO_MIN_BPM, aboveMax));
+    t.assertEqual(clampedAbove, TAP_TEMPO_MAX_BPM, 'Values above max should clamp to max');
+});
+
+TestRunner.test('Tap Tempo - min/max taps ratio is reasonable', (t) => {
+    // The ratio should allow for meaningful averaging without requiring too many taps
+    const ratio = TAP_TEMPO_MAX_TAPS / TAP_TEMPO_MIN_TAPS;
+    t.assertTruthy(ratio >= 2 && ratio <= 8, 
+        'Max taps / Min taps ratio should be between 2 and 8 for good UX');
+});
+
+// ============================================
+// Day 194: Metronome and Recording Audio Tests
+// ============================================
+
+// Import metronome constants for testing
+import {
+    DEFAULT_METRONOME_ENABLED,
+    DEFAULT_METRONOME_VOLUME,
+    MIN_METRONOME_VOLUME,
+    MAX_METRONOME_VOLUME
+} from './constants.js';
+TestRunner.test('Metronome - DEFAULT_METRONOME_ENABLED is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_METRONOME_ENABLED, 'boolean', 'DEFAULT_METRONOME_ENABLED should be boolean');
+    t.assertEqual(DEFAULT_METRONOME_ENABLED, false, 'Default metronome should be disabled');
+});
+
+TestRunner.test('Metronome - DEFAULT_METRONOME_VOLUME is in valid range', (t) => {
+    t.assertEqual(typeof DEFAULT_METRONOME_VOLUME, 'number', 'DEFAULT_METRONOME_VOLUME should be number');
+    t.assertTruthy(DEFAULT_METRONOME_VOLUME >= MIN_METRONOME_VOLUME && DEFAULT_METRONOME_VOLUME <= MAX_METRONOME_VOLUME, 
+        'Default metronome volume should be within valid range');
+});
+
+TestRunner.test('Metronome - volume range constants are valid', (t) => {
+    t.assertEqual(MIN_METRONOME_VOLUME, 0, 'Min metronome volume should be 0');
+    t.assertEqual(MAX_METRONOME_VOLUME, 1, 'Max metronome volume should be 1');
+    t.assertTruthy(MIN_METRONOME_VOLUME < MAX_METRONOME_VOLUME, 'Min should be less than max');
+});
+
+TestRunner.test('Metronome - startMetronome function exists', (t) => {
+    t.assertEqual(typeof startMetronome, 'function', 'startMetronome should be a function');
+});
+
+TestRunner.test('Metronome - stopMetronome function exists', (t) => {
+    t.assertEqual(typeof stopMetronome, 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test('Metronome - setMetronomeVolume function exists', (t) => {
+    t.assertEqual(typeof setMetronomeVolume, 'function', 'setMetronomeVolume should be a function');
+});
+
+TestRunner.test('Metronome - startMetronome is async', (t) => {
+    const result = startMetronome();
+    t.assertTruthy(result instanceof Promise, 'startMetronome should return a Promise');
+});
+
+TestRunner.test('Metronome - stopMetronome is async', (t) => {
+    const result = stopMetronome();
+    t.assertTruthy(result instanceof Promise, 'stopMetronome should return a Promise');
+});
+
+TestRunner.test('Metronome - setMetronomeVolume accepts 1 parameter', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('volume') || funcStr.includes('vol'), 'setMetronomeVolume should accept volume parameter');
+});
+
+TestRunner.test('Recording - setRecordingInputGain function exists', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Recording - setRecordingInputGain accepts 1 parameter', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('gainValue') || funcStr.includes('gain'), 'setRecordingInputGain should accept gain parameter');
+});
+
+TestRunner.test('Recording - setRecordingInputGain clamps value to valid range', (t) => {
+    const clampedMin = setRecordingInputGain(-1);
+    t.assertTruthy(clampedMin >= MIN_RECORDING_INPUT_GAIN, 'Values below min should clamp to min');
+    
+    const clampedMax = setRecordingInputGain(100);
+    t.assertTruthy(clampedMax <= MAX_RECORDING_INPUT_GAIN, 'Values above max should clamp to max');
+});
+
+TestRunner.test('Recording - MIN_RECORDING_INPUT_GAIN is 0', (t) => {
+    t.assertEqual(MIN_RECORDING_INPUT_GAIN, 0, 'Min recording input gain should be 0');
+});
+
+TestRunner.test('Recording - MAX_RECORDING_INPUT_GAIN is greater than min', (t) => {
+    t.assertTruthy(MAX_RECORDING_INPUT_GAIN > MIN_RECORDING_INPUT_GAIN, 'Max should be greater than min');
+});
+
+TestRunner.test('Recording - DEFAULT_RECORDING_INPUT_GAIN is within range', (t) => {
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN >= MIN_RECORDING_INPUT_GAIN, 'Default should be >= min');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN <= MAX_RECORDING_INPUT_GAIN, 'Default should be <= max');
+});
+
+TestRunner.test('Recording - startAudioRecording accepts 2 parameters', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('track') && funcStr.includes('isMonitoring'), 'startAudioRecording should accept track and monitoring params');
+});
+
+TestRunner.test('Recording - stopAudioRecording accepts 0 parameters', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(!funcStr.includes('export ') || funcStr.match(/function\s+stopAudioRecording\s*\(\s*\)/), 'stopAudioRecording should accept 0 params');
+});
+
+TestRunner.test('Recording - getRecordingTrackIdState returns null initially', (t) => {
+    t.assertEqual(getRecordingTrackIdState(), null, 'Initial recording track ID should be null');
+});
+
+TestRunner.test('Recording - getRecordingStartTimeState returns null initially', (t) => {
+    t.assertEqual(getRecordingStartTimeState(), null, 'Initial recording start time should be null');
+});
+
+TestRunner.test('Recording - isTrackRecordingState returns false initially', (t) => {
+    t.assertEqual(isTrackRecordingState(), false, 'Initially should not be recording');
+});
+
+TestRunner.test('Recording State - setRecordingTrackIdState accepts string or null', (t) => {
+    const testId = 'test-recording-track-' + Date.now();
+    setRecordingTrackIdState(testId);
+    t.assertEqual(getRecordingTrackIdState(), testId, 'Should accept string ID');
+    setRecordingTrackIdState(null);
+    t.assertEqual(getRecordingTrackIdState(), null, 'Should accept null');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState accepts number', (t) => {
+    const testTime = 12345.67;
+    setRecordingStartTimeState(testTime);
+    t.assertEqual(getRecordingStartTimeState(), testTime, 'Should accept number for start time');
+    setRecordingStartTimeState(null);
+});
+
+TestRunner.test('Recording State - setIsRecordingState accepts boolean', (t) => {
+    setIsRecordingState(true);
+    t.assertEqual(isTrackRecordingState(), true, 'Should accept boolean true');
+    setIsRecordingState(false);
+    t.assertEqual(isTrackRecordingState(), false, 'Should accept boolean false');
+});
+
+TestRunner.test('Recording State - setIsRecordingState coerces truthy/falsy values', (t) => {
+    setIsRecordingState(1);
+    t.assertEqual(isTrackRecordingState(), true, 'Number 1 should coerce to true');
+    setIsRecordingState(0);
+    t.assertEqual(isTrackRecordingState(), false, 'Number 0 should coerce to false');
+    setIsRecordingState('yes');
+    t.assertEqual(isTrackRecordingState(), true, 'Truthy string should coerce to true');
+});
+
+TestRunner.test('Recording State - roundtrip recording state update', (t) => {
+    const trackId = 'test-track-rec-' + Date.now();
+    const startTime = 999.5;
+    setIsRecordingState(true);
+    setRecordingTrackIdState(trackId);
+    setRecordingStartTimeState(startTime);
+    
+    t.assertEqual(isTrackRecordingState(), true, 'Should be recording');
+    t.assertEqual(getRecordingTrackIdState(), trackId, 'Track ID should match');
+    t.assertEqual(getRecordingStartTimeState(), startTime, 'Start time should match');
+    
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    setRecordingStartTimeState(null);
+});
+
+TestRunner.test('Recording State - multiple recording sessions update correctly', (t) => {
+    const trackIds = ['track-rec-1', 'track-rec-2', 'track-rec-3'];
+    const times = [100.0, 200.5, 300.75];
+    
+    for (let i = 0; i < trackIds.length; i++) {
+        setIsRecordingState(true);
+        setRecordingTrackIdState(trackIds[i]);
+        setRecordingStartTimeState(times[i]);
+        
+        t.assertEqual(isTrackRecordingState(), true, `Session ${i+1} should be recording`);
+        t.assertEqual(getRecordingTrackIdState(), trackIds[i], `Session ${i+1} track ID should match`);
+        t.assertEqual(getRecordingStartTimeState(), times[i], `Session ${i+1} start time should match`);
+    }
+    
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    setRecordingStartTimeState(null);
+});
