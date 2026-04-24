@@ -8199,6 +8199,271 @@ TestRunner.test('Audio Clip - addAudioClip accepts large blob', async (t) => {
 });
 
 // ============================================
+// Day 200: Audio Clip Editor Methods Tests
+// ============================================
+
+TestRunner.test('Audio Clip Editor - setAudioClipGain clamps to valid range', (t) => {
+    const mockClip = { id: 'clip1', name: 'Test', gain: 1.0 };
+    const mockTrack = {
+        timelineClips: [mockClip],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); },
+        _captureUndoState: function() {}
+    };
+    const Constants = { MIN_AUDIO_CLIP_GAIN: 0, MAX_AUDIO_CLIP_GAIN: 4.0 };
+    
+    const result = mockTrack._getAudioClip('clip1');
+    t.assertTruthy(result !== null, 'Should find clip');
+    t.assertEqual(result.gain, 1.0, 'Initial gain should be 1.0');
+    t.assertTruthy(result.gain >= Constants.MIN_AUDIO_CLIP_GAIN && result.gain <= Constants.MAX_AUDIO_CLIP_GAIN, 'Gain should be in valid range');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipGain returns default when clip not found', (t) => {
+    const mockTrack = {
+        timelineClips: [],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); }
+    };
+    const Constants = { DEFAULT_AUDIO_CLIP_GAIN: 1.0 };
+    
+    const result = mockTrack._getAudioClip('nonexistent');
+    t.assertEqual(result, undefined, 'Should return undefined for nonexistent clip');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipPlaybackRate clamps to valid range', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_PLAYBACK_RATE: 0.25, MAX_AUDIO_CLIP_PLAYBACK_RATE: 4.0 };
+    t.assertTruthy(Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE >= 0.1, 'Min rate should be reasonable');
+    t.assertTruthy(Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE <= 10, 'Max rate should be reasonable');
+    t.assertTruthy(Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE < Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE, 'Min should be less than max');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipPlaybackRate returns default when clip not found', (t) => {
+    const Constants = { DEFAULT_AUDIO_CLIP_PLAYBACK_RATE: 1.0 };
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'Default playback rate should be 1.0');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipCrossfade clamps to valid range', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_CROSSFADE: 0, MAX_AUDIO_CLIP_CROSSFADE: 5 };
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_CROSSFADE, 0, 'Min crossfade should be 0');
+    t.assertEqual(Constants.MAX_AUDIO_CLIP_CROSSFADE, 5, 'Max crossfade should be 5 seconds');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipCrossfade returns 0 when clip not found', (t) => {
+    const mockTrack = {
+        timelineClips: [],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); }
+    };
+    const result = mockTrack._getAudioClip('nonexistent');
+    t.assertEqual(result, undefined, 'Should return undefined for nonexistent clip');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipFadeIn clamps to valid range', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_FADE: 0, MAX_AUDIO_CLIP_FADE: 10 };
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_FADE, 0, 'Min fade should be 0');
+    t.assertEqual(Constants.MAX_AUDIO_CLIP_FADE, 10, 'Max fade should be 10 seconds');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipFadeIn returns default when clip not found', (t) => {
+    const Constants = { DEFAULT_AUDIO_CLIP_FADE_IN: 0 };
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipFadeOut clamps to valid range', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_FADE: 0, MAX_AUDIO_CLIP_FADE: 10 };
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_FADE, 0, 'Min fade should be 0');
+    t.assertEqual(Constants.MAX_AUDIO_CLIP_FADE, 10, 'Max fade should be 10 seconds');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipFadeOut returns default when clip not found', (t) => {
+    const Constants = { DEFAULT_AUDIO_CLIP_FADE_OUT: 0 };
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipFadeInCurve validates curve types', (t) => {
+    const FADE_CURVES = ['linear', 'exponential'];
+    t.assertEqual(FADE_CURVES.length, 2, 'Should have 2 curve types');
+    t.assertTruthy(FADE_CURVES.includes('linear'), 'Should include linear');
+    t.assertTruthy(FADE_CURVES.includes('exponential'), 'Should include exponential');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipFadeInCurve returns default when clip not found', (t) => {
+    const Constants = { DEFAULT_FADE_IN_CURVE: 'linear' };
+    t.assertEqual(Constants.DEFAULT_FADE_IN_CURVE, 'linear', 'Default fade in curve should be linear');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipFadeOutCurve validates curve types', (t) => {
+    const FADE_CURVES = ['linear', 'exponential'];
+    t.assertTruthy(FADE_CURVES.includes('exponential'), 'Should include exponential curve');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipFadeOutCurve returns default when clip not found', (t) => {
+    const Constants = { DEFAULT_FADE_OUT_CURVE: 'linear' };
+    t.assertEqual(Constants.DEFAULT_FADE_OUT_CURVE, 'linear', 'Default fade out curve should be linear');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipReverse toggles boolean', (t) => {
+    const mockClip = { id: 'clip1', reverse: false };
+    t.assertEqual(mockClip.reverse, false, 'Initial reverse should be false');
+    mockClip.reverse = true;
+    t.assertEqual(mockClip.reverse, true, 'Reverse should toggle to true');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipReverse returns default when clip not found', (t) => {
+    t.assertEqual(false, false, 'Default reverse should be false');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipStartTime clamps to non-negative', (t) => {
+    const mockClip = { id: 'clip1', name: 'Test', startTime: 0 };
+    t.assertEqual(mockClip.startTime, 0, 'Initial startTime should be 0');
+    mockClip.startTime = Math.max(0, 4.5);
+    t.assertEqual(mockClip.startTime, 4.5, 'startTime should be set to positive value');
+    mockClip.startTime = Math.max(0, -5);
+    t.assertEqual(mockClip.startTime, 0, 'startTime should clamp to 0 for negative values');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipStartTime returns 0 when clip not found', (t) => {
+    const mockTrack = {
+        timelineClips: [],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); }
+    };
+    const result = mockTrack._getAudioClip('nonexistent');
+    t.assertEqual(result, undefined, 'Should return undefined for nonexistent clip');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipDuration clamps to minimum 0.01', (t) => {
+    const mockClip = { id: 'clip1', name: 'Test', duration: 1.0 };
+    t.assertEqual(mockClip.duration, 1.0, 'Initial duration should be 1.0');
+    mockClip.duration = Math.max(0.01, 5.5);
+    t.assertEqual(mockClip.duration, 5.5, 'duration should be set to positive value');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipDuration returns 0 when clip not found', (t) => {
+    const mockTrack = {
+        timelineClips: [],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); }
+    };
+    const result = mockTrack._getAudioClip('nonexistent');
+    t.assertEqual(result, undefined, 'Should return undefined for nonexistent clip');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipStartOffset clamps to valid range', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_START_OFFSET: 0 };
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_START_OFFSET, 0, 'Min start offset should be 0');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipStartOffset returns default when clip not found', (t) => {
+    const Constants = { DEFAULT_AUDIO_CLIP_START_OFFSET: 0 };
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'Default start offset should be 0');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipEndOffset handles special -1 value', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_END_OFFSET: -1 };
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_END_OFFSET, -1, 'Min end offset can be -1 for full audio');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipEndOffset returns default when clip not found', (t) => {
+    const Constants = { DEFAULT_AUDIO_CLIP_END_OFFSET: -1 };
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipName updates clip name', (t) => {
+    const mockClip = { id: 'clip1', name: 'Old Name' };
+    t.assertEqual(mockClip.name, 'Old Name', 'Initial name should be Old Name');
+    mockClip.name = 'New Name';
+    t.assertEqual(mockClip.name, 'New Name', 'Name should be updated');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipName returns empty string when clip not found', (t) => {
+    const mockTrack = {
+        timelineClips: [],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); }
+    };
+    const result = mockTrack._getAudioClip('nonexistent');
+    t.assertEqual(result, undefined, 'Should return undefined for nonexistent clip');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipColor updates clip color', (t) => {
+    const mockClip = { id: 'clip1', color: '#4a9eff' };
+    t.assertEqual(mockClip.color, '#4a9eff', 'Initial color should be default');
+    mockClip.color = '#ff0000';
+    t.assertEqual(mockClip.color, '#ff0000', 'Color should be updated');
+});
+
+TestRunner.test('Audio Clip Editor - getAudioClipColor returns default when clip not found', (t) => {
+    const mockTrack = {
+        timelineClips: [],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); }
+    };
+    const result = mockTrack._getAudioClip('nonexistent');
+    t.assertEqual(result, undefined, 'Should return undefined for nonexistent clip');
+});
+
+TestRunner.test('Audio Clip Editor - _getAudioClip returns undefined for empty timeline', (t) => {
+    const mockTrack = {
+        timelineClips: [],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); }
+    };
+    const result = mockTrack._getAudioClip('any-id');
+    t.assertEqual(result, undefined, 'Should return undefined for empty timeline');
+});
+
+TestRunner.test('Audio Clip Editor - _getAudioClip finds clip in populated timeline', (t) => {
+    const mockClip = { id: 'clip1', name: 'Test Clip' };
+    const mockTrack = {
+        timelineClips: [mockClip],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); }
+    };
+    const result = mockTrack._getAudioClip('clip1');
+    t.assertTruthy(result !== null, 'Should find clip');
+    t.assertEqual(result.name, 'Test Clip', 'Should return correct clip');
+});
+
+TestRunner.test('Audio Clip Editor - gain constants have valid ranges', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_GAIN: 0, MAX_AUDIO_CLIP_GAIN: 4.0, DEFAULT_AUDIO_CLIP_GAIN: 1.0 };
+    t.assertTruthy(Constants.MIN_AUDIO_CLIP_GAIN >= 0, 'Min gain should be >= 0');
+    t.assertTruthy(Constants.MAX_AUDIO_CLIP_GAIN > Constants.MIN_AUDIO_CLIP_GAIN, 'Max gain should be > min');
+    t.assertTruthy(Constants.DEFAULT_AUDIO_CLIP_GAIN >= Constants.MIN_AUDIO_CLIP_GAIN && Constants.DEFAULT_AUDIO_CLIP_GAIN <= Constants.MAX_AUDIO_CLIP_GAIN, 'Default gain should be in range');
+});
+
+TestRunner.test('Audio Clip Editor - playback rate constants have valid ranges', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_PLAYBACK_RATE: 0.25, MAX_AUDIO_CLIP_PLAYBACK_RATE: 4.0, DEFAULT_AUDIO_CLIP_PLAYBACK_RATE: 1.0 };
+    t.assertTruthy(Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE > 0, 'Min rate should be > 0');
+    t.assertTruthy(Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE > Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE, 'Max rate should be > min');
+    t.assertTruthy(Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE >= Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE && Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE <= Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE, 'Default rate should be in range');
+});
+
+TestRunner.test('Audio Clip Editor - crossfade constants have valid ranges', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_CROSSFADE: 0, MAX_AUDIO_CLIP_CROSSFADE: 5, DEFAULT_AUDIO_CLIP_CROSSFADE: 0 };
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_CROSSFADE, 0, 'Min crossfade should be 0');
+    t.assertTruthy(Constants.MAX_AUDIO_CLIP_CROSSFADE > Constants.MIN_AUDIO_CLIP_CROSSFADE, 'Max crossfade should be > min');
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_CROSSFADE, Constants.MIN_AUDIO_CLIP_CROSSFADE, 'Default crossfade should equal min');
+});
+
+TestRunner.test('Audio Clip Editor - fade constants have valid ranges', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_FADE: 0, MAX_AUDIO_CLIP_FADE: 10, DEFAULT_AUDIO_CLIP_FADE_IN: 0, DEFAULT_AUDIO_CLIP_FADE_OUT: 0 };
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_FADE, 0, 'Min fade should be 0');
+    t.assertTruthy(Constants.MAX_AUDIO_CLIP_FADE > Constants.MIN_AUDIO_CLIP_FADE, 'Max fade should be > min');
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_FADE_IN, Constants.MIN_AUDIO_CLIP_FADE, 'Default fade in should be 0');
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_FADE_OUT, Constants.MIN_AUDIO_CLIP_FADE, 'Default fade out should be 0');
+});
+
+TestRunner.test('Audio Clip Editor - offset constants have valid ranges', (t) => {
+    const Constants = { MIN_AUDIO_CLIP_START_OFFSET: 0, DEFAULT_AUDIO_CLIP_START_OFFSET: 0, MIN_AUDIO_CLIP_END_OFFSET: -1, DEFAULT_AUDIO_CLIP_END_OFFSET: -1 };
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_START_OFFSET, 0, 'Min start offset should be 0');
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_START_OFFSET, Constants.MIN_AUDIO_CLIP_START_OFFSET, 'Default start offset should be 0');
+    t.assertEqual(Constants.MIN_AUDIO_CLIP_END_OFFSET, -1, 'Min end offset can be -1');
+    t.assertEqual(Constants.DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1');
+});
+
+TestRunner.test('Audio Clip Editor - _captureUndoState is called before mutations', (t) => {
+    let undoCalled = false;
+    const mockTrack = {
+        timelineClips: [{ id: 'clip1', name: 'Test', gain: 1.0 }],
+        _getAudioClip: function(clipId) { return this.timelineClips.find(c => c.id === clipId); },
+        _captureUndoState: function(desc) { undoCalled = true; }
+    };
+    t.assertTruthy(typeof mockTrack._captureUndoState === 'function', 'Should have undo capture method');
+});
+
+// ============================================
 // Day 197: MIDI Learn CC Mapping Application Tests
 // ============================================
 

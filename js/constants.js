@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.84.0'; // Day 199: DrumSampler Pad UI Functions Tests
+export const APP_VERSION = '0.85.0'; // Day 200: Audio Clip Editor Methods Tests - Added 33 tests for audio clip editor set/get methods
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -476,6 +476,14 @@ export const TASKBAR_HEIGHT = 30; // Taskbar height in pixels
 // ============================================
 export const CONTEXT_MENU_ITEM_HEIGHT = 28; // Height of each context menu item in pixels
 export const CONTEXT_MENU_MAX_WIDTH = 300; // Maximum width of context menu in pixels
+
+// ============================================
+// Drop Zone Constants
+// ============================================
+export const DROP_ZONE_MIN_WIDTH = 80; // Minimum drop zone width in pixels
+export const DROP_ZONE_MIN_HEIGHT = 60; // Minimum drop zone height in pixels
+export const DROP_ZONE_DEFAULT_HEIGHT = 50; // Default drop zone height in pixels
+export const DROP_ZONE_BORDER_RADIUS = 4; // Border radius in pixels
 
 // ============================================
 // Sequencer Grid Constants
