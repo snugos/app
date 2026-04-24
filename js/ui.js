@@ -5289,6 +5289,7 @@ export function showKeyboardShortcutsHelpWindow() {
                 <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">T</kbd> <span class="text-slate-400">Toggle Metronome</span></div>
                 <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">\`</kbd> <span class="text-slate-400">Tap Tempo</span></div>
                 <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">L</kbd> <span class="text-slate-400">Toggle Loop Region</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">K</kbd> <span class="text-slate-400">Toggle MIDI Learn</span></div>
                 <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Q</kbd> <span class="text-slate-400">Toggle Scale Mode</span></div>
             </div>
 

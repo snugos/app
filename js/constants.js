@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.81.0'; // Day 197: MIDI Learn CC Mapping Application Tests
+export const APP_VERSION = '0.82.0'; // Day 198: MIDI Learn Keyboard Shortcut 'K'
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -491,6 +491,7 @@ export const STEP_LABELS_SIXTEENTHS = {
 export const KEYBOARD_SHORTCUTS_HELP_TITLE = 'Keyboard Shortcuts';
 export const KEYBOARD_SHORTCUTS_HELP_WIDTH = 600; // Modal width in pixels
 export const KEYBOARD_SHORTCUTS_HELP_HEIGHT = 500; // Modal height in pixels
+export const MIDI_LEARN_SHORTCUT_KEY = 'k'; // Keyboard shortcut to toggle MIDI Learn mode
 
 // ============================================
 // MIDI Learn Constants

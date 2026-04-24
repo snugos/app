@@ -1135,6 +1135,21 @@ document.addEventListener('keydown', (event) => {
             }
             return;
         }
+        if (key === 'k' && !(event.ctrlKey || event.metaKey)) {
+            // Toggle MIDI Learn Mode
+            if (localAppServices.getMidiLearnModeState && localAppServices.setMidiLearnModeState) {
+                const currentMode = localAppServices.getMidiLearnModeState();
+                const newMode = !currentMode;
+                localAppServices.setMidiLearnModeState(newMode);
+                if (localAppServices.captureStateForUndo) {
+                    localAppServices.captureStateForUndo(`Toggle MIDI Learn ${newMode ? 'ON' : 'OFF'}`);
+                }
+                if (localAppServices.showNotification) {
+                    localAppServices.showNotification(`MIDI Learn: ${newMode ? 'ON - Move a control on your MIDI device' : 'OFF'}`, 2000);
+                }
+            }
+            return;
+        }
         
         const midNote = keyToMIDIMap[key];
         if (midNote !== undefined) {
