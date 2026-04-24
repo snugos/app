@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.67.1'; // Day 103: Drop Zone Listeners Tests - Added 11 tests for setupGenericDropZoneListeners
+export const APP_VERSION = '0.67.2'; // Day 104: SnugWindow, Track Types and Utils Constants Tests - Added 30 new tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -446,6 +446,32 @@ export const MIDI_IMPORT_DEFAULT_VELOCITY = 100; // Default velocity when not sp
 export const MIDI_IMPORT_DEFAULT_PROBABILITY = 1.0; // Default note probability
 export const MIDI_IMPORT_SNAP_TO_GRID = true; // Snap imported notes to 16th grid
 export const MIDI_IMPORT_VELOCITY_SCALE = 1 / 127; // Scale MIDI velocity (127) to app velocity (0-1)
+
+
+// ============================================
+// SnugWindow Window Constants
+// ============================================
+export const DEFAULT_WINDOW_MIN_WIDTH = 150; // Minimum window width in pixels
+export const DEFAULT_WINDOW_MIN_HEIGHT = 100; // Minimum window height in pixels
+export const DEFAULT_WINDOW_WIDTH = 350; // Default window width in pixels
+export const DEFAULT_WINDOW_HEIGHT = 250; // Default window height in pixels
+export const TASKBAR_HEIGHT = 30; // Taskbar height in pixels
+
+// ============================================
+// Context Menu Constants
+// ============================================
+export const CONTEXT_MENU_ITEM_HEIGHT = 28; // Height of each context menu item in pixels
+export const CONTEXT_MENU_MAX_WIDTH = 300; // Maximum width of context menu in pixels
+
+// ============================================
+// Sequencer Grid Constants
+// ============================================
+export const GRID_STEP_LABELS = {
+    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16']
+};
+export const STEP_LABELS_SIXTEENTHS = {
+    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16']
+};
 
 // Keyboard Shortcuts Help Constants
 export const KEYBOARD_SHORTCUTS_HELP_TITLE = 'Keyboard Shortcuts';

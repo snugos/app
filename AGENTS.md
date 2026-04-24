@@ -1316,3 +1316,32 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The `setupGenericDropZoneListeners` function in `js/utils.js` sets up drag-and-drop event handlers for audio file drop zones used throughout the DAW (DrumSampler, Sampler, InstrumentSampler, Audio tracks). The tests verify the function's behavior without requiring actual DOM elements.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.67.1
+
+#### Day 104: SnugWindow, Track Types and Utils Constants Tests (2026-04-24)
+- **Feature**: Added 30 new unit tests for SnugWindow dimensions, Track Types validation, Utils functions, Context Menu constants, Sequencer Grid constants, Sound Library, and Synth Engine Control Definitions
+- **Files Modified**:
+  - `js/constants.js`: Added new constants:
+    - `DEFAULT_WINDOW_MIN_WIDTH` (150), `DEFAULT_WINDOW_MIN_HEIGHT` (100), `DEFAULT_WINDOW_WIDTH` (350), `DEFAULT_WINDOW_HEIGHT` (250), `TASKBAR_HEIGHT` (30) - Window dimension constants
+    - `CONTEXT_MENU_ITEM_HEIGHT` (28), `CONTEXT_MENU_MAX_WIDTH` (300) - Context menu layout constants
+    - `GRID_STEP_LABELS` and `STEP_LABELS_SIXTEENTHS` - Sequencer grid step label arrays (16 entries each)
+    - Bumped APP_VERSION to 0.67.2
+  - `js/tests.js`: Added imports for utils.js functions and 30 new tests:
+    - SnugWindow: 5 tests for DEFAULT_WINDOW_* and TASKBAR_HEIGHT dimension validation
+    - Track Types: 2 tests validating 5 track types (Synth, DrumSampler, Sampler, InstrumentSampler, Audio)
+    - Utils Functions: 9 tests for showNotification, showCustomModal, showConfirmationDialog, secondsToBBSTime, bbsTimeToSeconds, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners
+    - Context Menu: 2 tests for CONTEXT_MENU_ITEM_HEIGHT and CONTEXT_MENU_MAX_WIDTH
+    - Sequencer Grid: 2 tests for GRID_STEP_LABELS and STEP_LABELS_SIXTEENTHS
+    - Sound Library: 1 test for soundLibraries object
+    - Synth Engine: 3 tests for synthEngineControlDefinitions structure and MonoSynth controls
+- **Feature Details**:
+  - Tests validate SnugWindow dimension constants are in reasonable ranges
+  - Tests verify all expected track type strings are defined
+  - Tests verify utils.js utility functions exist and have correct signatures
+  - Tests validate context menu layout constants
+  - Tests verify sequencer grid step labels have correct format (16 entries)
+  - Tests verify soundLibraries is a non-null object
+  - Tests verify synthEngineControlDefinitions has MonoSynth with controls array
+  - Total test count increased from 449 to 479 tests
+- **Backend Note**: These constants and tests fill gaps in test coverage for core UI infrastructure. The SnugWindow constants define default dimensions, the context menu constants control layout, and the sequencer grid constants define step labels used throughout the sequencer UI.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.2
