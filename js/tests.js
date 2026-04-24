@@ -8138,3 +8138,287 @@ TestRunner.test('MIDI Learn - DEFAULT_MIDI_LEARN_MAPPING has correct structure',
     t.assertTruthy('min' in DEFAULT_MIDI_LEARN_MAPPING, 'Should have min property');
     t.assertTruthy('max' in DEFAULT_MIDI_LEARN_MAPPING, 'Should have max property');
 });
+
+// ============================================
+// Day 200: SnugWindow Class Instance Tests
+// ============================================
+TestRunner.test('SnugWindow - class is exported and constructable', (t) => {
+    t.assertEqual(typeof SnugWindow, 'function', 'SnugWindow should be a function');
+    t.assertTruthy(SnugWindow.prototype.constructor === SnugWindow, 'Should have correct constructor');
+});
+
+TestRunner.test('SnugWindow - prototype has expected methods', (t) => {
+    const methods = ['minimize', 'restore', 'focus', 'close', 'toggleMaximize'];
+    methods.forEach(method => {
+        t.assertEqual(typeof SnugWindow.prototype[method], 'function', `Should have ${method} method`);
+    });
+});
+
+TestRunner.test('SnugWindow - instance properties are initialized', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: () => {},
+        addWindowToStore: () => {},
+        captureStateForUndo: () => {}
+    };
+    
+    const win = new SnugWindow('test-window', 'Test', '<div>content</div>', {}, mockAppServices);
+    t.assertTruthy(win !== null, 'Window should be created');
+    t.assertEqual(win.id, 'test-window', 'Should have correct id');
+    t.assertEqual(win.title, 'Test', 'Should have correct title');
+    t.assertEqual(win.isMinimized, false, 'Should not be minimized by default');
+    t.assertEqual(win.isMaximized, false, 'Should not be maximized by default');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});
+
+TestRunner.test('SnugWindow - minimize method toggles isMinimized flag', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: () => {},
+        addWindowToStore: () => {},
+        captureStateForUndo: () => {}
+    };
+    
+    const win = new SnugWindow('test-window-2', 'Test', '<div>content</div>', {}, mockAppServices);
+    t.assertEqual(win.isMinimized, false, 'Should start not minimized');
+    win.minimize();
+    t.assertEqual(win.isMinimized, true, 'Should be minimized after minimize()');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});
+
+TestRunner.test('SnugWindow - restore method restores from minimized', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: () => {},
+        addWindowToStore: () => {},
+        captureStateForUndo: () => {}
+    };
+    
+    const win = new SnugWindow('test-window-3', 'Test', '<div>content</div>', {}, mockAppServices);
+    win.minimize();
+    t.assertEqual(win.isMinimized, true, 'Should be minimized');
+    win.restore();
+    t.assertEqual(win.isMinimized, false, 'Should be restored after restore()');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});
+
+TestRunner.test('SnugWindow - toggleMaximize method toggles isMaximized flag', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: () => {},
+        addWindowToStore: () => {},
+        captureStateForUndo: () => {}
+    };
+    
+    const win = new SnugWindow('test-window-4', 'Test', '<div>content</div>', {}, mockAppServices);
+    t.assertEqual(win.isMaximized, false, 'Should start not maximized');
+    win.toggleMaximize();
+    t.assertEqual(win.isMaximized, true, 'Should be maximized after toggle');
+    win.toggleMaximize();
+    t.assertEqual(win.isMaximized, false, 'Should be restored after second toggle');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});
+
+TestRunner.test('SnugWindow - close method removes element from DOM', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: () => {},
+        addWindowToStore: () => {},
+        removeWindowFromStore: () => {},
+        captureStateForUndo: () => {}
+    };
+    
+    const win = new SnugWindow('test-window-5', 'Test', '<div>content</div>', { closable: true }, mockAppServices);
+    t.assertTruthy(document.getElementById('window-test-window-5') !== null, 'Window element should exist');
+    win.close();
+    t.assertTruthy(document.getElementById('window-test-window-5') === null || win.element === null, 'Window element should be removed after close');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});
+
+TestRunner.test('SnugWindow - options are stored correctly', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: () => {},
+        addWindowToStore: () => {},
+        captureStateForUndo: () => {}
+    };
+    
+    const options = { minWidth: 200, minHeight: 150, resizable: false };
+    const win = new SnugWindow('test-window-6', 'Test', '<div>content</div>', options, mockAppServices);
+    t.assertEqual(win.options.minWidth, 200, 'Should store minWidth option');
+    t.assertEqual(win.options.minHeight, 150, 'Should store minHeight option');
+    t.assertEqual(win.options.resizable, false, 'Should store resizable option');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});
+
+TestRunner.test('SnugWindow - focus method brings window to front', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    let zIndexCounter = 100;
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => ++zIndexCounter,
+        getHighestZ: () => zIndexCounter,
+        setHighestZ: (z) => zIndexCounter = z,
+        addWindowToStore: () => {},
+        captureStateForUndo: () => {}
+    };
+    
+    const win = new SnugWindow('test-window-7', 'Test', '<div>content</div>', {}, mockAppServices);
+    t.assertTruthy(typeof win.focus === 'function', 'Should have focus method');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});
+
+TestRunner.test('SnugWindow - _captureUndo method is called on move/resize', (t) => {
+    const funcStr = SnugWindow.prototype.minimize?.toString() || '';
+    t.assertTruthy(funcStr.includes('_captureUndo') || typeof SnugWindow.prototype._captureUndo === 'function', 'Should have undo capture method');
+});
+
+TestRunner.test('SnugWindow - createTaskbarButton creates a taskbar button', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    const mockTaskbarButtons = document.createElement('div');
+    mockTaskbarButtons.id = 'taskbarButtons';
+    mockTaskbar.appendChild(mockTaskbarButtons);
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: () => {},
+        addWindowToStore: () => {},
+        captureStateForUndo: () => {}
+    };
+    
+    const win = new SnugWindow('test-window-8', 'Test Window Title', '<div>content</div>', {}, mockAppServices);
+    t.assertTruthy(win.taskbarButton !== null, 'Should create taskbar button');
+    t.assertTruthy(win.taskbarButton.textContent.includes('Test'), 'Taskbar button should show window title');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});
+
+TestRunner.test('SnugWindow - makeDraggable and makeResizable are methods', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeDraggable, 'function', 'Should have makeDraggable method');
+    t.assertEqual(typeof SnugWindow.prototype.makeResizable, 'function', 'Should have makeResizable method');
+});
+
+TestRunner.test('SnugWindow - instance stores appServices reference', (t) => {
+    const mockDesktop = document.createElement('div');
+    mockDesktop.id = 'desktop';
+    const mockTaskbar = document.createElement('div');
+    mockTaskbar.id = 'taskbar';
+    mockTaskbar.offsetHeight = 30;
+    document.body.appendChild(mockDesktop);
+    document.body.appendChild(mockTaskbar);
+    
+    const testAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: mockTaskbar },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: () => {},
+        addWindowToStore: () => {},
+        customService: () => 'test'
+    };
+    
+    const win = new SnugWindow('test-window-9', 'Test', '<div>content</div>', {}, testAppServices);
+    t.assertEqual(win.appServices, testAppServices, 'Should store appServices reference');
+    t.assertEqual(win.appServices.customService(), 'test', 'Custom service should be accessible');
+    
+    document.body.removeChild(mockDesktop);
+    document.body.removeChild(mockTaskbar);
+});

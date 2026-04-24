@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.82.0'; // Day 198: MIDI Learn Keyboard Shortcut 'K'
+export const APP_VERSION = '0.83.0'; // Day 200: SnugWindow Class Instance Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

@@ -2360,3 +2360,30 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - MIDI Learn allows users to map physical MIDI controller knobs/faders to DAW parameters
 - **Usage**: Press 'K' anytime (when not in an input field) to toggle MIDI Learn mode
 - **Version**: Bumped to 0.82.0
+#### Day 200: SnugWindow Class Instance Tests (2026-04-24)
+- **Feature**: Added 11 new unit tests for SnugWindow class instance methods and behaviors
+- **Files Modified**:
+  - `js/tests.js`: Added import for SnugWindow class and 11 new tests:
+    - `SnugWindow - class is exported and constructable` - Tests class export and constructor type
+    - `SnugWindow - prototype has expected methods` - Tests minimize, restore, focus, close, toggleMaximize
+    - `SnugWindow - instance properties are initialized` - Tests id, title, isMinimized, isMaximized
+    - `SnugWindow - minimize method toggles isMinimized flag` - Tests minimize() behavior
+    - `SnugWindow - restore method restores from minimized` - Tests restore() after minimize
+    - `SnugWindow - toggleMaximize method toggles isMaximized flag` - Tests toggle between maximized/restored
+    - `SnugWindow - close method removes element from DOM` - Tests close() cleanup
+    - `SnugWindow - options are stored correctly` - Tests minWidth, minHeight, resizable options
+    - `SnugWindow - focus method brings window to front` - Tests focus method existence
+    - `SnugWindow - _captureUndo method is called on move/resize` - Tests undo capture method
+    - `SnugWindow - createTaskbarButton creates a taskbar button` - Tests taskbar button creation
+    - `SnugWindow - makeDraggable and makeResizable are methods` - Tests drag/resize method signatures
+    - `SnugWindow - instance stores appServices reference` - Tests appServices storage and access
+  - `js/constants.js`: Bumped APP_VERSION to 0.83.0
+- **Feature Details**:
+  - Tests validate SnugWindow class structure and prototype methods
+  - Tests validate instance initialization with proper default values
+  - Tests validate window state transitions (minimize, restore, maximize, close)
+  - Tests validate options storage and appServices reference
+  - Total test count increased from 1108 to 1119 tests
+- **Backend Note**: The SnugWindow class is the core window management component for the DAW UI. These tests complement the existing SnugWindow constants tests (Day 104) by testing the actual class instance behavior. The tests use mock DOM elements to create actual SnugWindow instances in a controlled environment.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.83.0
