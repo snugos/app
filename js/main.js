@@ -67,10 +67,10 @@ import {
     zoomOutVerticalTimeline,
     resetTimelineZoom,
     // Send Tracks state
-    getSendTracksState as getSendTracks,
-    getSendTrackByIdState as getSendTrackById,
+    getSendTracksState: getSendTracks,
+    getSendTrackByIdState: getSendTrackById,
     getTrackSendsState,
-    getTrackSendLevelState as getTrackSendLevel,
+    getTrackSendLevelState: getTrackSendLevel,
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
     setMidiAccessState, setActiveMIDIInputState,
@@ -407,9 +407,9 @@ const appServices = {
     getTrackSendLevelState,
     getTrackSendPreFaderState,
     // Aliases for mixer
-    getSendTracksState as getSendTracks,
-    getSendTrackByIdState as getSendTrackById,
-    getTrackSendLevelState as getTrackSendLevel,
+    getSendTracksState: getSendTracks,
+    getSendTrackByIdState: getSendTrackById,
+    getTrackSendLevelState: getTrackSendLevel,
     // State Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
