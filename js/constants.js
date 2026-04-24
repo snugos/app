@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.94.0'; // Day 209: MIDI Learn State Functions Tests
+export const APP_VERSION = '0.94.1'; // Day 210: Track addAudioClip Function Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
