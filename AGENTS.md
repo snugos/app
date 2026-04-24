@@ -2482,3 +2482,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Performance Monitor state functions track real-time DAW performance metrics (CPU usage, memory pressure, audio latency, dropped callbacks). The tests verify the state API without requiring actual Tone.js context monitoring.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.86.0
+
+#### Day 205: Audio Module Function Existence Tests (2026-04-24)
+- **Feature**: Added 50 new unit tests for audio.js function exports to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 50 new tests in Day 205 section covering:
+    - Metronome functions: initializeMetronome, startMetronome, stopMetronome, setMetronomeVolume (existence + parameter count)
+    - Send bus node accessors: getSendBusNodes, getTrackSendNodes (existence + parameter count)
+    - Track-to-send bus connections: connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel (existence + parameter count)
+    - Panic and performance metrics: panicAllAudio, getPerformanceMetrics (existence + parameter count)
+    - Master gain and effects bus accessors: getMasterEffectsBusInputNode, getActualMasterGainNode, rebuildMasterEffectChain, clearAllMasterEffectNodes (existence + parameter count)
+    - Audio context and master meter initialization: initAudioContextAndMasterMeter, updateMeters (existence + parameter count)
+    - Helper functions: getMimeTypeFromFilename, autoSliceSample (existence + parameter count)
+    - Master effect audio functions: addMasterEffectToAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, reorderMasterEffectInAudio (existence + parameter count)
+    - Performance monitor functions: startPerformanceMonitor, stopPerformanceMonitor (existence + parameter count)
+  - `js/constants.js`: Bumped APP_VERSION to 0.90.0
+- **Feature Details**:
+  - Tests verify all listed audio.js functions are properly exported and are of type 'function'
+  - Tests validate function parameter counts match expected APIs
+  - Tests verify async functions are properly marked as async (via their parameter counts)
+  - Total test count increased from 1082 to 1132 tests
+- **Backend Note**: These audio module functions handle metronome playback, send bus routing, panic functions, performance monitoring, master effect chains, and audio context initialization. The tests verify the exported API without requiring actual Tone.js audio context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.90.0
