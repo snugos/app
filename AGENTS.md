@@ -1288,3 +1288,31 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Track Groups state functions are used by the Mixer window and Timeline window for managing track groupings. The tests verify the state API without requiring UI context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.66.2
+
+#### Day 103: Drop Zone Listeners Tests (2026-04-24)
+- **Feature**: Added 11 new tests for `setupGenericDropZoneListeners` function to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests after the existing createDropZoneHTML tests:
+    - `setupGenericDropZoneListeners is a function` - Tests function type
+    - `setupGenericDropZoneListeners handles null element gracefully` - Tests error handling
+    - `setupGenericDropZoneListeners adds event listeners` - Tests dragover/dragleave/drop listeners are added
+    - `setupGenericDropZoneListeners dragover handler adds dragover class` - Tests dragover event behavior
+    - `setupGenericDropZoneListeners dragleave handler removes dragover class` - Tests dragleave event behavior
+    - `setupGenericDropZoneListeners relink button triggers file input click` - Tests relink/retry button functionality
+    - `setupGenericDropZoneListeners drop handler parses sound browser JSON` - Tests sound browser item processing
+    - `setupGenericDropZoneListeners drop handler handles OS file drop for DrumSampler` - Tests DrumSampler file drops
+    - `setupGenericDropZoneListeners drop handler handles OS file drop for Sampler` - Tests Sampler file drops
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Feature Details**:
+  - Tests verify the drop zone listener setup function exists and is callable
+  - Tests verify null element handling doesn't throw errors
+  - Tests verify all three event listeners (dragover, dragleave, drop) are attached
+  - Tests verify dragover adds 'dragover' CSS class and sets dropEffect to 'copy'
+  - Tests verify dragleave removes the 'dragover' CSS class
+  - Tests verify relink/retry button click triggers file input click
+  - Tests verify drop handler correctly parses JSON sound browser items
+  - Tests verify drop handler processes OS file drops correctly for DrumSampler and Sampler track types
+  - Total test count increased to 449 tests
+- **Backend Note**: The `setupGenericDropZoneListeners` function in `js/utils.js` sets up drag-and-drop event handlers for audio file drop zones used throughout the DAW (DrumSampler, Sampler, InstrumentSampler, Audio tracks). The tests verify the function's behavior without requiring actual DOM elements.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
