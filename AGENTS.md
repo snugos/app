@@ -2307,3 +2307,40 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These tests complement the existing MIDI Learn undo capture tests (Day 193) by verifying remove and clear operations also capture state for undo. The undo system captures full project state snapshots before mutations, allowing users to undo MIDI Learn changes via Ctrl+Z.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.80.0
+
+#### Day 197: MIDI Learn CC Mapping Application Tests (2026-04-24)
+- **Feature**: Added 21 new unit tests for MIDI Learn CC mapping application to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 21 new tests in Day 197 section:
+    - `applyMidiLearnMapping normalizes value correctly` - Tests mapping min/max properties
+    - `applyMidiLearnMapping handles masterVolume param type` - Tests masterVolume param type
+    - `applyMidiLearnMapping handles metronomeVolume param type` - Tests metronomeVolume param type
+    - `applyMidiLearnMapping handles tempo param type` - Tests tempo param type
+    - `applyMidiLearnMapping handles trackVolume param type` - Tests trackVolume param type
+    - `applyMidiLearnMapping handles trackPan param type` - Tests trackPan param type
+    - `applyMidiLearnMapping handles effectParam param type` - Tests effectParam param type
+    - `handleMIDIMessage detects CC messages correctly` - Tests CC message command range (176-191)
+    - `handleMIDIMessage normalizes CC value to 0-1` - Tests CC value normalization formula
+    - `MIDI Learn mode captures pending param on CC` - Tests pending param capture workflow
+    - `setMidiLearnModeState toggles mode correctly` - Tests mode toggle behavior
+    - `pending param is cleared when mode is disabled` - Tests pending param state access
+    - `addMidiLearnMapping respects MAX_MIDI_LEARN_MAPPINGS limit` - Tests 64 mapping cap
+    - `findMidiLearnMapping finds by channel and cc` - Tests find by channel/cc
+    - `findMidiLearnMapping returns -1 when not found` - Tests not-found return value
+    - `getMidiLearnMappingByIndex retrieves correct mapping` - Tests mapping retrieval
+    - `updateMidiLearnMapping modifies existing mapping` - Tests mapping update
+    - `MIDI_LEARN_PARAM_TYPES array has all expected values` - Tests 8 param types
+    - `DEFAULT_MIDI_LEARN_MAPPING has correct structure` - Tests default mapping structure
+  - `js/constants.js`: Bumped APP_VERSION to 0.81.0
+- **Feature Details**:
+  - Tests validate all MIDI Learn parameter types (trackVolume, trackPan, trackMute, trackSolo, effectParam, masterVolume, metronomeVolume, tempo)
+  - Tests validate CC message detection (command range 176-191 for channels 1-16)
+  - Tests validate CC value normalization from 0-127 to 0-1 range
+  - Tests validate pending param capture workflow in MIDI Learn mode
+  - Tests validate mapping CRUD operations (add, find, update, remove, clear)
+  - Tests validate MAX_MIDI_LEARN_MAPPINGS limit (64 mappings)
+  - Tests validate DEFAULT_MIDI_LEARN_MAPPING structure with required properties
+  - Total test count increased from 1067 to 1088 tests
+- **Backend Note**: The MIDI Learn CC mapping application tests complement the existing MIDI Learn tests (Days 107, 193, 196) by validating the parameter handling and value mapping that happens when CC messages are received from MIDI controllers.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.81.0

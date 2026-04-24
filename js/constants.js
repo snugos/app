@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.80.0'; // Day 196: Track addAudioClip Return Value Tests
+export const APP_VERSION = '0.81.0'; // Day 197: MIDI Learn CC Mapping Application Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

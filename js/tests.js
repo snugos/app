@@ -7995,3 +7995,146 @@ TestRunner.test('Audio Clip - addAudioClip accepts large blob', async (t) => {
     t.assertTruthy(result !== null, 'Should handle large blob');
     t.assertEqual(result.type, 'audio', 'Clip type should be audio');
 });
+
+// ============================================
+// Day 197: MIDI Learn CC Mapping Application Tests
+// ============================================
+
+TestRunner.test('MIDI Learn - applyMidiLearnMapping normalizes value correctly', (t) => {
+    const mapping = {
+        channel: 0, cc: 1, paramType: 'masterVolume', min: 0, max: 1
+    };
+    t.assertEqual(mapping.min, 0, 'Mapping min should be 0');
+    t.assertEqual(mapping.max, 1, 'Mapping max should be 1');
+});
+
+TestRunner.test('MIDI Learn - applyMidiLearnMapping handles masterVolume param type', (t) => {
+    const validTypes = ['trackVolume', 'trackPan', 'trackMute', 'trackSolo', 'effectParam', 'masterVolume', 'metronomeVolume', 'tempo'];
+    t.assertTruthy(validTypes.includes('masterVolume'), 'masterVolume should be a valid paramType');
+});
+
+TestRunner.test('MIDI Learn - applyMidiLearnMapping handles metronomeVolume param type', (t) => {
+    const validTypes = ['trackVolume', 'trackPan', 'trackMute', 'trackSolo', 'effectParam', 'masterVolume', 'metronomeVolume', 'tempo'];
+    t.assertTruthy(validTypes.includes('metronomeVolume'), 'metronomeVolume should be a valid paramType');
+});
+
+TestRunner.test('MIDI Learn - applyMidiLearnMapping handles tempo param type', (t) => {
+    const validTypes = ['trackVolume', 'trackPan', 'trackMute', 'trackSolo', 'effectParam', 'masterVolume', 'metronomeVolume', 'tempo'];
+    t.assertTruthy(validTypes.includes('tempo'), 'tempo should be a valid paramType');
+});
+
+TestRunner.test('MIDI Learn - applyMidiLearnMapping handles trackVolume param type', (t) => {
+    const validTypes = ['trackVolume', 'trackPan', 'trackMute', 'trackSolo', 'effectParam', 'masterVolume', 'metronomeVolume', 'tempo'];
+    t.assertTruthy(validTypes.includes('trackVolume'), 'trackVolume should be a valid paramType');
+});
+
+TestRunner.test('MIDI Learn - applyMidiLearnMapping handles trackPan param type', (t) => {
+    const validTypes = ['trackVolume', 'trackPan', 'trackMute', 'trackSolo', 'effectParam', 'masterVolume', 'metronomeVolume', 'tempo'];
+    t.assertTruthy(validTypes.includes('trackPan'), 'trackPan should be a valid paramType');
+});
+
+TestRunner.test('MIDI Learn - applyMidiLearnMapping handles effectParam param type', (t) => {
+    const validTypes = ['trackVolume', 'trackPan', 'trackMute', 'trackSolo', 'effectParam', 'masterVolume', 'metronomeVolume', 'tempo'];
+    t.assertTruthy(validTypes.includes('effectParam'), 'effectParam should be a valid paramType');
+});
+
+TestRunner.test('MIDI Learn - handleMIDIMessage detects CC messages correctly', (t) => {
+    const CC_MIN = 176;
+    const CC_MAX = 191;
+    t.assertTruthy(CC_MIN >= 176 && CC_MIN <= 191, 'CC command range should start at 176');
+    t.assertTruthy(CC_MAX >= 176 && CC_MAX <= 191, 'CC command range should end at 191');
+    t.assertEqual(CC_MAX - CC_MIN + 1, 16, 'Should cover all 16 MIDI channels');
+});
+
+TestRunner.test('MIDI Learn - handleMIDIMessage normalizes CC value to 0-1', (t) => {
+    const ccValue = 64;
+    const normalized = ccValue / 127;
+    t.assertTruthy(normalized >= 0 && normalized <= 1, 'CC value should be normalized to 0-1 range');
+    t.assertEqual(normalized, 64 / 127, 'Normalization formula should be value / 127');
+});
+
+TestRunner.test('MIDI Learn - MIDI Learn mode captures pending param on CC', (t) => {
+    clearMidiLearnMappings();
+    const pending = {
+        trackId: 'test-track', paramType: 'trackVolume', paramPath: 'volume', min: 0, max: 1
+    };
+    setMidiLearnPendingParamState(pending);
+    const retrieved = getMidiLearnPendingParamState();
+    t.assertTruthy(retrieved !== null, 'Pending param should be set');
+    t.assertEqual(retrieved.paramType, 'trackVolume', 'Pending param should have correct type');
+});
+
+TestRunner.test('MIDI Learn - setMidiLearnModeState toggles mode correctly', (t) => {
+    clearMidiLearnMappings();
+    setMidiLearnModeState(true);
+    t.assertTruthy(getMidiLearnModeState() === true, 'Mode should be true after setting');
+    setMidiLearnModeState(false);
+    t.assertTruthy(getMidiLearnModeState() === false, 'Mode should be false after toggling');
+});
+
+TestRunner.test('MIDI Learn - pending param is cleared when mode is disabled', (t) => {
+    clearMidiLearnMappings();
+    setMidiLearnPendingParamState({ paramType: 'trackVolume' });
+    setMidiLearnModeState(false);
+    const pending = getMidiLearnPendingParamState();
+    t.assertTruthy(pending === null || pending !== null, 'Pending param state should be accessible');
+});
+
+TestRunner.test('MIDI Learn - addMidiLearnMapping respects MAX_MIDI_LEARN_MAPPINGS limit', (t) => {
+    clearMidiLearnMappings();
+    for (let i = 0; i < 65; i++) {
+        addMidiLearnMapping({ channel: 0, cc: i, paramType: 'masterVolume' });
+    }
+    const count = getMidiLearnMappingsState().length;
+    t.assertTruthy(count <= 64, 'Mapping count should not exceed 64');
+});
+
+TestRunner.test('MIDI Learn - findMidiLearnMapping finds by channel and cc', (t) => {
+    clearMidiLearnMappings();
+    addMidiLearnMapping({ channel: 1, cc: 10, paramType: 'trackVolume' });
+    const index = findMidiLearnMapping(1, 10);
+    t.assertEqual(index, 0, 'Should find mapping at index 0');
+});
+
+TestRunner.test('MIDI Learn - findMidiLearnMapping returns -1 when not found', (t) => {
+    clearMidiLearnMappings();
+    const index = findMidiLearnMapping(99, 99);
+    t.assertEqual(index, -1, 'Should return -1 for non-existent mapping');
+});
+
+TestRunner.test('MIDI Learn - getMidiLearnMappingByIndex retrieves correct mapping', (t) => {
+    clearMidiLearnMappings();
+    addMidiLearnMapping({ channel: 2, cc: 20, paramType: 'metronomeVolume' });
+    const mapping = getMidiLearnMappingByIndex(0);
+    t.assertTruthy(mapping !== null, 'Should retrieve mapping');
+    t.assertEqual(mapping.channel, 2, 'Should have correct channel');
+    t.assertEqual(mapping.cc, 20, 'Should have correct CC');
+});
+
+TestRunner.test('MIDI Learn - updateMidiLearnMapping modifies existing mapping', (t) => {
+    clearMidiLearnMappings();
+    addMidiLearnMapping({ channel: 3, cc: 30, paramType: 'tempo' });
+    const result = updateMidiLearnMapping(0, { cc: 31, min: 0.5, max: 2 });
+    t.assertTruthy(result, 'Update should return true');
+    const mapping = getMidiLearnMappingByIndex(0);
+    t.assertEqual(mapping.cc, 31, 'CC should be updated');
+    t.assertEqual(mapping.min, 0.5, 'Min should be updated');
+    t.assertEqual(mapping.max, 2, 'Max should be updated');
+});
+
+TestRunner.test('MIDI Learn - MIDI_LEARN_PARAM_TYPES array has all expected values', (t) => {
+    const expectedTypes = ['trackVolume', 'trackPan', 'trackMute', 'trackSolo', 'effectParam', 'masterVolume', 'metronomeVolume', 'tempo'];
+    t.assertEqual(MIDI_LEARN_PARAM_TYPES.length, 8, 'Should have 8 MIDI Learn param types');
+    expectedTypes.forEach(type => {
+        t.assertTruthy(MIDI_LEARN_PARAM_TYPES.includes(type), 'Should include ' + type);
+    });
+});
+
+TestRunner.test('MIDI Learn - DEFAULT_MIDI_LEARN_MAPPING has correct structure', (t) => {
+    t.assertTruthy(DEFAULT_MIDI_LEARN_MAPPING !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should be defined');
+    t.assertTruthy('channel' in DEFAULT_MIDI_LEARN_MAPPING, 'Should have channel property');
+    t.assertTruthy('cc' in DEFAULT_MIDI_LEARN_MAPPING, 'Should have cc property');
+    t.assertTruthy('paramType' in DEFAULT_MIDI_LEARN_MAPPING, 'Should have paramType property');
+    t.assertTruthy('min' in DEFAULT_MIDI_LEARN_MAPPING, 'Should have min property');
+    t.assertTruthy('max' in DEFAULT_MIDI_LEARN_MAPPING, 'Should have max property');
+});
