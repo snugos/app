@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.68.0'; // Day 105: Send Bus Audio Functions Tests - Added 19 new tests
+export const APP_VERSION = '0.68.1'; // Day 106: Audio Recording Tests - Added 23 new tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

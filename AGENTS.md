@@ -1345,3 +1345,40 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These constants and tests fill gaps in test coverage for core UI infrastructure. The SnugWindow constants define default dimensions, the context menu constants control layout, and the sequencer grid constants define step labels used throughout the sequencer UI.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.67.2
+
+#### Day 105: Send Bus Audio Functions Tests (2026-04-24)
+- **Feature**: Added 19 new tests for Send Bus audio functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 19 new tests covering:
+    - Send bus function existence: createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted, setRecordingInputGain
+    - Function signature validation: parameter count tests for all functions
+    - setRecordingInputGain function exists and accepts 1 parameter
+    - All send bus audio functions are proper function types
+  - Bumped APP_VERSION to 0.68.0
+- **Feature Details**:
+  - Tests verify all send bus audio functions are defined and callable
+  - Tests validate function signatures match expected parameter counts
+  - Tests verify setRecordingInputGain is properly exported from audio.js
+  - Total test count increased from 479 to 498 tests
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.0
+
+#### Day 106: Audio Recording Tests (2026-04-24)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.1
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.1
