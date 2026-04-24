@@ -6495,6 +6495,129 @@ TestRunner.test('DrumSampler Pad - pad status transitions from empty to loaded',
 });
 
 // ============================================
+// === Day 206: DrumSampler Pad Drop Zones Comprehensive Verification ===
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML generates unique IDs for all 8 pads', (t) => {
+    const ids = [];
+    for (let pad = 0; pad < 8; pad++) {
+        const html = createDropZoneHTML('track1', `input${pad}`, 'DrumSampler', pad, null);
+        const match = html.match(/id="([^"]+)"/);
+        ids.push(match ? match[1] : null);
+    }
+    // All IDs should be unique
+    const uniqueIds = [...new Set(ids)];
+    t.assertEqual(ids.length, 8, 'Should have 8 IDs');
+    t.assertEqual(uniqueIds.length, 8, 'All pad drop zone IDs should be unique');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML includes data attributes for all pad indices', (t) => {
+    for (let pad = 0; pad < 8; pad++) {
+        const html = createDropZoneHTML('track1', `input${pad}`, 'DrumSampler', pad, null);
+        t.assertTruthy(html.includes(`data-pad-slice-index="${pad}"`), `Pad ${pad} should have correct data attribute`);
+    }
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML includes track ID in data attributes', (t) => {
+    const html = createDropZoneHTML('testTrack', 'input1', 'DrumSampler', 3, null);
+    t.assertTruthy(html.includes('data-track-id="testTrack"'), 'Should include track ID data attribute');
+    t.assertTruthy(html.includes('data-track-type="DrumSampler"'), 'Should include track type data attribute');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML generates correct drop zone class', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('class="drop-zone '), 'Should have drop-zone class');
+    t.assertTruthy(html.includes('drop-zone"'), 'Should close class attribute properly');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML includes file input with accept attribute', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('type="file"'), 'Should have file input type');
+    t.assertTruthy(html.includes('accept="audio/*, .sfz, .sf2"'), 'Should accept audio file types');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML includes upload label', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('Click to Upload'), 'Should have upload label');
+    t.assertTruthy(html.includes('for="input1"'), 'Should link label to file input');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML shows empty status for unloaded pads', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('Drag & Drop Audio File'), 'Should show empty/drag-drop status text');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML shows loaded status correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, { status: 'loaded', originalFileName: 'kick.wav' });
+    t.assertTruthy(html.includes('Loaded:'), 'Should show loaded status');
+    t.assertTruthy(html.includes('kick.wav'), 'Should display file name');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML truncates long file names', (t) => {
+    const longName = 'this_is_a_very_long_file_name_that_should_be_truncated.wav';
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, { status: 'loaded', originalFileName: longName });
+    t.assertTruthy(html.includes('...') || !html.includes(longName), 'Long file names should be truncated');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML missing status shows relink button', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, { status: 'missing', originalFileName: 'missing.wav' });
+    t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing status class');
+    t.assertTruthy(html.includes('Relink'), 'Should have relink button');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML error status shows retry button', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, { status: 'error', originalFileName: 'error.wav' });
+    t.assertTruthy(html.includes('drop-zone-error'), 'Should have error status class');
+    t.assertTruthy(html.includes('Retry'), 'Should have retry button');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML loading status shows loading indicator', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, { status: 'loading', originalFileName: 'loading.wav' });
+    t.assertTruthy(html.includes('drop-zone-loading'), 'Should have loading status class');
+    t.assertTruthy(html.includes('Loading:'), 'Should show loading text');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - drop zone ID format is correct', (t) => {
+    const html = createDropZoneHTML('myTrack', 'myInput', 'DrumSampler', 5, null);
+    t.assertTruthy(html.includes('id="dropZone-myTrack-drumsampler-5"'), 'Should have correct drop zone ID format');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - pad index 0 is handled correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input0', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('dropZone-track1-drumsampler-0'), 'Pad 0 should have correct ID');
+    t.assertTruthy(html.includes('data-pad-slice-index="0"'), 'Pad 0 should have correct data attribute');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - pad index 7 (last pad) is handled correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input7', 'DrumSampler', 7, null);
+    t.assertTruthy(html.includes('dropZone-track1-drumsampler-7'), 'Pad 7 should have correct ID');
+    t.assertTruthy(html.includes('data-pad-slice-index="7"'), 'Pad 7 should have correct data attribute');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - different track IDs produce different drop zone IDs', (t) => {
+    const html1 = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    const html2 = createDropZoneHTML('track2', 'input1', 'DrumSampler', 0, null);
+    const id1 = html1.match(/id="([^"]+)"/)[1];
+    const id2 = html2.match(/id="([^"]+)"/)[1];
+    t.assertNotEqual(id1, id2, 'Different tracks should have different drop zone IDs');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML returns a string', (t) => {
+    const result = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    t.assertEqual(typeof result, 'string', 'createDropZoneHTML should return a string');
+    t.assertTruthy(result.length > 0, 'Result should not be empty');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML with null pad index handles correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', null, null);
+    t.assertTruthy(html.includes('dropZone-track1-drumsampler'), 'Should work with null pad index');
+    t.assertTruthy(!html.includes('data-pad-slice-index'), 'Should not have pad index data attribute when null');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML file input is hidden', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('class="hidden"'), 'File input should be hidden');
+});
+
 // Day 204: Undo/Redo Capture Verification Tests
 // ============================================
 // These tests verify that state setter functions properly call captureStateForUndo

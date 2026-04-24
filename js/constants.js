@@ -1,6 +1,4 @@
-// js/constants.js - Shared constants for SnugOS
-export const APP_VERSION = '0.90.0'; // Day 205: Audio Module Function Existence Tests - Added 50 tests for metronome, send bus, track-send connections, panic, performance metrics, master bus accessors, audio context initialization, and master effects functions
-export const APP_VERSION = '0.90.0'; // Day 205: Audio Module Function Existence Tests - Added 50 tests for metronome, send bus, track-send connections, panic, performance metrics, master bus accessors, audio context initialization, and master effects functions Capture Verification Tests - Added 23 tests verifying captureStateForUndo calls in state setters
+export const APP_VERSION = '0.91.0'; // Day 206: DrumSampler Pad Drop Zones Verification
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
