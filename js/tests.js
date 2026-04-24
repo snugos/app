@@ -4547,3 +4547,229 @@ TestRunner.test('Recording State - Recording start time accepts numeric values',
         t.assertEqual(getRecordingStartTimeState(), time, `Should accept start time: ${time}`);
     }
 });
+// === Day 207: Audio Clip Editor UI Tests ===
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow function exists', (t) => {
+    t.assertEqual(typeof openAudioClipEditorWindow, 'function', 'openAudioClipEditorWindow should be a function');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow accepts 3 parameters', (t) => {
+    t.assertEqual(openAudioClipEditorWindow.length, 3, 'openAudioClipEditorWindow should accept 3 parameters (trackId, clipId, savedState)');
+});
+
+TestRunner.test('Audio Clip Editor - drawClipWaveform function exists', (t) => {
+    t.assertEqual(typeof drawClipWaveform, 'function', 'drawClipWaveform should be a function');
+});
+
+TestRunner.test('Audio Clip Editor - drawClipWaveform accepts 2 parameters', (t) => {
+    t.assertEqual(drawClipWaveform.length, 2, 'drawClipWaveform should accept 2 parameters (clipId, audioBuffer)');
+});
+
+TestRunner.test('Audio Clip Editor - CLIP_COLORS is a non-empty array', (t) => {
+    t.assertEqual(Array.isArray(CLIP_COLORS), true, 'CLIP_COLORS should be an array');
+    t.assertTruthy(CLIP_COLORS.length > 0, 'CLIP_COLORS should not be empty');
+});
+
+TestRunner.test('Audio Clip Editor - CLIP_COLORS has 16 colors', (t) => {
+    t.assertEqual(CLIP_COLORS.length, 16, 'CLIP_COLORS should have 16 colors');
+});
+
+TestRunner.test('Audio Clip Editor - CLIP_COLORS contains default color', (t) => {
+    t.assertTruthy(CLIP_COLORS.includes(DEFAULT_CLIP_COLOR), 'DEFAULT_CLIP_COLOR should be in CLIP_COLORS array');
+});
+
+TestRunner.test('Audio Clip Editor - CLIP_COLORS all entries are valid hex colors', (t) => {
+    for (const color of CLIP_COLORS) {
+        t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(color), `Color ${color} should be a valid hex color`);
+    }
+});
+
+TestRunner.test('Audio Clip Editor - DEFAULT_CLIP_COLOR is a valid hex color', (t) => {
+    t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(DEFAULT_CLIP_COLOR), 'DEFAULT_CLIP_COLOR should be a valid hex color');
+});
+
+TestRunner.test('Audio Clip Editor - FADE_CURVE_LINEAR is "linear"', (t) => {
+    t.assertEqual(FADE_CURVE_LINEAR, 'linear', 'FADE_CURVE_LINEAR should be "linear"');
+});
+
+TestRunner.test('Audio Clip Editor - FADE_CURVE_EXPONENTIAL is "exponential"', (t) => {
+    t.assertEqual(FADE_CURVE_EXPONENTIAL, 'exponential', 'FADE_CURVE_EXPONENTIAL should be "exponential"');
+});
+
+TestRunner.test('Audio Clip Editor - FADE_CURVES array has 2 options', (t) => {
+    t.assertEqual(FADE_CURVES.length, 2, 'FADE_CURVES should have 2 options');
+    t.assertTruthy(FADE_CURVES.includes('linear'), 'FADE_CURVES should include linear');
+    t.assertTruthy(FADE_CURVES.includes('exponential'), 'FADE_CURVES should include exponential');
+});
+
+TestRunner.test('Audio Clip Editor - DEFAULT_FADE_IN_CURVE is valid', (t) => {
+    t.assertTruthy(FADE_CURVES.includes(DEFAULT_FADE_IN_CURVE), 'DEFAULT_FADE_IN_CURVE should be a valid curve type');
+});
+
+TestRunner.test('Audio Clip Editor - DEFAULT_FADE_OUT_CURVE is valid', (t) => {
+    t.assertTruthy(FADE_CURVES.includes(DEFAULT_FADE_OUT_CURVE), 'DEFAULT_FADE_OUT_CURVE should be a valid curve type');
+});
+
+TestRunner.test('Audio Clip Editor - Fade constants are in valid range', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'DEFAULT_AUDIO_CLIP_FADE_IN should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'DEFAULT_AUDIO_CLIP_FADE_OUT should be 0');
+    t.assertEqual(MAX_AUDIO_CLIP_FADE, 10, 'MAX_AUDIO_CLIP_FADE should be 10');
+    t.assertTruthy(MIN_AUDIO_CLIP_FADE >= 0, 'MIN_AUDIO_CLIP_FADE should be non-negative');
+    t.assertTruthy(MAX_AUDIO_CLIP_FADE <= 10, 'MAX_AUDIO_CLIP_FADE should be <= 10 seconds');
+});
+
+TestRunner.test('Audio Clip Editor - Crossfade constants are in valid range', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'DEFAULT_AUDIO_CLIP_CROSSFADE should be 0');
+    t.assertEqual(MIN_AUDIO_CLIP_CROSSFADE, 0, 'MIN_AUDIO_CLIP_CROSSFADE should be 0');
+    t.assertEqual(MAX_AUDIO_CLIP_CROSSFADE, 5, 'MAX_AUDIO_CLIP_CROSSFADE should be 5');
+    t.assertTruthy(MIN_AUDIO_CLIP_CROSSFADE >= 0, 'MIN should be non-negative');
+    t.assertTruthy(MAX_AUDIO_CLIP_CROSSFADE <= 5, 'MAX should be <= 5 seconds');
+});
+
+TestRunner.test('Audio Clip Editor - Gain constants are in valid range', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'DEFAULT_AUDIO_CLIP_GAIN should be 1.0');
+    t.assertEqual(MIN_AUDIO_CLIP_GAIN, 0, 'MIN_AUDIO_CLIP_GAIN should be 0');
+    t.assertEqual(MAX_AUDIO_CLIP_GAIN, 4.0, 'MAX_AUDIO_CLIP_GAIN should be 4.0');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_GAIN >= MIN_AUDIO_CLIP_GAIN, 'Default gain should be >= min');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_GAIN <= MAX_AUDIO_CLIP_GAIN, 'Default gain should be <= max');
+});
+
+TestRunner.test('Audio Clip Editor - Playback rate constants are in valid range', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'DEFAULT_AUDIO_CLIP_PLAYBACK_RATE should be 1.0');
+    t.assertEqual(MIN_AUDIO_CLIP_PLAYBACK_RATE, 0.25, 'MIN_AUDIO_CLIP_PLAYBACK_RATE should be 0.25');
+    t.assertEqual(MAX_AUDIO_CLIP_PLAYBACK_RATE, 4.0, 'MAX_AUDIO_CLIP_PLAYBACK_RATE should be 4.0');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE >= MIN_AUDIO_CLIP_PLAYBACK_RATE, 'Default rate should be >= min');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE <= MAX_AUDIO_CLIP_PLAYBACK_RATE, 'Default rate should be <= max');
+});
+
+TestRunner.test('Audio Clip Editor - Offset constants are in valid range', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'DEFAULT_AUDIO_CLIP_START_OFFSET should be 0');
+    t.assertEqual(MIN_AUDIO_CLIP_START_OFFSET, 0, 'MIN_AUDIO_CLIP_START_OFFSET should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'DEFAULT_AUDIO_CLIP_END_OFFSET should be -1');
+    t.assertEqual(MIN_AUDIO_CLIP_END_OFFSET, -1, 'MIN_AUDIO_CLIP_END_OFFSET should be -1');
+});
+
+TestRunner.test('Audio Clip Editor - Reverse constant is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_AUDIO_CLIP_REVERSE, 'boolean', 'DEFAULT_AUDIO_CLIP_REVERSE should be boolean');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_REVERSE, false, 'DEFAULT_AUDIO_CLIP_REVERSE should be false');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipName method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipName, 'function', 'Track should have setAudioClipName method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipName method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipName, 'function', 'Track should have getAudioClipName method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipColor method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipColor, 'function', 'Track should have setAudioClipColor method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipGain method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipGain, 'function', 'Track should have setAudioClipGain method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipGain method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipGain, 'function', 'Track should have getAudioClipGain method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipPlaybackRate method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipPlaybackRate, 'function', 'Track should have setAudioClipPlaybackRate method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipPlaybackRate method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipPlaybackRate, 'function', 'Track should have getAudioClipPlaybackRate method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipStartOffset method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipStartOffset, 'function', 'Track should have setAudioClipStartOffset method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipEndOffset method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipEndOffset, 'function', 'Track should have setAudioClipEndOffset method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipCrossfade method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipCrossfade, 'function', 'Track should have setAudioClipCrossfade method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipCrossfade method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipCrossfade, 'function', 'Track should have getAudioClipCrossfade method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipFadeIn method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipFadeIn, 'function', 'Track should have setAudioClipFadeIn method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipFadeIn method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipFadeIn, 'function', 'Track should have getAudioClipFadeIn method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipFadeOut method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipFadeOut, 'function', 'Track should have setAudioClipFadeOut method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipFadeOut method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipFadeOut, 'function', 'Track should have getAudioClipFadeOut method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipFadeInCurve method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipFadeInCurve, 'function', 'Track should have setAudioClipFadeInCurve method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipFadeInCurve method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipFadeInCurve, 'function', 'Track should have getAudioClipFadeInCurve method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipFadeOutCurve method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipFadeOutCurve, 'function', 'Track should have setAudioClipFadeOutCurve method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipFadeOutCurve method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipFadeOutCurve, 'function', 'Track should have getAudioClipFadeOutCurve method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipReverse method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipReverse, 'function', 'Track should have setAudioClipReverse method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipReverse method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipReverse, 'function', 'Track should have getAudioClipReverse method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipStartTime method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipStartTime, 'function', 'Track should have setAudioClipStartTime method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipStartTime method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipStartTime, 'function', 'Track should have getAudioClipStartTime method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has _getAudioClip helper method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack._getAudioClip, 'function', 'Track should have _getAudioClip helper method');
+});
