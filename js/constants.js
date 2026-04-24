@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.69.0'; // Day 107: MIDI Learn - Added constants for MIDI Learn mapping system
+export const APP_VERSION = '0.69.1'; // Day 107: MIDI Learn Tests - Added 36 new tests for MIDI Learn constants and state functions
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

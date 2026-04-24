@@ -1065,6 +1065,17 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-purple-400 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div>
         <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div>
         <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="w-full bg-violet-400 hover:bg-violet-500 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-violet-500 dark:hover:bg-violet-600">Mode: Sequencer</button> </div>
+        <div class="border-t dark:border-slate-600 pt-2 mt-2">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-xs font-medium text-gray-600 dark:text-slate-400">MIDI Learn</span>
+                <button id="midiLearnBtnGlobal" title="Toggle MIDI Learn Mode" class="px-2 py-1 text-xs border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500 transition-colors">Learn: Off</button>
+            </div>
+            <div id="midiLearnMappingsList" class="max-h-24 overflow-y-auto text-xs space-y-0.5 mb-1">
+                <div class="text-gray-400 dark:text-slate-500 italic">No mappings</div>
+            </div>
+            <button id="midiLearnClearBtnGlobal" title="Clear All MIDI Learn Mappings" class="w-full px-2 py-1 text-xs border rounded bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 dark:border-slate-500 text-gray-600 dark:text-slate-400">Clear All</button>
+            <div id="midiLearnStatusGlobal" class="mt-1 text-xs text-center text-amber-600 dark:text-amber-400 font-medium hidden">Click a param to learn...</div>
+        </div>
     </div>`;
     const options = { width: 280, height: 360, minWidth: 250, minHeight: 340, closable: true, minimizable: true, resizable: true, initialContentKey: windowId };
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
