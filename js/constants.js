@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.88.0'; // Day 203: DrumSampler Pad Drop Zone Verification Tests - Added 22 tests for pad drop zone functionality verification
+export const APP_VERSION = '0.89.0'; // Day 204: Undo/Redo Capture Verification Tests - Added 23 tests verifying captureStateForUndo calls in state setters
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
