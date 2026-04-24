@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.71.0'; // Day 186: MIDI Learn undo/redo support - Added captureStateForUndo calls to all MIDI Learn state mutation functions
+export const APP_VERSION = '0.72.0'; // Day 187: Metronome constants - Added DEFAULT_METRONOME_ENABLED, DEFAULT_METRONOME_VOLUME, MIN/MAX_METRONOME_VOLUME
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -21,6 +21,13 @@ export const defaultStepsPerBar = 16; // Default for new tracks
 export const MAX_BARS = 512; // Maximum number of bars a sequence can have
 export const MIN_TEMPO = 0; // Minimum tempo in BPM
 export const MAX_TEMPO = 999; // Maximum tempo in BPM
+export const DEFAULT_TEMPO = 120; // Default tempo in BPM
+
+// Metronome Constants
+export const DEFAULT_METRONOME_ENABLED = false; // Metronome off by default
+export const DEFAULT_METRONOME_VOLUME = 0.5; // Default volume (0-1 range)
+export const MIN_METRONOME_VOLUME = 0; // Minimum volume
+export const MAX_METRONOME_VOLUME = 1; // Maximum volume
 
 // Time Signature constants
 export const TIME_SIG_MIN_NUMERATOR = 1;
