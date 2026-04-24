@@ -231,11 +231,26 @@ export function resetTimelineZoom() {
 let swingState = { ...Constants.DEFAULT_SWING };
 
 export function getSwingState() { return { ...swingState }; }
-export function setSwingState(state) { swingState = { ...state }; }
+export function setSwingState(state) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Swing`);
+    }
+    swingState = { ...state }; 
+}
 export function getSwingEnabledState() { return swingState.enabled; }
-export function setSwingEnabledState(enabled) { swingState.enabled = !!enabled; }
+export function setSwingEnabledState(enabled) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Toggle Swing ${enabled ? 'On' : 'Off'}`);
+    }
+    swingState.enabled = !!enabled; 
+}
 export function getSwingAmountState() { return swingState.amount; }
-export function setSwingAmountState(amount) { swingState.amount = Math.max(0, Math.min(100, parseInt(amount) || 0)); }
+export function setSwingAmountState(amount) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Swing Amount`);
+    }
+    swingState.amount = Math.max(0, Math.min(100, parseInt(amount) || 0)); 
+}
 
 // --- AppServices Placeholder (will be populated by main.js) ---
 let appServices = {}; // Populated by initializeStateModule

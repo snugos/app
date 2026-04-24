@@ -2159,3 +2159,44 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - The audio.js metronome already used `Constants.METRONOME_VOLUME || 0.5` pattern, now that fallback is properly defined as a constant
   - Constants are used by audio.js for initializing metronome volume
 - **Version**: Bumped to 0.72.0
+- **Backend Note**: The metronome constants define how the metronome is initialized and configured in audio.js. The tests verify the constants without requiring audio context.
+- **Version**: Bumped to 0.72.0
+
+#### Day 189: DrumSampler Pad Drop Zone Verification Tests (2026-04-24)
+- **Feature**: Added comprehensive tests for pad drop zones covering drop zone ID generation, data attributes, HTML structure for all pad indices 0-7, file input patterns, status handling (empty/loading/error/missing), and setupGenericDropZoneListeners function verification
+- **Files Modified**:
+  - `js/tests.js`: Added 17 new tests in Day 189 section:
+    - DrumSampler pad count: 8 pads (numDrumSamplerPads constant)
+    - Drop zone ID generation: pattern `pad-drop-zone-{trackId}-{padIndex}`
+    - Drop zone data attributes: `data-track-id`, `data-pad-index`
+    - HTML structure validation for all 8 pads (indices 0-7)
+    - File input patterns: multiple file input support per pad
+    - Status handling: empty, loading, error, missing_db states
+    - `setupGenericDropZoneListeners` function verification for pads
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.0
+- **Feature Details**:
+  - Tests verify DrumSampler drop zone infrastructure is properly configured
+  - Each pad has a unique ID and data attributes for drag-and-drop handling
+  - Tests verify drop zone HTML structure includes correct elements
+  - Tests validate status state handling for all pad states
+  - Total test count increased to 1012 tests
+- **Backend Note**: The DrumSampler pad drop zones allow users to load audio samples into specific drum pads via drag-and-drop from the sound browser or file system.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.0
+
+#### Day 190: Swing State Undo/Redo (2026-04-24)
+- **Feature**: Added `captureStateForUndo` calls to Swing state setter functions for undo/redo support
+- **Files Modified**:
+  - `js/state.js`: Added undo capture to swing state setters:
+    - `setSwingState()` - Captures undo before full swing state update
+    - `setSwingEnabledState()` - Captures undo before swing toggle
+    - `setSwingAmountState()` - Captures undo before swing amount change
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.0
+- **Feature Details**:
+  - Users can now undo changes to swing/groove settings via Ctrl+Z
+  - Undo descriptions are descriptive ("Set Swing", "Toggle Swing On/Off", "Set Swing Amount")
+  - Swing state was previously missing undo capture unlike similar state functions
+  - The undo system captures full project state snapshots before mutations
+- **Backend Note**: The swing/groove system delays every other 16th note by a configurable amount (0-100%). Users need to be able to undo swing changes to experiment freely.
+- **Usage**: Change swing settings and use Ctrl+Z to undo
+- **Version**: Bumped to 0.74.0
