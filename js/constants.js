@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.68.1'; // Day 106: Audio Recording Tests - Added 23 new tests
+export const APP_VERSION = '0.69.0'; // Day 107: MIDI Learn - Added constants for MIDI Learn mapping system
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -477,3 +477,38 @@ export const STEP_LABELS_SIXTEENTHS = {
 export const KEYBOARD_SHORTCUTS_HELP_TITLE = 'Keyboard Shortcuts';
 export const KEYBOARD_SHORTCUTS_HELP_WIDTH = 600; // Modal width in pixels
 export const KEYBOARD_SHORTCUTS_HELP_HEIGHT = 500; // Modal height in pixels
+
+// ============================================
+// MIDI Learn Constants
+// ============================================
+export const MIDI_LEARN_MIN_CC = 0; // CC number range
+export const MIDI_LEARN_MAX_CC = 127;
+export const MIDI_LEARN_MIN_CHANNEL = 0; // 0-indexed (MIDI channel 1)
+export const MIDI_LEARN_MAX_CHANNEL = 15; // 0-indexed (MIDI channel 16)
+export const MAX_MIDI_LEARN_MAPPINGS = 64; // Maximum number of MIDI Learn mappings
+export const MIDI_CC_COMMAND = 176; // CC message command (176-191 = CC on channels 1-16)
+export const DEFAULT_MIDI_LEARN_MODE = false; // MIDI Learn mode disabled by default
+export const MIDI_LEARN_INDICATOR_TIMEOUT_MS = 2000; // How long to show MIDI activity indicator
+
+// Parameter types that can be MIDI learned
+export const MIDI_LEARN_PARAM_TYPES = [
+    'trackVolume',
+    'trackPan',
+    'trackMute',
+    'trackSolo',
+    'effectParam',
+    'masterVolume',
+    'metronomeVolume',
+    'tempo'
+];
+
+// Default empty MIDI Learn mapping structure
+export const DEFAULT_MIDI_LEARN_MAPPING = {
+    channel: 0,      // MIDI channel (0-15)
+    cc: 0,           // CC number (0-127)
+    trackId: null,   // Track ID if track-specific
+    paramType: null,  // Type of parameter
+    paramPath: null, // Path to parameter (e.g., 'effects.0.params.decay')
+    min: 0,          // Input range min
+    max: 1           // Input range max
+};

@@ -19,7 +19,20 @@ import {
     getPlaybackModeState,
     setPlaybackModeState,
     getMidiAccessState, 
-    getActiveMIDIInputState
+    getActiveMIDIInputState,
+    // MIDI Learn state functions
+    getMidiLearnModeState,
+    setMidiLearnModeState,
+    getMidiLearnMappingsState,
+    addMidiLearnMapping,
+    setMidiLearnPendingParamState,
+    getMidiLearnPendingParamState,
+    getMidiLearnMappingByIndex,
+    updateMidiLearnMapping,
+    getMasterGainValueState,
+    setMasterGainValueState,
+    getMetronomeVolumeState,
+    setMetronomeVolumeState
 } from './state.js';
 
 let localAppServices = {};
@@ -734,6 +747,48 @@ function handleMIDIMessage(message) {
             setTimeout(() => midiIndicator.classList.remove('active'), 100);
         }
 
+        // Handle MIDI Learn mode - capture CC messages
+        const midiLearnMode = getMidiLearnModeState();
+        if (midiLearnMode && command >= 176 && command <= 191) {
+            // CC message (command 176-191 = channels 1-16)
+            const channel = command - 176;
+            const cc = note;
+            const value = velocity / 127; // Normalize to 0-1
+            
+            const pendingParam = getMidiLearnPendingParamState();
+            if (pendingParam) {
+                // Create new mapping with pending parameter
+                const newMapping = {
+                    channel: channel,
+                    cc: cc,
+                    trackId: pendingParam.trackId,
+                    paramType: pendingParam.paramType,
+                    paramPath: pendingParam.paramPath,
+                    min: pendingParam.min || 0,
+                    max: pendingParam.max || 1
+                };
+                addMidiLearnMapping(newMapping);
+                setMidiLearnModeState(false);
+                setMidiLearnPendingParamState(null);
+                if (localAppServices.showNotification) {
+                    localAppServices.showNotification(`MIDI Learn: Mapped CC ${cc} on Ch ${channel + 1} to ${pendingParam.paramType}`, 3000);
+                }
+                // Exit MIDI Learn mode
+                if (localAppServices.updateMidiLearnIndicator) {
+                    localAppServices.updateMidiLearnIndicator(false);
+                }
+            }
+            // Don't return - continue to process CC for existing mappings
+            const mappingIndex = findMidiLearnMapping(channel, cc);
+            if (mappingIndex !== -1) {
+                const mapping = getMidiLearnMappingByIndex(mappingIndex);
+                if (mapping) {
+                    applyMidiLearnMapping(mapping, value);
+                }
+            }
+            return; // Don't process note messages in MIDI Learn mode
+        }
+
         if (!armedTrack) return;
 
         const isNoteOn = command === 144 && velocity > 0;
@@ -782,6 +837,79 @@ function handleMIDIMessage(message) {
     } catch (error) {
         console.error("[EventHandlers handleMIDIMessage] Error:", error, "Message Data:", message.data);
     }
+}
+
+// Helper function to apply MIDI Learn mapping
+function applyMidiLearnMapping(mapping, normalizedValue) {
+    try {
+        const { setMasterGainValueState, getTracksState } = require('./state.js');
+        const scaledValue = mapping.min + (normalizedValue * (mapping.max - mapping.min));
+        
+        switch (mapping.paramType) {
+            case 'masterVolume':
+                setMasterGainValueState(scaledValue);
+                if (localAppServices.setActualMasterVolume) {
+                    localAppServices.setActualMasterVolume(scaledValue);
+                }
+                break;
+            case 'metronomeVolume':
+                if (localAppServices.setMetronomeVolume) {
+                    localAppServices.setMetronomeVolume(scaledValue);
+                }
+                break;
+            case 'tempo':
+                if (typeof Tone !== 'undefined' && Tone.Transport) {
+                    const newTempo = Math.max(Constants.MIN_TEMPO, Math.min(Constants.MAX_TEMPO, scaledValue));
+                    Tone.Transport.bpm.value = newTempo;
+                    if (localAppServices.updateTaskbarTempoDisplay) {
+                        localAppServices.updateTaskbarTempoDisplay(newTempo);
+                    }
+                }
+                break;
+            case 'trackVolume':
+            case 'trackPan':
+            case 'trackMute':
+            case 'trackSolo':
+                if (mapping.trackId) {
+                    const tracks = getTracks();
+                    const track = tracks.find(t => t.id === mapping.trackId);
+                    if (track) {
+                        if (mapping.paramType === 'trackVolume' && track.gainNode) {
+                            track.gainNode.gain.value = scaledValue;
+                        } else if (mapping.paramType === 'trackPan' && track.panNode) {
+                            track.panNode.pan.value = scaledValue * 2 - 1; // Convert 0-1 to -1 to 1
+                        }
+                    }
+                }
+                break;
+            case 'effectParam':
+                // Effect parameters use paramPath to navigate nested objects
+                if (mapping.trackId && mapping.paramPath) {
+                    const tracks = getTracks();
+                    const track = tracks.find(t => t.id === mapping.trackId);
+                    if (track && track.effects) {
+                        const pathParts = mapping.paramPath.split('.');
+                        let target = track;
+                        for (let i = 0; i < pathParts.length - 1; i++) {
+                            target = target[pathParts[i]];
+                        }
+                        const paramName = pathParts[pathParts.length - 1];
+                        if (target && typeof target[paramName] !== 'undefined') {
+                            target[paramName] = scaledValue;
+                        }
+                    }
+                }
+                break;
+        }
+    } catch (error) {
+        console.error("[EventHandlers applyMidiLearnMapping] Error:", error);
+    }
+}
+
+// Helper to find MIDI Learn mapping index
+function findMidiLearnMapping(channel, cc) {
+    const mappings = getMidiLearnMappingsState();
+    return mappings.findIndex(m => m.channel === channel && m.cc === cc);
 }
 
 const keyToMIDIMap = Constants.computerKeySynthMap || { 

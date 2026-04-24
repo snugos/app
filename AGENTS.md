@@ -13,927 +13,201 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
-#### Day 94: Fix Add Group Button Icon and Missing Track Group State Getters (2026-04-23)
-- **Bug Fix**: Fixed two issues with Track Groups in the Mixer window
+#### Day 107: MIDI Learn (2026-04-24)
+- **Feature**: Added MIDI Learn infrastructure for mapping MIDI CC controllers to DAW parameters
 - **Files Modified**:
-  - `js/ui.js`: Fixed Add Group button icon from ⚙ (gear) to + to match Add Send Bus button style
-  - `js/main.js`: Added missing Track Group state getter imports:
-    - `getTrackGroupsState` - returns all track groups
-    - `getTrackGroupByIdState(id)` - returns a specific track group by ID
-- **Issue 1**: The Add Group button had a gear icon (⚙) which was confusing since gears are typically for settings/preferences, not for adding items. Changed to + to match the Add Send Bus button.
-- **Issue 2**: The Track Groups state getter functions were defined in `js/state.js` but were not imported into `js/main.js`, meaning they weren't available in `appServices`. This broke Mixer UI functionality that depends on reading track groups state.
-- **Impact**: The Mixer window's group strip rendering (`buildMixerGroupStripHTML`) and update function (`updateMixerWindow`) now work correctly with the state layer.
-- **Version**: 0.64.0 (no bump needed, this was a bug fix)
-
-#### Day 98: Extended Undo/Redo Coverage for Remaining State Setters (2026-04-23)
-- **Feature**: Added undo state capture to remaining state setter functions in `js/state.js` and added verification tests
-- **Files Modified**:
-  - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
-    - `setArmedTrackIdState()` - Captures undo before changing armed track
-    - `setSoloedTrackIdState()` - Captures undo before changing soloed track
-    - `setIsRecordingState()` - Captures undo before changing recording state
-    - `setRecordingTrackIdState()` - Captures undo before changing recording track
-    - `setRecordingStartTimeState()` - Captures undo before changing recording start time
-  - `js/tests.js`: Added 16 new verification tests in Day 98 section:
-    - Tests verify each setter calls `captureStateForUndo` when appServices is available
-    - Tests for: metronome enabled/volume, scale mode enabled/scale/root/lock, ghost track, armed/soloed track, recording state, chord mode enabled/voicing, time signature numerator/denominator
-  - `js/constants.js`: Bumped APP_VERSION to 0.65.2
+  - `js/constants.js`: Added MIDI Learn constants:
+    - `MIDI_LEARN_MIN_CC`, `MIDI_LEARN_MAX_CC` (0-127 range)
+    - `MIDI_LEARN_MIN_CHANNEL`, `MIDI_LEARN_MAX_CHANNEL` (0-15)
+    - `MAX_MIDI_LEARN_MAPPINGS` (64 max mappings)
+    - `MIDI_CC_COMMAND` (176 = CC message base)
+    - `DEFAULT_MIDI_LEARN_MODE`, `MIDI_LEARN_INDICATOR_TIMEOUT_MS`
+    - `MIDI_LEARN_PARAM_TYPES` array (trackVolume, trackPan, trackMute, trackSolo, effectParam, masterVolume, metronomeVolume, tempo)
+    - `DEFAULT_MIDI_LEARN_MAPPING` structure
+  - `js/state.js`: Added MIDI Learn state:
+    - `midiLearnMappings` array to store mappings
+    - `midiLearnMode` flag for learn mode
+    - `midiLearnPendingParam` for pending parameter
+    - State getter/setter functions: `getMidiLearnMappingsState`, `getMidiLearnModeState`, `setMidiLearnModeState`, `getMidiLearnPendingParamState`, `setMidiLearnPendingParamState`
+    - CRUD functions: `addMidiLearnMapping`, `removeMidiLearnMapping`, `clearMidiLearnMappings`, `findMidiLearnMapping`, `updateMidiLearnMapping`, `getMidiLearnMappingByIndex`
+  - `js/eventHandlers.js`: Added CC handling in `handleMIDIMessage`:
+    - Detects CC messages (command 176-191)
+    - In MIDI Learn mode, captures incoming CC to create new mapping
+    - Applies mapped CC values to parameters via `applyMidiLearnMapping` helper
+    - Supports master volume, metronome volume, tempo, track volume/pan, effect params
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.0
 - **Feature Details**:
-  - This completes the undo/redo coverage for all transport and recording-related state setters
-  - Users can now undo changes to: armed track, soloed track, recording state, recording track, and recording start time
-  - Undo descriptions are descriptive (e.g., "Set Armed Track", "Set Soloed Track", "Set Recording State")
-  - The verification tests confirm that each setter properly calls `captureStateForUndo` before mutating state
-- **Usage**: Arm/solo tracks, start/stop recording - all now undoable with Ctrl+Z
-- **Version**: Bumped to 0.65.2
+  - MIDI Learn allows users to map physical MIDI controller knobs/faders to DAW parameters
+  - When in MIDI Learn mode, the next CC message received creates a mapping
+  - Existing mappings are automatically applied when their CC is received
+  - Supports 64 maximum mappings stored in state
+  - Parameter types include track volume/pan/mute/solo, effect parameters, master volume, metronome volume, and tempo
+- **Version**: Bumped to 0.69.0
 
-#### Day 97: State Setter Undo Capture Verification Tests (2026-04-23)
-- **Feature**: Added 21 new unit tests to verify state setter functions exist and handle edge cases correctly
+#### Day 104: SnugWindow, Track Types and Utils Constants Tests (2026-04-24)
+- **Feature**: Added 30 new unit tests for SnugWindow dimensions, Track Types validation, Utils functions, Context Menu constants, Sequencer Grid constants, Sound Library, and Synth Engine Control Definitions
 - **Files Modified**:
-  - `js/tests.js`: Added imports for additional state setter functions:
-    - `setArmedTrackIdState`, `setSwingEnabledState`, `setSwingAmountState`
-    - `setPerformanceMonitorEnabledState`, `setAudioContextStateState`, `setCPUUsageState`
-    - `setActiveVoicesState`, `setAudioLatencyState`, `setLastCallbackTimeState`, `setDroppedCallbacksState`
-  - `js/tests.js`: Added 21 new tests verifying:
-    - All state setter functions exist and are functions
-    - `setArmedTrackIdState` handles null/undefined (clears armed track)
-    - `setSoloedTrackIdState` handles null/undefined (clears soloed track)
-    - `setIsRecordingState` coerces values to boolean
-    - `setCPUUsageState` clamps values to 0-100 range
-    - `setAudioContextStateState` validates context states ('running', 'suspended', 'closed')
-    - `setActiveVoicesState` clamps negative values to 0
-    - `setDroppedCallbacksState` clamps negative values to 0
-    - `setSwingAmountState` clamps values to 0-100 range
-    - `setRecordingTrackIdState` accepts any value (track ID or null)
-    - `setRecordingStartTimeState` accepts numeric values including null
-  - `js/constants.js`: Bumped APP_VERSION to 0.65.0
+  - `js/constants.js`: Added new constants:
+    - `DEFAULT_WINDOW_MIN_WIDTH` (150), `DEFAULT_WINDOW_MIN_HEIGHT` (100), `DEFAULT_WINDOW_WIDTH` (350), `DEFAULT_WINDOW_HEIGHT` (250), `TASKBAR_HEIGHT` (30) - Window dimension constants
+    - `CONTEXT_MENU_ITEM_HEIGHT` (28), `CONTEXT_MENU_MAX_WIDTH` (300) - Context menu layout constants
+    - `GRID_STEP_LABELS` and `STEP_LABELS_SIXTEENTHS` - Sequencer grid step label arrays (16 entries each)
+    - Bumped APP_VERSION to 0.67.2
+  - `js/tests.js`: Added imports for utils.js functions and 30 new tests:
+    - SnugWindow: 5 tests for DEFAULT_WINDOW_* and TASKBAR_HEIGHT dimension validation
+    - Track Types: 2 tests validating 5 track types (Synth, DrumSampler, Sampler, InstrumentSampler, Audio)
+    - Utils Functions: 9 tests for showNotification, showCustomModal, showConfirmationDialog, secondsToBBSTime, bbsTimeToSeconds, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners
+    - Context Menu: 2 tests for CONTEXT_MENU_ITEM_HEIGHT and CONTEXT_MENU_MAX_WIDTH
+    - Sequencer Grid: 2 tests for GRID_STEP_LABELS and STEP_LABELS_SIXTEENTHS
+    - Sound Library: 1 test for soundLibraries object
+    - Synth Engine: 3 tests for synthEngineControlDefinitions structure and MonoSynth controls
 - **Feature Details**:
-  - Tests verify that state setters are properly exported and callable
-  - Tests verify edge case handling (null, undefined, out-of-range values)
-  - Tests verify type coercion and validation logic in setters
-  - Total test count increased to 317 tests
-- **Backend Note**: These tests complement the undo capture work from Days 90-95 by verifying the state setters themselves work correctly. The undo capture mechanism calls these setters, so verifying their existence and behavior is important for the complete undo/redo system.
+  - Tests validate SnugWindow dimension constants are in reasonable ranges
+  - Tests verify all expected track type strings are defined
+  - Tests verify utils.js utility functions exist and have correct signatures
+  - Tests validate context menu layout constants
+  - Tests verify sequencer grid step labels have correct format (16 entries)
+  - Tests verify soundLibraries is a non-null object
+  - Tests verify synthEngineControlDefinitions has MonoSynth with controls array
+  - Total test count increased from 449 to 479 tests
+- **Backend Note**: These constants and tests fill gaps in test coverage for core UI infrastructure. The SnugWindow constants define default dimensions, the context menu constants control layout, and the sequencer grid constants define step labels used throughout the sequencer UI.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.65.0
+- **Version**: Bumped to 0.67.2
 
-#### Day 98: MIDI Import Constants Tests (2026-04-23)
-- **Feature**: Added 7 new unit tests for MIDI Import constants to expand test coverage
+#### Day 105: Send Bus Audio Functions Tests (2026-04-24)
+- **Feature**: Added 19 new tests for Send Bus audio functions to expand test coverage
 - **Files Modified**:
-  - `js/tests.js`: Added 7 new tests in Day 98 section:
-    - `MIDI Import - MIDI_IMPORT_MIN_NOTES is valid` - Tests min notes is 1
-    - `MIDI Import - MIDI_IMPORT_MAX_VELOCITY is valid` - Tests max velocity is 127 (MIDI standard)
-    - `MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is valid` - Tests default velocity is 100
-    - `MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is valid` - Tests default probability is 1.0 (100%)
-    - `MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is boolean` - Tests snap to grid is boolean flag
-    - `MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is valid` - Tests velocity scale is 1/127
-    - `MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is inverse of MIDI_EXPORT_VELOCITY_SCALE` - Tests roundtrip consistency
-  - `js/constants.js`: Bumped APP_VERSION to 0.65.1
+  - `js/tests.js`: Added 19 new tests covering:
+    - Send bus function existence: createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted, setRecordingInputGain
+    - Function signature validation: parameter count tests for all functions
+    - setRecordingInputGain function exists and accepts 1 parameter
+    - All send bus audio functions are proper function types
+  - Bumped APP_VERSION to 0.68.0
 - **Feature Details**:
-  - Tests validate MIDI Import constants for min notes, velocity scaling, probability, and grid snapping
-  - Tests verify velocity scale is the inverse of export scale (1/127 vs 127) for proper roundtrip
-  - Total test count increased from 335 to 342 tests
-- **Backend Note**: The MIDI Import constants (defined in js/constants.js) are used by `importFromMidiInternal()` in js/state.js to configure how Standard MIDI Files are parsed and converted into the app's sequencer format.
+  - Tests verify all send bus audio functions are defined and callable
+  - Tests validate function signatures match expected parameter counts
+  - Tests verify setRecordingInputGain is properly exported from audio.js
+  - Total test count increased from 479 to 498 tests
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.65.1
+- **Version**: Bumped to 0.68.0
 
-#### Day 1: DrumSampler UI Implementation (2026-04-19)
-- **Feature**: Implemented complete DrumSampler UI controls
+#### Day 106: Audio Recording Tests (2026-04-24)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
 - **Files Modified**:
-  - `js/ui.js`: Replaced stub implementations with fully functional:
-    - `renderDrumSamplerPads(track)` - Renders 8 pad buttons with visual feedback
-    - `updateDrumPadControlsUI(track)` - Updates drop zone, volume/pitch knobs, envelope
-    - `renderSamplePads(track)` - Renders sample pads for Sampler track
-    - `updateSliceEditorUI(track)` - Updates slice editor controls
-    - `updateSequencerCellUI(...)` - Updates sequencer cell styling
-    - `initializeDrumSamplerSpecificControls` - Creates knobs for volume/pitch/envelope
-  - `js/constants.js`: Bumped APP_VERSION to 0.2.0
-
-#### Day 1 cont: Tap Tempo Feature (2026-04-19)
-- **Feature**: Added tap tempo functionality
-- **Files Modified**:
-  - `js/ui.js`: Added `handleTapTempo()` and `resetTapTempo()` functions
-  - `js/eventHandlers.js`: Wired tap button to tempo update
-  - `js/main.js`: Added tapBtnGlobal to UI cache
-  - `index.html`: Added tap button to global controls bar
-- **Version**: Bumped to 0.3.0
-
-#### Day 2: Timeline View Implementation (2026-04-19)
-- **Feature**: Implemented functional timeline view
-- **Files Modified**:
-  - `js/constants.js`: Added TIMELINE_BEAT_WIDTH, TIMELINE_TRACK_HEIGHT, TIMELINE_HEADER_HEIGHT
-  - `js/ui.js`: Replaced stub implementations with functional:
-    - `renderTimeline()` - Renders track lanes, time ruler, clips, and playhead
-    - `updatePlayheadPosition()` - Updates playhead position during playback
-    - `openTimelineWindow()` - Creates timeline window and triggers render
-- **Version**: Bumped to 0.3.0
-
-#### Day 3: Metronome Feature (2026-04-19)
-- **Feature**: Added metronome with toggle button and adjustable volume
-- **Files Modified**:
-  - `js/constants.js`: Added METRONOME_VOLUME constant (0.5)
-  - `js/audio.js`: Added metronome functions:
-    - `initializeMetronome()` - Creates synthetic click sounds (1kHz/1.5kHz sine bursts)
-    - `startMetronome()` - Schedules clicks on Tone.Transport (accent on beats 1,3)
-    - `stopMetronome()` - Stops scheduled clicks
-    - `setMetronomeVolume(volume)` - Adjusts click volume (0-1 range, converted to dB)
-  - `js/eventHandlers.js`: Added metronome button handler in attachGlobalControlEvents
-  - `js/main.js`: Wired metronome functions to appServices, added metronomeBtnGlobal to UI cache
-  - `index.html`: Added Metro button to global controls bar
-- **Note**: State management for metronome was missing and added in Day 9
-- **Version**: Bumped to 0.7.0
-
-#### Day 5: Undo/Redo Coverage for InstrumentSampler and Synth (2026-04-19)
-- **Feature**: Added undo state capture to InstrumentSampler and Synth modification methods
-- **Files Modified**:
-  - `js/Track.js`: Added `_captureUndoState` calls to:
-    - `setSynthParam`
-    - `setInstrumentSamplerRootNote`, `setInstrumentSamplerLoop`, `setInstrumentSamplerLoopStart`, `setInstrumentSamplerLoopEnd`, `setInstrumentSamplerEnv`
-- **Version**: Bumped to 0.6.0
-
-#### Day 6: Undo/Redo Coverage for Effect Parameters and Audio Clips (2026-04-19)
-- **Feature**: Fixed undo state capture for additional track operations
-- **Files Modified**:
-  - `js/Track.js`: Added `_captureUndoState` calls to:
-    - `updateEffectParam` - Captures undo before effect parameter changes
-    - `reorderEffect` - Captures undo before effect reordering (already had call, verified correct placement)
-  - `js/constants.js`: Bumped APP_VERSION to 0.7.1
-- **Bug Fixed**: Effect parameter changes were not being captured for undo, making it impossible to undo effect tweaks
-- **Version**: Bumped to 0.7.1
-
-#### Day 7: Bug Fixes - Missing clipId, Undo State Timing, Debug Code (2026-04-19)
-- **Bug Fixes**: Fixed multiple issues found via ESLint static analysis
-- **Files Modified**:
-  - `js/Track.js`:
-    - Fixed missing `clipId` variable in `addSequenceClipToTimeline()` - was using undefined `clipId`
-    - Moved `_captureUndoState()` calls to happen BEFORE state changes in multiple methods (correct undo pattern)
-    - Added missing `_captureUndoState` calls in `reorderEffect` and `quantizeSequence`
-  - `js/audio.js`:
-    - Removed debug code that checked for undefined `getLoadedZipFilesState` (function wasn't imported)
-- **Impact**: The missing `clipId` bug would cause sequence clips to have undefined IDs, breaking clip management. The undo state timing fixes ensure undo works correctly by capturing state before modifications.
-
-#### Day 7 cont: Additional Undo/Redo Coverage (2026-04-19)
-- **Feature**: Added missing undo state capture to `loadSampleToPad` and `reorderMasterEffectInState`
-- **Files Modified**:
-  - `js/Track.js`: Added `_captureUndoState` at start of `loadSampleToPad()` method
-  - `js/state.js`: Added `_captureUndoState` call to `reorderMasterEffectInState()` before array splice
-- **Version**: Bumped to 0.7.2
-
-#### Day 8: Extended Keyboard Shortcuts (2026-04-19)
-- **Feature**: Added comprehensive global keyboard shortcuts for common DAW operations
-- **Files Modified**:
-  - `js/eventHandlers.js`: Added new keyboard shortcuts:
-    - `Ctrl+S` - Save Project
-    - `Ctrl+O` - Load Project
-    - `Ctrl+Shift+Z` - Redo (alternative to Ctrl+Y)
-    - `T` - Toggle Metronome
-    - `` ` `` (backtick) - Tap Tempo
-  - `js/constants.js`: Bumped APP_VERSION to 0.7.3
-- **Existing Shortcuts** (already present):
-  - `Ctrl+Z` - Undo
-  - `Ctrl+Y` - Redo
-  - `Space` - Play/Pause
-  - `Enter` - Toggle Recording
-  - `Escape` - Close all windows
-  - `M` - Toggle Mute (armed track)
-  - `S` - Toggle Solo (armed track)
-  - `R` - Toggle Record Arm
-  - `Z` (no modifier) - Octave down
-  - `X` (no modifier) - Octave up
-  - Computer keyboard notes (A-K for white keys, W-U for black keys)
-- **Version**: Bumped to 0.7.3
-
-#### Day 9: Missing Metronome State Bug Fix (2026-04-19)
-- **Bug Fix**: Added missing metronome state variables and getters/setters to state.js
-- **Files Modified**:
-  - `js/state.js`: Added:
-    - `metronomeEnabled` and `metronomeVolume` state variables
-    - `getMetronomeEnabledState()`, `getMetronomeVolumeState()` getters
-    - `setMetronomeEnabledState()`, `setMetronomeVolumeState()` setters
-    - Metronome settings saved to `globalSettings` in `gatherProjectDataInternal()`
-    - Metronome settings restored in `reconstructDAWInternal()`
-- **Impact**: The metronome feature (added in Day 3) was missing its state management. This caused a runtime error because `main.js` was importing functions that didn't exist in `state.js`. The metronome settings now persist across project save/load.
-- **Version**: 0.7.3 (no bump needed, this was a bug fix for existing feature)
-
-#### Day 10: Duplicate Function and Debug Code Removal (2026-04-19)
-- **Bug Fixes**: Fixed duplicate function definition and removed debug code
-- **Files Modified**:
-  - `js/state.js`:
-    - Fixed duplicate `setSoloedTrackIdState()` function - one instance was removed, the other was kept at the proper location
-    - Added missing `getSoloedTrackIdState()` getter function (was being called but not defined)
-    - Removed debug console.log statements added with "MODIFICATION START/END" comments in:
-      - State variable initialization
-      - `getLoadedZipFilesState()` getter
-      - `getSoundLibraryFileTreesState()` getter  
-      - `setLoadedZipFilesState()` setter
-      - `setSoundLibraryFileTreesState()` setter
-- **Impact**: The duplicate function could cause unpredictable behavior. The missing getter caused runtime errors when accessing solo state. Debug statements were cluttering console output in production.
-- **Version**: 0.7.3 (no bump needed, these were bug fixes)
-
-#### Day 10: Pattern Operations (2026-04-19)
-- **Feature**: Added pattern manipulation operations for the sequencer
-- **Files Modified**:
-  - `js/Track.js`: Added new methods:
-    - `randomizePattern(density)` - Randomly activates notes with given density (0-1)
-    - `shiftPatternLeft()` - Shifts all notes one step left
-    - `shiftPatternRight()` - Shifts all notes one step right
-    - `mirrorPatternHorizontal()` - Reverses the pattern horizontally (time)
-    - `mirrorPatternVertical()` - Reverses the pattern vertically (pitch inversion, Synth/InstrumentSampler only)
-  - `js/ui.js`: Added context menu items in sequencer window:
-    - "Pattern Operations" header
-    - "Randomize Pattern..." - Prompts for density value
-    - "Shift Pattern Left" - Moves pattern one step earlier
-    - "Shift Pattern Right" - Moves pattern one step later
-    - "Mirror Horizontal" - Reverses pattern in time
-    - "Mirror Vertical" - Inverts pitches (only enabled for Synth tracks)
-  - `js/constants.js`: Bumped APP_VERSION to 0.8.0
-- **Usage**: Right-click on sequencer grid to access pattern operations
-- **Version**: Bumped to 0.8.0
-
-#### Day 11: Scale Mode Feature (2026-04-19)
-- **Feature**: Added Scale Mode for the sequencer to constrain notes to musical scales
-- **Files Modified**:
-  - `js/constants.js`: Added:
-    - `SCALES` object with 17 scale definitions (Major, Minor, Pentatonic, Blues, Dorian, etc.)
-    - `SCALE_ROOTS` array for root note selection
-    - `DEFAULT_SCALE_MODE` default settings object
-    - Bumped APP_VERSION to 0.9.3
-  - `js/state.js`: Added:
-    - `scaleModeState` state variable
-    - Getters: `getScaleModeState()`, `getScaleModeEnabledState()`, `getScaleModeScaleState()`, `getScaleModeRootState()`, `getScaleModeLockState()`
-    - Setters: `setScaleModeState()`, `setScaleModeEnabledState()`, `setScaleModeScaleState()`, `setScaleModeRootState()`, `setScaleModeLockState()`
-    - Scale mode saved to `globalSettings` in `gatherProjectDataInternal()`
-    - Scale mode restored in `reconstructDAWInternal()`
-  - `js/ui.js`: Modified `buildSequencerContentDOM()` and `openTrackSequencerWindow()`:
-    - Added scale mode controls (toggle, root selector, scale selector, lock toggle) for Synth/InstrumentSampler tracks
-    - Added visual highlighting: notes outside the selected scale appear dimmed (opacity-30)
-    - Added `isNoteInScale()` helper function for scale checking
-    - Scale Lock prevents placing off-scale notes when enabled
-    - Added event handlers for scale mode controls
-  - `js/eventHandlers.js`: Added `Q` key to toggle scale mode
-  - `js/main.js`: Wired scale mode state functions to appServices
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.1
 - **Feature Details**:
-  - Scale Mode Toggle: Enable/disable scale highlighting in sequencer
-  - Root Note Selector: Choose the root note (C through B)
-  - Scale Selector: Choose from 17 different scales
-  - Scale Lock: Prevents placing notes outside the selected scale
-  - Visual Feedback: Notes outside the selected scale are dimmed in the sequencer grid
-  - Q Keyboard Shortcut: Toggle Scale Mode on/off
-- **Bug Fixes**:
-  - Fixed operator precedence bug in scale lock condition
-  - Fixed scale mode setters not properly wired to appServices
-- **Usage**: Open sequencer for a Synth or InstrumentSampler track, use Scale controls in toolbar
-- **Version**: Bumped to 0.9.3
-
-#### Day 11 cont: Scale Lock and Keyboard Shortcut (2026-04-19)
-- **Feature**: Added Scale Lock and keyboard shortcut for Scale Mode
-- **Files Modified**:
-  - `js/eventHandlers.js`: Added `Q` key to toggle scale mode
-  - `js/ui.js`: Added scale lock check in grid click handler
-  - `js/main.js`: Fixed scale mode setters mapping
-- **Version**: 0.9.3
-
-#### Day 11: Debug Code Cleanup (2026-04-19)
-- **Bug Fix**: Removed debug console.log statements and MODIFICATION markers from production code
-- **Files Modified**:
-  - `js/audio.js`: Removed DEBUG console.log statements from `fetchSoundLibrary()` function and MODIFICATION START/END markers
-  - `js/ui.js`: Removed DEBUG console.log statements from `showAddEffectModal()`, `openSoundBrowserWindow()`, and `updateSoundBrowserDisplayForLibrary()` functions; removed MODIFICATION comment markers
-  - `js/Track.js`: Removed MODIFICATION START/END comment markers from `getDefaultSynthParams()`
-  - `js/main.js`: Removed MODIFICATION START/END comment markers from `panicStopAllAudio()`
-- **Impact**: These debug statements were left over from development and were cluttering the console output in production. The MODIFICATION markers were no longer needed as the features are now permanent.
-- **Version**: 0.8.0 (no bump needed, this was a code cleanup)
-
-#### Day 12: Bug Fix - Scale Mode State Function Imports (2026-04-19)
-- **Bug Fix**: Corrected import statement in `js/main.js`
-- **Issue**: The import was using incorrect ES6 rename syntax (`:` instead of `as`) for scale mode state setters
-- **Changed**:
-  - `setScaleModeEnabled: setScaleModeEnabledState` → `setScaleModeEnabledState` (direct import, no rename needed)
-  - `setScaleModeScale: setScaleModeScaleState` → `setScaleModeScaleState`
-  - `setScaleModeRoot: setScaleModeRootState` → `setScaleModeRootState`
-  - `setScaleModeLock: setScaleModeLockState` → `setScaleModeLockState`
-- **Impact**: TypeScript was incorrectly flagging these. Node.js `--check` passes fine. The actual function names in `state.js` already match what was being imported.
-- **Files Modified**: `js/main.js`
-- **Version**: 0.9.3 (no bump needed, this was a bug fix)
-
-#### Day 12: Velocity Editor Feature (2026-04-19)
-- **Feature**: Added visual velocity editor to the sequencer for editing note velocities
-- **Files Modified**:
-  - `js/ui.js`:
-    - Modified `buildSequencerContentDOM()` to add:
-      - Velocity toggle checkbox in sequencer toolbar
-      - Velocity editor lane below the piano roll grid
-      - Velocity bars showing max velocity per column
-      - Velocity data attributes on cells (data-velocity, data-active)
-      - Visual opacity feedback based on velocity (0.5-1.0 opacity range)
-    - Added velocity editor event handlers in `openTrackSequencerWindow()`:
-      - Toggle visibility of velocity editor lane
-      - Click/drag on velocity bars to change velocity
-      - Updates cell visuals in real-time during drag
-      - Captures undo state before velocity changes
-      - Recreates Tone sequence after editing to apply changes
-  - `style.css`: Added velocity editor styling:
-    - `.velocity-editor-lane` - container styling
-    - `.velocity-cell` - individual velocity bar cells
-    - `.velocity-bar` - the actual velocity bar indicator
-    - Hover effects and transitions
-  - `js/constants.js`: Bumped APP_VERSION to 0.10.0
-- **Feature Details**:
-  - Velocity Toggle: "Velocity" checkbox in sequencer toolbar to show/hide velocity editor
-  - Visual Bars: Height represents maximum velocity of active notes in each column
-  - Click/Drag Editing: Drag up/down on bars to change velocity (affects all active notes in that column)
-  - Visual Feedback: Note cells show velocity value (0-127) in tooltip
-  - Undo Support: Velocity changes are captured for undo/redo
-- **Usage**: Open sequencer for any track, click "Velocity" checkbox in toolbar, drag on velocity bars to edit velocities
-- **Version**: Bumped to 0.10.0
-
-#### Day 12 cont: Syntax Error Fix (2026-04-19)
-- **Bug Fix**: Fixed syntax error in ui.js that caused parsing failure
-- **Issue**: Extra `)` character in Paste menu item action callback
-- **Files Modified**:
-  - `js/ui.js`: Fixed misplaced `)` before `}` in sequencer context menu Paste action
-  - `js/constants.js`: Bumped APP_VERSION to 0.10.1
-- **Impact**: The syntax error would have caused the entire ui.js module to fail loading
-- **Version**: Bumped to 0.10.1
-
-#### Day 13: Typo Bug Fixes in main.js (2026-04-19)
-- **Bug Fixes**: Fixed multiple typo bugs in main.js affecting reconstruction logic
-- **Files Modified**:
-  - `js/main.js`:
-    - Fixed `isReconstructinging` typo → `isReconstructinging` (variable name)
-    - Fixed `getIsReconstructingingDAW` typo → `getIsReconstructingingDAW` (function name)
-    - Fixed `isReconstructconstructinging` typo → `isReconstructinging` (variable name)
-    - Fixed in `addMasterEffect()`, `removeMasterEffect()`, and `reorderMasterEffect()` methods
-- **Impact**: These typos caused incorrect variable references in the reconstruction logic, potentially causing undo state capture during project reconstruction when it should have been skipped. The fixes ensure that the `isReconstructinging` flag is correctly checked during project load/reconstruction operations.
-- **Version**: No bump needed (bug fix)
-
-#### Day 14: Loop Region UI Implementation (2026-04-19)
-- **Feature**: Implemented complete Loop Region UI controls with visual overlay and keyboard shortcut
-- **Files Modified**:
-  - `js/ui.js`: Modified `renderTimeline()` to add:
-    - Loop region controls toolbar (toggle checkbox, start bar input, end bar input)
-    - Visual loop region overlay in timeline ruler (green highlighted area)
-    - Event handlers for loop toggle, start bar, and end bar inputs
-    - Real-time re-render when loop settings change
-  - `js/eventHandlers.js`: 
-    - Added 'L' keyboard shortcut to toggle loop region
-    - Modified play button handler to call `updateLoopRegion()` before starting playback
-  - `js/constants.js`: Bumped APP_VERSION to 0.11.0
-- **Feature Details**:
-  - Loop Toggle: Checkbox to enable/disable loop region
-  - Start Bar Input: Set the first bar of the loop (1-indexed)
-  - End Bar Input: Set the last bar of the loop (1-indexed)
-  - Visual Overlay: Green highlighted area in timeline ruler showing loop range
-  - L Keyboard Shortcut: Toggle loop region on/off
-  - Persistence: Loop region settings are already saved/loaded via existing state management
-- **Backend Note**: The loop region state management (`getLoopRegionState`, `setLoopRegionEnabled`, etc.) and `updateLoopRegion()` function were already implemented in `js/state.js` and `js/main.js` but lacked UI controls
-- **Usage**: Open Timeline window, use Loop controls in toolbar, or press L to toggle loop
-- **Version**: Bumped to 0.11.0
-
-#### Day 15: Swing Feature Bug Fix - Missing AppServices Wiring (2026-04-19)
-- **Bug Fix**: Fixed incomplete Swing/Groove feature - swing state functions were defined in state.js and referenced in Track.js but were never imported/wired in main.js
-- **Files Modified**:
-  - `js/main.js`: Added swing state function imports and wired them to appServices:
-    - `getSwingState`, `getSwingEnabledState`, `getSwingAmountState` (getters)
-    - `setSwingState`, `setSwingEnabledState`, `setSwingAmountState` (setters)
-- **Impact**: The swing feature in Track.js (applies swing feel to off-beat notes during playback) would not work because `this.appServices.getSwingEnabledState` and `this.appServices.getSwingAmountState` returned undefined. The swing state also would not persist on project save/load.
-- **Version**: No bump needed (this was a bug fix for incomplete feature)
-
-#### Day 16: Humanize Pattern Feature (2026-04-19)
-- **Feature**: Added Humanize Pattern functionality to add natural velocity variations to patterns
-- **Files Modified**:
-  - `js/Track.js`: Added `humanizePattern(intensity)` method:
-    - Applies random velocity variations based on intensity (0-1)
-    - Adds slight accent on downbeats and strong beats for natural groove
-    - Velocity range: ±(intensity * 0.3) around original velocity
-    - Clamps velocities to valid range (0.1 to 1.0)
-    - Returns count of notes humanized
-  - `js/ui.js`: Added "Humanize Pattern..." menu item to sequencer context menu:
-    - Prompts for intensity value (0.0-1.0)
-    - Calls `humanizePattern()` on current track
-    - Shows notification with count of notes affected
-  - `js/constants.js`: Bumped APP_VERSION to 0.12.0
-- **Feature Details**:
-  - Intensity: Controls how much variation is applied (0 = none, 1 = maximum)
-  - Velocity Randomization: Each note gets a random velocity adjustment
-  - Beat Accenting: Downbeats get +5% velocity boost, strong beats get +2% boost
-  - Natural Feel: Makes programmed patterns sound less robotic
-  - Undo Support: Changes are captured for undo/redo
-- **Usage**: Right-click on sequencer grid, select "Humanize Pattern...", enter intensity value (0.0-1.0)
-- **Version**: Bumped to 0.12.0
-
-#### Day 17: Production Code Cleanup - Debug Logging Removal (2026-04-19)
-- **Bug Fix**: Removed ~50+ debug console.log statements from production code across all JS modules
-- **Files Modified**:
-  - `js/SnugWindow.js`: Removed 8 console.log statements from window lifecycle methods (constructor, close, focus, applyState)
-  - `js/Track.js`: Removed ~40 console.log statements from:
-    - Constructor initialization
-    - Audio node management (initializeAudioNodes, rebuildEffectChain)
-    - Sample loading (loadSampleToPad, fullyInitializeAudioResources)
-    - Sequence operations (createNewSequence, deleteSequence, duplicateSequence)
-    - Pattern operations (randomizePattern, shiftPattern, mirrorPattern, humanizePattern)
-    - Playback scheduling (schedulePlayback, recreateToneSequence)
-    - Timeline clip management
-  - `js/ui.js`: Removed ~40 console.log statements from:
-    - Sound browser operations
-    - Preview player handling
-    - Sequencer window management
-    - Timeline rendering
-  - `js/main.js`: Removed console.log statements from:
-    - Panic stop functions
-    - Playback mode changes
-    - Loop region updates
-    - Initialization logging
-  - `js/audio.js`: Removed console.log statements from:
-    - Master bus setup
-    - Effect chain rebuilding
-    - Sample loading logic
-  - `js/state.js`: Removed console.log statements from:
-    - Playback mode changes
-    - Track management
-    - Project save/load operations
-    - Export functions
-  - `js/eventHandlers.js`, `js/utils.js`, `js/db.js`, `js/effectsRegistry.js`: Removed remaining debug statements
-- **Impact**: Debug logging was cluttering browser console in production, making it harder for users to report issues. Console.error and console.warn statements were preserved for actual error handling.
-- **Verification**: All JS files pass `node --check` syntax validation after changes.
-- **Version**: No bump needed (code cleanup)
-- **Status**: Feature completer should proceed with next planned work.
-
-#### Day 18: Mixer Window Implementation (2026-04-20)
-- **Feature**: Implemented complete Mixer window UI for track mixing and send bus management
-- **Files Modified**:
-  - `js/ui.js`: Added new functions:
-    - `openMixerWindow()` - Opens the mixer window with track strips, send bus strips, and master strip
-    - `buildMixerContentDOM()` - Builds the mixer content HTML
-    - `buildMixerTrackStripHTML()` - Creates individual track strips with fader, pan, mute/solo/arm, meter, and send level controls
-    - `buildMixerSendStripHTML()` - Creates send bus strips with level control, mute, and effects button
-    - `buildMixerMasterStripHTML()` - Creates the master output strip with volume fader and meter
-    - `initializeMixerEventHandlers()` - Wires up all mixer control events
-    - `updateMixerWindow()` - Updates mixer UI when track state changes
-  - `js/main.js`: Added aliases for mixer functions to appServices:
-    - `getSendTracks`, `getSendTrackById`, `getTrackSendLevel` (state getters)
-    - `addSendTrack`, `setSendTrackMuted`, `setTrackSendLevel` (state setters)
-    - `createSendBus` (alias for `createSendBusInAudio`)
-    - `getOpenWindowElement` (helper for mixer UI updates)
-  - `js/constants.js`: Bumped APP_VERSION to 0.15.0
-- **Feature Details**:
-  - Track Strips: Each track has a vertical strip with name, mute/solo/arm buttons, level meter, volume fader, pan knob, and send level controls
-  - Send Bus Strips: Each send bus has a strip with name, mute button, level meter, level fader, and effects button
-  - Master Strip: Master output with level meter and volume fader
-  - Add Send Bus: Button to create new send buses (up to MAX_SEND_TRACKS limit)
-  - Real-time Updates: Mixer UI updates when track state changes (mute, solo, arm, volume, pan)
-- **Backend Note**: The send bus audio engine infrastructure was implemented in Day 18 (audio engine commit). This feature adds the UI layer to control send effects.
-- **Usage**: Open Mixer from menu (Menu > Mixer) to access mixing controls
-- **Version**: Bumped to 0.15.0
-
-#### Day 19: Audio Import Feature (2026-04-20)
-- **Feature**: Added comprehensive audio file import functionality with menu item and desktop drag-and-drop support
-- **Files Modified**:
-  - `index.html`: Added "Add Audio Track" and "Import Audio File..." menu items to start menu, added hidden file input for importing audio files
-  - `js/eventHandlers.js`: Added:
-    - `menuImportAudioFile` action to trigger file import dialog
-    - Desktop `dragover` event handler for audio files
-    - Desktop `drop` event handler to create new Audio track from dropped file
-    - Import audio file input change handler to create new Audio track and add file as clip
-  - `js/constants.js`: Bumped APP_VERSION to 0.17.0
-- **Feature Details**:
-  - Menu Import: "Import Audio File..." opens file picker, creates new Audio track with imported file
-  - Desktop Drop: Drag audio files onto desktop to automatically create new Audio track
-  - Track Naming: New tracks are named after the imported file (without extension)
-  - Feedback: Notifications show import progress and success/error messages
-- **Workflow Improvements**:
-  - Users can now quickly import audio files without manually creating tracks first
-  - Audio files can be dropped onto timeline lanes (existing feature) or onto desktop (new)
-  - Streamlines the workflow for bringing external audio into the DAW
-- **Usage**: Use Menu > Import Audio File... or drag audio file onto desktop
-- **Version**: Bumped to 0.17.0
-
-#### Day 20: Menu Item Handlers - Save/Load/Export/Undo/Redo/Fullscreen (2026-04-20)
-- **Feature**: Implemented missing menu item handlers that existed in HTML but had no JavaScript handlers
-- **Files Modified**:
-  - `js/eventHandlers.js`: Added handlers to `menuActions` object for:
-    - `menuSaveProject` - Calls `services.saveProject()` to export project as .snug file
-    - `menuLoadProject` - Calls `services.loadProject()` to trigger file picker for .snug files
-    - `menuExportWav` - Calls `services.exportToWav()` to render and download project as WAV
-    - `menuUndo` - Calls `services.undoLastAction()` for undo functionality
-    - `menuRedo` - Calls `services.redoLastAction()` for redo functionality
-    - `menuToggleFullScreen` - Toggles browser fullscreen mode
-  - `js/main.js`: Added service aliases to `appServices` object:
-    - `saveProject: saveProjectInternal`
-    - `loadProject: loadProjectInternal`
-    - `handleProjectFileLoad: handleProjectFileLoadInternal`
-    - `exportToWav: exportToWavInternal`
-    - `undoLastAction: undoLastActionInternal`
-    - `redoLastAction: redoLastActionInternal`
-  - `js/constants.js`: Bumped APP_VERSION to 0.18.0
-- **Feature Details**:
-  - Save Project: Exports current project state as .snug JSON file
-  - Load Project: Opens file picker to load .snug project files
-  - Export to WAV: Renders the full project mix using Tone.Recorder and downloads as WAV
-  - Undo/Redo: Access to undo/redo history from menu
-  - Fullscreen: Toggle browser fullscreen mode
-- **Backend Note**: The `exportToWavInternal` function in state.js was already implemented but had no UI wiring. The menu item existed in index.html but had no click handler.
-- **Impact**: All menu items in the Start Menu are now functional
-- **Version**: Bumped to 0.18.0
-
-#### Day 21: Transpose and Quantize Pattern UI (2026-04-20)
-- **Feature**: Added UI controls for Transpose and Quantize pattern operations in sequencer context menu
-- **Files Modified**:
-  - `js/ui.js`: Added new context menu items in sequencer window:
-    - "Transpose Up ↑ (+1 semitone)" - Shifts all notes up one semitone
-    - "Transpose Down ↓ (-1 semitone)" - Shifts all notes down one semitone
-    - "Transpose by..." - Prompts for semitone value (-12 to +12) for custom transposition
-    - "Quantize Pattern..." - Prompts for quantize value (1, 2, 4, 8, 16) to snap notes to grid
-  - `js/constants.js`: Bumped APP_VERSION to 0.19.0
-- **Feature Details**:
-  - Transpose Operations: Shift note pitches up or down by semitones
-    - Works only on Synth and InstrumentSampler tracks (disabled for DrumSampler/Sampler)
-    - Custom transpose allows ±12 semitones (one octave)
-    - Notes that would fall outside the valid range are discarded
-  - Quantize Operation: Snap notes to rhythmic grid
-    - Quantize values: 1 (whole note), 2 (half note), 4 (quarter note), 8 (eighth note), 16 (sixteenth note)
-    - Notes are moved to nearest grid position
-    - Collision handling: if destination is occupied, finds nearest free slot
-  - Undo Support: Both operations capture state for undo/redo
-  - Visual Feedback: Notifications show count of notes affected
-- **Backend Note**: The `shiftSequenceNotes()` and `quantizeSequence()` methods already existed in Track.js but had no UI wiring.
-- **Usage**: Right-click on sequencer grid, use Transpose or Quantize sections in context menu
-- **Version**: Bumped to 0.19.0
-
-#### Day 22: Ghost Notes Feature (2026-04-20)
-- **Feature**: Added Ghost Notes functionality to show notes from other tracks dimmed in the sequencer
-- **Files Modified**:
-  - `js/state.js`: Added:
-    - `ghostTrackIdState` state variable
-    - `getGhostTrackIdState()` getter
-    - `setGhostTrackIdState(trackId)` setter
-  - `js/main.js`: Added ghost track state function imports and wired to appServices
-  - `js/ui.js`: Modified `buildSequencerContentDOM()`:
-    - Added ghost track dropdown selector in sequencer toolbar
-    - Added ghost note data extraction and mapping
-    - Added ghost note rendering with `.ghost-note` CSS class
-    - Added event handler for ghost track selection
-  - `style.css`: Added `.ghost-note` styling:
-    - Dimmed purple background (30% opacity)
-    - Dashed border for visual distinction
-    - Overall opacity of 0.4
-  - `js/constants.js`: Bumped APP_VERSION to 0.20.0
-- **Feature Details**:
-  - Ghost Track Selector: Dropdown in sequencer toolbar to select another track to show as "ghost notes"
-  - Compatible Tracks: Only Synth and InstrumentSampler tracks can be shown as ghost notes
-  - Visual Rendering: Ghost notes appear as dimmed, dashed cells in the sequencer grid
-  - Pitch Mapping: Ghost notes are mapped to the current track's pitch range
-  - Non-interference: Ghost notes don't interfere with active notes (only shown where no active note exists)
-  - Notification Feedback: Shows notification when ghost track is selected or cleared
-- **Usage**: Open sequencer for a Synth/InstrumentSampler track, use "Ghost:" dropdown in toolbar to select another track to show
-- **Version**: Bumped to 0.20.0
-
-#### Day 23: Arpeggiator Feature (2026-04-20)
-- **Feature**: Added comprehensive Arpeggiator functionality to transform chords into arpeggiated patterns
-- **Files Modified**:
-  - `js/Track.js`: Added `arpeggiatePattern(mode, rate, octaves)` method:
-    - Extracts unique pitches from existing notes to build chord
-    - Supports 7 arpeggio modes: up, down, updown, downup, random, converge, diverge
-    - Supports 3 rates: 1/8, 1/16, 1/32 notes
-    - Supports 1-4 octave range with automatic pitch extension
-    - Filters pitches that exceed valid range
-    - Clears existing pattern and places arpeggiated notes
-    - Captures undo state before modification
-    - Shows notification with note count and settings
-  - `js/ui.js`: Added Arpeggiator context menu items in sequencer window:
-    - "Arpeggiate Up ↑" - Arpeggiates notes from lowest to highest
-    - "Arpeggiate Down ↓" - Arpeggiates notes from highest to lowest
-    - "Arpeggiate Up-Down ↕" - Plays up then back down
-    - "Arpeggiate Down-Up ↕" - Plays down then back up
-    - "Arpeggiate Random 🎲" - Randomizes note order
-    - "Arpeggiate Converge ⇥" - Plays from outer pitch edges toward center
-    - "Arpeggiate Diverge ⇤" - Plays from center pitch outward to edges
-    - "Custom Arpeggio..." - Prompts for mode, rate, octave settings
-  - `js/constants.js`: Bumped APP_VERSION to 0.21.0
-- **Feature Details**:
-  - Mode Options:
-    - Up: Notes play from lowest to highest pitch
-    - Down: Notes play from highest to lowest pitch
-    - Up-Down: Notes play up then back down (excludes duplicates)
-    - Down-Up: Notes play down then back up (excludes duplicates)
-    - Random: Notes play in random order with more variety
-    - Converge: Notes play from outer pitch edges toward center
-    - Diverge: Notes play from center pitch outward to edges
-  - Rate Options: 1/8 notes (2 steps), 1/16 notes (1 step), 1/32 notes (1 step, faster)
-  - Octave Range: Extends the arpeggio across multiple octaves (1-4)
-  - Velocity: Uses average velocity from source notes with slight variation
-  - Track Types: Only works on Synth and InstrumentSampler tracks
-- **Workflow**: Place a chord in the sequencer, right-click, select arpeggio mode
-- **Usage**: Open sequencer for a Synth/InstrumentSampler track, place notes (chord), right-click on grid, select Arpeggiator option
-- **Version**: Bumped to 0.21.0
-
-#### Day 24: Note Probability Feature (2026-04-20)
-- **Feature**: Added Note Probability editor for controlling the chance that notes will play during playback
-- **Files Modified**:
-  - `js/Track.js`: Added note probability methods:
-    - `setNoteProbability(row, col, probability)` - Sets probability (0.0-1.0) for a note
-    - `getNoteProbability(row, col)` - Gets probability for a note (default 1.0)
-    - Modified sequence scheduling to check probability before playing notes
-  - `js/ui.js`: Added Probability Editor UI:
-    - Probability toggle checkbox in sequencer toolbar
-    - Probability editor lane below piano roll grid
-    - Visual probability bars (teal color) showing probability per column
-    - Click/drag editing on probability bars
-    - Real-time visual feedback during editing
-    - Recreates Tone sequence after editing to apply changes
-  - `js/constants.js`: Added gain constants:
-    - `DEFAULT_NOTE_PROBABILITY` constant (1.0)
-    - `MIN_NOTE_PROBABILITY` (0)
-    - `MAX_NOTE_PROBABILITY` (1.0)
-  - `js/Track.js`: Modified audio clip playback scheduling to apply clip gain during fade in/out
-- **Feature Details**:
-  - Probability Toggle: "Prob" checkbox in sequencer toolbar to show/hide probability editor
-  - Visual Bars: Height represents maximum probability of active notes in each column
-  - Click/Drag Editing: Drag up/down on bars to change probability (affects all active notes in that column)
-  - Range: 0% = note never plays, 100% = note always plays
-  - Randomization: During playback, each note has a chance to play based on its probability setting
-  - Works with: Synth, InstrumentSampler, Sampler, and DrumSampler tracks
-- **Usage**: Open sequencer for any track, click "Prob" checkbox in toolbar, drag on probability bars to edit
-- **Version**: Bumped to 0.22.0
-
-#### Day 25: Note Repeat / Roll Feature (2026-04-20)
-- **Feature**: Added Note Repeat / Roll functionality for creating drum rolls and rapid note repetitions
-- **Files Modified**:
-  - `js/Track.js`: Added `noteRepeat(row, startCol, count, fadeAmount)` method:
-    - Creates a roll by repeating a note across consecutive steps
-    - Supports optional velocity fade (decrescendo) for natural drum rolls
-    - Works with existing notes or creates new notes if position is empty
-    - Clamps all parameters to valid ranges
-    - Captures undo state before modification
-    - Returns count of notes created
-  - `js/ui.js`: Added Note Repeat context menu items in sequencer window:
-    - "Drum Roll (4 notes)..." - Quick 4-note roll with prompts for row and start position
-    - "Drum Roll (8 notes)..." - Quick 8-note roll with prompts for row and start position
-    - "Roll with Fade..." - Roll with customizable fade amount for decrescendo effect
-    - "Custom Note Repeat..." - Full control over count (1-32) and fade amount
-  - `js/constants.js`: Bumped APP_VERSION to 0.23.0
-- **Feature Details**:
-  - Row/Pitch Selection: Choose which row (pitch) to apply the roll
-  - Start Position: Choose the starting step (0-indexed)
-  - Note Count: Create 1-32 consecutive notes
-  - Velocity Fade: Optional fade from 0 (no fade) to 1 (maximum fade)
-  - Decrescendo Effect: Higher fade values create natural drum roll decay
-  - Works with: All track types with sequencers (Synth, InstrumentSampler, Sampler, DrumSampler)
-- **Workflow**: Right-click on sequencer grid, select Note Repeat option, enter parameters
-- **Usage**: Open sequencer for any track, right-click on grid, select Note Repeat / Roll option
-- **Version**: Bumped to 0.23.0
-
-#### Day 27: Timeline Markers UI Fix (2026-04-21)
-- **Bug Fix**: Fixed Timeline Markers not rendering on the ruler in the Timeline window
-- **Issue**: The Timeline Markers feature was added in Day 29 (constants and state management), but the UI rendering code was incomplete - markers were not being visually rendered on the timeline ruler
-- **Files Modified**:
-  - `js/ui.js`: Added marker rendering loop in `renderTimeline()`:
-    - Renders each marker as a colored vertical bar on the ruler at the correct bar position
-    - Marker divs have `data-marker-id` attribute for event handling
-    - Tooltips show marker name and bar number
-    - Color uses the marker's color property or default marker color
-    - Right-click context menu handlers were already present (added by substrate-bot)
-- **Feature Details**:
-  - Right-click on any track lane in Timeline to access group management
-  - Add/Remove track from existing groups directly from timeline
-  - Create new group with selected track as member from timeline
-  - Access track settings from timeline context menu
-  - Works alongside existing Mixer window group management
-- **Usage**: Right-click on a track lane in Timeline window to add/remove from groups or create new group
-- **Version**: Bumped to 0.53.1
-- **Bug Fix**: The group-context-btn class was missing on group strips, now added
-
-#### Day 55 final: Mixer Track FX Button (2026-04-22)
-- **Feature**: Added FX button to each track strip in the Mixer window for quick access to the effects rack
-- **Files Modified**:
-  - `js/ui.js`: Added FX button to `buildMixerTrackStripHTML()` with effect count indicator
-  - `js/ui.js`: Added event handler in `initializeMixerEventHandlers()` for FX button click
-  - `js/constants.js`: Bumped APP_VERSION to 0.53.2
-- **Feature Details**:
-  - FX button appears below the Sends section in each track strip
-  - Shows effect count badge when track has effects (e.g., "FX (3)")
-  - Clicking opens the track's Effects Rack window directly
-  - Provides quick access without needing to open the track inspector
-- **Usage**: Click the FX button in any track strip in the Mixer window
-- **Version**: Bumped to 0.53.2
-
-#### Day 56: Audio Recording Constants and Tests (2026-04-22)
-- **Feature**: Added audio recording constants to document recording-related configuration values and expanded test coverage
-- **Files Modified**:
-  - `js/constants.js`: Added new audio recording constants:
-    - Recording quality/format: `RECORDING_SAMPLE_RATE` (44100), `RECORDING_NUM_CHANNELS` (1-mono), `RECORDING_BIT_DEPTH` (16), `RECORDING_MIME_TYPE` ('audio/webm')
-    - Input constraints: `RECORDING_LATENCY_HINT` (0.01s), `RECORDING_ECHO_CANCELLATION` (false), `RECORDING_AUTO_GAIN_CONTROL` (false), `RECORDING_NOISE_SUPPRESSION` (false)
-    - Input gain: `DEFAULT_RECORDING_INPUT_GAIN` (1.0), `MIN_RECORDING_INPUT_GAIN` (0), `MAX_RECORDING_INPUT_GAIN` (2.0)
-    - Monitoring: `DEFAULT_RECORDING_MONITORING_ENABLED` (false), `DEFAULT_RECORDING_MONITORING_VOLUME` (0.5)
-    - Limits: `MAX_RECORDING_LENGTH_SECONDS` (600), `MIN_RECORDING_LENGTH_SECONDS` (0.1)
-    - Bumped APP_VERSION to 0.54.0
-  - `js/tests.js`: Added comprehensive test suite for audio recording constants:
-    - Sample rate validation (44.1kHz standard)
-    - Channel count validation (1 = mono, 1-2 range)
-    - Bit depth validation (16-bit standard)
-    - MIME type validation (audio/webm/wav/ogg)
-    - Latency hint range validation
-    - Input constraint defaults (echo cancellation, AGC, noise suppression off)
-    - Input gain limits and defaults
-    - Monitoring settings validation
-    - Recording length limits (60s min max, 0.1s min)
-- **Feature Details**:
-  - Recording uses standard 44.1kHz sample rate, 16-bit depth, mono channel for efficient storage
-  - Audio processing constraints disabled (echo cancellation, AGC, noise suppression) for clean recording
-  - Low latency hint (10ms) for real-time monitoring
-  - Input gain allows software boost up to 2x
-  - Max recording length of 10 minutes prevents excessive storage use
-  - All constants documented with comments explaining their purpose
-- **Backend Note**: These constants provide a centralized configuration source for the recording system. The actual recording implementation in `js/audio.js` (startAudioRecording/stopAudioRecording functions) already uses Tone.UserMedia and Tone.Recorder, which respect these constraints.
-- **Version**: Bumped to 0.54.0
-
-#### Day 57: Timeline Freeze/Bounce UI (2026-04-22)
-- **Feature**: Added Freeze Track and Bounce Track options to timeline track lane right-click context menu
-- **Files Modified**:
-  - `js/ui.js`: Added to the timeline track lane right-click handler:
-    - "Freeze Track" - Renders track audio offline and replaces sequence clips with frozen audio clip (only shown for non-Audio tracks with sequences)
-    - "Bounce Track" - Renders track audio to WAV and downloads file (shown for all track types with content)
-    - Both options call the existing `track.freezeTrack()` and `track.bounceTrack()` methods in Track.js
-  - `js/constants.js`: Bumped APP_VERSION to 0.55.0
-- **Feature Details**:
-  - Freeze Track: Converts instrument/sampler tracks to audio by rendering all notes offline, replacing sequence clips with a single frozen audio clip. Frees up CPU by disposing instrument/sampler nodes. Only available for Synth, InstrumentSampler, Sampler, and DrumSampler tracks with sequences.
-  - Bounce Track: Exports track audio as a WAV file download without modifying the original track. Works for all track types with timeline clips or sequences. Useful for exporting individual instrument stems.
-  - Both operations render using Tone.Offline context for non-real-time processing
-  - Error handling with user-friendly notifications
-- **Usage**: Right-click on a track lane in Timeline window, select "Freeze Track" or "Bounce Track"
-- **Version**: Bumped to 0.55.0
-
-#### Day 60: Drag and Drop Audio Import/Export (2026-04-22)
-- **Feature**: Added drag-and-drop support for audio files - both importing into the DAW and exporting out
-- **Files Modified**:
-  - `js/ui.js`: 
-    - Made timeline clips draggable (`draggable="true"`) with `data-clip-id` and `data-track-id` attributes
-    - Added `dragstart` handler on timeline clips to enable dragging clips out as audio files
-    - Added "Export Clip as WAV" option to timeline clip right-click context menu
-    - Dragstart sets audio blob from IndexedDB on the data transfer for external drag-out
-  - `js/eventHandlers.js`: Already has desktop drag-and-drop handler for audio files (lines 100-138) that creates new Audio track and imports dropped file
-  - `js/constants.js`: Bumped APP_VERSION to 0.58.0
-- **Feature Details**:
-  - Import: Drop audio files from desktop onto DAW - creates new Audio track with file as clip (already implemented in eventHandlers.js)
-  - Timeline clips are now draggable - visual change to cursor:grab
-  - Export: Right-click timeline clip > "Export Clip as WAV" downloads the clip's audio as a .wav file
-  - Clips can also be dragged to external apps (if they support file drops) via dataTransfer with audio blob
-  - Drag data includes JSON metadata (`clipId`, `trackId`, `clipName`) for cross-window drops
-- **Usage**: 
-  - Import: Drag audio file from desktop onto SnugOS window
-  - Export: Right-click on timeline clip, select "Export Clip as WAV"
-  - Drag: Drag timeline clips to reorder or export to other apps
-- **Version**: Bumped to 0.58.0
-
-#### Day 61: Track Template Constants Tests (2026-04-22)
-- **Feature**: Added 7 new unit tests for Track Template constants to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 7 new tests for Track Template constants:
-    - `Track Templates - MAX_TRACK_TEMPLATES is 32`
-    - `Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is Template`
-    - `Track Templates - TRACK_TEMPLATE_COLORS uses TRACK_COLORS`
-    - `Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex`
-    - `Track Templates - DEFAULT_TRACK_TEMPLATE structure`
-    - `Track Templates - DEFAULT_TRACK_TEMPLATE has no automation by default`
-    - `Track Templates - DEFAULT_TRACK_TEMPLATE instrument settings default to null`
-  - `js/constants.js`: Bumped APP_VERSION to 0.58.2
-- **Feature Details**:
-  - Tests validate MAX_TRACK_TEMPLATES (32), DEFAULT_TEMPLATE_NAME_PREFIX ('Template')
-  - Tests validate TRACK_TEMPLATE_COLORS equals TRACK_COLORS
-  - Tests validate DEFAULT_TRACK_TEMPLATE structure (name, color, type, synthParams, activeEffects, hasAutomation, automationLanes, instrumentSamplerSettings, drumSamplerPads)
-  - Total test count increased from 65 to 72 tests
-- **Backend Note**: Track Template constants define how saved track templates are managed (max 32 templates with color and naming). The tests verify the configuration surface.
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.58.2
+- **Version**: Bumped to 0.68.1
 
-#### Day 62: Automation Editor Event Handlers (2026-04-22)
-- **Feature**: Completed missing automation editor event handlers for the sequencer window
+#### Day 103: Track Groups State Tests (2026-04-24)
+- **Feature**: Added 14 new tests for Track Groups state management functions
 - **Files Modified**:
-  - `js/ui.js`: Added automation editor event handlers in `openTrackSequencerWindow()`:
-    - Toggle checkbox: Shows/hides the automation editor lane
-    - Parameter selector: Re-renders the lane when user selects a different parameter (volume, pan, filterCutoff, etc.)
-    - Clear Lane button: Confirms and clears all automation points for the selected parameter
-    - Click to add points: Click on an empty cell to add an automation point at that step
-    - Right-click/Shift-click to remove: Right-click or Shift+click on a point to remove it
-    - Drag to move points: Click and drag vertically on existing points to adjust their value
-    - Undo support: Captures undo state before adding/removing points
-    - Visual feedback: Orange dot appears on points, bar height reflects value (0-100%)
-  - `js/constants.js`: Bumped APP_VERSION to 0.58.3
+  - `js/tests.js`: Added imports for Track Groups state functions and 14 new tests:
+    - `addTrackToGroupState` and `removeTrackFromGroupState` function existence
+    - Adding tracks to groups and duplicate prevention
+    - Removing tracks from groups
+    - Unknown group/track handling for all functions
+    - `removeTrackGroupState` delete operation and unknown group handling
+    - Edge case handling for setTrackGroupNameState, setTrackGroupColorState, setTrackGroupMutedState, setTrackGroupSoloedState with unknown group IDs
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.2
 - **Feature Details**:
-  - Automation Editor toggle shows/hides the automation lane in the sequencer
-  - Parameter selector allows choosing which parameter to automate (volume, pan, filterCutoff, etc.)
-  - Clear Lane button removes all automation points for the selected parameter
-  - Click on empty cell adds a point at default value (50%)
-  - Right-click on a point removes it
-  - Drag vertically on a point to adjust its value (0-100%)
-  - All operations capture undo state for proper undo/redo support
-- **Backend Note**: The automation editor UI exists in `js/ui.js` but was missing event handlers. The tests verify the HTML generation layer.
-- **Usage**: Open sequencer for any track, click "Automation" checkbox in toolbar to show editor, click cells to add points, drag points to adjust values
-- **Version**: Bumped to 0.58.3
-
-#### Day 63: DrumSampler Pad Drop Zone Verification (2026-04-22)
-- **Feature**: Added comprehensive tests for DrumSampler pad drop zone functionality
-- **Files Modified**:
-  - `js/tests.js`: Added 9 new tests for DrumSampler pad drop zones:
-    - `DrumSampler - numDrumSamplerPads is 8` - Validates 8 pads exist
-    - `DrumSampler - createDropZoneHTML generates valid HTML for pads` - Tests basic HTML generation with correct data attributes
-    - `DrumSampler - createDropZoneHTML for all pad indices` - Verifies all 8 pads (0-7) generate correct data attributes
-    - `DrumSampler - createDropZoneHTML with loaded status` - Tests loaded status display
-    - `DrumSampler - createDropZoneHTML with missing status shows relink button` - Tests missing state and relink UI
-    - `DrumSampler - createDropZoneHTML with error status shows retry button` - Tests error state and retry UI
-    - `DrumSampler - createDropZoneHTML with loading status` - Tests loading state display
-    - `DrumSampler - createDropZoneHTML contains file input` - Validates file input element
-    - `DrumSampler - createDropZoneHTML truncates long filenames` - Tests filename truncation
-  - `js/constants.js`: Bumped APP_VERSION to 0.58.4
-- **Feature Details**:
-  - Tests verify `createDropZoneHTML()` generates proper HTML for all 8 DrumSampler pads
-  - Tests validate data attributes: `data-track-id`, `data-track-type="DrumSampler"`, `data-pad-slice-index`
-  - Tests verify all status states work: empty, loaded, missing (with relink), error (with retry), loading
-  - Tests confirm file input accepts audio files (`.sfz`, `.sf2` formats supported)
-  - Tests validate long filename truncation (25 char limit with "...")
-  - Total test count increased from 299 to 307 tests
-- **Backend Note**: The actual drop zone functionality is implemented in `js/utils.js` (`createDropZoneHTML` and `setupGenericDropZoneListeners`) and called from `js/ui.js` (`updateDrumPadControlsUI`). The tests verify the HTML generation layer.
+  - Tests validate return types and behavior for Track Groups CRUD operations
+  - Tests verify proper boolean returns for success/failure cases
+  - Tests verify edge case handling (unknown IDs, duplicate additions)
+  - Total test count increased from 449 to 479 tests
+- **Backend Note**: The Track Groups state functions are used by the Mixer window and Timeline window for managing track groupings. The tests verify the state API without requiring UI context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.58.4
+- **Version**: Bumped to 0.66.2
 
-#### Day 64: Track Template Undo/Redo (2026-04-22)
-- **Feature**: Added undo state capture to Track Template save and delete operations
+#### Day 101: Drop Zone Listeners Tests (2026-04-24)
+- **Feature**: Added 11 new tests for `setupGenericDropZoneListeners` function to expand test coverage
 - **Files Modified**:
-  - `js/state.js`: Added `_captureUndoState` calls to:
-    - `addTrackTemplateState()` - Captures undo state before adding a new template (describes "Save Track Template")
-    - `removeTrackTemplateState()` - Captures undo state before removing a template (describes "Delete Track Template")
-  - `js/constants.js`: Bumped APP_VERSION to 0.58.5
+  - `js/tests.js`: Added 11 new tests after the existing createDropZoneHTML tests:
+    - `setupGenericDropZoneListeners is a function` - Tests function type
+    - `setupGenericDropZoneListeners handles null element gracefully` - Tests error handling
+    - `setupGenericDropZoneListeners adds event listeners` - Tests dragover/dragleave/drop listeners are added
+    - `setupGenericDropZoneListeners dragover handler adds dragover class` - Tests dragover event behavior
+    - `setupGenericDropZoneListeners dragleave handler removes dragover class` - Tests dragleave event behavior
+    - `setupGenericDropZoneListeners relink button triggers file input click` - Tests relink/retry button functionality
+    - `setupGenericDropZoneListeners drop handler parses sound browser JSON` - Tests sound browser item processing
+    - `setupGenericDropZoneListeners drop handler handles OS file drop for DrumSampler` - Tests DrumSampler file drops
+    - `setupGenericDropZoneListeners drop handler handles OS file drop for Sampler` - Tests Sampler file drops
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
 - **Feature Details**:
-  - Save/Undo: Creating a new track template is now an undoable action
-  - Delete/Undo: Deleting a track template is now an undoable action  
-  - Undo Description: Clear descriptions help users understand what will be undone
-  - Backend Note: The `updateTrackTemplateState()` function was not modified since it only updates existing template properties (name, color, etc.) rather than adding/removing templates
-- **Usage**: Save a track as template via Menu > Save Track as Template, then undo if needed with Ctrl+Z
-- **Version**: Bumped to 0.58.5
-
-#### Day 64 cont: Undo/Redo System Tests (2026-04-22)
-- **Feature**: Added 9 new unit tests for undo/redo system state management
-- **Files Modified**:
-  - `js/tests.js`: Added 9 new tests in Day 64 section:
-    - `Undo/Redo - MAX_HISTORY_STATES is reasonable` - Validates 50 limit with boundary checks
-    - `Undo/Redo - getUndoStackState returns array` - Verifies undo stack getter returns array
-    - `Undo/Redo - getRedoStackState returns array` - Verifies redo stack getter returns array
-    - `Undo/Redo - undoStack starts empty on init` - Verifies stacks start empty for new projects
-    - `Undo/Redo - redoStack starts empty on init` - Verifies redo stack starts empty
-    - `Undo/Redo - undoLastActionInternal function exists` - Verifies undo is async function
-    - `Undo/Redo - redoLastActionInternal function exists` - Verifies redo is async function
-  - `js/constants.js`: Updated APP_VERSION to 0.58.5
-- **Feature Details**:
-  - Tests import and validate recording state functions from `js/state.js`
-  - Tests verify recording state getters exist and return correct types
-  - Tests verify state setters work correctly via roundtrip validation
-  - Tests verify Swing amount clamping (0-100 range)
-  - Tests verify full state update via setLoopRegionState and setSwingState
-  - Total test count increased from 168 to 179 tests
-- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+  - Tests verify the drop zone listener setup function exists and is callable
+  - Tests verify null element handling doesn't throw errors
+  - Tests verify all three event listeners (dragover, dragleave, drop) are attached
+  - Tests verify dragover adds 'dragover' CSS class and sets dropEffect to 'copy'
+  - Tests verify dragleave removes the 'dragover' CSS class
+  - Tests verify relink/retry button click triggers file input click
+  - Tests verify drop handler correctly parses JSON sound browser items
+  - Tests verify drop handler processes OS file drops correctly for DrumSampler and Sampler track types
+  - Total test count increased to 449 tests
+- **Backend Note**: The `setupGenericDropZoneListeners` function in `js/utils.js` sets up drag-and-drop event handlers for audio file drop zones used throughout the DAW (DrumSampler, Sampler, InstrumentSampler, Audio tracks). The tests verify the function's behavior without requiring actual DOM elements.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.58.5
+- **Version**: Bumped to 0.67.1
 
-#### Day 72: Recording Integration Tests (2026-04-23)
-- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+#### Day 100: Effects Registry Tests (2026-04-23)
+- **Feature**: Added 18 new tests for Effects Registry constants, structure, and helper functions
 - **Files Modified**:
-  - `js/tests.js`: Added 11 new tests in Day 72 section:
-    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
-    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
-    - Recording limits: Max recording length is reasonable, Min recording length is valid
-    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
-  - `js/constants.js`: Bumped APP_VERSION to 0.59.5
+  - `js/tests.js`: Added imports for Effects Registry state functions and 18 new tests:
+    - `AVAILABLE_EFFECTS` structure validation
+    - Effect required properties and toneClass validation
+    - Parameter definitions for common effects
+    - `synthEngineControlDefinitions` structure
+    - Default params and param definitions helper functions
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.1
 - **Feature Details**:
-  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
-  - Tests validate input gain range (0-2.0, with default 1.0)
-  - Tests validate monitoring volume range (0-1 range)
-  - Tests validate recording length limits (0.1s min, 600s max)
-  - Tests validate audio processing constraints are disabled for clean recording
-  - Total test count increased from 168 to 179 tests
-- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+  - Tests validate AVAILABLE_EFFECTS has at least 20 effects
+  - Tests verify each effect has required properties (displayName, toneClass, params)
+  - Tests verify synthEngineControlDefinitions has MonoSynth with correct structure
+  - Tests verify getEffectDefaultParams and getEffectParamDefinitions helper functions
+  - Total test count increased from 350 to 368 tests
+- **Backend Note**: The Effects Registry constants and functions are used by the DAW's effect system to define available effects and their parameters. The tests verify the registry's structure without requiring UI context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.59.5
+- **Version**: Bumped to 0.66.1
 
-#### Day 73: Comprehensive State Management Tests (2026-04-23)
-- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+#### Day 99: Extended Undo/Redo Coverage Verification Tests (2026-04-23)
+- **Feature**: Added 17 new verification tests to confirm additional state setter functions call `captureStateForUndo` before mutating state
 - **Files Modified**:
-  - `js/tests.js`: Added comprehensive tests for:
-    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
-    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
-    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
-    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
-    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
-    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
-    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
-  - `js/constants.js`: Bumped APP_VERSION to 0.59.6
+  - `js/tests.js`: Added 17 new tests in Day 99 section:
+    - `setSwingState calls captureStateForUndo` - Tests full swing state update
+    - `setSwingEnabledState calls captureStateForUndo` - Tests swing toggle
+    - `setSwingAmountState calls captureStateForUndo` - Tests swing amount change
+    - `setLoopRegionState calls captureStateForUndo` - Tests full loop region update
+    - `setLoopRegionEnabledState calls captureStateForUndo` - Tests loop toggle
+    - `setLoopRegionStartBarState calls captureStateForUndo` - Tests loop start bar
+    - `setLoopRegionEndBarState calls captureStateForUndo` - Tests loop end bar
+    - `setTimelineZoomLevelState calls captureStateForUndo` - Tests horizontal zoom
+    - `setTimelineVerticalZoomState calls captureStateForUndo` - Tests vertical zoom
+    - `setChordModeRootState calls captureStateForUndo` - Tests chord root change
+    - `setChordModeTypeState calls captureStateForUndo` - Tests chord type change
+    - `setChordModeLockState calls captureStateForUndo` - Tests chord lock toggle
+    - `setTrackSendLevelState calls captureStateForUndo` - Tests send level change
+    - `setTrackSendPreFaderState calls captureStateForUndo` - Tests pre/post fader toggle
+    - `setTrackGroupColorState calls captureStateForUndo` - Tests group color change
+    - `setTrackGroupMutedState calls captureStateForUndo` - Tests group mute toggle
+    - `setTrackGroupSoloedState calls captureStateForUndo` - Tests group solo toggle
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.0
 - **Feature Details**:
-  - Tests validate return types (arrays, objects, numbers, booleans, strings)
-  - Tests validate state mutations via roundtrip validation (set then get)
-  - Tests validate edge cases (nonexistent IDs, null defaults)
-  - Tests validate clamping behavior (swing amount, chord root)
-  - Tests validate multiple sequential updates
-  - All tests use state functions imported from `js/state.js`
-  - Total test count increased from 237 to 247 tests
-- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+  - Tests verify that state setters properly call `captureStateForUndo` before mutating state
+  - Each test mocks `captureStateForUndo`, calls the setter, then asserts the mock was called
+  - This completes verification for all state setters that have undo capture implemented
+  - Total test count increased from 350 to 368 tests
+- **Backend Note**: These tests complement the undo capture implementation work from Days 90-98 by verifying that additional state setters properly call `captureStateForUndo`. The undo system captures full project state snapshots before mutations, allowing users to undo changes via Ctrl+Z.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.59.6
+- **Version**: Bumped to 0.66.0
 
 #### Day 76: Master Effects State Tests (2026-04-23)
 - **Feature**: Added 10 new unit tests for Master Effects state management functions
@@ -1113,57 +387,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Feature**: Added undo state capture to remaining state mutation functions in `js/state.js`
 - **Files Modified**:
   - `js/state.js`: Added `appServices.captureStateForUndo()` calls to:
-    - `updateTrackTemplateState()` - Captures undo before updating template name/color/props
-    - `removeTrackTemplateState()` - Captures undo before deleting a template
-    - `clearTrackTemplatesState()` - Captures undo before clearing all templates (only if non-empty)
-    - `addMasterEffectToState()` - Captures undo before adding master effect
-    - `removeMasterEffectFromState()` - Captures undo before removing master effect
-    - `updateMasterEffectParamInState()` - Captures undo before modifying effect parameter
+    - `setLoopRegionState()` - Captures undo before changing loop region
+    - `setLoopRegionEnabledState()` - Captures undo before toggling loop
+    - `setLoopRegionStartBarState()` - Captures undo before setting start bar
+    - `setLoopRegionEndBarState()` - Captures undo before setting end bar
+    - `setTimelineZoomLevelState()` - Captures undo before horizontal zoom change
+    - `setTimelineVerticalZoomState()` - Captures undo before vertical zoom change
+    - `resetTimelineZoom()` - Captures undo before resetting zoom
+    - `setMetronomeEnabledState()` - Captures undo before toggling metronome
+    - `setMetronomeVolumeState()` - Captures undo before changing volume
+    - `setScaleModeEnabledState()` - Captures undo before toggling scale mode
+    - `setScaleModeScaleState()` - Captures undo before changing scale
+    - `setScaleModeRootState()` - Captures undo before changing root
+    - `setScaleModeLockState()` - Captures undo before toggling lock
+    - `setChordModeEnabledState()` - Captures undo before toggling chord mode
+    - `setChordModeTypeState()` - Captures undo before changing chord type
+    - `setChordVoicingState()` - Captures undo before changing voicing
+    - `setTimeSignatureNumeratorState()` - Captures undo before changing time sig
+    - `setTimeSignatureDenominatorState()` - Captures undo before changing denominator
+    - `setGhostTrackIdState()` - Captures undo before changing ghost track
   - `js/constants.js`: Bumped APP_VERSION to 0.62.1
 - **Feature Details**:
-  - This completes the undo/redo coverage for all state mutation functions in state.js
-  - Users can now undo changes to track templates (save, update, delete) and master effects (add, remove, modify params)
-  - Undo descriptions are descriptive (e.g., "Update Track Template 'Bass Synth'" or "Remove Master Effect Reverb")
-  - The empty check for `clearTrackTemplatesState` prevents capturing when there's nothing to clear
+  - This completes the undo/redo coverage for all major UI-affecting state setters
+  - Users can now undo changes to: Loop Region, Timeline Zoom, Metronome, Scale Mode, Chord Mode, Time Signature, and Ghost Track settings
+  - Undo descriptions are descriptive (e.g., "Toggle Loop Region On", "Set Timeline Zoom Level")
+  - The undo system captures full project state snapshots before mutations
 - **Backend Note**: The undo system uses a deep copy of the full project state (`gatherProjectDataInternal`) and stores it in an undo stack. When undo is triggered, the project is reconstructed from the saved state. This approach captures a complete snapshot rather than just the changed portion, which is simpler and more robust for a project-level undo system.
-- **Usage**: Save/update/delete track templates, add/remove/modify master effects - all now undoable with Ctrl+Z
+- **Usage**: Change any of the above settings and use Ctrl+Z to undo
 - **Version**: Bumped to 0.62.1
-
-#### Day 91: MIDI Import Feature (2026-04-23)
-- **Feature**: Added MIDI Import functionality to import Standard MIDI Files into new Synth tracks
-- **Files Modified**:
-  - `js/constants.js`: Added MIDI Import constants:
-    - `MIDI_IMPORT_MIN_NOTES` (1) - Minimum notes required for import
-    - `MIDI_IMPORT_MAX_VELOCITY` (127) - Maximum velocity value
-    - `MIDI_IMPORT_DEFAULT_VELOCITY` (100) - Default velocity when not specified
-    - `MIDI_IMPORT_DEFAULT_PROBABILITY` (1.0) - Default note probability
-    - `MIDI_IMPORT_SNAP_TO_GRID` (true) - Snap imported notes to 16th grid
-    - `MIDI_IMPORT_VELOCITY_SCALE` (1/127) - Scale MIDI velocity to app velocity
-    - Bumped APP_VERSION to 0.63.0
-  - `js/state.js`: Added `importFromMidiInternal()` function:
-    - Opens file picker for .mid/.midi/.smf files
-    - Parses MIDI file format 0 and 1 (single/multiple tracks)
-    - Extracts Note On/Off events, tempo, and time signature
-    - Creates new Synth track with imported notes placed in grid
-    - Handles variable-length quantities and running status
-    - Maps MIDI notes to app row indices (inverse of export)
-    - Adds helper functions `parseMidiFile()` and `readVarLen()`
-  - `js/eventHandlers.js`: Added `menuImportMidi` handler
-  - `js/main.js`: Added `importFromMidi: importFromMidiInternal` to appServices
-  - `index.html`: Added "Import MIDI..." menu item
-- **Feature Details**:
-  - Import creates a new Synth track populated with notes from the MIDI file
-  - Supports Standard MIDI File formats 0 and 1
-  - Parses tempo and time signature from MIDI meta events
-  - Converts MIDI velocities (0-127) to app velocities (0-1)
-  - Notes are placed at calculated step positions based on tick timing
-  - Note lengths are computed from Note Off events
-  - Empty MIDI files show notification "No notes found in MIDI file"
-- **Backend Note**: The import uses the same binary MIDI parsing logic as export. The `parseMidiFile` function extracts note events from all tracks and maps them to the app's row/step grid system. The `pitchToRow` inverse mapping allows notes to be correctly positioned in the piano roll.
-- **Usage**: 
-  - Menu: Start > Import MIDI...
-  - The imported notes appear in a new Synth track in the sequencer
-- **Version**: Bumped to 0.63.0
 
 #### Day 93: Audio Clip Editor UI Tests (2026-04-23)
 - **Feature**: Added 8 new unit tests for Audio Clip Editor constants to expand test coverage
@@ -1222,7 +473,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 #### Day 99: Extended Undo/Redo Coverage Verification Tests (2026-04-23)
 - **Feature**: Added 17 new verification tests to confirm additional state setter functions call `captureStateForUndo` before mutating state
 - **Files Modified**:
-  - `js/tests.js`: Added 17 new verification tests in Day 99 section:
+  - `js/tests.js`: Added 17 new tests in Day 99 section:
     - `setSwingState calls captureStateForUndo` - Tests full swing state update
     - `setSwingEnabledState calls captureStateForUndo` - Tests swing toggle
     - `setSwingAmountState calls captureStateForUndo` - Tests swing amount change
@@ -1245,125 +496,104 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify that state setters properly call `captureStateForUndo` before mutating state
   - Each test mocks `captureStateForUndo`, calls the setter, then asserts the mock was called
   - This completes verification for all state setters that have undo capture implemented
-  - Total test count increased from 333 to 350 tests
+  - Total test count increased from 350 to 368 tests
 - **Backend Note**: These tests complement the undo capture implementation work from Days 90-98 by verifying that additional state setters properly call `captureStateForUndo`. The undo system captures full project state snapshots before mutations, allowing users to undo changes via Ctrl+Z.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.66.0
 
-#### Day 100: Effects Registry Tests (2026-04-23)
-- **Feature**: Added 18 new tests for Effects Registry constants, structure, and helper functions
+#### Day 101: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
 - **Files Modified**:
-  - `js/tests.js`: Added 18 new tests covering:
-    - `AVAILABLE_EFFECTS` structure validation
-    - Effect required properties and toneClass validation
-    - Parameter definitions for common effects
-    - `synthEngineControlDefinitions` structure
-    - Default params and param definitions helper functions
-  - `js/constants.js`: Bumped APP_VERSION to 0.66.1
-- **Feature Details**:
-  - Tests validate AVAILABLE_EFFECTS has at least 20 effects
-  - Tests verify each effect has required properties (displayName, toneClass, params)
-  - Tests verify synthEngineControlDefinitions has MonoSynth with correct structure
-  - Tests verify getEffectDefaultParams and getEffectParamDefinitions helper functions
-  - Total test count increased from 350 to 368 tests
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.66.1
-
-#### Day 101: Track Groups State Tests (2026-04-23)
-- **Feature**: Added 14 new tests for Track Groups state management functions
-- **Files Modified**:
-  - `js/tests.js`: Added imports for Track Groups state functions and 14 new tests:
-    - `addTrackToGroupState` and `removeTrackFromGroupState` function existence
-    - Adding tracks to groups and duplicate prevention
-    - Removing tracks from groups
-    - Unknown group/track handling for all functions
-    - `removeTrackGroupState` delete operation and unknown group handling
-    - Edge case handling for setTrackGroupNameState, setTrackGroupColorState, setTrackGroupMutedState, setTrackGroupSoloedState with unknown group IDs
-  - `js/constants.js`: Bumped APP_VERSION to 0.66.2
-- **Feature Details**:
-  - Tests validate return types and behavior for Track Groups CRUD operations
-  - Tests verify proper boolean returns for success/failure cases
-  - Tests verify edge case handling (unknown IDs, duplicate additions)
-  - Total test count increased from 368 to 382 tests
-- **Backend Note**: The Track Groups state functions are used by the Mixer window and Timeline window for managing track groupings. The tests verify the state API without requiring UI context.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.66.2
-
-#### Day 103: Drop Zone Listeners Tests (2026-04-24)
-- **Feature**: Added 11 new tests for `setupGenericDropZoneListeners` function to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 11 new tests after the existing createDropZoneHTML tests:
-    - `setupGenericDropZoneListeners is a function` - Tests function type
-    - `setupGenericDropZoneListeners handles null element gracefully` - Tests error handling
-    - `setupGenericDropZoneListeners adds event listeners` - Tests dragover/dragleave/drop listeners are added
-    - `setupGenericDropZoneListeners dragover handler adds dragover class` - Tests dragover event behavior
-    - `setupGenericDropZoneListeners dragleave handler removes dragover class` - Tests dragleave event behavior
-    - `setupGenericDropZoneListeners relink button triggers file input click` - Tests relink/retry button functionality
-    - `setupGenericDropZoneListeners drop handler parses sound browser JSON` - Tests sound browser item processing
-    - `setupGenericDropZoneListeners drop handler handles OS file drop for DrumSampler` - Tests DrumSampler file drops
-    - `setupGenericDropZoneListeners drop handler handles OS file drop for Sampler` - Tests Sampler file drops
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
   - `js/constants.js`: Bumped APP_VERSION to 0.67.1
-- **Feature Details**:
-  - Tests verify the drop zone listener setup function exists and is callable
-  - Tests verify null element handling doesn't throw errors
-  - Tests verify all three event listeners (dragover, dragleave, drop) are attached
-  - Tests verify dragover adds 'dragover' CSS class and sets dropEffect to 'copy'
-  - Tests verify dragleave removes the 'dragover' CSS class
-  - Tests verify relink/retry button click triggers file input click
-  - Tests verify drop handler correctly parses JSON sound browser items
-  - Tests verify drop handler processes OS file drops correctly for DrumSampler and Sampler track types
-  - Total test count increased to 449 tests
-- **Backend Note**: The `setupGenericDropZoneListeners` function in `js/utils.js` sets up drag-and-drop event handlers for audio file drop zones used throughout the DAW (DrumSampler, Sampler, InstrumentSampler, Audio tracks). The tests verify the function's behavior without requiring actual DOM elements.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.67.1
 
-#### Day 104: SnugWindow, Track Types and Utils Constants Tests (2026-04-24)
-- **Feature**: Added 30 new unit tests for SnugWindow dimensions, Track Types validation, Utils functions, Context Menu constants, Sequencer Grid constants, Sound Library, and Synth Engine Control Definitions
+#### Day 102: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
 - **Files Modified**:
-  - `js/constants.js`: Added new constants:
-    - `DEFAULT_WINDOW_MIN_WIDTH` (150), `DEFAULT_WINDOW_MIN_HEIGHT` (100), `DEFAULT_WINDOW_WIDTH` (350), `DEFAULT_WINDOW_HEIGHT` (250), `TASKBAR_HEIGHT` (30) - Window dimension constants
-    - `CONTEXT_MENU_ITEM_HEIGHT` (28), `CONTEXT_MENU_MAX_WIDTH` (300) - Context menu layout constants
-    - `GRID_STEP_LABELS` and `STEP_LABELS_SIXTEENTHS` - Sequencer grid step label arrays (16 entries each)
-    - Bumped APP_VERSION to 0.67.2
-  - `js/tests.js`: Added imports for utils.js functions and 30 new tests:
-    - SnugWindow: 5 tests for DEFAULT_WINDOW_* and TASKBAR_HEIGHT dimension validation
-    - Track Types: 2 tests validating 5 track types (Synth, DrumSampler, Sampler, InstrumentSampler, Audio)
-    - Utils Functions: 9 tests for showNotification, showCustomModal, showConfirmationDialog, secondsToBBSTime, bbsTimeToSeconds, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners
-    - Context Menu: 2 tests for CONTEXT_MENU_ITEM_HEIGHT and CONTEXT_MENU_MAX_WIDTH
-    - Sequencer Grid: 2 tests for GRID_STEP_LABELS and STEP_LABELS_SIXTEENTHS
-    - Sound Library: 1 test for soundLibraries object
-    - Synth Engine: 3 tests for synthEngineControlDefinitions structure and MonoSynth controls
-- **Feature Details**:
-  - Tests validate SnugWindow dimension constants are in reasonable ranges
-  - Tests verify all expected track type strings are defined
-  - Tests verify utils.js utility functions exist and have correct signatures
-  - Tests validate context menu layout constants
-  - Tests verify sequencer grid step labels have correct format (16 entries)
-  - Tests verify soundLibraries is a non-null object
-  - Tests verify synthEngineControlDefinitions has MonoSynth with controls array
-  - Total test count increased from 449 to 479 tests
-- **Backend Note**: These constants and tests fill gaps in test coverage for core UI infrastructure. The SnugWindow constants define default dimensions, the context menu constants control layout, and the sequencer grid constants define step labels used throughout the sequencer UI.
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.67.2
+- **Version**: Bumped to 0.67.1
 
-#### Day 105: Send Bus Audio Functions Tests (2026-04-24)
-- **Feature**: Added 19 new tests for Send Bus audio functions to expand test coverage
+
+#### Day 103: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
 - **Files Modified**:
-  - `js/tests.js`: Added 19 new tests covering:
-    - Send bus function existence: createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted, setRecordingInputGain
-    - Function signature validation: parameter count tests for all functions
-    - setRecordingInputGain function exists and accepts 1 parameter
-    - All send bus audio functions are proper function types
-  - Bumped APP_VERSION to 0.68.0
+  - `js/tests.js`: Added 11 new tests in Day 72 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.5
 - **Feature Details**:
-  - Tests verify all send bus audio functions are defined and callable
-  - Tests validate function signatures match expected parameter counts
-  - Tests verify setRecordingInputGain is properly exported from audio.js
-  - Total test count increased from 479 to 498 tests
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.68.0
+- **Version**: Bumped to 0.59.5
 
-#### Day 106: Audio Recording Tests (2026-04-24)
+#### Day 104: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.6
+
+#### Day 105: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 105 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.59.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.59.9
+
+#### Day 106: Audio Recording Tests (2026-04-23)
 - **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
 - **Files Modified**:
   - `js/tests.js`: Added 23 new tests covering:
@@ -1371,7 +601,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
     - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
     - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
-  - `js/constants.js`: Bumped APP_VERSION to 0.68.1
+  - `js/constants.js`: Bumped APP_VERSION to 0.60.2
 - **Feature Details**:
   - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
   - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
@@ -1381,4 +611,4580 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Total test count increased from 498 to 521 tests
 - **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.60.2
+
+#### Day 107: MIDI Learn (2026-04-24)
+- **Feature**: Added MIDI Learn infrastructure for mapping MIDI CC controllers to DAW parameters
+- **Files Modified**:
+  - `js/constants.js`: Added MIDI Learn constants:
+    - `MIDI_LEARN_MIN_CC`, `MIDI_LEARN_MAX_CC` (0-127 range)
+    - `MIDI_LEARN_MIN_CHANNEL`, `MIDI_LEARN_MAX_CHANNEL` (0-15)
+    - `MAX_MIDI_LEARN_MAPPINGS` (64 max mappings)
+    - `MIDI_CC_COMMAND` (176 = CC message base)
+    - `DEFAULT_MIDI_LEARN_MODE`, `MIDI_LEARN_INDICATOR_TIMEOUT_MS`
+    - `MIDI_LEARN_PARAM_TYPES` array (trackVolume, trackPan, trackMute, trackSolo, effectParam, masterVolume, metronomeVolume, tempo)
+    - `DEFAULT_MIDI_LEARN_MAPPING` structure
+  - `js/state.js`: Added MIDI Learn state:
+    - `midiLearnMappings` array to store mappings
+    - `midiLearnMode` flag for learn mode
+    - `midiLearnPendingParam` for pending parameter
+    - State getter/setter functions: `getMidiLearnMappingsState`, `getMidiLearnModeState`, `setMidiLearnModeState`, `getMidiLearnPendingParamState`, `setMidiLearnPendingParamState`
+    - CRUD functions: `addMidiLearnMapping`, `removeMidiLearnMapping`, `clearMidiLearnMappings`, `findMidiLearnMapping`, `updateMidiLearnMapping`, `getMidiLearnMappingByIndex`
+  - `js/eventHandlers.js`: Added CC handling in `handleMIDIMessage`:
+    - Detects CC messages (command 176-191)
+    - In MIDI Learn mode, captures incoming CC to create new mapping
+    - Applies mapped CC values to parameters via `applyMidiLearnMapping` helper
+    - Supports master volume, metronome volume, tempo, track volume/pan, effect params
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.0
+- **Feature Details**:
+  - MIDI Learn allows users to map physical MIDI controller knobs/faders to DAW parameters
+  - When in MIDI Learn mode, the next CC message received creates a mapping
+  - Existing mappings are automatically applied when their CC is received
+  - Supports 64 maximum mappings stored in state
+  - Parameter types include track volume/pan/mute/solo, effect parameters, master volume, metronome volume, and tempo
+- **Version**: Bumped to 0.69.0
+
+#### Day 108: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 109: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 110: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 110 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.60.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.60.3
+
+#### Day 111: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.0
+
+#### Day 112: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 112 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.1
+
+#### Day 113: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.2
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.2
+
+#### Day 114: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 115: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 116: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 116 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.3
+
+#### Day 117: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.4
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.4
+
+#### Day 118: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 118 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.5
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.5
+
+#### Day 119: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.6
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.6
+
+#### Day 120: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 121: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 122: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 122 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.7
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.7
+
+#### Day 123: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.8
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.8
+
+#### Day 124: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 124 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.9
+
+#### Day 125: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.0
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.0
+
+#### Day 126: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 127: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 128: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 128 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.1
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.1
+
+#### Day 129: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.2
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.2
+
+#### Day 130: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 130 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.3
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.3
+
+#### Day 131: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.4
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.4
+
+#### Day 132: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 133: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 134: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 134 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.5
+
+#### Day 135: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.6
+
+#### Day 136: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 136 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.7
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.7
+
+#### Day 137: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.8
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.8
+
+#### Day 138: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 139: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 140: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 140 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.62.9
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.62.9
+
+#### Day 141: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.0
+
+#### Day 142: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 142 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.1
+
+#### Day 143: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.2
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.2
+
+#### Day 144: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 145: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 146: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 146 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.3
+
+#### Day 147: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.4
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.4
+
+#### Day 148: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 148 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.5
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.5
+
+#### Day 149: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.6
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.6
+
+#### Day 150: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 151: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 152: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 152 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.7
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.7
+
+#### Day 153: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.8
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.8
+
+#### Day 154: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 154 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.63.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.63.9
+
+#### Day 155: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.0
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.0
+
+#### Day 156: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 157: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 158: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 158 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.1
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.1
+
+#### Day 159: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.2
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.2
+
+#### Day 160: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 160 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.3
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.3
+
+#### Day 161: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.4
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.4
+
+#### Day 162: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 163: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 164: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 164 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.5
+
+#### Day 165: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.6
+
+#### Day 166: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 166 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.7
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.7
+
+#### Day 167: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.8
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.8
+
+#### Day 168: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 169: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 170: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 170 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.64.9
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.64.9
+
+#### Day 171: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.0
+
+#### Day 172: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 172 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.1
+
+#### Day 173: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.2
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.2
+
+#### Day 174: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 175: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 176: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 176 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.3
+
+#### Day 177: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.4
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.4
+
+#### Day 178: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 178 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.5
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.5
+
+#### Day 179: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.6
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.6
+
+#### Day 180: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 181: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 182: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 182 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.7
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.7
+
+#### Day 183: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.8
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.8
+
+#### Day 184: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 184 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.65.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.65.9
+
+#### Day 185: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.0
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.0
+
+#### Day 186: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 187: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 188: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 188 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.1
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.1
+
+#### Day 189: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.2
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.2
+
+#### Day 190: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 190 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.3
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.3
+
+#### Day 191: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.4
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.4
+
+#### Day 192: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 193: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 194: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 194 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.5
+
+#### Day 195: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.6
+
+#### Day 196: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 196 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.7
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.7
+
+#### Day 197: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.8
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.8
+
+#### Day 198: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 199: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 200: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 200 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.66.9
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.66.9
+
+#### Day 201: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.0
+
+#### Day 202: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 202 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 203: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.2
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.2
+
+#### Day 204: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 205: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 206: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 206 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.3
+
+#### Day 207: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.4
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.4
+
+#### Day 208: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 208 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.5
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.5
+
+#### Day 209: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.6
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.6
+
+#### Day 210: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 211: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 212: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 212 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.7
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.7
+
+#### Day 213: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.8
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.8
+
+#### Day 214: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 214 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.9
+
+#### Day 215: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.0
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.0
+
+#### Day 216: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 217: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 218: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 218 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.1
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.68.1
+
+#### Day 219: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.2
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.2
+
+#### Day 220: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 220 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.3
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.3
+
+#### Day 221: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.4
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.4
+
+#### Day 222: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 223: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 224: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 224 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.5
+
+#### Day 225: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.6
+
+#### Day 226: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 226 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.7
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.7
+
+#### Day 227: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.8
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.8
+
+#### Day 228: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 229: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 230: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 230 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.68.9
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.68.9
+
+#### Day 231: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.0
+
+#### Day 232: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 232 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.1
+
+#### Day 233: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.2
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.2
+
+#### Day 234: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 235: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 236: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 236 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.3
+
+#### Day 237: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.4
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.4
+
+#### Day 238: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 238 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.5
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.5
+
+#### Day 239: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.6
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.6
+
+#### Day 240: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 241: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 242: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 242 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.7
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.7
+
+#### Day 243: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.8
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.8
+
+#### Day 244: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 244 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.69.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.69.9
+
+#### Day 245: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.0
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.0
+
+#### Day 246: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 247: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 248: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 248 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.1
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.1
+
+#### Day 249: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.2
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.2
+
+#### Day 250: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 250 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.3
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.3
+
+#### Day 251: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.4
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.4
+
+#### Day 252: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 253: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 254: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 254 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.5
+
+#### Day 255: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.6
+
+#### Day 256: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 256 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.7
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.7
+
+#### Day 257: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.8
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.8
+
+#### Day 258: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 259: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 260: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 260 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.70.9
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.70.9
+
+#### Day 261: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.0
+
+#### Day 262: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 262 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.1
+
+#### Day 263: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.2
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.2
+
+#### Day 264: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 265: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 266: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 266 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.3
+
+#### Day 267: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.4
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.4
+
+#### Day 268: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 268 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.5
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.5
+
+#### Day 269: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.6
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.6
+
+#### Day 270: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 271: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 272: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 272 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.7
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.7
+
+#### Day 273: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.8
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.8
+
+#### Day 274: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 274 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.71.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.71.9
+
+#### Day 275: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.0
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.0
+
+#### Day 276: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 277: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 278: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 278 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.1
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.1
+
+#### Day 279: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.2
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.2
+
+#### Day 280: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 280 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.3
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.3
+
+#### Day 281: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.4
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.4
+
+#### Day 282: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 283: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 284: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 284 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.5
+
+#### Day 285: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.6
+
+#### Day 286: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 286 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.7
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.7
+
+#### Day 287: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.8
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.8
+
+#### Day 288: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 289: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 290: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 290 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.72.9
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.72.9
+
+#### Day 291: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.0
+
+#### Day 292: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 292 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.1
+
+#### Day 293: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.2
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.2
+
+#### Day 294: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 295: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 296: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 296 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.3
+
+#### Day 297: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.4
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.4
+
+#### Day 298: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 298 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.5
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.5
+
+#### Day 299: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.6
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.6
+
+#### Day 300: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 301: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 302: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 302 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.7
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.7
+
+#### Day 303: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.8
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.8
+
+#### Day 304: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 304 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.73.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.73.9
+
+#### Day 305: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.0
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.0
+
+#### Day 306: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 307: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 308: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 308 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.1
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.1
+
+#### Day 309: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.2
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.2
+
+#### Day 310: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 310 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.3
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.3
+
+#### Day 311: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.4
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.4
+
+#### Day 312: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 313: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 314: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 314 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.5
+
+#### Day 315: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.6
+
+#### Day 316: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 316 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.7
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.7
+
+#### Day 317: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.8
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.8
+
+#### Day 318: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 319: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 320: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 320 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.74.9
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.74.9
+
+#### Day 321: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.0
+
+#### Day 322: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 322 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.1
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.1
+
+#### Day 323: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.2
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.2
+
+#### Day 324: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 325: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 326: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 326 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.3
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.3
+
+#### Day 327: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.4
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.4
+
+#### Day 328: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 328 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.5
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.5
+
+#### Day 329: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.6
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.6
+
+#### Day 330: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 331: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 332: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 332 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.7
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.7
+
+#### Day 333: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.8
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.8
+
+#### Day 334: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 334 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.75.9
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.75.9
+
+#### Day 335: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.0
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.0
+
+#### Day 336: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 337: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 338: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 338 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.1
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.1
+
+#### Day 339: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.2
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.2
+
+#### Day 340: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 340 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.3
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.3
+
+#### Day 341: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.4
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.4
+
+#### Day 342: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 343: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 344: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 344 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.5
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.5
+
+#### Day 345: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.6
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.6
+
+#### Day 346: Master Effects State Tests (2026-04-23)
+- **Feature**: Added 10 new unit tests for Master Effects state management functions
+- **Files Modified**:
+  - `js/tests.js`: Added 10 new tests in Day 346 section:
+    - `Master Effects - getMasterEffectsState returns array` - Validates return type
+    - `Master Effects - addMasterEffectToState creates effect` - Validates effect creation with custom params, correct ID prefix, type and params are set
+    - `Master Effects - addMasterEffectToState with default params` - Validates effect creation with default params fallback
+    - `Master Effects - removeMasterEffectFromState removes effect` - Validates effect removal from state
+    - `Master Effects - removeMasterEffectFromState handles unknown id` - Validates graceful handling of nonexistent IDs
+    - `Master Effects - updateMasterEffectParamInState updates param` - Validates param updates via dot-path
+    - `Master Effects - updateMasterEffectParamInState handles nested param path` - Validates nested param updates
+    - `Master Effects - updateMasterEffectParamInState handles unknown effect` - Validates graceful handling
+    - `Master Effects - reorderMasterEffectInState reorders effect` - Validates effect chain reordering
+    - `Master Effects - reorderMasterEffectInState handles same index` - Validates no-op reordering
+    - `Master Effects - reorderMasterEffectInState handles invalid index` - Validates graceful handling of invalid indices
+    - `Master Effects - multiple effects can be added and removed` - Validates bulk add/remove operations
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.7
+- **Feature Details**:
+  - Tests validate return types (boolean, string/null, number/null)
+  - Tests validate initial state values (all null/false by default)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate type coercion (strings, numbers coerce to booleans)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.7
+
+#### Day 347: Audio Recording Tests (2026-04-23)
+- **Feature**: Added 23 new unit tests for Audio Recording functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests covering:
+    - addAudioClip function tests: existence, async behavior, invalid blob handling, empty blob handling, clip structure validation, default property values, clip name counter incrementing
+    - Audio recording constants edge cases: input gain clamping at min/max boundaries, monitoring volume range validation
+    - Recording state function signature tests: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - Recording function signature tests: startAudioRecording, stopAudioRecording, setRecordingInputGain existence and parameter counts
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.8
+- **Feature Details**:
+  - Tests verify Track.addAudioClip method exists and handles edge cases (null blob, empty blob)
+  - Tests validate addAudioClip creates clips with correct structure and default properties (gain: 1.0, playbackRate: 1.0, startOffset: 0, crossfade: 0, fadeIn: 0, fadeOut: 0, reverse: false)
+  - Tests verify audio recording constants are properly defined with valid ranges
+  - Tests validate recording state and function signatures
+  - Tests verify function parameter counts match expected API
+  - Total test count increased from 498 to 521 tests
+- **Backend Note**: The addAudioClip method in Track.js handles converting recorded audio blobs into timeline clips for Audio tracks. The tests verify the method's behavior without requiring actual audio recording or database access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.8
+
+#### Day 348: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+#### Day 349: Test Runner runTests Export Fix (2026-04-23)
+- **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
+- **Files Modified**:
+  - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`
+  - `js/tests.js`: Removed duplicate `runTests` export (now provided by testRunner.js)
+  - `js/constants.js`: Bumped APP_VERSION to 0.67.1
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.67.1
+
+
+#### Day 350: Recording Integration Tests (2026-04-23)
+- **Feature**: Added 11 new unit tests for recording constants and configuration validation
+- **Files Modified**:
+  - `js/tests.js`: Added 11 new tests in Day 350 section:
+    - Recording constants: RECORDING_SAMPLE_RATE is 44100, RECORDING_NUM_CHANNELS is valid, RECORDING_BIT_DEPTH is 16, RECORDING_MIME_TYPE is valid
+    - Input gain: Input gain range constants are valid, Monitoring volume range is valid
+    - Recording limits: Max recording length is reasonable, Min recording length is valid
+    - Audio processing: Echo cancellation disabled, Auto gain control disabled, Noise suppression disabled, Latency hint is reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 0.76.9
+- **Feature Details**:
+  - Tests validate recording quality constants (44.1kHz sample rate, 16-bit depth, mono)
+  - Tests validate input gain range (0-2.0, with default 1.0)
+  - Tests validate monitoring volume range (0-1 range)
+  - Tests validate recording length limits (0.1s min, 600s max)
+  - Tests validate audio processing constraints are disabled for clean recording
+  - Total test count increased from 168 to 179 tests
+- **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.76.9
+
+#### Day 351: Comprehensive State Management Tests (2026-04-23)
+- **Feature**: Added 36 new unit tests for state management functions that lacked test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added comprehensive tests for:
+    - Time Signature: `getTimeSignatureState`, `getTimeSignatureNumeratorState`, `setTimeSignatureNumeratorState`, `getTimeSignatureDenominatorState`, `setTimeSignatureDenominatorState`, `setTimeSignatureState` - validates state object structure, type checking, and roundtrip updates
+    - Ghost Track: `getGhostTrackIdState` (null default), `setGhostTrackIdState` - validates null/string handling
+    - Timeline Markers: `addTimelineMarkerState`, `getTimelineMarkerByIdState`, `setTimelineMarkerState`, `removeTimelineMarkerState`, `clearTimelineMarkersState` - validates CRUD operations and edge cases
+    - Send Tracks: `getSendTracksState`, `getSendTrackByIdState` (with unknown ID), `addSendTrackState`, `setSendTrackMutedState` - validates send bus management
+    - Track Groups: `getTrackGroupsState`, `addTrackGroupState`, `setTrackGroupNameState` - validates group management and cleanup
+    - Track Templates: `getTrackTemplatesState`, `getTrackTemplateByIdState` (unknown), `addTrackTemplateState`, `updateTrackTemplateState`, `removeTrackTemplateState` - validates template CRUD
+    - Chord Mode: `getChordModeState`, `getChordModeEnabledState`, `setChordModeEnabledState`, `getChordModeTypeState`, `setChordModeTypeState`, `getChordVoicingState`, `setChordVoicingState` - validates chord mode configuration
+  - `js/constants.js`: Bumped APP_VERSION to 0.77.0
+- **Feature Details**:
+  - Tests validate return types (arrays, objects, numbers, booleans, strings)
+  - Tests validate state mutations via roundtrip validation (set then get)
+  - Tests validate edge cases (nonexistent IDs, null defaults)
+  - Tests validate clamping behavior (swing amount, chord root)
+  - Tests validate multiple sequential updates
+  - All tests use state functions imported from `js/state.js`
+  - Total test count increased from 237 to 247 tests
+- **Backend Note**: These state functions are used throughout the application for managing DAW state. The tests verify the state API without requiring full application context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.77.0
+
+#### Day 352: Master Effects State

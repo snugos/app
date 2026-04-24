@@ -26,6 +26,11 @@ let masterGainValueState = (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone
 let midiAccessGlobal = null;
 let activeMIDIInputGlobal = null;
 
+// MIDI Learn State
+let midiLearnMappings = []; // Array of MIDI Learn mapping objects
+let midiLearnMode = false; // When true, next CC message creates a new mapping
+let midiLearnPendingParam = null; // Parameter info waiting to be mapped to incoming CC
+
 // Sound Browser State
 let loadedZipFilesGlobal = {};
 let soundLibraryFileTreesGlobal = {};
@@ -261,6 +266,54 @@ export function getMasterGainValueState() { return masterGainValueState; }
 
 export function getMidiAccessState() { return midiAccessGlobal; }
 export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
+
+// MIDI Learn state functions
+export function getMidiLearnMappingsState() { return [...midiLearnMappings]; }
+export function getMidiLearnModeState() { return midiLearnMode; }
+export function setMidiLearnModeState(mode) { midiLearnMode = !!mode; }
+export function getMidiLearnPendingParamState() { return midiLearnPendingParam; }
+export function setMidiLearnPendingParamState(param) { midiLearnPendingParam = param; }
+
+export function addMidiLearnMapping(mapping) {
+    if (midiLearnMappings.length >= Constants.MAX_MIDI_LEARN_MAPPINGS) {
+        console.warn("[State] Max MIDI Learn mappings reached");
+        return false;
+    }
+    const newMapping = { ...Constants.DEFAULT_MIDI_LEARN_MAPPING, ...mapping };
+    midiLearnMappings.push(newMapping);
+    return true;
+}
+
+export function removeMidiLearnMapping(index) {
+    if (index >= 0 && index < midiLearnMappings.length) {
+        midiLearnMappings.splice(index, 1);
+        return true;
+    }
+    return false;
+}
+
+export function clearMidiLearnMappings() {
+    midiLearnMappings = [];
+}
+
+export function findMidiLearnMapping(channel, cc) {
+    return midiLearnMappings.findIndex(m => m.channel === channel && m.cc === cc);
+}
+
+export function updateMidiLearnMapping(index, updates) {
+    if (index >= 0 && index < midiLearnMappings.length) {
+        midiLearnMappings[index] = { ...midiLearnMappings[index], ...updates };
+        return true;
+    }
+    return false;
+}
+
+export function getMidiLearnMappingByIndex(index) {
+    if (index >= 0 && index < midiLearnMappings.length) {
+        return { ...midiLearnMappings[index] };
+    }
+    return null;
+}
 
 export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
 export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
