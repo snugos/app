@@ -338,6 +338,9 @@ export function findMidiLearnMapping(channel, cc) {
 
 export function updateMidiLearnMapping(index, updates) {
     if (index >= 0 && index < midiLearnMappings.length) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Update MIDI Learn Mapping`);
+        }
         midiLearnMappings[index] = { ...midiLearnMappings[index], ...updates };
         return true;
     }
