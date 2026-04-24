@@ -68,8 +68,8 @@ import {
     zoomOutVerticalTimeline,
     resetTimelineZoom,
     // Send Tracks state
-    getSendTracksState: getSendTracks,
-    getSendTrackByIdState: getSendTrackById,
+    getSendTracksState,
+    getSendTrackByIdState,
     getTrackSendsState,
     getTrackSendLevelState,
     getTrackSendPreFaderState,
