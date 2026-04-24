@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.70.1'; // Day 182: MIDI Learn mixer integration - Added undo capture and MIDI Learn binding support for mixer volume and pan controls
+export const APP_VERSION = '0.70.2'; // Day 183: MIDI Learn - Added project save/load persistence for MIDI Learn mappings
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

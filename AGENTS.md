@@ -645,6 +645,20 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Version**: Bumped to 0.69.0
 
 #### Day 108: Test Runner runTests Export Fix (2026-04-23)
+
+#### Day 183: MIDI Learn Project Persistence (2026-04-24)
+- **Feature**: Added MIDI Learn mappings persistence to project save/load
+- **Files Modified**:
+  - `js/state.js`:
+    - Added `midiLearnMappings: JSON.parse(JSON.stringify(getMidiLearnMappingsState()))` to globalSettings in `gatherProjectDataInternal()`
+    - Added restoration code in `reconstructDAWInternal()` to restore MIDI Learn mappings from project data with proper DEFAULT_MIDI_LEARN_MAPPING structure
+    - Calls `appServices.updateMidiLearnMappingsUI()` after restoration to update the UI
+- **Feature Details**:
+  - MIDI Learn mappings are now saved with project data and restored on load
+  - Mappings preserve channel, CC number, track ID, parameter type, parameter path, and min/max range
+  - After restoring mappings, the UI is updated to show the current mappings
+  - This ensures users don't lose their MIDI controller setups when saving/loading projects
+- **Version**: Bumped to 0.70.2
 - **Bug Fix**: Fixed missing `runTests` export in testRunner.js that prevented browser console test execution
 - **Files Modified**:
   - `js/testRunner.js`: Added `runTests` async export function that calls `TestRunner.runAll(window.showNotification)` and properly exports `TestRunner` and `TestRunner.default`

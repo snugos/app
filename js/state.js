@@ -1037,6 +1037,7 @@ export function gatherProjectDataInternal() {
                 loopRegion: getLoopRegionState(),
                 swing: getSwingState(),
                 timelineMarkers: JSON.parse(JSON.stringify(getTimelineMarkersState())),
+                midiLearnMappings: JSON.parse(JSON.stringify(getMidiLearnMappingsState())),
             },
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,
@@ -1185,6 +1186,15 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         setPlaybackModeStateInternal(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');
         if (appServices && appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
         setHighestZState(Number.isFinite(gs.highestZIndex) ? gs.highestZIndex : 100);
+
+        // MIDI Learn mappings restoration
+        if (gs.midiLearnMappings && Array.isArray(gs.midiLearnMappings)) {
+            midiLearnMappings = gs.midiLearnMappings.map(m => ({ ...Constants.DEFAULT_MIDI_LEARN_MAPPING, ...m }));
+            if (appServices && appServices.updateMidiLearnMappingsUI) {
+                appServices.updateMidiLearnMappingsUI();
+            }
+        }
+
         // Armed and Soloed will be set after tracks are created
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error applying global settings:", error);
