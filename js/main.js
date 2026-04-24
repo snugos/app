@@ -400,6 +400,13 @@ import {
             }
         } catch (error) { console.warn("[Main updateMasterEffectsRackUI] Error:", error); }
     },
+    updateMidiLearnMappingsUI: () => {
+        try {
+            if (localAppServices.updateMidiLearnMappingsList) {
+                localAppServices.updateMidiLearnMappingsList();
+            }
+        } catch (error) { console.warn("[Main updateMidiLearnMappingsUI] Error:", error); }
+    },
     triggerCustomBackgroundUpload: () => {
         if (uiElementsCache.customBgInput) uiElementsCache.customBgInput.click();
         else console.warn("Custom background input element not found in cache.");
