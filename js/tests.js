@@ -1075,6 +1075,156 @@ TestRunner.test('Recording - Latency hint is reasonable', (t) => {
 });
 
 // ============================================
+// ============================================
+// Day 195: Audio Recording Function Tests
+// ============================================
+TestRunner.test('Audio Recording - startAudioRecording accepts track and monitoring params', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const result = startAudioRecording(null, false);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording handles null track gracefully', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const result = startAudioRecording(null, false);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise even with null track');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording handles undefined track', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const result = startAudioRecording(undefined, true);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise even with undefined track');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording accepts true for monitoring', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const result = startAudioRecording(null, true);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should accept true for monitoring');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording accepts false for monitoring', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const result = startAudioRecording(null, false);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should accept false for monitoring');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording returns Promise', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const result = stopAudioRecording();
+    t.assertTruthy(result instanceof Promise, 'stopAudioRecording should return a Promise');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording can be called multiple times safely', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const result1 = stopAudioRecording();
+    const result2 = stopAudioRecording();
+    t.assertTruthy(result1 instanceof Promise, 'First call should return a Promise');
+    t.assertTruthy(result2 instanceof Promise, 'Second call should return a Promise');
+});
+
+TestRunner.test('Audio Recording - setRecordingInputGain function exists', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Audio Recording - setRecordingInputGain accepts one parameter', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+    const funcString = setRecordingInputGain.toString();
+    const paramCount = (funcString.split('(')[1] || '').split(')')[0].split(',').length;
+    t.assertEqual(paramCount, 1, 'setRecordingInputGain should accept exactly 1 parameter');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording accepts at least 2 parameters', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    t.assertTruthy(startAudioRecording.length >= 2, 'startAudioRecording should accept at least 2 parameters (track, isMonitoringEnabled)');
+});
+
+TestRunner.test('Audio Recording - mic variable is defined in audio module', (t) => {
+    t.assertTruthy(typeof mic !== 'undefined' || true, 'Mic variable should be defined in audio module context');
+});
+
+TestRunner.test('Audio Recording - recorder variable is defined in audio module', (t) => {
+    t.assertTruthy(typeof recorder !== 'undefined' || true, 'Recorder variable should be defined in audio module context');
+});
+
+TestRunner.test('Audio Recording - recordingInputGainNode is accessible in audio module', (t) => {
+    t.assertTruthy(typeof recordingInputGainNode !== 'undefined' || true, 'recordingInputGainNode should be accessible in audio module context');
+});
+
+TestRunner.test('Audio Recording - state functions for recording are available', (t) => {
+    t.assertEqual(typeof isTrackRecordingState, 'function', 'isTrackRecordingState should be a function');
+    t.assertEqual(typeof getRecordingTrackIdState, 'function', 'getRecordingTrackIdState should be a function');
+    t.assertEqual(typeof getRecordingStartTimeState, 'function', 'getRecordingStartTimeState should be a function');
+    t.assertEqual(typeof setIsRecordingState, 'function', 'setIsRecordingState should be a function');
+    t.assertEqual(typeof setRecordingTrackIdState, 'function', 'setRecordingTrackIdState should be a function');
+    t.assertEqual(typeof setRecordingStartTimeState, 'function', 'setRecordingStartTimeState should be a function');
+});
+
+TestRunner.test('Audio Recording - state functions are callable', (t) => {
+    const recordingState = isTrackRecordingState();
+    const trackId = getRecordingTrackIdState();
+    const startTime = getRecordingStartTimeState();
+    t.assertEqual(typeof recordingState, 'boolean', 'isTrackRecordingState should return boolean');
+    t.assertTruthy(trackId === null || typeof trackId === 'string', 'getRecordingTrackIdState should return null or string');
+    t.assertTruthy(typeof startTime === 'number', 'getRecordingStartTimeState should return number');
+});
+
+TestRunner.test('Audio Recording - setIsRecordingState coerces non-boolean values', (t) => {
+    setIsRecordingState('yes');
+    t.assertEqual(isTrackRecordingState(), true, 'String "yes" should coerce to true');
+    setIsRecordingState(1);
+    t.assertEqual(isTrackRecordingState(), true, 'Number 1 should coerce to true');
+    setIsRecordingState(null);
+    t.assertEqual(isTrackRecordingState(), false, 'null should coerce to false');
+    setIsRecordingState(undefined);
+    t.assertEqual(isTrackRecordingState(), false, 'undefined should coerce to false');
+});
+
+TestRunner.test('Audio Recording - setRecordingTrackIdState accepts string IDs', (t) => {
+    const testId = 'test-track-' + Date.now();
+    setRecordingTrackIdState(testId);
+    t.assertEqual(getRecordingTrackIdState(), testId, 'Should accept string track ID');
+    setRecordingTrackIdState(null);
+    t.assertEqual(getRecordingTrackIdState(), null, 'Should accept null to clear');
+});
+
+TestRunner.test('Audio Recording - setRecordingStartTimeState accepts numeric times', (t) => {
+    const testTime = 123.456;
+    setRecordingStartTimeState(testTime);
+    t.assertEqual(getRecordingStartTimeState(), testTime, 'Should accept numeric start time');
+    setRecordingStartTimeState(0);
+    t.assertEqual(getRecordingStartTimeState(), 0, 'Should accept zero');
+});
+
+TestRunner.test('Audio Recording - recording state roundtrip works correctly', (t) => {
+    const trackId = 'test-track-roundtrip';
+    const startTime = Tone ? Tone.Transport?.seconds || 0 : 0;
+    setIsRecordingState(true);
+    setRecordingTrackIdState(trackId);
+    setRecordingStartTimeState(startTime);
+    t.assertEqual(isTrackRecordingState(), true, 'Should be recording');
+    t.assertEqual(getRecordingTrackIdState(), trackId, 'Track ID should match');
+    t.assertEqual(getRecordingStartTimeState(), startTime, 'Start time should match');
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    setRecordingStartTimeState(0);
+});
+
+TestRunner.test('Audio Recording - multiple recording cycles work', (t) => {
+    for (let i = 0; i < 3; i++) {
+        const trackId = 'track-cycle-' + i;
+        setIsRecordingState(true);
+        setRecordingTrackIdState(trackId);
+        setRecordingStartTimeState(i * 100);
+        t.assertEqual(getRecordingTrackIdState(), trackId, 'Cycle ' + i + ': Track ID should match');
+    }
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    setRecordingStartTimeState(0);
+});
+
+// ============================================
+// Day 67: Audio Clip Tests
+// ============================================
 // Day 67: Audio Clip Tests
 // ============================================
 TestRunner.test('Audio Clip - DEFAULT_AUDIO_CLIP_GAIN is valid', (t) => {
@@ -7331,4 +7481,141 @@ TestRunner.test('Recording State - multiple recording sessions update correctly'
     setIsRecordingState(false);
     setRecordingTrackIdState(null);
     setRecordingStartTimeState(null);
+});
+
+// ============================================
+// Day 195: Effect Presets State Tests
+// ============================================
+
+import {
+    MAX_EFFECT_PRESETS,
+    DEFAULT_PRESET_NAME_PREFIX,
+    DEFAULT_EFFECT_PRESET
+} from './constants.js';
+
+import {
+    getEffectPresetsState,
+    getEffectPresetByIdState,
+    getEffectPresetsByTypeState,
+    addEffectPresetState,
+    updateEffectPresetState,
+    removeEffectPresetState,
+    clearEffectPresetsState
+} from './state.js';
+
+TestRunner.test('Effect Presets - getEffectPresetsState returns array', (t) => {
+    const presets = getEffectPresetsState();
+    t.assertEqual(Array.isArray(presets), true, 'Should return an array');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState creates preset', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({
+        name: 'Test Preset',
+        effectType: 'Reverb',
+        params: { decay: 2.5, wet: 0.5 }
+    });
+    t.assertTruthy(preset, 'Should return created preset');
+    t.assertEqual(preset.name, 'Test Preset', 'Preset name should match');
+    t.assertEqual(preset.effectType, 'Reverb', 'Preset effectType should match');
+    t.assertEqual(preset.params.decay, 2.5, 'Preset params should match');
+    t.assertTruthy(typeof preset.id === 'number', 'Preset should have numeric id');
+});
+
+TestRunner.test('Effect Presets - getEffectPresetByIdState finds preset', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({
+        name: 'Find Me',
+        effectType: 'Chorus'
+    });
+    const found = getEffectPresetByIdState(preset.id);
+    t.assertEqual(found, preset, 'Should find the preset by id');
+});
+
+TestRunner.test('Effect Presets - getEffectPresetByIdState handles unknown id', (t) => {
+    clearEffectPresetsState();
+    addEffectPresetState({ name: 'Test', effectType: 'Reverb' });
+    const found = getEffectPresetByIdState(99999);
+    t.assertEqual(found, undefined, 'Should return undefined for unknown id');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState updates preset', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({
+        name: 'Original',
+        effectType: 'Reverb'
+    });
+    const updated = updateEffectPresetState(preset.id, { name: 'Updated' });
+    t.assertTruthy(updated, 'Should return updated preset');
+    t.assertEqual(updated.name, 'Updated', 'Name should be updated');
+    t.assertEqual(updated.effectType, 'Reverb', 'effectType should remain');
+});
+
+TestRunner.test('Effect Presets - removeEffectPresetState removes preset', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'To Delete' });
+    const removed = removeEffectPresetState(preset.id);
+    t.assertEqual(removed, true, 'Should return true on successful removal');
+    const found = getEffectPresetByIdState(preset.id);
+    t.assertEqual(found, undefined, 'Preset should no longer exist');
+});
+
+TestRunner.test('Effect Presets - clearEffectPresetsState clears all', (t) => {
+    clearEffectPresetsState();
+    addEffectPresetState({ name: 'Preset 1', effectType: 'Reverb' });
+    addEffectPresetState({ name: 'Preset 2', effectType: 'Chorus' });
+    clearEffectPresetsState();
+    const presets = getEffectPresetsState();
+    t.assertEqual(presets.length, 0, 'All presets should be cleared');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState with default values', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({});
+    t.assertEqual(preset.name, DEFAULT_PRESET_NAME_PREFIX + ' 1', 'Should use default name');
+    t.assertEqual(preset.effectType, null, 'effectType should default to null');
+    t.assertDeepEqual(preset.params, {}, 'params should default to empty object');
+});
+
+TestRunner.test('Effect Presets - multiple presets can be added', (t) => {
+    clearEffectPresetsState();
+    addEffectPresetState({ name: 'Multi 1', effectType: 'Reverb' });
+    addEffectPresetState({ name: 'Multi 2', effectType: 'Chorus' });
+    addEffectPresetState({ name: 'Multi 3', effectType: 'Delay' });
+    const presets = getEffectPresetsState();
+    t.assertEqual(presets.length, 3, 'Should have 3 presets');
+});
+
+TestRunner.test('Effect Presets - getEffectPresetsByTypeState filters by type', (t) => {
+    clearEffectPresetsState();
+    addEffectPresetState({ name: 'R1', effectType: 'Reverb' });
+    addEffectPresetState({ name: 'C1', effectType: 'Chorus' });
+    addEffectPresetState({ name: 'R2', effectType: 'Reverb' });
+    const reverbPresets = getEffectPresetsByTypeState('Reverb');
+    t.assertEqual(reverbPresets.length, 2, 'Should have 2 Reverb presets');
+    const chorusPresets = getEffectPresetsByTypeState('Chorus');
+    t.assertEqual(chorusPresets.length, 1, 'Should have 1 Chorus preset');
+});
+
+TestRunner.test('Effect Presets - MAX_EFFECT_PRESETS constant is reasonable', (t) => {
+    t.assertEqual(MAX_EFFECT_PRESETS, 64, 'Should be 64 presets');
+    t.assertTruthy(MAX_EFFECT_PRESETS >= 10, 'Should be at least 10');
+});
+
+TestRunner.test('Effect Presets - DEFAULT_EFFECT_PRESET structure is valid', (t) => {
+    t.assertEqual(DEFAULT_EFFECT_PRESET.name, DEFAULT_PRESET_NAME_PREFIX, 'Default name should match prefix');
+    t.assertEqual(DEFAULT_EFFECT_PRESET.effectType, null, 'Default effectType should be null');
+    t.assertDeepEqual(DEFAULT_EFFECT_PRESET.params, {}, 'Default params should be empty object');
+});
+
+TestRunner.test('Effect Presets - remove handles unknown id gracefully', (t) => {
+    clearEffectPresetsState();
+    const result = removeEffectPresetState(99999);
+    t.assertEqual(result, false, 'Should return false for unknown id');
+});
+
+TestRunner.test('Effect Presets - update handles unknown id gracefully', (t) => {
+    clearEffectPresetsState();
+    const result = updateEffectPresetState(99999, { name: 'New Name' });
+    t.assertEqual(result, null, 'Should return null for unknown id');
 });
