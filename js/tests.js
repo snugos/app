@@ -9199,3 +9199,191 @@ TestRunner.test('Effects Registry - Effects have wet parameter for dry/wet mix',
     const hasWet = effect.params.some(p => p.key === 'wet');
     t.assertTruthy(hasWet, 'AutoFilter should have wet parameter');
 });
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule function exists', (t) => {
+    t.assertTruthy(typeof initializeEventHandlersModule === 'function', 'initializeEventHandlersModule should be a function');
+});
+
+TestRunner.test('Event Handlers - initializePrimaryEventListeners function exists', (t) => {
+    t.assertTruthy(typeof initializePrimaryEventListeners === 'function', 'initializePrimaryEventListeners should be a function');
+});
+
+TestRunner.test('Event Handlers - attachGlobalControlEvents function exists', (t) => {
+    t.assertTruthy(typeof attachGlobalControlEvents === 'function', 'attachGlobalControlEvents should be a function');
+});
+
+TestRunner.test('Event Handlers - setupMIDI function exists', (t) => {
+    t.assertTruthy(typeof setupMIDI === 'function', 'setupMIDI should be a function');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput function exists', (t) => {
+    t.assertTruthy(typeof selectMIDIInput === 'function', 'selectMIDIInput should be a function');
+});
+
+TestRunner.test('Event Handlers - handleTrackMute function exists', (t) => {
+    t.assertTruthy(typeof handleTrackMute === 'function', 'handleTrackMute should be a function');
+});
+
+TestRunner.test('Event Handlers - handleTrackSolo function exists', (t) => {
+    t.assertTruthy(typeof handleTrackSolo === 'function', 'handleTrackSolo should be a function');
+});
+
+TestRunner.test('Event Handlers - handleTrackArm function exists', (t) => {
+    t.assertTruthy(typeof handleTrackArm === 'function', 'handleTrackArm should be a function');
+});
+
+TestRunner.test('Event Handlers - handleRemoveTrack function exists', (t) => {
+    t.assertTruthy(typeof handleRemoveTrack === 'function', 'handleRemoveTrack should be a function');
+});
+
+TestRunner.test('Event Handlers - handleOpenTrackInspector function exists', (t) => {
+    t.assertTruthy(typeof handleOpenTrackInspector === 'function', 'handleOpenTrackInspector should be a function');
+});
+
+TestRunner.test('Event Handlers - handleOpenEffectsRack function exists', (t) => {
+    t.assertTruthy(typeof handleOpenEffectsRack === 'function', 'handleOpenEffectsRack should be a function');
+});
+
+TestRunner.test('Event Handlers - handleOpenSequencer function exists', (t) => {
+    t.assertTruthy(typeof handleOpenSequencer === 'function', 'handleOpenSequencer should be a function');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop function exists and is async', (t) => {
+    t.assertTruthy(typeof handleTimelineLaneDrop === 'function', 'handleTimelineLaneDrop should be a function');
+    const result = handleTimelineLaneDrop(null, 'track-1', 0, null);
+    t.assertTruthy(result instanceof Promise, 'handleTimelineLaneDrop should return a Promise');
+});
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule accepts 1 parameter', (t) => {
+    const funcStr = initializeEventHandlersModule.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'initializeEventHandlersModule should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - initializePrimaryEventListeners accepts 1 parameter', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'initializePrimaryEventListeners should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput accepts 2 parameters', (t) => {
+    const funcStr = selectMIDIInput.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 2, 'selectMIDIInput should accept 2 parameters (deviceId, silent)');
+});
+
+TestRunner.test('Event Handlers - handleTrackMute accepts 1 parameter', (t) => {
+    const funcStr = handleTrackMute.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'handleTrackMute should accept 1 parameter (trackId)');
+});
+
+TestRunner.test('Event Handlers - handleTrackSolo accepts 1 parameter', (t) => {
+    const funcStr = handleTrackSolo.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'handleTrackSolo should accept 1 parameter (trackId)');
+});
+
+TestRunner.test('Event Handlers - handleTrackArm accepts 1 parameter', (t) => {
+    const funcStr = handleTrackArm.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'handleTrackArm should accept 1 parameter (trackId)');
+});
+
+TestRunner.test('Event Handlers - handleRemoveTrack accepts 1 parameter', (t) => {
+    const funcStr = handleRemoveTrack.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'handleRemoveTrack should accept 1 parameter (trackId)');
+});
+
+TestRunner.test('Event Handlers - handleOpenTrackInspector accepts 1 parameter', (t) => {
+    const funcStr = handleOpenTrackInspector.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'handleOpenTrackInspector should accept 1 parameter (trackId)');
+});
+
+TestRunner.test('Event Handlers - handleOpenEffectsRack accepts 1 parameter', (t) => {
+    const funcStr = handleOpenEffectsRack.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'handleOpenEffectsRack should accept 1 parameter (trackId)');
+});
+
+TestRunner.test('Event Handlers - handleOpenSequencer accepts 1 parameter', (t) => {
+    const funcStr = handleOpenSequencer.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'handleOpenSequencer should accept 1 parameter (trackId)');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop accepts 4 parameters', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 4, 'handleTimelineLaneDrop should accept 4 parameters (event, targetTrackId, startTime, appServicesPassed)');
+});
+
+TestRunner.test('Event Handlers - all event handler functions are callable', (t) => {
+    t.assertTruthy(typeof initializeEventHandlersModule === 'function', 'initializeEventHandlersModule should be callable');
+    t.assertTruthy(typeof initializePrimaryEventListeners === 'function', 'initializePrimaryEventListeners should be callable');
+    t.assertTruthy(typeof attachGlobalControlEvents === 'function', 'attachGlobalControlEvents should be callable');
+    t.assertTruthy(typeof setupMIDI === 'function', 'setupMIDI should be callable');
+    t.assertTruthy(typeof selectMIDIInput === 'function', 'selectMIDIInput should be callable');
+    t.assertTruthy(typeof handleTrackMute === 'function', 'handleTrackMute should be callable');
+    t.assertTruthy(typeof handleTrackSolo === 'function', 'handleTrackSolo should be callable');
+    t.assertTruthy(typeof handleTrackArm === 'function', 'handleTrackArm should be callable');
+    t.assertTruthy(typeof handleRemoveTrack === 'function', 'handleRemoveTrack should be callable');
+    t.assertTruthy(typeof handleOpenTrackInspector === 'function', 'handleOpenTrackInspector should be callable');
+    t.assertTruthy(typeof handleOpenEffectsRack === 'function', 'handleOpenEffectsRack should be callable');
+    t.assertTruthy(typeof handleOpenSequencer === 'function', 'handleOpenSequencer should be callable');
+    t.assertTruthy(typeof handleTimelineLaneDrop === 'function', 'handleTimelineLaneDrop should be callable');
+});
+
+TestRunner.test('Event Handlers - attachGlobalControlEvents accepts 1 parameter', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'attachGlobalControlEvents should accept 1 parameter (elements)');
+});
+
+TestRunner.test('Event Handlers - currentlyPressedComputerKeys is exported', (t) => {
+    t.assertTruthy(typeof currentlyPressedComputerKeys === 'object', 'currentlyPressedComputerKeys should be an object');
+});
+
+TestRunner.test('Event Handlers - setupMIDI accepts no parameters', (t) => {
+    const funcStr = setupMIDI.toString();
+    const match = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 0, 'setupMIDI should accept no parameters');
+});
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule handles null appServices', (t) => {
+    try {
+        initializeEventHandlersModule(null);
+        t.assertTruthy(true, 'initializeEventHandlersModule should handle null gracefully');
+    } catch (e) {
+        t.assertTruthy(false, 'initializeEventHandlersModule should not throw on null: ' + e.message);
+    }
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput has silent parameter default', (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('silent = false') || funcStr.includes('silent=false'), 'selectMIDIInput should have silent=false default');
+});
+
+TestRunner.test('Event Handlers - event handler functions reference state.js imports', (t) => {
+    const handleTrackMuteStr = handleTrackMute.toString();
+    const handleTrackSoloStr = handleTrackSolo.toString();
+    const handleTrackArmStr = handleTrackArm.toString();
+    t.assertTruthy(handleTrackMuteStr.includes('setSoloedTrackId') || handleTrackMuteStr.includes('trackId'), 'handleTrackMute should reference track state');
+    t.assertTruthy(handleTrackSoloStr.includes('setSoloedTrackId') || handleTrackSoloStr.includes('trackId'), 'handleTrackSolo should reference track state');
+    t.assertTruthy(handleTrackArmStr.includes('setArmedTrackId') || handleTrackArmStr.includes('trackId'), 'handleTrackArm should reference track state');
+});

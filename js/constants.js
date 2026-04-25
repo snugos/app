@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.14.0'; // Day 231: Recording Input Gain & Monitoring Tests
+export const APP_VERSION = '1.15.0'; // Day 232: Event Handler Function Tests
 
 
 // Performance Monitor Constants

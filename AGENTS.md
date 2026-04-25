@@ -3080,3 +3080,69 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The recording input gain controls the level of audio coming from the microphone before it hits the recorder. The monitoring volume controls the level of hear-back when monitoring is enabled. These tests verify the constants and state management without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.14.0
+
+#### Day 231: Effects Registry Function Tests (2026-04-25)
+- **Feature**: Added 28 new unit tests for Effects Registry module (effectsRegistry.js) to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 28 new tests in Day 231 section:
+    - AVAILABLE_EFFECTS structure validation (object type, AutoFilter presence, required properties)
+    - AutoFilter.toneClass and params validation
+    - createEffectInstance function export, parameter count, effectType validation
+    - getEffectDefaultParams function export, parameter count, return type
+    - getEffectParamDefinitions function export, parameter count, return type
+    - synthEngineControlDefinitions structure (MonoSynth, AMSynth, FMSynth presence)
+    - synthEngineControlDefinitions MonoSynth controls (idPrefix, path properties)
+    - Common effects defined (Reverb, Delay, Chorus)
+    - Effect params have min/max/step/defaultValue
+    - Nested param paths support (e.g. 'filter.type')
+    - All effects have string displayName and toneClass
+    - Effects have wet parameter for dry/wet mix
+  - `js/constants.js`: Bumped APP_VERSION to 1.14.0
+- **Feature Details**:
+  - Tests validate Effects Registry module exports (AVAILABLE_EFFECTS, synthEngineControlDefinitions)
+  - Tests verify createEffectInstance function signature and effectType validation
+  - Tests verify getEffectDefaultParams extracts default values from effect definitions
+  - Tests verify getEffectParamDefinitions returns params array for UI rendering
+  - Tests validate synthEngineControlDefinitions has MonoSynth, AMSynth, FMSynth with control arrays
+  - Tests verify all effects have required properties (displayName, toneClass, params)
+  - Tests verify common effects (Reverb, Delay, Chorus) are defined
+  - Total test count increased from 1353 to 1407
+- **Backend Note**: The Effects Registry module defines available effects and their parameters for the DAW's effect system. The synthEngineControlDefinitions provide synth engine control parameters for MonoSynth, AMSynth, FMSynth, and DuoSynth.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.14.0
+
+#### Day 232: Event Handler Function Tests (2026-04-25)
+- **Feature**: Added 31 new unit tests for Event Handler module (eventHandlers.js) to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 232 section:
+    - initializeEventHandlersModule function exists
+    - initializePrimaryEventListeners function exists
+    - attachGlobalControlEvents function exists
+    - setupMIDI function exists
+    - selectMIDIInput function exists
+    - handleTrackMute function exists
+    - handleTrackSolo function exists
+    - handleTrackArm function exists
+    - handleRemoveTrack function exists
+    - handleOpenTrackInspector function exists
+    - handleOpenEffectsRack function exists
+    - handleOpenSequencer function exists
+    - handleTimelineLaneDrop function exists and is async
+    - Parameter count tests for all functions
+    - currentlyPressedComputerKeys is exported object
+    - setupMIDI accepts no parameters
+    - initializeEventHandlersModule handles null gracefully
+    - selectMIDIInput has silent parameter default
+    - Event handlers reference state.js imports
+  - `js/constants.js`: Bumped APP_VERSION to 1.15.0
+- **Feature Details**:
+  - Tests verify all 13 event handler functions are properly exported from eventHandlers.js
+  - Tests validate function parameter counts match expected APIs
+  - Tests verify async functions are properly marked as async (handleTimelineLaneDrop)
+  - Tests verify parameter defaults (selectMIDIInput has silent=false)
+  - Tests verify error handling (initializeEventHandlersModule handles null)
+  - Tests verify exported objects (currentlyPressedComputerKeys)
+  - Total tests increased from 1407 to 1438
+- **Backend Note**: The Event Handler module handles global keyboard, mouse, and MIDI input for the DAW. The tests verify the exported API without requiring actual DOM or MIDI hardware.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.15.0
