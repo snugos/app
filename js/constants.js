@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.05.0'; // Day 221: Swing State & Window Store Tests
+export const APP_VERSION = '1.06.0'; // Day 223: Timeline Zoom State & Function Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

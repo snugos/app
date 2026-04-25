@@ -6827,3 +6827,194 @@ TestRunner.test('Swing Constants - DEFAULT_SWING.amount is within valid range', 
 });
 
 
+
+// Day 223: Timeline Zoom State & Function Tests (2026-04-25)
+// ==========================================================
+// These tests verify Timeline Zoom state management and zoom functions
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomState returns object', (t) => {
+    const result = getTimelineZoomState();
+    t.assertEqual(typeof result, 'object', 'getTimelineZoomState should return an object');
+    t.assertTruthy(result !== null, 'getTimelineZoomState should not return null');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomState has horizontal property', (t) => {
+    const result = getTimelineZoomState();
+    t.assertTruthy('horizontal' in result, 'Timeline zoom state should have horizontal property');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomState has vertical property', (t) => {
+    const result = getTimelineZoomState();
+    t.assertTruthy('vertical' in result, 'Timeline zoom state should have vertical property');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomLevelState returns number', (t) => {
+    const result = getTimelineZoomLevelState();
+    t.assertEqual(typeof result, 'number', 'getTimelineZoomLevelState should return a number');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomLevelState returns value in valid range', (t) => {
+    const result = getTimelineZoomLevelState();
+    t.assertTruthy(result >= TIMELINE_ZOOM_MIN && result <= TIMELINE_ZOOM_MAX, 
+        'Timeline zoom level should be between MIN and MAX');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineVerticalZoomState returns number', (t) => {
+    const result = getTimelineVerticalZoomState();
+    t.assertEqual(typeof result, 'number', 'getTimelineVerticalZoomState should return a number');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineVerticalZoomState returns value in valid range', (t) => {
+    const result = getTimelineVerticalZoomState();
+    t.assertTruthy(result >= TIMELINE_VERTICAL_ZOOM_MIN && result <= TIMELINE_VERTICAL_ZOOM_MAX, 
+        'Vertical zoom should be between MIN and MAX');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineZoomLevelState is a function', (t) => {
+    t.assertEqual(typeof setTimelineZoomLevelState, 'function', 'setTimelineZoomLevelState should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineZoomLevelState clamps values to valid range', (t) => {
+    // Test clamping below minimum
+    setTimelineZoomLevelState(0.1);
+    let result = getTimelineZoomLevelState();
+    t.assertTruthy(result >= TIMELINE_ZOOM_MIN, 'Zoom should not go below MIN');
+    
+    // Test clamping above maximum
+    setTimelineZoomLevelState(10.0);
+    result = getTimelineZoomLevelState();
+    t.assertTruthy(result <= TIMELINE_ZOOM_MAX, 'Zoom should not exceed MAX');
+    
+    // Reset to default
+    setTimelineZoomLevelState(TIMELINE_ZOOM_DEFAULT);
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineVerticalZoomState is a function', (t) => {
+    t.assertEqual(typeof setTimelineVerticalZoomState, 'function', 'setTimelineVerticalZoomState should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineVerticalZoomState clamps values to valid range', (t) => {
+    // Test clamping below minimum
+    setTimelineVerticalZoomState(0.1);
+    let result = getTimelineVerticalZoomState();
+    t.assertTruthy(result >= TIMELINE_VERTICAL_ZOOM_MIN, 'Vertical zoom should not go below MIN');
+    
+    // Test clamping above maximum
+    setTimelineVerticalZoomState(10.0);
+    result = getTimelineVerticalZoomState();
+    t.assertTruthy(result <= TIMELINE_VERTICAL_ZOOM_MAX, 'Vertical zoom should not exceed MAX');
+    
+    // Reset to default
+    setTimelineVerticalZoomState(TIMELINE_VERTICAL_ZOOM_DEFAULT);
+});
+
+TestRunner.test('Timeline Zoom State - zoomInTimeline is a function', (t) => {
+    t.assertEqual(typeof zoomInTimeline, 'function', 'zoomInTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutTimeline is a function', (t) => {
+    t.assertEqual(typeof zoomOutTimeline, 'function', 'zoomOutTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInVerticalTimeline is a function', (t) => {
+    t.assertEqual(typeof zoomInVerticalTimeline, 'function', 'zoomInVerticalTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutVerticalTimeline is a function', (t) => {
+    t.assertEqual(typeof zoomOutVerticalTimeline, 'function', 'zoomOutVerticalTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - resetTimelineZoom is a function', (t) => {
+    t.assertEqual(typeof resetTimelineZoom, 'function', 'resetTimelineZoom should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInTimeline increases zoom level by STEP', (t) => {
+    // Set to a known value in the middle of the range
+    setTimelineZoomLevelState(1.0);
+    const before = getTimelineZoomLevelState();
+    zoomInTimeline();
+    const after = getTimelineZoomLevelState();
+    t.assertEqual(after - before, TIMELINE_ZOOM_STEP, 'zoomInTimeline should increase by STEP');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutTimeline decreases zoom level by STEP', (t) => {
+    // Set to a known value in the middle of the range
+    setTimelineZoomLevelState(1.0);
+    const before = getTimelineZoomLevelState();
+    zoomOutTimeline();
+    const after = getTimelineZoomLevelState();
+    t.assertEqual(before - after, TIMELINE_ZOOM_STEP, 'zoomOutTimeline should decrease by STEP');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInVerticalTimeline increases vertical zoom by STEP', (t) => {
+    setTimelineVerticalZoomState(1.0);
+    const before = getTimelineVerticalZoomState();
+    zoomInVerticalTimeline();
+    const after = getTimelineVerticalZoomState();
+    t.assertEqual(after - before, TIMELINE_VERTICAL_ZOOM_STEP, 'zoomInVerticalTimeline should increase by STEP');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutVerticalTimeline decreases vertical zoom by STEP', (t) => {
+    setTimelineVerticalZoomState(1.0);
+    const before = getTimelineVerticalZoomState();
+    zoomOutVerticalTimeline();
+    const after = getTimelineVerticalZoomState();
+    t.assertEqual(before - after, TIMELINE_VERTICAL_ZOOM_STEP, 'zoomOutVerticalTimeline should decrease by STEP');
+});
+
+TestRunner.test('Timeline Zoom State - resetTimelineZoom resets both zoom levels to DEFAULT', (t) => {
+    // Set to non-default values
+    setTimelineZoomLevelState(2.0);
+    setTimelineVerticalZoomState(1.5);
+    resetTimelineZoom();
+    t.assertEqual(getTimelineZoomLevelState(), TIMELINE_ZOOM_DEFAULT, 'Horizontal zoom should reset to DEFAULT');
+    t.assertEqual(getTimelineVerticalZoomState(), TIMELINE_VERTICAL_ZOOM_DEFAULT, 'Vertical zoom should reset to DEFAULT');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_ZOOM_MIN is 0.25', (t) => {
+    t.assertEqual(TIMELINE_ZOOM_MIN, 0.25, 'TIMELINE_ZOOM_MIN should be 0.25');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_ZOOM_MAX is 4.0', (t) => {
+    t.assertEqual(TIMELINE_ZOOM_MAX, 4.0, 'TIMELINE_ZOOM_MAX should be 4.0');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_ZOOM_STEP is 0.25', (t) => {
+    t.assertEqual(TIMELINE_ZOOM_STEP, 0.25, 'TIMELINE_ZOOM_STEP should be 0.25');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_ZOOM_DEFAULT is 1.0', (t) => {
+    t.assertEqual(TIMELINE_ZOOM_DEFAULT, 1.0, 'TIMELINE_ZOOM_DEFAULT should be 1.0');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_VERTICAL_ZOOM_MIN is 0.5', (t) => {
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_MIN, 0.5, 'TIMELINE_VERTICAL_ZOOM_MIN should be 0.5');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_VERTICAL_ZOOM_MAX is 2.0', (t) => {
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_MAX, 2.0, 'TIMELINE_VERTICAL_ZOOM_MAX should be 2.0');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_VERTICAL_ZOOM_STEP is 0.1', (t) => {
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_STEP, 0.1, 'TIMELINE_VERTICAL_ZOOM_STEP should be 0.1');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_VERTICAL_ZOOM_DEFAULT is 1.0', (t) => {
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_DEFAULT, 1.0, 'TIMELINE_VERTICAL_ZOOM_DEFAULT should be 1.0');
+});
+
+TestRunner.test('Timeline Zoom Constants - MIN is less than MAX', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_MIN < TIMELINE_ZOOM_MAX, 'MIN should be less than MAX');
+});
+
+TestRunner.test('Timeline Zoom Constants - vertical MIN is less than MAX', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_MIN < TIMELINE_VERTICAL_ZOOM_MAX, 'Vertical MIN should be less than MAX');
+});
+
+TestRunner.test('Timeline Zoom Constants - STEP is positive', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_STEP > 0, 'STEP should be positive');
+});
+
+TestRunner.test('Timeline Zoom Constants - vertical STEP is positive', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_STEP > 0, 'Vertical STEP should be positive');
+});
