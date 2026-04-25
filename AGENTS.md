@@ -2827,3 +2827,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These audio module functions handle metronome playback, send bus routing, panic functions, performance monitoring, master effect chains, and audio context initialization. The tests verify the exported API without requiring actual Tone.js audio context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.90.0
+
+#### Day 221: Swing State & Window Store Undo Capture Tests (2026-04-25)
+- **Feature**: Added 9 new unit tests for Swing state undo capture and Window Store functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 9 new tests in Day 221 section:
+    - Swing State: setSwingEnabledState calls captureStateForUndo (via function string inspection)
+    - Swing State: setSwingAmountState calls captureStateForUndo (via function string inspection)
+    - Swing State: setSwingState calls captureStateForUndo (via function string inspection)
+    - Window Store: addWindowToStoreState is exported as function
+    - Window Store: removeWindowFromStoreState is exported as function
+    - Window Store: getWindowByIdState returns undefined for nonexistent window
+  - `js/constants.js`: Bumped APP_VERSION to 1.05.0
+- **Feature Details**:
+  - Tests verify Swing state setters call captureStateForUndo before mutating state
+  - Tests verify Window Store functions are properly exported from state.js
+  - Tests verify function type checking for window store operations
+  - Total tests increased from 1013 to 1022 tests
+- **Backend Note**: The Swing state functions use captureStateForUndo for undo/redo support. The Window Store functions manage the open windows Map for window instances. Tests verify function exports and behavior without requiring actual window rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.05.0

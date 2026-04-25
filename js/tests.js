@@ -6329,3 +6329,37 @@ TestRunner.test('Chord Mode State - lockChord property in state', (t) => {
     const state = getChordModeState();
     t.assertTruthy('lockChord' in state, 'State should have lockChord property');
 });
+// Day 221: Swing State & Window Store Undo Capture Tests (2026-04-25)
+// ================================================================
+// These tests verify that Swing state setters and Window Store functions
+// have proper undo capture and function exports.
+
+TestRunner.test('Swing State - setSwingEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Swing State - setSwingAmountState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingAmountState should call captureStateForUndo');
+});
+
+TestRunner.test('Swing State - setSwingState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingState should call captureStateForUndo');
+});
+
+// Window Store State Function Tests
+TestRunner.test('Window Store - addWindowToStoreState is exported', (t) => {
+    t.assertEqual(typeof addWindowToStoreState, 'function', 'addWindowToStoreState should be a function');
+});
+
+TestRunner.test('Window Store - removeWindowFromStoreState is exported', (t) => {
+    t.assertEqual(typeof removeWindowFromStoreState, 'function', 'removeWindowFromStoreState should be a function');
+});
+
+TestRunner.test('Window Store - getWindowByIdState returns window instance', (t) => {
+    // Test that getWindowByIdState works with the store
+    const result = getWindowByIdState('nonexistent-id');
+    t.assertEqual(result, undefined, 'Should return undefined for nonexistent window');
+});

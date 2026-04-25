@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.04.0'; // Day 220: Chord Mode State Tests
+export const APP_VERSION = '1.05.0'; // Day 221: Swing State & Window Store Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
