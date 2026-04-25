@@ -128,6 +128,16 @@ import {
     addTrackTemplateState,
     updateTrackTemplateState,
     removeTrackTemplateState,
+    // Project Save/Load/Export
+    saveProjectInternal,
+    loadProjectInternal,
+    handleProjectFileLoadInternal,
+    exportToWavInternal,
+    exportToMidiInternal,
+    importFromMidiInternal,
+    // Undo/Redo
+    undoLastActionInternal,
+    redoLastActionInternal,
 } from './state.js';
 
 // --- App Services Object ---
