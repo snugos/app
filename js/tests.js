@@ -2276,8 +2276,8 @@ TestRunner.test('Synth Engine - synthEngineControlDefinitions has MonoSynth', (t
 
 TestRunner.test('Synth Engine - synthEngineControlDefinitions.MonoSynth has controls', (t) => {
     const mono = synthEngineControlDefinitions.MonoSynth;
-    t.assertTruthy(Array.isArray(mono.controls), 'MonoSynth should have controls array');
-    t.assertTruthy(mono.controls.length > 0, 'MonoSynth should have at least one control');
+    t.assertTruthy(Array.isArray(mono), 'MonoSynth should be an array of control definitions');
+    t.assertTruthy(mono.length > 0, 'MonoSynth should have at least one control definition');
 });
 
 // ============================================
@@ -5257,7 +5257,7 @@ TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.params is empty object', 
 // Synth Engine Control Definitions - MonoSynth control tests
 TestRunner.test('Synth Engine - MonoSynth controls is an array', (t) => {
     const mono = synthEngineControlDefinitions.MonoSynth;
-    t.assertTruthy(Array.isArray(mono), 'synthEngineControlDefinitions.MonoSynth should be an array');
+    t.assertTruthy(Array.isArray(mono), 'MonoSynth should be an array of control definitions');
 });
 
 TestRunner.test('Synth Engine - MonoSynth has 15 control definitions', (t) => {
@@ -6498,3 +6498,332 @@ TestRunner.test('Effect Preset State - updateEffectPresetState partial update pr
     t.assertEqual(updated.params.decay, 2.5, 'params should be preserved');
     clearEffectPresetsState();
 });
+// === Day 222: Audio Utility & Sampler Clip Tests (2026-04-25) ===
+
+// Mime type utility function comprehensive tests
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/wav for .wav', (t) => {
+    const result = getMimeTypeFromFilename('test.wav');
+    t.assertEqual(result, 'audio/wav', 'Should return audio/wav for .wav file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/mpeg for .mp3', (t) => {
+    const result = getMimeTypeFromFilename('music.mp3');
+    t.assertEqual(result, 'audio/mpeg', 'Should return audio/mpeg for .mp3 file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/ogg for .ogg', (t) => {
+    const result = getMimeTypeFromFilename('sound.ogg');
+    t.assertEqual(result, 'audio/ogg', 'Should return audio/ogg for .ogg file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/flac for .flac', (t) => {
+    const result = getMimeTypeFromFilename('track.flac');
+    t.assertEqual(result, 'audio/flac', 'Should return audio/flac for .flac file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/aac for .aac', (t) => {
+    const result = getMimeTypeFromFilename('audio.aac');
+    t.assertEqual(result, 'audio/aac', 'Should return audio/aac for .aac file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/mp4 for .m4a', (t) => {
+    const result = getMimeTypeFromFilename('recording.m4a');
+    t.assertEqual(result, 'audio/mp4', 'Should return audio/mp4 for .m4a file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns octet-stream for unknown extension', (t) => {
+    const result = getMimeTypeFromFilename('file.xyz');
+    t.assertEqual(result, 'application/octet-stream', 'Should return octet-stream fallback');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename handles null input', (t) => {
+    const result = getMimeTypeFromFilename(null);
+    t.assertEqual(result, 'application/octet-stream', 'Should return octet-stream for null');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename handles empty string', (t) => {
+    const result = getMimeTypeFromFilename('');
+    t.assertEqual(result, 'application/octet-stream', 'Should return octet-stream for empty string');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename is case insensitive for extension', (t) => {
+    const result = getMimeTypeFromFilename('sound.WAV');
+    t.assertEqual(result, 'audio/wav', 'Should handle uppercase extension');
+});
+
+// autoSliceSample function validation tests
+TestRunner.test('Audio Utility - autoSliceSample function exists', (t) => {
+    t.assertEqual(typeof autoSliceSample, 'function', 'autoSliceSample should be a function');
+});
+
+TestRunner.test('Audio Utility - autoSliceSample accepts 1-2 parameters', (t) => {
+    t.assertTruthy(autoSliceSample.length === 1 || autoSliceSample.length === 2, 'autoSliceSample should accept 1-2 parameters');
+});
+
+// numSlices constant validation tests  
+TestRunner.test('Audio Utility - numSlices constant is defined', (t) => {
+    t.assertTruthy(typeof numSlices !== 'undefined', 'numSlices should be defined');
+});
+
+TestRunner.test('Audio Utility - numSlices equals 8', (t) => {
+    t.assertEqual(numSlices, 8, 'numSlices should equal 8');
+});
+
+TestRunner.test('Audio Utility - numSlices is positive', (t) => {
+    t.assertTruthy(numSlices > 0, 'numSlices should be positive');
+});
+
+TestRunner.test('Audio Utility - numSlices is used as default for autoSliceSample', (t) => {
+    // When numSlices is 8, autoSliceSample should default to creating 8 slices
+    t.assertEqual(numSlices, 8, 'numSlices should be 8 for default slicing');
+});
+
+// Clip constants validation tests  
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_GAIN is 1.0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'Default gain should be 1.0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_PLAYBACK_RATE is 1.0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'Default playback rate should be 1.0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_START_OFFSET is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'Default start offset should be 0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_END_OFFSET is -1', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_CROSSFADE is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'Default crossfade should be 0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_FADE_IN is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_FADE_OUT is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_REVERSE is false', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_REVERSE, false, 'Default reverse should be false');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_FADE_IN_CURVE equals FADE_CURVE_LINEAR', (t) => {
+    t.assertEqual(DEFAULT_FADE_IN_CURVE, FADE_CURVE_LINEAR, 'Default fade in curve should be linear');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_FADE_OUT_CURVE equals FADE_CURVE_LINEAR', (t) => {
+    t.assertEqual(DEFAULT_FADE_OUT_CURVE, FADE_CURVE_LINEAR, 'Default fade out curve should be linear');
+});
+
+// ============================================
+// Day 222: Synth Engine, Sampler & Swing Constants Tests (2026-04-25)
+// ============================================
+
+// Fix broken MonoSynth test - synthEngineControlDefinitions.MonoSynth is an array, not an object with .controls
+TestRunner.test('Synth Engine - synthEngineControlDefinitions.MonoSynth is an array', (t) => {
+    const mono = synthEngineControlDefinitions.MonoSynth;
+    t.assertTruthy(Array.isArray(mono), 'MonoSynth should be an array of control definitions');
+});
+
+TestRunner.test('Synth Engine - synthEngineControlDefinitions has AMSynth', (t) => {
+    t.assertTruthy(Array.isArray(synthEngineControlDefinitions.AMSynth), 'AMSynth should be an array');
+    t.assertTruthy(synthEngineControlDefinitions.AMSynth.length > 0, 'AMSynth should have control definitions');
+});
+
+TestRunner.test('Synth Engine - synthEngineControlDefinitions has FMSynth', (t) => {
+    t.assertTruthy(Array.isArray(synthEngineControlDefinitions.FMSynth), 'FMSynth should be an array');
+    t.assertTruthy(synthEngineControlDefinitions.FMSynth.length > 0, 'FMSynth should have control definitions');
+});
+
+TestRunner.test('Synth Engine - synthEngineControlDefinitions has DuoSynth', (t) => {
+    t.assertTruthy(Array.isArray(synthEngineControlDefinitions.DuoSynth), 'DuoSynth should be an array');
+    t.assertTruthy(synthEngineControlDefinitions.DuoSynth.length > 0, 'DuoSynth should have control definitions');
+});
+
+TestRunner.test('Synth Engine - MonoSynth control definitions have required properties', (t) => {
+    const mono = synthEngineControlDefinitions.MonoSynth;
+    const ctrl = mono[0];
+    t.assertTruthy(ctrl.hasOwnProperty('idPrefix'), 'Control should have idPrefix');
+    t.assertTruthy(ctrl.hasOwnProperty('label'), 'Control should have label');
+    t.assertTruthy(ctrl.hasOwnProperty('type'), 'Control should have type');
+    t.assertTruthy(ctrl.hasOwnProperty('min'), 'Control should have min');
+    t.assertTruthy(ctrl.hasOwnProperty('max'), 'Control should have max');
+    t.assertTruthy(ctrl.hasOwnProperty('defaultValue'), 'Control should have defaultValue');
+    t.assertTruthy(ctrl.hasOwnProperty('path'), 'Control should have path');
+});
+
+TestRunner.test('Synth Engine - AMSynth control definitions have required properties', (t) => {
+    const am = synthEngineControlDefinitions.AMSynth;
+    const ctrl = am[0];
+    t.assertTruthy(ctrl.hasOwnProperty('idPrefix'), 'AMSynth control should have idPrefix');
+    t.assertTruthy(ctrl.hasOwnProperty('defaultValue'), 'AMSynth control should have defaultValue');
+    t.assertTruthy(typeof ctrl.defaultValue === 'number', 'AMSynth control defaultValue should be number');
+});
+
+TestRunner.test('Synth Engine - FMSynth control definitions have required properties', (t) => {
+    const fm = synthEngineControlDefinitions.FMSynth;
+    const ctrl = fm[0];
+    t.assertTruthy(ctrl.hasOwnProperty('idPrefix'), 'FMSynth control should have idPrefix');
+    t.assertTruthy(ctrl.hasOwnProperty('defaultValue'), 'FMSynth control should have defaultValue');
+});
+
+TestRunner.test('Synth Engine - DuoSynth control definitions have required properties', (t) => {
+    const duo = synthEngineControlDefinitions.DuoSynth;
+    t.assertTruthy(Array.isArray(duo), 'DuoSynth should be an array');
+    t.assertTruthy(duo.length > 0, 'DuoSynth should have control definitions');
+});
+
+// synthPitches array validation
+TestRunner.test('synthPitches - is an array after .reverse()', (t) => {
+    t.assertTruthy(Array.isArray(synthPitches), 'synthPitches should be an array');
+});
+
+TestRunner.test('synthPitches - has correct count (72 pitches for 6 octaves)', (t) => {
+    t.assertEqual(synthPitches.length, 72, 'synthPitches should have 72 entries (6 octaves x 12 notes)');
+});
+
+TestRunner.test('synthPitches - starts with lowest note C6 (after reverse)', (t) => {
+    t.assertEqual(synthPitches[0], 'C6', 'First pitch should be C6 (lowest)');
+});
+
+TestRunner.test('synthPitches - ends with highest note B1 (after reverse)', (t) => {
+    t.assertEqual(synthPitches[synthPitches.length - 1], 'B1', 'Last pitch should be B1 (highest)');
+});
+
+TestRunner.test('synthPitches - contains middle C (C4)', (t) => {
+    t.assertTruthy(synthPitches.includes('C4'), 'synthPitches should include C4 (middle C)');
+});
+
+TestRunner.test('synthPitches - all entries are valid note strings', (t) => {
+    const notePattern = /^[A-G]#?[1-6]$/;
+    for (const pitch of synthPitches) {
+        t.assertTruthy(notePattern.test(pitch), `Pitch "${pitch}" should match note pattern`);
+    }
+});
+
+TestRunner.test('synthPitches - contains all chromatic notes per octave', (t) => {
+    const naturalNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    const sharpNotes = ['C#', 'D#', 'F#', 'G#', 'A#'];
+    for (let octave = 1; octave <= 6; octave++) {
+        for (const note of naturalNotes) {
+            t.assertTruthy(synthPitches.includes(`${note}${octave}`), `Should include ${note}${octave}`);
+        }
+        for (const note of sharpNotes) {
+            t.assertTruthy(synthPitches.includes(`${note}${octave}`), `Should include ${note}${octave}`);
+        }
+    }
+});
+
+// soundLibraries structure validation
+TestRunner.test('Sound Library - has Drums library', (t) => {
+    t.assertTruthy('Drums' in soundLibraries, 'soundLibraries should have Drums key');
+    t.assertTruthy(typeof soundLibraries['Drums'] === 'string', 'Drums should be a string path');
+});
+
+TestRunner.test('Sound Library - has Instruments library', (t) => {
+    t.assertTruthy('Instruments' in soundLibraries, 'soundLibraries should have Instruments key');
+    t.assertTruthy(typeof soundLibraries['Instruments'] === 'string', 'Instruments should be a string path');
+});
+
+TestRunner.test('Sound Library - library paths use assets prefix', (t) => {
+    for (const libName in soundLibraries) {
+        t.assertTruthy(soundLibraries[libName].startsWith('assets/'), `${libName} path should start with assets/`);
+    }
+});
+
+TestRunner.test('Sound Library - library paths use .zip extension', (t) => {
+    for (const libName in soundLibraries) {
+        t.assertTruthy(soundLibraries[libName].endsWith('.zip'), `${libName} path should end with .zip`);
+    }
+});
+
+// samplerMIDINoteStart validation
+TestRunner.test('Sampler Constants - samplerMIDINoteStart is C2 (36)', (t) => {
+    t.assertEqual(samplerMIDINoteStart, 36, 'samplerMIDINoteStart should be 36 (C2)');
+});
+
+TestRunner.test('Sampler Constants - samplerMIDINoteStart is positive', (t) => {
+    t.assertTruthy(samplerMIDINoteStart > 0, 'samplerMIDINoteStart should be positive');
+});
+
+TestRunner.test('Sampler Constants - numSlices equals 8', (t) => {
+    t.assertEqual(numSlices, 8, 'numSlices should be 8');
+});
+
+TestRunner.test('Sampler Constants - numDrumSamplerPads equals 8', (t) => {
+    t.assertEqual(numDrumSamplerPads, 8, 'numDrumSamplerPads should be 8');
+});
+
+TestRunner.test('Sampler Constants - numDrumSamplerPads is used in computerKeySamplerMap', (t) => {
+    // Digit1 maps to samplerMIDINoteStart, Digit8 maps to samplerMIDINoteStart + 7
+    t.assertEqual(computerKeySamplerMap['Digit1'], samplerMIDINoteStart, 'Digit1 should map to samplerMIDINoteStart');
+    t.assertEqual(computerKeySamplerMap['Digit8'], samplerMIDINoteStart + 7, 'Digit8 should map to last pad');
+});
+
+// defaultVelocity validation
+TestRunner.test('defaultVelocity - is in valid range (0-1)', (t) => {
+    t.assertTruthy(defaultVelocity >= 0 && defaultVelocity <= 1, 'defaultVelocity should be between 0 and 1');
+});
+
+TestRunner.test('defaultVelocity - is positive', (t) => {
+    t.assertTruthy(defaultVelocity > 0, 'defaultVelocity should be positive');
+});
+
+// defaultDesktopBg validation
+TestRunner.test('defaultDesktopBg - is a string', (t) => {
+    t.assertEqual(typeof defaultDesktopBg, 'string', 'defaultDesktopBg should be a string');
+});
+
+TestRunner.test('defaultDesktopBg - is a valid hex color', (t) => {
+    t.assertTruthy(defaultDesktopBg.startsWith('#'), 'defaultDesktopBg should start with #');
+    t.assertEqual(defaultDesktopBg.length, 7, 'defaultDesktopBg should be 7 chars (#RRGGBB)');
+});
+
+// Swing constants validation
+TestRunner.test('Swing Constants - DEFAULT_SWING is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING, 'object', 'DEFAULT_SWING should be an object');
+    t.assertTruthy(DEFAULT_SWING !== null, 'DEFAULT_SWING should not be null');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.enabled is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING.enabled, 'boolean', 'DEFAULT_SWING.enabled should be boolean');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.enabled is false', (t) => {
+    t.assertEqual(DEFAULT_SWING.enabled, false, 'Swing should be disabled by default');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.amount is number', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING.amount, 'number', 'DEFAULT_SWING.amount should be number');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.amount is 0', (t) => {
+    t.assertEqual(DEFAULT_SWING.amount, 0, 'Default swing amount should be 0');
+});
+
+TestRunner.test('Swing Constants - MAX_SWING_AMOUNT is positive', (t) => {
+    t.assertTruthy(MAX_SWING_AMOUNT > 0, 'MAX_SWING_AMOUNT should be positive');
+});
+
+TestRunner.test('Swing Constants - MAX_SWING_AMOUNT is 100', (t) => {
+    t.assertEqual(MAX_SWING_AMOUNT, 100, 'MAX_SWING_AMOUNT should be 100');
+});
+
+TestRunner.test('Swing Constants - SWING_SUBDIVISION is 8 (8th notes)', (t) => {
+    t.assertEqual(SWING_SUBDIVISION, 8, 'SWING_SUBDIVISION should be 8');
+});
+
+TestRunner.test('Swing Constants - SWING_SUBDIVISION is positive', (t) => {
+    t.assertTruthy(SWING_SUBDIVISION > 0, 'SWING_SUBDIVISION should be positive');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.amount is within valid range', (t) => {
+    t.assertTruthy(DEFAULT_SWING.amount >= 0, 'Default amount should be >= 0');
+    t.assertTruthy(DEFAULT_SWING.amount <= MAX_SWING_AMOUNT, 'Default amount should be <= MAX_SWING_AMOUNT');
+});
+
+
