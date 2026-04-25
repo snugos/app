@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.09.0'; // Day 226: Automation Lane Instance Tests
+export const APP_VERSION = '1.10.0'; // Day 227: Performance Monitor Undo Capture Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

@@ -49,6 +49,16 @@ import {
     setIsRecordingState,
     setRecordingTrackIdState,
     setRecordingStartTimeState,
+    setPerformanceMonitorEnabledState,
+    setAudioContextStateState,
+    setCPUUsageState,
+    setMemoryPressureState,
+    setActiveVoicesState,
+    setAudioLatencyState,
+    setLastCallbackTimeState,
+    setDroppedCallbacksState,
+    setArmedTrackIdState,
+    setHighestZState,
     getSendTracksState,
     getSendTrackByIdState,
     getTrackSendsState,
@@ -142,6 +152,7 @@ import {
     updateMasterEffectParamInState,
     reorderMasterEffectInState,
     setArmedTrackIdState,
+    setHighestZState,
     setSwingEnabledState,
     setSwingAmountState,
     setPerformanceMonitorEnabledState,
@@ -7615,4 +7626,262 @@ TestRunner.test('Automation Lane - Track clone preserves automation data', (t) =
     t.assertEqual(cloneTrack.getAutomationLaneCount('volume'), 1, 'Clone should have automation');
     t.assertEqual(originalTrack.getAutomationValue('volume', 0), 0.5, 'Original value should match');
     t.assertEqual(cloneTrack.getAutomationValue('volume', 0), 0.5, 'Clone value should match');
+});TestRunner.test('Performance Monitor State - setPerformanceMonitorEnabledState calls captureStateForUndo', (t) => {
+    let captured = false;
+    let capturedLabel = '';
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; capturedLabel = label; };
+    }
+    try {
+        setPerformanceMonitorEnabledState(true);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+        t.assertEqual(capturedLabel.includes('Performance Monitor'), true, 'Label should mention Performance Monitor');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setAudioContextStateState calls captureStateForUndo', (t) => {
+    let captured = false;
+    let capturedLabel = '';
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; capturedLabel = label; };
+    }
+    try {
+        setAudioContextStateState('running');
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+        t.assertEqual(capturedLabel.includes('Audio Context State'), true, 'Label should mention Audio Context State');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setCPUUsageState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setCPUUsageState(50);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setMemoryPressureState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setMemoryPressureState('high');
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setActiveVoicesState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setActiveVoicesState(10);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setAudioLatencyState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setAudioLatencyState(0.05);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setLastCallbackTimeState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setLastCallbackTimeState(100);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setDroppedCallbacksState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setDroppedCallbacksState(5);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setArmedTrackIdState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setArmedTrackIdState('test-track');
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setSoloedTrackIdState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setSoloedTrackIdState('test-track');
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setIsRecordingState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setIsRecordingState(true);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setRecordingTrackIdState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setRecordingTrackIdState('test-track');
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setRecordingStartTimeState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setRecordingStartTimeState(10.5);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setHighestZState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setHighestZState(200);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setMidiLearnModeState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setMidiLearnModeState(true);
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('Performance Monitor State - setMidiLearnPendingParamState calls captureStateForUndo', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    try {
+        setMidiLearnPendingParamState({ type: 'trackVolume', trackId: 'test' });
+        t.assertEqual(captured, true, 'Should call captureStateForUndo');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
 });
