@@ -355,14 +355,14 @@ const appServices = {
         }
     },
     setActualMasterVolume: (volumeValue) => {
-        if (typeof getActualMasterGainNodeFromAudio === 'function') {
-            const actualMasterNode = getActualMasterGainNodeFromAudio();
+        if (typeof getActualMasterGainNode === 'function') {
+            const actualMasterNode = getActualMasterGainNode();
             if (actualMasterNode && actualMasterNode.gain && typeof actualMasterNode.gain.setValueAtTime === 'function') {
                 try {
                     actualMasterNode.gain.setValueAtTime(volumeValue, Tone.now());
                 } catch (e) { console.error("Error setting master volume via Tone:", e); }
             } else { console.warn("Master gain node or its gain property not available."); }
-        } else { console.warn("getActualMasterGainNodeFromAudio service missing."); }
+        } else { console.warn("getActualMasterGainNode function not available."); }
     },
     effectsRegistryAccess: {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
