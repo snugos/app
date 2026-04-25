@@ -205,6 +205,7 @@ import {
 } from './effectsRegistry.js';
 
 import { Track } from './Track.js';
+import { SnugWindow } from './SnugWindow.js';
 
 import {
     openMixerWindow,
@@ -8163,4 +8164,338 @@ TestRunner.test('Performance Monitor State - setMidiLearnPendingParamState calls
             window.appServices.captureStateForUndo = origCapture || null;
         }
     }
+});
+
+// === Day 229: SnugWindow Extended Instance Tests (2026-04-25) ===
+
+TestRunner.test('SnugWindow - class has applyState method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.applyState, 'function', 'applyState should be a function');
+});
+
+TestRunner.test('SnugWindow - applyState accepts state parameter', (t) => {
+    t.assertEqual(SnugWindow.prototype.applyState.length >= 1, true, 'applyState should accept state parameter');
+});
+
+TestRunner.test('SnugWindow - applyState handles left/top position changes', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    win.element = { style: {}, classList: { add: t.stub(), remove: t.stub() }, querySelector: t.stub().returns({ textContent: '' }) };
+    win.titleBar = { querySelector: t.stub().returns({ textContent: '' }) };
+    win.taskbarButton = null;
+    
+    const state = { left: '100px', top: '200px' };
+    win.applyState(state);
+    
+    t.assertEqual(win.element.style.left, '100px', 'applyState should set left position');
+    t.assertEqual(win.element.style.top, '200px', 'applyState should set top position');
+});
+
+TestRunner.test('SnugWindow - applyState handles width/height changes', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    win.element = { style: {}, classList: { add: t.stub(), remove: t.stub() }, querySelector: t.stub().returns({ textContent: '' }) };
+    win.titleBar = { querySelector: t.stub().returns({ textContent: '' }) };
+    win.taskbarButton = null;
+    
+    const state = { width: '500px', height: '400px' };
+    win.applyState(state);
+    
+    t.assertEqual(win.element.style.width, '500px', 'applyState should set width');
+    t.assertEqual(win.element.style.height, '400px', 'applyState should set height');
+});
+
+TestRunner.test('SnugWindow - applyState handles zIndex changes', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    win.element = { style: {}, classList: { add: t.stub(), remove: t.stub() }, querySelector: t.stub().returns({ textContent: '' }) };
+    win.titleBar = { querySelector: t.stub().returns({ textContent: '' }) };
+    win.taskbarButton = null;
+    
+    const state = { zIndex: 150 };
+    win.applyState(state);
+    
+    t.assertEqual(win.element.style.zIndex, 150, 'applyState should set zIndex');
+});
+
+TestRunner.test('SnugWindow - applyState handles title changes', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const mockTitleSpan = { textContent: '' };
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    win.element = { style: {}, classList: { add: t.stub(), remove: t.stub() }, querySelector: t.stub().returns({ textContent: '' }) };
+    win.titleBar = { querySelector: t.stub().returns(mockTitleSpan) };
+    win.taskbarButton = { textContent: '', title: '' };
+    win.title = 'Test Window';
+    
+    const state = { title: 'New Window Title' };
+    win.applyState(state);
+    
+    t.assertEqual(win.title, 'New Window Title', 'applyState should update title');
+});
+
+TestRunner.test('SnugWindow - applyState handles isMinimized state', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub(),
+        getOpenWindows: () => ({
+            forEach: (cb) => {}
+        })
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    win.element = { style: {}, classList: { add: t.stub(), remove: t.stub() }, querySelector: t.stub().returns({ textContent: '' }) };
+    win.titleBar = { querySelector: t.stub().returns({ textContent: '' }) };
+    win.taskbarButton = null;
+    win.isMinimized = false;
+    win.minimize = t.stub();
+    
+    const state = { isMinimized: true };
+    win.applyState(state);
+    
+    t.assertEqual(win.minimize.calls.length, 1, 'applyState should call minimize when isMinimized is true');
+});
+
+TestRunner.test('SnugWindow - applyState handles null state gracefully', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    win.element = null;
+    
+    // Should not throw
+    let threw = false;
+    try {
+        win.applyState(null);
+    } catch (e) {
+        threw = true;
+    }
+    
+    t.assertEqual(threw, false, 'applyState should handle null state gracefully');
+});
+
+TestRunner.test('SnugWindow - instance has id property', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('unique-window-id', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    t.assertEqual(win.id, 'unique-window-id', 'SnugWindow should have id property');
+});
+
+TestRunner.test('SnugWindow - instance has title property', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'My Window Title', '<div>content</div>', {}, mockAppServices);
+    t.assertEqual(win.title, 'My Window Title', 'SnugWindow should have title property');
+});
+
+TestRunner.test('SnugWindow - instance has element property', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    t.assertTruthy(win.element !== undefined, 'SnugWindow should have element property');
+});
+
+TestRunner.test('SnugWindow - instance has isMinimized boolean property', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    t.assertEqual(typeof win.isMinimized, 'boolean', 'isMinimized should be boolean');
+    t.assertEqual(win.isMinimized, false, 'isMinimized should be false by default');
+});
+
+TestRunner.test('SnugWindow - instance has isMaximized boolean property', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    t.assertEqual(typeof win.isMaximized, 'boolean', 'isMaximized should be boolean');
+    t.assertEqual(win.isMaximized, false, 'isMaximized should be false by default');
+});
+
+TestRunner.test('SnugWindow - instance has options object', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const customOptions = { minWidth: 200, minHeight: 150 };
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', customOptions, mockAppServices);
+    t.assertEqual(typeof win.options, 'object', 'options should be an object');
+    t.assertEqual(win.options.minWidth, 200, 'options.minWidth should match input');
+    t.assertEqual(win.options.minHeight, 150, 'options.minHeight should match input');
+});
+
+TestRunner.test('SnugWindow - instance has appServices reference', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    t.assertEqual(win.appServices, mockAppServices, 'appServices should be stored');
+});
+
+TestRunner.test('SnugWindow - prototype has toggleMaximize method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.toggleMaximize, 'function', 'toggleMaximize should be a function');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize changes isMaximized state', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    win.element = { style: {}, classList: { add: t.stub(), remove: t.stub() }, querySelector: t.stub().returns(null), remove: t.stub() };
+    win.titleBar = { querySelector: t.stub().returns(null) };
+    win.taskbarButton = null;
+    win.isMaximized = false;
+    
+    win.toggleMaximize();
+    t.assertEqual(win.isMaximized, true, 'toggleMaximize should set isMaximized to true');
+    
+    win.toggleMaximize();
+    t.assertEqual(win.isMaximized, false, 'toggleMaximize should set isMaximized to false');
+});
+
+TestRunner.test('SnugWindow - updateTaskbarButtonActiveState method exists', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    
+    const win = new SnugWindow('test-window', 'Test Window', '<div>content</div>', {}, mockAppServices);
+    t.assertEqual(typeof win.updateTaskbarButtonActiveState, 'function', 'updateTaskbarButtonActiveState should be a function');
+});
+
+TestRunner.test('SnugWindow - makeDraggable method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeDraggable, 'function', 'makeDraggable should be a function');
+});
+
+TestRunner.test('SnugWindow - makeResizable method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeResizable, 'function', 'makeResizable should be a function');
+});
+
+TestRunner.test('SnugWindow - _captureUndo method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype._captureUndo, 'function', '_captureUndo should be a function');
 });

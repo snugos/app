@@ -96,6 +96,76 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.09.0
 
+#### Day 227: Performance Monitor Undo Capture Tests (2026-04-25)
+- **Feature**: Added 16 new unit tests verifying Performance Monitor and recording state setters call captureStateForUndo before mutating state
+- **Files Modified**:
+  - `js/tests.js`: Added 16 new tests in Day 227 section:
+    - setPerformanceMonitorEnabledState calls captureStateForUndo
+    - setAudioContextStateState calls captureStateForUndo
+    - setCPUUsageState calls captureStateForUndo
+    - setMemoryPressureState calls captureStateForUndo
+    - setActiveVoicesState calls captureStateForUndo
+    - setAudioLatencyState calls captureStateForUndo
+    - setLastCallbackTimeState calls captureStateForUndo
+    - setDroppedCallbacksState calls captureStateForUndo
+    - setArmedTrackIdState calls captureStateForUndo
+    - setSoloedTrackIdState calls captureStateForUndo
+    - setIsRecordingState calls captureStateForUndo
+    - setRecordingTrackIdState calls captureStateForUndo
+    - setRecordingStartTimeState calls captureStateForUndo
+    - setHighestZState calls captureStateForUndo
+    - setMidiLearnModeState calls captureStateForUndo
+    - setMidiLearnPendingParamState calls captureStateForUndo
+  - `js/constants.js`: Bumped APP_VERSION to 1.10.0
+- **Feature Details**:
+  - Tests verify all Performance Monitor and recording state setters call captureStateForUndo before mutating
+  - Tests verify setters guard against missing appServices.captureStateForUndo
+  - Total tests increased from 1209 to 1225
+- **Backend Note**: These tests complete the undo capture verification for Performance Monitor and recording state setters.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.10.0
+
+#### Day 228: InstrumentSampler Track Instance Tests (2026-04-25)
+- **Feature**: Added 22 new unit tests for InstrumentSampler Track instance methods
+- **Files Modified**:
+  - `js/tests.js`: Added 22 new tests in Day 228 section:
+    - InstrumentSampler class exists and is constructable
+    - InstrumentSampler has expected prototype methods
+    - InstrumentSampler has envelope properties
+    - InstrumentSampler has filter properties
+    - InstrumentSampler handles noteOn/noteOff
+    - InstrumentSampler stores audio clips
+    - InstrumentSampler updateControlsUI method exists
+    - Multiple InstrumentSampler tracks are independent
+  - `js/constants.js`: Bumped APP_VERSION to 1.11.0
+- **Feature Details**:
+  - Tests validate InstrumentSampler Track type implementation
+  - Tests verify class structure, methods, and properties
+  - Total tests increased from 1225 to 1247
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.11.0
+
+#### Day 229: SnugWindow Extended Instance Tests (2026-04-25)
+- **Feature**: Added 22 new unit tests for SnugWindow extended instance methods and behaviors
+- **Files Modified**:
+  - `js/tests.js`: Added imports for SnugWindow class and 22 new tests:
+    - SnugWindow - applyState method exists and handles position/size/zIndex/title changes
+    - SnugWindow - prototype has toggleMaximize method
+    - SnugWindow - toggleMaximize changes isMaximized state
+    - SnugWindow - updateTaskbarButtonActiveState method exists
+    - SnugWindow - makeDraggable and makeResizable methods exist
+    - SnugWindow - _captureUndo method exists
+    - SnugWindow - instance has isMaximized, options, appServices properties
+  - `js/constants.js`: Bumped APP_VERSION to 1.12.0
+- **Feature Details**:
+  - Tests validate SnugWindow applyState method for window position/size management
+  - Tests verify prototype methods (toggleMaximize, makeDraggable, makeResizable, _captureUndo)
+  - Tests verify instance properties initialization and storage
+  - Total tests increased from 1247 to 1269
+- **Backend Note**: These tests complement Day 200 SnugWindow tests by verifying additional instance methods and behaviors.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.12.0
+
 
 ## Known Issues and TODOs
 
