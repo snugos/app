@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.03.0'; // Day 219: Metronome, Tempo, Loop Region & Timeline Marker Constants Tests
+export const APP_VERSION = '1.04.0'; // Day 220: Chord Mode State Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

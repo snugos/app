@@ -3595,6 +3595,51 @@ TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex colo
     t.assertTruthy(DEFAULT_TRACK_TEMPLATE_COLOR.length === 7, 'DEFAULT_TRACK_TEMPLATE_COLOR should be 7 chars (#RRGGBB)');
 });
 
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE is an object', (t) => {
+    t.assertTruthy(typeof DEFAULT_TRACK_TEMPLATE === 'object', 'DEFAULT_TRACK_TEMPLATE should be an object');
+    t.assertTruthy(DEFAULT_TRACK_TEMPLATE !== null, 'DEFAULT_TRACK_TEMPLATE should not be null');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.name equals DEFAULT_TEMPLATE_NAME_PREFIX', (t) => {
+    t.assertEqual(DEFAULT_TRACK_TEMPLATE.name, DEFAULT_TEMPLATE_NAME_PREFIX, 'Template name should match DEFAULT_TEMPLATE_NAME_PREFIX');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.color equals DEFAULT_TRACK_TEMPLATE_COLOR', (t) => {
+    t.assertEqual(DEFAULT_TRACK_TEMPLATE.color, DEFAULT_TRACK_TEMPLATE_COLOR, 'Template color should match DEFAULT_TRACK_TEMPLATE_COLOR');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.type is a valid track type', (t) => {
+    const validTypes = ['Synth', 'DrumSampler', 'Sampler', 'InstrumentSampler', 'Audio'];
+    t.assertTruthy(validTypes.includes(DEFAULT_TRACK_TEMPLATE.type), 'Template type should be a valid track type');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.synthParams is an object', (t) => {
+    t.assertTruthy(typeof DEFAULT_TRACK_TEMPLATE.synthParams === 'object', 'synthParams should be an object');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.instrumentSamplerSettings is null', (t) => {
+    t.assertEqual(DEFAULT_TRACK_TEMPLATE.instrumentSamplerSettings, null, 'instrumentSamplerSettings should be null');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.drumSamplerPads is null', (t) => {
+    t.assertEqual(DEFAULT_TRACK_TEMPLATE.drumSamplerPads, null, 'drumSamplerPads should be null');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.activeEffects is an array', (t) => {
+    t.assertTruthy(Array.isArray(DEFAULT_TRACK_TEMPLATE.activeEffects), 'activeEffects should be an array');
+    t.assertEqual(DEFAULT_TRACK_TEMPLATE.activeEffects.length, 0, 'activeEffects should be empty by default');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.hasAutomation is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE.hasAutomation, 'boolean', 'hasAutomation should be boolean');
+    t.assertEqual(DEFAULT_TRACK_TEMPLATE.hasAutomation, false, 'hasAutomation should be false by default');
+});
+
+TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.automationLanes is an array', (t) => {
+    t.assertTruthy(Array.isArray(DEFAULT_TRACK_TEMPLATE.automationLanes), 'automationLanes should be an array');
+    t.assertEqual(DEFAULT_TRACK_TEMPLATE.automationLanes.length, 0, 'automationLanes should be empty by default');
+});
+
 // === Day 205: Audio Module Function Existence Tests ===
 
 // Metronome function existence and signature tests
@@ -6101,4 +6146,186 @@ TestRunner.test('Timeline Markers - DEFAULT_MARKER has color property', (t) => {
 
 TestRunner.test('Timeline Markers - DEFAULT_MARKER.bar is positive', (t) => {
     t.assertTruthy(DEFAULT_MARKER.bar >= 1, 'Default marker bar should be >= 1');
+});
+
+// Day 220: Chord Mode State Tests (2026-04-25)
+// Tests for Chord Mode state management functions to expand test coverage
+
+TestRunner.test('Chord Mode State - getChordModeState returns object', (t) => {
+    t.assertEqual(typeof getChordModeState(), 'object', 'getChordModeState should return an object');
+    t.assertTruthy(getChordModeState() !== null, 'Chord mode state should not be null');
+});
+
+TestRunner.test('Chord Mode State - getChordModeEnabledState returns boolean', (t) => {
+    t.assertEqual(typeof getChordModeEnabledState(), 'boolean', 'getChordModeEnabledState should return boolean');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState accepts boolean', (t) => {
+    setChordModeEnabledState(true);
+    t.assertEqual(getChordModeEnabledState(), true, 'Should accept true');
+    setChordModeEnabledState(false);
+    t.assertEqual(getChordModeEnabledState(), false, 'Should accept false');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState coerces truthy/falsy', (t) => {
+    setChordModeEnabledState(1);
+    t.assertEqual(getChordModeEnabledState(), true, 'Should coerce truthy value 1 to true');
+    setChordModeEnabledState(0);
+    t.assertEqual(getChordModeEnabledState(), false, 'Should coerce falsy value 0 to false');
+});
+
+TestRunner.test('Chord Mode State - getChordModeRootState returns number', (t) => {
+    t.assertEqual(typeof getChordModeRootState(), 'number', 'getChordModeRootState should return number');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState accepts valid root (0-11)', (t) => {
+    setChordModeRootState(0);
+    t.assertEqual(getChordModeRootState(), 0, 'Should accept root 0 (C)');
+    setChordModeRootState(11);
+    t.assertEqual(getChordModeRootState(), 11, 'Should accept root 11 (B)');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState clamps out-of-range values', (t) => {
+    setChordModeRootState(100);
+    t.assertEqual(getChordModeRootState(), 11, 'Should clamp value > 11 to 11');
+    setChordModeRootState(-5);
+    t.assertEqual(getChordModeRootState(), 0, 'Should clamp negative value to 0');
+});
+
+TestRunner.test('Chord Mode State - getChordModeTypeState returns string', (t) => {
+    t.assertEqual(typeof getChordModeTypeState(), 'string', 'getChordModeTypeState should return string');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState accepts valid chord types', (t) => {
+    setChordModeTypeState('minor');
+    t.assertEqual(getChordModeTypeState(), 'minor', 'Should accept minor');
+    setChordModeTypeState('dominant7');
+    t.assertEqual(getChordModeTypeState(), 'dominant7', 'Should accept dominant7');
+    setChordModeTypeState('major7');
+    t.assertEqual(getChordModeTypeState(), 'major7', 'Should accept major7');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState falls back to major for invalid', (t) => {
+    setChordModeTypeState('invalidChord');
+    t.assertEqual(getChordModeTypeState(), 'major', 'Should fall back to major for invalid type');
+});
+
+TestRunner.test('Chord Mode State - getChordModeLockState returns boolean', (t) => {
+    t.assertEqual(typeof getChordModeLockState(), 'boolean', 'getChordModeLockState should return boolean');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState accepts boolean', (t) => {
+    setChordModeLockState(true);
+    t.assertEqual(getChordModeLockState(), true, 'Should accept true');
+    setChordModeLockState(false);
+    t.assertEqual(getChordModeLockState(), false, 'Should accept false');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState coerces truthy/falsy', (t) => {
+    setChordModeLockState(1);
+    t.assertEqual(getChordModeLockState(), true, 'Should coerce truthy to true');
+    setChordModeLockState('');
+    t.assertEqual(getChordModeLockState(), false, 'Should coerce empty string to false');
+});
+
+TestRunner.test('Chord Mode State - getChordVoicingState returns string', (t) => {
+    t.assertEqual(typeof getChordVoicingState(), 'string', 'getChordVoicingState should return string');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState accepts valid voicing', (t) => {
+    setChordVoicingState('wide');
+    t.assertEqual(getChordVoicingState(), 'wide', 'Should accept wide voicing');
+    setChordVoicingState('drop2');
+    t.assertEqual(getChordVoicingState(), 'drop2', 'Should accept drop2 voicing');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState falls back to closed for invalid', (t) => {
+    setChordVoicingState('invalidVoicing');
+    t.assertEqual(getChordVoicingState(), 'closed', 'Should fall back to closed for invalid voicing');
+});
+
+TestRunner.test('Chord Mode State - roundtrip all chord mode settings', (t) => {
+    setChordModeEnabledState(true);
+    setChordModeRootState(5);
+    setChordModeTypeState('minor');
+    setChordModeLockState(true);
+    setChordVoicingState('rootless');
+
+    t.assertEqual(getChordModeEnabledState(), true, 'Enabled should match');
+    t.assertEqual(getChordModeRootState(), 5, 'Root should match');
+    t.assertEqual(getChordModeTypeState(), 'minor', 'Type should match');
+    t.assertEqual(getChordModeLockState(), true, 'Lock should match');
+    t.assertEqual(getChordVoicingState(), 'rootless', 'Voicing should match');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState updates full state object', (t) => {
+    const newState = {
+        enabled: true,
+        root: 7,
+        type: 'dominant7',
+        lockChord: true,
+        voicing: 'drop2'
+    };
+    setChordModeState(newState);
+
+    const state = getChordModeState();
+    t.assertEqual(state.enabled, true, 'Enabled should be updated');
+    t.assertEqual(state.root, 7, 'Root should be updated');
+    t.assertEqual(state.type, 'dominant7', 'Type should be updated');
+    t.assertEqual(state.lockChord, true, 'Lock should be updated');
+    t.assertEqual(state.voicing, 'drop2', 'Voicing should be updated');
+});
+
+TestRunner.test('Chord Mode State - CHORD_TYPES has expected chord types', (t) => {
+    t.assertTruthy(CHORD_TYPES['major'], 'Should have major');
+    t.assertTruthy(CHORD_TYPES['minor'], 'Should have minor');
+    t.assertTruthy(CHORD_TYPES['dominant7'], 'Should have dominant7');
+    t.assertTruthy(CHORD_TYPES['major7'], 'Should have major7');
+    t.assertTruthy(CHORD_TYPES['minor7'], 'Should have minor7');
+});
+
+TestRunner.test('Chord Mode State - CHORD_TYPES intervals are valid semitones', (t) => {
+    for (const [type, intervals] of Object.entries(CHORD_TYPES)) {
+        for (const interval of intervals) {
+            t.assertTruthy(interval >= 0 && interval <= 12, `Chord type ${type} interval ${interval} should be 0-12`);
+        }
+    }
+});
+
+TestRunner.test('Chord Mode State - DEFAULT_CHORD_MODE has correct structure', (t) => {
+    t.assertEqual(typeof DEFAULT_CHORD_MODE, 'object', 'DEFAULT_CHORD_MODE should be object');
+    t.assertEqual(DEFAULT_CHORD_MODE.enabled, false, 'Chord mode should be disabled by default');
+    t.assertEqual(DEFAULT_CHORD_MODE.root, 0, 'Default root should be C (0)');
+    t.assertEqual(DEFAULT_CHORD_MODE.type, 'major', 'Default type should be major');
+    t.assertEqual(DEFAULT_CHORD_MODE.lockChord, false, 'Lock should be false by default');
+});
+
+TestRunner.test('Chord Mode State - CHORD_VOICINGS contains all expected voicings', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'Should include closed');
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'Should include wide');
+    t.assertTruthy(CHORD_VOICINGS.includes('drop2'), 'Should include drop2');
+    t.assertTruthy(CHORD_VOICINGS.includes('rootless'), 'Should include rootless');
+    t.assertEqual(CHORD_VOICINGS.length, 4, 'Should have exactly 4 voicing types');
+});
+
+TestRunner.test('Chord Mode State - CHORD_VOICING_SPREAD has 12 elements per voicing', (t) => {
+    for (const [voicing, intervals] of Object.entries(CHORD_VOICING_SPREAD)) {
+        t.assertEqual(intervals.length, 12, `Voicing ${voicing} should have 12 elements`);
+    }
+});
+
+TestRunner.test('Chord Mode State - DEFAULT_CHORD_VOICING is valid', (t) => {
+    t.assertEqual(DEFAULT_CHORD_VOICING, 'closed', 'Default voicing should be closed');
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'Default should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Mode State - SCALE_ROOTS has 12 chromatic notes', (t) => {
+    t.assertEqual(SCALE_ROOTS.length, 12, 'SCALE_ROOTS should have 12 notes');
+    t.assertEqual(SCALE_ROOTS[0], 'C', 'First note should be C');
+    t.assertEqual(SCALE_ROOTS[11], 'B', 'Last note should be B');
+});
+
+TestRunner.test('Chord Mode State - lockChord property in state', (t) => {
+    const state = getChordModeState();
+    t.assertTruthy('lockChord' in state, 'State should have lockChord property');
 });
