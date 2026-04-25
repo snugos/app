@@ -7018,3 +7018,170 @@ TestRunner.test('Timeline Zoom Constants - STEP is positive', (t) => {
 TestRunner.test('Timeline Zoom Constants - vertical STEP is positive', (t) => {
     t.assertTruthy(TIMELINE_VERTICAL_ZOOM_STEP > 0, 'Vertical STEP should be positive');
 });
+
+// === Day 224: Remaining Undo/Redo Capture Verification Tests (2026-04-25) ===
+// These tests verify that additional state setter functions properly call captureStateForUndo
+// Completing the undo/redo verification coverage for all set* state functions
+
+TestRunner.test('Undo/Redo - setTimeSignatureState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureNumeratorState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureNumeratorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureNumeratorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureDenominatorState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureDenominatorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureDenominatorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setSendTrackMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackSendLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackSendPreFaderState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendPreFaderState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupNameState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupNameState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupColorState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupColorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupColorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupSoloedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupSoloedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupSoloedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('Time Signature'), 'Should mention Time Signature in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureNumeratorState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureNumeratorState.toString();
+    t.assertTruthy(funcStr.includes('Time Signature'), 'Should mention Time Signature in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureDenominatorState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureDenominatorState.toString();
+    t.assertTruthy(funcStr.includes('Time Signature'), 'Should mention Time Signature in undo label');
+});
+
+TestRunner.test('Undo/Redo - setSendTrackMutedState uses descriptive undo label', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('Send') && funcStr.includes('muted'), 'Should mention Send and muted in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackSendLevelState uses descriptive undo label', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('Send Level'), 'Should mention Send Level in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackSendPreFaderState uses descriptive undo label', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('Pre-Fader'), 'Should mention Pre-Fader in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupNameState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('Track Group') || funcStr.includes('Group'), 'Should mention Track Group in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupColorState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupColorState.toString();
+    t.assertTruthy(funcStr.includes('Track Group') && funcStr.includes('color'), 'Should mention Track Group and color in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupMutedState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('Group') && funcStr.includes('muted'), 'Should mention Group and muted in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupSoloedState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupSoloedState.toString();
+    t.assertTruthy(funcStr.includes('Group') && funcStr.includes('soloed'), 'Should mention Group and soloed in undo label');
+});
+
+TestRunner.test('Undo/Redo - all remaining setters guard against missing appServices', (t) => {
+    const remainingSetters = [
+        'setTimeSignatureState', 'setTimeSignatureNumeratorState', 'setTimeSignatureDenominatorState',
+        'setSendTrackMutedState', 'setTrackSendLevelState', 'setTrackSendPreFaderState',
+        'setTrackGroupNameState', 'setTrackGroupColorState', 'setTrackGroupMutedState', 'setTrackGroupSoloedState'
+    ];
+    remainingSetters.forEach(name => {
+        const funcStr = eval(name).toString();
+        t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 
+            `${name} should guard against missing appServices`);
+    });
+});
+
+TestRunner.test('Undo/Redo - complete set function list has undo capture', (t) => {
+    // Comprehensive list of all set functions that should have undo capture
+    const allSettersWithUndo = [
+        // Performance Monitor
+        'setPerformanceMonitorEnabledState', 'setAudioContextStateState', 'setCPUUsageState',
+        'setMemoryPressureState', 'setActiveVoicesState', 'setAudioLatencyState',
+        'setLastCallbackTimeState', 'setDroppedCallbacksState',
+        // Loop Region
+        'setLoopRegionState', 'setLoopRegionEnabledState', 'setLoopRegionStartBarState', 'setLoopRegionEndBarState',
+        // Timeline Zoom
+        'setTimelineZoomLevelState', 'setTimelineVerticalZoomState', 'resetTimelineZoom',
+        // Swing
+        'setSwingState', 'setSwingEnabledState', 'setSwingAmountState',
+        // MIDI Learn
+        'setMidiLearnModeState', 'setMidiLearnPendingParamState',
+        // Recording
+        'setArmedTrackIdState', 'setSoloedTrackIdState', 'setIsRecordingState',
+        'setRecordingTrackIdState', 'setRecordingStartTimeState',
+        // Metronome
+        'setMetronomeEnabledState', 'setMetronomeVolumeState',
+        // Scale Mode
+        'setScaleModeState', 'setScaleModeEnabledState', 'setScaleModeScaleState',
+        'setScaleModeRootState', 'setScaleModeLockState',
+        // Chord Mode
+        'setChordModeState', 'setChordModeEnabledState', 'setChordModeRootState',
+        'setChordModeTypeState', 'setChordModeLockState', 'setChordVoicingState',
+        // Time Signature
+        'setTimeSignatureState', 'setTimeSignatureNumeratorState', 'setTimeSignatureDenominatorState',
+        // Ghost Track
+        'setGhostTrackIdState',
+        // Timeline Markers (handled separately)
+        // Send Tracks
+        'setSendTrackMutedState', 'setTrackSendLevelState', 'setTrackSendPreFaderState',
+        // Track Groups
+        'setTrackGroupNameState', 'setTrackGroupColorState', 'setTrackGroupMutedState', 'setTrackGroupSoloedState'
+    ];
+    let missingUndo = [];
+    allSettersWithUndo.forEach(name => {
+        if (typeof eval(name) !== 'function') {
+            missingUndo.push(name + ' (not a function)');
+            return;
+        }
+        const funcStr = eval(name).toString();
+        if (!funcStr.includes('captureStateForUndo')) {
+            missingUndo.push(name);
+        }
+    });
+    t.assertEqual(missingUndo.length, 0, `All setters should call captureStateForUndo. Missing: ${missingUndo.join(', ')}`);
+});

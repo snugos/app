@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.06.0'; // Day 223: Timeline Zoom State & Function Tests
+export const APP_VERSION = '1.07.0'; // Day 224: Remaining Undo/Redo Capture Verification Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
