@@ -30,7 +30,13 @@ import {
     MAX_TIMELINE_MARKERS,
     DEFAULT_MARKER_COLOR,
     MARKER_COLORS,
-    DEFAULT_MARKER
+    DEFAULT_MARKER,
+    AUTOMATION_LANE_HEIGHT,
+    AUTOMATION_LANE_DEFAULT,
+    AUTOMATION_LANE_PRECISION,
+    AUTOMATION_LANE_STEP,
+    AUTOMATION_LANE_PARAMETERS,
+    AUTOMATION_LANE_COLORS
 } from './constants.js';
 import {
     getUndoStackState,
@@ -7299,4 +7305,314 @@ TestRunner.test('Recording State - Multiple recording cycles work correctly', (t
     setIsRecordingState(false);
     setRecordingTrackIdState(null);
     setRecordingStartTimeState(0);
+});
+
+// ============================================
+// Day 226: Automation Lane Instance Tests (2026-04-25)
+// ============================================
+TestRunner.test('Automation Lane - Track class has getAutomationLane method', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAutomationLane, 'function', 'Track should have getAutomationLane method');
+});
+
+TestRunner.test('Automation Lane - Track class has setAutomationPoint method', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAutomationPoint, 'function', 'Track should have setAutomationPoint method');
+});
+
+TestRunner.test('Automation Lane - Track class has getAutomationValue method', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAutomationValue, 'function', 'Track should have getAutomationValue method');
+});
+
+TestRunner.test('Automation Lane - Track class has clearAutomationLane method', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.clearAutomationLane, 'function', 'Track should have clearAutomationLane method');
+});
+
+TestRunner.test('Automation Lane - Track class has removeAutomationPoint method', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.removeAutomationPoint, 'function', 'Track should have removeAutomationPoint method');
+});
+
+TestRunner.test('Automation Lane - Track class has getAutomationLaneCount method', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAutomationLaneCount, 'function', 'Track should have getAutomationLaneCount method');
+});
+
+TestRunner.test('Automation Lane - Track class has hasAutomation method', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.hasAutomation, 'function', 'Track should have hasAutomation method');
+});
+
+TestRunner.test('Automation Lane - getAutomationLane returns array for any parameter', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    const lane = mockTrack.getAutomationLane('volume');
+    t.assertTruthy(Array.isArray(lane), 'Should return an array');
+    t.assertEqual(lane.length, 0, 'New lane should be empty');
+});
+
+TestRunner.test('Automation Lane - getAutomationLane creates lane if not exists', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    const lane1 = mockTrack.getAutomationLane('pan');
+    t.assertTruthy(Array.isArray(lane1), 'Should return array');
+    const lane2 = mockTrack.getAutomationLane('pan');
+    t.assertEqual(lane1, lane2, 'Same parameter should return same lane');
+});
+
+TestRunner.test('Automation Lane - setAutomationPoint adds point to lane', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.5);
+    const lane = mockTrack.getAutomationLane('volume');
+    t.assertEqual(lane.length, 1, 'Lane should have 1 point');
+    t.assertEqual(lane[0].step, 0, 'Point step should be 0');
+    t.assertEqual(lane[0].value, 0.5, 'Point value should be 0.5');
+});
+
+TestRunner.test('Automation Lane - setAutomationPoint updates existing point at same step', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 5, 0.5);
+    mockTrack.setAutomationPoint('volume', 5, 0.8);
+    const lane = mockTrack.getAutomationLane('volume');
+    t.assertEqual(lane.length, 1, 'Lane should still have 1 point');
+    t.assertEqual(lane[0].value, 0.8, 'Point value should be updated to 0.8');
+});
+
+TestRunner.test('Automation Lane - setAutomationPoint sorts points by step', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 10, 0.9);
+    mockTrack.setAutomationPoint('volume', 0, 0.1);
+    mockTrack.setAutomationPoint('volume', 5, 0.5);
+    const lane = mockTrack.getAutomationLane('volume');
+    t.assertEqual(lane.length, 3, 'Lane should have 3 points');
+    t.assertEqual(lane[0].step, 0, 'First point step should be 0');
+    t.assertEqual(lane[1].step, 5, 'Second point step should be 5');
+    t.assertEqual(lane[2].step, 10, 'Third point step should be 10');
+});
+
+TestRunner.test('Automation Lane - getAutomationValue returns default for empty lane', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    const value = mockTrack.getAutomationValue('volume', 5);
+    t.assertEqual(value, AUTOMATION_LANE_DEFAULT, `Should return default ${AUTOMATION_LANE_DEFAULT}`);
+});
+
+TestRunner.test('Automation Lane - getAutomationValue returns point value when step matches', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 5, 0.75);
+    const value = mockTrack.getAutomationValue('volume', 5);
+    t.assertEqual(value, 0.75, 'Should return the point value');
+});
+
+TestRunner.test('Automation Lane - getAutomationValue interpolates between points', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.0);
+    mockTrack.setAutomationPoint('volume', 10, 1.0);
+    const value = mockTrack.getAutomationValue('volume', 5);
+    t.assertEqual(value, 0.5, 'Should return interpolated value 0.5');
+});
+
+TestRunner.test('Automation Lane - getAutomationValue returns first point value before second point', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.2);
+    mockTrack.setAutomationPoint('volume', 10, 0.8);
+    const value = mockTrack.getAutomationValue('volume', 3);
+    t.assertEqual(value, 0.2, 'Should return first point value (before second)');
+});
+
+TestRunner.test('Automation Lane - getAutomationValue returns last point value after all points', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.2);
+    mockTrack.setAutomationPoint('volume', 10, 0.8);
+    const value = mockTrack.getAutomationValue('volume', 15);
+    t.assertEqual(value, 0.8, 'Should return last point value');
+});
+
+TestRunner.test('Automation Lane - clearAutomationLane removes all points', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.5);
+    mockTrack.setAutomationPoint('volume', 5, 0.7);
+    mockTrack.setAutomationPoint('volume', 10, 0.9);
+    mockTrack.clearAutomationLane('volume');
+    const lane = mockTrack.getAutomationLane('volume');
+    t.assertEqual(lane.length, 0, 'Lane should be empty after clear');
+});
+
+TestRunner.test('Automation Lane - clearAutomationLane handles nonexistent lane', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.clearAutomationLane('pan');
+    const lane = mockTrack.getAutomationLane('pan');
+    t.assertEqual(lane.length, 0, 'Should not error on nonexistent lane');
+});
+
+TestRunner.test('Automation Lane - removeAutomationPoint removes point at step', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 5, 0.5);
+    const result = mockTrack.removeAutomationPoint('volume', 5);
+    t.assertEqual(result, true, 'Should return true');
+    const lane = mockTrack.getAutomationLane('volume');
+    t.assertEqual(lane.length, 0, 'Point should be removed');
+});
+
+TestRunner.test('Automation Lane - removeAutomationPoint returns false for nonexistent point', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    const result = mockTrack.removeAutomationPoint('volume', 999);
+    t.assertEqual(result, false, 'Should return false for nonexistent point');
+});
+
+TestRunner.test('Automation Lane - getAutomationLaneCount returns number of points', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(mockTrack.getAutomationLaneCount('volume'), 0, 'Empty lane should have 0 count');
+    mockTrack.setAutomationPoint('volume', 0, 0.5);
+    t.assertEqual(mockTrack.getAutomationLaneCount('volume'), 1, 'Should have 1 point');
+    mockTrack.setAutomationPoint('volume', 5, 0.7);
+    t.assertEqual(mockTrack.getAutomationLaneCount('volume'), 2, 'Should have 2 points');
+});
+
+TestRunner.test('Automation Lane - hasAutomation returns false when no automation', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    t.assertEqual(mockTrack.hasAutomation(), false, 'Should return false for clean track');
+});
+
+TestRunner.test('Automation Lane - hasAutomation returns true when automation exists', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.5);
+    t.assertEqual(mockTrack.hasAutomation(), true, 'Should return true when automation exists');
+});
+
+TestRunner.test('Automation Lane - hasAutomation returns true for any parameter with points', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('pan', 0, 0.5);
+    t.assertEqual(mockTrack.hasAutomation(), true, 'Should return true for any parameter');
+});
+
+TestRunner.test('Automation Lane - Multiple parameters have separate lanes', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.5);
+    mockTrack.setAutomationPoint('pan', 0, 0.3);
+    mockTrack.setAutomationPoint('filterCutoff', 0, 0.8);
+    t.assertEqual(mockTrack.getAutomationLaneCount('volume'), 1, 'Volume should have 1 point');
+    t.assertEqual(mockTrack.getAutomationLaneCount('pan'), 1, 'Pan should have 1 point');
+    t.assertEqual(mockTrack.getAutomationLaneCount('filterCutoff'), 1, 'Filter cutoff should have 1 point');
+    t.assertEqual(mockTrack.hasAutomation(), true, 'Track should have automation');
+});
+
+TestRunner.test('Automation Lane - Track automation initializes from track data', (t) => {
+    const trackData = {
+        id: 'test-track',
+        name: 'Test Track',
+        type: 'Audio',
+        volume: 0.8,
+        pan: 0,
+        muted: false,
+        soloed: false,
+        armed: false,
+        color: '#ff9f43',
+        automation: {
+            volume: [{ step: 0, value: 0.5 }, { step: 10, value: 0.9 }],
+            pan: [{ step: 5, value: 0.3 }]
+        }
+    };
+    const mockTrack = new Track('test-track', 'Audio', 0, trackData);
+    t.assertEqual(mockTrack.getAutomationLaneCount('volume'), 2, 'Should have 2 volume points');
+    t.assertEqual(mockTrack.getAutomationLaneCount('pan'), 1, 'Should have 1 pan point');
+    t.assertEqual(mockTrack.hasAutomation(), true, 'Track should have automation');
+});
+
+TestRunner.test('Automation Lane - Track automation data includes all parameters', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.5);
+    mockTrack.setAutomationPoint('pan', 5, 0.3);
+    mockTrack.setAutomationPoint('filterCutoff', 10, 0.8);
+    const trackData = mockTrack.toJSON();
+    t.assertTruthy(trackData.automation, 'Track data should have automation');
+    t.assertTruthy(trackData.automation.volume, 'Volume lane should exist');
+    t.assertTruthy(trackData.automation.pan, 'Pan lane should exist');
+    t.assertTruthy(trackData.automation.filterCutoff, 'Filter cutoff lane should exist');
+});
+
+TestRunner.test('Automation Lane - AUTOMATION_LANE_PRECISION constant is used for value rounding', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.123456789);
+    const lane = mockTrack.getAutomationLane('volume');
+    t.assertEqual(lane[0].value.toString().split('.')[1]?.length <= AUTOMATION_LANE_PRECISION, true, 
+        'Value should be rounded to precision');
+});
+
+TestRunner.test('Automation Lane - setAutomationPoint returns boolean success indicator', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    const result = mockTrack.setAutomationPoint('volume', 0, 0.5);
+    t.assertEqual(result, true, 'Should return true on success');
+});
+
+TestRunner.test('Automation Lane - removeAutomationPoint handles parameter with no lane', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    const result = mockTrack.removeAutomationPoint('nonexistent', 0);
+    t.assertEqual(result, false, 'Should return false when parameter has no lane');
+});
+
+TestRunner.test('Automation Lane - getAutomationValue returns default when only before point exists', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.5);
+    const value = mockTrack.getAutomationValue('volume', -5);
+    t.assertEqual(value, 0.5, 'Should return before point value for negative step');
+});
+
+TestRunner.test('Automation Lane - getAutomationValue returns default when only after point exists', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 10, 0.9);
+    const value = mockTrack.getAutomationValue('volume', 15);
+    t.assertEqual(value, 0.9, 'Should return after point value for step beyond all points');
+});
+
+TestRunner.test('Automation Lane - clearAutomationLane on parameter with no points does not error', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.clearAutomationLane('nonexistent');
+    t.assertEqual(mockTrack.getAutomationLane('nonexistent').length, 0, 'Should have empty lane');
+});
+
+TestRunner.test('Automation Lane - Multiple tracks have independent automation lanes', (t) => {
+    const track1 = new Track('track-1', 'Audio', 0);
+    const track2 = new Track('track-2', 'Audio', 1);
+    track1.setAutomationPoint('volume', 0, 0.5);
+    track2.setAutomationPoint('volume', 0, 0.9);
+    t.assertEqual(track1.getAutomationValue('volume', 0), 0.5, 'Track1 should have 0.5');
+    t.assertEqual(track2.getAutomationValue('volume', 0), 0.9, 'Track2 should have 0.9');
+    t.assertEqual(track1.getAutomationLaneCount('volume'), 1, 'Track1 should have 1 point');
+    t.assertEqual(track2.getAutomationLaneCount('volume'), 1, 'Track2 should have 1 point');
+});
+
+TestRunner.test('Automation Lane - setAutomationPoint at step 0 works correctly', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    mockTrack.setAutomationPoint('volume', 0, 0.25);
+    const value = mockTrack.getAutomationValue('volume', 0);
+    t.assertEqual(value, 0.25, 'Should handle step 0 correctly');
+});
+
+TestRunner.test('Automation Lane - getAutomationLaneCount for parameter with no automation', (t) => {
+    const mockTrack = new Track('test-automation-track', 'Audio', 0);
+    const count = mockTrack.getAutomationLaneCount('pan');
+    t.assertEqual(count, 0, 'Should return 0 for parameter with no automation');
+});
+
+TestRunner.test('Automation Lane - Track clone preserves automation data', (t) => {
+    const trackData = {
+        id: 'test-clone-track',
+        name: 'Test Clone Track',
+        type: 'Audio',
+        volume: 0.8,
+        pan: 0,
+        muted: false,
+        soloed: false,
+        armed: false,
+        color: '#ff9f43',
+        automation: {
+            volume: [{ step: 0, value: 0.5 }]
+        }
+    };
+    const originalTrack = new Track('original', 'Audio', 0, trackData);
+    const cloneTrack = new Track('clone', 'Audio', 1, trackData);
+    t.assertEqual(originalTrack.getAutomationLaneCount('volume'), 1, 'Original should have automation');
+    t.assertEqual(cloneTrack.getAutomationLaneCount('volume'), 1, 'Clone should have automation');
+    t.assertEqual(originalTrack.getAutomationValue('volume', 0), 0.5, 'Original value should match');
+    t.assertEqual(cloneTrack.getAutomationValue('volume', 0), 0.5, 'Clone value should match');
 });
