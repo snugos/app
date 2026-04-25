@@ -5183,6 +5183,220 @@ TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.params is empty object', 
     t.assertEqual(Object.keys(DEFAULT_EFFECT_PRESET.params).length, 0, 'DEFAULT_EFFECT_PRESET.params should be an empty object');
 });
 
+
+// ============================================
+// Day 216: Synth Engine & Track Group Constants Tests (2026-04-25)
+// ============================================
+// Synth Engine Control Definitions - MonoSynth control tests
+TestRunner.test('Synth Engine - MonoSynth controls is an array', (t) => {
+    const mono = synthEngineControlDefinitions.MonoSynth;
+    t.assertTruthy(Array.isArray(mono), 'synthEngineControlDefinitions.MonoSynth should be an array');
+});
+
+TestRunner.test('Synth Engine - MonoSynth has 15 control definitions', (t) => {
+    const mono = synthEngineControlDefinitions.MonoSynth;
+    t.assertEqual(mono.length, 15, 'MonoSynth should have 15 control definitions');
+});
+
+TestRunner.test('Synth Engine - MonoSynth portamento control has correct structure', (t) => {
+    const ctrl = synthEngineControlDefinitions.MonoSynth[0];
+    t.assertEqual(ctrl.idPrefix, 'portamento', 'Portamento should have correct idPrefix');
+    t.assertEqual(ctrl.type, 'knob', 'Portamento should be a knob type');
+    t.assertEqual(ctrl.min, 0, 'Portamento min should be 0');
+    t.assertEqual(ctrl.max, 0.2, 'Portamento max should be 0.2');
+});
+
+TestRunner.test('Synth Engine - MonoSynth oscType control has correct options', (t) => {
+    const ctrl = synthEngineControlDefinitions.MonoSynth[1];
+    t.assertEqual(ctrl.idPrefix, 'oscType', 'oscType should have correct idPrefix');
+    t.assertEqual(ctrl.type, 'select', 'oscType should be a select type');
+    t.assertTruthy(ctrl.options.includes('sine'), 'oscType should include sine');
+    t.assertTruthy(ctrl.options.includes('square'), 'oscType should include square');
+    t.assertTruthy(ctrl.options.includes('sawtooth'), 'oscType should include sawtooth');
+    t.assertTruthy(ctrl.options.includes('triangle'), 'oscType should include triangle');
+});
+
+TestRunner.test('Synth Engine - MonoSynth envelope controls have correct range', (t) => {
+    const attack = synthEngineControlDefinitions.MonoSynth[2];
+    const decay = synthEngineControlDefinitions.MonoSynth[3];
+    const sustain = synthEngineControlDefinitions.MonoSynth[4];
+    const release = synthEngineControlDefinitions.MonoSynth[5];
+    t.assertEqual(attack.idPrefix, 'envAttack', 'Attack should have correct idPrefix');
+    t.assertEqual(decay.idPrefix, 'envDecay', 'Decay should have correct idPrefix');
+    t.assertEqual(sustain.idPrefix, 'envSustain', 'Sustain should have correct idPrefix');
+    t.assertEqual(release.idPrefix, 'envRelease', 'Release should have correct idPrefix');
+    t.assertEqual(attack.max, 2, 'Attack max should be 2');
+    t.assertEqual(release.max, 5, 'Release max should be 5');
+});
+
+TestRunner.test('Synth Engine - MonoSynth filter controls have correct structure', (t) => {
+    const filtType = synthEngineControlDefinitions.MonoSynth[6];
+    const filtFreq = synthEngineControlDefinitions.MonoSynth[7];
+    const filtQ = synthEngineControlDefinitions.MonoSynth[8];
+    t.assertEqual(filtType.idPrefix, 'filtType', 'filtType should have correct idPrefix');
+    t.assertEqual(filtFreq.idPrefix, 'filtFreq', 'filtFreq should have correct idPrefix');
+    t.assertEqual(filtQ.idPrefix, 'filtQ', 'filtQ should have correct idPrefix');
+    t.assertEqual(filtFreq.max, 20000, 'filter freq max should be 20000Hz');
+    t.assertEqual(filtQ.min, 0.1, 'filter Q min should be 0.1');
+});
+
+TestRunner.test('Synth Engine - MonoSynth filter envelope controls exist', (t) => {
+    const filtEnvAttack = synthEngineControlDefinitions.MonoSynth[9];
+    const filtEnvDecay = synthEngineControlDefinitions.MonoSynth[10];
+    const filtEnvSustain = synthEngineControlDefinitions.MonoSynth[11];
+    const filtEnvRelease = synthEngineControlDefinitions.MonoSynth[12];
+    t.assertEqual(filtEnvAttack.idPrefix, 'filtEnvAttack', 'filter env attack should exist');
+    t.assertEqual(filtEnvDecay.idPrefix, 'filtEnvDecay', 'filter env decay should exist');
+    t.assertEqual(filtEnvSustain.idPrefix, 'filtEnvSustain', 'filter env sustain should exist');
+    t.assertEqual(filtEnvRelease.idPrefix, 'filtEnvRelease', 'filter env release should exist');
+});
+
+TestRunner.test('Synth Engine - MonoSynth filter envelope has correct ranges', (t) => {
+    const filtEnvAttack = synthEngineControlDefinitions.MonoSynth[9];
+    const filtEnvRelease = synthEngineControlDefinitions.MonoSynth[12];
+    t.assertEqual(filtEnvAttack.max, 2, 'filter env attack max should be 2');
+    t.assertEqual(filtEnvRelease.max, 5, 'filter env release max should be 5');
+});
+
+TestRunner.test('Synth Engine - MonoSynth all controls have required properties', (t) => {
+    const mono = synthEngineControlDefinitions.MonoSynth;
+    mono.forEach(ctrl => {
+        t.assertTruthy('idPrefix' in ctrl, 'Each control should have idPrefix');
+        t.assertTruthy('label' in ctrl, 'Each control should have label');
+        t.assertTruthy('type' in ctrl, 'Each control should have type');
+        t.assertTruthy('defaultValue' in ctrl, 'Each control should have defaultValue');
+        t.assertTruthy('path' in ctrl, 'Each control should have path');
+    });
+});
+
+TestRunner.test('Synth Engine - MonoSynth all control paths are non-empty strings', (t) => {
+    const mono = synthEngineControlDefinitions.MonoSynth;
+    mono.forEach(ctrl => {
+        t.assertEqual(typeof ctrl.path, 'string', 'path should be a string');
+        t.assertTruthy(ctrl.path.length > 0, 'path should not be empty');
+    });
+});
+
+TestRunner.test('Synth Engine - MonoSynth filter env base frequency defaults to reasonable value', (t) => {
+    const filtEnvBaseFreq = synthEngineControlDefinitions.MonoSynth[13];
+    t.assertEqual(filtEnvBaseFreq.idPrefix, 'filtEnvBaseFreq', 'filter env base freq should exist');
+    t.assertEqual(filtEnvBaseFreq.defaultValue, 200, 'filter env base freq default should be 200Hz');
+    t.assertEqual(filtEnvBaseFreq.min, 20, 'filter env base freq min should be 20Hz');
+});
+
+TestRunner.test('Synth Engine - MonoSynth filter env octaves defaults to reasonable value', (t) => {
+    const filtEnvOctaves = synthEngineControlDefinitions.MonoSynth[14];
+    t.assertEqual(filtEnvOctaves.idPrefix, 'filtEnvOctaves', 'filter env octaves should exist');
+    t.assertEqual(filtEnvOctaves.defaultValue, 7, 'filter env octaves default should be 7');
+    t.assertEqual(filtEnvOctaves.max, 10, 'filter env octaves max should be 10');
+});
+
+// Track Group Constants Tests
+TestRunner.test('Track Group - TRACK_GROUP_COLORS is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_GROUP_COLORS), 'TRACK_GROUP_COLORS should be an array');
+});
+
+TestRunner.test('Track Group - TRACK_GROUP_COLORS has 15 colors', (t) => {
+    t.assertEqual(TRACK_GROUP_COLORS.length, 15, 'TRACK_GROUP_COLORS should have 15 colors');
+});
+
+TestRunner.test('Track Group - TRACK_GROUP_COLORS contains DEFAULT_TRACK_GROUP_COLOR', (t) => {
+    t.assertTruthy(TRACK_GROUP_COLORS.includes(DEFAULT_TRACK_GROUP_COLOR), 'TRACK_GROUP_COLORS should include DEFAULT_TRACK_GROUP_COLOR');
+});
+
+TestRunner.test('Track Group - TRACK_GROUP_COLORS all colors are valid hex', (t) => {
+    TRACK_GROUP_COLORS.forEach(color => {
+        t.assertTruthy(color.startsWith('#'), 'Each color should be a hex color starting with #');
+        t.assertEqual(color.length, 7, 'Hex color should be 7 characters (#RRGGBB)');
+    });
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP_COLOR is valid hex', (t) => {
+    t.assertTruthy(DEFAULT_TRACK_GROUP_COLOR.startsWith('#'), 'DEFAULT_TRACK_GROUP_COLOR should be a hex color');
+    t.assertEqual(DEFAULT_TRACK_GROUP_COLOR.length, 7, 'DEFAULT_TRACK_GROUP_COLOR should be 7 characters');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP has correct structure', (t) => {
+    t.assertTruthy('name' in DEFAULT_TRACK_GROUP, 'DEFAULT_TRACK_GROUP should have name property');
+    t.assertTruthy('color' in DEFAULT_TRACK_GROUP, 'DEFAULT_TRACK_GROUP should have color property');
+    t.assertTruthy('trackIds' in DEFAULT_TRACK_GROUP, 'DEFAULT_TRACK_GROUP should have trackIds property');
+    t.assertTruthy('muted' in DEFAULT_TRACK_GROUP, 'DEFAULT_TRACK_GROUP should have muted property');
+    t.assertTruthy('soloed' in DEFAULT_TRACK_GROUP, 'DEFAULT_TRACK_GROUP should have soloed property');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP.trackIds is empty array', (t) => {
+    t.assertTruthy(Array.isArray(DEFAULT_TRACK_GROUP.trackIds), 'trackIds should be an array');
+    t.assertEqual(DEFAULT_TRACK_GROUP.trackIds.length, 0, 'trackIds should be empty');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP.muted is false', (t) => {
+    t.assertEqual(DEFAULT_TRACK_GROUP.muted, false, 'DEFAULT_TRACK_GROUP.muted should be false');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP.soloed is false', (t) => {
+    t.assertEqual(DEFAULT_TRACK_GROUP.soloed, false, 'DEFAULT_TRACK_GROUP.soloed should be false');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP.name equals DEFAULT_TRACK_GROUP_NAME', (t) => {
+    t.assertEqual(DEFAULT_TRACK_GROUP.name, DEFAULT_TRACK_GROUP_NAME, 'DEFAULT_TRACK_GROUP.name should equal DEFAULT_TRACK_GROUP_NAME');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP.color equals DEFAULT_TRACK_GROUP_COLOR', (t) => {
+    t.assertEqual(DEFAULT_TRACK_GROUP.color, DEFAULT_TRACK_GROUP_COLOR, 'DEFAULT_TRACK_GROUP.color should equal DEFAULT_TRACK_GROUP_COLOR');
+});
+
+TestRunner.test('Track Group - MAX_TRACK_GROUPS is reasonable', (t) => {
+    t.assertEqual(typeof MAX_TRACK_GROUPS, 'number', 'MAX_TRACK_GROUPS should be a number');
+    t.assertTruthy(MAX_TRACK_GROUPS >= 4 && MAX_TRACK_GROUPS <= 64, 'MAX_TRACK_GROUPS should be between 4 and 64');
+});
+
+// Computer Key Sampler Map Tests
+TestRunner.test('Sampler Map - computerKeySamplerMap is an object', (t) => {
+    t.assertEqual(typeof computerKeySamplerMap, 'object', 'computerKeySamplerMap should be an object');
+});
+
+TestRunner.test('Sampler Map - computerKeySamplerMap has 8 digit keys', (t) => {
+    const digitKeys = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8'];
+    digitKeys.forEach(key => {
+        t.assertTruthy(key in computerKeySamplerMap, 'computerKeySamplerMap should have ' + key);
+    });
+});
+
+TestRunner.test('Sampler Map - computerKeySamplerMap values are MIDI note numbers', (t) => {
+    Object.values(computerKeySamplerMap).forEach(value => {
+        t.assertEqual(typeof value, 'number', 'Each value should be a number');
+        t.assertTruthy(value >= 0 && value <= 127, 'MIDI note should be in range 0-127');
+    });
+});
+
+TestRunner.test('Sampler Map - computerKeySamplerMap values are consecutive', (t) => {
+    const values = Object.values(computerKeySamplerMap).sort((a, b) => a - b);
+    for (let i = 1; i < values.length; i++) {
+        t.assertEqual(values[i], values[i - 1] + 1, 'Values should be consecutive MIDI notes');
+    }
+});
+
+TestRunner.test('Sampler Map - Digit1 maps to samplerMIDINoteStart', (t) => {
+    t.assertEqual(computerKeySamplerMap['Digit1'], samplerMIDINoteStart, 'Digit1 should map to samplerMIDINoteStart');
+});
+
+TestRunner.test('Sampler Map - Digit8 maps to samplerMIDINoteStart + 7', (t) => {
+    t.assertEqual(computerKeySamplerMap['Digit8'], samplerMIDINoteStart + 7, 'Digit8 should map to samplerMIDINoteStart + 7');
+});
+
+TestRunner.test('Sampler Map - numDrumSamplerPads equals 8', (t) => {
+    t.assertEqual(numDrumSamplerPads, 8, 'numDrumSamplerPads should be 8');
+});
+
+TestRunner.test('Sampler Map - samplerMIDINoteStart is C2 (36)', (t) => {
+    t.assertEqual(samplerMIDINoteStart, 36, 'samplerMIDINoteStart should be 36 (C2)');
+});
+
+TestRunner.test('Sampler Map - All sampler map values are unique', (t) => {
+    const values = Object.values(computerKeySamplerMap);
+    const uniqueValues = [...new Set(values)];
+    t.assertEqual(uniqueValues.length, values.length, 'All sampler map values should be unique');
+});
 // ============================================
 // Day 215: Swing Constants Tests (2026-04-25)
 // ============================================

@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.99.0'; // Day 215: Swing Constants Tests
+export const APP_VERSION = '1.00.0'; // Day 216: Synth Engine & Track Group Constants Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
