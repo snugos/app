@@ -13,6 +13,56 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
+#### Day 220: Chord Mode State Tests (2026-04-25)
+- **Feature**: Added 36 new unit tests for Chord Mode state management functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added tests covering:
+    - getChordModeState, getChordModeEnabledState, setChordModeEnabledState (boolean, truthy coercion)
+    - getChordModeRootState, setChordModeRootState (root 0-11, clamping out-of-range)
+    - getChordModeTypeState, setChordModeTypeState (valid types, fallback to major)
+    - getChordModeLockState, setChordModeLockState (boolean, truthy coercion)
+    - getChordVoicingState, setChordVoicingState (valid voicing, fallback to closed)
+    - roundtrip all chord mode settings
+    - setChordModeState (full state object update)
+    - CHORD_TYPES structure and interval validation
+    - CHORD_VOICINGS contains all 4 voicing types
+    - CHORD_VOICING_SPREAD has 12 elements per voicing
+    - DEFAULT_CHORD_MODE structure validation
+    - SCALE_ROOTS has 12 chromatic notes
+    - lockChord property presence
+  - `js/constants.js`: Bumped APP_VERSION to 1.04.0
+- **Feature Details**:
+  - Tests validate Chord Mode state getter/setter functions
+  - Tests verify value clamping for root note (0-11)
+  - Tests verify fallback to default for invalid chord types and voicings
+  - Tests verify truthy/falsy coercion for boolean setters
+  - Tests verify CHORD_TYPES intervals are valid semitones (0-12)
+  - Tests validate full state roundtrip and partial updates
+  - Total tests increased from 977 to 1013 tests
+- **Backend Note**: The Chord Mode state functions are used by the Sequencer and Track Inspector windows for managing chord-based note input. Tests verify state API without requiring actual audio processing.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.04.0
+
+#### Day 219: Metronome, Tempo, Loop Region & Timeline Marker Constants Tests (2026-04-25)
+- **Feature**: Added 38 new unit tests for Metronome, Tempo, Loop Region, and Timeline Marker constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for DEFAULT_METRONOME_ENABLED, DEFAULT_METRONOME_VOLUME, MIN_METRONOME_VOLUME, MAX_METRONOME_VOLUME, DEFAULT_TEMPO, MIN_TEMPO, MAX_TEMPO, DEFAULT_LOOP_REGION, MAX_TIMELINE_MARKERS, DEFAULT_MARKER_COLOR, MARKER_COLORS, DEFAULT_MARKER
+  - Added 38 new tests in Day 219 section:
+    - Metronome: DEFAULT_METRONOME_ENABLED (boolean, false), DEFAULT_METRONOME_VOLUME (0.5), MIN/MAX volume range (0-1)
+    - Tempo: DEFAULT_TEMPO (120), MIN_TEMPO (0), MAX_TEMPO (999)
+    - Loop Region: DEFAULT_LOOP_REGION structure (enabled:false, startBar:1, endBar:4, minimumBars:1)
+    - Timeline Markers: MAX_TIMELINE_MARKERS (64), DEFAULT_MARKER_COLOR (#ff9f43 orange), MARKER_COLORS array, DEFAULT_MARKER structure
+  - `js/constants.js`: Bumped APP_VERSION to 1.03.0
+- **Feature Details**:
+  - Tests validate Metronome constants (enabled flag, volume range, defaults)
+  - Tests validate Tempo constants (default 120 BPM, min/max bounds)
+  - Tests validate Loop Region structure and property values
+  - Tests validate Timeline Marker constants (max markers, colors, default marker structure)
+  - Total tests increased from 939 to 977 tests
+- **Backend Note**: These constants define behavior for metronome playback, tempo settings, loop region display, and timeline markers in the DAW. Tests verify configuration values without requiring actual audio playback or UI rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.03.0
+
 #### Day 217: Fix isReconstructingDAW Typo in audio.js (2026-04-25)
 - **Bug Fix**: Fixed typo in `js/audio.js` where `isReconstructingingDAW` had an extra "inging" making it a non-existent function call
 - **Files Modified**:
@@ -38,26 +88,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These constants define behavior for effect presets, transport controls, MIDI learn mode, and sequencer grid display. Tests verify configuration values without requiring actual UI rendering.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.02.0
-
-#### Day 219: Metronome, Tempo, Loop Region & Timeline Marker Constants Tests (2026-04-25)
-- **Feature**: Added 38 new unit tests for Metronome, Tempo, Loop Region, and Timeline Marker constants to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added imports for DEFAULT_METRONOME_ENABLED, DEFAULT_METRONOME_VOLUME, MIN_METRONOME_VOLUME, MAX_METRONOME_VOLUME, DEFAULT_TEMPO, MIN_TEMPO, MAX_TEMPO, DEFAULT_LOOP_REGION, MAX_TIMELINE_MARKERS, DEFAULT_MARKER_COLOR, MARKER_COLORS, DEFAULT_MARKER
-  - Added 38 new tests in Day 219 section:
-    - Metronome: DEFAULT_METRONOME_ENABLED (boolean, false), DEFAULT_METRONOME_VOLUME (0.5), MIN/MAX volume range (0-1)
-    - Tempo: DEFAULT_TEMPO (120), MIN_TEMPO (0), MAX_TEMPO (999)
-    - Loop Region: DEFAULT_LOOP_REGION structure (enabled:false, startBar:1, endBar:4, minimumBars:1)
-    - Timeline Markers: MAX_TIMELINE_MARKERS (64), DEFAULT_MARKER_COLOR (#ff9f43 orange), MARKER_COLORS array, DEFAULT_MARKER structure
-  - `js/constants.js`: Bumped APP_VERSION to 1.03.0
-- **Feature Details**:
-  - Tests validate Metronome constants (enabled flag, volume range, defaults)
-  - Tests validate Tempo constants (default 120 BPM, min/max bounds)
-  - Tests validate Loop Region structure and property values
-  - Tests validate Timeline Marker constants (max markers, colors, default marker structure)
-  - Total tests increased from 939 to 977 tests
-- **Backend Note**: These constants define behavior for metronome playback, tempo settings, loop region display, and timeline markers in the DAW. Tests verify configuration values without requiring actual audio playback or UI rendering.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 1.03.0
 
 #### Day 216: Additional Constants Tests (2026-04-25)
 - **Feature**: Added 21 new unit tests for additional constants (Tap Tempo, Drop Zone, Keyboard Shortcuts Help)
