@@ -3657,6 +3657,285 @@ TestRunner.test('Track Template - DEFAULT_TRACK_TEMPLATE.automationLanes is an a
     t.assertEqual(DEFAULT_TRACK_TEMPLATE.automationLanes.length, 0, 'automationLanes should be empty by default');
 });
 
+// === Day 228: InstrumentSampler Track Instance Tests ===
+
+TestRunner.test('InstrumentSampler - Track class can create InstrumentSampler track', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertEqual(track.type, 'InstrumentSampler', 'Track type should be InstrumentSampler');
+});
+
+TestRunner.test('InstrumentSampler - InstrumentSampler track has instrumentSamplerSettings', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy(track.instrumentSamplerSettings !== undefined, 'Should have instrumentSamplerSettings');
+    t.assertEqual(typeof track.instrumentSamplerSettings, 'object', 'instrumentSamplerSettings should be an object');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has sampleUrl property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('sampleUrl' in track.instrumentSamplerSettings, 'Should have sampleUrl property');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has audioBufferDataURL property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('audioBufferDataURL' in track.instrumentSamplerSettings, 'Should have audioBufferDataURL property');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has originalFileName property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('originalFileName' in track.instrumentSamplerSettings, 'Should have originalFileName property');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has dbKey property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('dbKey' in track.instrumentSamplerSettings, 'Should have dbKey property');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has rootNote property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('rootNote' in track.instrumentSamplerSettings, 'Should have rootNote property');
+    t.assertEqual(track.instrumentSamplerSettings.rootNote, 'C4', 'Default rootNote should be C4');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has loop property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('loop' in track.instrumentSamplerSettings, 'Should have loop property');
+    t.assertEqual(track.instrumentSamplerSettings.loop, false, 'Default loop should be false');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has loopStart property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('loopStart' in track.instrumentSamplerSettings, 'Should have loopStart property');
+    t.assertEqual(track.instrumentSamplerSettings.loopStart, 0, 'Default loopStart should be 0');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has loopEnd property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('loopEnd' in track.instrumentSamplerSettings, 'Should have loopEnd property');
+    t.assertEqual(track.instrumentSamplerSettings.loopEnd, 0, 'Default loopEnd should be 0');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has envelope property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('envelope' in track.instrumentSamplerSettings, 'Should have envelope property');
+    t.assertEqual(typeof track.instrumentSamplerSettings.envelope, 'object', 'envelope should be an object');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings envelope has attack, decay, sustain, release', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    const env = track.instrumentSamplerSettings.envelope;
+    t.assertTruthy('attack' in env, 'envelope should have attack');
+    t.assertTruthy('decay' in env, 'envelope should have decay');
+    t.assertTruthy('sustain' in env, 'envelope should have sustain');
+    t.assertTruthy('release' in env, 'envelope should have release');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings has status property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('status' in track.instrumentSamplerSettings, 'Should have status property');
+    t.assertEqual(track.instrumentSamplerSettings.status, 'empty', 'Default status should be empty');
+});
+
+TestRunner.test('InstrumentSampler - track has instrumentSamplerIsPolyphonic property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('instrumentSamplerIsPolyphonic' in track, 'Should have instrumentSamplerIsPolyphonic property');
+    t.assertEqual(track.instrumentSamplerIsPolyphonic, true, 'Default should be polyphonic (true)');
+});
+
+TestRunner.test('InstrumentSampler - track has toneSampler property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertTruthy('toneSampler' in track, 'Should have toneSampler property');
+    t.assertEqual(track.toneSampler, null, 'toneSampler should be null initially');
+});
+
+TestRunner.test('InstrumentSampler - track has setInstrumentSamplerRootNote method', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertEqual(typeof track.setInstrumentSamplerRootNote, 'function', 'Should have setInstrumentSamplerRootNote method');
+});
+
+TestRunner.test('InstrumentSampler - track has setInstrumentSamplerLoop method', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertEqual(typeof track.setInstrumentSamplerLoop, 'function', 'Should have setInstrumentSamplerLoop method');
+});
+
+TestRunner.test('InstrumentSampler - track has setInstrumentSamplerLoopStart method', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertEqual(typeof track.setInstrumentSamplerLoopStart, 'function', 'Should have setInstrumentSamplerLoopStart method');
+});
+
+TestRunner.test('InstrumentSampler - track has setInstrumentSamplerLoopEnd method', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertEqual(typeof track.setInstrumentSamplerLoopEnd, 'function', 'Should have setInstrumentSamplerLoopEnd method');
+});
+
+TestRunner.test('InstrumentSampler - track has setInstrumentSamplerEnv method', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    t.assertEqual(typeof track.setInstrumentSamplerEnv, 'function', 'Should have setInstrumentSamplerEnv method');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoop calls _captureUndoState', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.appServices = window.appServices || {};
+    try {
+        track.setInstrumentSamplerLoop(true);
+        t.assertEqual(captured, true, 'Should call _captureUndoState');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerRootNote calls _captureUndoState', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.appServices = window.appServices || {};
+    try {
+        track.setInstrumentSamplerRootNote('C3');
+        t.assertEqual(captured, true, 'Should call _captureUndoState');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopStart calls _captureUndoState', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.appServices = window.appServices || {};
+    try {
+        track.setInstrumentSamplerLoopStart(0.5);
+        t.assertEqual(captured, true, 'Should call _captureUndoState');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopEnd calls _captureUndoState', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.appServices = window.appServices || {};
+    try {
+        track.setInstrumentSamplerLoopEnd(1.5);
+        t.assertEqual(captured, true, 'Should call _captureUndoState');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerEnv calls _captureUndoState', (t) => {
+    let captured = false;
+    const origCapture = window.appServices?.captureStateForUndo;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (label) => { captured = true; };
+    }
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.appServices = window.appServices || {};
+    try {
+        track.setInstrumentSamplerEnv('attack', 0.05);
+        t.assertEqual(captured, true, 'Should call _captureUndoState');
+    } finally {
+        if (window.appServices) {
+            window.appServices.captureStateForUndo = origCapture || null;
+        }
+    }
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoop updates loop property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.setInstrumentSamplerLoop(true);
+    t.assertEqual(track.instrumentSamplerSettings.loop, true, 'loop should be true');
+    track.setInstrumentSamplerLoop(false);
+    t.assertEqual(track.instrumentSamplerSettings.loop, false, 'loop should be false');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerRootNote updates rootNote property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.setInstrumentSamplerRootNote('E4');
+    t.assertEqual(track.instrumentSamplerSettings.rootNote, 'E4', 'rootNote should be E4');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopStart updates loopStart property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.setInstrumentSamplerLoopStart(2.5);
+    t.assertEqual(track.instrumentSamplerSettings.loopStart, 2.5, 'loopStart should be 2.5');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopEnd updates loopEnd property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.setInstrumentSamplerLoopEnd(5.0);
+    t.assertEqual(track.instrumentSamplerSettings.loopEnd, 5.0, 'loopEnd should be 5.0');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerEnv updates envelope property', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    track.setInstrumentSamplerEnv('attack', 0.1);
+    t.assertEqual(track.instrumentSamplerSettings.envelope.attack, 0.1, 'envelope attack should be 0.1');
+});
+
+TestRunner.test('InstrumentSampler - track toJSON includes instrumentSamplerSettings', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    const json = track.toJSON();
+    t.assertTruthy('instrumentSamplerSettings' in json, 'toJSON should include instrumentSamplerSettings');
+});
+
+TestRunner.test('InstrumentSampler - track toJSON includes instrumentSamplerIsPolyphonic', (t) => {
+    const track = new Track('test-track', 'InstrumentSampler', 0);
+    const json = track.toJSON();
+    t.assertTruthy('instrumentSamplerIsPolyphonic' in json, 'toJSON should include instrumentSamplerIsPolyphonic');
+});
+
+TestRunner.test('InstrumentSampler - instrumentSamplerSettings defaults with initialData', (t) => {
+    const initialData = {
+        instrumentSamplerSettings: {
+            sampleUrl: 'http://example.com/sample.wav',
+            rootNote: 'C3',
+            loop: true,
+            loopStart: 1.0,
+            loopEnd: 4.0,
+            envelope: { attack: 0.05, decay: 0.2, sustain: 0.6, release: 1.0 }
+        }
+    };
+    const track = new Track('test-track', 'InstrumentSampler', 0, initialData);
+    t.assertEqual(track.instrumentSamplerSettings.sampleUrl, 'http://example.com/sample.wav');
+    t.assertEqual(track.instrumentSamplerSettings.rootNote, 'C3');
+    t.assertEqual(track.instrumentSamplerSettings.loop, true);
+    t.assertEqual(track.instrumentSamplerSettings.loopStart, 1.0);
+    t.assertEqual(track.instrumentSamplerSettings.loopEnd, 4.0);
+    t.assertEqual(track.instrumentSamplerSettings.envelope.attack, 0.05);
+});
+
+// Audio slice constants tests
+TestRunner.test('Constants - numSlices is 8', (t) => {
+    t.assertEqual(numSlices, 8, 'numSlices should be 8');
+});
+
+TestRunner.test('Constants - numSlices is used for Sampler tracks', (t) => {
+    t.assertEqual(typeof numSlices, 'number', 'numSlices should be a number');
+    t.assertEqual(numSlices, 8, 'numSlices should be 8 for default slicing');
+});
+
 // === Day 205: Audio Module Function Existence Tests ===
 
 // Metronome function existence and signature tests
