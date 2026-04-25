@@ -139,6 +139,7 @@ import {
     // Undo/Redo
     undoLastActionInternal,
     redoLastActionInternal,
+    captureStateForUndoInternal,
 } from './state.js';
 
 // --- App Services Object ---
@@ -167,6 +168,8 @@ const appServices = {
     // Undo/Redo
     undoLastAction: undoLastActionInternal,
     redoLastAction: redoLastActionInternal,
+
+    captureStateForUndo: captureStateForUndoInternal,
 
     getAudioBlobFromSoundBrowserItem: async (soundData) => {
         if (!soundData || !soundData.libraryName || !soundData.fullPath) {
