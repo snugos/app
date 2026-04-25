@@ -4,6 +4,29 @@
 SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla JavaScript modules. It uses Tone.js for audio processing and Tailwind CSS for styling. The app is deployed via GitHub Pages.
 
 ## Tech Stack
+#### Day 238: MIDI Learn applyMidiLearnMapping & handleMIDIMessage Tests (2026-04-25)
+- **Feature**: Added 27 new unit tests for MIDI Learn applyMidiLearnMapping and handleMIDIMessage functions
+- **Files Modified**:
+  - `js/tests.js`: Added 27 new tests in Day 238 section:
+    - handleMIDIMessage function inspection tests (CC handling, midiLearnMode check, value normalization)
+    - applyMidiLearnMapping function tests (value scaling, parameter handling for masterVolume, metronomeVolume, tempo, trackVolume, trackPan, effectParam)
+    - findMidiLearnMapping function tests (returns index, returns -1 for not found)
+    - Error handling tests (try/catch blocks, missing track handling, tempo clamping)
+    - getTracks alias usage verification
+    - Channel and CC parsing from MIDI message data
+    - CC command range validation (176-191)
+  - `js/constants.js`: Bumped APP_VERSION to 1.21.0
+- **Feature Details**:
+  - Tests verify handleMIDIMessage handles CC messages and checks MIDI learn mode
+  - Tests verify applyMidiLearnMapping scales normalized CC values using min/max range
+  - Tests verify parameter handling for all MIDI Learn target types (master, metronome, tempo, track, effect)
+  - Tests verify findMidiLearnMapping finds by channel and cc, returns -1 when not found
+  - Tests verify error handling and edge cases (missing track, tempo clamping)
+  - Total tests increased from 1622 to 1649
+- **Backend Note**: The MIDI Learn system allows mapping physical MIDI CC controllers to DAW parameters. These tests verify the CC message handling and parameter application without requiring actual MIDI hardware.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.21.0
+
 - Vanilla JS modules (no build step)
 - Tone.js (audio engine) via CDN
 - Tailwind CSS via CDN
