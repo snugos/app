@@ -153,6 +153,7 @@ const appServices = {
     handleOpenSequencer: eventHandleOpenSequencer,
     handleTimelineLaneDrop: handleTimelineLaneDrop,
     attachGlobalControlEvents: attachGlobalControlEvents, // FIX: Expose for reconstruction
+    getTrackById: getTrackByIdState, // Expose track lookup for UI components
 
     // Project Save/Load/Export
     saveProject: saveProjectInternal,
@@ -444,6 +445,10 @@ const appServices = {
     startMetronome: startMetronome,
     stopMetronome: stopMetronome,
     setMetronomeVolume: setMetronomeVolume,
+    // Audio loading functions
+    loadSampleFile,
+    loadDrumSamplerPadFile,
+    loadSoundFromBrowserToTarget,
     // Send Bus functions
     createSendBusInAudio,
     deleteSendBusFromAudio,
