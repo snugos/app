@@ -9,6 +9,30 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - Tailwind CSS via CDN
 - GitHub Pages deployment
 
+#### Day 236: appServices Export & Method Signature Tests (2026-04-25)
+- **Feature**: Added 50 new unit tests for appServices object exported from main.js
+- **Files Modified**:
+  - `js/tests.js`: Added 50 new tests in Day 236 section:
+    - Project methods: saveProject, loadProject, handleProjectFileLoad, exportToWav, exportToMidi, importFromMidi
+    - Undo/Redo methods: undoLastAction, redoLastAction
+    - Audio control: panicStopAllAudio
+    - Transport methods: play, pause, stop, togglePlayPause, startRecording, stopRecording, toggleMetronome, tapTempo
+    - Timeline methods: zoomInTimeline, zoomOutTimeline, resetTimelineZoom, zoomInVerticalTimeline, zoomOutVerticalTimeline
+    - Track methods: createTrack, removeTrack, duplicateTrack, createSendBus, removeSendBus
+    - Window methods: closeAllWindows, closeAllTrackWindows, bringWindowToFront, updateUndoRedoButtonsUI, updateRecordButtonUI
+    - State capture: captureStateForUndo, getIsReconstructingDAW
+    - Parameter counts verified for all methods
+  - `js/constants.js`: Bumped APP_VERSION to 1.19.0
+- **Feature Details**:
+  - Tests verify appServices is a proper object export from main.js
+  - Tests verify all major appServices methods exist and are functions
+  - Tests verify method parameter counts for API correctness
+  - Tests verify undo/redo actions are async functions
+  - Total tests increased from 1531 to 1581
+- **Backend Note**: appServices is the main service layer providing state management, audio control, and UI operations. These tests verify the exported API surface.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.19.0
+
 #### Day 235: Remaining Constants & Keyboard Map Tests (2026-04-25)
 - **Feature**: Added 15 new unit tests for remaining Timeline constants and computer keyboard map validations
 - **Files Modified**:
