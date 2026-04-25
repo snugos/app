@@ -9,6 +9,28 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - Tailwind CSS via CDN
 - GitHub Pages deployment
 
+#### Day 224: Complete Undo/Redo Capture Verification Tests (2026-04-25)
+- **Feature**: Added 22 new unit tests to complete undo/redo verification coverage for remaining state setter functions
+- **Files Modified**:
+  - `js/tests.js`: Added 22 new tests in Day 224 section:
+    - setTimeSignatureState/ Numerator/ DenominatorState calls captureStateForUndo
+    - setSendTrackMutedState/Level/PreFaderState calls captureStateForUndo
+    - setTrackGroupNameState/ColorState/MutedState/SoloedState calls captureStateForUndo
+    - Descriptive undo labels verification for all remaining setters
+    - Guards against missing appServices for all remaining setters
+    - Comprehensive test verifying ALL 40+ set functions call captureStateForUndo
+  - `js/constants.js`: Bumped APP_VERSION to 1.07.0
+- **Feature Details**:
+  - Tests verify all remaining state setters call captureStateForUndo before mutating
+  - Tests verify descriptive undo labels (e.g., "Set Time Signature", "Set Send Level", "Track Group" operations)
+  - Tests verify setters guard against missing appServices.captureStateForUndo
+  - Comprehensive validation test confirms complete coverage across all 40+ set functions
+  - Total tests increased from 1131 to 1153
+- **Backend Note**: The undo system captures full project state snapshots before mutations. These tests complete the verification coverage for Time Signature, Send Track, and Track Group state setters.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.07.0
+
+
 ## Known Issues and TODOs
 
 ### Completed Features
