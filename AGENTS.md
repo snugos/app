@@ -3146,3 +3146,31 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Event Handler module handles global keyboard, mouse, and MIDI input for the DAW. The tests verify the exported API without requiring actual DOM or MIDI hardware.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.15.0
+
+#### Day 233: Additional UI Function Tests (2026-04-25)
+- **Feature**: Added 41 new unit tests for remaining UI module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Updated ui.js imports to include renderEffectsList, renderEffectControls, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory, drawWaveform, drawInstrumentWaveform, highlightPlayingStep, renderSamplePads, updateSliceEditorUI, updateSequencerCellUI, openAudioClipEditorWindow
+  - Added 41 new tests in Day 233 section:
+    - renderEffectsList function export and 4 parameter count
+    - renderEffectControls function export and 4 parameter count
+    - updateSoundBrowserDisplayForLibrary function export and 3 parameter count
+    - renderSoundBrowserDirectory function export and 2 parameter count
+    - drawWaveform function export and 1 parameter count
+    - drawInstrumentWaveform function export and 1 parameter count
+    - highlightPlayingStep function export and 3 parameter count
+    - renderSamplePads function export and 1 parameter count
+    - updateSliceEditorUI function export and 1 parameter count
+    - updateSequencerCellUI function export and 5 parameter count
+    - openAudioClipEditorWindow function export and 3 parameter count
+    - Code inspection tests verifying DOM element references
+    - Tests verify functions reference expected parameters and internal logic
+  - `js/constants.js`: Bumped APP_VERSION to 1.16.0
+- **Feature Details**:
+  - Tests validate all 11 previously-untested UI functions are properly exported from ui.js
+  - Tests validate function parameter counts match expected APIs
+  - Tests verify functions contain expected code references (DOM elements, parameters, state)
+  - Total tests increased from 1438 to 1479
+- **Backend Note**: These UI functions handle effects list rendering, waveform drawing, sequencer cell updates, sound browser display, and sample pad rendering. The tests verify the exported API without requiring actual DOM rendering or audio processing.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.16.0

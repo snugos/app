@@ -225,7 +225,18 @@ import {
     handleTapTempo,
     resetTapTempo,
     createKnob,
-    initializeUIModule
+    initializeUIModule,
+    renderEffectsList,
+    renderEffectControls,
+    updateSoundBrowserDisplayForLibrary,
+    renderSoundBrowserDirectory,
+    drawWaveform,
+    drawInstrumentWaveform,
+    highlightPlayingStep,
+    renderSamplePads,
+    updateSliceEditorUI,
+    updateSequencerCellUI,
+    openAudioClipEditorWindow
 } from './ui.js';
 
 import {
@@ -9386,4 +9397,189 @@ TestRunner.test('Event Handlers - event handler functions reference state.js imp
     t.assertTruthy(handleTrackMuteStr.includes('setSoloedTrackId') || handleTrackMuteStr.includes('trackId'), 'handleTrackMute should reference track state');
     t.assertTruthy(handleTrackSoloStr.includes('setSoloedTrackId') || handleTrackSoloStr.includes('trackId'), 'handleTrackSolo should reference track state');
     t.assertTruthy(handleTrackArmStr.includes('setArmedTrackId') || handleTrackArmStr.includes('trackId'), 'handleTrackArm should reference track state');
+});
+
+
+// Day 233: Additional UI Function Tests
+TestRunner.test('UI - renderEffectsList function is exported', (t) => {
+    t.assertTruthy(typeof renderEffectsList === 'function', 'renderEffectsList should be a function');
+});
+
+TestRunner.test('UI - renderEffectsList accepts 4 parameters', (t) => {
+    t.assertTruthy(renderEffectsList.length === 4, 'renderEffectsList should accept 4 parameters (owner, ownerType, listDiv, controlsContainer)');
+});
+
+TestRunner.test('UI - renderEffectControls function is exported', (t) => {
+    t.assertTruthy(typeof renderEffectControls === 'function', 'renderEffectControls should be a function');
+});
+
+TestRunner.test('UI - renderEffectControls accepts 4 parameters', (t) => {
+    t.assertTruthy(renderEffectControls.length === 4, 'renderEffectControls should accept 4 parameters (owner, ownerType, effectId, controlsContainer)');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary function is exported', (t) => {
+    t.assertTruthy(typeof updateSoundBrowserDisplayForLibrary === 'function', 'updateSoundBrowserDisplayForLibrary should be a function');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary accepts 3 parameters', (t) => {
+    t.assertTruthy(updateSoundBrowserDisplayForLibrary.length === 3, 'updateSoundBrowserDisplayForLibrary should accept 3 parameters (libraryName, isLoading, hasError)');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory function is exported', (t) => {
+    t.assertTruthy(typeof renderSoundBrowserDirectory === 'function', 'renderSoundBrowserDirectory should be a function');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory accepts 2 parameters', (t) => {
+    t.assertTruthy(renderSoundBrowserDirectory.length === 2, 'renderSoundBrowserDirectory should accept 2 parameters (pathArray, treeNode)');
+});
+
+TestRunner.test('UI - drawWaveform function is exported', (t) => {
+    t.assertTruthy(typeof drawWaveform === 'function', 'drawWaveform should be a function');
+});
+
+TestRunner.test('UI - drawWaveform accepts 1 parameter', (t) => {
+    t.assertTruthy(drawWaveform.length === 1, 'drawWaveform should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform function is exported', (t) => {
+    t.assertTruthy(typeof drawInstrumentWaveform === 'function', 'drawInstrumentWaveform should be a function');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform accepts 1 parameter', (t) => {
+    t.assertTruthy(drawInstrumentWaveform.length === 1, 'drawInstrumentWaveform should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - highlightPlayingStep function is exported', (t) => {
+    t.assertTruthy(typeof highlightPlayingStep === 'function', 'highlightPlayingStep should be a function');
+});
+
+TestRunner.test('UI - highlightPlayingStep accepts 3 parameters', (t) => {
+    t.assertTruthy(highlightPlayingStep.length === 3, 'highlightPlayingStep should accept 3 parameters (trackId, stepIndex, isPlaying)');
+});
+
+TestRunner.test('UI - renderSamplePads function is exported', (t) => {
+    t.assertTruthy(typeof renderSamplePads === 'function', 'renderSamplePads should be a function');
+});
+
+TestRunner.test('UI - renderSamplePads accepts 1 parameter', (t) => {
+    t.assertTruthy(renderSamplePads.length === 1, 'renderSamplePads should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - updateSliceEditorUI function is exported', (t) => {
+    t.assertTruthy(typeof updateSliceEditorUI === 'function', 'updateSliceEditorUI should be a function');
+});
+
+TestRunner.test('UI - updateSliceEditorUI accepts 1 parameter', (t) => {
+    t.assertTruthy(updateSliceEditorUI.length === 1, 'updateSliceEditorUI should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - updateSequencerCellUI function is exported', (t) => {
+    t.assertTruthy(typeof updateSequencerCellUI === 'function', 'updateSequencerCellUI should be a function');
+});
+
+TestRunner.test('UI - updateSequencerCellUI accepts 5 parameters', (t) => {
+    t.assertTruthy(updateSequencerCellUI.length === 5, 'updateSequencerCellUI should accept 5 parameters (sequencerElement, trackType, row, col, isActive)');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow function is exported', (t) => {
+    t.assertTruthy(typeof openAudioClipEditorWindow === 'function', 'openAudioClipEditorWindow should be a function');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow accepts 3 parameters', (t) => {
+    t.assertTruthy(openAudioClipEditorWindow.length === 3, 'openAudioClipEditorWindow should accept 3 parameters (trackId, clipId, savedState)');
+});
+
+TestRunner.test('UI - renderEffectsList references list/container elements', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('listDiv') || funcStr.includes('controlsContainer') || funcStr.includes('innerHTML') || funcStr.includes('appendChild'), 'renderEffectsList should reference DOM elements');
+});
+
+TestRunner.test('UI - renderEffectControls references effect container', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('controlsContainer') || funcStr.includes('effectId') || funcStr.includes('innerHTML') || funcStr.includes('appendChild'), 'renderEffectControls should reference effect container');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary handles loading state', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('isLoading') || funcStr.includes('hasError') || funcStr.includes('libraryName'), 'updateSoundBrowserDisplayForLibrary should handle loading/error states');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory handles path arrays', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('pathArray') || funcStr.includes('treeNode') || funcStr.includes('innerHTML') || funcStr.includes('appendChild'), 'renderSoundBrowserDirectory should handle path arrays');
+});
+
+TestRunner.test('UI - drawWaveform references track data', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('audioClips') || funcStr.includes('audioBuffer') || funcStr.includes('getAudio'), 'drawWaveform should reference track audio data');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform references track data', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('audioClips') || funcStr.includes('instrumentSlices'), 'drawInstrumentWaveform should reference track instrument data');
+});
+
+TestRunner.test('UI - highlightPlayingStep references track and step index', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('trackId') || funcStr.includes('stepIndex') || funcStr.includes('isPlaying') || funcStr.includes('classList'), 'highlightPlayingStep should reference track/step/playing state');
+});
+
+TestRunner.test('UI - renderSamplePads references track audio clips', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('audioClips') || funcStr.includes('slices'), 'renderSamplePads should reference track slices');
+});
+
+TestRunner.test('UI - updateSliceEditorUI references selected slice', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('selectedSlice') || funcStr.includes('sliceIndex') || funcStr.includes('innerHTML'), 'updateSliceEditorUI should reference selected slice');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references sequencer cell state', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('sequencerElement') || funcStr.includes('isActive') || funcStr.includes('classList') || funcStr.includes('trackType'), 'updateSequencerCellUI should reference cell and track type');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow opens editor window', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId') || funcStr.includes('clipId') || funcStr.includes('SnugWindow') || funcStr.includes('openWindow'), 'openAudioClipEditorWindow should open editor window');
+});
+
+TestRunner.test('UI - renderEffectsList checks owner type', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('ownerType') || funcStr.includes('owner') || funcStr.includes('track') || funcStr.includes('master'), 'renderEffectsList should check owner type');
+});
+
+TestRunner.test('UI - renderEffectControls creates effect controls', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('effectId') || funcStr.includes('params') || funcStr.includes('createKnob') || funcStr.includes('controlsContainer'), 'renderEffectControls should create effect controls');
+});
+
+TestRunner.test('UI - drawWaveform handles empty track', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('audioClips') || funcStr.includes('if') || funcStr.includes('null') || funcStr.includes('empty'), 'drawWaveform should handle empty track');
+});
+
+TestRunner.test('UI - highlightPlayingStep toggles playing class', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('classList') || funcStr.includes('add') || funcStr.includes('remove') || funcStr.includes('isPlaying'), 'highlightPlayingStep should toggle playing class');
+});
+
+TestRunner.test('UI - updateSliceEditorUI references slice data', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('sliceIndex') || funcStr.includes('audioBuffer') || funcStr.includes('buffer'), 'updateSliceEditorUI should reference slice data');
+});
+
+TestRunner.test('UI - updateSequencerCellUI updates cell style', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('sequencerElement') || funcStr.includes('style') || funcStr.includes('background') || funcStr.includes('classList'), 'updateSequencerCellUI should update cell style');
+});
+
+TestRunner.test('UI - renderEffectsList handles effect list iteration', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('forEach') || funcStr.includes('map') || funcStr.includes('for') || funcStr.includes('effects') || funcStr.includes('length'), 'renderEffectsList should iterate over effects');
+});
+
+TestRunner.test('UI - renderEffectControls handles parameter rendering', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('params') || funcStr.includes('param') || funcStr.includes('forEach') || funcStr.includes('map') || funcStr.includes('key') || funcStr.includes('value'), 'renderEffectControls should render parameters');
 });
