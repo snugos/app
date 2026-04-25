@@ -13,7 +13,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
-#### Day 214: Scale Mode Comprehensive Constants Tests (2026-04-25)
+#### Day 216: Additional Constants Tests (2026-04-25)
+- **Feature**: Added 21 new unit tests for additional constants (Tap Tempo, Drop Zone, Keyboard Shortcuts Help)
+- **Files Modified**:
+  - `js/tests.js`: Added 21 new tests in Day 216 section:
+    - Tap Tempo tests: TAP_TEMPO_TIMEOUT_MS (positive, value 2000), TAP_TEMPO_MIN_TAPS (at least 2), TAP_TEMPO_MAX_TAPS (>= MIN), TAP_TEMPO_MIN_BPM (10-60), TAP_TEMPO_MAX_BPM (200-400), MAX_BPM > MIN_BPM validation
+    - Drop Zone tests: DROP_ZONE_MIN_WIDTH (positive, >= 40), DROP_ZONE_MIN_HEIGHT (positive, >= 30), DROP_ZONE_DEFAULT_HEIGHT (30-100), DROP_ZONE_BORDER_RADIUS (non-negative, <= 20)
+    - Keyboard Shortcuts Help tests: KEYBOARD_SHORTCUTS_HELP_TITLE (non-empty string), KEYBOARD_SHORTCUTS_HELP_WIDTH (positive, 400-800), KEYBOARD_SHORTCUTS_HELP_HEIGHT (positive, 300-700)
+  - `js/constants.js`: Bumped APP_VERSION to 1.01.0
+- **Feature Details**:
+  - Tests validate Tap Tempo constants (timeout, min/max taps, BPM range)
+  - Tests validate Drop Zone constants (min width/height, default height, border radius)
+  - Tests validate Keyboard Shortcuts Help window dimensions and title
+  - Total tests increased from 844 to 865 tests
+- **Backend Note**: These constants define UI behavior for the tap tempo feature, drag-and-drop zones, and the keyboard shortcuts help modal window. Tests verify configuration values without requiring actual UI rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.01.0
+
 - **Feature**: Added 35 new unit tests for Scale Mode constants to expand test coverage
 - **Files Modified**:
   - `js/tests.js`: Added 35 new tests in Day 214 section:

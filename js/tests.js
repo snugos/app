@@ -5485,3 +5485,97 @@ TestRunner.test('Swing - Swing amount percentage calculation is valid', (t) => {
 TestRunner.test('Swing - SWING_SUBDIVISION is even (for even time divisions)', (t) => {
     t.assertEqual(SWING_SUBDIVISION % 2, 0, 'SWING_SUBDIVISION should be even for even time divisions');
 });
+
+// ============================================
+// Day 216: Additional Constants Tests (2026-04-25)
+// ============================================
+// Tap Tempo Constants Tests
+TestRunner.test('Tap Tempo - TAP_TEMPO_TIMEOUT_MS is positive', (t) => {
+    t.assertEqual(typeof TAP_TEMPO_TIMEOUT_MS, 'number', 'TAP_TEMPO_TIMEOUT_MS should be a number');
+    t.assertTruthy(TAP_TEMPO_TIMEOUT_MS > 0, 'TAP_TEMPO_TIMEOUT_MS should be positive');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_TIMEOUT_MS is 2000', (t) => {
+    t.assertEqual(TAP_TEMPO_TIMEOUT_MS, 2000, 'TAP_TEMPO_TIMEOUT_MS should be 2000ms');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MIN_TAPS is at least 2', (t) => {
+    t.assertEqual(typeof TAP_TEMPO_MIN_TAPS, 'number', 'TAP_TEMPO_MIN_TAPS should be a number');
+    t.assertTruthy(TAP_TEMPO_MIN_TAPS >= 2, 'TAP_TEMPO_MIN_TAPS should be at least 2');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MAX_TAPS is at least TAP_TEMPO_MIN_TAPS', (t) => {
+    t.assertEqual(typeof TAP_TEMPO_MAX_TAPS, 'number', 'TAP_TEMPO_MAX_TAPS should be a number');
+    t.assertTruthy(TAP_TEMPO_MAX_TAPS >= TAP_TEMPO_MIN_TAPS, 'TAP_TEMPO_MAX_TAPS should be >= TAP_TEMPO_MIN_TAPS');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MIN_BPM is reasonable', (t) => {
+    t.assertEqual(typeof TAP_TEMPO_MIN_BPM, 'number', 'TAP_TEMPO_MIN_BPM should be a number');
+    t.assertTruthy(TAP_TEMPO_MIN_BPM >= 10 && TAP_TEMPO_MIN_BPM <= 60, 'TAP_TEMPO_MIN_BPM should be between 10 and 60');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MAX_BPM is reasonable', (t) => {
+    t.assertEqual(typeof TAP_TEMPO_MAX_BPM, 'number', 'TAP_TEMPO_MAX_BPM should be a number');
+    t.assertTruthy(TAP_TEMPO_MAX_BPM >= 200 && TAP_TEMPO_MAX_BPM <= 400, 'TAP_TEMPO_MAX_BPM should be between 200 and 400');
+});
+
+TestRunner.test('Tap Tempo - TAP_TEMPO_MAX_BPM is greater than TAP_TEMPO_MIN_BPM', (t) => {
+    t.assertTruthy(TAP_TEMPO_MAX_BPM > TAP_TEMPO_MIN_BPM, 'TAP_TEMPO_MAX_BPM should be greater than TAP_TEMPO_MIN_BPM');
+});
+
+// Drop Zone Constants Tests
+TestRunner.test('Drop Zone - DROP_ZONE_MIN_WIDTH is positive', (t) => {
+    t.assertEqual(typeof DROP_ZONE_MIN_WIDTH, 'number', 'DROP_ZONE_MIN_WIDTH should be a number');
+    t.assertTruthy(DROP_ZONE_MIN_WIDTH > 0, 'DROP_ZONE_MIN_WIDTH should be positive');
+});
+
+TestRunner.test('Drop Zone - DROP_ZONE_MIN_WIDTH is at least 40', (t) => {
+    t.assertTruthy(DROP_ZONE_MIN_WIDTH >= 40, 'DROP_ZONE_MIN_WIDTH should be at least 40');
+});
+
+TestRunner.test('Drop Zone - DROP_ZONE_MIN_HEIGHT is positive', (t) => {
+    t.assertEqual(typeof DROP_ZONE_MIN_HEIGHT, 'number', 'DROP_ZONE_MIN_HEIGHT should be a number');
+    t.assertTruthy(DROP_ZONE_MIN_HEIGHT > 0, 'DROP_ZONE_MIN_HEIGHT should be positive');
+});
+
+TestRunner.test('Drop Zone - DROP_ZONE_MIN_HEIGHT is at least 30', (t) => {
+    t.assertTruthy(DROP_ZONE_MIN_HEIGHT >= 30, 'DROP_ZONE_MIN_HEIGHT should be at least 30');
+});
+
+TestRunner.test('Drop Zone - DROP_ZONE_DEFAULT_HEIGHT is reasonable', (t) => {
+    t.assertEqual(typeof DROP_ZONE_DEFAULT_HEIGHT, 'number', 'DROP_ZONE_DEFAULT_HEIGHT should be a number');
+    t.assertTruthy(DROP_ZONE_DEFAULT_HEIGHT >= 30 && DROP_ZONE_DEFAULT_HEIGHT <= 100, 'DROP_ZONE_DEFAULT_HEIGHT should be between 30 and 100');
+});
+
+TestRunner.test('Drop Zone - DROP_ZONE_BORDER_RADIUS is non-negative', (t) => {
+    t.assertEqual(typeof DROP_ZONE_BORDER_RADIUS, 'number', 'DROP_ZONE_BORDER_RADIUS should be a number');
+    t.assertTruthy(DROP_ZONE_BORDER_RADIUS >= 0, 'DROP_ZONE_BORDER_RADIUS should be non-negative');
+});
+
+TestRunner.test('Drop Zone - DROP_ZONE_BORDER_RADIUS is at most 20', (t) => {
+    t.assertTruthy(DROP_ZONE_BORDER_RADIUS <= 20, 'DROP_ZONE_BORDER_RADIUS should be at most 20');
+});
+
+// Keyboard Shortcuts Help Constants Tests
+TestRunner.test('Keyboard Shortcuts Help - KEYBOARD_SHORTCUTS_HELP_TITLE is a string', (t) => {
+    t.assertEqual(typeof KEYBOARD_SHORTCUTS_HELP_TITLE, 'string', 'KEYBOARD_SHORTCUTS_HELP_TITLE should be a string');
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_TITLE.length > 0, 'KEYBOARD_SHORTCUTS_HELP_TITLE should not be empty');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - KEYBOARD_SHORTCUTS_HELP_WIDTH is positive', (t) => {
+    t.assertEqual(typeof KEYBOARD_SHORTCUTS_HELP_WIDTH, 'number', 'KEYBOARD_SHORTCUTS_HELP_WIDTH should be a number');
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_WIDTH > 0, 'KEYBOARD_SHORTCUTS_HELP_WIDTH should be positive');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - KEYBOARD_SHORTCUTS_HELP_WIDTH is between 400 and 800', (t) => {
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_WIDTH >= 400 && KEYBOARD_SHORTCUTS_HELP_WIDTH <= 800, 'KEYBOARD_SHORTCUTS_HELP_WIDTH should be between 400 and 800');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - KEYBOARD_SHORTCUTS_HELP_HEIGHT is positive', (t) => {
+    t.assertEqual(typeof KEYBOARD_SHORTCUTS_HELP_HEIGHT, 'number', 'KEYBOARD_SHORTCUTS_HELP_HEIGHT should be a number');
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_HEIGHT > 0, 'KEYBOARD_SHORTCUTS_HELP_HEIGHT should be positive');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - KEYBOARD_SHORTCUTS_HELP_HEIGHT is between 300 and 700', (t) => {
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_HEIGHT >= 300 && KEYBOARD_SHORTCUTS_HELP_HEIGHT <= 700, 'KEYBOARD_SHORTCUTS_HELP_HEIGHT should be between 300 and 700');
+});
