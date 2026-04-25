@@ -75,6 +75,31 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.98.0
 
+#### Day 217: Audio Clip & Send Track Constants Tests (2026-04-25)
+- **Feature**: Added 38 new unit tests for Audio Clip, Send Track, Window, and Context Menu constants
+- **Files Modified**:
+  - `js/tests.js`: Added 38 new tests in Day 217 section:
+    - Audio Clip Crossfade: DEFAULT_AUDIO_CLIP_CROSSFADE (0), MIN/MAX (0/5)
+    - Audio Clip Gain: DEFAULT (1.0), MIN (0), MAX (4.0), GAIN_NORMALIZE_TARGET (1.0)
+    - Audio Clip Playback Rate: DEFAULT (1.0), MIN (0.25), MAX (4.0)
+    - Audio Clip Offset: DEFAULT_START_OFFSET (0), MIN_START_OFFSET (0), DEFAULT_END_OFFSET (-1), MIN_END_OFFSET (-1)
+    - Audio Clip Reverse: DEFAULT_AUDIO_CLIP_REVERSE is false
+    - Audio Clip Fade: DEFAULT_FADE_IN/OUT (0), MAX_FADE (10)
+    - Send Track: DEFAULT_SEND_TRACK structure, DEFAULT_SEND_LEVEL (0), SEND_LEVEL_MIN/MAX (0/1.2), DEFAULT_SEND_PRE_FADER (false), SEND_PRE_FADER_ENABLED (true), MAX_SEND_TRACKS (8)
+    - Window: DEFAULT_WINDOW_WIDTH (350), DEFAULT_WINDOW_HEIGHT (250), DEFAULT_WINDOW_MIN_WIDTH/HEIGHT (150/100), TASKBAR_HEIGHT (30)
+    - Context Menu: CONTEXT_MENU_ITEM_HEIGHT (28), CONTEXT_MENU_MAX_WIDTH (300)
+  - `js/constants.js`: Bumped APP_VERSION to 1.02.0
+- **Feature Details**:
+  - Tests validate Audio Clip Editor constants (crossfade, gain, playback rate, start/end offset, reverse, fade)
+  - Tests validate Send Track constants (default levels, min/max, pre-fader settings, max tracks)
+  - Tests validate Window dimension constants (default sizes, minimums, taskbar height)
+  - Tests validate Context Menu layout constants (item height, max width)
+  - Total tests increased from 865 to 905 tests
+- **Backend Note**: These constants define UI behavior for the audio clip editor, send bus routing, window management, and context menus. Tests verify configuration values without requiring actual UI rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.02.0
+
+
 #### Day 212: MIDI Export/Import Constants Tests (2026-04-24)
 #### Day 213: Project Save/Load/Export Function Tests (2026-04-25)
 - **Feature**: Added 16 new unit tests for Project Save/Load/Export functions to expand test coverage
