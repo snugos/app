@@ -145,6 +145,32 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.11.0
 
+#### Day 230: Audio Track Instance Tests (2026-04-25)
+- **Feature**: Added 72 new unit tests for Audio Track instance methods and properties on Track class objects
+- **Files Modified**:
+  - `js/tests.js`: Added 72 new tests in Day 230 section:
+    - Track class can create Audio track
+    - Audio track has inputChannel property (null initially)
+    - Audio track has clipPlayers Map (empty initially)
+    - Audio track has timelineClips array (empty initially)
+    - addAudioClip method exists and returns Promise
+    - addAudioClip handles null/empty blob gracefully
+    - _getAudioClip helper returns undefined for nonexistent clip
+    - All audio clip getter/setter methods exist (name, color, gain, playbackRate, startOffset, endOffset, crossfade, fadeIn, fadeOut, fadeInCurve, fadeOutCurve, reverse, startTime)
+    - bounceTrack and _audioBufferToWav methods exist
+    - Different track types have independent clipPlayers Maps
+    - Audio track stores id, name, and index correctly
+  - `js/constants.js`: Bumped APP_VERSION to 1.13.0
+- **Feature Details**:
+  - Tests validate all audio clip accessor methods on Audio Track type
+  - Tests verify Audio track-specific properties (inputChannel, clipPlayers)
+  - Tests verify addAudioClip edge case handling (null/empty blob)
+  - Tests verify independent state for different track types
+  - Total tests increased from 1281 to 1353
+- **Backend Note**: The Audio Track tests complement the existing Audio Clip Editor tests by verifying Audio Track instance properties and methods directly. Tests verify the Track class handles Audio tracks correctly without requiring actual audio processing.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.13.0
+
 #### Day 229: SnugWindow Extended Instance Tests (2026-04-25)
 - **Feature**: Added 22 new unit tests for SnugWindow extended instance methods and behaviors
 - **Files Modified**:
