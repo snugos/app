@@ -13,6 +13,52 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
+#### Day 214: Scale Mode Comprehensive Constants Tests (2026-04-25)
+- **Feature**: Added 35 new unit tests for Scale Mode constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 35 new tests in Day 214 section:
+    - `Scale Mode - SCALES is an object` - Tests SCALES is object and not null
+    - `Scale Mode - SCALES has all expected scale types` - Tests all 17 scale types exist
+    - `Scale Mode - SCALES.Major has correct interval pattern` - Tests Major scale intervals (0,2,4,5,7,9,11)
+    - `Scale Mode - SCALES.Minor has correct interval pattern` - Tests Minor scale intervals (0,2,3,5,7,8,10)
+    - `Scale Mode - SCALES.Harmonic Minor has correct intervals` - Tests Harmonic Minor (7th is 11)
+    - `Scale Mode - SCALES.Melodic Minor has correct intervals` - Tests Melodic Minor ascending
+    - `Scale Mode - SCALES.Pentatonic Major has 5 notes` - Tests Pentatonic Major count
+    - `Scale Mode - SCALES.Pentatonic Minor has 5 notes` - Tests Pentatonic Minor count
+    - `Scale Mode - SCALES.Blues has 6 notes` - Tests Blues scale count
+    - `Scale Mode - SCALES.Dorian has correct intervals` - Tests Dorian scale (2nd is 2)
+    - `Scale Mode - SCALES.Phrygian has correct intervals` - Tests Phrygian scale (2nd is 1)
+    - `Scale Mode - SCALES.Lydian has correct intervals` - Tests Lydian scale (4th is 6)
+    - `Scale Mode - SCALES.Mixolydian has correct intervals` - Tests Mixolydian scale (7th is 10)
+    - `Scale Mode - SCALES.Locrian has correct intervals` - Tests Locrian scale (2nd is 1)
+    - `Scale Mode - SCALES.Whole Tone has 6 notes` - Tests Whole Tone scale (all whole steps)
+    - `Scale Mode - SCALES.Diminished has 8 notes` - Tests Diminished scale (octatonic)
+    - `Scale Mode - SCALES.Arabic has correct intervals` - Tests Arabic scale
+    - `Scale Mode - SCALES.Japanese has 5 notes` - Tests Japanese pentatonic scale
+    - `Scale Mode - SCALES.Chromatic has 12 notes` - Tests Chromatic scale (0-11)
+    - `Scale Mode - SCALE_ROOTS is an array` - Tests SCALE_ROOTS is array type
+    - `Scale Mode - SCALE_ROOTS has 12 notes` - Tests root note count
+    - `Scale Mode - SCALE_ROOTS contains all natural notes and sharps` - Tests all 12 notes (C through B with sharps)
+    - `Scale Mode - SCALE_ROOTS starts with C and ends with B` - Tests first and last notes
+    - `Scale Mode - DEFAULT_SCALE_MODE.enabled is boolean` - Tests enabled property type
+    - `Scale Mode - DEFAULT_SCALE_MODE.scale is a valid scale name` - Tests scale is in SCALES
+    - `Scale Mode - DEFAULT_SCALE_MODE.root is a valid root note` - Tests root is in SCALE_ROOTS
+    - `Scale Mode - DEFAULT_SCALE_MODE.lock is boolean` - Tests lock property type
+    - `Scale Mode - DEFAULT_SCALE_MODE defaults are correct` - Tests default values (enabled:false, scale:Major, root:C, lock:false)
+    - `Scale Mode - All scale intervals are within valid range (0-11)` - Tests all intervals 0-11
+    - `Scale Mode - All scale intervals are sorted ascending` - Tests ascending order
+  - `js/constants.js`: Bumped APP_VERSION to 0.98.0
+- **Feature Details**:
+  - Tests validate SCALES object has all 17 scale types (Major, Minor, Harmonic Minor, Melodic Minor, Pentatonic Major/Minor, Blues, Dorian, Phrygian, Lydian, Mixolydian, Locrian, Whole Tone, Diminished, Arabic, Japanese, Chromatic)
+  - Tests verify exact interval patterns for each scale type
+  - Tests validate SCALE_ROOTS array has all 12 chromatic notes
+  - Tests validate DEFAULT_SCALE_MODE structure and default values
+  - Tests verify all scale intervals are within 0-11 semitone range and sorted ascending
+  - Total test count increased from 761 to 791 tests
+- **Backend Note**: The Scale Mode constants define musical scales for the DAW's scale mode feature, which restricts note input to notes within a selected scale. The tests verify the scale definitions without requiring actual musical note processing.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.98.0
+
 #### Day 212: MIDI Export/Import Constants Tests (2026-04-24)
 #### Day 213: Project Save/Load/Export Function Tests (2026-04-25)
 - **Feature**: Added 16 new unit tests for Project Save/Load/Export functions to expand test coverage

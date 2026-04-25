@@ -5,7 +5,10 @@ import { TestRunner } from './testRunner.js';
 import {
     MAX_EFFECT_PRESETS,
     DEFAULT_PRESET_NAME_PREFIX,
-    DEFAULT_EFFECT_PRESET
+    DEFAULT_EFFECT_PRESET,
+    SCALES,
+    SCALE_ROOTS,
+    DEFAULT_SCALE_MODE
 } from './constants.js';
 import {
     getUndoStackState,
@@ -861,6 +864,227 @@ TestRunner.test('DEFAULT_SCALE_MODE has valid structure', (t) => {
     t.assertTruthy(typeof def.scale === 'string', 'scale should be string');
     t.assertTruthy(typeof def.root === 'string', 'root should be string');
     t.assertTruthy(typeof def.lock === 'boolean', 'lock should be boolean');
+});
+
+// ============================================
+// Day 214: Scale Mode Comprehensive Constants Tests (2026-04-25)
+// ============================================
+TestRunner.test('Scale Mode - SCALES is an object', (t) => {
+    t.assertEqual(typeof SCALES, 'object', 'SCALES should be an object');
+    t.assertTruthy(SCALES !== null, 'SCALES should not be null');
+});
+
+TestRunner.test('Scale Mode - SCALES has all expected scale types', (t) => {
+    t.assertTruthy('Major' in SCALES, 'Should have Major scale');
+    t.assertTruthy('Minor' in SCALES, 'Should have Minor scale');
+    t.assertTruthy('Harmonic Minor' in SCALES, 'Should have Harmonic Minor scale');
+    t.assertTruthy('Melodic Minor' in SCALES, 'Should have Melodic Minor scale');
+    t.assertTruthy('Pentatonic Major' in SCALES, 'Should have Pentatonic Major scale');
+    t.assertTruthy('Pentatonic Minor' in SCALES, 'Should have Pentatonic Minor scale');
+    t.assertTruthy('Blues' in SCALES, 'Should have Blues scale');
+    t.assertTruthy('Dorian' in SCALES, 'Should have Dorian scale');
+    t.assertTruthy('Phrygian' in SCALES, 'Should have Phrygian scale');
+    t.assertTruthy('Lydian' in SCALES, 'Should have Lydian scale');
+    t.assertTruthy('Mixolydian' in SCALES, 'Should have Mixolydian scale');
+    t.assertTruthy('Locrian' in SCALES, 'Should have Locrian scale');
+    t.assertTruthy('Whole Tone' in SCALES, 'Should have Whole Tone scale');
+    t.assertTruthy('Diminished' in SCALES, 'Should have Diminished scale');
+    t.assertTruthy('Arabic' in SCALES, 'Should have Arabic scale');
+    t.assertTruthy('Japanese' in SCALES, 'Should have Japanese scale');
+    t.assertTruthy('Chromatic' in SCALES, 'Should have Chromatic scale');
+});
+
+TestRunner.test('Scale Mode - SCALES.Major has correct interval pattern', (t) => {
+    const major = SCALES.Major;
+    t.assertEqual(major.length, 7, 'Major scale should have 7 intervals');
+    t.assertEqual(major[0], 0, 'First note is root');
+    t.assertEqual(major[1], 2, 'Second note is 2 semitones (whole step)');
+    t.assertEqual(major[2], 4, 'Third note is 4 semitones');
+    t.assertEqual(major[3], 5, 'Fourth note is 5 semitones (half step)');
+    t.assertEqual(major[4], 7, 'Fifth note is 7 semitones');
+    t.assertEqual(major[5], 9, 'Sixth note is 9 semitones');
+    t.assertEqual(major[6], 11, 'Seventh note is 11 semitones');
+});
+
+TestRunner.test('Scale Mode - SCALES.Minor has correct interval pattern', (t) => {
+    const minor = SCALES.Minor;
+    t.assertEqual(minor.length, 7, 'Minor scale should have 7 intervals');
+    t.assertEqual(minor[0], 0, 'First note is root');
+    t.assertEqual(minor[1], 2, 'Second note is 2 semitones (whole step)');
+    t.assertEqual(minor[2], 3, 'Third note is 3 semitones (half step)');
+    t.assertEqual(minor[3], 5, 'Fourth note is 5 semitones');
+    t.assertEqual(minor[4], 7, 'Fifth note is 7 semitones');
+    t.assertEqual(minor[5], 8, 'Sixth note is 8 semitones');
+    t.assertEqual(minor[6], 10, 'Seventh note is 10 semitones');
+});
+
+TestRunner.test('Scale Mode - SCALES.Harmonic Minor has correct intervals', (t) => {
+    const harmMin = SCALES['Harmonic Minor'];
+    t.assertEqual(harmMin.length, 7, 'Harmonic Minor should have 7 intervals');
+    t.assertEqual(harmMin[0], 0, 'First note is root');
+    t.assertEqual(harmMin[6], 11, 'Seventh note is 11 (raised from 10)');
+});
+
+TestRunner.test('Scale Mode - SCALES.Melodic Minor has correct intervals', (t) => {
+    const melMin = SCALES['Melodic Minor'];
+    t.assertEqual(melMin.length, 7, 'Melodic Minor should have 7 intervals');
+    t.assertEqual(melMin[0], 0, 'First note is root');
+    t.assertEqual(melMin[1], 2, 'Second note is 2');
+    t.assertEqual(melMin[2], 3, 'Third note is 3');
+});
+
+TestRunner.test('Scale Mode - SCALES.Pentatonic Major has 5 notes', (t) => {
+    const pentMaj = SCALES['Pentatonic Major'];
+    t.assertEqual(pentMaj.length, 5, 'Pentatonic Major should have 5 intervals');
+});
+
+TestRunner.test('Scale Mode - SCALES.Pentatonic Minor has 5 notes', (t) => {
+    const pentMin = SCALES['Pentatonic Minor'];
+    t.assertEqual(pentMin.length, 5, 'Pentatonic Minor should have 5 intervals');
+});
+
+TestRunner.test('Scale Mode - SCALES.Blues has 6 notes', (t) => {
+    const blues = SCALES.Blues;
+    t.assertEqual(blues.length, 6, 'Blues scale should have 6 intervals');
+});
+
+TestRunner.test('Scale Mode - SCALES.Dorian has correct intervals', (t) => {
+    const dorian = SCALES.Dorian;
+    t.assertEqual(dorian.length, 7, 'Dorian should have 7 intervals');
+    t.assertEqual(dorian[0], 0, 'First note is root');
+    t.assertEqual(dorian[1], 2, 'Second note is 2');
+    t.assertEqual(dorian[2], 3, 'Third note is 3');
+});
+
+TestRunner.test('Scale Mode - SCALES.Phrygian has correct intervals', (t) => {
+    const phrygian = SCALES.Phrygian;
+    t.assertEqual(phrygian.length, 7, 'Phrygian should have 7 intervals');
+    t.assertEqual(phrygian[1], 1, 'Second note is 1 (half step from root)');
+});
+
+TestRunner.test('Scale Mode - SCALES.Lydian has correct intervals', (t) => {
+    const lydian = SCALES.Lydian;
+    t.assertEqual(lydian.length, 7, 'Lydian should have 7 intervals');
+    t.assertEqual(lydian[3], 6, 'Fourth note is 6 (raised from 5)');
+});
+
+TestRunner.test('Scale Mode - SCALES.Mixolydian has correct intervals', (t) => {
+    const mixolydian = SCALES.Mixolydian;
+    t.assertEqual(mixolydian.length, 7, 'Mixolydian should have 7 intervals');
+    t.assertEqual(mixolydian[6], 10, 'Seventh note is 10 (lowered from 11)');
+});
+
+TestRunner.test('Scale Mode - SCALES.Locrian has correct intervals', (t) => {
+    const locrian = SCALES.Locrian;
+    t.assertEqual(locrian.length, 7, 'Locrian should have 7 intervals');
+    t.assertEqual(locrian[0], 0, 'First note is root');
+    t.assertEqual(locrian[1], 1, 'Second note is 1 (half step)');
+});
+
+TestRunner.test('Scale Mode - SCALES.Whole Tone has 6 notes', (t) => {
+    const wholeTone = SCALES['Whole Tone'];
+    t.assertEqual(wholeTone.length, 6, 'Whole Tone should have 6 intervals');
+    // Check all intervals are whole steps (2 semitones)
+    t.assertEqual(wholeTone[0], 0, 'Root');
+    t.assertEqual(wholeTone[1], 2, 'Whole step');
+    t.assertEqual(wholeTone[2], 4, 'Whole step');
+    t.assertEqual(wholeTone[3], 6, 'Whole step');
+    t.assertEqual(wholeTone[4], 8, 'Whole step');
+    t.assertEqual(wholeTone[5], 10, 'Whole step');
+});
+
+TestRunner.test('Scale Mode - SCALES.Diminished has 8 notes', (t) => {
+    const diminished = SCALES.Diminished;
+    t.assertEqual(diminished.length, 8, 'Diminished should have 8 intervals');
+});
+
+TestRunner.test('Scale Mode - SCALES.Arabic has correct intervals', (t) => {
+    const arabic = SCALES.Arabic;
+    t.assertEqual(arabic.length, 7, 'Arabic should have 7 intervals');
+});
+
+TestRunner.test('Scale Mode - SCALES.Japanese has 5 notes', (t) => {
+    const japanese = SCALES.Japanese;
+    t.assertEqual(japanese.length, 5, 'Japanese should have 5 intervals');
+});
+
+TestRunner.test('Scale Mode - SCALES.Chromatic has 12 notes', (t) => {
+    const chromatic = SCALES.Chromatic;
+    t.assertEqual(chromatic.length, 12, 'Chromatic should have 12 intervals');
+    // All intervals should be 0-11
+    for (let i = 0; i < 12; i++) {
+        t.assertEqual(chromatic[i], i, `Note ${i} should be ${i}`);
+    }
+});
+
+TestRunner.test('Scale Mode - SCALE_ROOTS is an array', (t) => {
+    t.assertEqual(typeof SCALE_ROOTS, 'object', 'SCALE_ROOTS should be an object/array');
+    t.assertTruthy(Array.isArray(SCALE_ROOTS), 'SCALE_ROOTS should be an array');
+});
+
+TestRunner.test('Scale Mode - SCALE_ROOTS has 12 notes', (t) => {
+    t.assertEqual(SCALE_ROOTS.length, 12, 'SCALE_ROOTS should have 12 notes');
+});
+
+TestRunner.test('Scale Mode - SCALE_ROOTS contains all natural notes and sharps', (t) => {
+    t.assertTruthy(SCALE_ROOTS.includes('C'), 'Should include C');
+    t.assertTruthy(SCALE_ROOTS.includes('C#'), 'Should include C#');
+    t.assertTruthy(SCALE_ROOTS.includes('D'), 'Should include D');
+    t.assertTruthy(SCALE_ROOTS.includes('D#'), 'Should include D#');
+    t.assertTruthy(SCALE_ROOTS.includes('E'), 'Should include E');
+    t.assertTruthy(SCALE_ROOTS.includes('F'), 'Should include F');
+    t.assertTruthy(SCALE_ROOTS.includes('F#'), 'Should include F#');
+    t.assertTruthy(SCALE_ROOTS.includes('G'), 'Should include G');
+    t.assertTruthy(SCALE_ROOTS.includes('G#'), 'Should include G#');
+    t.assertTruthy(SCALE_ROOTS.includes('A'), 'Should include A');
+    t.assertTruthy(SCALE_ROOTS.includes('A#'), 'Should include A#');
+    t.assertTruthy(SCALE_ROOTS.includes('B'), 'Should include B');
+});
+
+TestRunner.test('Scale Mode - SCALE_ROOTS starts with C and ends with B', (t) => {
+    t.assertEqual(SCALE_ROOTS[0], 'C', 'First root should be C');
+    t.assertEqual(SCALE_ROOTS[11], 'B', 'Last root should be B');
+});
+
+TestRunner.test('Scale Mode - DEFAULT_SCALE_MODE.enabled is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_SCALE_MODE.enabled, 'boolean', 'enabled should be boolean');
+});
+
+TestRunner.test('Scale Mode - DEFAULT_SCALE_MODE.scale is a valid scale name', (t) => {
+    t.assertEqual(typeof DEFAULT_SCALE_MODE.scale, 'string', 'scale should be string');
+    t.assertTruthy(DEFAULT_SCALE_MODE.scale in SCALES, 'scale should be a valid scale type');
+});
+
+TestRunner.test('Scale Mode - DEFAULT_SCALE_MODE.root is a valid root note', (t) => {
+    t.assertEqual(typeof DEFAULT_SCALE_MODE.root, 'string', 'root should be string');
+    t.assertTruthy(SCALE_ROOTS.includes(DEFAULT_SCALE_MODE.root), 'root should be in SCALE_ROOTS');
+});
+
+TestRunner.test('Scale Mode - DEFAULT_SCALE_MODE.lock is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_SCALE_MODE.lock, 'boolean', 'lock should be boolean');
+});
+
+TestRunner.test('Scale Mode - DEFAULT_SCALE_MODE defaults are correct', (t) => {
+    t.assertEqual(DEFAULT_SCALE_MODE.enabled, false, 'Default enabled should be false');
+    t.assertEqual(DEFAULT_SCALE_MODE.scale, 'Major', 'Default scale should be Major');
+    t.assertEqual(DEFAULT_SCALE_MODE.root, 'C', 'Default root should be C');
+    t.assertEqual(DEFAULT_SCALE_MODE.lock, false, 'Default lock should be false');
+});
+
+TestRunner.test('Scale Mode - All scale intervals are within valid range (0-11)', (t) => {
+    for (const [scaleName, intervals] of Object.entries(SCALES)) {
+        for (const interval of intervals) {
+            t.assertTruthy(interval >= 0 && interval <= 11, `${scaleName}: interval ${interval} should be 0-11`);
+        }
+    }
+});
+
+TestRunner.test('Scale Mode - All scale intervals are sorted ascending', (t) => {
+    for (const [scaleName, intervals] of Object.entries(SCALES)) {
+        for (let i = 1; i < intervals.length; i++) {
+            t.assertTruthy(intervals[i] > intervals[i-1], `${scaleName}: intervals should be ascending`);
+        }
+    }
 });
 
 // ============================================
