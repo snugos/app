@@ -4828,3 +4828,69 @@ TestRunner.test('Database - clearAllAudio accepts no parameters', (t) => {
 TestRunner.test('Database - clearAllAudio is async', (t) => {
     t.assertTruthy(clearAllAudio.constructor.name === 'AsyncFunction' || clearAllAudio.toString().includes('async'), 'clearAllAudio should be async');
 });
+// ============================================
+// Day 213: Project Save/Load/Export Function Tests (2026-04-25)
+// ============================================
+TestRunner.test('Project - gatherProjectDataInternal function is exported', (t) => {
+    t.assertEqual(typeof gatherProjectDataInternal, 'function', 'gatherProjectDataInternal should be a function');
+});
+
+TestRunner.test('Project - gatherProjectDataInternal accepts no parameters', (t) => {
+    t.assertEqual(gatherProjectDataInternal.length, 0, 'gatherProjectDataInternal should accept 0 parameters');
+});
+
+TestRunner.test('Project - saveProjectInternal function is exported', (t) => {
+    t.assertEqual(typeof saveProjectInternal, 'function', 'saveProjectInternal should be a function');
+});
+
+TestRunner.test('Project - saveProjectInternal accepts no parameters', (t) => {
+    t.assertEqual(saveProjectInternal.length, 0, 'saveProjectInternal should accept 0 parameters');
+});
+
+TestRunner.test('Project - saveProjectInternal is async', (t) => {
+    t.assertTruthy(saveProjectInternal.constructor.name === 'AsyncFunction' || saveProjectInternal.toString().includes('async'), 'saveProjectInternal should be async');
+});
+
+TestRunner.test('Project - loadProjectInternal function is exported', (t) => {
+    t.assertEqual(typeof loadProjectInternal, 'function', 'loadProjectInternal should be a function');
+});
+
+TestRunner.test('Project - loadProjectInternal accepts no parameters', (t) => {
+    t.assertEqual(loadProjectInternal.length, 0, 'loadProjectInternal should accept 0 parameters');
+});
+
+TestRunner.test('Project - handleProjectFileLoadInternal function is exported', (t) => {
+    t.assertEqual(typeof handleProjectFileLoadInternal, 'function', 'handleProjectFileLoadInternal should be a function');
+});
+
+TestRunner.test('Project - handleProjectFileLoadInternal accepts event parameter', (t) => {
+    t.assertEqual(handleProjectFileLoadInternal.length, 1, 'handleProjectFileLoadInternal should accept 1 parameter');
+});
+
+TestRunner.test('Project - handleProjectFileLoadInternal is async', (t) => {
+    t.assertTruthy(handleProjectFileLoadInternal.constructor.name === 'AsyncFunction' || handleProjectFileLoadInternal.toString().includes('async'), 'handleProjectFileLoadInternal should be async');
+});
+
+TestRunner.test('Project - reconstructDAWInternal function is exported', (t) => {
+    t.assertEqual(typeof reconstructDAWInternal, 'function', 'reconstructDAWInternal should be a function');
+});
+
+TestRunner.test('Project - reconstructDAWInternal accepts projectData and optional isUndoRedo parameters', (t) => {
+    t.assertTruthy(reconstructDAWInternal.length >= 1 && reconstructDAWInternal.length <= 2, 'reconstructDAWInternal should accept 1-2 parameters');
+});
+
+TestRunner.test('Project - reconstructDAWInternal is async', (t) => {
+    t.assertTruthy(reconstructDAWInternal.constructor.name === 'AsyncFunction' || reconstructDAWInternal.toString().includes('async'), 'reconstructDAWInternal should be async');
+});
+
+TestRunner.test('Project - exportToWavInternal function is exported', (t) => {
+    t.assertEqual(typeof exportToWavInternal, 'function', 'exportToWavInternal should be a function');
+});
+
+TestRunner.test('Project - exportToWavInternal accepts no parameters', (t) => {
+    t.assertEqual(exportToWavInternal.length, 0, 'exportToWavInternal should accept 0 parameters');
+});
+
+TestRunner.test('Project - exportToWavInternal is async', (t) => {
+    t.assertTruthy(exportToWavInternal.constructor.name === 'AsyncFunction' || exportToWavInternal.toString().includes('async'), 'exportToWavInternal should be async');
+});
