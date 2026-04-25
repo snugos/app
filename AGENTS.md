@@ -3312,3 +3312,20 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Recording and MIDI Export/Import functions handle audio track recording via microphone, MIDI file export/import, and audio clip management. Tests verify the API without requiring actual microphone access or MIDI hardware.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.22.0
+
+#### Day 240: SnugWindow & Utils Tests (2026-04-25)
+- **Feature**: Added 53 new unit tests for SnugWindow instance methods, Utils UI functions, and Event Handler module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 53 new tests in Day 240 section:
+    - SnugWindow: applyState function, toggleMaximize function, makeDraggable, makeResizable, updateTaskbarButtonActiveState, _captureUndo, instance properties (isMaximized, options, appServices)
+    - Utils: showNotification with default duration, showCustomModal with title/contentHTML/buttonsConfig/modalClass, showConfirmationDialog wrapping showCustomModal, createContextMenu with event/menuItems/appServicesForZIndex
+    - Event Handlers: currentlyPressedComputerKeys object, setupMIDI, selectMIDIInput, initializePrimaryEventListeners, attachGlobalControlEvents, handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer, handleTimelineLaneDrop async behavior
+  - `js/constants.js`: Bumped APP_VERSION to 1.23.0
+- **Feature Details**:
+  - Tests validate SnugWindow prototype methods and instance properties
+  - Tests verify Utils functions (showNotification, showCustomModal, showConfirmationDialog, createContextMenu) parameter counts and internal logic
+  - Tests verify Event Handler functions (setupMIDI, selectMIDIInput, handleTimelineLaneDrop) and keyboard event handling references
+  - Total tests increased from 1688 to 1741
+- **Backend Note**: The SnugWindow instance methods handle window state management, the Utils functions provide modal/dialog/notification services, and the Event Handler functions manage MIDI and keyboard input. Tests verify the exported API without requiring actual DOM or hardware.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.23.0

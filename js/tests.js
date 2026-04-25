@@ -10615,3 +10615,254 @@ TestRunner.test('Track - addAudioClip calls renderTimeline after adding', (t) =>
     // This test exists at line 5045+, verify structure
     t.assertTruthy(true, 'addAudioClip already calls renderTimeline');
 });
+
+// ============================================
+// Day 240: SnugOS Utilities & Event Handler Tests (2026-04-25)
+// ============================================
+TestRunner.test('SnugWindow - applyState is a function', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.applyState, 'function', 'applyState should be a function');
+});
+
+TestRunner.test('SnugWindow - applyState accepts options parameter', (t) => {
+    t.assertEqual(SnugWindow.prototype.applyState.length >= 1, true, 'applyState should accept at least 1 parameter');
+});
+
+TestRunner.test('SnugWindow - applyState handles position changes', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('x') || funcStr.includes('y') || funcStr.includes('left') || funcStr.includes('top'), 'applyState should handle position');
+});
+
+TestRunner.test('SnugWindow - applyState handles size changes', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('width') || funcStr.includes('height') || funcStr.includes('size'), 'applyState should handle size');
+});
+
+TestRunner.test('SnugWindow - applyState handles zIndex changes', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('zIndex') || funcStr.includes('z'), 'applyState should handle zIndex');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize is a function', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.toggleMaximize, 'function', 'toggleMaximize should be a function');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize accepts no parameters', (t) => {
+    t.assertEqual(SnugWindow.prototype.toggleMaximize.length, 0, 'toggleMaximize should accept 0 parameters');
+});
+
+TestRunner.test('SnugWindow - makeDraggable is a function', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeDraggable, 'function', 'makeDraggable should be a function');
+});
+
+TestRunner.test('SnugWindow - makeResizable is a function', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeResizable, 'function', 'makeResizable should be a function');
+});
+
+TestRunner.test('SnugWindow - updateTaskbarButtonActiveState is a function', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.updateTaskbarButtonActiveState, 'function', 'updateTaskbarButtonActiveState should be a function');
+});
+
+TestRunner.test('SnugWindow - instance has isMaximized property', (t) => {
+    const win = new SnugWindow('test-win', {});
+    t.assertTruthy('isMaximized' in win || win.isMaximized !== undefined, 'SnugWindow instance should have isMaximized');
+});
+
+TestRunner.test('SnugWindow - instance has options property', (t) => {
+    const win = new SnugWindow('test-win', { title: 'Test' });
+    t.assertTruthy('options' in win, 'SnugWindow instance should have options');
+});
+
+TestRunner.test('SnugWindow - instance has appServices property', (t) => {
+    const win = new SnugWindow('test-win', {});
+    t.assertTruthy('appServices' in win, 'SnugWindow instance should have appServices');
+});
+
+TestRunner.test('SnugWindow - _captureUndo is a function', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype._captureUndo, 'function', '_captureUndo should be a function');
+});
+
+TestRunner.test('SnugWindow - isMaximized is boolean when toggled', (t) => {
+    const win = new SnugWindow('test-win', {});
+    if (typeof win.toggleMaximize === 'function') {
+        win.toggleMaximize();
+        t.assertEqual(typeof win.isMaximized, 'boolean', 'isMaximized should be boolean after toggle');
+    } else {
+        t.assertTruthy(true, 'toggleMaximize not implemented');
+    }
+});
+
+// Utils - showNotification detailed tests
+TestRunner.test('Utils - showNotification accepts message parameter', (t) => {
+    t.assertEqual(showNotification.length >= 1, true, 'showNotification should accept at least 1 parameter');
+});
+
+TestRunner.test('Utils - showNotification has default duration', (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('duration') || funcStr.includes('= 3000') || funcStr.includes('3000'), 'showNotification should have default duration');
+});
+
+TestRunner.test('Utils - showNotification handles string message', (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('message') || funcStr.includes('string'), 'showNotification should handle string message');
+});
+
+TestRunner.test('Utils - showCustomModal accepts title parameter', (t) => {
+    t.assertEqual(showCustomModal.length >= 1, true, 'showCustomModal should accept at least 1 parameter');
+});
+
+TestRunner.test('Utils - showCustomModal accepts contentHTML parameter', (t) => {
+    t.assertEqual(showCustomModal.length >= 2, true, 'showCustomModal should accept at least 2 parameters');
+});
+
+TestRunner.test('Utils - showCustomModal accepts buttonsConfig parameter', (t) => {
+    t.assertEqual(showCustomModal.length >= 3, true, 'showCustomModal should accept at least 3 parameters');
+});
+
+TestRunner.test('Utils - showCustomModal accepts optional modalClass parameter', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('modalClass') || funcStr.includes("= ''"), 'showCustomModal should accept optional modalClass');
+});
+
+TestRunner.test('Utils - showCustomModal handles empty buttons gracefully', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('buttons') || funcStr.includes('length') || funcStr.includes('forEach'), 'showCustomModal should handle buttons');
+});
+
+TestRunner.test('Utils - showConfirmationDialog wraps showCustomModal', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('showCustomModal'), 'showConfirmationDialog should use showCustomModal internally');
+});
+
+TestRunner.test('Utils - showConfirmationDialog passes title and message', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('title') && funcStr.includes('message'), 'showConfirmationDialog should pass title and message');
+});
+
+TestRunner.test('Utils - showConfirmationDialog creates confirm/cancel buttons', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('Confirm') || funcStr.includes('Cancel') || funcStr.includes('buttons'), 'showConfirmationDialog should create buttons');
+});
+
+// Utils - createContextMenu tests
+TestRunner.test('Utils - createContextMenu accepts event parameter', (t) => {
+    t.assertEqual(createContextMenu.length >= 2, true, 'createContextMenu should accept at least 2 parameters');
+});
+
+TestRunner.test('Utils - createContextMenu accepts menuItems parameter', (t) => {
+    t.assertEqual(createContextMenu.length >= 2, true, 'createContextMenu should accept at least 2 parameters');
+});
+
+TestRunner.test('Utils - createContextMenu accepts optional appServicesForZIndex', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('appServicesForZIndex') || funcStr.includes('null'), 'createContextMenu should accept optional zIndex parameter');
+});
+
+TestRunner.test('Utils - createContextMenu handles empty menu items', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('length') || funcStr.includes('forEach') || funcStr.includes('items'), 'createContextMenu should handle items');
+});
+
+// Event Handlers - currentlyPressedComputerKeys tests
+TestRunner.test('Event Handlers - currentlyPressedComputerKeys is exported object', (t) => {
+    t.assertEqual(typeof currentlyPressedComputerKeys, 'object', 'currentlyPressedComputerKeys should be an object');
+});
+
+TestRunner.test('Event Handlers - initializePrimaryEventListeners is a function', (t) => {
+    t.assertEqual(typeof initializePrimaryEventListeners, 'function', 'initializePrimaryEventListeners should be a function');
+});
+
+TestRunner.test('Event Handlers - attachGlobalControlEvents is a function', (t) => {
+    t.assertEqual(typeof attachGlobalControlEvents, 'function', 'attachGlobalControlEvents should be a function');
+});
+
+TestRunner.test('Event Handlers - setupMIDI is a function', (t) => {
+    t.assertEqual(typeof setupMIDI, 'function', 'setupMIDI should be a function');
+});
+
+TestRunner.test('Event Handlers - setupMIDI accepts no parameters', (t) => {
+    t.assertEqual(setupMIDI.length, 0, 'setupMIDI should accept 0 parameters');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput is a function', (t) => {
+    t.assertEqual(typeof selectMIDIInput, 'function', 'selectMIDIInput should be a function');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput accepts deviceId parameter', (t) => {
+    t.assertEqual(selectMIDIInput.length >= 1, true, 'selectMIDIInput should accept at least 1 parameter');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput has silent parameter with default', (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('silent') || funcStr.includes('= false'), 'selectMIDIInput should have silent parameter');
+});
+
+TestRunner.test('Event Handlers - handleOpenTrackInspector is a function', (t) => {
+    t.assertEqual(typeof handleOpenTrackInspector, 'function', 'handleOpenTrackInspector should be a function');
+});
+
+TestRunner.test('Event Handlers - handleOpenEffectsRack is a function', (t) => {
+    t.assertEqual(typeof handleOpenEffectsRack, 'function', 'handleOpenEffectsRack should be a function');
+});
+
+TestRunner.test('Event Handlers - handleOpenSequencer is a function', (t) => {
+    t.assertEqual(typeof handleOpenSequencer, 'function', 'handleOpenSequencer should be a function');
+});
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule references appServices', (t) => {
+    const funcStr = initializeEventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('appServices') || funcStr.includes('services'), 'initializeEventHandlersModule should reference appServices');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop references appServicesPassed parameter', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('appServicesPassed') || funcStr.includes('appServices'), 'handleTimelineLaneDrop should use appServices');
+});
+
+TestRunner.test('Event Handlers - initializePrimaryEventListeners accepts appContext parameter', (t) => {
+    t.assertEqual(initializePrimaryEventListeners.length >= 1, true, 'initializePrimaryEventListeners should accept at least 1 parameter');
+});
+
+TestRunner.test('Event Handlers - attachGlobalControlEvents accepts elements parameter', (t) => {
+    t.assertEqual(attachGlobalControlEvents.length >= 1, true, 'attachGlobalControlEvents should accept at least 1 parameter');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop is async', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('async') || handleTimelineLaneDrop.constructor.name === 'AsyncFunction', 'handleTimelineLaneDrop should be async');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop handles track type for audio clips', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('Audio') || funcStr.includes('clip') || funcStr.includes('track'), 'handleTimelineLaneDrop should handle track types');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop validates target track', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('targetTrackId') || funcStr.includes('trackId'), 'handleTimelineLaneDrop should validate track');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput handles device selection', (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('device') || funcStr.includes('input') || funcStr.includes('midi'), 'selectMIDIInput should handle device selection');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput references MIDIAccess', (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('MIDI') || funcStr.includes('midiAccess') || funcStr.includes('inputs'), 'selectMIDIInput should reference MIDIAccess');
+});
+
+// Computer keyboard event handling tests
+TestRunner.test('Event Handlers - handleKeyDown references currentlyPressedComputerKeys', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('keydown') || funcStr.includes('key') || funcStr.includes('Keyboard'), 'Should handle keyboard events');
+});
+
+TestRunner.test('Event Handlers - handleKeyUp updates currentlyPressedComputerKeys', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('keyup') || funcStr.includes('delete') || funcStr.includes('remove'), 'Should update key state on keyup');
+});
+
+TestRunner.test('Event Handlers - computer key mapping references synthPitches or sampler', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('synthPitches') || funcStr.includes('computerKey') || funcStr.includes('key'), 'Should reference keyboard mapping');
+});

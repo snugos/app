@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.22.0'; // Day 239: Additional Utils & appServices Tests
+export const APP_VERSION = '1.23.0'; // Day 240: SnugWindow & Utils Tests
 
 
 // Performance Monitor Constants
