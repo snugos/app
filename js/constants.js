@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.02.0'; // Day 218: Effect Preset & Transport Constants Tests
+export const APP_VERSION = '1.03.0'; // Day 219: Metronome, Tempo, Loop Region & Timeline Marker Constants Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

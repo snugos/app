@@ -18,7 +18,19 @@ import {
     MIDI_LEARN_INDICATOR_TIMEOUT_MS,
     MIDI_CC_COMMAND,
     GRID_STEP_LABELS,
-    STEP_LABELS_SIXTEENTHS
+    STEP_LABELS_SIXTEENTHS,
+    DEFAULT_METRONOME_ENABLED,
+    DEFAULT_METRONOME_VOLUME,
+    MIN_METRONOME_VOLUME,
+    MAX_METRONOME_VOLUME,
+    DEFAULT_TEMPO,
+    MIN_TEMPO,
+    MAX_TEMPO,
+    DEFAULT_LOOP_REGION,
+    MAX_TIMELINE_MARKERS,
+    DEFAULT_MARKER_COLOR,
+    MARKER_COLORS,
+    DEFAULT_MARKER
 } from './constants.js';
 import {
     getUndoStackState,
@@ -5918,4 +5930,175 @@ TestRunner.test('Sequencer - GRID_STEP_LABELS has 1 property', (t) => {
 
 TestRunner.test('Sequencer - STEP_LABELS_SIXTEENTHS has 1 property', (t) => {
     t.assertEqual(Object.keys(STEP_LABELS_SIXTEENTHS).length, 1, 'STEP_LABELS_SIXTEENTHS should have 1 property');
+});
+
+// Day 219: Metronome Constants Tests
+TestRunner.test('Metronome - DEFAULT_METRONOME_ENABLED is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_METRONOME_ENABLED, 'boolean', 'DEFAULT_METRONOME_ENABLED should be boolean');
+});
+
+TestRunner.test('Metronome - DEFAULT_METRONOME_ENABLED is false', (t) => {
+    t.assertEqual(DEFAULT_METRONOME_ENABLED, false, 'DEFAULT_METRONOME_ENABLED should be false (off by default)');
+});
+
+TestRunner.test('Metronome - DEFAULT_METRONOME_VOLUME is 0.5', (t) => {
+    t.assertEqual(DEFAULT_METRONOME_VOLUME, 0.5, 'DEFAULT_METRONOME_VOLUME should be 0.5');
+});
+
+TestRunner.test('Metronome - DEFAULT_METRONOME_VOLUME is in valid range', (t) => {
+    t.assertTruthy(DEFAULT_METRONOME_VOLUME >= MIN_METRONOME_VOLUME, 'DEFAULT_METRONOME_VOLUME should be >= MIN');
+    t.assertTruthy(DEFAULT_METRONOME_VOLUME <= MAX_METRONOME_VOLUME, 'DEFAULT_METRONOME_VOLUME should be <= MAX');
+});
+
+TestRunner.test('Metronome - MIN_METRONOME_VOLUME is 0', (t) => {
+    t.assertEqual(MIN_METRONOME_VOLUME, 0, 'MIN_METRONOME_VOLUME should be 0');
+});
+
+TestRunner.test('Metronome - MAX_METRONOME_VOLUME is 1', (t) => {
+    t.assertEqual(MAX_METRONOME_VOLUME, 1, 'MAX_METRONOME_VOLUME should be 1');
+});
+
+TestRunner.test('Metronome - MIN_METRONOME_VOLUME is less than MAX', (t) => {
+    t.assertTruthy(MIN_METRONOME_VOLUME < MAX_METRONOME_VOLUME, 'MIN should be less than MAX');
+});
+
+// Day 219: Tempo Constants Tests
+TestRunner.test('Tempo - DEFAULT_TEMPO is 120', (t) => {
+    t.assertEqual(DEFAULT_TEMPO, 120, 'DEFAULT_TEMPO should be 120 BPM');
+});
+
+TestRunner.test('Tempo - DEFAULT_TEMPO is in valid range', (t) => {
+    t.assertTruthy(DEFAULT_TEMPO >= MIN_TEMPO, 'DEFAULT_TEMPO should be >= MIN_TEMPO');
+    t.assertTruthy(DEFAULT_TEMPO <= MAX_TEMPO, 'DEFAULT_TEMPO should be <= MAX_TEMPO');
+});
+
+TestRunner.test('Tempo - MIN_TEMPO is 0', (t) => {
+    t.assertEqual(MIN_TEMPO, 0, 'MIN_TEMPO should be 0');
+});
+
+TestRunner.test('Tempo - MAX_TEMPO is 999', (t) => {
+    t.assertEqual(MAX_TEMPO, 999, 'MAX_TEMPO should be 999');
+});
+
+TestRunner.test('Tempo - MIN_TEMPO is less than MAX_TEMPO', (t) => {
+    t.assertTruthy(MIN_TEMPO < MAX_TEMPO, 'MIN_TEMPO should be less than MAX_TEMPO');
+});
+
+TestRunner.test('Tempo - MAX_TEMPO is reasonable upper bound', (t) => {
+    t.assertTruthy(MAX_TEMPO >= 200 && MAX_TEMPO <= 9999, 'MAX_TEMPO should be between 200 and 9999');
+});
+
+// Day 219: Loop Region Constants Tests
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_LOOP_REGION, 'object', 'DEFAULT_LOOP_REGION should be an object');
+    t.assertTruthy(DEFAULT_LOOP_REGION !== null, 'DEFAULT_LOOP_REGION should not be null');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION has enabled property', (t) => {
+    t.assertTruthy('enabled' in DEFAULT_LOOP_REGION, 'DEFAULT_LOOP_REGION should have enabled property');
+    t.assertEqual(typeof DEFAULT_LOOP_REGION.enabled, 'boolean', 'enabled should be boolean');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION.enabled is false', (t) => {
+    t.assertEqual(DEFAULT_LOOP_REGION.enabled, false, 'Loop should be disabled by default');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION has startBar property', (t) => {
+    t.assertTruthy('startBar' in DEFAULT_LOOP_REGION, 'DEFAULT_LOOP_REGION should have startBar property');
+    t.assertEqual(typeof DEFAULT_LOOP_REGION.startBar, 'number', 'startBar should be a number');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION.startBar is 1', (t) => {
+    t.assertEqual(DEFAULT_LOOP_REGION.startBar, 1, 'Default start bar should be 1');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION has endBar property', (t) => {
+    t.assertTruthy('endBar' in DEFAULT_LOOP_REGION, 'DEFAULT_LOOP_REGION should have endBar property');
+    t.assertEqual(typeof DEFAULT_LOOP_REGION.endBar, 'number', 'endBar should be a number');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION.endBar is 4', (t) => {
+    t.assertEqual(DEFAULT_LOOP_REGION.endBar, 4, 'Default end bar should be 4');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION has minimumBars property', (t) => {
+    t.assertTruthy('minimumBars' in DEFAULT_LOOP_REGION, 'DEFAULT_LOOP_REGION should have minimumBars property');
+    t.assertEqual(typeof DEFAULT_LOOP_REGION.minimumBars, 'number', 'minimumBars should be a number');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION.startBar is positive', (t) => {
+    t.assertTruthy(DEFAULT_LOOP_REGION.startBar >= 1, 'startBar should be >= 1');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION.endBar is greater than startBar', (t) => {
+    t.assertTruthy(DEFAULT_LOOP_REGION.endBar > DEFAULT_LOOP_REGION.startBar, 'endBar should be > startBar');
+});
+
+TestRunner.test('Loop Region - DEFAULT_LOOP_REGION.minimumBars is 1', (t) => {
+    t.assertEqual(DEFAULT_LOOP_REGION.minimumBars, 1, 'minimumBars should be 1');
+});
+
+// Day 219: Timeline Marker Constants Tests
+TestRunner.test('Timeline Markers - MAX_TIMELINE_MARKERS is 64', (t) => {
+    t.assertEqual(MAX_TIMELINE_MARKERS, 64, 'MAX_TIMELINE_MARKERS should be 64');
+});
+
+TestRunner.test('Timeline Markers - MAX_TIMELINE_MARKERS is positive', (t) => {
+    t.assertTruthy(MAX_TIMELINE_MARKERS > 0, 'MAX_TIMELINE_MARKERS should be positive');
+});
+
+TestRunner.test('Timeline Markers - MAX_TIMELINE_MARKERS is reasonable', (t) => {
+    t.assertTruthy(MAX_TIMELINE_MARKERS >= 10 && MAX_TIMELINE_MARKERS <= 256, 'MAX_TIMELINE_MARKERS should be between 10 and 256');
+});
+
+TestRunner.test('Timeline Markers - DEFAULT_MARKER_COLOR is valid hex', (t) => {
+    t.assertEqual(DEFAULT_MARKER_COLOR.startsWith('#'), true, 'DEFAULT_MARKER_COLOR should start with #');
+    t.assertEqual(DEFAULT_MARKER_COLOR.length, 7, 'DEFAULT_MARKER_COLOR should be 7 characters');
+});
+
+TestRunner.test('Timeline Markers - DEFAULT_MARKER_COLOR is orange', (t) => {
+    t.assertEqual(DEFAULT_MARKER_COLOR, '#ff9f43', 'DEFAULT_MARKER_COLOR should be orange (#ff9f43)');
+});
+
+TestRunner.test('Timeline Markers - MARKER_COLORS is an array', (t) => {
+    t.assertEqual(Array.isArray(MARKER_COLORS), true, 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('Timeline Markers - MARKER_COLORS has multiple colors', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 5, 'MARKER_COLORS should have at least 5 colors');
+});
+
+TestRunner.test('Timeline Markers - MARKER_COLORS contains DEFAULT_MARKER_COLOR', (t) => {
+    t.assertTruthy(MARKER_COLORS.includes(DEFAULT_MARKER_COLOR), 'MARKER_COLORS should include DEFAULT_MARKER_COLOR');
+});
+
+TestRunner.test('Timeline Markers - MARKER_COLORS all colors are valid hex', (t) => {
+    for (const color of MARKER_COLORS) {
+        t.assertEqual(color.startsWith('#'), true, `${color} should start with #`);
+        t.assertEqual(color.length, 7, `${color} should be 7 characters`);
+    }
+});
+
+TestRunner.test('Timeline Markers - DEFAULT_MARKER is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_MARKER, 'object', 'DEFAULT_MARKER should be an object');
+    t.assertTruthy(DEFAULT_MARKER !== null, 'DEFAULT_MARKER should not be null');
+});
+
+TestRunner.test('Timeline Markers - DEFAULT_MARKER has name property', (t) => {
+    t.assertTruthy('name' in DEFAULT_MARKER, 'DEFAULT_MARKER should have name property');
+    t.assertEqual(DEFAULT_MARKER.name, 'Marker', 'Default marker name should be "Marker"');
+});
+
+TestRunner.test('Timeline Markers - DEFAULT_MARKER has bar property', (t) => {
+    t.assertTruthy('bar' in DEFAULT_MARKER, 'DEFAULT_MARKER should have bar property');
+    t.assertEqual(DEFAULT_MARKER.bar, 1, 'Default marker bar should be 1');
+});
+
+TestRunner.test('Timeline Markers - DEFAULT_MARKER has color property', (t) => {
+    t.assertTruthy('color' in DEFAULT_MARKER, 'DEFAULT_MARKER should have color property');
+    t.assertEqual(DEFAULT_MARKER.color, DEFAULT_MARKER_COLOR, 'Default marker color should match DEFAULT_MARKER_COLOR');
+});
+
+TestRunner.test('Timeline Markers - DEFAULT_MARKER.bar is positive', (t) => {
+    t.assertTruthy(DEFAULT_MARKER.bar >= 1, 'Default marker bar should be >= 1');
 });
