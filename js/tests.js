@@ -6329,6 +6329,7 @@ TestRunner.test('Chord Mode State - lockChord property in state', (t) => {
     const state = getChordModeState();
     t.assertTruthy('lockChord' in state, 'State should have lockChord property');
 });
+
 // Day 221: Swing State & Window Store Undo Capture Tests (2026-04-25)
 // ================================================================
 // These tests verify that Swing state setters and Window Store functions
@@ -6362,4 +6363,138 @@ TestRunner.test('Window Store - getWindowByIdState returns window instance', (t)
     // Test that getWindowByIdState works with the store
     const result = getWindowByIdState('nonexistent-id');
     t.assertEqual(result, undefined, 'Should return undefined for nonexistent window');
+});
+
+// Day 222: Effect Preset State Tests (2026-04-25)
+// ===============================================================
+// These tests verify that Effect Preset state management functions
+// properly manage effect preset data with undo capture support.
+
+TestRunner.test('Effect Preset State - getEffectPresetsState returns array', (t) => {
+    const result = getEffectPresetsState();
+    t.assertTruthy(Array.isArray(result), 'getEffectPresetsState should return an array');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - getEffectPresetByIdState returns undefined for unknown id', (t) => {
+    const result = getEffectPresetByIdState(99999);
+    t.assertEqual(result, undefined, 'getEffectPresetByIdState should return undefined for unknown id');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - getEffectPresetsByTypeState returns array', (t) => {
+    const result = getEffectPresetsByTypeState('Reverb');
+    t.assertTruthy(Array.isArray(result), 'getEffectPresetsByTypeState should return an array');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - addEffectPresetState creates preset with correct structure', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'Test Preset', effectType: 'Reverb', params: { decay: 2.5 } });
+    t.assertTruthy(preset !== null, 'addEffectPresetState should return a preset');
+    t.assertTruthy('id' in preset, 'Preset should have id property');
+    t.assertEqual(preset.name, 'Test Preset', 'Preset name should be set');
+    t.assertEqual(preset.effectType, 'Reverb', 'Preset effectType should be set');
+    t.assertTruthy('params' in preset, 'Preset should have params property');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - addEffectPresetState uses default values when not provided', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({});
+    t.assertTruthy(preset !== null, 'addEffectPresetState should return a preset');
+    t.assertEqual(preset.effectType, null, 'Default effectType should be null');
+    t.assertTruthy(typeof preset.params === 'object', 'Default params should be an object');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - addEffectPresetState respects MAX_EFFECT_PRESETS limit', (t) => {
+    clearEffectPresetsState();
+    for (let i = 0; i < MAX_EFFECT_PRESETS; i++) {
+        addEffectPresetState({ name: `Template ${i}` });
+    }
+    const result = addEffectPresetState({ name: 'Extra Preset' });
+    t.assertEqual(result, null, 'addEffectPresetState should return null when limit reached');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - addEffectPresetState with custom id', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ id: 9999, name: 'Custom ID Preset' });
+    t.assertEqual(preset.id, 9999, 'Preset should use custom id');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - updateEffectPresetState updates existing preset', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'Original Name', effectType: 'Reverb' });
+    const result = updateEffectPresetState(preset.id, { name: 'Updated Name', params: { decay: 3.0 } });
+    t.assertTruthy(result !== null, 'updateEffectPresetState should return updated preset');
+    t.assertEqual(result.name, 'Updated Name', 'Name should be updated');
+    t.assertEqual(result.params.decay, 3.0, 'Params should be updated');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - updateEffectPresetState handles unknown id', (t) => {
+    clearEffectPresetsState();
+    const result = updateEffectPresetState(99999, { name: 'Test' });
+    t.assertEqual(result, null, 'updateEffectPresetState should return null for unknown id');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - removeEffectPresetState removes preset', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'To Remove' });
+    const result = removeEffectPresetState(preset.id);
+    t.assertEqual(result, true, 'removeEffectPresetState should return true');
+    t.assertEqual(getEffectPresetByIdState(preset.id), undefined, 'Preset should be removed');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - removeEffectPresetState handles unknown id', (t) => {
+    clearEffectPresetsState();
+    const result = removeEffectPresetState(99999);
+    t.assertEqual(result, false, 'removeEffectPresetState should return false for unknown id');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - clearEffectPresetsState removes all presets', (t) => {
+    clearEffectPresetsState();
+    addEffectPresetState({ name: 'Preset 1' });
+    addEffectPresetState({ name: 'Preset 2' });
+    clearEffectPresetsState();
+    const result = getEffectPresetsState();
+    t.assertEqual(result.length, 0, 'All presets should be cleared');
+});
+
+TestRunner.test('Effect Preset State - getEffectPresetsByTypeState filters by effectType', (t) => {
+    clearEffectPresetsState();
+    addEffectPresetState({ name: 'Reverb 1', effectType: 'Reverb' });
+    addEffectPresetState({ name: 'Reverb 2', effectType: 'Reverb' });
+    addEffectPresetState({ name: 'Delay', effectType: 'Delay' });
+    const reverbPresets = getEffectPresetsByTypeState('Reverb');
+    t.assertEqual(reverbPresets.length, 2, 'Should have 2 Reverb presets');
+    const delayPresets = getEffectPresetsByTypeState('Delay');
+    t.assertEqual(delayPresets.length, 1, 'Should have 1 Delay preset');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - getEffectPresetByIdState finds by id', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'Find Test', effectType: 'Reverb' });
+    const found = getEffectPresetByIdState(preset.id);
+    t.assertTruthy(found !== undefined, 'Should find preset');
+    t.assertEqual(found.name, 'Find Test', 'Should return correct preset');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - updateEffectPresetState partial update preserves other fields', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'Original', effectType: 'Reverb', params: { decay: 2.5 } });
+    updateEffectPresetState(preset.id, { name: 'New Name' });
+    const updated = getEffectPresetByIdState(preset.id);
+    t.assertEqual(updated.name, 'New Name', 'Name should be updated');
+    t.assertEqual(updated.effectType, 'Reverb', 'effectType should be preserved');
+    t.assertEqual(updated.params.decay, 2.5, 'params should be preserved');
+    clearEffectPresetsState();
 });
