@@ -62,6 +62,40 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.08.0
 
+#### Day 226: Automation Lane Instance Tests (2026-04-25)
+- **Feature**: Added 38 new unit tests for Automation Lane instance methods on Track class objects
+- **Files Modified**:
+  - `js/tests.js`: Added imports for AUTOMATION_LANE_HEIGHT, AUTOMATION_LANE_DEFAULT, AUTOMATION_LANE_PRECISION, AUTOMATION_LANE_STEP, AUTOMATION_LANE_PARAMETERS, AUTOMATION_LANE_COLORS
+  - Added 38 new tests in Day 226 section:
+    - Track class has getAutomationLane, setAutomationPoint, getAutomationValue, clearAutomationLane, removeAutomationPoint, getAutomationLaneCount, hasAutomation methods
+    - getAutomationLane returns array, creates lane if not exists
+    - setAutomationPoint adds/updates points, sorts by step
+    - getAutomationValue returns default for empty lane, point value, interpolates between points
+    - getAutomationValue returns first point value before second point, last point value after all points
+    - clearAutomationLane removes all points, handles nonexistent lane
+    - removeAutomationPoint removes point at step, returns false for nonexistent point
+    - getAutomationLaneCount returns number of points
+    - hasAutomation returns false when no automation, true when automation exists
+    - Multiple parameters have separate lanes
+    - Track automation initializes from track data
+    - Track automation data includes all parameters via toJSON
+    - Multiple tracks have independent automation lanes
+    - setAutomationPoint at step 0 works correctly
+    - Track clone preserves automation data
+  - `js/constants.js`: Bumped APP_VERSION to 1.09.0
+- **Feature Details**:
+  - Tests validate all automation lane methods on Track class instances
+  - Tests verify getAutomationLane returns/creates automation lanes for parameters
+  - Tests verify setAutomationPoint adds, updates, and sorts automation points by step
+  - Tests verify getAutomationValue handles empty lanes, exact matches, interpolation, and boundary cases
+  - Tests verify clearAutomationLane and removeAutomationPoint work correctly
+  - Tests verify getAutomationLaneCount and hasAutomation provide lane metadata
+  - Tests verify automation persists via track data initialization and toJSON serialization
+  - Total tests increased from 1171 to 1209
+- **Backend Note**: The Automation Lane methods in Track.js allow tracks to store and retrieve automation data for parameters like volume, pan, filter cutoff, and ADSR envelope. The tests verify the Track class automation methods without requiring actual audio processing.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.09.0
+
 
 ## Known Issues and TODOs
 
