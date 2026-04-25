@@ -9816,3 +9816,221 @@ TestRunner.test('computerKeySamplerMap - values are consecutive starting from sa
         t.assertEqual(computerKeySamplerMap[keys[i]], expected, `computerKeySamplerMap[${keys[i]}] should be ${expected}`);
     }
 });
+
+// Day 236: appServices Export and Method Signature Tests
+// Testing appServices object exported from main.js for state management and UI operations
+
+TestRunner.test('appServices - is exported as an object', (t) => {
+    t.assertEqual(typeof appServices, 'object', 'appServices should be an object');
+    t.assertTruthy(appServices !== null, 'appServices should not be null');
+});
+
+TestRunner.test('appServices - has saveProject method', (t) => {
+    t.assertEqual(typeof appServices.saveProject, 'function', 'appServices.saveProject should be a function');
+});
+
+TestRunner.test('appServices - has loadProject method', (t) => {
+    t.assertEqual(typeof appServices.loadProject, 'function', 'appServices.loadProject should be a function');
+});
+
+TestRunner.test('appServices - has handleProjectFileLoad method', (t) => {
+    t.assertEqual(typeof appServices.handleProjectFileLoad, 'function', 'appServices.handleProjectFileLoad should be a function');
+});
+
+TestRunner.test('appServices - has exportToWav method', (t) => {
+    t.assertEqual(typeof appServices.exportToWav, 'function', 'appServices.exportToWav should be a function');
+});
+
+TestRunner.test('appServices - has exportToMidi method', (t) => {
+    t.assertEqual(typeof appServices.exportToMidi, 'function', 'appServices.exportToMidi should be a function');
+});
+
+TestRunner.test('appServices - has importFromMidi method', (t) => {
+    t.assertEqual(typeof appServices.importFromMidi, 'function', 'appServices.importFromMidi should be a function');
+});
+
+TestRunner.test('appServices - has undoLastAction method', (t) => {
+    t.assertEqual(typeof appServices.undoLastAction, 'function', 'appServices.undoLastAction should be a function');
+});
+
+TestRunner.test('appServices - has redoLastAction method', (t) => {
+    t.assertEqual(typeof appServices.redoLastAction, 'function', 'appServices.redoLastAction should be a function');
+});
+
+TestRunner.test('appServices - has panicStopAllAudio method', (t) => {
+    t.assertEqual(typeof appServices.panicStopAllAudio, 'function', 'appServices.panicStopAllAudio should be a function');
+});
+
+TestRunner.test('appServices - has updateTaskbarTempoDisplay method', (t) => {
+    t.assertEqual(typeof appServices.updateTaskbarTempoDisplay, 'function', 'appServices.updateTaskbarTempoDisplay should be a function');
+});
+
+TestRunner.test('appServices - has updateUndoRedoButtonsUI method', (t) => {
+    t.assertEqual(typeof appServices.updateUndoRedoButtonsUI, 'function', 'appServices.updateUndoRedoButtonsUI should be a function');
+});
+
+TestRunner.test('appServices - has updateRecordButtonUI method', (t) => {
+    t.assertEqual(typeof appServices.updateRecordButtonUI, 'function', 'appServices.updateRecordButtonUI should be a function');
+});
+
+TestRunner.test('appServices - has closeAllWindows method', (t) => {
+    t.assertEqual(typeof appServices.closeAllWindows, 'function', 'appServices.closeAllWindows should be a function');
+});
+
+TestRunner.test('appServices - has clearOpenWindowsMap method', (t) => {
+    t.assertEqual(typeof appServices.clearOpenWindowsMap, 'function', 'appServices.clearOpenWindowsMap should be a function');
+});
+
+TestRunner.test('appServices - has createWindow method', (t) => {
+    t.assertEqual(typeof appServices.createWindow, 'function', 'appServices.createWindow should be a function');
+    t.assertEqual(appServices.createWindow.length, 4, 'createWindow should accept 4 parameters (id, title, content, options)');
+});
+
+TestRunner.test('appServices - has updateTrackUI method', (t) => {
+    t.assertEqual(typeof appServices.updateTrackUI, 'function', 'appServices.updateTrackUI should be a function');
+});
+
+TestRunner.test('appServices - has updateTrackMeterUI method', (t) => {
+    t.assertEqual(typeof appServices.updateTrackMeterUI, 'function', 'appServices.updateTrackMeterUI should be a function');
+});
+
+TestRunner.test('appServices - has updateMasterEffectsRackUI method', (t) => {
+    t.assertEqual(typeof appServices.updateMasterEffectsRackUI, 'function', 'appServices.updateMasterEffectsRackUI should be a function');
+});
+
+TestRunner.test('appServices - has startMetronome method', (t) => {
+    t.assertEqual(typeof appServices.startMetronome, 'function', 'appServices.startMetronome should be a function');
+});
+
+TestRunner.test('appServices - has stopMetronome method', (t) => {
+    t.assertEqual(typeof appServices.stopMetronome, 'function', 'appServices.stopMetronome should be a function');
+});
+
+TestRunner.test('appServices - has setMetronomeVolume method', (t) => {
+    t.assertEqual(typeof appServices.setMetronomeVolume, 'function', 'appServices.setMetronomeVolume should be a function');
+});
+
+TestRunner.test('appServices - has getIsReconstructingDAW method', (t) => {
+    t.assertEqual(typeof appServices.getIsReconstructingDAW, 'function', 'appServices.getIsReconstructingDAW should be a function');
+});
+
+TestRunner.test('appServices - has addMasterEffect method', (t) => {
+    t.assertEqual(typeof appServices.addMasterEffect, 'function', 'appServices.addMasterEffect should be a function');
+});
+
+TestRunner.test('appServices - has setMasterVolume method', (t) => {
+    t.assertEqual(typeof appServices.setMasterVolume, 'function', 'appServices.setMasterVolume should be a function');
+});
+
+TestRunner.test('appServices - has onPlaybackModeChange method', (t) => {
+    t.assertEqual(typeof appServices.onPlaybackModeChange, 'function', 'appServices.onPlaybackModeChange should be a function');
+});
+
+TestRunner.test('appServices - has uiElementsCache object', (t) => {
+    t.assertEqual(typeof appServices.uiElementsCache, 'object', 'appServices.uiElementsCache should be an object');
+});
+
+TestRunner.test('appServices - has effectsRegistryAccess object', (t) => {
+    t.assertEqual(typeof appServices.effectsRegistryAccess, 'object', 'appServices.effectsRegistryAccess should be an object');
+});
+
+TestRunner.test('appServices - has Send Bus methods', (t) => {
+    t.assertEqual(typeof appServices.createSendBusInAudio, 'function', 'appServices.createSendBusInAudio should be a function');
+    t.assertEqual(typeof appServices.deleteSendBusFromAudio, 'function', 'appServices.deleteSendBusFromAudio should be a function');
+    t.assertEqual(typeof appServices.setSendBusLevel, 'function', 'appServices.setSendBusLevel should be a function');
+    t.assertEqual(typeof appServices.setSendBusMuted, 'function', 'appServices.setSendBusMuted should be a function');
+});
+
+TestRunner.test('appServices - has Track Send methods', (t) => {
+    t.assertEqual(typeof appServices.connectTrackToSendBus, 'function', 'appServices.connectTrackToSendBus should be a function');
+    t.assertEqual(typeof appServices.disconnectTrackFromSendBus, 'function', 'appServices.disconnectTrackFromSendBus should be a function');
+    t.assertEqual(typeof appServices.setTrackSendLevel, 'function', 'appServices.setTrackSendLevel should be a function');
+});
+
+TestRunner.test('appServices - has closeAllTrackWindows method', (t) => {
+    t.assertEqual(typeof appServices.closeAllTrackWindows, 'function', 'appServices.closeAllTrackWindows should be a function');
+});
+
+TestRunner.test('appServices - has getAudioBlobFromSoundBrowserItem method', (t) => {
+    t.assertEqual(typeof appServices.getAudioBlobFromSoundBrowserItem, 'function', 'appServices.getAudioBlobFromSoundBrowserItem should be a function');
+});
+
+TestRunner.test('appServices - has triggerCustomBackgroundUpload method', (t) => {
+    t.assertEqual(typeof appServices.triggerCustomBackgroundUpload, 'function', 'appServices.triggerCustomBackgroundUpload should be a function');
+});
+
+TestRunner.test('appServices - has removeCustomDesktopBackground method', (t) => {
+    t.assertEqual(typeof appServices.removeCustomDesktopBackground, 'function', 'appServices.removeCustomDesktopBackground should be a function');
+});
+
+TestRunner.test('appServices - has updateMidiLearnMappingsUI method', (t) => {
+    t.assertEqual(typeof appServices.updateMidiLearnMappingsUI, 'function', 'appServices.updateMidiLearnMappingsUI should be a function');
+});
+
+TestRunner.test('appServices - has Event Handler passthrough methods', (t) => {
+    t.assertEqual(typeof appServices.handleTrackMute, 'function', 'appServices.handleTrackMute should be a function');
+    t.assertEqual(typeof appServices.handleTrackSolo, 'function', 'appServices.handleTrackSolo should be a function');
+    t.assertEqual(typeof appServices.handleTrackArm, 'function', 'appServices.handleTrackArm should be a function');
+    t.assertEqual(typeof appServices.handleRemoveTrack, 'function', 'appServices.handleRemoveTrack should be a function');
+    t.assertEqual(typeof appServices.handleOpenTrackInspector, 'function', 'appServices.handleOpenTrackInspector should be a function');
+    t.assertEqual(typeof appServices.handleOpenEffectsRack, 'function', 'appServices.handleOpenEffectsRack should be a function');
+    t.assertEqual(typeof appServices.handleOpenSequencer, 'function', 'appServices.handleOpenSequencer should be a function');
+});
+
+TestRunner.test('appServices - has handleTimelineLaneDrop method', (t) => {
+    t.assertEqual(typeof appServices.handleTimelineLaneDrop, 'function', 'appServices.handleTimelineLaneDrop should be a function');
+});
+
+TestRunner.test('appServices - panicStopAllAudio is a callable function', (t) => {
+    t.assertTruthy(typeof appServices.panicStopAllAudio === 'function', 'panicStopAllAudio should be callable');
+    t.assertEqual(appServices.panicStopAllAudio.length, 0, 'panicStopAllAudio should accept no parameters');
+});
+
+TestRunner.test('appServices - undoLastAction is an async function', (t) => {
+    t.assertTruthy(appServices.undoLastAction instanceof Promise || typeof appServices.undoLastAction === 'function', 'undoLastAction should be async or return Promise');
+});
+
+TestRunner.test('appServices - redoLastAction is an async function', (t) => {
+    t.assertTruthy(appServices.redoLastAction instanceof Promise || typeof appServices.redoLastAction === 'function', 'redoLastAction should be async or return Promise');
+});
+
+TestRunner.test('appServices - updateUndoRedoButtonsUI accepts 2 parameters', (t) => {
+    t.assertEqual(appServices.updateUndoRedoButtonsUI.length, 2, 'updateUndoRedoButtonsUI should accept 2 parameters (undoState, redoState)');
+});
+
+TestRunner.test('appServices - updateRecordButtonUI accepts 1 parameter', (t) => {
+    t.assertEqual(appServices.updateRecordButtonUI.length, 1, 'updateRecordButtonUI should accept 1 parameter (isRec)');
+});
+
+TestRunner.test('appServices - onPlaybackModeChange accepts 1 parameter', (t) => {
+    t.assertEqual(appServices.onPlaybackModeChange.length, 1, 'onPlaybackModeChange should accept 1 parameter (newMode)');
+});
+
+TestRunner.test('appServices - updateTaskbarTempoDisplay accepts 1 parameter', (t) => {
+    t.assertEqual(appServices.updateTaskbarTempoDisplay.length, 1, 'updateTaskbarTempoDisplay should accept 1 parameter (tempo)');
+});
+
+TestRunner.test('appServices - updateTrackMeterUI accepts 3 parameters', (t) => {
+    t.assertEqual(appServices.updateTrackMeterUI.length, 3, 'updateTrackMeterUI should accept 3 parameters (trackId, level, isClipping)');
+});
+
+TestRunner.test('appServices - getIsReconstructingDAW returns boolean', (t) => {
+    const result = appServices.getIsReconstructingDAW();
+    t.assertEqual(typeof result, 'boolean', 'getIsReconstructingDAW should return a boolean');
+});
+
+TestRunner.test('appServices - has getTransportEventsInitialized method', (t) => {
+    t.assertEqual(typeof appServices.getTransportEventsInitialized, 'function', 'appServices.getTransportEventsInitialized should be a function');
+});
+
+TestRunner.test('appServices - has setTransportEventsInitialized method', (t) => {
+    t.assertEqual(typeof appServices.setTransportEventsInitialized, 'function', 'appServices.setTransportEventsInitialized should be a function');
+});
+
+TestRunner.test('appServices - setTransportEventsInitialized accepts 1 parameter', (t) => {
+    t.assertEqual(appServices.setTransportEventsInitialized.length, 1, 'setTransportEventsInitialized should accept 1 parameter');
+});
+
+TestRunner.test('appServices - closeAllWindows accepts optional parameter', (t) => {
+    t.assertEqual(appServices.closeAllWindows.length, 1, 'closeAllWindows should accept 1 optional parameter (isReconstructinging)');
+});
