@@ -14,6 +14,35 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 ### Completed Features
 
 #### Day 212: MIDI Export/Import Constants Tests (2026-04-24)
+#### Day 213: Project Save/Load/Export Function Tests (2026-04-25)
+- **Feature**: Added 16 new unit tests for Project Save/Load/Export functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 16 new tests in Day 213 section:
+    - `Project - gatherProjectDataInternal function is exported` - Tests function export
+    - `Project - gatherProjectDataInternal accepts no parameters` - Tests parameter count
+    - `Project - saveProjectInternal function is exported` - Tests function export
+    - `Project - saveProjectInternal accepts no parameters` - Tests parameter count
+    - `Project - saveProjectInternal is async` - Tests async behavior
+    - `Project - loadProjectInternal function is exported` - Tests function export
+    - `Project - loadProjectInternal accepts no parameters` - Tests parameter count
+    - `Project - handleProjectFileLoadInternal function is exported` - Tests function export
+    - `Project - handleProjectFileLoadInternal accepts event parameter` - Tests parameter count
+    - `Project - handleProjectFileLoadInternal is async` - Tests async behavior
+    - `Project - reconstructDAWInternal function is exported` - Tests function export
+    - `Project - reconstructDAWInternal accepts projectData and optional isUndoRedo parameters` - Tests parameter count
+    - `Project - reconstructDAWInternal is async` - Tests async behavior
+    - `Project - exportToWavInternal function is exported` - Tests function export
+    - `Project - exportToWavInternal accepts no parameters` - Tests parameter count
+    - `Project - exportToWavInternal is async` - Tests async behavior
+  - `js/constants.js`: Bumped APP_VERSION to 0.97.0
+- **Feature Details**:
+  - Tests verify project save/load/export functions are properly exported from state.js
+  - Tests validate function parameter counts match expected APIs
+  - Tests verify async functions are properly marked as async
+  - Total test count increased from 731 to 747 tests
+- **Backend Note**: The project save/load/export functions handle project persistence, WAV export, and DAW state reconstruction. The tests verify the exported API without requiring actual file system access or audio rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.97.0
 - **Feature**: Added 14 new unit tests for MIDI Export/Import constants to expand test coverage
 - **Files Modified**:
   - `js/tests.js`: Added 14 new tests in Day 212 section:
