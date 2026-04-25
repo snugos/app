@@ -8,7 +8,17 @@ import {
     DEFAULT_EFFECT_PRESET,
     SCALES,
     SCALE_ROOTS,
-    DEFAULT_SCALE_MODE
+    DEFAULT_SCALE_MODE,
+    MAX_HISTORY_STATES,
+    MAX_BARS,
+    DEFAULT_NOTE_PROBABILITY,
+    STEPS_PER_BAR,
+    defaultStepsPerBar,
+    MIDI_LEARN_SHORTCUT_KEY,
+    MIDI_LEARN_INDICATOR_TIMEOUT_MS,
+    MIDI_CC_COMMAND,
+    GRID_STEP_LABELS,
+    STEP_LABELS_SIXTEENTHS
 } from './constants.js';
 import {
     getUndoStackState,
@@ -5760,4 +5770,152 @@ TestRunner.test('Context Menu - CONTEXT_MENU_MAX_WIDTH is 300', (t) => {
 
 TestRunner.test('Context Menu - CONTEXT_MENU_MAX_WIDTH is positive', (t) => {
     t.assertTruthy(CONTEXT_MENU_MAX_WIDTH > 0, 'CONTEXT_MENU_MAX_WIDTH should be positive');
+});
+
+// ============================================
+// Day 218: Effect Preset & Transport Constants Tests (2026-04-25)
+// ============================================
+// Effect Preset Constants Tests
+TestRunner.test('Effect Preset - MAX_EFFECT_PRESETS is 64', (t) => {
+    t.assertEqual(MAX_EFFECT_PRESETS, 64, 'MAX_EFFECT_PRESETS should be 64');
+});
+
+TestRunner.test('Effect Preset - MAX_EFFECT_PRESETS is positive', (t) => {
+    t.assertTruthy(MAX_EFFECT_PRESETS > 0, 'MAX_EFFECT_PRESETS should be positive');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_PRESET_NAME_PREFIX is string', (t) => {
+    t.assertEqual(typeof DEFAULT_PRESET_NAME_PREFIX, 'string', 'DEFAULT_PRESET_NAME_PREFIX should be a string');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_PRESET_NAME_PREFIX is non-empty', (t) => {
+    t.assertTruthy(DEFAULT_PRESET_NAME_PREFIX.length > 0, 'DEFAULT_PRESET_NAME_PREFIX should be non-empty');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_PRESET_NAME_PREFIX is "Preset"', (t) => {
+    t.assertEqual(DEFAULT_PRESET_NAME_PREFIX, 'Preset', 'DEFAULT_PRESET_NAME_PREFIX should be "Preset"');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_EFFECT_PRESET, 'object', 'DEFAULT_EFFECT_PRESET should be an object');
+    t.assertTruthy(DEFAULT_EFFECT_PRESET !== null, 'DEFAULT_EFFECT_PRESET should not be null');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET has name property', (t) => {
+    t.assertTruthy('name' in DEFAULT_EFFECT_PRESET, 'DEFAULT_EFFECT_PRESET should have name property');
+    t.assertEqual(DEFAULT_EFFECT_PRESET.name, DEFAULT_PRESET_NAME_PREFIX, 'name should match DEFAULT_PRESET_NAME_PREFIX');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET has effectType property', (t) => {
+    t.assertTruthy('effectType' in DEFAULT_EFFECT_PRESET, 'DEFAULT_EFFECT_PRESET should have effectType property');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET has params property', (t) => {
+    t.assertTruthy('params' in DEFAULT_EFFECT_PRESET, 'DEFAULT_EFFECT_PRESET should have params property');
+    t.assertEqual(typeof DEFAULT_EFFECT_PRESET.params, 'object', 'params should be an object');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.effectType is null', (t) => {
+    t.assertEqual(DEFAULT_EFFECT_PRESET.effectType, null, 'effectType should be null by default');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.params is empty object', (t) => {
+    t.assertEqual(Object.keys(DEFAULT_EFFECT_PRESET.params).length, 0, 'params should be an empty object');
+});
+
+// Transport & History Constants Tests
+TestRunner.test('Transport - MAX_HISTORY_STATES is 50', (t) => {
+    t.assertEqual(MAX_HISTORY_STATES, 50, 'MAX_HISTORY_STATES should be 50');
+});
+
+TestRunner.test('Transport - MAX_HISTORY_STATES is positive', (t) => {
+    t.assertTruthy(MAX_HISTORY_STATES > 0, 'MAX_HISTORY_STATES should be positive');
+});
+
+TestRunner.test('Transport - MAX_HISTORY_STATES is at least 10', (t) => {
+    t.assertTruthy(MAX_HISTORY_STATES >= 10, 'MAX_HISTORY_STATES should be at least 10 for useful undo/redo');
+});
+
+TestRunner.test('Transport - MAX_BARS is 512', (t) => {
+    t.assertEqual(MAX_BARS, 512, 'MAX_BARS should be 512');
+});
+
+TestRunner.test('Transport - MAX_BARS is positive', (t) => {
+    t.assertTruthy(MAX_BARS > 0, 'MAX_BARS should be positive');
+});
+
+TestRunner.test('Transport - MAX_BARS is at least 4', (t) => {
+    t.assertTruthy(MAX_BARS >= 4, 'MAX_BARS should be at least 4 for basic sequencing');
+});
+
+TestRunner.test('Transport - DEFAULT_NOTE_PROBABILITY is 1.0', (t) => {
+    t.assertEqual(DEFAULT_NOTE_PROBABILITY, 1.0, 'DEFAULT_NOTE_PROBABILITY should be 1.0');
+});
+
+TestRunner.test('Transport - DEFAULT_NOTE_PROBABILITY is between 0 and 1', (t) => {
+    t.assertTruthy(DEFAULT_NOTE_PROBABILITY >= 0 && DEFAULT_NOTE_PROBABILITY <= 1, 'DEFAULT_NOTE_PROBABILITY should be between 0 and 1');
+});
+
+TestRunner.test('Transport - STEPS_PER_BAR is 16', (t) => {
+    t.assertEqual(STEPS_PER_BAR, 16, 'STEPS_PER_BAR should be 16');
+});
+
+TestRunner.test('Transport - STEPS_PER_BAR is positive', (t) => {
+    t.assertTruthy(STEPS_PER_BAR > 0, 'STEPS_PER_BAR should be positive');
+});
+
+TestRunner.test('Transport - STEPS_PER_BAR is power of 2', (t) => {
+    t.assertTruthy((STEPS_PER_BAR & (STEPS_PER_BAR - 1)) === 0, 'STEPS_PER_BAR should be a power of 2');
+});
+
+TestRunner.test('Transport - defaultStepsPerBar is 16', (t) => {
+    t.assertEqual(defaultStepsPerBar, 16, 'defaultStepsPerBar should be 16');
+});
+
+TestRunner.test('Transport - defaultStepsPerBar equals STEPS_PER_BAR', (t) => {
+    t.assertEqual(defaultStepsPerBar, STEPS_PER_BAR, 'defaultStepsPerBar should equal STEPS_PER_BAR');
+});
+
+// MIDI Learn Shortcut Constant Tests
+TestRunner.test('MIDI Learn - MIDI_LEARN_SHORTCUT_KEY is "k"', (t) => {
+    t.assertEqual(MIDI_LEARN_SHORTCUT_KEY, 'k', 'MIDI_LEARN_SHORTCUT_KEY should be "k"');
+});
+
+TestRunner.test('MIDI Learn - MIDI_LEARN_SHORTCUT_KEY is lowercase', (t) => {
+    t.assertEqual(MIDI_LEARN_SHORTCUT_KEY, MIDI_LEARN_SHORTCUT_KEY.toLowerCase(), 'MIDI_LEARN_SHORTCUT_KEY should be lowercase');
+});
+
+TestRunner.test('MIDI Learn - MIDI_LEARN_INDICATOR_TIMEOUT_MS is positive', (t) => {
+    t.assertTruthy(MIDI_LEARN_INDICATOR_TIMEOUT_MS > 0, 'MIDI_LEARN_INDICATOR_TIMEOUT_MS should be positive');
+});
+
+TestRunner.test('MIDI Learn - MIDI_LEARN_INDICATOR_TIMEOUT_MS is at least 500', (t) => {
+    t.assertTruthy(MIDI_LEARN_INDICATOR_TIMEOUT_MS >= 500, 'MIDI_LEARN_INDICATOR_TIMEOUT_MS should be at least 500ms');
+});
+
+TestRunner.test('MIDI Learn - MIDI_CC_COMMAND is 176', (t) => {
+    t.assertEqual(MIDI_CC_COMMAND, 176, 'MIDI_CC_COMMAND should be 176');
+});
+
+TestRunner.test('MIDI Learn - MIDI_CC_COMMAND is in valid CC range', (t) => {
+    t.assertTruthy(MIDI_CC_COMMAND >= 176 && MIDI_CC_COMMAND <= 191, 'MIDI_CC_COMMAND should be in range 176-191');
+});
+
+// Sequencer Grid Constants Tests
+TestRunner.test('Sequencer - GRID_STEP_LABELS is an object', (t) => {
+    t.assertEqual(typeof GRID_STEP_LABELS, 'object', 'GRID_STEP_LABELS should be an object');
+    t.assertTruthy(GRID_STEP_LABELS !== null, 'GRID_STEP_LABELS should not be null');
+});
+
+TestRunner.test('Sequencer - STEP_LABELS_SIXTEENTHS is an object', (t) => {
+    t.assertEqual(typeof STEP_LABELS_SIXTEENTHS, 'object', 'STEP_LABELS_SIXTEENTHS should be an object');
+    t.assertTruthy(STEP_LABELS_SIXTEENTHS !== null, 'STEP_LABELS_SIXTEENTHS should not be null');
+});
+
+TestRunner.test('Sequencer - GRID_STEP_LABELS has 1 property', (t) => {
+    t.assertEqual(Object.keys(GRID_STEP_LABELS).length, 1, 'GRID_STEP_LABELS should have 1 property');
+});
+
+TestRunner.test('Sequencer - STEP_LABELS_SIXTEENTHS has 1 property', (t) => {
+    t.assertEqual(Object.keys(STEP_LABELS_SIXTEENTHS).length, 1, 'STEP_LABELS_SIXTEENTHS should have 1 property');
 });
