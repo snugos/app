@@ -145,32 +145,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.11.0
 
-#### Day 230: Audio Track Instance Tests (2026-04-25)
-- **Feature**: Added 72 new unit tests for Audio Track instance methods and properties on Track class objects
-- **Files Modified**:
-  - `js/tests.js`: Added 72 new tests in Day 230 section:
-    - Track class can create Audio track
-    - Audio track has inputChannel property (null initially)
-    - Audio track has clipPlayers Map (empty initially)
-    - Audio track has timelineClips array (empty initially)
-    - addAudioClip method exists and returns Promise
-    - addAudioClip handles null/empty blob gracefully
-    - _getAudioClip helper returns undefined for nonexistent clip
-    - All audio clip getter/setter methods exist (name, color, gain, playbackRate, startOffset, endOffset, crossfade, fadeIn, fadeOut, fadeInCurve, fadeOutCurve, reverse, startTime)
-    - bounceTrack and _audioBufferToWav methods exist
-    - Different track types have independent clipPlayers Maps
-    - Audio track stores id, name, and index correctly
-  - `js/constants.js`: Bumped APP_VERSION to 1.13.0
-- **Feature Details**:
-  - Tests validate all audio clip accessor methods on Audio Track type
-  - Tests verify Audio track-specific properties (inputChannel, clipPlayers)
-  - Tests verify addAudioClip edge case handling (null/empty blob)
-  - Tests verify independent state for different track types
-  - Total tests increased from 1281 to 1353
-- **Backend Note**: The Audio Track tests complement the existing Audio Clip Editor tests by verifying Audio Track instance properties and methods directly. Tests verify the Track class handles Audio tracks correctly without requiring actual audio processing.
-- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 1.13.0
-
 #### Day 229: SnugWindow Extended Instance Tests (2026-04-25)
 - **Feature**: Added 22 new unit tests for SnugWindow extended instance methods and behaviors
 - **Files Modified**:
@@ -191,6 +165,44 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These tests complement Day 200 SnugWindow tests by verifying additional instance methods and behaviors.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.12.0
+
+#### Day 230: DB Module Tests (2026-04-25)
+- **Feature**: Added 24 new unit tests for DB Module (IndexedDB Helper) to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for storeAudio, getAudio, deleteAudio, clearAllAudio from db.js and 24 new tests:
+    - storeAudio is exported as async function
+    - storeAudio accepts 2 parameters (key, audioBlob)
+    - getAudio is exported as async function
+    - getAudio accepts 1 parameter (key)
+    - deleteAudio is exported as async function
+    - deleteAudio accepts 1 parameter (key)
+    - clearAllAudio is exported as async function
+    - clearAllAudio accepts no parameters
+    - storeAudio references key parameter
+    - getAudio handles null resolution for missing keys
+    - DB functions are callable
+    - DB module references IndexedDB transaction/objectStore
+    - storeAudio references audioBlob parameter
+    - clearAllAudio clears the entire store
+    - getAudio uses readonly transaction
+    - storeAudio uses readwrite transaction
+    - deleteAudio uses readwrite transaction
+    - DB module references IndexedDB
+    - storeAudio handles transaction abort errors
+    - getAudio handles transaction errors
+    - deleteAudio handles errors
+    - clearAllAudio handles errors
+    - All 4 DB functions are independent exports
+  - `js/constants.js`: Bumped APP_VERSION to 1.13.0
+- **Feature Details**:
+  - Tests validate all 4 DB module functions (storeAudio, getAudio, deleteAudio, clearAllAudio)
+  - Tests verify async function signatures and parameter counts
+  - Tests verify IndexedDB transaction usage patterns
+  - Tests verify error handling for all functions
+  - Total tests increased from 1269 to 1293
+- **Backend Note**: The DB module provides IndexedDB persistence for audio samples. The tests verify the exported API without requiring actual IndexedDB access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.13.0
 
 
 ## Known Issues and TODOs
