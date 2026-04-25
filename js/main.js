@@ -1,6 +1,10 @@
 // force rebuild
 // js/main.js - Main Application Logic Orchestrator
 
+// Desktop background localStorage keys
+const DESKTOP_BG_TYPE_KEY = 'snugOS_desktopBgType';
+const DESKTOP_BACKGROUND_KEY = 'snugOS_desktopBackground';
+
 // --- Module Imports ---
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
@@ -757,6 +761,35 @@ async function restoreDesktopBackground() {
             applyDesktopBackground(imageUrl, 'image');
         }
     }
+}
+
+function handleCustomBackgroundUpload(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+        console.warn("[handleCustomBackgroundUpload] No file selected.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        localStorage.setItem(DESKTOP_BACKGROUND_KEY, dataUrl);
+        localStorage.setItem(DESKTOP_BG_TYPE_KEY, 'image');
+        applyDesktopBackground(dataUrl, 'image');
+        showSafeNotification("Desktop background updated!", 2000);
+    };
+    reader.onerror = (err) => {
+        console.error("[handleCustomBackgroundUpload] Error reading file:", err);
+        showSafeNotification("Failed to set background.", 2000);
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeCustomDesktopBackground() {
+    localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
+    localStorage.removeItem(DESKTOP_BG_TYPE_KEY);
+    applyDesktopBackground(null, null);
+    showSafeNotification("Desktop background reset to default.", 2000);
 }
 
 
