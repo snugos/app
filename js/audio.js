@@ -500,7 +500,7 @@ export function getMimeTypeFromFilename(filename) {
 }
 
 async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint, padIndex = null) {
-    const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingingDAW() : false;
+    const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingDAW() : false;
 
     if (localAppServices.captureStateForUndo && !isReconstructing) {
         const targetName = trackTypeHint === 'DrumSampler' && padIndex !== null ?
@@ -1381,8 +1381,8 @@ export function reorderEffectInSendBus(sendId, effectId, newIndex) {
         return;
     }
 
-    const currentIndex = busData.effectsChain.findIndex(e => e.id === effectId);
-    if (currentIndex === -1) {
+    const effectIndex = busData.effectsChain.findIndex(e => e.id === effectId);
+    if (effectIndex === -1) {
         console.warn(`[Audio reorderEffectInSendBus] Effect ${effectId} not found in send bus ${sendId}.`);
         return;
     }
@@ -1391,7 +1391,7 @@ export function reorderEffectInSendBus(sendId, effectId, newIndex) {
     const clampedIndex = Math.max(0, Math.min(newIndex, busData.effectsChain.length - 1));
     
     // Remove from current position and insert at new position
-    const [effect] = busData.effectsChain.splice(currentIndex, 1);
+    const [effect] = busData.effectsChain.splice(effectIndex, 1);
     busData.effectsChain.splice(clampedIndex, 0, effect);
 
     rebuildSendBusChain(sendId);

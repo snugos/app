@@ -3,10 +3,10 @@
 export const synthEngineControlDefinitions = {
     MonoSynth: [
         { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
-        { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sine', path: 'oscillator.type' }, // MODIFIED
+        { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sine', path: 'oscillator.type' },
         { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
-        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'envelope.decay' }, // MODIFIED
-        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'envelope.sustain' }, // MODIFIED
+        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'envelope.decay' },
+        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'envelope.sustain' },
         { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
         { idPrefix: 'filtType', label: 'Filt Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass', path: 'filter.type' },
         { idPrefix: 'filtFreq', label: 'Filt Freq', type: 'knob', min: 20, max: 20000, step: 1, defaultValue: 1000, decimals: 0, path: 'filter.frequency.value' },
@@ -17,8 +17,54 @@ export const synthEngineControlDefinitions = {
         { idPrefix: 'filtEnvRelease', label: 'F.Rel', type: 'knob', min:0.01, max:5, step:0.01, defaultValue:2, decimals:2, path:'filterEnvelope.release'},
         { idPrefix: 'filtEnvBaseFreq', label: 'F.Base', type: 'knob', min:20, max:5000, step:1, defaultValue:200, decimals:0, path:'filterEnvelope.baseFrequency'},
         { idPrefix: 'filtEnvOctaves', label: 'F.Oct', type: 'knob', min:0, max:10, step:0.1, defaultValue:7, decimals:1, path:'filterEnvelope.octaves'},
-    ]
-    // Add other synth engine definitions here
+    ],
+    AMSynth: [
+        { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
+        { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sine', path: 'oscillator.type' },
+        { idPrefix: 'oscType2', label: 'Mod Osc', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'square', path: 'modulator.type' },
+        { idPrefix: 'harmonicity', label: 'Harmonic', type: 'knob', min: 0.1, max: 10, step: 0.1, defaultValue: 3, decimals: 1, path: 'harmonicity' },
+        { idPrefix: 'modulationIndex', label: 'Mod Index', type: 'knob', min: 0.1, max: 100, step: 0.1, defaultValue: 10, decimals: 1, path: 'modulationIndex' },
+        { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
+        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'envelope.decay' },
+        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'envelope.sustain' },
+        { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
+        { idPrefix: 'modEnvAttack', label: 'M.Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'modulationEnvelope.attack' },
+        { idPrefix: 'modEnvDecay', label: 'M.Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'modulationEnvelope.decay' },
+        { idPrefix: 'modEnvSustain', label: 'M.Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'modulationEnvelope.sustain' },
+        { idPrefix: 'modEnvRelease', label: 'M.Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'modulationEnvelope.release' },
+    ],
+    FMSynth: [
+        { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
+        { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sine', path: 'oscillator.type' },
+        { idPrefix: 'oscType2', label: 'Mod Osc', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'square', path: 'modulator.type' },
+        { idPrefix: 'harmonicity', label: 'Harmonic', type: 'knob', min: 0.1, max: 10, step: 0.1, defaultValue: 3, decimals: 1, path: 'harmonicity' },
+        { idPrefix: 'modulationIndex', label: 'Mod Index', type: 'knob', min: 0.1, max: 100, step: 0.1, defaultValue: 10, decimals: 1, path: 'modulationIndex' },
+        { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
+        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'envelope.decay' },
+        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'envelope.sustain' },
+        { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
+        { idPrefix: 'modEnvAttack', label: 'M.Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'modulationEnvelope.attack' },
+        { idPrefix: 'modEnvDecay', label: 'M.Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'modulationEnvelope.decay' },
+        { idPrefix: 'modEnvSustain', label: 'M.Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'modulationEnvelope.sustain' },
+        { idPrefix: 'modEnvRelease', label: 'M.Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'modulationEnvelope.release' },
+    ],
+    DuoSynth: [
+        { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
+        { idPrefix: 'vibratoAmount', label: 'Vib Amt', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, path: 'vibratoAmount' },
+        { idPrefix: 'vibratoRate', label: 'Vib Rate', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 5, decimals: 1, path: 'vibratoRate' },
+        { idPrefix: 'harmonicity', label: 'Harmonic', type: 'knob', min: 0.1, max: 10, step: 0.1, defaultValue: 1.5, decimals: 1, path: 'harmonicity' },
+        { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
+        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'envelope.decay' },
+        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'envelope.sustain' },
+        { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
+        { idPrefix: 'modEnvAttack', label: 'M.Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'modulationEnvelope.attack' },
+        { idPrefix: 'modEnvDecay', label: 'M.Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'modulationEnvelope.decay' },
+        { idPrefix: 'modEnvSustain', label: 'M.Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'modulationEnvelope.sustain' },
+        { idPrefix: 'modEnvRelease', label: 'M.Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'modulationEnvelope.release' },
+        { idPrefix: 'modFilterType', label: 'Mod Filt', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass', path: 'modulationFilter.type' },
+        { idPrefix: 'modFilterFreq', label: 'MF Freq', type: 'knob', min: 20, max: 20000, step: 1, defaultValue: 2000, decimals: 0, path: 'modulationFilter.frequency' },
+        { idPrefix: 'modFilterQ', label: 'MF Q', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 1, decimals: 1, path: 'modulationFilter.Q' },
+    ],
 };
 
 export const AVAILABLE_EFFECTS = {
