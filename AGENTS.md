@@ -39,6 +39,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.02.0
 
+#### Day 219: Metronome, Tempo, Loop Region & Timeline Marker Constants Tests (2026-04-25)
+- **Feature**: Added 38 new unit tests for Metronome, Tempo, Loop Region, and Timeline Marker constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for DEFAULT_METRONOME_ENABLED, DEFAULT_METRONOME_VOLUME, MIN_METRONOME_VOLUME, MAX_METRONOME_VOLUME, DEFAULT_TEMPO, MIN_TEMPO, MAX_TEMPO, DEFAULT_LOOP_REGION, MAX_TIMELINE_MARKERS, DEFAULT_MARKER_COLOR, MARKER_COLORS, DEFAULT_MARKER
+  - Added 38 new tests in Day 219 section:
+    - Metronome: DEFAULT_METRONOME_ENABLED (boolean, false), DEFAULT_METRONOME_VOLUME (0.5), MIN/MAX volume range (0-1)
+    - Tempo: DEFAULT_TEMPO (120), MIN_TEMPO (0), MAX_TEMPO (999)
+    - Loop Region: DEFAULT_LOOP_REGION structure (enabled:false, startBar:1, endBar:4, minimumBars:1)
+    - Timeline Markers: MAX_TIMELINE_MARKERS (64), DEFAULT_MARKER_COLOR (#ff9f43 orange), MARKER_COLORS array, DEFAULT_MARKER structure
+  - `js/constants.js`: Bumped APP_VERSION to 1.03.0
+- **Feature Details**:
+  - Tests validate Metronome constants (enabled flag, volume range, defaults)
+  - Tests validate Tempo constants (default 120 BPM, min/max bounds)
+  - Tests validate Loop Region structure and property values
+  - Tests validate Timeline Marker constants (max markers, colors, default marker structure)
+  - Total tests increased from 939 to 977 tests
+- **Backend Note**: These constants define behavior for metronome playback, tempo settings, loop region display, and timeline markers in the DAW. Tests verify configuration values without requiring actual audio playback or UI rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.03.0
+
 #### Day 216: Additional Constants Tests (2026-04-25)
 - **Feature**: Added 21 new unit tests for additional constants (Tap Tempo, Drop Zone, Keyboard Shortcuts Help)
 - **Files Modified**:
