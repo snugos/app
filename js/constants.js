@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.07.0'; // Day 224: Remaining Undo/Redo Capture Verification Tests
+export const APP_VERSION = '1.08.0'; // Day 225: Recording Constants Additional Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
