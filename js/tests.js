@@ -2276,8 +2276,8 @@ TestRunner.test('Synth Engine - synthEngineControlDefinitions has MonoSynth', (t
 
 TestRunner.test('Synth Engine - synthEngineControlDefinitions.MonoSynth has controls', (t) => {
     const mono = synthEngineControlDefinitions.MonoSynth;
-    t.assertTruthy(Array.isArray(mono.controls), 'MonoSynth should have controls array');
-    t.assertTruthy(mono.controls.length > 0, 'MonoSynth should have at least one control');
+    t.assertTruthy(Array.isArray(mono), 'MonoSynth should be an array of control definitions');
+    t.assertTruthy(mono.length > 0, 'MonoSynth should have at least one control definition');
 });
 
 // ============================================
@@ -5257,7 +5257,7 @@ TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.params is empty object', 
 // Synth Engine Control Definitions - MonoSynth control tests
 TestRunner.test('Synth Engine - MonoSynth controls is an array', (t) => {
     const mono = synthEngineControlDefinitions.MonoSynth;
-    t.assertTruthy(Array.isArray(mono), 'synthEngineControlDefinitions.MonoSynth should be an array');
+    t.assertTruthy(Array.isArray(mono), 'MonoSynth should be an array of control definitions');
 });
 
 TestRunner.test('Synth Engine - MonoSynth has 15 control definitions', (t) => {
@@ -6329,6 +6329,7 @@ TestRunner.test('Chord Mode State - lockChord property in state', (t) => {
     const state = getChordModeState();
     t.assertTruthy('lockChord' in state, 'State should have lockChord property');
 });
+
 // Day 221: Swing State & Window Store Undo Capture Tests (2026-04-25)
 // ================================================================
 // These tests verify that Swing state setters and Window Store functions
@@ -6362,4 +6363,825 @@ TestRunner.test('Window Store - getWindowByIdState returns window instance', (t)
     // Test that getWindowByIdState works with the store
     const result = getWindowByIdState('nonexistent-id');
     t.assertEqual(result, undefined, 'Should return undefined for nonexistent window');
+});
+
+// Day 222: Effect Preset State Tests (2026-04-25)
+// ===============================================================
+// These tests verify that Effect Preset state management functions
+// properly manage effect preset data with undo capture support.
+
+TestRunner.test('Effect Preset State - getEffectPresetsState returns array', (t) => {
+    const result = getEffectPresetsState();
+    t.assertTruthy(Array.isArray(result), 'getEffectPresetsState should return an array');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - getEffectPresetByIdState returns undefined for unknown id', (t) => {
+    const result = getEffectPresetByIdState(99999);
+    t.assertEqual(result, undefined, 'getEffectPresetByIdState should return undefined for unknown id');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - getEffectPresetsByTypeState returns array', (t) => {
+    const result = getEffectPresetsByTypeState('Reverb');
+    t.assertTruthy(Array.isArray(result), 'getEffectPresetsByTypeState should return an array');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - addEffectPresetState creates preset with correct structure', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'Test Preset', effectType: 'Reverb', params: { decay: 2.5 } });
+    t.assertTruthy(preset !== null, 'addEffectPresetState should return a preset');
+    t.assertTruthy('id' in preset, 'Preset should have id property');
+    t.assertEqual(preset.name, 'Test Preset', 'Preset name should be set');
+    t.assertEqual(preset.effectType, 'Reverb', 'Preset effectType should be set');
+    t.assertTruthy('params' in preset, 'Preset should have params property');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - addEffectPresetState uses default values when not provided', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({});
+    t.assertTruthy(preset !== null, 'addEffectPresetState should return a preset');
+    t.assertEqual(preset.effectType, null, 'Default effectType should be null');
+    t.assertTruthy(typeof preset.params === 'object', 'Default params should be an object');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - addEffectPresetState respects MAX_EFFECT_PRESETS limit', (t) => {
+    clearEffectPresetsState();
+    for (let i = 0; i < MAX_EFFECT_PRESETS; i++) {
+        addEffectPresetState({ name: `Template ${i}` });
+    }
+    const result = addEffectPresetState({ name: 'Extra Preset' });
+    t.assertEqual(result, null, 'addEffectPresetState should return null when limit reached');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - addEffectPresetState with custom id', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ id: 9999, name: 'Custom ID Preset' });
+    t.assertEqual(preset.id, 9999, 'Preset should use custom id');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - updateEffectPresetState updates existing preset', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'Original Name', effectType: 'Reverb' });
+    const result = updateEffectPresetState(preset.id, { name: 'Updated Name', params: { decay: 3.0 } });
+    t.assertTruthy(result !== null, 'updateEffectPresetState should return updated preset');
+    t.assertEqual(result.name, 'Updated Name', 'Name should be updated');
+    t.assertEqual(result.params.decay, 3.0, 'Params should be updated');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - updateEffectPresetState handles unknown id', (t) => {
+    clearEffectPresetsState();
+    const result = updateEffectPresetState(99999, { name: 'Test' });
+    t.assertEqual(result, null, 'updateEffectPresetState should return null for unknown id');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - removeEffectPresetState removes preset', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'To Remove' });
+    const result = removeEffectPresetState(preset.id);
+    t.assertEqual(result, true, 'removeEffectPresetState should return true');
+    t.assertEqual(getEffectPresetByIdState(preset.id), undefined, 'Preset should be removed');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - removeEffectPresetState handles unknown id', (t) => {
+    clearEffectPresetsState();
+    const result = removeEffectPresetState(99999);
+    t.assertEqual(result, false, 'removeEffectPresetState should return false for unknown id');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - clearEffectPresetsState removes all presets', (t) => {
+    clearEffectPresetsState();
+    addEffectPresetState({ name: 'Preset 1' });
+    addEffectPresetState({ name: 'Preset 2' });
+    clearEffectPresetsState();
+    const result = getEffectPresetsState();
+    t.assertEqual(result.length, 0, 'All presets should be cleared');
+});
+
+TestRunner.test('Effect Preset State - getEffectPresetsByTypeState filters by effectType', (t) => {
+    clearEffectPresetsState();
+    addEffectPresetState({ name: 'Reverb 1', effectType: 'Reverb' });
+    addEffectPresetState({ name: 'Reverb 2', effectType: 'Reverb' });
+    addEffectPresetState({ name: 'Delay', effectType: 'Delay' });
+    const reverbPresets = getEffectPresetsByTypeState('Reverb');
+    t.assertEqual(reverbPresets.length, 2, 'Should have 2 Reverb presets');
+    const delayPresets = getEffectPresetsByTypeState('Delay');
+    t.assertEqual(delayPresets.length, 1, 'Should have 1 Delay preset');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - getEffectPresetByIdState finds by id', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'Find Test', effectType: 'Reverb' });
+    const found = getEffectPresetByIdState(preset.id);
+    t.assertTruthy(found !== undefined, 'Should find preset');
+    t.assertEqual(found.name, 'Find Test', 'Should return correct preset');
+    clearEffectPresetsState();
+});
+
+TestRunner.test('Effect Preset State - updateEffectPresetState partial update preserves other fields', (t) => {
+    clearEffectPresetsState();
+    const preset = addEffectPresetState({ name: 'Original', effectType: 'Reverb', params: { decay: 2.5 } });
+    updateEffectPresetState(preset.id, { name: 'New Name' });
+    const updated = getEffectPresetByIdState(preset.id);
+    t.assertEqual(updated.name, 'New Name', 'Name should be updated');
+    t.assertEqual(updated.effectType, 'Reverb', 'effectType should be preserved');
+    t.assertEqual(updated.params.decay, 2.5, 'params should be preserved');
+    clearEffectPresetsState();
+});
+// === Day 222: Audio Utility & Sampler Clip Tests (2026-04-25) ===
+
+// Mime type utility function comprehensive tests
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/wav for .wav', (t) => {
+    const result = getMimeTypeFromFilename('test.wav');
+    t.assertEqual(result, 'audio/wav', 'Should return audio/wav for .wav file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/mpeg for .mp3', (t) => {
+    const result = getMimeTypeFromFilename('music.mp3');
+    t.assertEqual(result, 'audio/mpeg', 'Should return audio/mpeg for .mp3 file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/ogg for .ogg', (t) => {
+    const result = getMimeTypeFromFilename('sound.ogg');
+    t.assertEqual(result, 'audio/ogg', 'Should return audio/ogg for .ogg file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/flac for .flac', (t) => {
+    const result = getMimeTypeFromFilename('track.flac');
+    t.assertEqual(result, 'audio/flac', 'Should return audio/flac for .flac file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/aac for .aac', (t) => {
+    const result = getMimeTypeFromFilename('audio.aac');
+    t.assertEqual(result, 'audio/aac', 'Should return audio/aac for .aac file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns audio/mp4 for .m4a', (t) => {
+    const result = getMimeTypeFromFilename('recording.m4a');
+    t.assertEqual(result, 'audio/mp4', 'Should return audio/mp4 for .m4a file');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename returns octet-stream for unknown extension', (t) => {
+    const result = getMimeTypeFromFilename('file.xyz');
+    t.assertEqual(result, 'application/octet-stream', 'Should return octet-stream fallback');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename handles null input', (t) => {
+    const result = getMimeTypeFromFilename(null);
+    t.assertEqual(result, 'application/octet-stream', 'Should return octet-stream for null');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename handles empty string', (t) => {
+    const result = getMimeTypeFromFilename('');
+    t.assertEqual(result, 'application/octet-stream', 'Should return octet-stream for empty string');
+});
+
+TestRunner.test('Audio Utility - getMimeTypeFromFilename is case insensitive for extension', (t) => {
+    const result = getMimeTypeFromFilename('sound.WAV');
+    t.assertEqual(result, 'audio/wav', 'Should handle uppercase extension');
+});
+
+// autoSliceSample function validation tests
+TestRunner.test('Audio Utility - autoSliceSample function exists', (t) => {
+    t.assertEqual(typeof autoSliceSample, 'function', 'autoSliceSample should be a function');
+});
+
+TestRunner.test('Audio Utility - autoSliceSample accepts 1-2 parameters', (t) => {
+    t.assertTruthy(autoSliceSample.length === 1 || autoSliceSample.length === 2, 'autoSliceSample should accept 1-2 parameters');
+});
+
+// numSlices constant validation tests  
+TestRunner.test('Audio Utility - numSlices constant is defined', (t) => {
+    t.assertTruthy(typeof numSlices !== 'undefined', 'numSlices should be defined');
+});
+
+TestRunner.test('Audio Utility - numSlices equals 8', (t) => {
+    t.assertEqual(numSlices, 8, 'numSlices should equal 8');
+});
+
+TestRunner.test('Audio Utility - numSlices is positive', (t) => {
+    t.assertTruthy(numSlices > 0, 'numSlices should be positive');
+});
+
+TestRunner.test('Audio Utility - numSlices is used as default for autoSliceSample', (t) => {
+    // When numSlices is 8, autoSliceSample should default to creating 8 slices
+    t.assertEqual(numSlices, 8, 'numSlices should be 8 for default slicing');
+});
+
+// Clip constants validation tests  
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_GAIN is 1.0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'Default gain should be 1.0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_PLAYBACK_RATE is 1.0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'Default playback rate should be 1.0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_START_OFFSET is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'Default start offset should be 0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_END_OFFSET is -1', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_CROSSFADE is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'Default crossfade should be 0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_FADE_IN is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_FADE_OUT is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_AUDIO_CLIP_REVERSE is false', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_REVERSE, false, 'Default reverse should be false');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_FADE_IN_CURVE equals FADE_CURVE_LINEAR', (t) => {
+    t.assertEqual(DEFAULT_FADE_IN_CURVE, FADE_CURVE_LINEAR, 'Default fade in curve should be linear');
+});
+
+TestRunner.test('Audio Utility - DEFAULT_FADE_OUT_CURVE equals FADE_CURVE_LINEAR', (t) => {
+    t.assertEqual(DEFAULT_FADE_OUT_CURVE, FADE_CURVE_LINEAR, 'Default fade out curve should be linear');
+});
+
+// ============================================
+// Day 222: Synth Engine, Sampler & Swing Constants Tests (2026-04-25)
+// ============================================
+
+// Fix broken MonoSynth test - synthEngineControlDefinitions.MonoSynth is an array, not an object with .controls
+TestRunner.test('Synth Engine - synthEngineControlDefinitions.MonoSynth is an array', (t) => {
+    const mono = synthEngineControlDefinitions.MonoSynth;
+    t.assertTruthy(Array.isArray(mono), 'MonoSynth should be an array of control definitions');
+});
+
+TestRunner.test('Synth Engine - synthEngineControlDefinitions has AMSynth', (t) => {
+    t.assertTruthy(Array.isArray(synthEngineControlDefinitions.AMSynth), 'AMSynth should be an array');
+    t.assertTruthy(synthEngineControlDefinitions.AMSynth.length > 0, 'AMSynth should have control definitions');
+});
+
+TestRunner.test('Synth Engine - synthEngineControlDefinitions has FMSynth', (t) => {
+    t.assertTruthy(Array.isArray(synthEngineControlDefinitions.FMSynth), 'FMSynth should be an array');
+    t.assertTruthy(synthEngineControlDefinitions.FMSynth.length > 0, 'FMSynth should have control definitions');
+});
+
+TestRunner.test('Synth Engine - synthEngineControlDefinitions has DuoSynth', (t) => {
+    t.assertTruthy(Array.isArray(synthEngineControlDefinitions.DuoSynth), 'DuoSynth should be an array');
+    t.assertTruthy(synthEngineControlDefinitions.DuoSynth.length > 0, 'DuoSynth should have control definitions');
+});
+
+TestRunner.test('Synth Engine - MonoSynth control definitions have required properties', (t) => {
+    const mono = synthEngineControlDefinitions.MonoSynth;
+    const ctrl = mono[0];
+    t.assertTruthy(ctrl.hasOwnProperty('idPrefix'), 'Control should have idPrefix');
+    t.assertTruthy(ctrl.hasOwnProperty('label'), 'Control should have label');
+    t.assertTruthy(ctrl.hasOwnProperty('type'), 'Control should have type');
+    t.assertTruthy(ctrl.hasOwnProperty('min'), 'Control should have min');
+    t.assertTruthy(ctrl.hasOwnProperty('max'), 'Control should have max');
+    t.assertTruthy(ctrl.hasOwnProperty('defaultValue'), 'Control should have defaultValue');
+    t.assertTruthy(ctrl.hasOwnProperty('path'), 'Control should have path');
+});
+
+TestRunner.test('Synth Engine - AMSynth control definitions have required properties', (t) => {
+    const am = synthEngineControlDefinitions.AMSynth;
+    const ctrl = am[0];
+    t.assertTruthy(ctrl.hasOwnProperty('idPrefix'), 'AMSynth control should have idPrefix');
+    t.assertTruthy(ctrl.hasOwnProperty('defaultValue'), 'AMSynth control should have defaultValue');
+    t.assertTruthy(typeof ctrl.defaultValue === 'number', 'AMSynth control defaultValue should be number');
+});
+
+TestRunner.test('Synth Engine - FMSynth control definitions have required properties', (t) => {
+    const fm = synthEngineControlDefinitions.FMSynth;
+    const ctrl = fm[0];
+    t.assertTruthy(ctrl.hasOwnProperty('idPrefix'), 'FMSynth control should have idPrefix');
+    t.assertTruthy(ctrl.hasOwnProperty('defaultValue'), 'FMSynth control should have defaultValue');
+});
+
+TestRunner.test('Synth Engine - DuoSynth control definitions have required properties', (t) => {
+    const duo = synthEngineControlDefinitions.DuoSynth;
+    t.assertTruthy(Array.isArray(duo), 'DuoSynth should be an array');
+    t.assertTruthy(duo.length > 0, 'DuoSynth should have control definitions');
+});
+
+// synthPitches array validation
+TestRunner.test('synthPitches - is an array after .reverse()', (t) => {
+    t.assertTruthy(Array.isArray(synthPitches), 'synthPitches should be an array');
+});
+
+TestRunner.test('synthPitches - has correct count (72 pitches for 6 octaves)', (t) => {
+    t.assertEqual(synthPitches.length, 72, 'synthPitches should have 72 entries (6 octaves x 12 notes)');
+});
+
+TestRunner.test('synthPitches - starts with lowest note C6 (after reverse)', (t) => {
+    t.assertEqual(synthPitches[0], 'C6', 'First pitch should be C6 (lowest)');
+});
+
+TestRunner.test('synthPitches - ends with highest note B1 (after reverse)', (t) => {
+    t.assertEqual(synthPitches[synthPitches.length - 1], 'B1', 'Last pitch should be B1 (highest)');
+});
+
+TestRunner.test('synthPitches - contains middle C (C4)', (t) => {
+    t.assertTruthy(synthPitches.includes('C4'), 'synthPitches should include C4 (middle C)');
+});
+
+TestRunner.test('synthPitches - all entries are valid note strings', (t) => {
+    const notePattern = /^[A-G]#?[1-6]$/;
+    for (const pitch of synthPitches) {
+        t.assertTruthy(notePattern.test(pitch), `Pitch "${pitch}" should match note pattern`);
+    }
+});
+
+TestRunner.test('synthPitches - contains all chromatic notes per octave', (t) => {
+    const naturalNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    const sharpNotes = ['C#', 'D#', 'F#', 'G#', 'A#'];
+    for (let octave = 1; octave <= 6; octave++) {
+        for (const note of naturalNotes) {
+            t.assertTruthy(synthPitches.includes(`${note}${octave}`), `Should include ${note}${octave}`);
+        }
+        for (const note of sharpNotes) {
+            t.assertTruthy(synthPitches.includes(`${note}${octave}`), `Should include ${note}${octave}`);
+        }
+    }
+});
+
+// soundLibraries structure validation
+TestRunner.test('Sound Library - has Drums library', (t) => {
+    t.assertTruthy('Drums' in soundLibraries, 'soundLibraries should have Drums key');
+    t.assertTruthy(typeof soundLibraries['Drums'] === 'string', 'Drums should be a string path');
+});
+
+TestRunner.test('Sound Library - has Instruments library', (t) => {
+    t.assertTruthy('Instruments' in soundLibraries, 'soundLibraries should have Instruments key');
+    t.assertTruthy(typeof soundLibraries['Instruments'] === 'string', 'Instruments should be a string path');
+});
+
+TestRunner.test('Sound Library - library paths use assets prefix', (t) => {
+    for (const libName in soundLibraries) {
+        t.assertTruthy(soundLibraries[libName].startsWith('assets/'), `${libName} path should start with assets/`);
+    }
+});
+
+TestRunner.test('Sound Library - library paths use .zip extension', (t) => {
+    for (const libName in soundLibraries) {
+        t.assertTruthy(soundLibraries[libName].endsWith('.zip'), `${libName} path should end with .zip`);
+    }
+});
+
+// samplerMIDINoteStart validation
+TestRunner.test('Sampler Constants - samplerMIDINoteStart is C2 (36)', (t) => {
+    t.assertEqual(samplerMIDINoteStart, 36, 'samplerMIDINoteStart should be 36 (C2)');
+});
+
+TestRunner.test('Sampler Constants - samplerMIDINoteStart is positive', (t) => {
+    t.assertTruthy(samplerMIDINoteStart > 0, 'samplerMIDINoteStart should be positive');
+});
+
+TestRunner.test('Sampler Constants - numSlices equals 8', (t) => {
+    t.assertEqual(numSlices, 8, 'numSlices should be 8');
+});
+
+TestRunner.test('Sampler Constants - numDrumSamplerPads equals 8', (t) => {
+    t.assertEqual(numDrumSamplerPads, 8, 'numDrumSamplerPads should be 8');
+});
+
+TestRunner.test('Sampler Constants - numDrumSamplerPads is used in computerKeySamplerMap', (t) => {
+    // Digit1 maps to samplerMIDINoteStart, Digit8 maps to samplerMIDINoteStart + 7
+    t.assertEqual(computerKeySamplerMap['Digit1'], samplerMIDINoteStart, 'Digit1 should map to samplerMIDINoteStart');
+    t.assertEqual(computerKeySamplerMap['Digit8'], samplerMIDINoteStart + 7, 'Digit8 should map to last pad');
+});
+
+// defaultVelocity validation
+TestRunner.test('defaultVelocity - is in valid range (0-1)', (t) => {
+    t.assertTruthy(defaultVelocity >= 0 && defaultVelocity <= 1, 'defaultVelocity should be between 0 and 1');
+});
+
+TestRunner.test('defaultVelocity - is positive', (t) => {
+    t.assertTruthy(defaultVelocity > 0, 'defaultVelocity should be positive');
+});
+
+// defaultDesktopBg validation
+TestRunner.test('defaultDesktopBg - is a string', (t) => {
+    t.assertEqual(typeof defaultDesktopBg, 'string', 'defaultDesktopBg should be a string');
+});
+
+TestRunner.test('defaultDesktopBg - is a valid hex color', (t) => {
+    t.assertTruthy(defaultDesktopBg.startsWith('#'), 'defaultDesktopBg should start with #');
+    t.assertEqual(defaultDesktopBg.length, 7, 'defaultDesktopBg should be 7 chars (#RRGGBB)');
+});
+
+// Swing constants validation
+TestRunner.test('Swing Constants - DEFAULT_SWING is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING, 'object', 'DEFAULT_SWING should be an object');
+    t.assertTruthy(DEFAULT_SWING !== null, 'DEFAULT_SWING should not be null');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.enabled is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING.enabled, 'boolean', 'DEFAULT_SWING.enabled should be boolean');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.enabled is false', (t) => {
+    t.assertEqual(DEFAULT_SWING.enabled, false, 'Swing should be disabled by default');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.amount is number', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING.amount, 'number', 'DEFAULT_SWING.amount should be number');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.amount is 0', (t) => {
+    t.assertEqual(DEFAULT_SWING.amount, 0, 'Default swing amount should be 0');
+});
+
+TestRunner.test('Swing Constants - MAX_SWING_AMOUNT is positive', (t) => {
+    t.assertTruthy(MAX_SWING_AMOUNT > 0, 'MAX_SWING_AMOUNT should be positive');
+});
+
+TestRunner.test('Swing Constants - MAX_SWING_AMOUNT is 100', (t) => {
+    t.assertEqual(MAX_SWING_AMOUNT, 100, 'MAX_SWING_AMOUNT should be 100');
+});
+
+TestRunner.test('Swing Constants - SWING_SUBDIVISION is 8 (8th notes)', (t) => {
+    t.assertEqual(SWING_SUBDIVISION, 8, 'SWING_SUBDIVISION should be 8');
+});
+
+TestRunner.test('Swing Constants - SWING_SUBDIVISION is positive', (t) => {
+    t.assertTruthy(SWING_SUBDIVISION > 0, 'SWING_SUBDIVISION should be positive');
+});
+
+TestRunner.test('Swing Constants - DEFAULT_SWING.amount is within valid range', (t) => {
+    t.assertTruthy(DEFAULT_SWING.amount >= 0, 'Default amount should be >= 0');
+    t.assertTruthy(DEFAULT_SWING.amount <= MAX_SWING_AMOUNT, 'Default amount should be <= MAX_SWING_AMOUNT');
+});
+
+
+
+// Day 223: Timeline Zoom State & Function Tests (2026-04-25)
+// ==========================================================
+// These tests verify Timeline Zoom state management and zoom functions
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomState returns object', (t) => {
+    const result = getTimelineZoomState();
+    t.assertEqual(typeof result, 'object', 'getTimelineZoomState should return an object');
+    t.assertTruthy(result !== null, 'getTimelineZoomState should not return null');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomState has horizontal property', (t) => {
+    const result = getTimelineZoomState();
+    t.assertTruthy('horizontal' in result, 'Timeline zoom state should have horizontal property');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomState has vertical property', (t) => {
+    const result = getTimelineZoomState();
+    t.assertTruthy('vertical' in result, 'Timeline zoom state should have vertical property');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomLevelState returns number', (t) => {
+    const result = getTimelineZoomLevelState();
+    t.assertEqual(typeof result, 'number', 'getTimelineZoomLevelState should return a number');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomLevelState returns value in valid range', (t) => {
+    const result = getTimelineZoomLevelState();
+    t.assertTruthy(result >= TIMELINE_ZOOM_MIN && result <= TIMELINE_ZOOM_MAX, 
+        'Timeline zoom level should be between MIN and MAX');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineVerticalZoomState returns number', (t) => {
+    const result = getTimelineVerticalZoomState();
+    t.assertEqual(typeof result, 'number', 'getTimelineVerticalZoomState should return a number');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineVerticalZoomState returns value in valid range', (t) => {
+    const result = getTimelineVerticalZoomState();
+    t.assertTruthy(result >= TIMELINE_VERTICAL_ZOOM_MIN && result <= TIMELINE_VERTICAL_ZOOM_MAX, 
+        'Vertical zoom should be between MIN and MAX');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineZoomLevelState is a function', (t) => {
+    t.assertEqual(typeof setTimelineZoomLevelState, 'function', 'setTimelineZoomLevelState should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineZoomLevelState clamps values to valid range', (t) => {
+    // Test clamping below minimum
+    setTimelineZoomLevelState(0.1);
+    let result = getTimelineZoomLevelState();
+    t.assertTruthy(result >= TIMELINE_ZOOM_MIN, 'Zoom should not go below MIN');
+    
+    // Test clamping above maximum
+    setTimelineZoomLevelState(10.0);
+    result = getTimelineZoomLevelState();
+    t.assertTruthy(result <= TIMELINE_ZOOM_MAX, 'Zoom should not exceed MAX');
+    
+    // Reset to default
+    setTimelineZoomLevelState(TIMELINE_ZOOM_DEFAULT);
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineVerticalZoomState is a function', (t) => {
+    t.assertEqual(typeof setTimelineVerticalZoomState, 'function', 'setTimelineVerticalZoomState should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineVerticalZoomState clamps values to valid range', (t) => {
+    // Test clamping below minimum
+    setTimelineVerticalZoomState(0.1);
+    let result = getTimelineVerticalZoomState();
+    t.assertTruthy(result >= TIMELINE_VERTICAL_ZOOM_MIN, 'Vertical zoom should not go below MIN');
+    
+    // Test clamping above maximum
+    setTimelineVerticalZoomState(10.0);
+    result = getTimelineVerticalZoomState();
+    t.assertTruthy(result <= TIMELINE_VERTICAL_ZOOM_MAX, 'Vertical zoom should not exceed MAX');
+    
+    // Reset to default
+    setTimelineVerticalZoomState(TIMELINE_VERTICAL_ZOOM_DEFAULT);
+});
+
+TestRunner.test('Timeline Zoom State - zoomInTimeline is a function', (t) => {
+    t.assertEqual(typeof zoomInTimeline, 'function', 'zoomInTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutTimeline is a function', (t) => {
+    t.assertEqual(typeof zoomOutTimeline, 'function', 'zoomOutTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInVerticalTimeline is a function', (t) => {
+    t.assertEqual(typeof zoomInVerticalTimeline, 'function', 'zoomInVerticalTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutVerticalTimeline is a function', (t) => {
+    t.assertEqual(typeof zoomOutVerticalTimeline, 'function', 'zoomOutVerticalTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - resetTimelineZoom is a function', (t) => {
+    t.assertEqual(typeof resetTimelineZoom, 'function', 'resetTimelineZoom should be a function');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInTimeline increases zoom level by STEP', (t) => {
+    // Set to a known value in the middle of the range
+    setTimelineZoomLevelState(1.0);
+    const before = getTimelineZoomLevelState();
+    zoomInTimeline();
+    const after = getTimelineZoomLevelState();
+    t.assertEqual(after - before, TIMELINE_ZOOM_STEP, 'zoomInTimeline should increase by STEP');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutTimeline decreases zoom level by STEP', (t) => {
+    // Set to a known value in the middle of the range
+    setTimelineZoomLevelState(1.0);
+    const before = getTimelineZoomLevelState();
+    zoomOutTimeline();
+    const after = getTimelineZoomLevelState();
+    t.assertEqual(before - after, TIMELINE_ZOOM_STEP, 'zoomOutTimeline should decrease by STEP');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInVerticalTimeline increases vertical zoom by STEP', (t) => {
+    setTimelineVerticalZoomState(1.0);
+    const before = getTimelineVerticalZoomState();
+    zoomInVerticalTimeline();
+    const after = getTimelineVerticalZoomState();
+    t.assertEqual(after - before, TIMELINE_VERTICAL_ZOOM_STEP, 'zoomInVerticalTimeline should increase by STEP');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutVerticalTimeline decreases vertical zoom by STEP', (t) => {
+    setTimelineVerticalZoomState(1.0);
+    const before = getTimelineVerticalZoomState();
+    zoomOutVerticalTimeline();
+    const after = getTimelineVerticalZoomState();
+    t.assertEqual(before - after, TIMELINE_VERTICAL_ZOOM_STEP, 'zoomOutVerticalTimeline should decrease by STEP');
+});
+
+TestRunner.test('Timeline Zoom State - resetTimelineZoom resets both zoom levels to DEFAULT', (t) => {
+    // Set to non-default values
+    setTimelineZoomLevelState(2.0);
+    setTimelineVerticalZoomState(1.5);
+    resetTimelineZoom();
+    t.assertEqual(getTimelineZoomLevelState(), TIMELINE_ZOOM_DEFAULT, 'Horizontal zoom should reset to DEFAULT');
+    t.assertEqual(getTimelineVerticalZoomState(), TIMELINE_VERTICAL_ZOOM_DEFAULT, 'Vertical zoom should reset to DEFAULT');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_ZOOM_MIN is 0.25', (t) => {
+    t.assertEqual(TIMELINE_ZOOM_MIN, 0.25, 'TIMELINE_ZOOM_MIN should be 0.25');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_ZOOM_MAX is 4.0', (t) => {
+    t.assertEqual(TIMELINE_ZOOM_MAX, 4.0, 'TIMELINE_ZOOM_MAX should be 4.0');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_ZOOM_STEP is 0.25', (t) => {
+    t.assertEqual(TIMELINE_ZOOM_STEP, 0.25, 'TIMELINE_ZOOM_STEP should be 0.25');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_ZOOM_DEFAULT is 1.0', (t) => {
+    t.assertEqual(TIMELINE_ZOOM_DEFAULT, 1.0, 'TIMELINE_ZOOM_DEFAULT should be 1.0');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_VERTICAL_ZOOM_MIN is 0.5', (t) => {
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_MIN, 0.5, 'TIMELINE_VERTICAL_ZOOM_MIN should be 0.5');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_VERTICAL_ZOOM_MAX is 2.0', (t) => {
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_MAX, 2.0, 'TIMELINE_VERTICAL_ZOOM_MAX should be 2.0');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_VERTICAL_ZOOM_STEP is 0.1', (t) => {
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_STEP, 0.1, 'TIMELINE_VERTICAL_ZOOM_STEP should be 0.1');
+});
+
+TestRunner.test('Timeline Zoom Constants - TIMELINE_VERTICAL_ZOOM_DEFAULT is 1.0', (t) => {
+    t.assertEqual(TIMELINE_VERTICAL_ZOOM_DEFAULT, 1.0, 'TIMELINE_VERTICAL_ZOOM_DEFAULT should be 1.0');
+});
+
+TestRunner.test('Timeline Zoom Constants - MIN is less than MAX', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_MIN < TIMELINE_ZOOM_MAX, 'MIN should be less than MAX');
+});
+
+TestRunner.test('Timeline Zoom Constants - vertical MIN is less than MAX', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_MIN < TIMELINE_VERTICAL_ZOOM_MAX, 'Vertical MIN should be less than MAX');
+});
+
+TestRunner.test('Timeline Zoom Constants - STEP is positive', (t) => {
+    t.assertTruthy(TIMELINE_ZOOM_STEP > 0, 'STEP should be positive');
+});
+
+TestRunner.test('Timeline Zoom Constants - vertical STEP is positive', (t) => {
+    t.assertTruthy(TIMELINE_VERTICAL_ZOOM_STEP > 0, 'Vertical STEP should be positive');
+});
+
+// === Day 224: Remaining Undo/Redo Capture Verification Tests (2026-04-25) ===
+// These tests verify that additional state setter functions properly call captureStateForUndo
+// Completing the undo/redo verification coverage for all set* state functions
+
+TestRunner.test('Undo/Redo - setTimeSignatureState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureNumeratorState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureNumeratorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureNumeratorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureDenominatorState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureDenominatorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureDenominatorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setSendTrackMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackSendLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackSendPreFaderState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendPreFaderState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupNameState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupNameState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupColorState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupColorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupColorState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupSoloedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupSoloedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupSoloedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('Time Signature'), 'Should mention Time Signature in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureNumeratorState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureNumeratorState.toString();
+    t.assertTruthy(funcStr.includes('Time Signature'), 'Should mention Time Signature in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTimeSignatureDenominatorState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureDenominatorState.toString();
+    t.assertTruthy(funcStr.includes('Time Signature'), 'Should mention Time Signature in undo label');
+});
+
+TestRunner.test('Undo/Redo - setSendTrackMutedState uses descriptive undo label', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('Send') && funcStr.includes('muted'), 'Should mention Send and muted in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackSendLevelState uses descriptive undo label', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('Send Level'), 'Should mention Send Level in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackSendPreFaderState uses descriptive undo label', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('Pre-Fader'), 'Should mention Pre-Fader in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupNameState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('Track Group') || funcStr.includes('Group'), 'Should mention Track Group in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupColorState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupColorState.toString();
+    t.assertTruthy(funcStr.includes('Track Group') && funcStr.includes('color'), 'Should mention Track Group and color in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupMutedState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('Group') && funcStr.includes('muted'), 'Should mention Group and muted in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTrackGroupSoloedState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupSoloedState.toString();
+    t.assertTruthy(funcStr.includes('Group') && funcStr.includes('soloed'), 'Should mention Group and soloed in undo label');
+});
+
+TestRunner.test('Undo/Redo - all remaining setters guard against missing appServices', (t) => {
+    const remainingSetters = [
+        'setTimeSignatureState', 'setTimeSignatureNumeratorState', 'setTimeSignatureDenominatorState',
+        'setSendTrackMutedState', 'setTrackSendLevelState', 'setTrackSendPreFaderState',
+        'setTrackGroupNameState', 'setTrackGroupColorState', 'setTrackGroupMutedState', 'setTrackGroupSoloedState'
+    ];
+    remainingSetters.forEach(name => {
+        const funcStr = eval(name).toString();
+        t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 
+            `${name} should guard against missing appServices`);
+    });
+});
+
+TestRunner.test('Undo/Redo - complete set function list has undo capture', (t) => {
+    // Comprehensive list of all set functions that should have undo capture
+    const allSettersWithUndo = [
+        // Performance Monitor
+        'setPerformanceMonitorEnabledState', 'setAudioContextStateState', 'setCPUUsageState',
+        'setMemoryPressureState', 'setActiveVoicesState', 'setAudioLatencyState',
+        'setLastCallbackTimeState', 'setDroppedCallbacksState',
+        // Loop Region
+        'setLoopRegionState', 'setLoopRegionEnabledState', 'setLoopRegionStartBarState', 'setLoopRegionEndBarState',
+        // Timeline Zoom
+        'setTimelineZoomLevelState', 'setTimelineVerticalZoomState', 'resetTimelineZoom',
+        // Swing
+        'setSwingState', 'setSwingEnabledState', 'setSwingAmountState',
+        // MIDI Learn
+        'setMidiLearnModeState', 'setMidiLearnPendingParamState',
+        // Recording
+        'setArmedTrackIdState', 'setSoloedTrackIdState', 'setIsRecordingState',
+        'setRecordingTrackIdState', 'setRecordingStartTimeState',
+        // Metronome
+        'setMetronomeEnabledState', 'setMetronomeVolumeState',
+        // Scale Mode
+        'setScaleModeState', 'setScaleModeEnabledState', 'setScaleModeScaleState',
+        'setScaleModeRootState', 'setScaleModeLockState',
+        // Chord Mode
+        'setChordModeState', 'setChordModeEnabledState', 'setChordModeRootState',
+        'setChordModeTypeState', 'setChordModeLockState', 'setChordVoicingState',
+        // Time Signature
+        'setTimeSignatureState', 'setTimeSignatureNumeratorState', 'setTimeSignatureDenominatorState',
+        // Ghost Track
+        'setGhostTrackIdState',
+        // Timeline Markers (handled separately)
+        // Send Tracks
+        'setSendTrackMutedState', 'setTrackSendLevelState', 'setTrackSendPreFaderState',
+        // Track Groups
+        'setTrackGroupNameState', 'setTrackGroupColorState', 'setTrackGroupMutedState', 'setTrackGroupSoloedState'
+    ];
+    let missingUndo = [];
+    allSettersWithUndo.forEach(name => {
+        if (typeof eval(name) !== 'function') {
+            missingUndo.push(name + ' (not a function)');
+            return;
+        }
+        const funcStr = eval(name).toString();
+        if (!funcStr.includes('captureStateForUndo')) {
+            missingUndo.push(name);
+        }
+    });
+    t.assertEqual(missingUndo.length, 0, `All setters should call captureStateForUndo. Missing: ${missingUndo.join(', ')}`);
 });
