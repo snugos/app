@@ -5579,3 +5579,185 @@ TestRunner.test('Keyboard Shortcuts Help - KEYBOARD_SHORTCUTS_HELP_HEIGHT is pos
 TestRunner.test('Keyboard Shortcuts Help - KEYBOARD_SHORTCUTS_HELP_HEIGHT is between 300 and 700', (t) => {
     t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_HEIGHT >= 300 && KEYBOARD_SHORTCUTS_HELP_HEIGHT <= 700, 'KEYBOARD_SHORTCUTS_HELP_HEIGHT should be between 300 and 700');
 });
+
+// ============================================
+// Day 217: Audio Clip & Send Track Constants Tests (2026-04-25)
+// ============================================
+// Audio Clip Crossfade Constants Tests
+TestRunner.test('Audio Clip Crossfade - DEFAULT_AUDIO_CLIP_CROSSFADE is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'DEFAULT_AUDIO_CLIP_CROSSFADE should be 0');
+});
+
+TestRunner.test('Audio Clip Crossfade - MIN_AUDIO_CLIP_CROSSFADE is 0', (t) => {
+    t.assertEqual(MIN_AUDIO_CLIP_CROSSFADE, 0, 'MIN_AUDIO_CLIP_CROSSFADE should be 0');
+});
+
+TestRunner.test('Audio Clip Crossfade - MAX_AUDIO_CLIP_CROSSFADE is 5', (t) => {
+    t.assertEqual(MAX_AUDIO_CLIP_CROSSFADE, 5, 'MAX_AUDIO_CLIP_CROSSFADE should be 5 seconds');
+});
+
+TestRunner.test('Audio Clip Crossfade - MAX is greater than MIN', (t) => {
+    t.assertTruthy(MAX_AUDIO_CLIP_CROSSFADE > MIN_AUDIO_CLIP_CROSSFADE, 'MAX should be greater than MIN');
+});
+
+// Audio Clip Gain Constants Tests
+TestRunner.test('Audio Clip Gain - DEFAULT_AUDIO_CLIP_GAIN is 1.0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'DEFAULT_AUDIO_CLIP_GAIN should be 1.0 (0dB)');
+});
+
+TestRunner.test('Audio Clip Gain - MIN_AUDIO_CLIP_GAIN is 0', (t) => {
+    t.assertEqual(MIN_AUDIO_CLIP_GAIN, 0, 'MIN_AUDIO_CLIP_GAIN should be 0 (silence)');
+});
+
+TestRunner.test('Audio Clip Gain - MAX_AUDIO_CLIP_GAIN is 4.0', (t) => {
+    t.assertEqual(MAX_AUDIO_CLIP_GAIN, 4.0, 'MAX_AUDIO_CLIP_GAIN should be 4.0 (12dB boost)');
+});
+
+TestRunner.test('Audio Clip Gain - GAIN_NORMALIZE_TARGET is 1.0', (t) => {
+    t.assertEqual(GAIN_NORMALIZE_TARGET, 1.0, 'GAIN_NORMALIZE_TARGET should be 1.0');
+});
+
+TestRunner.test('Audio Clip Gain - MAX is greater than MIN', (t) => {
+    t.assertTruthy(MAX_AUDIO_CLIP_GAIN > MIN_AUDIO_CLIP_GAIN, 'MAX should be greater than MIN');
+});
+
+// Audio Clip Playback Rate Constants Tests
+TestRunner.test('Audio Clip Playback Rate - DEFAULT_AUDIO_CLIP_PLAYBACK_RATE is 1.0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'DEFAULT_AUDIO_CLIP_PLAYBACK_RATE should be 1.0');
+});
+
+TestRunner.test('Audio Clip Playback Rate - MIN_AUDIO_CLIP_PLAYBACK_RATE is 0.25', (t) => {
+    t.assertEqual(MIN_AUDIO_CLIP_PLAYBACK_RATE, 0.25, 'MIN_AUDIO_CLIP_PLAYBACK_RATE should be 0.25x');
+});
+
+TestRunner.test('Audio Clip Playback Rate - MAX_AUDIO_CLIP_PLAYBACK_RATE is 4.0', (t) => {
+    t.assertEqual(MAX_AUDIO_CLIP_PLAYBACK_RATE, 4.0, 'MAX_AUDIO_CLIP_PLAYBACK_RATE should be 4.0x');
+});
+
+TestRunner.test('Audio Clip Playback Rate - MAX is greater than MIN', (t) => {
+    t.assertTruthy(MAX_AUDIO_CLIP_PLAYBACK_RATE > MIN_AUDIO_CLIP_PLAYBACK_RATE, 'MAX should be greater than MIN');
+});
+
+// Audio Clip Offset Constants Tests
+TestRunner.test('Audio Clip Offset - DEFAULT_AUDIO_CLIP_START_OFFSET is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'DEFAULT_AUDIO_CLIP_START_OFFSET should be 0');
+});
+
+TestRunner.test('Audio Clip Offset - MIN_AUDIO_CLIP_START_OFFSET is 0', (t) => {
+    t.assertEqual(MIN_AUDIO_CLIP_START_OFFSET, 0, 'MIN_AUDIO_CLIP_START_OFFSET should be 0');
+});
+
+TestRunner.test('Audio Clip Offset - DEFAULT_AUDIO_CLIP_END_OFFSET is -1', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'DEFAULT_AUDIO_CLIP_END_OFFSET should be -1 (use full audio)');
+});
+
+TestRunner.test('Audio Clip Offset - MIN_AUDIO_CLIP_END_OFFSET is -1', (t) => {
+    t.assertEqual(MIN_AUDIO_CLIP_END_OFFSET, -1, 'MIN_AUDIO_CLIP_END_OFFSET should be -1');
+});
+
+// Audio Clip Reverse & Fade Constants Tests
+TestRunner.test('Audio Clip Reverse - DEFAULT_AUDIO_CLIP_REVERSE is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_AUDIO_CLIP_REVERSE, 'boolean', 'DEFAULT_AUDIO_CLIP_REVERSE should be boolean');
+});
+
+TestRunner.test('Audio Clip Reverse - DEFAULT_AUDIO_CLIP_REVERSE is false', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_REVERSE, false, 'DEFAULT_AUDIO_CLIP_REVERSE should be false');
+});
+
+TestRunner.test('Audio Clip Fade - DEFAULT_AUDIO_CLIP_FADE_IN is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'DEFAULT_AUDIO_CLIP_FADE_IN should be 0 seconds');
+});
+
+TestRunner.test('Audio Clip Fade - DEFAULT_AUDIO_CLIP_FADE_OUT is 0', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'DEFAULT_AUDIO_CLIP_FADE_OUT should be 0 seconds');
+});
+
+TestRunner.test('Audio Clip Fade - MAX_AUDIO_CLIP_FADE is 10', (t) => {
+    t.assertEqual(MAX_AUDIO_CLIP_FADE, 10, 'MAX_AUDIO_CLIP_FADE should be 10 seconds');
+});
+
+// Send Track Defaults Tests
+TestRunner.test('Send Track - DEFAULT_SEND_TRACK is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_SEND_TRACK, 'object', 'DEFAULT_SEND_TRACK should be an object');
+    t.assertTruthy(DEFAULT_SEND_TRACK !== null, 'DEFAULT_SEND_TRACK should not be null');
+});
+
+TestRunner.test('Send Track - DEFAULT_SEND_TRACK has muted property', (t) => {
+    t.assertTruthy('muted' in DEFAULT_SEND_TRACK, 'DEFAULT_SEND_TRACK should have muted property');
+    t.assertEqual(typeof DEFAULT_SEND_TRACK.muted, 'boolean', 'muted should be boolean');
+});
+
+TestRunner.test('Send Track - DEFAULT_SEND_TRACK has level property', (t) => {
+    t.assertTruthy('level' in DEFAULT_SEND_TRACK, 'DEFAULT_SEND_TRACK should have level property');
+    t.assertEqual(DEFAULT_SEND_TRACK.level, DEFAULT_SEND_LEVEL, 'level should match DEFAULT_SEND_LEVEL');
+});
+
+TestRunner.test('Send Track - DEFAULT_SEND_LEVEL is 0', (t) => {
+    t.assertEqual(DEFAULT_SEND_LEVEL, 0, 'DEFAULT_SEND_LEVEL should be 0 (off/-infinity dB)');
+});
+
+TestRunner.test('Send Track - SEND_LEVEL_MIN is 0', (t) => {
+    t.assertEqual(SEND_LEVEL_MIN, 0, 'SEND_LEVEL_MIN should be 0');
+});
+
+TestRunner.test('Send Track - SEND_LEVEL_MAX is 1.2', (t) => {
+    t.assertEqual(SEND_LEVEL_MAX, 1.2, 'SEND_LEVEL_MAX should be 1.2 (slight boost above unity)');
+});
+
+TestRunner.test('Send Track - DEFAULT_SEND_PRE_FADER is false', (t) => {
+    t.assertEqual(DEFAULT_SEND_PRE_FADER, false, 'DEFAULT_SEND_PRE_FADER should be false (post-fader default)');
+});
+
+TestRunner.test('Send Track - SEND_PRE_FADER_ENABLED is true', (t) => {
+    t.assertEqual(SEND_PRE_FADER_ENABLED, true, 'SEND_PRE_FADER_ENABLED should be true');
+});
+
+TestRunner.test('Send Track - MAX_SEND_TRACKS is 8', (t) => {
+    t.assertEqual(MAX_SEND_TRACKS, 8, 'MAX_SEND_TRACKS should be 8');
+});
+
+// Window Defaults Tests
+TestRunner.test('Window - DEFAULT_WINDOW_WIDTH is 350', (t) => {
+    t.assertEqual(DEFAULT_WINDOW_WIDTH, 350, 'DEFAULT_WINDOW_WIDTH should be 350px');
+});
+
+TestRunner.test('Window - DEFAULT_WINDOW_HEIGHT is 250', (t) => {
+    t.assertEqual(DEFAULT_WINDOW_HEIGHT, 250, 'DEFAULT_WINDOW_HEIGHT should be 250px');
+});
+
+TestRunner.test('Window - DEFAULT_WINDOW_MIN_WIDTH is 150', (t) => {
+    t.assertEqual(DEFAULT_WINDOW_MIN_WIDTH, 150, 'DEFAULT_WINDOW_MIN_WIDTH should be 150px');
+});
+
+TestRunner.test('Window - DEFAULT_WINDOW_MIN_HEIGHT is 100', (t) => {
+    t.assertEqual(DEFAULT_WINDOW_MIN_HEIGHT, 100, 'DEFAULT_WINDOW_MIN_HEIGHT should be 100px');
+});
+
+TestRunner.test('Window - TASKBAR_HEIGHT is 30', (t) => {
+    t.assertEqual(TASKBAR_HEIGHT, 30, 'TASKBAR_HEIGHT should be 30px');
+});
+
+TestRunner.test('Window - MIN_WIDTH is less than DEFAULT_WIDTH', (t) => {
+    t.assertTruthy(DEFAULT_WINDOW_MIN_WIDTH < DEFAULT_WINDOW_WIDTH, 'MIN_WIDTH should be less than DEFAULT_WIDTH');
+});
+
+TestRunner.test('Window - MIN_HEIGHT is less than DEFAULT_HEIGHT', (t) => {
+    t.assertTruthy(DEFAULT_WINDOW_MIN_HEIGHT < DEFAULT_WINDOW_HEIGHT, 'MIN_HEIGHT should be less than DEFAULT_HEIGHT');
+});
+
+// Context Menu Defaults Tests
+TestRunner.test('Context Menu - CONTEXT_MENU_ITEM_HEIGHT is 28', (t) => {
+    t.assertEqual(CONTEXT_MENU_ITEM_HEIGHT, 28, 'CONTEXT_MENU_ITEM_HEIGHT should be 28px');
+});
+
+TestRunner.test('Context Menu - CONTEXT_MENU_ITEM_HEIGHT is positive', (t) => {
+    t.assertTruthy(CONTEXT_MENU_ITEM_HEIGHT > 0, 'CONTEXT_MENU_ITEM_HEIGHT should be positive');
+});
+
+TestRunner.test('Context Menu - CONTEXT_MENU_MAX_WIDTH is 300', (t) => {
+    t.assertEqual(CONTEXT_MENU_MAX_WIDTH, 300, 'CONTEXT_MENU_MAX_WIDTH should be 300px');
+});
+
+TestRunner.test('Context Menu - CONTEXT_MENU_MAX_WIDTH is positive', (t) => {
+    t.assertTruthy(CONTEXT_MENU_MAX_WIDTH > 0, 'CONTEXT_MENU_MAX_WIDTH should be positive');
+});
