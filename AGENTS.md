@@ -3174,3 +3174,32 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These UI functions handle effects list rendering, waveform drawing, sequencer cell updates, sound browser display, and sample pad rendering. The tests verify the exported API without requiring actual DOM rendering or audio processing.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.16.0
+
+#### Day 234: Remaining Audio Module Function Tests (2026-04-25)
+- **Feature**: Added 37 new unit tests for remaining audio.js functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 37 new tests in Day 234 section:
+    - initializeAudioModule function export and 1 parameter count
+    - createSendBusInAudio function export and 1 parameter count
+    - deleteSendBusFromAudio function export and 1 parameter count
+    - addEffectToSendBus function export and 3 parameter count
+    - removeEffectFromSendBus function export and 2 parameter count
+    - reorderEffectInSendBus function export and 3 parameter count
+    - updateSendBusEffectParam function export and 4 parameter count
+    - setSendBusLevel function export and 2 parameter count
+    - setSendBusMuted function export and 2 parameter count
+    - loadSampleFile function export, async behavior, 3+ parameter count
+    - loadDrumSamplerPadFile function export, async behavior, 3+ parameter count
+    - loadSoundFromBrowserToTarget function export, async behavior, 3+ parameter count
+    - fetchSoundLibrary function export, async behavior, 2+ parameter count
+    - playSlicePreview function export, async behavior, 2+ parameter count
+    - playDrumSamplerPadPreview function export, async behavior, 2+ parameter count
+  - `js/constants.js`: Bumped APP_VERSION to 1.17.0
+- **Feature Details**:
+  - Tests validate all 15 previously-untested audio.js functions are properly exported
+  - Tests verify async functions return Promises
+  - Tests validate function parameter counts match expected APIs
+  - Total tests increased from 1479 to 1516
+- **Backend Note**: These audio module functions handle send bus creation/deletion, effect routing in send buses, sample loading, sound library fetching, and preview playback. The tests verify the exported API without requiring actual Tone.js audio context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.17.0

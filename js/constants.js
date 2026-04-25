@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.16.0'; // Day 233: Additional UI Function Tests
+export const APP_VERSION = '1.17.0'; // Day 234: Remaining Audio Module Function Tests
 
 
 // Performance Monitor Constants
