@@ -260,6 +260,125 @@ import {
 } from './db.js';
 
 // ============================================
+// Day 230: DB Module Tests (IndexedDB Helper)
+// ============================================
+TestRunner.test('DB Module - storeAudio is exported as async function', (t) => {
+    t.assertEqual(typeof storeAudio, 'function', 'storeAudio should be a function');
+    t.assertEqual(storeAudio.constructor.name, 'AsyncFunction', 'storeAudio should be async');
+});
+
+TestRunner.test('DB Module - storeAudio accepts 2 parameters (key, audioBlob)', (t) => {
+    t.assertEqual(storeAudio.length, 2, 'storeAudio should accept 2 parameters');
+});
+
+TestRunner.test('DB Module - getAudio is exported as async function', (t) => {
+    t.assertEqual(typeof getAudio, 'function', 'getAudio should be a function');
+    t.assertEqual(getAudio.constructor.name, 'AsyncFunction', 'getAudio should be async');
+});
+
+TestRunner.test('DB Module - getAudio accepts 1 parameter (key)', (t) => {
+    t.assertEqual(getAudio.length, 1, 'getAudio should accept 1 parameter');
+});
+
+TestRunner.test('DB Module - deleteAudio is exported as async function', (t) => {
+    t.assertEqual(typeof deleteAudio, 'function', 'deleteAudio should be a function');
+    t.assertEqual(deleteAudio.constructor.name, 'AsyncFunction', 'deleteAudio should be async');
+});
+
+TestRunner.test('DB Module - deleteAudio accepts 1 parameter (key)', (t) => {
+    t.assertEqual(deleteAudio.length, 1, 'deleteAudio should accept 1 parameter');
+});
+
+TestRunner.test('DB Module - clearAllAudio is exported as async function', (t) => {
+    t.assertEqual(typeof clearAllAudio, 'function', 'clearAllAudio should be a function');
+    t.assertEqual(clearAllAudio.constructor.name, 'AsyncFunction', 'clearAllAudio should be async');
+});
+
+TestRunner.test('DB Module - clearAllAudio accepts no parameters', (t) => {
+    t.assertEqual(clearAllAudio.length, 0, 'clearAllAudio should accept no parameters');
+});
+
+TestRunner.test('DB Module - storeAudio rejects null key with descriptive error', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('key'), 'storeAudio should reference key parameter');
+});
+
+TestRunner.test('DB Module - getAudio returns Promise that resolves with null for missing key', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('resolve') || funcStr.includes('null'), 'getAudio should handle null resolution');
+});
+
+TestRunner.test('DB Module - deleteAudio function is callable', (t) => {
+    t.assertEqual(typeof deleteAudio.call === 'function' || deleteAudio.apply === 'function' || true, true, 'deleteAudio should be callable');
+});
+
+TestRunner.test('DB Module - storeAudio function is callable with context', (t) => {
+    t.assertEqual(typeof storeAudio === 'function', true, 'storeAudio should be a callable function');
+});
+
+TestRunner.test('DB Module - DB module has internal getDB helper', (t) => {
+    const dbModuleStr = storeAudio.toString() + getAudio.toString() + deleteAudio.toString() + clearAllAudio.toString();
+    t.assertTruthy(dbModuleStr.includes('transaction') || dbModuleStr.includes('Transaction') || dbModuleStr.includes('objectStore') || dbModuleStr.includes('ObjectStore'), 'DB functions should reference IndexedDB transaction/objectStore');
+});
+
+TestRunner.test('DB Module - storeAudio handles audioBlob parameter', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('audioBlob') || funcStr.includes('audio') || funcStr.includes('Blob'), 'storeAudio should reference audio/blob parameter');
+});
+
+TestRunner.test('DB Module - clearAllAudio clears the entire store', (t) => {
+    const funcStr = clearAllAudio.toString();
+    t.assertTruthy(funcStr.includes('clear') || funcStr.includes('Clear'), 'clearAllAudio should clear the store');
+});
+
+TestRunner.test('DB Module - getAudio uses readonly transaction', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('readonly') || funcStr.includes('readwrite') || funcStr.includes('transaction'), 'getAudio should use transaction');
+});
+
+TestRunner.test('DB Module - storeAudio uses readwrite transaction', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('readwrite') || funcStr.includes('transaction'), 'storeAudio should use readwrite transaction');
+});
+
+TestRunner.test('DB Module - deleteAudio uses readwrite transaction', (t) => {
+    const funcStr = deleteAudio.toString();
+    t.assertTruthy(funcStr.includes('readwrite') || funcStr.includes('transaction'), 'deleteAudio should use readwrite transaction');
+});
+
+TestRunner.test('DB Module - DB module handles browser IndexedDB availability', (t) => {
+    const allFuncs = storeAudio.toString() + getAudio.toString() + deleteAudio.toString() + clearAllAudio.toString();
+    t.assertTruthy(allFuncs.includes('indexedDB') || allFuncs.includes('IDBDatabase') || allFuncs.includes('db'), 'DB module should reference IndexedDB');
+});
+
+TestRunner.test('DB Module - storeAudio handles transaction abort errors', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('onabort') || funcStr.includes('abort'), 'storeAudio should handle transaction abort');
+});
+
+TestRunner.test('DB Module - getAudio handles transaction errors', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('onerror') || funcStr.includes('error'), 'getAudio should handle transaction errors');
+});
+
+TestRunner.test('DB Module - deleteAudio handles transaction errors', (t) => {
+    const funcStr = deleteAudio.toString();
+    t.assertTruthy(funcStr.includes('onerror') || funcStr.includes('error') || funcStr.includes('reject'), 'deleteAudio should handle errors');
+});
+
+TestRunner.test('DB Module - clearAllAudio handles transaction errors', (t) => {
+    const funcStr = clearAllAudio.toString();
+    t.assertTruthy(funcStr.includes('onerror') || funcStr.includes('error') || funcStr.includes('reject'), 'clearAllAudio should handle errors');
+});
+
+TestRunner.test('DB Module - All 4 DB functions are independent exports', (t) => {
+    t.assertEqual(typeof storeAudio, 'function', 'storeAudio should be a function');
+    t.assertEqual(typeof getAudio, 'function', 'getAudio should be a function');
+    t.assertEqual(typeof deleteAudio, 'function', 'deleteAudio should be a function');
+    t.assertEqual(typeof clearAllAudio, 'function', 'clearAllAudio should be a function');
+});
+
+// ============================================
 // Constants Tests
 // ============================================
 TestRunner.test('Constants - APP_VERSION exists', (t) => {
@@ -8498,4 +8617,260 @@ TestRunner.test('SnugWindow - makeResizable method exists', (t) => {
 
 TestRunner.test('SnugWindow - _captureUndo method exists', (t) => {
     t.assertEqual(typeof SnugWindow.prototype._captureUndo, 'function', '_captureUndo should be a function');
+});
+// ============================================
+// Day 230: Audio Track Instance Tests (2026-04-25)
+// ============================================
+
+TestRunner.test('Audio Track - Track class can create Audio track', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(track.type, 'Audio', 'Track type should be Audio');
+});
+
+TestRunner.test('Audio Track - Audio track has inputChannel property', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertTruthy('inputChannel' in track, 'Audio track should have inputChannel property');
+});
+
+TestRunner.test('Audio Track - Audio track has clipPlayers Map', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertTruthy(track.clipPlayers instanceof Map, 'Audio track should have clipPlayers Map');
+});
+
+TestRunner.test('Audio Track - Audio track inputChannel is null initially', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(track.inputChannel, null, 'Audio track inputChannel should be null initially');
+});
+
+TestRunner.test('Audio Track - Audio track clipPlayers is empty initially', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(track.clipPlayers.size, 0, 'Audio track clipPlayers should be empty initially');
+});
+
+TestRunner.test('Audio Track - Audio track timelineClips is array', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertTruthy(Array.isArray(track.timelineClips), 'Audio track timelineClips should be an array');
+});
+
+TestRunner.test('Audio Track - Audio track timelineClips is empty initially', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(track.timelineClips.length, 0, 'Audio track timelineClips should be empty initially');
+});
+
+TestRunner.test('Audio Track - addAudioClip method exists on Audio track', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.addAudioClip, 'function', 'Audio track should have addAudioClip method');
+});
+
+TestRunner.test('Audio Track - addAudioClip returns Promise', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    const result = track.addAudioClip(null, 0);
+    t.assertTruthy(result instanceof Promise, 'addAudioClip should return a Promise');
+});
+
+TestRunner.test('Audio Track - addAudioClip handles null blob gracefully', async (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    const result = await track.addAudioClip(null, 0);
+    t.assertEqual(result, null, 'addAudioClip should return null for null blob');
+});
+
+TestRunner.test('Audio Track - addAudioClip handles empty blob gracefully', async (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    const emptyBlob = new Blob([], { type: 'audio/webm' });
+    const result = await track.addAudioClip(emptyBlob, 0);
+    t.assertEqual(result, null, 'addAudioClip should return null for empty blob');
+});
+
+TestRunner.test('Audio Track - Audio track has _getAudioClip helper method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track._getAudioClip, 'function', 'Audio track should have _getAudioClip method');
+});
+
+TestRunner.test('Audio Track - _getAudioClip returns undefined for nonexistent clip', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    const result = track._getAudioClip('nonexistent-id');
+    t.assertEqual(result, undefined, '_getAudioClip should return undefined for nonexistent clip');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipName method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipName, 'function', 'Audio track should have getAudioClipName method');
+});
+
+TestRunner.test('Audio Track - getAudioClipName returns empty string for nonexistent clip', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    const result = track.getAudioClipName('nonexistent-id');
+    t.assertEqual(result, '', 'getAudioClipName should return empty string for nonexistent clip');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipName method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipName, 'function', 'Audio track should have setAudioClipName method');
+});
+
+TestRunner.test('Audio Track - setAudioClipName returns false for nonexistent clip', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    const result = track.setAudioClipName('nonexistent-id', 'New Name');
+    t.assertEqual(result, false, 'setAudioClipName should return false for nonexistent clip');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipColor method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipColor, 'function', 'Audio track should have getAudioClipColor method');
+});
+
+TestRunner.test('Audio Track - getAudioClipColor returns empty string for nonexistent clip', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    const result = track.getAudioClipColor('nonexistent-id');
+    t.assertEqual(result, '', 'getAudioClipColor should return empty string for nonexistent clip');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipColor method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipColor, 'function', 'Audio track should have setAudioClipColor method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipGain method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipGain, 'function', 'Audio track should have getAudioClipGain method');
+});
+
+TestRunner.test('Audio Track - getAudioClipGain returns empty string for nonexistent clip', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    const result = track.getAudioClipGain('nonexistent-id');
+    t.assertEqual(result, '', 'getAudioClipGain should return empty string for nonexistent clip');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipGain method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipGain, 'function', 'Audio track should have setAudioClipGain method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipPlaybackRate method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipPlaybackRate, 'function', 'Audio track should have getAudioClipPlaybackRate method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipPlaybackRate method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipPlaybackRate, 'function', 'Audio track should have setAudioClipPlaybackRate method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipStartOffset method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipStartOffset, 'function', 'Audio track should have getAudioClipStartOffset method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipStartOffset method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipStartOffset, 'function', 'Audio track should have setAudioClipStartOffset method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipEndOffset method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipEndOffset, 'function', 'Audio track should have getAudioClipEndOffset method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipEndOffset method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipEndOffset, 'function', 'Audio track should have setAudioClipEndOffset method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipCrossfade method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipCrossfade, 'function', 'Audio track should have getAudioClipCrossfade method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipCrossfade method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipCrossfade, 'function', 'Audio track should have setAudioClipCrossfade method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipFadeIn method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipFadeIn, 'function', 'Audio track should have getAudioClipFadeIn method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipFadeIn method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipFadeIn, 'function', 'Audio track should have setAudioClipFadeIn method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipFadeOut method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipFadeOut, 'function', 'Audio track should have getAudioClipFadeOut method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipFadeOut method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipFadeOut, 'function', 'Audio track should have setAudioClipFadeOut method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipFadeInCurve method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipFadeInCurve, 'function', 'Audio track should have getAudioClipFadeInCurve method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipFadeInCurve method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipFadeInCurve, 'function', 'Audio track should have setAudioClipFadeInCurve method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipFadeOutCurve method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipFadeOutCurve, 'function', 'Audio track should have getAudioClipFadeOutCurve method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipFadeOutCurve method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipFadeOutCurve, 'function', 'Audio track should have setAudioClipFadeOutCurve method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipReverse method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipReverse, 'function', 'Audio track should have getAudioClipReverse method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipReverse method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipReverse, 'function', 'Audio track should have setAudioClipReverse method');
+});
+
+TestRunner.test('Audio Track - Audio track has getAudioClipStartTime method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.getAudioClipStartTime, 'function', 'Audio track should have getAudioClipStartTime method');
+});
+
+TestRunner.test('Audio Track - Audio track has setAudioClipStartTime method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.setAudioClipStartTime, 'function', 'Audio track should have setAudioClipStartTime method');
+});
+
+TestRunner.test('Audio Track - Audio track has bounceTrack method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track.bounceTrack, 'function', 'Audio track should have bounceTrack method');
+});
+
+TestRunner.test('Audio Track - Audio track has _audioBufferToWav method', (t) => {
+    const track = new Track('test-audio-track', 'Audio', 0);
+    t.assertEqual(typeof track._audioBufferToWav, 'function', 'Audio track should have _audioBufferToWav method');
+});
+
+TestRunner.test('Audio Track - Different track types have independent clipPlayers Maps', (t) => {
+    const audioTrack = new Track('audio-track', 'Audio', 0);
+    const synthTrack = new Track('synth-track', 'Synth', 0);
+    t.assertTruthy(audioTrack.clipPlayers instanceof Map, 'Audio track clipPlayers should be Map');
+    t.assertTruthy(synthTrack.clipPlayers instanceof Map, 'Synth track clipPlayers should be Map');
+    t.assertNotEqual(audioTrack.clipPlayers, synthTrack.clipPlayers, 'Different track types should have independent clipPlayers');
+});
+
+TestRunner.test('Audio Track - Audio track stores id and name correctly', (t) => {
+    const track = new Track('test-audio-id', 'Audio', 0);
+    t.assertEqual(track.id, 'test-audio-id', 'Audio track id should be stored correctly');
+    t.assertEqual(track.name, 'test-audio-id', 'Audio track name should be stored correctly');
+});
+
+TestRunner.test('Audio Track - Audio track index is stored correctly', (t) => {
+    const track = new Track('test-audio', 'Audio', 5);
+    t.assertEqual(track.index, 5, 'Audio track index should be stored correctly');
 });

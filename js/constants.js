@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.12.0'; // Day 229: SnugWindow Extended Instance Tests
+export const APP_VERSION = '1.13.0'; // Day 230: Audio Track Instance Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
