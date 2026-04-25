@@ -20,6 +20,25 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: When loading samples during project reconstruction, the undo capture logic would fail silently because `getIsReconstructingDAW` was being called with a misspelled name, causing `isReconstructing` to always be `false` and triggering unnecessary undo captures
 - **Version**: Bumped to 1.01.1
 
+#### Day 218: Effect Preset & Transport Constants Tests (2026-04-25)
+- **Feature**: Added 37 new unit tests for Effect Preset constants, Transport/History constants, MIDI Learn shortcut, and Sequencer Grid constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 37 new tests in Day 218 section:
+    - Effect Preset: MAX_EFFECT_PRESETS (64, positive), DEFAULT_PRESET_NAME_PREFIX (string, non-empty, "Preset"), DEFAULT_EFFECT_PRESET (object with name, effectType, params)
+    - Transport/History: MAX_HISTORY_STATES (50, positive, >= 10), MAX_BARS (512, positive, >= 4), DEFAULT_NOTE_PROBABILITY (1.0, 0-1 range), STEPS_PER_BAR (16, positive, power of 2), defaultStepsPerBar (16, equals STEPS_PER_BAR)
+    - MIDI Learn: MIDI_LEARN_SHORTCUT_KEY ("k", lowercase), MIDI_LEARN_INDICATOR_TIMEOUT_MS (positive, >= 500), MIDI_CC_COMMAND (176, valid CC range 176-191)
+    - Sequencer Grid: GRID_STEP_LABELS (object, non-null, 1 property), STEP_LABELS_SIXTEENTHS (object, non-null, 1 property)
+  - `js/constants.js`: Bumped APP_VERSION to 1.02.0
+- **Feature Details**:
+  - Tests validate Effect Preset constants (max presets 64, preset name prefix, default preset structure)
+  - Tests validate Transport/History constants (history stack size 50, max bars 512, note probability, steps per bar)
+  - Tests validate MIDI Learn shortcut constants (keyboard shortcut 'k', indicator timeout, CC command value)
+  - Tests validate Sequencer Grid label constants (GRID_STEP_LABELS and STEP_LABELS_SIXTEENTHS structures)
+  - Total tests increased from 905 to 942 tests
+- **Backend Note**: These constants define behavior for effect presets, transport controls, MIDI learn mode, and sequencer grid display. Tests verify configuration values without requiring actual UI rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.02.0
+
 #### Day 216: Additional Constants Tests (2026-04-25)
 - **Feature**: Added 21 new unit tests for additional constants (Tap Tempo, Drop Zone, Keyboard Shortcuts Help)
 - **Files Modified**:
