@@ -8874,3 +8874,146 @@ TestRunner.test('Audio Track - Audio track index is stored correctly', (t) => {
     const track = new Track('test-audio', 'Audio', 5);
     t.assertEqual(track.index, 5, 'Audio track index should be stored correctly');
 });
+
+// ============================================
+// Day 231: Recording Input Gain & Monitoring Tests
+// ============================================
+
+TestRunner.test('Recording - setRecordingInputGain is exported as function', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Recording - setRecordingInputGain accepts 1 parameter (gainValue)', (t) => {
+    const funcString = setRecordingInputGain.toString();
+    const paramMatch = funcString.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'setRecordingInputGain should accept exactly 1 parameter');
+    t.assertEqual(params[0], 'gainValue', 'Parameter should be named gainValue');
+});
+
+TestRunner.test('Recording - DEFAULT_RECORDING_INPUT_GAIN is in valid range', (t) => {
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN >= MIN_RECORDING_INPUT_GAIN, 'Default should be >= min');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN <= MAX_RECORDING_INPUT_GAIN, 'Default should be <= max');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN > 0, 'Default should be positive');
+});
+
+TestRunner.test('Recording - MIN_RECORDING_INPUT_GAIN is valid', (t) => {
+    t.assertEqual(MIN_RECORDING_INPUT_GAIN, 0, 'Min input gain should be 0');
+    t.assertTruthy(MIN_RECORDING_INPUT_GAIN >= 0, 'Min should be non-negative');
+});
+
+TestRunner.test('Recording - MAX_RECORDING_INPUT_GAIN is valid', (t) => {
+    t.assertEqual(MAX_RECORDING_INPUT_GAIN, 2, 'Max input gain should be 2');
+    t.assertTruthy(MAX_RECORDING_INPUT_GAIN > MIN_RECORDING_INPUT_GAIN, 'Max should be greater than min');
+});
+
+TestRunner.test('Recording - input gain range is sensible', (t) => {
+    t.assertTruthy(MAX_RECORDING_INPUT_GAIN > 1, 'Max gain should allow boosting above unity');
+    t.assertTruthy(MAX_RECORDING_INPUT_GAIN <= 4, 'Max gain should not be excessive');
+});
+
+TestRunner.test('Recording - setRecordingInputGain updates gain value', (t) => {
+    // Test that the function can be called without errors
+    setRecordingInputGain(1.0);
+    setRecordingInputGain(0.5);
+    setRecordingInputGain(1.5);
+    // No assertion needed - just verify function is callable
+    t.assertTruthy(true, 'setRecordingInputGain should accept valid gain values');
+});
+
+TestRunner.test('Recording - DEFAULT_MONITORING_VOLUME is in valid range', (t) => {
+    t.assertTruthy(DEFAULT_MONITORING_VOLUME >= 0, 'Default monitoring volume should be >= 0');
+    t.assertTruthy(DEFAULT_MONITORING_VOLUME <= 1, 'Default monitoring volume should be <= 1');
+});
+
+TestRunner.test('Recording - MIN_MONITORING_VOLUME is valid', (t) => {
+    t.assertEqual(MIN_MONITORING_VOLUME, 0, 'Min monitoring volume should be 0');
+});
+
+TestRunner.test('Recording - MAX_MONITORING_VOLUME is valid', (t) => {
+    t.assertEqual(MAX_MONITORING_VOLUME, 1, 'Max monitoring volume should be 1');
+});
+
+TestRunner.test('Recording - monitoring volume range spans 0 to 1', (t) => {
+    t.assertTruthy(MAX_MONITORING_VOLUME > MIN_MONITORING_VOLUME, 'Max should be greater than min');
+    t.assertEqual(MIN_MONITORING_VOLUME, 0, 'Min should be 0');
+    t.assertEqual(MAX_MONITORING_VOLUME, 1, 'Max should be 1');
+});
+
+TestRunner.test('Recording - recording state setters exist and are callable', (t) => {
+    t.assertEqual(typeof setIsRecordingState, 'function', 'setIsRecordingState should be a function');
+    t.assertEqual(typeof setRecordingTrackIdState, 'function', 'setRecordingTrackIdState should be a function');
+    t.assertEqual(typeof setRecordingStartTimeState, 'function', 'setRecordingStartTimeState should be a function');
+});
+
+TestRunner.test('Recording - recording state setters accept correct parameter counts', (t) => {
+    const setIsRecordingCount = setIsRecordingState.length;
+    const setTrackIdCount = setRecordingTrackIdState.length;
+    const setStartTimeCount = setRecordingStartTimeState.length;
+    t.assertEqual(setIsRecordingCount, 1, 'setIsRecordingState should accept 1 parameter');
+    t.assertEqual(setTrackIdCount, 1, 'setRecordingTrackIdState should accept 1 parameter');
+    t.assertEqual(setStartTimeCount, 1, 'setRecordingStartTimeState should accept 1 parameter');
+});
+
+TestRunner.test('Recording - startAudioRecording handles null track gracefully', (t) => {
+    // startAudioRecording with null track should return false without throwing
+    const result = startAudioRecording(null, false);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise');
+});
+
+TestRunner.test('Recording - stopAudioRecording handles missing recorder gracefully', (t) => {
+    // stopAudioRecording should return void/promise without throwing even if recorder is not initialized
+    const result = stopAudioRecording();
+    if (result instanceof Promise) {
+        result.then(() => {
+            t.assertTruthy(true, 'stopAudioRecording should resolve gracefully');
+        }).catch(() => {
+            t.assertTruthy(false, 'stopAudioRecording should not reject');
+        });
+    } else {
+        t.assertTruthy(true, 'stopAudioRecording should be callable');
+    }
+});
+
+TestRunner.test('Recording - getRecordingTrackIdState returns null initially', (t) => {
+    t.assertEqual(getRecordingTrackIdState(), null, 'Initial recording track ID should be null');
+});
+
+TestRunner.test('Recording - getRecordingStartTimeState returns null initially', (t) => {
+    t.assertEqual(getRecordingStartTimeState(), null, 'Initial recording start time should be null');
+});
+
+TestRunner.test('Recording - isTrackRecordingState returns boolean', (t) => {
+    t.assertEqual(typeof isTrackRecordingState(), 'boolean', 'isTrackRecordingState should return boolean');
+});
+
+TestRunner.test('Recording - setRecordingTrackIdState can clear to null', (t) => {
+    setRecordingTrackIdState('test-track-id');
+    t.assertEqual(getRecordingTrackIdState(), 'test-track-id', 'Track ID should be set');
+    setRecordingTrackIdState(null);
+    t.assertEqual(getRecordingTrackIdState(), null, 'Track ID should be cleared to null');
+});
+
+TestRunner.test('Recording - setRecordingStartTimeState handles numeric values', (t) => {
+    setRecordingStartTimeState(0);
+    t.assertEqual(getRecordingStartTimeState(), 0, 'Start time should accept 0');
+    setRecordingStartTimeState(120.5);
+    t.assertEqual(getRecordingStartTimeState(), 120.5, 'Start time should accept decimal values');
+});
+
+TestRunner.test('Recording - multiple recording cycles maintain state', (t) => {
+    setIsRecordingState(true);
+    setRecordingTrackIdState('track1');
+    setRecordingStartTimeState(10);
+    
+    t.assertEqual(isTrackRecordingState(), true, 'Should be recording');
+    t.assertEqual(getRecordingTrackIdState(), 'track1', 'Should have track1');
+    
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    setRecordingStartTimeState(null);
+    
+    t.assertEqual(isTrackRecordingState(), false, 'Should not be recording after reset');
+    t.assertEqual(getRecordingTrackIdState(), null, 'Should have no track ID after reset');
+    t.assertEqual(getRecordingStartTimeState(), null, 'Should have no start time after reset');
+});

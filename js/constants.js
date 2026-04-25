@@ -1,4 +1,5 @@
-export const APP_VERSION = '1.13.0'; // Day 230: Audio Track Instance Tests
+export const APP_VERSION = '1.14.0'; // Day 231: Recording Input Gain & Monitoring Tests
+
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

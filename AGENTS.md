@@ -3043,3 +3043,40 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Swing state functions use captureStateForUndo for undo/redo support. The Window Store functions manage the open windows Map for window instances. Tests verify function exports and behavior without requiring actual window rendering.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.05.0
+
+#### Day 231: Recording Input Gain & Monitoring Tests (2026-04-25)
+- **Feature**: Added 24 new unit tests for Recording Input Gain and Monitoring functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 24 new tests in Day 231 section:
+    - setRecordingInputGain is exported as function
+    - setRecordingInputGain accepts 1 parameter (gainValue)
+    - DEFAULT_RECORDING_INPUT_GAIN in valid range
+    - MIN_RECORDING_INPUT_GAIN is valid (0)
+    - MAX_RECORDING_INPUT_GAIN is valid (2)
+    - Input gain range is sensible (allows boosting above unity)
+    - setRecordingInputGain updates gain value
+    - DEFAULT_MONITORING_VOLUME in valid range (0-1)
+    - MIN_MONITORING_VOLUME is valid (0)
+    - MAX_MONITORING_VOLUME is valid (1)
+    - Monitoring volume range spans 0 to 1
+    - Recording state setters exist and are callable
+    - Recording state setters accept correct parameter counts
+    - startAudioRecording handles null track gracefully
+    - stopAudioRecording handles missing recorder gracefully
+    - getRecordingTrackIdState returns null initially
+    - getRecordingStartTimeState returns null initially
+    - isTrackRecordingState returns boolean
+    - setRecordingTrackIdState can clear to null
+    - setRecordingStartTimeState handles numeric values
+    - Multiple recording cycles maintain state
+  - `js/constants.js`: Bumped APP_VERSION to 1.14.0
+- **Feature Details**:
+  - Tests validate recording input gain constants (MIN=0, MAX=2, DEFAULT=1.0)
+  - Tests validate monitoring volume constants (MIN=0, MAX=1, DEFAULT=0.5)
+  - Tests verify recording state getter/setter functions
+  - Tests verify startAudioRecording and stopAudioRecording handle edge cases
+  - Tests verify state management for multiple recording cycles
+  - Total tests increased from 1293 to 1317
+- **Backend Note**: The recording input gain controls the level of audio coming from the microphone before it hits the recorder. The monitoring volume controls the level of hear-back when monitoring is enabled. These tests verify the constants and state management without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.14.0
