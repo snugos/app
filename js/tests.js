@@ -7185,3 +7185,118 @@ TestRunner.test('Undo/Redo - complete set function list has undo capture', (t) =
     });
     t.assertEqual(missingUndo.length, 0, `All setters should call captureStateForUndo. Missing: ${missingUndo.join(', ')}`);
 });
+
+// === Day 225: Recording Constants Additional Tests (2026-04-25) ===
+// Additional verification tests for Recording constants to expand test coverage
+
+TestRunner.test('Recording Constants - RECORDING_SAMPLE_RATE is 44100 Hz', (t) => {
+    t.assertEqual(RECORDING_SAMPLE_RATE, 44100, 'Sample rate should be 44100 Hz');
+});
+
+TestRunner.test('Recording Constants - RECORDING_NUM_CHANNELS is 1 (mono)', (t) => {
+    t.assertEqual(RECORDING_NUM_CHANNELS, 1, 'Recording should be mono');
+});
+
+TestRunner.test('Recording Constants - RECORDING_BIT_DEPTH is 16 bit', (t) => {
+    t.assertEqual(RECORDING_BIT_DEPTH, 16, 'Bit depth should be 16');
+});
+
+TestRunner.test('Recording Constants - RECORDING_MIME_TYPE is valid', (t) => {
+    t.assertEqual(RECORDING_MIME_TYPE, 'audio/webm', 'MIME type should be audio/webm');
+    t.assertTruthy(RECORDING_MIME_TYPE.includes('audio'), 'Should be an audio MIME type');
+});
+
+TestRunner.test('Recording Constants - RECORDING_LATENCY_HINT is reasonable', (t) => {
+    t.assertTruthy(RECORDING_LATENCY_HINT > 0, 'Latency hint should be positive');
+    t.assertTruthy(RECORDING_LATENCY_HINT <= 0.1, 'Latency hint should be <= 100ms');
+});
+
+TestRunner.test('Recording Constants - Audio processing constraints are disabled', (t) => {
+    t.assertEqual(RECORDING_ECHO_CANCELLATION, false, 'Echo cancellation should be disabled');
+    t.assertEqual(RECORDING_AUTO_GAIN_CONTROL, false, 'Auto gain control should be disabled');
+    t.assertEqual(RECORDING_NOISE_SUPPRESSION, false, 'Noise suppression should be disabled');
+});
+
+TestRunner.test('Recording Constants - Input gain range is valid', (t) => {
+    t.assertEqual(DEFAULT_RECORDING_INPUT_GAIN, 1.0, 'Default input gain should be 1.0');
+    t.assertEqual(MIN_RECORDING_INPUT_GAIN, 0, 'Min input gain should be 0');
+    t.assertEqual(MAX_RECORDING_INPUT_GAIN, 2.0, 'Max input gain should be 2.0');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN >= MIN_RECORDING_INPUT_GAIN, 'Default >= min');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN <= MAX_RECORDING_INPUT_GAIN, 'Default <= max');
+    t.assertTruthy(MIN_RECORDING_INPUT_GAIN < MAX_RECORDING_INPUT_GAIN, 'Min < max');
+});
+
+TestRunner.test('Recording Constants - Monitoring settings are valid', (t) => {
+    t.assertEqual(DEFAULT_RECORDING_MONITORING_ENABLED, false, 'Monitoring disabled by default');
+    t.assertEqual(DEFAULT_RECORDING_MONITORING_VOLUME, 0.5, 'Default monitoring volume should be 0.5');
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME >= 0, 'Monitoring volume >= 0');
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME <= 1, 'Monitoring volume <= 1');
+});
+
+TestRunner.test('Recording Constants - MAX_RECORDING_LENGTH_SECONDS is valid', (t) => {
+    t.assertEqual(MAX_RECORDING_LENGTH_SECONDS, 600, 'Max recording should be 600 seconds (10 min)');
+    t.assertTruthy(MAX_RECORDING_LENGTH_SECONDS >= 300, 'Max recording should be at least 5 minutes');
+    t.assertTruthy(MAX_RECORDING_LENGTH_SECONDS <= 900, 'Max recording should be at most 15 minutes');
+});
+
+TestRunner.test('Recording Constants - MIN_RECORDING_LENGTH_SECONDS is valid', (t) => {
+    t.assertEqual(MIN_RECORDING_LENGTH_SECONDS, 0.1, 'Min recording should be 0.1 seconds');
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS > 0, 'Min recording should be positive');
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS <= 1, 'Min recording should be <= 1 second');
+});
+
+TestRunner.test('Recording Constants - Min less than max recording length', (t) => {
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS < MAX_RECORDING_LENGTH_SECONDS, 'Min < max');
+});
+
+TestRunner.test('Recording Constants - Audio quality constants are consistent', (t) => {
+    t.assertTruthy(RECORDING_SAMPLE_RATE >= 44100, 'Sample rate should be at least 44100');
+    t.assertTruthy([16, 24, 32].includes(RECORDING_BIT_DEPTH), 'Bit depth should be standard (16, 24, or 32)');
+});
+
+TestRunner.test('Recording State - isTrackRecordingState returns boolean', (t) => {
+    const initialValue = isTrackRecordingState();
+    t.assertEqual(typeof initialValue, 'boolean', 'Should return boolean');
+    setIsRecordingState(false);
+    t.assertEqual(isTrackRecordingState(), false, 'Should be false after setIsRecordingState(false)');
+});
+
+TestRunner.test('Recording State - getRecordingTrackIdState returns null initially', (t) => {
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    t.assertEqual(getRecordingTrackIdState(), null, 'Should be null initially');
+});
+
+TestRunner.test('Recording State - getRecordingStartTimeState returns number', (t) => {
+    const initialValue = getRecordingStartTimeState();
+    t.assertEqual(typeof initialValue, 'number', 'Should return number');
+    t.assertTruthy(initialValue >= 0, 'Should be >= 0');
+});
+
+TestRunner.test('Recording State - setRecordingTrackIdState accepts null to clear', (t) => {
+    setRecordingTrackIdState('test-track');
+    t.assertEqual(getRecordingTrackIdState(), 'test-track', 'Should accept string');
+    setRecordingTrackIdState(null);
+    t.assertEqual(getRecordingTrackIdState(), null, 'Should accept null to clear');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState clamps negative values', (t) => {
+    setRecordingStartTimeState(-100);
+    t.assertEqual(getRecordingStartTimeState(), 0, 'Should clamp negative to 0');
+    setRecordingStartTimeState(123.456);
+    t.assertEqual(getRecordingStartTimeState(), 123.456, 'Should accept positive number');
+});
+
+TestRunner.test('Recording State - Multiple recording cycles work correctly', (t) => {
+    for (let i = 0; i < 3; i++) {
+        const trackId = 'test-track-' + i;
+        setIsRecordingState(true);
+        setRecordingTrackIdState(trackId);
+        setRecordingStartTimeState(i * 100);
+        t.assertEqual(getRecordingTrackIdState(), trackId, `Cycle ${i}: Track ID should match`);
+        t.assertEqual(isTrackRecordingState(), true, `Cycle ${i}: Should be recording`);
+    }
+    setIsRecordingState(false);
+    setRecordingTrackIdState(null);
+    setRecordingStartTimeState(0);
+});
