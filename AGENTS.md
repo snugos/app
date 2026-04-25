@@ -3285,3 +3285,30 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These audio module functions handle send bus creation/deletion, effect routing in send buses, sample loading, sound library fetching, and preview playback. The tests verify the exported API without requiring actual Tone.js audio context.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.17.0
+
+#### Day 239: Recording, MIDI Export/Import, and Track Tests (2026-04-25)
+- **Feature**: Added 39 new unit tests for Recording, MIDI Export/Import, and Track functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 39 new tests in Day 239 section:
+    - exportToMidiInternal function export, parameter count, async behavior
+    - importFromMidiInternal function export, parameter count, async behavior
+    - exportToMidiInternal references tempo, time signature, and tracks state
+    - exportToMidiInternal handles MIDI file format and playback mode
+    - importFromMidiInternal handles file input and parsing errors
+    - importFromMidiInternal creates or updates tracks
+    - startAudioRecording validates track type and handles mic errors
+    - stopAudioRecording handles blob processing and recorder cleanup
+    - stopAudioRecording handles missing recorder and empty recordings
+    - startAudioRecording creates Tone.UserMedia and Tone.Recorder instances
+    - setRecordingInputGain updates gain node and clamps value
+    - Track Audio track has addAudioClip method with async behavior
+    - Track addAudioClip validates blob and updates timeline
+  - `js/constants.js`: Bumped APP_VERSION to 1.22.0
+- **Feature Details**:
+  - Tests validate MIDI export/import functions (exportToMidiInternal, importFromMidiInternal)
+  - Tests verify recording functions handle microphone, recorder, and blob processing
+  - Tests verify Track addAudioClip method behavior and state management
+  - Total tests increased from 1649 to 1688
+- **Backend Note**: The Recording and MIDI Export/Import functions handle audio track recording via microphone, MIDI file export/import, and audio clip management. Tests verify the API without requiring actual microphone access or MIDI hardware.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.22.0

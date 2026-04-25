@@ -173,6 +173,8 @@ import {
     clearMidiLearnMappings,
     findMidiLearnMapping,
     updateMidiLearnMapping,
+    exportToMidiInternal,
+    importFromMidiInternal
     getMidiLearnMappingByIndex
 } from './state.js';
 
