@@ -128,6 +128,10 @@ import {
     addTrackTemplateState,
     updateTrackTemplateState,
     removeTrackTemplateState,
+} from './state.js';
+
+// --- App Services Object ---
+const appServices = {
     // Event Handler Passthroughs
     selectMIDIInput: eventSelectMIDIInput, 
     handleTrackMute: eventHandleTrackMute,

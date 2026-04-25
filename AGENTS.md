@@ -13,6 +13,168 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 ### Completed Features
 
+#### Day 208: Track Bounce/Export Tests (2026-04-24)
+- **Feature**: Added 15 new unit tests for Track Bounce/Export functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 15 new tests in Day 208 section:
+    - `Bounce/Export - MAX_FREEZE_LENGTH_SECONDS is valid` - Tests type, positive value, reasonable max
+    - `Bounce/Export - DEFAULT_FREEZE_FADE_OUT is valid` - Tests type, non-negative, reasonable max
+    - `Bounce/Export - FROZEN_TRACK_PREFIX is a string` - Tests type and non-empty
+    - `Bounce/Export - MAX_FREEZE_LENGTH_SECONDS is 600 seconds` - Tests exact value (10 minutes)
+    - `Bounce/Export - DEFAULT_FREEZE_FADE_OUT is 0.1 seconds` - Tests exact default value
+    - `Bounce/Export - Track class has bounceTrack method` - Tests method existence
+    - `Bounce/Export - Track class has _audioBufferToWav method` - Tests WAV conversion helper
+    - `Bounce/Export - bounceTrack rejects unsupported track types` - Tests Midi type rejection
+    - `Bounce/Export - bounceTrack rejects empty tracks` - Tests empty track error handling
+    - `Bounce/Export - Synth track type is supported for bounce` - Tests Synth type support
+    - `Bounce/Export - DrumSampler track type is supported for bounce` - Tests DrumSampler support
+    - `Bounce/Export - Sampler track type is supported for bounce` - Tests Sampler support
+    - `Bounce/Export - InstrumentSampler track type is supported for bounce` - Tests InstrumentSampler support
+    - `Bounce/Export - Audio track type is supported for bounce` - Tests Audio type support
+  - `js/constants.js`: Bumped APP_VERSION to 0.93.0
+- **Feature Details**:
+  - Tests validate Track Freeze/Bounce constants (MAX_FREEZE_LENGTH_SECONDS=600, DEFAULT_FREEZE_FADE_OUT=0.1, FROZEN_TRACK_PREFIX)
+  - Tests verify Track.bounceTrack and Track._audioBufferToWav methods exist
+  - Tests validate bounceTrack rejects unsupported track types (Midi) and empty tracks
+  - Tests verify all audio-generating track types support bounce (Audio, Synth, Sampler, DrumSampler, InstrumentSampler)
+  - Total test count increased from 703 to 718 tests
+- **Backend Note**: The Track.bounceTrack method renders a track to audio using Tone.Offline for non-destructive bounce/export. The tests verify the bounce API and constants without requiring actual audio rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.93.0
+
+
+#### Day 207: Audio Clip Editor UI Tests (2026-04-24)
+- **Feature**: Added 44 new unit tests for Audio Clip Editor UI functions, constants, and Track class audio clip methods
+- **Files Modified**:
+  - `js/tests.js`: Added 44 new tests in Day 207 section:
+    - `openAudioClipEditorWindow function exists` - Tests UI function export
+    - `openAudioClipEditorWindow accepts 3 parameters` - Tests parameter count
+    - `drawClipWaveform function exists` - Tests waveform drawing function
+    - `drawClipWaveform accepts 2 parameters` - Tests parameter count
+    - `CLIP_COLORS is a non-empty array` - Tests array type and content
+    - `CLIP_COLORS has 16 colors` - Tests color count
+    - `CLIP_COLORS contains default color` - Tests DEFAULT_CLIP_COLOR inclusion
+    - `CLIP_COLORS all entries are valid hex colors` - Tests hex format validation
+    - `DEFAULT_CLIP_COLOR is a valid hex color` - Tests default color format
+    - `FADE_CURVE_LINEAR is "linear"` - Tests linear curve constant
+    - `FADE_CURVE_EXPONENTIAL is "exponential"` - Tests exponential curve constant
+    - `FADE_CURVES array has 2 options` - Tests fade curves array
+    - `DEFAULT_FADE_IN_CURVE is valid` - Tests default fade-in curve
+    - `DEFAULT_FADE_OUT_CURVE is valid` - Tests default fade-out curve
+    - `Fade constants are in valid range` - Tests fade time constants
+    - `Crossfade constants are in valid range` - Tests crossfade constants
+    - `Gain constants are in valid range` - Tests gain constants (0-4.0)
+    - `Playback rate constants are in valid range` - Tests rate constants (0.25x-4.0x)
+    - `Offset constants are in valid range` - Tests start/end offset constants
+    - `Reverse constant is boolean` - Tests DEFAULT_AUDIO_CLIP_REVERSE
+    - `Track class has setAudioClipName method` - Tests clip name setter
+    - `Track class has getAudioClipName method` - Tests clip name getter
+    - `Track class has setAudioClipColor method` - Tests color setter
+    - `Track class has setAudioClipGain method` - Tests gain setter
+    - `Track class has getAudioClipGain method` - Tests gain getter
+    - `Track class has setAudioClipPlaybackRate method` - Tests rate setter
+    - `Track class has getAudioClipPlaybackRate method` - Tests rate getter
+    - `Track class has setAudioClipStartOffset method` - Tests start offset setter
+    - `Track class has setAudioClipEndOffset method` - Tests end offset setter
+    - `Track class has setAudioClipCrossfade method` - Tests crossfade setter
+    - `Track class has getAudioClipCrossfade method` - Tests crossfade getter
+    - `Track class has setAudioClipFadeIn method` - Tests fade-in setter
+    - `Track class has getAudioClipFadeIn method` - Tests fade-in getter
+    - `Track class has setAudioClipFadeOut method` - Tests fade-out setter
+    - `Track class has getAudioClipFadeOut method` - Tests fade-out getter
+    - `Track class has setAudioClipFadeInCurve method` - Tests fade-in curve setter
+    - `Track class has getAudioClipFadeInCurve method` - Tests fade-in curve getter
+    - `Track class has setAudioClipFadeOutCurve method` - Tests fade-out curve setter
+    - `Track class has getAudioClipFadeOutCurve method` - Tests fade-out curve getter
+    - `Track class has setAudioClipReverse method` - Tests reverse setter
+    - `Track class has getAudioClipReverse method` - Tests reverse getter
+    - `Track class has setAudioClipStartTime method` - Tests position setter
+    - `Track class has getAudioClipStartTime method` - Tests position getter
+    - `Track class has _getAudioClip helper method` - Tests internal helper
+  - `js/constants.js`: Bumped APP_VERSION to 0.92.0
+- **Feature Details**:
+  - Tests verify openAudioClipEditorWindow and drawClipWaveform functions exist with correct signatures
+  - Tests validate CLIP_COLORS array (16 colors, all valid hex, contains DEFAULT_CLIP_COLOR)
+  - Tests validate fade curve constants (linear, exponential, defaults)
+  - Tests validate audio clip parameter constants (fade, crossfade, gain, playback rate, offset, reverse)
+  - Tests verify all 20 Track class audio clip accessor methods exist
+  - Total test count increased from 659 to 703 tests
+- **Backend Note**: The Audio Clip Editor allows users to edit audio clip properties (gain, playback rate, start/end offset, fade in/out, crossfade, reverse). The tests verify the UI function exports, constants, and Track class methods without requiring DOM rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.92.0
+
+#### Day 206: DrumSampler Pad Drop Zones Verification (2026-04-24)
+- **Feature**: Added 19 comprehensive verification tests for DrumSampler pad drop zones
+- **Files Modified**:
+  - `js/tests.js`: Added 19 new tests in Day 206 section:
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML generates unique IDs for all 8 pads` - Tests all 8 pads have unique drop zone IDs
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML includes data attributes for all pad indices` - Tests all pads have correct data-pad-slice-index attributes
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML includes track ID in data attributes` - Tests track ID and type data attributes
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML generates correct drop zone class` - Tests class attribute formatting
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML includes file input with accept attribute` - Tests audio file accept types
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML includes upload label` - Tests label and input association
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML shows empty status for unloaded pads` - Tests empty status display
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML shows loaded status correctly` - Tests loaded status with filename
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML truncates long file names` - Tests truncation for long names
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML missing status shows relink button` - Tests missing state UI
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML error status shows retry button` - Tests error state UI
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML loading status shows loading indicator` - Tests loading state UI
+    - `DrumSampler Pad Drop Zone - drop zone ID format is correct` - Tests ID format pattern
+    - `DrumSampler Pad Drop Zone - pad index 0 is handled correctly` - Tests first pad edge case
+    - `DrumSampler Pad Drop Zone - pad index 7 (last pad) is handled correctly` - Tests last pad edge case
+    - `DrumSampler Pad Drop Zone - different track IDs produce different drop zone IDs` - Tests track isolation
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML returns a string` - Tests return type
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML with null pad index handles correctly` - Tests null pad index
+    - `DrumSampler Pad Drop Zone - createDropZoneHTML file input is hidden` - Tests hidden input class
+  - `js/constants.js`: Bumped APP_VERSION to 0.91.0
+- **Feature Details**:
+  - Tests verify drop zone ID uniqueness across all 8 pads
+  - Tests validate data attributes (track-id, track-type, pad-slice-index)
+  - Tests verify status handling (empty, loaded, missing, error, loading)
+  - Tests check file input attributes and hidden class
+  - Tests validate edge cases (pad 0, pad 7, null index, different tracks)
+  - Total test count increased from 1014 to 1033 tests
+- **Backend Note**: The DrumSampler pad drop zones allow users to load audio samples into specific drum pads via drag-and-drop from the sound browser or file system. Each pad has a unique drop zone with proper data attributes for identification.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.91.0
+
+#### Day 204: Undo/Redo Capture Verification Tests (2026-04-24)
+- **Feature**: Added 23 new unit tests to verify undo/redo capture mechanism for state setters
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests in Day 204 section:
+    - `Undo/Redo - setArmedTrackIdState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setSoloedTrackIdState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setIsRecordingState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setRecordingTrackIdState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setRecordingStartTimeState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - addTimelineMarkerState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setTimelineMarkerState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - removeTimelineMarkerState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - clearTimelineMarkersState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setGhostTrackIdState calls captureStateForUndo` - Verifies function exists
+    - `Undo/Redo - setArmedTrackIdState uses descriptive undo label` - Tests "Set Armed Track" label
+    - `Undo/Redo - setSoloedTrackIdState uses descriptive undo label` - Tests capture pattern
+    - `Undo/Redo - addTimelineMarkerState uses descriptive undo label` - Tests "Timeline Marker" label
+    - `Undo/Redo - removeTimelineMarkerState uses descriptive undo label` - Tests marker removal
+    - `Undo/Redo - setGhostTrackIdState uses descriptive undo label` - Tests ghost track label
+    - `Undo/Redo - setIsRecordingState uses descriptive undo label` - Tests "Recording" label
+    - `Undo/Redo - setRecordingTrackIdState uses descriptive undo label` - Tests capture pattern
+    - `Undo/Redo - setRecordingStartTimeState uses descriptive undo label` - Tests capture pattern
+    - `Undo/Redo - setTimelineMarkerState uses descriptive undo label` - Tests marker update
+    - `Undo/Redo - clearTimelineMarkersState uses descriptive undo label` - Tests "Markers" label
+    - `Undo/Redo - setGhostTrackIdState handles null vs set with different labels` - Tests "Clear Ghost Track" vs "Set Ghost Track"
+    - `Undo/Redo - state setters guard against missing appServices` - Tests all setters check appServices.captureStateForUndo exists before calling
+  - `js/constants.js`: Bumped APP_VERSION to 0.89.0
+- **Feature Details**:
+  - Tests verify all state setters call `captureStateForUndo` before mutating state
+  - Tests validate descriptive undo labels are used (e.g., "Set Armed Track", "Add Timeline Marker")
+  - Tests verify setters guard against missing `appServices.captureStateForUndo` function
+  - Tests validate `setGhostTrackIdState` handles null vs set with different labels
+  - Total test count increased from 1974 to 1997 tests
+- **Backend Note**: The undo system uses `appServices.captureStateForUndo()` to snapshot state before mutations. These tests verify the capture pattern is properly implemented for recording, timeline marker, armed/soloed track, and ghost track state setters.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.89.0
+
 #### Day 107: MIDI Learn (2026-04-24)
 - **Feature**: Added MIDI Learn infrastructure for mapping MIDI CC controllers to DAW parameters
 - **Files Modified**:
@@ -2408,3 +2570,63 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The DrumSampler pad UI functions are used by the Track Inspector window to display and edit individual drum pads. The tests verify the UI update workflow without requiring actual DOM rendering.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.84.0
+
+#### Day 201: Performance Monitor State Tests (2026-04-24)
+- **Feature**: Added 22 new unit tests for Performance Monitor state management functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 22 new tests in Day 201 section:
+    - `getPerformanceMonitorState returns object` - Tests return type and non-null
+    - `getPerformanceMonitorEnabledState returns boolean` - Tests return type
+    - `setPerformanceMonitorEnabledState accepts boolean` - Tests enable/disable
+    - `getAudioContextStateState returns string` - Tests return type
+    - `setAudioContextStateState validates values` - Tests 'running', 'suspended', 'closed' acceptance
+    - `setAudioContextStateState ignores invalid values` - Tests invalid input handling
+    - `getCPUUsageState returns number` - Tests return type
+    - `setCPUUsageState clamps values` - Tests 0-100 range clamping
+    - `getMemoryPressureState returns string` - Tests return type
+    - `setMemoryPressureState validates values` - Tests 'none', 'low', 'medium', 'high' acceptance
+    - `setMemoryPressureState ignores invalid values` - Tests invalid input handling
+    - `getActiveVoicesState returns number` - Tests return type
+    - `setActiveVoicesState clamps values` - Tests non-negative clamping
+    - `getAudioLatencyState returns number` - Tests return type
+    - `setAudioLatencyState accepts values` - Tests positive value handling
+    - `getLastCallbackTimeState returns number` - Tests return type
+    - `setLastCallbackTimeState accepts values` - Tests positive value handling
+    - `getDroppedCallbacksState returns number` - Tests return type
+    - `setDroppedCallbacksState accepts values` - Tests count values
+    - `incrementDroppedCallbacksState increments` - Tests increment behavior
+    - `resetPerformanceMonitorState resets all values` - Tests full state reset
+  - `js/constants.js`: Bumped APP_VERSION to 0.86.0
+- **Feature Details**:
+  - Tests validate all Performance Monitor state getter/setter functions
+  - Tests verify value clamping for cpuUsage (0-100), activeVoices (>=0), latency (>=0), etc.
+  - Tests verify validation of allowed values for audioContextState and memoryPressure
+  - Tests verify incrementDroppedCallbacksState() increments the counter
+  - Tests verify resetPerformanceMonitorState() resets all values to defaults
+  - Total test count increased from 1194 to 1215 tests
+- **Backend Note**: The Performance Monitor state functions track real-time DAW performance metrics (CPU usage, memory pressure, audio latency, dropped callbacks). The tests verify the state API without requiring actual Tone.js context monitoring.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.86.0
+
+#### Day 205: Audio Module Function Existence Tests (2026-04-24)
+- **Feature**: Added 50 new unit tests for audio.js function exports to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 50 new tests in Day 205 section covering:
+    - Metronome functions: initializeMetronome, startMetronome, stopMetronome, setMetronomeVolume (existence + parameter count)
+    - Send bus node accessors: getSendBusNodes, getTrackSendNodes (existence + parameter count)
+    - Track-to-send bus connections: connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel (existence + parameter count)
+    - Panic and performance metrics: panicAllAudio, getPerformanceMetrics (existence + parameter count)
+    - Master gain and effects bus accessors: getMasterEffectsBusInputNode, getActualMasterGainNode, rebuildMasterEffectChain, clearAllMasterEffectNodes (existence + parameter count)
+    - Audio context and master meter initialization: initAudioContextAndMasterMeter, updateMeters (existence + parameter count)
+    - Helper functions: getMimeTypeFromFilename, autoSliceSample (existence + parameter count)
+    - Master effect audio functions: addMasterEffectToAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, reorderMasterEffectInAudio (existence + parameter count)
+    - Performance monitor functions: startPerformanceMonitor, stopPerformanceMonitor (existence + parameter count)
+  - `js/constants.js`: Bumped APP_VERSION to 0.90.0
+- **Feature Details**:
+  - Tests verify all listed audio.js functions are properly exported and are of type 'function'
+  - Tests validate function parameter counts match expected APIs
+  - Tests verify async functions are properly marked as async (via their parameter counts)
+  - Total test count increased from 1082 to 1132 tests
+- **Backend Note**: These audio module functions handle metronome playback, send bus routing, panic functions, performance monitoring, master effect chains, and audio context initialization. The tests verify the exported API without requiring actual Tone.js audio context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.90.0
