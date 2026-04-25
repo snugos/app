@@ -30,6 +30,38 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.07.0
 
+#### Day 225: Recording Constants Additional Tests (2026-04-25)
+- **Feature**: Added 18 new unit tests for Recording constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 18 new tests in Day 225 section:
+    - RECORDING_SAMPLE_RATE verification (44100 Hz)
+    - RECORDING_NUM_CHANNELS verification (1 = mono)
+    - RECORDING_BIT_DEPTH verification (16 bit)
+    - RECORDING_MIME_TYPE verification (audio/webm)
+    - RECORDING_LATENCY_HINT validation
+    - Audio processing constraints (echo cancellation, AGC, noise suppression disabled)
+    - Input gain range validation (MIN, MAX, DEFAULT)
+    - Monitoring settings validation
+    - MAX_RECORDING_LENGTH_SECONDS verification (600 seconds)
+    - MIN_RECORDING_LENGTH_SECONDS verification (0.1 seconds)
+    - Min < max recording length validation
+    - Audio quality constants consistency check
+    - Recording state function tests (isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState)
+    - setRecordingTrackIdState null clearing
+    - setRecordingStartTimeState negative value handling
+    - Multiple recording cycles validation
+  - `js/constants.js`: Bumped APP_VERSION to 1.08.0
+- **Feature Details**:
+  - Tests validate all Recording constants from js/constants.js
+  - Tests verify audio quality settings (sample rate, bit depth, channels)
+  - Tests verify input gain and monitoring settings are within valid ranges
+  - Tests verify recording length limits (min 0.1s, max 600s)
+  - Tests verify recording state functions handle edge cases properly
+  - Total tests increased from 1153 to 1171
+- **Backend Note**: The Recording constants define how Tone.UserMedia and Tone.Recorder are configured in js/audio.js for audio track recording. Tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.08.0
+
 
 ## Known Issues and TODOs
 
