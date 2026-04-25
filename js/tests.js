@@ -3,6 +3,11 @@
 
 import { TestRunner } from './testRunner.js';
 import {
+    MAX_EFFECT_PRESETS,
+    DEFAULT_PRESET_NAME_PREFIX,
+    DEFAULT_EFFECT_PRESET
+} from './constants.js';
+import {
     getUndoStackState,
     getRedoStackState,
     undoLastActionInternal,
@@ -4893,4 +4898,63 @@ TestRunner.test('Project - exportToWavInternal accepts no parameters', (t) => {
 
 TestRunner.test('Project - exportToWavInternal is async', (t) => {
     t.assertTruthy(exportToWavInternal.constructor.name === 'AsyncFunction' || exportToWavInternal.toString().includes('async'), 'exportToWavInternal should be async');
+});
+
+// ============================================
+// Day 213: Effect Preset Constants Tests (2026-04-25)
+// ============================================
+TestRunner.test('Effect Preset - MAX_EFFECT_PRESETS is of type number', (t) => {
+    t.assertEqual(typeof MAX_EFFECT_PRESETS, 'number', 'MAX_EFFECT_PRESETS should be a number');
+});
+
+TestRunner.test('Effect Preset - MAX_EFFECT_PRESETS is positive', (t) => {
+    t.assertTruthy(MAX_EFFECT_PRESETS > 0, 'MAX_EFFECT_PRESETS should be positive');
+});
+
+TestRunner.test('Effect Preset - MAX_EFFECT_PRESETS is 64', (t) => {
+    t.assertEqual(MAX_EFFECT_PRESETS, 64, 'MAX_EFFECT_PRESETS should be 64');
+});
+
+TestRunner.test('Effect Preset - MAX_EFFECT_PRESETS is reasonable maximum', (t) => {
+    t.assertTruthy(MAX_EFFECT_PRESETS >= 10 && MAX_EFFECT_PRESETS <= 256, 'MAX_EFFECT_PRESETS should be between 10 and 256');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_PRESET_NAME_PREFIX is of type string', (t) => {
+    t.assertEqual(typeof DEFAULT_PRESET_NAME_PREFIX, 'string', 'DEFAULT_PRESET_NAME_PREFIX should be a string');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_PRESET_NAME_PREFIX is non-empty', (t) => {
+    t.assertTruthy(DEFAULT_PRESET_NAME_PREFIX.length > 0, 'DEFAULT_PRESET_NAME_PREFIX should be non-empty');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_PRESET_NAME_PREFIX is "Preset"', (t) => {
+    t.assertEqual(DEFAULT_PRESET_NAME_PREFIX, 'Preset', 'DEFAULT_PRESET_NAME_PREFIX should be "Preset"');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET is of type object', (t) => {
+    t.assertEqual(typeof DEFAULT_EFFECT_PRESET, 'object', 'DEFAULT_EFFECT_PRESET should be an object');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET has name property', (t) => {
+    t.assertTruthy('name' in DEFAULT_EFFECT_PRESET, 'DEFAULT_EFFECT_PRESET should have name property');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.name equals DEFAULT_PRESET_NAME_PREFIX', (t) => {
+    t.assertEqual(DEFAULT_EFFECT_PRESET.name, DEFAULT_PRESET_NAME_PREFIX, 'DEFAULT_EFFECT_PRESET.name should equal DEFAULT_PRESET_NAME_PREFIX');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET has effectType property set to null', (t) => {
+    t.assertEqual(DEFAULT_EFFECT_PRESET.effectType, null, 'DEFAULT_EFFECT_PRESET.effectType should be null');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET has params property', (t) => {
+    t.assertTruthy('params' in DEFAULT_EFFECT_PRESET, 'DEFAULT_EFFECT_PRESET should have params property');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.params is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_EFFECT_PRESET.params, 'object', 'DEFAULT_EFFECT_PRESET.params should be an object');
+});
+
+TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.params is empty object', (t) => {
+    t.assertEqual(Object.keys(DEFAULT_EFFECT_PRESET.params).length, 0, 'DEFAULT_EFFECT_PRESET.params should be an empty object');
 });
