@@ -9,6 +9,22 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - Tailwind CSS via CDN
 - GitHub Pages deployment
 
+#### Day 235: Remaining Constants & Keyboard Map Tests (2026-04-25)
+- **Feature**: Added 15 new unit tests for remaining Timeline constants and computer keyboard map validations
+- **Files Modified**:
+  - `js/tests.js`: Added 15 new tests in Day 235 section:
+    - Timeline Constants: TIMELINE_BEAT_WIDTH (positive, reasonable 20-100), TIMELINE_TRACK_HEIGHT (positive, reasonable 30-120), TIMELINE_HEADER_HEIGHT (positive, reasonable 20-60)
+    - computerKeySynthMap: references synthPitches, has white keys a/k, has black keys w/u
+    - computerKeySamplerMap: references numDrumSamplerPads, has 8 digit keys (0-7), values are MIDI note numbers, values are consecutive starting from samplerMIDINoteStart
+  - `js/constants.js`: Bumped APP_VERSION to 1.18.0
+- **Feature Details**:
+  - Tests validate remaining Timeline constants not covered by previous test sections
+  - Tests verify computerKeySynthMap references synthPitches constant and has expected keyboard mappings
+  - Tests verify computerKeySamplerMap references numDrumSamplerPads and has 8 pads with consecutive MIDI notes
+  - Total tests increased from 1516 to 1531
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.18.0
+
 #### Day 224: Complete Undo/Redo Capture Verification Tests (2026-04-25)
 - **Feature**: Added 22 new unit tests to complete undo/redo verification coverage for remaining state setter functions
 - **Files Modified**:

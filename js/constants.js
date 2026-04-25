@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.17.0'; // Day 234: Remaining Audio Module Function Tests
+export const APP_VERSION = '1.18.0'; // Day 235: Remaining Constants & Keyboard Map Tests
 
 
 // Performance Monitor Constants

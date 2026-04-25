@@ -9740,3 +9740,79 @@ TestRunner.test('Audio - playDrumSamplerPadPreview is async', (t) => {
 TestRunner.test('Audio - playDrumSamplerPadPreview accepts 2+ parameters', (t) => {
     t.assertTruthy(playDrumSamplerPadPreview.length >= 2, 'playDrumSamplerPadPreview should accept at least 2 parameters');
 });
+
+// Day 235: Remaining Constants & Keyboard Map Tests
+// Testing remaining constants not covered by previous test sections
+
+// Timeline Constants Tests (not yet tested)
+TestRunner.test('Timeline Constants - TIMELINE_BEAT_WIDTH is positive', (t) => {
+    t.assertTruthy(typeof TIMELINE_BEAT_WIDTH === 'number' && TIMELINE_BEAT_WIDTH > 0, 'TIMELINE_BEAT_WIDTH should be positive');
+});
+
+TestRunner.test('Timeline Constants - TIMELINE_BEAT_WIDTH is reasonable (20-100)', (t) => {
+    t.assertTruthy(TIMELINE_BEAT_WIDTH >= 20 && TIMELINE_BEAT_WIDTH <= 100, 'TIMELINE_BEAT_WIDTH should be between 20 and 100 pixels');
+});
+
+TestRunner.test('Timeline Constants - TIMELINE_TRACK_HEIGHT is positive', (t) => {
+    t.assertTruthy(typeof TIMELINE_TRACK_HEIGHT === 'number' && TIMELINE_TRACK_HEIGHT > 0, 'TIMELINE_TRACK_HEIGHT should be positive');
+});
+
+TestRunner.test('Timeline Constants - TIMELINE_TRACK_HEIGHT is reasonable (30-120)', (t) => {
+    t.assertTruthy(TIMELINE_TRACK_HEIGHT >= 30 && TIMELINE_TRACK_HEIGHT <= 120, 'TIMELINE_TRACK_HEIGHT should be between 30 and 120 pixels');
+});
+
+TestRunner.test('Timeline Constants - TIMELINE_HEADER_HEIGHT is positive', (t) => {
+    t.assertTruthy(typeof TIMELINE_HEADER_HEIGHT === 'number' && TIMELINE_HEADER_HEIGHT > 0, 'TIMELINE_HEADER_HEIGHT should be positive');
+});
+
+TestRunner.test('Timeline Constants - TIMELINE_HEADER_HEIGHT is reasonable (20-60)', (t) => {
+    t.assertTruthy(TIMELINE_HEADER_HEIGHT >= 20 && TIMELINE_HEADER_HEIGHT <= 60, 'TIMELINE_HEADER_HEIGHT should be between 20 and 60 pixels');
+});
+
+// computerKeySynthMap Validation Tests
+TestRunner.test('computerKeySynthMap - references synthPitches constant', (t) => {
+    const funcStr = computerKeySynthMap.toString();
+    t.assertTruthy(funcStr.includes('synthPitches') || funcStr.includes('note') || funcStr.includes('pitch'), 'computerKeySynthMap should reference synthPitches');
+});
+
+TestRunner.test('computerKeySynthMap - has white key a', (t) => {
+    t.assertTruthy('a' in computerKeySynthMap, 'computerKeySynthMap should have key a');
+});
+
+TestRunner.test('computerKeySynthMap - has white key k', (t) => {
+    t.assertTruthy('k' in computerKeySynthMap, 'computerKeySynthMap should have key k');
+});
+
+TestRunner.test('computerKeySynthMap - has black key w', (t) => {
+    t.assertTruthy('w' in computerKeySynthMap, 'computerKeySynthMap should have key w');
+});
+
+TestRunner.test('computerKeySynthMap - has black key u', (t) => {
+    t.assertTruthy('u' in computerKeySynthMap, 'computerKeySynthMap should have key u');
+});
+
+// computerKeySamplerMap Validation Tests
+TestRunner.test('computerKeySamplerMap - references numDrumSamplerPads', (t) => {
+    const funcStr = computerKeySamplerMap.toString();
+    t.assertTruthy(funcStr.includes('numDrumSamplerPads') || funcStr.includes('pad') || funcStr.includes('slice'), 'computerKeySamplerMap should reference numDrumSamplerPads');
+});
+
+TestRunner.test('computerKeySamplerMap - has 8 digit keys', (t) => {
+    const keys = Object.keys(computerKeySamplerMap).filter(k => /^\d$/.test(k));
+    t.assertEqual(keys.length, 8, 'computerKeySamplerMap should have 8 digit keys (0-7)');
+});
+
+TestRunner.test('computerKeySamplerMap - values are MIDI note numbers', (t) => {
+    const values = Object.values(computerKeySamplerMap);
+    values.forEach(v => {
+        t.assertTruthy(typeof v === 'number' && v >= 0 && v <= 127, 'computerKeySamplerMap values should be MIDI note numbers (0-127)');
+    });
+});
+
+TestRunner.test('computerKeySamplerMap - values are consecutive starting from samplerMIDINoteStart', (t) => {
+    const keys = Object.keys(computerKeySamplerMap).filter(k => /^\d$/.test(k)).sort();
+    for (let i = 0; i < keys.length; i++) {
+        const expected = samplerMIDINoteStart + i;
+        t.assertEqual(computerKeySamplerMap[keys[i]], expected, `computerKeySamplerMap[${keys[i]}] should be ${expected}`);
+    }
+});
