@@ -720,8 +720,14 @@ export function attachGlobalControlEvents(elements) {
     updateMidiLearnMappingsListUI();
 
     // Expose update function for external calls
-    if (localAppServices.updateMidiLearnMappingsList) {
+    if (localAppServices.updateMidiLearnMappingsList !== undefined) {
         localAppServices.updateMidiLearnMappingsList = updateMidiLearnMappingsListUI;
+    } else {
+        // Fallback: if updateMidiLearnMappingsList doesn't exist yet in appServices, create it
+        Object.defineProperty(localAppServices, 'updateMidiLearnMappingsList', {
+            get: () => updateMidiLearnMappingsListUI,
+            configurable: true
+        });
     }
 }
 
