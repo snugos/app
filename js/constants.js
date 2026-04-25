@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.98.0'; // Day 214: Scale Mode Comprehensive Constants Tests
+export const APP_VERSION = '0.99.0'; // Day 215: Swing Constants Tests
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

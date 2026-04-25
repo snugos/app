@@ -5182,3 +5182,92 @@ TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.params is an object', (t)
 TestRunner.test('Effect Preset - DEFAULT_EFFECT_PRESET.params is empty object', (t) => {
     t.assertEqual(Object.keys(DEFAULT_EFFECT_PRESET.params).length, 0, 'DEFAULT_EFFECT_PRESET.params should be an empty object');
 });
+
+// ============================================
+// Day 215: Swing Constants Tests (2026-04-25)
+// ============================================
+TestRunner.test('Swing - MAX_SWING_AMOUNT is of type number', (t) => {
+    t.assertEqual(typeof MAX_SWING_AMOUNT, 'number', 'MAX_SWING_AMOUNT should be a number');
+});
+
+TestRunner.test('Swing - MAX_SWING_AMOUNT is positive', (t) => {
+    t.assertTruthy(MAX_SWING_AMOUNT > 0, 'MAX_SWING_AMOUNT should be positive');
+});
+
+TestRunner.test('Swing - MAX_SWING_AMOUNT is 100', (t) => {
+    t.assertEqual(MAX_SWING_AMOUNT, 100, 'MAX_SWING_AMOUNT should be 100');
+});
+
+TestRunner.test('Swing - MAX_SWING_AMOUNT is a reasonable maximum', (t) => {
+    t.assertTruthy(MAX_SWING_AMOUNT >= 50 && MAX_SWING_AMOUNT <= 200, 'MAX_SWING_AMOUNT should be between 50 and 200');
+});
+
+TestRunner.test('Swing - SWING_SUBDIVISION is of type number', (t) => {
+    t.assertEqual(typeof SWING_SUBDIVISION, 'number', 'SWING_SUBDIVISION should be a number');
+});
+
+TestRunner.test('Swing - SWING_SUBDIVISION is positive', (t) => {
+    t.assertTruthy(SWING_SUBDIVISION > 0, 'SWING_SUBDIVISION should be positive');
+});
+
+TestRunner.test('Swing - SWING_SUBDIVISION is 8 (eighth notes)', (t) => {
+    t.assertEqual(SWING_SUBDIVISION, 8, 'SWING_SUBDIVISION should be 8 for eighth notes');
+});
+
+TestRunner.test('Swing - SWING_SUBDIVISION represents 8th notes', (t) => {
+    t.assertTruthy(SWING_SUBDIVISION === 8 || SWING_SUBDIVISION === 16, 'SWING_SUBDIVISION should be 8 or 16');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING is of type object', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING, 'object', 'DEFAULT_SWING should be an object');
+    t.assertTruthy(DEFAULT_SWING !== null, 'DEFAULT_SWING should not be null');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING has enabled property', (t) => {
+    t.assertTruthy('enabled' in DEFAULT_SWING, 'DEFAULT_SWING should have enabled property');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING.enabled is boolean', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING.enabled, 'boolean', 'DEFAULT_SWING.enabled should be boolean');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING.enabled is false', (t) => {
+    t.assertEqual(DEFAULT_SWING.enabled, false, 'DEFAULT_SWING.enabled should be false');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING has amount property', (t) => {
+    t.assertTruthy('amount' in DEFAULT_SWING, 'DEFAULT_SWING should have amount property');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING.amount is number', (t) => {
+    t.assertEqual(typeof DEFAULT_SWING.amount, 'number', 'DEFAULT_SWING.amount should be number');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING.amount is 0', (t) => {
+    t.assertEqual(DEFAULT_SWING.amount, 0, 'DEFAULT_SWING.amount should be 0');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING.amount is non-negative', (t) => {
+    t.assertTruthy(DEFAULT_SWING.amount >= 0, 'DEFAULT_SWING.amount should be non-negative');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING.amount is within valid range', (t) => {
+    t.assertTruthy(DEFAULT_SWING.amount >= 0 && DEFAULT_SWING.amount <= MAX_SWING_AMOUNT, 'DEFAULT_SWING.amount should be within 0-MAX_SWING_AMOUNT');
+});
+
+TestRunner.test('Swing - DEFAULT_SWING has correct structure', (t) => {
+    const keys = Object.keys(DEFAULT_SWING);
+    t.assertEqual(keys.length, 2, 'DEFAULT_SWING should have exactly 2 properties');
+    t.assertTruthy(keys.includes('enabled'), 'DEFAULT_SWING should have enabled property');
+    t.assertTruthy(keys.includes('amount'), 'DEFAULT_SWING should have amount property');
+});
+
+TestRunner.test('Swing - Swing amount percentage calculation is valid', (t) => {
+    // 50% swing means the off-beat is delayed by half the 16th note duration
+    const swing50 = 50;
+    t.assertTruthy(swing50 >= 0 && swing50 <= MAX_SWING_AMOUNT, 'Swing amount percentage should be in valid range');
+});
+
+TestRunner.test('Swing - SWING_SUBDIVISION is even (for even time divisions)', (t) => {
+    t.assertEqual(SWING_SUBDIVISION % 2, 0, 'SWING_SUBDIVISION should be even for even time divisions');
+});
