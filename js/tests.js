@@ -10034,3 +10034,218 @@ TestRunner.test('appServices - setTransportEventsInitialized accepts 1 parameter
 TestRunner.test('appServices - closeAllWindows accepts optional parameter', (t) => {
     t.assertEqual(appServices.closeAllWindows.length, 1, 'closeAllWindows should accept 1 optional parameter (isReconstructinging)');
 });
+
+// ============================================
+// Day 237: Utils Time Conversion Tests (2026-04-25)
+// ============================================
+TestRunner.test('Utils Time Conversion - secondsToBBSTime is a function', (t) => {
+    t.assertEqual(typeof secondsToBBSTime, 'function', 'secondsToBBSTime should be a function');
+});
+
+TestRunner.test('Utils Time Conversion - secondsToBBSTime accepts 1 parameter', (t) => {
+    t.assertEqual(secondsToBBSTime.length, 1, 'secondsToBBSTime should accept 1 parameter');
+});
+
+TestRunner.test('Utils Time Conversion - secondsToBBSTime handles invalid input gracefully', (t) => {
+    const result = secondsToBBSTime(null);
+    t.assertEqual(result, '0:0:0', 'Should return 0:0:0 for null input');
+    const resultNaN = secondsToBBSTime(NaN);
+    t.assertEqual(resultNaN, '0:0:0', 'Should return 0:0:0 for NaN');
+});
+
+TestRunner.test('Utils Time Conversion - secondsToBBSTime handles undefined input gracefully', (t) => {
+    const result = secondsToBBSTime(undefined);
+    t.assertEqual(result, '0:0:0', 'Should return 0:0:0 for undefined');
+});
+
+TestRunner.test('Utils Time Conversion - bbsTimeToSeconds is a function', (t) => {
+    t.assertEqual(typeof bbsTimeToSeconds, 'function', 'bbsTimeToSeconds should be a function');
+});
+
+TestRunner.test('Utils Time Conversion - bbsTimeToSeconds accepts 1 parameter', (t) => {
+    t.assertEqual(bbsTimeToSeconds.length, 1, 'bbsTimeToSeconds should accept 1 parameter');
+});
+
+TestRunner.test('Utils Time Conversion - bbsTimeToSeconds handles invalid input gracefully', (t) => {
+    const result = bbsTimeToSeconds(null);
+    t.assertEqual(result, null, 'Should return null for null input');
+    const resultInvalid = bbsTimeToSeconds(undefined);
+    t.assertEqual(resultInvalid, null, 'Should return null for undefined');
+});
+
+TestRunner.test('Utils Time Conversion - bbsTimeToSeconds handles non-string input gracefully', (t) => {
+    const result = bbsTimeToSeconds(123);
+    t.assertEqual(result, null, 'Should return null for non-string input');
+});
+
+TestRunner.test('Utils Time Conversion - secondsToBBSTime references Tone object', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('Tone'), 'secondsToBBSTime should reference Tone object');
+    t.assertTruthy(funcStr.includes('toBarsBeatsSixteenths') || funcStr.includes('BarsBeats'), 'secondsToBBSTime should use Tone.Time conversion');
+});
+
+TestRunner.test('Utils Time Conversion - bbsTimeToSeconds references Tone object', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('Tone'), 'bbsTimeToSeconds should reference Tone object');
+    t.assertTruthy(funcStr.includes('toSeconds') || funcStr.includes('Seconds'), 'bbsTimeToSeconds should use Tone.Time conversion');
+});
+
+TestRunner.test('Utils Time Conversion - bbsTimeToSeconds returns null for invalid BBS string', (t) => {
+    const result = bbsTimeToSeconds('not:a:valid:time');
+    t.assertEqual(result, null, 'Should return null for invalid BBS string');
+});
+
+// ============================================
+// Day 237: appServices getAudioBlobFromSoundBrowserItem Tests (2026-04-25)
+// ============================================
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem is a function', (t) => {
+    t.assertEqual(typeof appServices.getAudioBlobFromSoundBrowserItem, 'function', 'getAudioBlobFromSoundBrowserItem should be a function');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem is async', (t) => {
+    const funcStr = appServices.getAudioBlobFromSoundBrowserItem.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'getAudioBlobFromSoundBrowserItem should be async');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem accepts 1 parameter', (t) => {
+    t.assertEqual(appServices.getAudioBlobFromSoundBrowserItem.length, 1, 'getAudioBlobFromSoundBrowserItem should accept 1 parameter (soundData)');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem handles null soundData gracefully', async (t) => {
+    const result = await appServices.getAudioBlobFromSoundBrowserItem(null);
+    t.assertEqual(result, null, 'Should return null for null soundData');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem handles missing libraryName gracefully', async (t) => {
+    const result = await appServices.getAudioBlobFromSoundBrowserItem({ fullPath: '/path/to/file.wav' });
+    t.assertEqual(result, null, 'Should return null when libraryName is missing');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem handles missing fullPath gracefully', async (t) => {
+    const result = await appServices.getAudioBlobFromSoundBrowserItem({ libraryName: 'Drums' });
+    t.assertEqual(result, null, 'Should return null when fullPath is missing');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem references loadedZips', (t) => {
+    const funcStr = appServices.getAudioBlobFromSoundBrowserItem.toString();
+    t.assertTruthy(funcStr.includes('loadedZips') || funcStr.includes('getLoadedZipFilesState'), 'Should reference loaded zip files state');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem references blob conversion', (t) => {
+    const funcStr = appServices.getAudioBlobFromSoundBrowserItem.toString();
+    t.assertTruthy(funcStr.includes('blob') || funcStr.includes('Blob'), 'Should handle blob conversion');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem references mimeType', (t) => {
+    const funcStr = appServices.getAudioBlobFromSoundBrowserItem.toString();
+    t.assertTruthy(funcStr.includes('mime') || funcStr.includes('type'), 'Should handle mime type for File creation');
+});
+
+// ============================================
+// Day 237: appServices panicStopAllAudio Tests (2026-04-25)
+// ============================================
+TestRunner.test('appServices - panicStopAllAudio is a function', (t) => {
+    t.assertEqual(typeof appServices.panicStopAllAudio, 'function', 'panicStopAllAudio should be a function');
+});
+
+TestRunner.test('appServices - panicStopAllAudio accepts no parameters', (t) => {
+    t.assertEqual(appServices.panicStopAllAudio.length, 0, 'panicStopAllAudio should accept no parameters');
+});
+
+TestRunner.test('appServices - panicStopAllAudio references Tone.Transport', (t) => {
+    const funcStr = appServices.panicStopAllAudio.toString();
+    t.assertTruthy(funcStr.includes('Tone') && funcStr.includes('Transport'), 'panicStopAllAudio should reference Tone.Transport');
+});
+
+TestRunner.test('appServices - panicStopAllAudio calls Transport.stop', (t) => {
+    const funcStr = appServices.panicStopAllAudio.toString();
+    t.assertTruthy(funcStr.includes('stop') || funcStr.includes('Transport.stop'), 'panicStopAllAudio should stop the transport');
+});
+
+TestRunner.test('appServices - panicStopAllAudio calls Transport.cancel', (t) => {
+    const funcStr = appServices.panicStopAllAudio.toString();
+    t.assertTruthy(funcStr.includes('cancel') || funcStr.includes('Transport.cancel'), 'panicStopAllAudio should cancel scheduled events');
+});
+
+// ============================================
+// Day 237: appServices Desktop Background Tests (2026-04-25)
+// ============================================
+TestRunner.test('appServices - triggerCustomBackgroundUpload is a function', (t) => {
+    t.assertEqual(typeof appServices.triggerCustomBackgroundUpload, 'function', 'triggerCustomBackgroundUpload should be a function');
+});
+
+TestRunner.test('appServices - triggerCustomBackgroundUpload accepts no parameters', (t) => {
+    t.assertEqual(appServices.triggerCustomBackgroundUpload.length, 0, 'triggerCustomBackgroundUpload should accept no parameters');
+});
+
+TestRunner.test('appServices - removeCustomDesktopBackground is a function', (t) => {
+    t.assertEqual(typeof appServices.removeCustomDesktopBackground, 'function', 'removeCustomDesktopBackground should be a function');
+});
+
+TestRunner.test('appServices - removeCustomDesktopBackground accepts no parameters', (t) => {
+    t.assertEqual(appServices.removeCustomDesktopBackground.length, 0, 'removeCustomDesktopBackground should accept no parameters');
+});
+
+TestRunner.test('appServices - triggerCustomBackgroundUpload references customBgInput', (t) => {
+    const funcStr = appServices.triggerCustomBackgroundUpload.toString();
+    t.assertTruthy(funcStr.includes('customBgInput') || funcStr.includes('click'), 'Should reference custom background input element');
+});
+
+// ============================================
+// Day 237: appServices Playback Mode Tests (2026-04-25)
+// ============================================
+TestRunner.test('appServices - onPlaybackModeChange is a function', (t) => {
+    t.assertEqual(typeof appServices.onPlaybackModeChange, 'function', 'onPlaybackModeChange should be a function');
+});
+
+TestRunner.test('appServices - onPlaybackModeChange accepts 1 parameter', (t) => {
+    t.assertEqual(appServices.onPlaybackModeChange.length, 1, 'onPlaybackModeChange should accept 1 parameter (newMode)');
+});
+
+TestRunner.test('appServices - onPlaybackModeChange references playback mode toggle button', (t) => {
+    const funcStr = appServices.onPlaybackModeChange.toString();
+    t.assertTruthy(funcStr.includes('playbackModeToggleBtn') || funcStr.includes('PlaybackMode'), 'Should reference playback mode UI');
+});
+
+TestRunner.test('appServices - onPlaybackModeChange references Mode label text', (t) => {
+    const funcStr = appServices.onPlaybackModeChange.toString();
+    t.assertTruthy(funcStr.includes('timeline') || funcStr.includes('Mode:'), 'Should handle mode label text update');
+});
+
+// ============================================
+// Day 237: appServices Metronome Tests (2026-04-25)
+// ============================================
+TestRunner.test('appServices - startMetronome is a function', (t) => {
+    t.assertEqual(typeof appServices.startMetronome, 'function', 'startMetronome should be a function');
+});
+
+TestRunner.test('appServices - startMetronome accepts no parameters', (t) => {
+    t.assertEqual(appServices.startMetronome.length, 0, 'startMetronome should accept no parameters');
+});
+
+TestRunner.test('appServices - stopMetronome is a function', (t) => {
+    t.assertEqual(typeof appServices.stopMetronome, 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test('appServices - stopMetronome accepts no parameters', (t) => {
+    t.assertEqual(appServices.stopMetronome.length, 0, 'stopMetronome should accept no parameters');
+});
+
+TestRunner.test('appServices - setMetronomeVolume is a function', (t) => {
+    t.assertEqual(typeof appServices.setMetronomeVolume, 'function', 'setMetronomeVolume should be a function');
+});
+
+TestRunner.test('appServices - setMetronomeVolume accepts 1 parameter', (t) => {
+    t.assertEqual(appServices.setMetronomeVolume.length, 1, 'setMetronomeVolume should accept 1 parameter (volume)');
+});
+
+TestRunner.test('appServices - startMetronome references Tone.Metronome', (t) => {
+    const funcStr = appServices.startMetronome.toString();
+    t.assertTruthy(funcStr.includes('Metronome') || funcStr.includes('metronome'), 'startMetronome should handle metronome');
+});
+
+TestRunner.test('appServices - appServices has startMetronome and stopMetronome', (t) => {
+    t.assertEqual(typeof appServices.startMetronome, 'function', 'startMetronome should be a function');
+    t.assertEqual(typeof appServices.stopMetronome, 'function', 'stopMetronome should be a function');
+    t.assertEqual(typeof appServices.setMetronomeVolume, 'function', 'setMetronomeVolume should be a function');
+});

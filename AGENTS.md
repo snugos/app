@@ -10,6 +10,22 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - GitHub Pages deployment
 
 #### Day 236: appServices Export & Method Signature Tests (2026-04-25)
+
+#### Day 237: CI Workflow Setup Documentation (2026-04-25)
+- **Feature**: Added CI workflow setup documentation for GitHub Actions automation
+- **Files Modified**:
+  - `docs/CI_WORKFLOW_SETUP.md`: Created CI setup documentation with manual setup instructions
+- **Feature Details**:
+  - Attempted to create `.github/workflows/tests.yml` for automated browser testing
+  - OAuth token lacks `workflow` scope - cannot push workflow files directly
+  - Created documentation with workflow file contents and setup steps
+  - Users must create workflow via GitHub web UI
+  - Workflow uses puppeteer to run browser-based tests headlessly
+  - Tests run on every push/PR to LWB-with-Bugs and main branches
+- **Backend Note**: The GitHub Actions workflow enables automated testing of the 1581 browser-based unit tests via puppeteer headless browser, ensuring code quality on every change.
+- **Version**: 1.19.0 (documentation only, no version bump)
+
+#### Day 236: appServices Export & Method Signature Tests (2026-04-25)
 - **Feature**: Added 50 new unit tests for appServices object exported from main.js
 - **Files Modified**:
   - `js/tests.js`: Added 50 new tests in Day 236 section:
@@ -30,6 +46,9 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify undo/redo actions are async functions
   - Total tests increased from 1531 to 1581
 - **Backend Note**: appServices is the main service layer providing state management, audio control, and UI operations. These tests verify the exported API surface.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.19.0
+
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.19.0
 
