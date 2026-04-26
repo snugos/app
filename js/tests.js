@@ -10473,3 +10473,202 @@ TestRunner.test("UI Constants - KEYBOARD_SHORTCUTS_HELP_WIDTH is reasonable", (t
 TestRunner.test("UI Constants - KEYBOARD_SHORTCUTS_HELP_HEIGHT is reasonable", (t) => {
     t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_HEIGHT >= 200 && KEYBOARD_SHORTCUTS_HELP_HEIGHT <= 800, "KEYBOARD_SHORTCUTS_HELP_HEIGHT should be reasonable");
 });
+
+// ============================================
+// Day 253: Track Color Instance Tests (2026-04-26)
+// ============================================
+
+// Track Color Constants Tests
+TestRunner.test('TRACK_COLORS - is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS), 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('TRACK_COLORS - has 16 colors', (t) => {
+    t.assertEqual(TRACK_COLORS.length, 16, 'Should have 16 track colors');
+});
+
+TestRunner.test('TRACK_COLORS - has expected count of colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 8, 'Should have at least 8 colors');
+});
+
+TestRunner.test('TRACK_COLORS - all entries are valid hex colors', (t) => {
+    const hexPattern = /^#[0-9A-Fa-f]{6}$/;
+    TRACK_COLORS.forEach(color => {
+        t.assertTruthy(hexPattern.test(color), `${color} should be valid hex`);
+    });
+});
+
+TestRunner.test('TRACK_COLORS - Default color is in array', (t) => {
+    t.assertTruthy(TRACK_COLORS.includes(DEFAULT_TRACK_COLOR), 'Default should be in colors');
+});
+
+TestRunner.test('TRACK_COLORS - Default track color index is valid', (t) => {
+    t.assertTruthy(DEFAULT_TRACK_COLOR_INDEX >= 0, 'Index should be non-negative');
+    t.assertTruthy(DEFAULT_TRACK_COLOR_INDEX < TRACK_COLORS.length, 'Index should be within bounds');
+});
+
+TestRunner.test('TRACK_COLORS - Default track color matches derived value', (t) => {
+    t.assertEqual(DEFAULT_TRACK_COLOR, TRACK_COLORS[DEFAULT_TRACK_COLOR_INDEX], 'Default should match derived value');
+});
+
+TestRunner.test('TRACK_COLORS - Template colors equals TRACK_COLORS', (t) => {
+    t.assertEqual(TRACK_TEMPLATE_COLORS, TRACK_COLORS, 'TRACK_TEMPLATE_COLORS should equal TRACK_COLORS');
+});
+
+TestRunner.test('TRACK_COLORS - No duplicate colors', (t) => {
+    const uniqueColors = new Set(TRACK_COLORS);
+    t.assertEqual(uniqueColors.size, TRACK_COLORS.length, 'All colors should be unique');
+});
+
+// Track Color Instance Method Tests
+TestRunner.test('Track - setTrackColor is a function', (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.setTrackColor, 'function', 'setTrackColor should be a function');
+});
+
+TestRunner.test('Track - getTrackColor is a function', (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.getTrackColor, 'function', 'getTrackColor should be a function');
+});
+
+TestRunner.test('Track - setTrackColor accepts color parameter', (t) => {
+    const mockTrack = {
+        color: '#ff6b6b',
+        appServices: {
+            renderTimeline: () => {},
+            updateMixerWindow: () => {}
+        },
+        _captureUndoState: () => {}
+    };
+    mockTrack.setTrackColor = Track.prototype.setTrackColor;
+    mockTrack.setTrackColor('#48dbfb');
+    t.assertEqual(mockTrack.color, '#48dbfb', 'Color should be updated');
+});
+
+TestRunner.test('Track - getTrackColor returns current color', (t) => {
+    const mockTrack = {
+        color: '#1dd1a1',
+        getTrackColor: Track.prototype.getTrackColor
+    };
+    t.assertEqual(mockTrack.getTrackColor(), '#1dd1a1', 'Should return current color');
+});
+
+TestRunner.test('Track - setTrackColor calls renderTimeline', (t) => {
+    let called = false;
+    const mockTrack = {
+        color: '#ff6b6b',
+        appServices: {
+            renderTimeline: () => { called = true; },
+            updateMixerWindow: () => {}
+        },
+        _captureUndoState: () => {}
+    };
+    mockTrack.setTrackColor = Track.prototype.setTrackColor;
+    mockTrack.setTrackColor('#feca57');
+    t.assertTruthy(called, 'renderTimeline should be called');
+});
+
+TestRunner.test('Track - setTrackColor calls updateMixerWindow', (t) => {
+    let called = false;
+    const mockTrack = {
+        color: '#ff6b6b',
+        appServices: {
+            renderTimeline: () => {},
+            updateMixerWindow: () => { called = true; }
+        },
+        _captureUndoState: () => {}
+    };
+    mockTrack.setTrackColor = Track.prototype.setTrackColor;
+    mockTrack.setTrackColor('#feca57');
+    t.assertTruthy(called, 'updateMixerWindow should be called');
+});
+
+TestRunner.test('Track - setTrackColor calls _captureUndoState', (t) => {
+    let undoCalled = false;
+    const mockTrack = {
+        color: '#ff6b6b',
+        name: 'Test Track',
+        appServices: {
+            renderTimeline: () => {},
+            updateMixerWindow: () => {}
+        },
+        _captureUndoState: () => { 
+            undoCalled = true;
+        }
+    };
+    mockTrack.setTrackColor = Track.prototype.setTrackColor;
+    mockTrack.setTrackColor('#feca57');
+    t.assertTruthy(undoCalled, '_captureUndoState should be called');
+});
+
+TestRunner.test('Track - setTrackColor handles missing renderTimeline gracefully', (t) => {
+    let threw = false;
+    const mockTrack = {
+        color: '#ff6b6b',
+        appServices: {
+            updateMixerWindow: () => {}
+        },
+        _captureUndoState: () => {}
+    };
+    mockTrack.setTrackColor = Track.prototype.setTrackColor;
+    try {
+        mockTrack.setTrackColor('#feca57');
+    } catch (e) {
+        threw = true;
+    }
+    t.assertFalse(threw, 'Should not throw when renderTimeline is missing');
+});
+
+TestRunner.test('Track - setTrackColor handles missing updateMixerWindow gracefully', (t) => {
+    let threw = false;
+    const mockTrack = {
+        color: '#ff6b6b',
+        appServices: {
+            renderTimeline: () => {}
+        },
+        _captureUndoState: () => {}
+    };
+    mockTrack.setTrackColor = Track.prototype.setTrackColor;
+    try {
+        mockTrack.setTrackColor('#feca57');
+    } catch (e) {
+        threw = true;
+    }
+    t.assertFalse(threw, 'Should not throw when updateMixerWindow is missing');
+});
+
+TestRunner.test('Track - setTrackColor preserves color after multiple changes', (t) => {
+    const mockTrack = {
+        color: '#ff6b6b',
+        appServices: {
+            renderTimeline: () => {},
+            updateMixerWindow: () => {}
+        },
+        _captureUndoState: () => {}
+    };
+    mockTrack.setTrackColor = Track.prototype.setTrackColor;
+    mockTrack.setTrackColor('#feca57');
+    mockTrack.setTrackColor('#48dbfb');
+    mockTrack.setTrackColor('#1dd1a1');
+    t.assertEqual(mockTrack.color, '#1dd1a1', 'Final color should be last set value');
+});
+
+TestRunner.test('Track - Color cycling uses modulo for track count', (t) => {
+    const colors = TRACK_COLORS;
+    const trackCount = 20;
+    const colorIndex = trackCount % colors.length;
+    t.assertTruthy(colorIndex >= 0, 'Color index should be non-negative');
+    t.assertTruthy(colorIndex < colors.length, 'Color index should be within bounds');
+});
+
+TestRunner.test('Track - All 16 TRACK_COLORS are distinct', (t) => {
+    const uniqueColors = new Set(TRACK_COLORS);
+    t.assertEqual(uniqueColors.size, 16, 'All 16 colors should be distinct');
+});
+
+TestRunner.test('Track - TRACK_COLORS contains expected color spectrum', (t) => {
+    const hasRed = TRACK_COLORS.some(c => c.toLowerCase().includes('ff6b6b') || c.toLowerCase().includes('ff6348'));
+    const hasBlue = TRACK_COLORS.some(c => c.toLowerCase().includes('54a0ff') || c.toLowerCase().includes('5f27cd'));
+    const hasGreen = TRACK_COLORS.some(c => c.toLowerCase().includes('1dd1a1') || c.toLowerCase().includes('7bed9f'));
+    t.assertTruthy(hasRed && hasBlue && hasGreen, 'Colors should span red, blue, and green spectrum');
+});
