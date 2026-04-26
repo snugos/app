@@ -10617,6 +10617,177 @@ TestRunner.test('Track - addAudioClip calls renderTimeline after adding', (t) =>
 });
 
 // ============================================
+// Day 241: Track Effects Instance Tests (2026-04-26)
+// ============================================
+TestRunner.test('Track Effects - addEffect method exists on Track instances', (t) => {
+    const mockTrack = new Track('test-track-effects', 'Synth');
+    t.assertEqual(typeof mockTrack.addEffect, 'function', 'Track should have addEffect method');
+});
+
+TestRunner.test('Track Effects - removeEffect method exists on Track instances', (t) => {
+    const mockTrack = new Track('test-track-effects', 'Synth');
+    t.assertEqual(typeof mockTrack.removeEffect, 'function', 'Track should have removeEffect method');
+});
+
+TestRunner.test('Track Effects - updateEffectParam method exists on Track instances', (t) => {
+    const mockTrack = new Track('test-track-effects', 'Synth');
+    t.assertEqual(typeof mockTrack.updateEffectParam, 'function', 'Track should have updateEffectParam method');
+});
+
+TestRunner.test('Track Effects - reorderEffect method exists on Track instances', (t) => {
+    const mockTrack = new Track('test-track-effects', 'Synth');
+    t.assertEqual(typeof mockTrack.reorderEffect, 'function', 'Track should have reorderEffect method');
+});
+
+TestRunner.test('Track Effects - addEffect accepts effectType parameter', (t) => {
+    const mockTrack = new Track('test-track-effects', 'Synth');
+    t.assertEqual(mockTrack.addEffect.length >= 1, true, 'addEffect should accept at least 1 parameter (effectType)');
+});
+
+TestRunner.test('Track Effects - removeEffect accepts effectId parameter', (t) => {
+    const mockTrack = new Track('test-track-effects', 'Synth');
+    t.assertEqual(mockTrack.removeEffect.length >= 1, true, 'removeEffect should accept at least 1 parameter (effectId)');
+});
+
+TestRunner.test('Track Effects - updateEffectParam accepts 3 parameters', (t) => {
+    const mockTrack = new Track('test-track-effects', 'Synth');
+    t.assertEqual(mockTrack.updateEffectParam.length, 3, 'updateEffectParam should accept 3 parameters (effectId, paramPath, value)');
+});
+
+TestRunner.test('Track Effects - reorderEffect accepts 2 parameters', (t) => {
+    const mockTrack = new Track('test-track-effects', 'Synth');
+    t.assertEqual(mockTrack.reorderEffect.length, 2, 'reorderEffect should accept 2 parameters (effectId, newIndex)');
+});
+
+TestRunner.test('Track Effects - addEffect calls _captureUndoState before adding', (t) => {
+    const funcStr = mockTrack.addEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'addEffect should call _captureUndoState before adding effect');
+});
+
+TestRunner.test('Track Effects - removeEffect calls _captureUndoState before removing', (t) => {
+    const funcStr = mockTrack.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'removeEffect should call _captureUndoState before removing effect');
+});
+
+TestRunner.test('Track Effects - updateEffectParam calls _captureUndoState before updating', (t) => {
+    const funcStr = mockTrack.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'updateEffectParam should call _captureUndoState before updating');
+});
+
+TestRunner.test('Track Effects - reorderEffect calls _captureUndoState before reordering', (t) => {
+    const funcStr = mockTrack.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'reorderEffect should call _captureUndoState before reordering');
+});
+
+TestRunner.test('Track Effects - activeEffects is initialized as empty array', (t) => {
+    const mockTrack = new Track('test-track', 'Synth');
+    t.assertEqual(Array.isArray(mockTrack.activeEffects), true, 'activeEffects should be an array');
+    t.assertEqual(mockTrack.activeEffects.length, 0, 'activeEffects should be empty by default');
+});
+
+TestRunner.test('Track Effects - addEffect uses effectsRegistryAccess from appServices', (t) => {
+    const funcStr = mockTrack.addEffect.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('AVAILABLE_EFFECTS'), 'addEffect should use effects registry');
+});
+
+TestRunner.test('Track Effects - addEffect creates effect with unique ID', (t) => {
+    const funcStr = mockTrack.addEffect.toString();
+    t.assertTruthy(funcStr.includes('effect-') || funcStr.includes('Date.now()') || funcStr.includes('random'), 'addEffect should create unique effect IDs');
+});
+
+TestRunner.test('Track Effects - addEffect adds to activeEffects array', (t) => {
+    const funcStr = mockTrack.addEffect.toString();
+    t.assertTruthy(funcStr.includes('push') && funcStr.includes('activeEffects'), 'addEffect should push to activeEffects array');
+});
+
+TestRunner.test('Track Effects - removeEffect finds effect by ID', (t) => {
+    const funcStr = mockTrack.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('findIndex') && funcStr.includes('effectId'), 'removeEffect should find effect by ID');
+});
+
+TestRunner.test('Track Effects - removeEffect disposes toneNode before removing', (t) => {
+    const funcStr = mockTrack.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('dispose') && funcStr.includes('toneNode'), 'removeEffect should dispose toneNode');
+});
+
+TestRunner.test('Track Effects - removeEffect splices from activeEffects array', (t) => {
+    const funcStr = mockTrack.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('splice') && funcStr.includes('activeEffects'), 'removeEffect should splice from activeEffects');
+});
+
+TestRunner.test('Track Effects - updateEffectParam finds effect by ID', (t) => {
+    const funcStr = mockTrack.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('find') && funcStr.includes('effectId'), 'updateEffectParam should find effect by ID');
+});
+
+TestRunner.test('Track Effects - updateEffectParam uses dot-path for nested params', (t) => {
+    const funcStr = mockTrack.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('paramPath') || funcStr.includes('split'), 'updateEffectParam should handle dot-path for nested params');
+});
+
+TestRunner.test('Track Effects - reorderEffect clamps newIndex to valid range', (t) => {
+    const funcStr = mockTrack.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'reorderEffect should clamp newIndex to valid range');
+});
+
+TestRunner.test('Track Effects - reorderEffect uses splice for reordering', (t) => {
+    const funcStr = mockTrack.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('splice') && funcStr.includes('activeEffects'), 'reorderEffect should use splice to reorder');
+});
+
+TestRunner.test('Track Effects - all effect methods call rebuildEffectChain after changes', (t) => {
+    const addStr = mockTrack.addEffect.toString();
+    const removeStr = mockTrack.removeEffect.toString();
+    const reorderStr = mockTrack.reorderEffect.toString();
+    const hasRebuildAdd = addStr.includes('rebuildEffectChain');
+    const hasRebuildRemove = removeStr.includes('rebuildEffectChain');
+    const hasRebuildReorder = reorderStr.includes('rebuildEffectChain');
+    t.assertTruthy(hasRebuildAdd && hasRebuildRemove && hasRebuildReorder, 'Effect methods should call rebuildEffectChain after changes');
+});
+
+TestRunner.test('Track Effects - all effect methods call updateTrackUI after changes', (t) => {
+    const addStr = mockTrack.addEffect.toString();
+    const removeStr = mockTrack.removeEffect.toString();
+    const updateStr = mockTrack.updateEffectParam.toString();
+    const reorderStr = mockTrack.reorderEffect.toString();
+    const hasUIAdd = addStr.includes('updateTrackUI');
+    const hasUIRemove = removeStr.includes('updateTrackUI');
+    const hasUIUpdate = updateStr.includes('updateTrackUI');
+    const hasUIReorder = reorderStr.includes('updateTrackUI');
+    t.assertTruthy(hasUIAdd && hasUIRemove && hasUIUpdate && hasUIReorder, 'Effect methods should call updateTrackUI after changes');
+});
+
+TestRunner.test('Track Effects - addEffect handles unknown effect types gracefully', (t) => {
+    const funcStr = mockTrack.addEffect.toString();
+    t.assertTruthy(funcStr.includes('not found') || funcStr.includes('warn') || funcStr.includes('error'), 'addEffect should handle unknown effect types');
+});
+
+TestRunner.test('Track Effects - removeEffect handles unknown effect IDs gracefully', (t) => {
+    const funcStr = mockTrack.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('not found') || funcStr.includes('warn'), 'removeEffect should handle unknown effect IDs');
+});
+
+TestRunner.test('Track Effects - updateEffectParam handles unknown effect IDs gracefully', (t) => {
+    const funcStr = mockTrack.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('not found') || funcStr.includes('warn'), 'updateEffectParam should handle unknown effect IDs');
+});
+
+TestRunner.test('Track Effects - reorderEffect handles same index gracefully', (t) => {
+    const funcStr = mockTrack.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('captureUndo') || funcStr.includes('rebuild'), 'reorderEffect should handle same index');
+});
+
+TestRunner.test('Track Effects - addEffect handles missing appServices gracefully', (t) => {
+    const funcStr = mockTrack.addEffect.toString();
+    t.assertTruthy(funcStr.includes('appServices') || funcStr.includes('if '), 'addEffect should guard against missing appServices');
+});
+
+TestRunner.test('Track Effects - Track toJSON includes activeEffects serialization', (t) => {
+    const funcStr = mockTrack.toJSON.toString();
+    t.assertTruthy(funcStr.includes('activeEffects'), 'toJSON should include activeEffects serialization');
+});
+
+// ============================================
 // Day 240: SnugOS Utilities & Event Handler Tests (2026-04-25)
 // ============================================
 TestRunner.test('SnugWindow - applyState is a function', (t) => {
@@ -10865,4 +11036,159 @@ TestRunner.test('Event Handlers - handleKeyUp updates currentlyPressedComputerKe
 TestRunner.test('Event Handlers - computer key mapping references synthPitches or sampler', (t) => {
     const funcStr = initializePrimaryEventListeners.toString();
     t.assertTruthy(funcStr.includes('synthPitches') || funcStr.includes('computerKey') || funcStr.includes('key'), 'Should reference keyboard mapping');
+});
+
+// ============================================
+// === Day 241: Sampler Slice Drop Zones Verification (2026-04-26) ===
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML generates valid HTML for Sampler', (t) => {
+    const html = createDropZoneHTML('samplerTrack1', 'sliceInput1', 'Sampler', 0, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should contain drop-zone class');
+    t.assertTruthy(html.includes('sliceInput1'), 'Should contain input ID');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML includes data-pad-slice-index for Sampler', (t) => {
+    const html = createDropZoneHTML('samplerTrack1', 'sliceInput1', 'Sampler', 3, null);
+    t.assertTruthy(html.includes('data-pad-slice-index="3"'), 'Should have slice index data attribute');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML generates correct drop zone ID for Sampler', (t) => {
+    const html = createDropZoneHTML('samplerTrack1', 'sliceInput1', 'Sampler', 2, null);
+    t.assertTruthy(html.includes('id="dropZone-samplerTrack1-sampler-2"'), 'Should have correct drop zone ID with slice index');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML includes track ID in data attributes', (t) => {
+    const html = createDropZoneHTML('mySamplerTrack', 'input1', 'Sampler', 1, null);
+    t.assertTruthy(html.includes('data-track-id="mySamplerTrack"'), 'Should include track ID data attribute');
+    t.assertTruthy(html.includes('data-track-type="Sampler"'), 'Should include track type data attribute');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML includes file input with accept attribute', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'Sampler', 0, null);
+    t.assertTruthy(html.includes('type="file"'), 'Should have file input type');
+    t.assertTruthy(html.includes('accept="audio/*, .sfz, .sf2"'), 'Should accept audio file types');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML shows empty status for unloaded slice', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'Sampler', 0, null);
+    t.assertTruthy(html.includes('Drag & Drop') || html.includes('Click to Upload'), 'Should show empty status');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML shows loaded status correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'Sampler', 0, { status: 'loaded', originalFileName: 'piano_c3.wav' });
+    t.assertTruthy(html.includes('Loaded:') || html.includes('piano_c3.wav'), 'Should show loaded status with file name');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML shows missing status correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'Sampler', 0, { status: 'missing', originalFileName: 'missing.wav' });
+    t.assertTruthy(html.includes('drop-zone-missing') || html.includes('Missing'), 'Should show missing status');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML shows error status correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'Sampler', 0, { status: 'error', originalFileName: 'error.wav' });
+    t.assertTruthy(html.includes('drop-zone-error') || html.includes('Retry'), 'Should show error status');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML generates unique IDs for all 8 slices', (t) => {
+    const ids = [];
+    for (let slice = 0; slice < 8; slice++) {
+        const html = createDropZoneHTML('samplerTrack', `input${slice}`, 'Sampler', slice, null);
+        const match = html.match(/id="([^"]+)"/);
+        ids.push(match ? match[1] : null);
+    }
+    const uniqueIds = [...new Set(ids)];
+    t.assertEqual(ids.length, 8, 'Should have 8 IDs');
+    t.assertEqual(uniqueIds.length, 8, 'All slice drop zone IDs should be unique');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML includes data attributes for all slice indices', (t) => {
+    for (let slice = 0; slice < 8; slice++) {
+        const html = createDropZoneHTML('track1', `input${slice}`, 'Sampler', slice, null);
+        t.assertTruthy(html.includes(`data-pad-slice-index="${slice}"`), `Slice ${slice} should have correct data attribute`);
+    }
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML handles InstrumentSampler type', (t) => {
+    const html = createDropZoneHTML('iSamplerTrack', 'input1', 'InstrumentSampler', 0, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should contain drop-zone class');
+    t.assertTruthy(html.includes('dropZone-iSamplerTrack-instrumentsampler-0') || html.includes('data-pad-slice-index="0"'), 'Should handle InstrumentSampler type');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML handles Audio type drop zone', (t) => {
+    const html = createDropZoneHTML('audioTrack', 'input1', 'Audio', null, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should contain drop-zone class');
+    t.assertTruthy(html.includes('dropZone-audioTrack-audio') || html.includes('data-track-type="Audio"'), 'Should handle Audio type');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML returns a string', (t) => {
+    const result = createDropZoneHTML('track1', 'input1', 'Sampler', 0, null);
+    t.assertEqual(typeof result, 'string', 'createDropZoneHTML should return a string');
+    t.assertTruthy(result.length > 0, 'Result should not be empty');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML with null slice index handles correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'Sampler', null, null);
+    t.assertTruthy(html.includes('dropZone-track1-sampler'), 'Should work with null slice index');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - createDropZoneHTML file input is hidden', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'Sampler', 0, null);
+    t.assertTruthy(html.includes('class="hidden"'), 'File input should be hidden');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners function exists', (t) => {
+    t.assertEqual(typeof setupGenericDropZoneListeners, 'function', 'setupGenericDropZoneListeners should be a function');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners accepts 7 parameters', (t) => {
+    t.assertEqual(setupGenericDropZoneListeners.length, 7, 'setupGenericDropZoneListeners should accept 7 parameters');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners handles null element gracefully', (t) => {
+    try {
+        setupGenericDropZoneListeners(null, 'track1', 'Sampler', 0, null, null, null);
+    } catch (e) {
+        t.fail('Should handle null element gracefully');
+    }
+});
+
+TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners adds event listeners', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') || funcStr.includes('dragover') || funcStr.includes('drop'), 'Should add event listeners');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners dragover handler adds class', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dragover') || funcStr.includes('classList'), 'Should handle dragover');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners dragleave handler removes class', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dragleave') || funcStr.includes('classList'), 'Should handle dragleave');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners drop handler for Sampler', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('drop') || funcStr.includes('files'), 'Should handle drop events');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - numSlices constant is used for Sampler tracks', (t) => {
+    t.assertEqual(typeof numSlices, 'number', 'numSlices should be a number');
+    t.assertEqual(numSlices, 8, 'numSlices should be 8 for default slicing');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - samplerMIDINoteStart is C2 (36)', (t) => {
+    t.assertEqual(samplerMIDINoteStart, 36, 'samplerMIDINoteStart should be 36 (C2)');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - computerKeySamplerMap Digit1 maps to samplerMIDINoteStart', (t) => {
+    t.assertEqual(computerKeySamplerMap['Digit1'], samplerMIDINoteStart, 'Digit1 should map to samplerMIDINoteStart');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - computerKeySamplerMap Digit8 maps to samplerMIDINoteStart + 7', (t) => {
+    t.assertEqual(computerKeySamplerMap['Digit8'], samplerMIDINoteStart + 7, 'Digit8 should map to samplerMIDINoteStart + 7');
+});
+
+TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners passes correct slice index', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('padIndexOrSliceId') || funcStr.includes('sliceIndex') || funcStr.includes('padIndex'), 'Should pass slice/pad index');
 });

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.23.0'; // Day 240: SnugWindow & Utils Tests
+export const APP_VERSION = '1.24.0'; // Day 241: Track Effects Instance Tests // Day 240: SnugWindow & Utils Tests
 
 
 // Performance Monitor Constants
