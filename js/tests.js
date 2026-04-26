@@ -13868,3 +13868,106 @@ TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is at least 16', (t) => {
 TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is less than MAX', (t) => {
     t.assertTruthy(MIDI_IMPORT_DEFAULT_VELOCITY < MIDI_IMPORT_MAX_VELOCITY, 'Default should be less than max');
 });
+
+// Day 264: Comprehensive Performance Monitor Constants Tests (2026-04-26)
+// =====================================================================
+TestRunner.test('Performance Monitor - PERFORMANCE_MONITOR_ENABLED defaults to true', (t) => {
+    t.assertEqual(PERFORMANCE_MONITOR_ENABLED, true, 'Performance monitor should be enabled by default');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_MONITOR_ENABLED is boolean', (t) => {
+    t.assertEqual(typeof PERFORMANCE_MONITOR_ENABLED, 'boolean', 'Enabled flag should be boolean');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_UPDATE_INTERVAL_MS is 500', (t) => {
+    t.assertEqual(PERFORMANCE_UPDATE_INTERVAL_MS, 500, 'Update interval should be 500ms');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_UPDATE_INTERVAL_MS is positive', (t) => {
+    t.assertTruthy(PERFORMANCE_UPDATE_INTERVAL_MS > 0, 'Update interval should be positive');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_UPDATE_INTERVAL_MS is reasonable (>=100)', (t) => {
+    t.assertTruthy(PERFORMANCE_UPDATE_INTERVAL_MS >= 100, 'Update interval should be at least 100ms');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_CONTEXT_STATE_OK is running', (t) => {
+    t.assertEqual(PERFORMANCE_CONTEXT_STATE_OK, 'running', 'Context state OK should be running');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_CONTEXT_STATE_SUSPENDED is suspended', (t) => {
+    t.assertEqual(PERFORMANCE_CONTEXT_STATE_SUSPENDED, 'suspended', 'Context state suspended should be suspended');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_CONTEXT_STATE_CLOSED is closed', (t) => {
+    t.assertEqual(PERFORMANCE_CONTEXT_STATE_CLOSED, 'closed', 'Context state closed should be closed');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_CONTEXT_STATE values are all different', (t) => {
+    t.assertTruthy(PERFORMANCE_CONTEXT_STATE_OK !== PERFORMANCE_CONTEXT_STATE_SUSPENDED, 'OK and suspended should differ');
+    t.assertTruthy(PERFORMANCE_CONTEXT_STATE_OK !== PERFORMANCE_CONTEXT_STATE_CLOSED, 'OK and closed should differ');
+    t.assertTruthy(PERFORMANCE_CONTEXT_STATE_SUSPENDED !== PERFORMANCE_CONTEXT_STATE_CLOSED, 'Suspended and closed should differ');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS is 4', (t) => {
+    t.assertEqual(PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS, 4, 'Buffer size steps should be 4');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS is positive', (t) => {
+    t.assertTruthy(PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS > 0, 'Buffer size steps should be positive');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_DEFAULT_LATENCY_HINT is interactive', (t) => {
+    t.assertEqual(PERFORMANCE_DEFAULT_LATENCY_HINT, 'interactive', 'Default latency hint should be interactive');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_DEFAULT_LATENCY_HINT is valid Tone.js hint', (t) => {
+    t.assertTruthy(['interactive', 'balanced', 'fastest'].includes(PERFORMANCE_DEFAULT_LATENCY_HINT), 'Latency hint should be valid Tone.js hint');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_MEMORY_PRESSURE_NONE is none', (t) => {
+    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_NONE, 'none', 'Memory pressure none should be none');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_MEMORY_PRESSURE_LOW is low', (t) => {
+    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_LOW, 'low', 'Memory pressure low should be low');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_MEMORY_PRESSURE_MEDIUM is medium', (t) => {
+    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_MEDIUM, 'medium', 'Memory pressure medium should be medium');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_MEMORY_PRESSURE_HIGH is high', (t) => {
+    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_HIGH, 'high', 'Memory pressure high should be high');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_MEMORY_PRESSURE values are all distinct', (t) => {
+    t.assertTruthy(PERFORMANCE_MEMORY_PRESSURE_NONE !== PERFORMANCE_MEMORY_PRESSURE_LOW, 'None and low should differ');
+    t.assertTruthy(PERFORMANCE_MEMORY_PRESSURE_NONE !== PERFORMANCE_MEMORY_PRESSURE_MEDIUM, 'None and medium should differ');
+    t.assertTruthy(PERFORMANCE_MEMORY_PRESSURE_NONE !== PERFORMANCE_MEMORY_PRESSURE_HIGH, 'None and high should differ');
+    t.assertTruthy(PERFORMANCE_MEMORY_PRESSURE_LOW !== PERFORMANCE_MEMORY_PRESSURE_MEDIUM, 'Low and medium should differ');
+    t.assertTruthy(PERFORMANCE_MEMORY_PRESSURE_LOW !== PERFORMANCE_MEMORY_PRESSURE_HIGH, 'Low and high should differ');
+    t.assertTruthy(PERFORMANCE_MEMORY_PRESSURE_MEDIUM !== PERFORMANCE_MEMORY_PRESSURE_HIGH, 'Medium and high should differ');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_WARNING_THRESHOLD_MS is 50', (t) => {
+    t.assertEqual(PERFORMANCE_WARNING_THRESHOLD_MS, 50, 'Warning threshold should be 50ms');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_WARNING_THRESHOLD_MS is positive', (t) => {
+    t.assertTruthy(PERFORMANCE_WARNING_THRESHOLD_MS > 0, 'Warning threshold should be positive');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_WARNING_THRESHOLD_MS is reasonable (<=500)', (t) => {
+    t.assertTruthy(PERFORMANCE_WARNING_THRESHOLD_MS <= 500, 'Warning threshold should be reasonable');
+});
+
+TestRunner.test('Performance Monitor - All PERFORMANCE_ constants are defined', (t) => {
+    t.assertTruthy(typeof PERFORMANCE_MONITOR_ENABLED !== 'undefined', 'PERFORMANCE_MONITOR_ENABLED should be defined');
+    t.assertTruthy(typeof PERFORMANCE_UPDATE_INTERVAL_MS !== 'undefined', 'PERFORMANCE_UPDATE_INTERVAL_MS should be defined');
+    t.assertTruthy(typeof PERFORMANCE_CONTEXT_STATE_OK !== 'undefined', 'PERFORMANCE_CONTEXT_STATE_OK should be defined');
+    t.assertTruthy(typeof PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS !== 'undefined', 'PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS should be defined');
+    t.assertTruthy(typeof PERFORMANCE_DEFAULT_LATENCY_HINT !== 'undefined', 'PERFORMANCE_DEFAULT_LATENCY_HINT should be defined');
+    t.assertTruthy(typeof PERFORMANCE_MEMORY_PRESSURE_NONE !== 'undefined', 'PERFORMANCE_MEMORY_PRESSURE_NONE should be defined');
+    t.assertTruthy(typeof PERFORMANCE_WARNING_THRESHOLD_MS !== 'undefined', 'PERFORMANCE_WARNING_THRESHOLD_MS should be defined');
+});
