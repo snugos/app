@@ -139,6 +139,7 @@ import {
     // Undo/Redo
     undoLastActionInternal,
     redoLastActionInternal,
+    captureStateForUndoInternal,
 } from './state.js';
 
 // --- App Services Object ---
@@ -170,6 +171,7 @@ const appServices = {
     // Undo/Redo
     undoLastAction: undoLastActionInternal,
     redoLastAction: redoLastActionInternal,
+    captureStateForUndo: captureStateForUndoInternal,
 
     getAudioBlobFromSoundBrowserItem: async (soundData) => {
         if (!soundData || !soundData.libraryName || !soundData.fullPath) {
@@ -385,7 +387,7 @@ const appServices = {
     reorderMasterEffect: (effectId, newIndex) => {
         try {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -409,8 +411,8 @@ const appServices = {
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
     updateMidiLearnMappingsList: null, // Will be set by attachGlobalControlEvents
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
-    _isReconstructingDAW_flag: false,
+    getIsReconstructingDAW: () => appServices._isReconstructingingDAW_flag === true, 
+    _isReconstructingingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
