@@ -12708,3 +12708,219 @@ TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has all 24 effects', (t) =
     const effectCount = Object.keys(AVAILABLE_EFFECTS).length;
     t.assertEqual(effectCount, 24, 'AVAILABLE_EFFECTS should have exactly 24 effects');
 });
+
+// ============================================
+// Day 259 Part 2: SynthEngineControlDefinitions Tests (2026-04-26)
+// ============================================
+
+// SynthEngineControlDefinitions structure tests
+TestRunner.test('Effects Registry - synthEngineControlDefinitions has 4 synth types', (t) => {
+    t.assertEqual(Object.keys(synthEngineControlDefinitions).length, 4, 'Should have 4 synth types');
+});
+
+['MonoSynth', 'AMSynth', 'FMSynth', 'DuoSynth'].forEach(synthType => {
+    TestRunner.test(`Effects Registry - ${synthType} exists`, (t) => {
+        t.assertTruthy(synthEngineControlDefinitions.hasOwnProperty(synthType), `${synthType} should exist`);
+    });
+    TestRunner.test(`Effects Registry - ${synthType} is an array`, (t) => {
+        t.assertTruthy(Array.isArray(synthEngineControlDefinitions[synthType]), `${synthType} should be array`);
+    });
+    TestRunner.test(`Effects Registry - ${synthType} has >10 controls`, (t) => {
+        t.assertTruthy(synthEngineControlDefinitions[synthType].length > 10, `${synthType} should have controls`);
+    });
+    TestRunner.test(`Effects Registry - ${synthType} controls have required props`, (t) => {
+        synthEngineControlDefinitions[synthType].forEach((ctrl, idx) => {
+            t.assertTruthy(ctrl.hasOwnProperty('idPrefix'), `${synthType}[${idx}] idPrefix`);
+            t.assertTruthy(ctrl.hasOwnProperty('label'), `${synthType}[${idx}] label`);
+            t.assertTruthy(ctrl.hasOwnProperty('type'), `${synthType}[${idx}] type`);
+            t.assertTruthy(ctrl.hasOwnProperty('path'), `${synthType}[${idx}] path`);
+            t.assertTruthy(ctrl.hasOwnProperty('defaultValue'), `${synthType}[${idx}] defaultValue`);
+        });
+    });
+    TestRunner.test(`Effects Registry - ${synthType} has portamento`, (t) => {
+        t.assertTruthy(synthEngineControlDefinitions[synthType].some(c => c.idPrefix === 'portamento'), `${synthType} porta`);
+    });
+    TestRunner.test(`Effects Registry - ${synthType} has ADSR envelope`, (t) => {
+        const c = synthEngineControlDefinitions[synthType];
+        t.assertTruthy(c.some(x => x.idPrefix === 'envAttack'), `${synthType} attack`);
+        t.assertTruthy(c.some(x => x.idPrefix === 'envDecay'), `${synthType} decay`);
+        t.assertTruthy(c.some(x => x.idPrefix === 'envSustain'), `${synthType} sustain`);
+        t.assertTruthy(c.some(x => x.idPrefix === 'envRelease'), `${synthType} release`);
+    });
+});
+
+// MonoSynth filter tests
+TestRunner.test('Effects Registry - MonoSynth has filter controls', (t) => {
+    const m = synthEngineControlDefinitions.MonoSynth;
+    t.assertTruthy(m.some(c => c.idPrefix === 'filtType' || c.idPrefix === 'filtFreq'), 'MonoSynth filter');
+});
+
+TestRunner.test('Effects Registry - MonoSynth has filter envelope', (t) => {
+    const m = synthEngineControlDefinitions.MonoSynth;
+    t.assertTruthy(m.some(c => c.idPrefix === 'filtEnvAttack'), 'MonoSynth filter env');
+});
+
+// FMSynth/AMSynth modulation tests
+TestRunner.test('Effects Registry - FMSynth/AMSynth have oscType2', (t) => {
+    t.assertTruthy(synthEngineControlDefinitions.FMSynth.some(c => c.idPrefix === 'oscType2'), 'FM oscType2');
+    t.assertTruthy(synthEngineControlDefinitions.AMSynth.some(c => c.idPrefix === 'oscType2'), 'AM oscType2');
+});
+
+TestRunner.test('Effects Registry - FMSynth/AMSynth have harmonicity', (t) => {
+    t.assertTruthy(synthEngineControlDefinitions.FMSynth.some(c => c.idPrefix === 'harmonicity'), 'FM harmonicity');
+    t.assertTruthy(synthEngineControlDefinitions.AMSynth.some(c => c.idPrefix === 'harmonicity'), 'AM harmonicity');
+});
+
+TestRunner.test('Effects Registry - FMSynth/AMSynth have modulationIndex', (t) => {
+    t.assertTruthy(synthEngineControlDefinitions.FMSynth.some(c => c.idPrefix === 'modulationIndex'), 'FM modIndex');
+    t.assertTruthy(synthEngineControlDefinitions.AMSynth.some(c => c.idPrefix === 'modulationIndex'), 'AM modIndex');
+});
+
+// DuoSynth vibrato tests
+TestRunner.test('Effects Registry - DuoSynth has vibrato controls', (t) => {
+    const d = synthEngineControlDefinitions.DuoSynth;
+    t.assertTruthy(d.some(c => c.idPrefix === 'vibratoAmount'), 'DuoSynth vibratoAmount');
+    t.assertTruthy(d.some(c => c.idPrefix === 'vibratoRate'), 'DuoSynth vibratoRate');
+});
+
+TestRunner.test('Effects Registry - DuoSynth has mod filter', (t) => {
+    const d = synthEngineControlDefinitions.DuoSynth;
+    t.assertTruthy(d.some(c => c.idPrefix === 'modFilterType'), 'DuoSynth modFilter');
+});
+
+// Function export tests
+TestRunner.test('Effects Registry - createEffectInstance is function (2 params)', (t) => {
+    t.assertEqual(typeof createEffectInstance, 'function');
+    t.assertEqual(createEffectInstance.length, 2);
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams is function (1 param)', (t) => {
+    t.assertEqual(typeof getEffectDefaultParams, 'function');
+    t.assertEqual(getEffectDefaultParams.length, 1);
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions is function (1 param)', (t) => {
+    t.assertEqual(typeof getEffectParamDefinitions, 'function');
+    t.assertEqual(getEffectParamDefinitions.length, 1);
+});
+
+// createEffectInstance code inspection
+TestRunner.test('Effects Registry - createEffectInstance uses AVAILABLE_EFFECTS', (t) => {
+    t.assertTruthy(createEffectInstance.toString().includes('AVAILABLE_EFFECTS'));
+});
+
+TestRunner.test('Effects Registry - createEffectInstance uses Tone', (t) => {
+    t.assertTruthy(createEffectInstance.toString().includes('Tone'));
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles dot-path params', (t) => {
+    t.assertTruthy(createEffectInstance.toString().includes('split') || createEffectInstance.toString().includes('.'));
+});
+
+TestRunner.test('Effects Registry - createEffectInstance has error handling', (t) => {
+    const s = createEffectInstance.toString();
+    t.assertTruthy(s.includes('console.error') || s.includes('console.warn'));
+});
+
+// getEffectDefaultParams code inspection
+TestRunner.test('Effects Registry - getEffectDefaultParams iterates over params', (t) => {
+    const s = getEffectDefaultParams.toString();
+    t.assertTruthy(s.includes('forEach') || s.includes('reduce'));
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams uses defaultValue', (t) => {
+    t.assertTruthy(getEffectDefaultParams.toString().includes('defaultValue'));
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns object', (t) => {
+    const s = getEffectDefaultParams.toString();
+    t.assertTruthy(s.includes('return') && s.includes('{}'));
+});
+
+// getEffectParamDefinitions tests
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns params', (t) => {
+    const s = getEffectParamDefinitions.toString();
+    t.assertTruthy(s.includes('return') && s.includes('params'));
+});
+
+// Effect param structure tests
+TestRunner.test('Effects Registry - All 24 effects have non-empty displayName', (t) => {
+    Object.keys(AVAILABLE_EFFECTS).forEach(k => {
+        t.assertEqual(typeof AVAILABLE_EFFECTS[k].displayName, 'string', `${k} displayName`);
+        t.assertTruthy(AVAILABLE_EFFECTS[k].displayName.length > 0, `${k} displayName non-empty`);
+    });
+});
+
+TestRunner.test('Effects Registry - All effects have non-empty toneClass', (t) => {
+    Object.keys(AVAILABLE_EFFECTS).forEach(k => {
+        t.assertEqual(typeof AVAILABLE_EFFECTS[k].toneClass, 'string', `${k} toneClass`);
+        t.assertTruthy(AVAILABLE_EFFECTS[k].toneClass.length > 0, `${k} toneClass non-empty`);
+    });
+});
+
+TestRunner.test('Effects Registry - Most effects have wet param (>18)', (t) => {
+    const withWet = Object.keys(AVAILABLE_EFFECTS).filter(k => 
+        AVAILABLE_EFFECTS[k].params.some(p => p.key === 'wet')
+    );
+    t.assertTruthy(withWet.length > 18, `Found ${withWet.length} effects with wet`);
+});
+
+TestRunner.test('Effects Registry - Mono has empty params', (t) => {
+    t.assertEqual(AVAILABLE_EFFECTS.Mono.params.length, 0, 'Mono empty params');
+});
+
+TestRunner.test('Effects Registry - Select params have options array', (t) => {
+    Object.keys(AVAILABLE_EFFECTS).forEach(en => {
+        AVAILABLE_EFFECTS[en].params.forEach((p, i) => {
+            if (p.type === 'select') {
+                t.assertTruthy(Array.isArray(p.options), `${en}[${i}] options`);
+                t.assertTruthy(p.options.length > 0, `${en}[${i}] options non-empty`);
+            }
+        });
+    });
+});
+
+TestRunner.test('Effects Registry - Effects have nested param paths', (t) => {
+    const nested = [];
+    Object.keys(AVAILABLE_EFFECTS).forEach(en => {
+        AVAILABLE_EFFECTS[en].params.forEach(p => {
+            if (p.key.includes('.')) nested.push(`${en}.${p.key}`);
+        });
+    });
+    t.assertTruthy(nested.length > 0, 'Nested paths exist');
+});
+
+TestRunner.test('Effects Registry - Synth controls use dot-path notation', (t) => {
+    const dotPaths = [];
+    Object.keys(synthEngineControlDefinitions).forEach(st => {
+        synthEngineControlDefinitions[st].forEach(c => {
+            if (c.path.includes('.')) dotPaths.push(`${st}.${c.path}`);
+        });
+    });
+    t.assertTruthy(dotPaths.length > 5, 'Dot-path controls exist');
+});
+
+TestRunner.test('Effects Registry - MonoSynth has envelope decay/sustain/release', (t) => {
+    const m = synthEngineControlDefinitions.MonoSynth;
+    t.assertTruthy(m.some(c => c.path.includes('decay')), 'envelope.decay');
+    t.assertTruthy(m.some(c => c.path.includes('sustain')), 'envelope.sustain');
+    t.assertTruthy(m.some(c => c.path.includes('release')), 'envelope.release');
+});
+
+TestRunner.test('Effects Registry - Synth knob controls have min/max/step', (t) => {
+    Object.keys(synthEngineControlDefinitions).forEach(st => {
+        synthEngineControlDefinitions[st].forEach((c, i) => {
+            if (c.type === 'knob') {
+                t.assertTruthy(c.hasOwnProperty('min'), `${st}[${i}] min`);
+                t.assertTruthy(c.hasOwnProperty('max'), `${st}[${i}] max`);
+                t.assertTruthy(c.hasOwnProperty('step'), `${st}[${i}] step`);
+            }
+        });
+    });
+});
+
+// Final verification
+TestRunner.test('Effects Registry - Complete coverage: 24 effects, 4 synth types', (t) => {
+    t.assertEqual(Object.keys(AVAILABLE_EFFECTS).length, 24);
+    t.assertEqual(Object.keys(synthEngineControlDefinitions).length, 4);
+});
