@@ -1,6 +1,5 @@
 export const APP_VERSION = '1.32.0'; // Day 249: Additional Track Instance Method Tests // Day 248: Mixer UI Tests // Day 247: Remaining UI Function & Mixer Tests // Day 246: InstrumentSampler & Audio Track UI Tests // Day 244: Effect Presets State Tests
 
-
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
 export const PERFORMANCE_UPDATE_INTERVAL_MS = 500; // Update every 500ms

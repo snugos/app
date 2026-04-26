@@ -29,6 +29,8 @@ import {
     getMidiLearnPendingParamState,
     getMidiLearnMappingByIndex,
     updateMidiLearnMapping,
+    removeMidiLearnMapping,
+    clearMidiLearnMappings,
     getMasterGainValueState,
     setMasterGainValueState,
     getMetronomeVolumeState,
