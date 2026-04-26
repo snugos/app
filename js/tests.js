@@ -12366,3 +12366,278 @@ TestRunner.test('Audio Metronome - setMetronomeVolume updates volume', (t) => {
     const funcStr = setMetronomeVolume.toString();
     t.assertTruthy(funcStr.includes('volume') || funcStr.includes('metronome') || funcStr.includes('gain'), 'setMetronomeVolume should update volume');
 });
+
+// ============================================
+// Day 258: appServices Main.js Function Tests (2026-04-26)
+// ============================================
+
+// Panic Stop Audio Tests
+TestRunner.test('appServices - panicStopAllAudio function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.panicStopAllAudio, 'function', 'panicStopAllAudio should be a function');
+});
+
+TestRunner.test('appServices - panicStopAllAudio accepts no parameters', (t) => {
+    t.assertEqual(window.appServices?.panicStopAllAudio?.length, 0, 'panicStopAllAudio should accept 0 parameters');
+});
+
+TestRunner.test('appServices - panicStopAllAudio references Tone.Transport', (t) => {
+    const funcStr = window.appServices?.panicStopAllAudio?.toString() || '';
+    t.assertTruthy(funcStr.includes('Transport') || funcStr.includes('Tone'), 'panicStopAllAudio should reference Tone.Transport');
+});
+
+TestRunner.test('appServices - panicStopAllAudio cancels scheduled events', (t) => {
+    const funcStr = window.appServices?.panicStopAllAudio?.toString() || '';
+    t.assertTruthy(funcStr.includes('cancel') || funcStr.includes('stop'), 'panicStopAllAudio should cancel events');
+});
+
+TestRunner.test('appServices - panicStopAllAudio iterates over tracks', (t) => {
+    const funcStr = window.appServices?.panicStopAllAudio?.toString() || '';
+    t.assertTruthy(funcStr.includes('tracks') || funcStr.includes('forEach') || funcStr.includes('track'), 'panicStopAllAudio should iterate over tracks');
+});
+
+// Taskbar UI Update Tests
+TestRunner.test('appServices - updateTaskbarTempoDisplay function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.updateTaskbarTempoDisplay, 'function', 'updateTaskbarTempoDisplay should be a function');
+});
+
+TestRunner.test('appServices - updateTaskbarTempoDisplay accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.updateTaskbarTempoDisplay?.length, 1, 'updateTaskbarTempoDisplay should accept 1 parameter (tempo)');
+});
+
+TestRunner.test('appServices - updateTaskbarTempoDisplay references BPM display', (t) => {
+    const funcStr = window.appServices?.updateTaskbarTempoDisplay?.toString() || '';
+    t.assertTruthy(funcStr.includes('BPM') || funcStr.includes('textContent') || funcStr.includes('tempo'), 'updateTaskbarTempoDisplay should update display');
+});
+
+// Undo/Redo Button Update Tests
+TestRunner.test('appServices - updateUndoRedoButtonsUI function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.updateUndoRedoButtonsUI, 'function', 'updateUndoRedoButtonsUI should be a function');
+});
+
+TestRunner.test('appServices - updateUndoRedoButtonsUI accepts 2 parameters', (t) => {
+    t.assertEqual(window.appServices?.updateUndoRedoButtonsUI?.length, 2, 'updateUndoRedoButtonsUI should accept 2 parameters (undoState, redoState)');
+});
+
+TestRunner.test('appServices - updateUndoRedoButtonsUI references undo button', (t) => {
+    const funcStr = window.appServices?.updateUndoRedoButtonsUI?.toString() || '';
+    t.assertTruthy(funcStr.includes('Undo') || funcStr.includes('menuUndo') || funcStr.includes('disabled'), 'updateUndoRedoButtonsUI should update undo button');
+});
+
+TestRunner.test('appServices - updateUndoRedoButtonsUI references redo button', (t) => {
+    const funcStr = window.appServices?.updateUndoRedoButtonsUI?.toString() || '';
+    t.assertTruthy(funcStr.includes('Redo') || funcStr.includes('menuRedo') || funcStr.includes('disabled'), 'updateUndoRedoButtonsUI should update redo button');
+});
+
+// Record Button Update Tests
+TestRunner.test('appServices - updateRecordButtonUI function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.updateRecordButtonUI, 'function', 'updateRecordButtonUI should be a function');
+});
+
+TestRunner.test('appServices - updateRecordButtonUI accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.updateRecordButtonUI?.length, 1, 'updateRecordButtonUI should accept 1 parameter (isRec)');
+});
+
+// Window Management Tests
+TestRunner.test('appServices - closeAllWindows function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.closeAllWindows, 'function', 'closeAllWindows should be a function');
+});
+
+TestRunner.test('appServices - closeAllWindows accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.closeAllWindows?.length, 1, 'closeAllWindows should accept 1 parameter (isReconstructing)');
+});
+
+TestRunner.test('appServices - clearOpenWindowsMap function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.clearOpenWindowsMap, 'function', 'clearOpenWindowsMap should be a function');
+});
+
+TestRunner.test('appServices - closeAllTrackWindows function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.closeAllTrackWindows, 'function', 'closeAllTrackWindows should be a function');
+});
+
+TestRunner.test('appServices - closeAllTrackWindows accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.closeAllTrackWindows?.length, 1, 'closeAllTrackWindows should accept 1 parameter (trackIdToClose)');
+});
+
+// Create Window Tests
+TestRunner.test('appServices - createWindow function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.createWindow, 'function', 'createWindow should be a function');
+});
+
+TestRunner.test('appServices - createWindow accepts 4 parameters', (t) => {
+    t.assertEqual(window.appServices?.createWindow?.length, 4, 'createWindow should accept 4 parameters (id, title, content, options)');
+});
+
+TestRunner.test('appServices - createWindow creates SnugWindow instance', (t) => {
+    const funcStr = window.appServices?.createWindow?.toString() || '';
+    t.assertTruthy(funcStr.includes('SnugWindow') || funcStr.includes('new '), 'createWindow should create SnugWindow instance');
+});
+
+// Track UI Update Tests
+TestRunner.test('appServices - updateTrackUI function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.updateTrackUI, 'function', 'updateTrackUI should be a function');
+});
+
+TestRunner.test('appServices - updateTrackUI accepts 3 parameters', (t) => {
+    t.assertEqual(window.appServices?.updateTrackUI?.length, 3, 'updateTrackUI should accept 3 parameters (trackId, reason, detail)');
+});
+
+// Master Effects Tests
+TestRunner.test('appServices - addMasterEffect function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.addMasterEffect, 'function', 'addMasterEffect should be a function');
+});
+
+TestRunner.test('appServices - addMasterEffect accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.addMasterEffect?.length, 1, 'addMasterEffect should accept 1 parameter (effectType)');
+});
+
+TestRunner.test('appServices - addMasterEffect is async', (t) => {
+    const funcStr = window.appServices?.addMasterEffect?.toString() || '';
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'addMasterEffect should be async');
+});
+
+TestRunner.test('appServices - addMasterEffect references undo capture', (t) => {
+    const funcStr = window.appServices?.addMasterEffect?.toString() || '';
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('undo'), 'addMasterEffect should capture undo state');
+});
+
+TestRunner.test('appServices - removeMasterEffect function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.removeMasterEffect, 'function', 'removeMasterEffect should be a function');
+});
+
+TestRunner.test('appServices - removeMasterEffect accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.removeMasterEffect?.length, 1, 'removeMasterEffect should accept 1 parameter (effectId)');
+});
+
+TestRunner.test('appServices - removeMasterEffect is async', (t) => {
+    const funcStr = window.appServices?.removeMasterEffect?.toString() || '';
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'removeMasterEffect should be async');
+});
+
+TestRunner.test('appServices - updateMasterEffectParam function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.updateMasterEffectParam, 'function', 'updateMasterEffectParam should be a function');
+});
+
+TestRunner.test('appServices - updateMasterEffectParam accepts 3 parameters', (t) => {
+    t.assertEqual(window.appServices?.updateMasterEffectParam?.length, 3, 'updateMasterEffectParam should accept 3 parameters (effectId, paramPath, value)');
+});
+
+TestRunner.test('appServices - reorderMasterEffect function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.reorderMasterEffect, 'function', 'reorderMasterEffect should be a function');
+});
+
+TestRunner.test('appServices - reorderMasterEffect accepts 2 parameters', (t) => {
+    t.assertEqual(window.appServices?.reorderMasterEffect?.length, 2, 'reorderMasterEffect should accept 2 parameters (effectId, newIndex)');
+});
+
+// Master Volume Tests
+TestRunner.test('appServices - setActualMasterVolume function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.setActualMasterVolume, 'function', 'setActualMasterVolume should be a function');
+});
+
+TestRunner.test('appServices - setActualMasterVolume accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.setActualMasterVolume?.length, 1, 'setActualMasterVolume should accept 1 parameter (volumeValue)');
+});
+
+TestRunner.test('appServices - setActualMasterVolume references gain node', (t) => {
+    const funcStr = window.appServices?.setActualMasterVolume?.toString() || '';
+    t.assertTruthy(funcStr.includes('gain') || funcStr.includes('master') || funcStr.includes('volume'), 'setActualMasterVolume should reference gain node');
+});
+
+// Track Meter UI Tests
+TestRunner.test('appServices - updateTrackMeterUI function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.updateTrackMeterUI, 'function', 'updateTrackMeterUI should be a function');
+});
+
+TestRunner.test('appServices - updateTrackMeterUI accepts 3 parameters', (t) => {
+    t.assertEqual(window.appServices?.updateTrackMeterUI?.length, 3, 'updateTrackMeterUI should accept 3 parameters (trackId, level, isClipping)');
+});
+
+// Master Effects Rack UI Tests
+TestRunner.test('appServices - updateMasterEffectsRackUI function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.updateMasterEffectsRackUI, 'function', 'updateMasterEffectsRackUI should be a function');
+});
+
+TestRunner.test('appServices - updateMasterEffectsRackUI accepts no parameters', (t) => {
+    t.assertEqual(window.appServices?.updateMasterEffectsRackUI?.length, 0, 'updateMasterEffectsRackUI should accept 0 parameters');
+});
+
+// MIDI Learn UI Tests
+TestRunner.test('appServices - updateMidiLearnMappingsUI function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.updateMidiLearnMappingsUI, 'function', 'updateMidiLearnMappingsUI should be a function');
+});
+
+TestRunner.test('appServices - updateMidiLearnMappingsUI accepts no parameters', (t) => {
+    t.assertEqual(window.appServices?.updateMidiLearnMappingsUI?.length, 0, 'updateMidiLearnMappingsUI should accept 0 parameters');
+});
+
+// Playback Mode Change Tests
+TestRunner.test('appServices - onPlaybackModeChange function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.onPlaybackModeChange, 'function', 'onPlaybackModeChange should be a function');
+});
+
+TestRunner.test('appServices - onPlaybackModeChange accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.onPlaybackModeChange?.length, 1, 'onPlaybackModeChange should accept 1 parameter (newMode)');
+});
+
+TestRunner.test('appServices - onPlaybackModeChange references UI update', (t) => {
+    const funcStr = window.appServices?.onPlaybackModeChange?.toString() || '';
+    t.assertTruthy(funcStr.includes('playbackMode') || funcStr.includes('toggle') || funcStr.includes('classList'), 'onPlaybackModeChange should update UI');
+});
+
+// Get/Set Highest Z Tests
+TestRunner.test('appServices - getHighestZ function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.getHighestZ, 'function', 'getHighestZ should be a function');
+});
+
+TestRunner.test('appServices - setHighestZ function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.setHighestZ, 'function', 'setHighestZ should be a function');
+});
+
+TestRunner.test('appServices - incrementHighestZ function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.incrementHighestZ, 'function', 'incrementHighestZ should be a function');
+});
+
+// Window Store Management Tests
+TestRunner.test('appServices - addWindowToStore function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.addWindowToStore, 'function', 'addWindowToStore should be a function');
+});
+
+TestRunner.test('appServices - removeWindowFromStore function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.removeWindowFromStore, 'function', 'removeWindowFromStore should be a function');
+});
+
+TestRunner.test('appServices - getOpenWindowElement function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.getOpenWindowElement, 'function', 'getOpenWindowElement should be a function');
+});
+
+// Get Audio Blob from Sound Browser Item Tests
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.getAudioBlobFromSoundBrowserItem, 'function', 'getAudioBlobFromSoundBrowserItem should be a function');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem accepts 1 parameter', (t) => {
+    t.assertEqual(window.appServices?.getAudioBlobFromSoundBrowserItem?.length, 1, 'getAudioBlobFromSoundBrowserItem should accept 1 parameter (soundData)');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem is async', (t) => {
+    const funcStr = window.appServices?.getAudioBlobFromSoundBrowserItem?.toString() || '';
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise') || funcStr.includes('await'), 'getAudioBlobFromSoundBrowserItem should be async');
+});
+
+TestRunner.test('appServices - getAudioBlobFromSoundBrowserItem handles zip files', (t) => {
+    const funcStr = window.appServices?.getAudioBlobFromSoundBrowserItem?.toString() || '';
+    t.assertTruthy(funcStr.includes('zip') || funcStr.includes('entry') || funcStr.includes('async'), 'getAudioBlobFromSoundBrowserItem should handle zip files');
+});
+
+// Get/Set Transport Events Initialized Tests
+TestRunner.test('appServices - getTransportEventsInitialized function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.getTransportEventsInitialized, 'function', 'getTransportEventsInitialized should be a function');
+});
+
+TestRunner.test('appServices - setTransportEventsInitialized function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.setTransportEventsInitialized, 'function', 'setTransportEventsInitialized should be a function');
+});
+
+TestRunner.test('appServices - getIsReconstructingDAW function is exported', (t) => {
+    t.assertEqual(typeof window.appServices?.getIsReconstructingDAW, 'function', 'getIsReconstructingDAW should be a function');
+});

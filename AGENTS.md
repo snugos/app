@@ -1,4 +1,42 @@
 # SnugOS AGENTS.md - Agent Memory and Improvement Log
+#### Day 258: appServices Main.js Function Tests (2026-04-26)
+- **Feature**: Added 60 new unit tests for appServices functions exported from main.js to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 60 new tests in Day 258 section:
+    - panicStopAllAudio: function export, 0 parameters, references Tone.Transport, cancels events, iterates over tracks
+    - updateTaskbarTempoDisplay: function export, 1 parameter, BPM display reference
+    - updateUndoRedoButtonsUI: function export, 2 parameters, references undo/redo buttons
+    - updateRecordButtonUI: function export, 1 parameter
+    - closeAllWindows: function export, 1 parameter (isReconstructing)
+    - clearOpenWindowsMap: function export
+    - closeAllTrackWindows: function export, 1 parameter (trackIdToClose)
+    - createWindow: function export, 4 parameters (id, title, content, options), creates SnugWindow instances
+    - updateTrackUI: function export, 3 parameters (trackId, reason, detail)
+    - addMasterEffect: async function, 1 parameter (effectType), references undo capture
+    - removeMasterEffect: async function, 1 parameter (effectId)
+    - updateMasterEffectParam: function export, 3 parameters (effectId, paramPath, value)
+    - reorderMasterEffect: function export, 2 parameters (effectId, newIndex)
+    - setActualMasterVolume: function export, 1 parameter (volumeValue), references gain node
+    - updateTrackMeterUI: function export, 3 parameters (trackId, level, isClipping)
+    - updateMasterEffectsRackUI: function export, 0 parameters
+    - updateMidiLearnMappingsUI: function export, 0 parameters
+    - onPlaybackModeChange: function export, 1 parameter (newMode), references UI update
+    - getHighestZ/setHighestZ/incrementHighestZ: function exports
+    - addWindowToStore/removeWindowFromStore/getOpenWindowElement: function exports
+    - getAudioBlobFromSoundBrowserItem: async function, 1 parameter, handles zip files
+    - getTransportEventsInitialized/setTransportEventsInitialized: function exports
+    - getIsReconstructingDAW: function export
+  - `js/constants.js`: Bumped APP_VERSION to 1.39.0
+- **Feature Details**:
+  - Tests validate appServices functions are properly exported from main.js
+  - Tests verify function parameter counts match expected APIs
+  - Tests verify async functions return Promises
+  - Tests verify undo capture for addMasterEffect
+  - Tests verify window creation and management functions
+  - Tests verify MIDI learn and playback mode change functions
+  - Total tests increased from 1901 to 1961
+- **Version**: Bumped to 1.39.0
+
 #### Day 256: Remaining Audio Module Function Tests (2026-04-26)
 - **Feature**: Added 31 new unit tests for remaining audio module functions to expand test coverage
 - **Files Modified**:
