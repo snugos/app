@@ -57,8 +57,6 @@ import {
     setAudioLatencyState,
     setLastCallbackTimeState,
     setDroppedCallbacksState,
-    setArmedTrackIdState,
-    setHighestZState,
     getSendTracksState,
     getSendTrackByIdState,
     getTrackSendsState,
@@ -66,10 +64,6 @@ import {
     addSendTrackState,
     setSendTrackMutedState,
     setTrackSendLevelState,
-    getTrackGroupsState,
-    getTrackGroupByIdState,
-    addTrackGroupState,
-    setTrackGroupNameState,
     getTimelineMarkersState,
     getTimelineMarkerByIdState,
     addTimelineMarkerState,
@@ -122,9 +116,6 @@ import {
     getSwingState,
     setSwingState,
     getSwingEnabledState,
-    setSwingEnabledState,
-    getSwingAmountState,
-    setSwingAmountState,
     // Timeline Markers cleanup functions
     clearTimelineMarkersState,
     // Track Groups state functions
@@ -155,13 +146,6 @@ import {
     setHighestZState,
     setSwingEnabledState,
     setSwingAmountState,
-    setPerformanceMonitorEnabledState,
-    setAudioContextStateState,
-    setCPUUsageState,
-    setActiveVoicesState,
-    setAudioLatencyState,
-    setLastCallbackTimeState,
-    setDroppedCallbacksState,
     // MIDI Learn state functions
     getMidiLearnMappingsState,
     getMidiLearnModeState,
@@ -174,7 +158,7 @@ import {
     findMidiLearnMapping,
     updateMidiLearnMapping,
     exportToMidiInternal,
-    importFromMidiInternal
+    importFromMidiInternal,
     getMidiLearnMappingByIndex
 } from './state.js';
 
