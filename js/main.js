@@ -153,6 +153,7 @@ const appServices = {
     handleOpenSequencer: eventHandleOpenSequencer,
     handleTimelineLaneDrop: handleTimelineLaneDrop,
     attachGlobalControlEvents: attachGlobalControlEvents, // FIX: Expose for reconstruction
+    getTrackById: getTrackByIdState, // Expose track lookup for UI components
 
     // Project Save/Load/Export
     saveProject: saveProjectInternal,
@@ -281,11 +282,11 @@ const appServices = {
             uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec);
         } else { console.warn("Global record button not found in cache."); }
     },
-    closeAllWindows: (isReconstructinging = false) => {
+    closeAllWindows: (isReconstructing = false) => {
         const openWindows = getOpenWindowsState();
         if (openWindows && typeof openWindows.forEach === 'function') {
             openWindows.forEach(win => {
-                if (win && typeof win.close === 'function') win.close(isReconstructinging);
+                if (win && typeof win.close === 'function') win.close(isReconstructing);
             });
         }
         if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
@@ -457,7 +458,57 @@ const appServices = {
     disconnectTrackFromSendBus,
     setTrackSendLevel,
     getSendBusNodes,
-    getTrackSendNodes
+    getTrackSendNodes,
+    loadSampleFile: async (e, trackId, trackType) => {
+        if (!e || !e.target || !e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        if (!file) return;
+        const track = getTrackByIdState(trackId);
+        if (!track) return;
+        try {
+            const blob = await file.arrayBuffer();
+            const audioBuffer = await Tone.context.decodeAudioData(blob);
+            if (trackType === 'Sampler') {
+                track.samplerAudioData = { fileName: file.name, audioBuffer };
+                if (typeof drawWaveform === 'function' && typeof renderSamplePads === 'function' && typeof updateSliceEditorUI === 'function') {
+                    drawWaveform(track); renderSamplePads(track); updateSliceEditorUI(track);
+                }
+            } else if (trackType === 'InstrumentSampler') {
+                track.instrumentSamplerSettings = { fileName: file.name, audioBuffer };
+                if (typeof drawInstrumentWaveform === 'function') {
+                    drawInstrumentWaveform(track);
+                }
+            }
+        } catch (error) {
+            console.error(`[AppServices loadSampleFile] Error loading file ${file.name}:`, error);
+            showSafeNotification(`Failed to load ${file.name}.`, 3000);
+        }
+    },
+    loadSoundFromBrowserToTarget: async (e, trackId, trackType) => {
+        if (!e || !e.target || !e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        if (!file) return;
+        const track = getTrackByIdState(trackId);
+        if (!track) return;
+        try {
+            const blob = await file.arrayBuffer();
+            const audioBuffer = await Tone.context.decodeAudioData(blob);
+            if (trackType === 'Sampler') {
+                track.samplerAudioData = { fileName: file.name, audioBuffer };
+                if (typeof drawWaveform === 'function' && typeof renderSamplePads === 'function' && typeof updateSliceEditorUI === 'function') {
+                    drawWaveform(track); renderSamplePads(track); updateSliceEditorUI(track);
+                }
+            } else if (trackType === 'InstrumentSampler') {
+                track.instrumentSamplerSettings = { fileName: file.name, audioBuffer };
+                if (typeof drawInstrumentWaveform === 'function') {
+                    drawInstrumentWaveform(track);
+                }
+            }
+        } catch (error) {
+            console.error(`[AppServices loadSoundFromBrowserToTarget] Error loading file ${file.name}:`, error);
+            showSafeNotification(`Failed to load ${file.name}.`, 3000);
+        }
+    }
 };
 
 // --- Internal helpers (avoid name collisions) ---
