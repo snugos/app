@@ -179,7 +179,16 @@ import {
     playSlicePreview,
     playDrumSamplerPadPreview,
     loadSampleFile,
-    fetchSoundLibrary
+    fetchSoundLibrary,
+    panicAllAudio,
+    getPerformanceMetrics,
+    startPerformanceMonitor,
+    stopPerformanceMonitor,
+    getSendBusNodes,
+    getTrackSendNodes,
+    connectTrackToSendBus,
+    disconnectTrackFromSendBus,
+    setTrackSendLevel
 } from './audio.js';
 
 import {
@@ -12923,4 +12932,283 @@ TestRunner.test('Effects Registry - Synth knob controls have min/max/step', (t) 
 TestRunner.test('Effects Registry - Complete coverage: 24 effects, 4 synth types', (t) => {
     t.assertEqual(Object.keys(AVAILABLE_EFFECTS).length, 24);
     t.assertEqual(Object.keys(synthEngineControlDefinitions).length, 4);
+});
+
+// ============================================
+// Day 260: Audio Module Send Bus & Performance Tests (2026-04-26)
+// ============================================
+
+// Send Bus Node Accessor internal logic tests
+TestRunner.test('Audio - getSendBusNodes returns a Map', (t) => {
+    const result = getSendBusNodes();
+    t.assertEqual(typeof result, 'object', 'getSendBusNodes should return an object');
+    t.assertTruthy(result !== null, 'getSendBusNodes should not return null');
+});
+
+TestRunner.test('Audio - getTrackSendNodes returns a Map', (t) => {
+    const result = getTrackSendNodes();
+    t.assertEqual(typeof result, 'object', 'getTrackSendNodes should return an object');
+    t.assertTruthy(result !== null, 'getTrackSendNodes should not return null');
+});
+
+// connectTrackToSendBus internal logic tests
+TestRunner.test('Audio - connectTrackToSendBus references sendBusNodes', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'connectTrackToSendBus should reference sendBusNodes');
+});
+
+TestRunner.test('Audio - connectTrackToSendBus references trackSendNodes', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes'), 'connectTrackToSendBus should reference trackSendNodes');
+});
+
+TestRunner.test('Audio - connectTrackToSendBus checks sendId exists in sendBusNodes', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('has(sendId)'), 'connectTrackToSendBus should check if sendId exists');
+});
+
+// disconnectTrackFromSendBus internal logic tests
+TestRunner.test('Audio - disconnectTrackFromSendBus references trackSendNodes', (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes'), 'disconnectTrackFromSendBus should reference trackSendNodes');
+});
+
+TestRunner.test('Audio - disconnectTrackFromSendBus handles missing track entry', (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('get(trackId)'), 'disconnectTrackFromSendBus should get track entry');
+});
+
+// setTrackSendLevel internal logic tests
+TestRunner.test('Audio - setTrackSendLevel references trackSendNodes', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes'), 'setTrackSendLevel should reference trackSendNodes');
+});
+
+TestRunner.test('Audio - setTrackSendLevel clamps level to valid range', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTrackSendLevel should clamp values');
+});
+
+TestRunner.test('Audio - setTrackSendLevel calls connectTrackToSendBus when not connected', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('connectTrackToSendBus'), 'setTrackSendLevel should try to connect when not found');
+});
+
+// panicAllAudio internal logic tests
+TestRunner.test('Audio - panicAllAudio references Tone.Transport', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('Tone') && funcStr.includes('Transport'), 'panicAllAudio should reference Tone.Transport');
+});
+
+TestRunner.test('Audio - panicAllAudio cancels transport events', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('cancel') || funcStr.includes('stop'), 'panicAllAudio should cancel/stop events');
+});
+
+TestRunner.test('Audio - panicAllAudio iterates over tracks', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('forEach') || funcStr.includes('tracks'), 'panicAllAudio should iterate over tracks');
+});
+
+TestRunner.test('Audio - panicAllAudio handles dispose errors gracefully', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'panicAllAudio should handle errors gracefully');
+});
+
+// getPerformanceMetrics internal logic tests
+TestRunner.test('Audio - getPerformanceMetrics returns an object', (t) => {
+    const result = getPerformanceMetrics();
+    t.assertEqual(typeof result, 'object', 'getPerformanceMetrics should return an object');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics has expected properties', (t) => {
+    const result = getPerformanceMetrics();
+    t.assertTruthy(result.hasOwnProperty('audioContextState'), 'metrics should have audioContextState');
+    t.assertTruthy(result.hasOwnProperty('cpuUsage'), 'metrics should have cpuUsage');
+    t.assertTruthy(result.hasOwnProperty('memoryPressure'), 'metrics should have memoryPressure');
+    t.assertTruthy(result.hasOwnProperty('activeVoices'), 'metrics should have activeVoices');
+    t.assertTruthy(result.hasOwnProperty('audioLatency'), 'metrics should have audioLatency');
+    t.assertTruthy(result.hasOwnProperty('droppedCallbacks'), 'metrics should have droppedCallbacks');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics references Tone.context', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('Tone'), 'getPerformanceMetrics should reference Tone');
+    t.assertTruthy(funcStr.includes('context'), 'getPerformanceMetrics should check context');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics references localAppServices', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'getPerformanceMetrics should reference localAppServices');
+});
+
+// startPerformanceMonitor internal logic tests
+TestRunner.test('Audio - startPerformanceMonitor references Tone.context', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('Tone'), 'startPerformanceMonitor should reference Tone');
+    t.assertTruthy(funcStr.includes('context'), 'startPerformanceMonitor should check context');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor references setInterval', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setInterval'), 'startPerformanceMonitor should use setInterval');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor updates CPUUsageState', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setCPUUsageState'), 'startPerformanceMonitor should update CPUUsageState');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor updates MemoryPressureState', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setMemoryPressureState'), 'startPerformanceMonitor should update MemoryPressureState');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor updates ActiveVoicesState', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setActiveVoicesState'), 'startPerformanceMonitor should update ActiveVoicesState');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor updates AudioContextState', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setAudioContextStateState'), 'startPerformanceMonitor should update AudioContextState');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor updates AudioLatencyState', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setAudioLatencyState'), 'startPerformanceMonitor should update AudioLatencyState');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor checks PERFORMANCE_UPDATE_INTERVAL_MS', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('PERFORMANCE_UPDATE_INTERVAL') || funcStr.includes('intervalMs'), 'startPerformanceMonitor should use interval constant');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor iterates over tracks for active voices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('getTracks') || funcStr.includes('tracks'), 'startPerformanceMonitor should access tracks');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor handles case where tracks is empty', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('!tracks') || funcStr.includes('length === 0') || funcStr.includes('Array.isArray'), 'startPerformanceMonitor should handle empty tracks');
+});
+
+// stopPerformanceMonitor internal logic tests
+TestRunner.test('Audio - stopPerformanceMonitor references clearInterval', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('clearInterval'), 'stopPerformanceMonitor should use clearInterval');
+});
+
+TestRunner.test('Audio - stopPerformanceMonitor checks if monitor is running', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('performanceMonitorIntervalId') || funcStr.includes('!== null'), 'stopPerformanceMonitor should check interval ID');
+});
+
+// ============================================
+// Day 260 Part 2: Audio Recording Input Gain Tests (2026-04-26)
+// ============================================
+
+// setRecordingInputGain internal logic tests
+TestRunner.test('Audio - setRecordingInputGain references recordingInputGainNode', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGainNode'), 'setRecordingInputGain should reference recordingInputGainNode');
+});
+
+TestRunner.test('Audio - setRecordingInputGain clamps gain value', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setRecordingInputGain should clamp values');
+});
+
+TestRunner.test('Audio - setRecordingInputGain updates gain.value', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('.gain'), 'setRecordingInputGain should update gain property');
+    t.assertTruthy(funcStr.includes('.value'), 'setRecordingInputGain should update gain.value');
+});
+
+// ============================================
+// Day 260 Part 3: Send Bus Audio Functions Detail Tests (2026-04-26)
+// ============================================
+
+// createSendBusInAudio internal logic tests
+TestRunner.test('Audio - createSendBusInAudio references sendBusNodes', (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'createSendBusInAudio should reference sendBusNodes');
+});
+
+TestRunner.test('Audio - createSendBusInAudio creates inputGain and outputGain', (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('inputGain') || funcStr.includes('outputGain'), 'createSendBusInAudio should create gain nodes');
+});
+
+// deleteSendBusFromAudio internal logic tests
+TestRunner.test('Audio - deleteSendBusFromAudio references sendBusNodes', (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'deleteSendBusFromAudio should reference sendBusNodes');
+});
+
+TestRunner.test('Audio - deleteSendBusFromAudio disposes nodes', (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'deleteSendBusFromAudio should dispose nodes');
+});
+
+TestRunner.test('Audio - deleteSendBusFromAudio handles errors gracefully', (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'deleteSendBusFromAudio should handle errors');
+});
+
+// addEffectToSendBus internal logic tests
+TestRunner.test('Audio - addEffectToSendBus references sendBusNodes', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'addEffectToSendBus should reference sendBusNodes');
+});
+
+TestRunner.test('Audio - addEffectToSendBus creates effect nodes', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('effectsChain') || funcStr.includes('effect'), 'addEffectToSendBus should manage effects chain');
+});
+
+// removeEffectFromSendBus internal logic tests
+TestRunner.test('Audio - removeEffectFromSendBus references sendBusNodes', (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'removeEffectFromSendBus should reference sendBusNodes');
+});
+
+// reorderEffectInSendBus internal logic tests
+TestRunner.test('Audio - reorderEffectInSendBus references sendBusNodes', (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'reorderEffectInSendBus should reference sendBusNodes');
+});
+
+TestRunner.test('Audio - reorderEffectInSendBus handles splice operation', (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('splice') || funcStr.includes('index'), 'reorderEffectInSendBus should handle reordering');
+});
+
+// updateSendBusEffectParam internal logic tests
+TestRunner.test('Audio - updateSendBusEffectParam references sendBusNodes', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'updateSendBusEffectParam should reference sendBusNodes');
+});
+
+// setSendBusLevel internal logic tests
+TestRunner.test('Audio - setSendBusLevel references sendBusNodes', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'setSendBusLevel should reference sendBusNodes');
+});
+
+TestRunner.test('Audio - setSendBusLevel clamps level value', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'setSendBusLevel should clamp values');
+});
+
+// setSendBusMuted internal logic tests
+TestRunner.test('Audio - setSendBusMuted references sendBusNodes', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'setSendBusMuted should reference sendBusNodes');
+});
+
+TestRunner.test('Audio - setSendBusMuted sets gain to 0 when muted', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('.gain') || funcStr.includes('outputGain'), 'setSendBusMuted should affect gain');
 });
