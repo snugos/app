@@ -362,8 +362,8 @@ const appServices = {
     },
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            const isReconstructinging = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -625,6 +625,14 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         }
     } catch (error) {
         console.error(`[Main handleTrackUIUpdate] Error updating UI for track ${trackId}, reason ${reason}:`, error);
+    }
+}
+
+function showSafeNotification(message, duration = 3000) {
+    try {
+        utilShowNotification(message, duration);
+    } catch (e) {
+        console.warn("[showSafeNotification] Failed to show notification:", e);
     }
 }
 
