@@ -3,6 +3,23 @@
 ## Project Overview
 SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla JavaScript modules. It uses Tone.js for audio processing and Tailwind CSS for styling. The app is deployed via GitHub Pages.
 
+#### Day 246: InstrumentSampler & Audio Track UI Tests (2026-04-26)
+- **Feature**: Added 24 new unit tests for InstrumentSampler and Audio Track UI components
+- **Files Modified**:
+  - `js/tests.js`: Added 24 new tests in Day 246 section:
+    - InstrumentSampler UI: buildInstrumentSamplerSpecificInspectorDOM creates drop zone container, includes waveform canvas, root note select, loop controls, envelope controls, polyphony toggle
+    - InstrumentSampler UI: initializeInstrumentSamplerSpecificControls sets up drop zone, file input onchange, waveform canvas, root note select, loop toggle click handler, loop start/end handlers, envelope knobs, polyphony toggle
+    - Audio Track UI: buildAudioTrackInspectorDOM creates recording input section, includes input device select, input gain knob placeholder, monitoring volume control, recording status indicator
+    - Audio Track Constants: Audio track type validation (5 track types including Audio)
+  - `js/constants.js`: Bumped APP_VERSION to 1.28.0
+- **Feature Details**:
+  - Tests validate InstrumentSampler UI DOM building and initialization functions
+  - Tests verify drop zone setup for InstrumentSampler tracks
+  - Tests verify Audio Track UI recording input section and controls
+  - Total tests increased from 1931 to 1955
+- **Version**: Bumped to 1.28.0
+
+
 ## Tech Stack
 #### Day 242: Synth, DrumSampler & Sampler Track Instance Tests (2026-04-26)
 - **Feature**: Added 52 new unit tests for Synth, DrumSampler, and Sampler track instance properties and methods
