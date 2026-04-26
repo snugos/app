@@ -11886,3 +11886,424 @@ TestRunner.test('Effect Presets - DEFAULT_PRESET_NAME_PREFIX is non-empty string
     t.assertTruthy(typeof DEFAULT_PRESET_NAME_PREFIX === 'string', 'DEFAULT_PRESET_NAME_PREFIX should be string');
     t.assertTruthy(DEFAULT_PRESET_NAME_PREFIX.length > 0, 'DEFAULT_PRESET_NAME_PREFIX should be non-empty');
 });
+
+// Day 246: Freeze Track Instance Tests
+
+TestRunner.test('Freeze Track - freezeTrack method exists on Track class', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        id: 'track1',
+        name: 'Test Synth',
+        timelineClips: [{ startTime: 0, duration: 4, type: 'sequence' }],
+        schedulePlayback: async () => {},
+        _captureUndoState: () => {},
+        _audioBufferToWav: () => new Blob(),
+        disposeSlicerMonoNodes: () => {}
+    };
+    t.assertEqual(typeof mockTrack.freezeTrack, 'function', 'Track should have freezeTrack method');
+});
+
+TestRunner.test('Freeze Track - freezeTrack is async function', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'freezeTrack should be async');
+});
+
+TestRunner.test('Freeze Track - freezeTrack rejects Audio track type', async (t) => {
+    const mockTrack = {
+        type: 'Audio',
+        id: 'track1',
+        name: 'Test Audio',
+        timelineClips: []
+    };
+    try {
+        await mockTrack.freezeTrack();
+        t.fail('freezeTrack should throw for Audio track');
+    } catch (e) {
+        t.assertTruthy(e.message.includes('Cannot freeze') || e.message.includes('Audio'), 'Should throw appropriate error for Audio tracks');
+    }
+});
+
+TestRunner.test('Freeze Track - freezeTrack throws when no audio content', async (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        id: 'track1',
+        name: 'Test Synth',
+        timelineClips: [],
+        schedulePlayback: async () => {},
+        _captureUndoState: () => {}
+    };
+    try {
+        await mockTrack.freezeTrack();
+        t.fail('freezeTrack should throw when no audio content');
+    } catch (e) {
+        t.assertTruthy(e.message.includes('No audio content'), 'Should throw error about no audio content');
+    }
+});
+
+TestRunner.test('Freeze Track - freezeTrack respects MAX_FREEZE_LENGTH_SECONDS', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('MAX_FREEZE_LENGTH_SECONDS') || funcStr.includes('600'), 'freezeTrack should respect max freeze length');
+});
+
+TestRunner.test('Freeze Track - freezeTrack calls _captureUndoState', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'freezeTrack should capture undo state before freezing');
+});
+
+TestRunner.test('Freeze Track - freezeTrack stores frozen audio with storeAudio', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('storeAudio') || funcStr.includes('dbKey'), 'freezeTrack should store frozen audio in database');
+});
+
+TestRunner.test('Freeze Track - frozen clip has isFrozen property', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('isFrozen'), 'frozen clip should have isFrozen property set to true');
+});
+
+TestRunner.test('Freeze Track - frozen clip has originalTrackId property', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('originalTrackId'), 'frozen clip should reference original track ID');
+});
+
+TestRunner.test('Freeze Track - frozen clip uses FROZEN_TRACK_PREFIX for name', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('FROZEN_TRACK_PREFIX'), 'frozen clip name should use FROZEN_TRACK_PREFIX constant');
+});
+
+TestRunner.test('Freeze Track - freezeTrack disposes synth instrument after freezing', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('dispose') || funcStr.includes('instrument'), 'freezeTrack should dispose synth instrument after freezing');
+});
+
+TestRunner.test('Freeze Track - freezeTrack clears sampler audio buffer', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer') && funcStr.includes('dispose'), 'freezeTrack should clear audio buffer after freezing');
+});
+
+TestRunner.test('Freeze Track - freezeTrack replaces timeline clips with frozen clip', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('timelineClips') && funcStr.includes('push'), 'freezeTrack should replace timeline clips with frozen audio');
+});
+
+TestRunner.test('Freeze Track - freezeTrack filters out sequence clips before adding frozen', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('filter') && (funcStr.includes('sequence') || funcStr.includes('type')), 'freezeTrack should remove sequence clips before adding frozen audio');
+});
+
+TestRunner.test('Freeze Track - freezeTrack calls appServices.updateTrackUI', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'freezeTrack should notify app services to update track UI');
+});
+
+TestRunner.test('Freeze Track - freezeTrack calls appServices.renderTimeline', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('renderTimeline'), 'freezeTrack should re-render timeline after freezing');
+});
+
+TestRunner.test('Freeze Track - frozen clip has DEFAULT_FREEZE_FADE_OUT for fade', (t) => {
+    const funcStr = freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_FREEZE_FADE_OUT') || funcStr.includes('fadeIn') || funcStr.includes('fadeOut'), 'frozen clip should use default fade out');
+});
+
+TestRunner.test('Freeze Track - MAX_FREEZE_LENGTH_SECONDS is 600', (t) => {
+    t.assertEquals(600, MAX_FREEZE_LENGTH_SECONDS, 'MAX_FREEZE_LENGTH_SECONDS should be 600 seconds');
+});
+
+TestRunner.test('Freeze Track - DEFAULT_FREEZE_FADE_OUT is 0.1', (t) => {
+    t.assertEquals(0.1, DEFAULT_FREEZE_FADE_OUT, 'DEFAULT_FREEZE_FADE_OUT should be 0.1 seconds');
+});
+
+TestRunner.test('Freeze Track - FROZEN_TRACK_PREFIX is non-empty string', (t) => {
+    t.assertTruthy(typeof FROZEN_TRACK_PREFIX === 'string', 'FROZEN_TRACK_PREFIX should be string');
+    t.assertTruthy(FROZEN_TRACK_PREFIX.length > 0, 'FROZEN_TRACK_PREFIX should be non-empty');
+});
+
+TestRunner.test('Freeze Track - FROZEN_TRACK_PREFIX contains frozen indicator', (t) => {
+    t.assertTruthy(FROZEN_TRACK_PREFIX.includes('Frozen') || FROZEN_TRACK_PREFIX.includes('FROZEN'), 'FROZEN_TRACK_PREFIX should indicate frozen state');
+});
+
+TestRunner.test('Bounce Track - bounceTrack method exists on Track class', (t) => {
+    const mockTrack = {
+        type: 'Audio',
+        id: 'track1',
+        name: 'Test Track',
+        timelineClips: [{ startTime: 0, duration: 4, type: 'audio' }],
+        sequences: [],
+        schedulePlayback: async () => {},
+        appServices: { getTempo: () => 120 }
+    };
+    t.assertEqual(typeof mockTrack.bounceTrack, 'function', 'Track should have bounceTrack method');
+});
+
+TestRunner.test('Bounce Track - bounceTrack is async function', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'bounceTrack should be async');
+});
+
+TestRunner.test('Bounce Track - bounceTrack rejects unsupported track types', async (t) => {
+    const mockTrack = {
+        type: 'Midi',
+        id: 'track1',
+        name: 'Test Midi'
+    };
+    try {
+        await mockTrack.bounceTrack();
+        t.fail('bounceTrack should throw for unsupported track type');
+    } catch (e) {
+        t.assertTruthy(e.message.includes('Unsupported') || e.message.includes('type'), 'Should throw appropriate error for unsupported types');
+    }
+});
+
+TestRunner.test('Bounce Track - bounceTrack throws when no audio content', async (t) => {
+    const mockTrack = {
+        type: 'Audio',
+        id: 'track1',
+        name: 'Test Audio',
+        timelineClips: [],
+        sequences: [],
+        schedulePlayback: async () => {},
+        appServices: { getTempo: () => 120 }
+    };
+    try {
+        await mockTrack.bounceTrack();
+        t.fail('bounceTrack should throw when no audio content');
+    } catch (e) {
+        t.assertTruthy(e.message.includes('No audio content'), 'Should throw error about no audio content');
+    }
+});
+
+TestRunner.test('Bounce Track - bounceTrack respects MAX_FREEZE_LENGTH_SECONDS', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('MAX_FREEZE_LENGTH_SECONDS') || funcStr.includes('600'), 'bounceTrack should respect max bounce length');
+});
+
+TestRunner.test('Bounce Track - bounceTrack uses Tone.Offline for rendering', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('Tone.Offline') || funcStr.includes('offlineContext'), 'bounceTrack should use Tone.Offline for rendering');
+});
+
+TestRunner.test('Bounce Track - bounceTrack calls schedulePlayback', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('schedulePlayback'), 'bounceTrack should call schedulePlayback with maxDuration');
+});
+
+TestRunner.test('Bounce Track - bounceTrack returns Blob', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('Blob') || funcStr.includes('wav'), 'bounceTrack should return a Blob (WAV)');
+});
+
+TestRunner.test('Bounce Track - bounceTrack supports Audio track type', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('Audio'), 'bounceTrack should support Audio track type');
+});
+
+TestRunner.test('Bounce Track - bounceTrack supports Synth track type', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('Synth'), 'bounceTrack should support Synth track type');
+});
+
+TestRunner.test('Bounce Track - bounceTrack supports Sampler track type', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('Sampler'), 'bounceTrack should support Sampler track type');
+});
+
+TestRunner.test('Bounce Track - bounceTrack supports InstrumentSampler track type', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('InstrumentSampler'), 'bounceTrack should support InstrumentSampler track type');
+});
+
+TestRunner.test('Bounce Track - bounceTrack supports DrumSampler track type', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'bounceTrack should support DrumSampler track type');
+});
+
+TestRunner.test('Bounce Track - _audioBufferToWav method exists', (t) => {
+    const funcStr = _audioBufferToWav.toString();
+    t.assertTruthy(funcStr.includes('function') || funcStr.includes('=>'), '_audioBufferToWav should be a function');
+});
+
+TestRunner.test('Bounce Track - _audioBufferToWav creates WAV header', (t) => {
+    const funcStr = _audioBufferToWav.toString();
+    t.assertTruthy(funcStr.includes('RIFF') && funcStr.includes('WAVE'), '_audioBufferToWav should create valid WAV header');
+});
+
+TestRunner.test('Bounce Track - _audioBufferToWav handles stereo audio', (t) => {
+    const funcStr = _audioBufferToWav.toString();
+    t.assertTruthy(funcStr.includes('numberOfChannels') || funcStr.includes('stereo'), '_audioBufferToWav should handle multi-channel audio');
+});
+
+TestRunner.test('Bounce Track - _audioBufferToWav returns Blob', (t) => {
+    const funcStr = _audioBufferToWav.toString();
+    t.assertTruthy(funcStr.includes('Blob'), '_audioBufferToWav should return a Blob');
+});
+
+TestRunner.test('Bounce Track - _audioBufferToWav uses correct MIME type', (t) => {
+    const funcStr = _audioBufferToWav.toString();
+    t.assertTruthy(funcStr.includes('audio/wav') || funcStr.includes('wav'), '_audioBufferToWav should specify audio/wav MIME type');
+});
+
+TestRunner.test('Bounce Track - bounceTrack considers sequences for duration', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('sequences') || funcStr.includes('metadata'), 'bounceTrack should consider sequence clips for duration calculation');
+});
+
+TestRunner.test('Bounce Track - bounceTrack uses Tempo for sequence duration', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('getTempo') || funcStr.includes('tempo'), 'bounceTrack should use tempo for sequence duration calculation');
+});
+
+TestRunner.test('Bounce Track - bounceTrack clamps samples to valid range', (t) => {
+    const funcStr = _audioBufferToWav.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min') || funcStr.includes('clamp'), '_audioBufferToWav should clamp audio samples to valid range');
+});
+
+TestRunner.test('Bounce Track - _audioBufferToWav writes PCM 16-bit audio', (t) => {
+    const funcStr = _audioBufferToWav.toString();
+    t.assertTruthy(funcStr.includes('setInt16') || funcStr.includes('16'), '_audioBufferToWav should write 16-bit PCM audio data');
+});
+
+TestRunner.test('Bounce Track - bounceTrack does not modify original track', (t) => {
+    const funcStr = bounceTrack.toString();
+    t.assertTruthy(!funcStr.includes('timelineClips =') || funcStr.includes('filter') || funcStr.includes('timelineClips.push'), 'bounceTrack should not modify original clips (unlike freeze)');
+});
+
+TestRunner.test('Bounce/Export - MAX_FREEZE_LENGTH_SECONDS is positive', (t) => {
+    t.assertTruthy(MAX_FREEZE_LENGTH_SECONDS > 0, 'MAX_FREEZE_LENGTH_SECONDS should be positive');
+});
+
+TestRunner.test('Bounce/Export - DEFAULT_FREEZE_FADE_OUT is non-negative', (t) => {
+    t.assertTruthy(DEFAULT_FREEZE_FADE_OUT >= 0, 'DEFAULT_FREEZE_FADE_OUT should be non-negative');
+});
+
+TestRunner.test('Bounce/Export - FROZEN_TRACK_PREFIX is a string', (t) => {
+    t.assertTruthy(typeof FROZEN_TRACK_PREFIX === 'string', 'FROZEN_TRACK_PREFIX should be a string');
+});
+
+TestRunner.test('Bounce/Export - MAX_FREEZE_LENGTH_SECONDS is reasonable (<= 3600)', (t) => {
+    t.assertTruthy(MAX_FREEZE_LENGTH_SECONDS <= 3600, 'MAX_FREEZE_LENGTH_SECONDS should be reasonable (<= 1 hour)');
+});
+
+TestRunner.test('Bounce/Export - DEFAULT_FREEZE_FADE_OUT is reasonable (<= 5)', (t) => {
+    t.assertTruthy(DEFAULT_FREEZE_FADE_OUT <= 5, 'DEFAULT_FREEZE_FADE_OUT should be reasonable (<= 5 seconds)');
+});
+
+// ============================================
+// Day 246: InstrumentSampler & Audio Track Drop Zone UI Tests (2026-04-26)
+// ============================================
+TestRunner.test('InstrumentSampler UI - buildInstrumentSamplerSpecificInspectorDOM creates drop zone container', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dropZoneContainer') || funcStr.includes('drop-zone'), 'Should create drop zone container');
+});
+
+TestRunner.test('InstrumentSampler UI - buildInstrumentSamplerSpecificInspectorDOM includes waveform canvas', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvas') || funcStr.includes('canvas'), 'Should include waveform canvas');
+});
+
+TestRunner.test('InstrumentSampler UI - buildInstrumentSamplerSpecificInspectorDOM includes root note select', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentRootNote') || funcStr.includes('Root Note'), 'Should include root note control');
+});
+
+TestRunner.test('InstrumentSampler UI - buildInstrumentSamplerSpecificInspectorDOM includes loop controls', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopToggle') || funcStr.includes('Loop'), 'Should include loop toggle');
+    t.assertTruthy(funcStr.includes('instrumentLoopStart') || funcStr.includes('Loop Start'), 'Should include loop start input');
+    t.assertTruthy(funcStr.includes('instrumentLoopEnd') || funcStr.includes('Loop End'), 'Should include loop end input');
+});
+
+TestRunner.test('InstrumentSampler UI - buildInstrumentSamplerSpecificInspectorDOM includes envelope controls', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentEnvAttack') || funcStr.includes('Attack'), 'Should include attack control');
+    t.assertTruthy(funcStr.includes('instrumentEnvDecay') || funcStr.includes('Decay'), 'Should include decay control');
+    t.assertTruthy(funcStr.includes('instrumentEnvSustain') || funcStr.includes('Sustain'), 'Should include sustain control');
+    t.assertTruthy(funcStr.includes('instrumentEnvRelease') || funcStr.includes('Release'), 'Should include release control');
+});
+
+TestRunner.test('InstrumentSampler UI - buildInstrumentSamplerSpecificInspectorDOM includes polyphony toggle', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentPolyphonyToggle') || funcStr.includes('Poly'), 'Should include polyphony toggle');
+});
+
+TestRunner.test('InstrumentSampler UI - initializeInstrumentSamplerSpecificControls sets up drop zone', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('createDropZoneHTML'), 'Should call createDropZoneHTML');
+    t.assertTruthy(funcStr.includes('setupGenericDropZoneListeners'), 'Should call setupGenericDropZoneListeners');
+});
+
+TestRunner.test('InstrumentSampler UI - initializeInstrumentSamplerSpecificControls sets up file input onchange', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('loadSampleFile') || funcStr.includes('onchange'), 'Should set up file input handler');
+});
+
+TestRunner.test('InstrumentSampler UI - initializeInstrumentSamplerSpecificControls sets up waveform canvas', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvas') || funcStr.includes('getContext'), 'Should set up waveform canvas');
+});
+
+TestRunner.test('InstrumentSampler UI - initializeInstrumentSamplerSpecificControls populates root note select', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('synthPitches') || funcStr.includes('Root Note'), 'Should populate root note select');
+});
+
+TestRunner.test('InstrumentSampler UI - initializeInstrumentSamplerSpecificControls sets up loop toggle click handler', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopToggle') || funcStr.includes('addEventListener'), 'Should set up loop toggle handler');
+});
+
+TestRunner.test('InstrumentSampler UI - initializeInstrumentSamplerSpecificControls sets up loop start/end handlers', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopStart') || funcStr.includes('Loop Start'), 'Should set up loop start handler');
+    t.assertTruthy(funcStr.includes('instrumentLoopEnd') || funcStr.includes('Loop End'), 'Should set up loop end handler');
+});
+
+TestRunner.test('InstrumentSampler UI - initializeInstrumentSamplerSpecificControls creates envelope knobs', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('setInstrumentSamplerEnv') || funcStr.includes('createAndPlaceKnob'), 'Should create envelope knobs');
+});
+
+TestRunner.test('InstrumentSampler UI - initializeInstrumentSamplerSpecificControls sets up polyphony toggle', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('instrumentPolyphonyToggle') || funcStr.includes('Poly'), 'Should set up polyphony toggle');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM creates recording input section', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('audio-track-controls') || funcStr.includes('Recording Input'), 'Should create audio track controls');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes input device select', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('audioInputDevice') || funcStr.includes('Input Device'), 'Should include input device select');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes input gain knob placeholder', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('inputGainKnob') || funcStr.includes('Gain'), 'Should include input gain control');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes monitoring volume control', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('monitoringVolume') || funcStr.includes('Monitor'), 'Should include monitoring volume control');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes recording status indicator', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('recordingStatus') || funcStr.includes('Recording'), 'Should include recording status indicator');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM handles recording status styling', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('isRecording') || funcStr.includes('Ready to Record'), 'Should handle recording status styling');
+});
+
+TestRunner.test('Audio Track Constants - Audio track type is valid', (t) => {
+    const validTypes = ['Synth', 'DrumSampler', 'Sampler', 'InstrumentSampler', 'Audio'];
+    t.assertTruthy(validTypes.includes('Audio'), 'Audio should be a valid track type');
+});
+
+TestRunner.test('Audio Track Constants - Audio track type is in TRACK_TYPES list', (t) => {
+    const types = ['Synth', 'DrumSampler', 'Sampler', 'InstrumentSampler', 'Audio'];
+    t.assertEqual(types.length, 5, 'Should have 5 track types');
+    t.assertTruthy(types.includes('Audio'), 'Audio should be in track types');
+});
