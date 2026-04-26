@@ -1,6 +1,5 @@
 export const APP_VERSION = '1.26.0'; // Day 243: Complete missing appServices window management exports // Day 242: Synth, DrumSampler & Sampler Track Instance Tests
 
-
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
 export const PERFORMANCE_UPDATE_INTERVAL_MS = 500; // Update every 500ms
