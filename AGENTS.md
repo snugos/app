@@ -3454,3 +3454,35 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The SnugWindow instance methods handle window state management, the Utils functions provide modal/dialog/notification services, and the Event Handler functions manage MIDI and keyboard input. Tests verify the exported API without requiring actual DOM or hardware.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.23.0
+
+#### Day 254: Sequence Instance Method Tests (2026-04-26)
+- **Feature**: Added 17 new unit tests for Track Sequence instance methods to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 17 new tests in Day 254 section:
+    - Sequence methods exist on Track.prototype (createNewSequence, deleteSequence, renameSequence, duplicateSequence, setActiveSequence, doubleSequence, shiftSequenceNotes, humanizeVelocity, arpeggiatePattern, quantizeSequence)
+    - createNewSequence creates sequence with correct structure (3 rows for Synth type)
+    - createNewSequence returns null for Audio tracks
+    - deleteSequence removes sequence and handles edge cases
+    - deleteSequence prevents deletion of last sequence with notification
+    - renameSequence updates sequence name
+    - duplicateSequence creates copy with correct data
+    - setActiveSequence switches active sequence
+    - getActiveSequence returns correct sequence
+    - getActiveSequence returns null for Audio tracks
+    - doubleSequence doubles sequence length
+    - quantizeSequence snaps notes to grid
+    - shiftSequenceNotes returns 0 for DrumSampler
+    - humanizeVelocity modifies velocity values
+    - arpeggiatePattern only works on Synth/InstrumentSampler
+    - sequences array is properly cloned in toJSON
+    - Sequence constants validation
+  - `js/constants.js`: Bumped APP_VERSION to 1.35.0
+- **Feature Details**:
+  - Tests validate Track Sequence instance methods on Track.prototype
+  - Tests verify sequence CRUD operations (create, delete, rename, duplicate)
+  - Tests verify sequence switching and active sequence management
+  - Tests verify Audio track restrictions (createNewSequence returns null)
+  - Tests verify sequence operations (double, quantize, shift, humanize, arpeggiate)
+  - Tests verify toJSON serialization includes sequences
+  - Total tests increased from 1689 to ~1706
+- **Version**: Bumped to 1.35.0
