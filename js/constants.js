@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.26.0'; // Day 243: Complete missing appServices window management exports // Day 242: Synth, DrumSampler & Sampler Track Instance Tests
+export const APP_VERSION = '1.27.0'; // Day 244: Effect Presets State Tests // Day 242: Synth, DrumSampler & Sampler Track Instance Tests
 
 
 // Performance Monitor Constants

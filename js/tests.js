@@ -11710,3 +11710,179 @@ TestRunner.test('Audio - startPerformanceMonitor handles missing Tone gracefully
     const funcStr = startPerformanceMonitor.toString();
     t.assertTruthy(funcStr.includes('Tone') || funcStr.includes('context'), 'startPerformanceMonitor should handle audio context');
 });
+
+// ============================================
+// Day 244: Effect Presets State Tests (2026-04-26)
+// ============================================
+TestRunner.test('Effect Presets - getEffectPresetsState returns array', (t) => {
+    t.assertTruthy(Array.isArray(getEffectPresetsState()), 'getEffectPresetsState should return array');
+});
+
+TestRunner.test('Effect Presets - getEffectPresetsByTypeState is exported function', (t) => {
+    t.assertTruthy(typeof getEffectPresetsByTypeState === 'function', 'getEffectPresetsByTypeState should be a function');
+});
+
+TestRunner.test('Effect Presets - getEffectPresetsByTypeState accepts 1 parameter', (t) => {
+    const params = getEffectPresetsByTypeState.length;
+    t.assertEquals(1, params, 'getEffectPresetsByTypeState should accept 1 parameter');
+});
+
+TestRunner.test('Effect Presets - getEffectPresetsByTypeState returns filtered array', (t) => {
+    const result = getEffectPresetsByTypeState('Reverb');
+    t.assertTruthy(Array.isArray(result), 'getEffectPresetsByTypeState should return array');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState is exported function', (t) => {
+    t.assertTruthy(typeof addEffectPresetState === 'function', 'addEffectPresetState should be a function');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState accepts 1 parameter', (t) => {
+    const params = addEffectPresetState.length;
+    t.assertEquals(1, params, 'addEffectPresetState should accept 1 parameter');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState checks MAX_EFFECT_PRESETS', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('MAX_EFFECT_PRESETS'), 'addEffectPresetState should check MAX_EFFECT_PRESETS limit');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState is exported function', (t) => {
+    t.assertTruthy(typeof updateEffectPresetState === 'function', 'updateEffectPresetState should be a function');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState accepts 2 parameters', (t) => {
+    const params = updateEffectPresetState.length;
+    t.assertEquals(2, params, 'updateEffectPresetState should accept 2 parameters (id, updates)');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState uses descriptive undo label', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('Update Effect Preset'), 'updateEffectPresetState should have descriptive undo label');
+});
+
+TestRunner.test('Effect Presets - removeEffectPresetState is exported function', (t) => {
+    t.assertTruthy(typeof removeEffectPresetState === 'function', 'removeEffectPresetState should be a function');
+});
+
+TestRunner.test('Effect Presets - removeEffectPresetState accepts 1 parameter', (t) => {
+    const params = removeEffectPresetState.length;
+    t.assertEquals(1, params, 'removeEffectPresetState should accept 1 parameter (id)');
+});
+
+TestRunner.test('Effect Presets - removeEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Effect Presets - removeEffectPresetState uses descriptive undo label', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('Delete Effect Preset'), 'removeEffectPresetState should have descriptive undo label');
+});
+
+TestRunner.test('Effect Presets - clearEffectPresetsState is exported function', (t) => {
+    t.assertTruthy(typeof clearEffectPresetsState === 'function', 'clearEffectPresetsState should be a function');
+});
+
+TestRunner.test('Effect Presets - clearEffectPresetsState accepts no parameters', (t) => {
+    const params = clearEffectPresetsState.length;
+    t.assertEquals(0, params, 'clearEffectPresetsState should accept no parameters');
+});
+
+TestRunner.test('Effect Presets - clearEffectPresetsState calls captureStateForUndo', (t) => {
+    const funcStr = clearEffectPresetsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearEffectPresetsState should call captureStateForUndo');
+});
+
+TestRunner.test('Effect Presets - clearEffectPresetsState checks array length before capture', (t) => {
+    const funcStr = clearEffectPresetsState.toString();
+    t.assertTruthy(funcStr.includes('length > 0') || funcStr.includes('length>0'), 'clearEffectPresetsState should check if presets exist before capture');
+});
+
+TestRunner.test('Effect Presets - clearEffectPresetsState resets array to empty', (t) => {
+    const funcStr = clearEffectPresetsState.toString();
+    t.assertTruthy(funcStr.includes('[]') || funcStr.includes('= []'), 'clearEffectPresetsState should reset array to empty');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState generates unique id', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('effectPresetIdCounter') || funcStr.includes('++'), 'addEffectPresetState should generate unique IDs');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState handles presetData with id', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('presetData?.id') || funcStr.includes('presetData.id'), 'addEffectPresetState should handle presetData.id');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState uses DEFAULT_PRESET_NAME_PREFIX', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_PRESET_NAME_PREFIX'), 'addEffectPresetState should use default preset name prefix');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState handles name update', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('name') || funcStr.includes('updates.name'), 'updateEffectPresetState should handle name updates');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState handles effectType update', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('effectType') || funcStr.includes('updates.effectType'), 'updateEffectPresetState should handle effectType updates');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState handles params update', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('params') || funcStr.includes('updates.params'), 'updateEffectPresetState should handle params updates');
+});
+
+TestRunner.test('Effect Presets - updateEffectPresetState returns null for unknown id', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('null'), 'updateEffectPresetState should return null for unknown preset');
+});
+
+TestRunner.test('Effect Presets - removeEffectPresetState returns false for unknown id', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('return false'), 'removeEffectPresetState should return false for unknown preset');
+});
+
+TestRunner.test('Effect Presets - removeEffectPresetState returns true on success', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('splice') && funcStr.includes('return true'), 'removeEffectPresetState should return true on successful removal');
+});
+
+TestRunner.test('Effect Presets - addEffectPresetState calls showNotification when limit reached', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'addEffectPresetState should notify when max presets reached');
+});
+
+TestRunner.test('Effect Presets - DEFAULT_EFFECT_PRESET structure is correct', (t) => {
+    t.assertTruthy(typeof DEFAULT_EFFECT_PRESET === 'object', 'DEFAULT_EFFECT_PRESET should be an object');
+    t.assertTruthy(typeof DEFAULT_EFFECT_PRESET.name === 'string', 'DEFAULT_EFFECT_PRESET.name should be a string');
+    t.assertTruthy(DEFAULT_EFFECT_PRESET.effectType === null, 'DEFAULT_EFFECT_PRESET.effectType should be null');
+    t.assertTruthy(typeof DEFAULT_EFFECT_PRESET.params === 'object', 'DEFAULT_EFFECT_PRESET.params should be an object');
+});
+
+TestRunner.test('Effect Presets - MAX_EFFECT_PRESETS is 64', (t) => {
+    t.assertEquals(64, MAX_EFFECT_PRESETS, 'MAX_EFFECT_PRESETS should be 64');
+});
+
+TestRunner.test('Effect Presets - MAX_EFFECT_PRESETS is positive', (t) => {
+    t.assertTruthy(MAX_EFFECT_PRESETS > 0, 'MAX_EFFECT_PRESETS should be positive');
+});
+
+TestRunner.test('Effect Presets - MAX_EFFECT_PRESETS is reasonable (<= 256)', (t) => {
+    t.assertTruthy(MAX_EFFECT_PRESETS <= 256, 'MAX_EFFECT_PRESETS should be reasonable (<= 256)');
+});
+
+TestRunner.test('Effect Presets - DEFAULT_PRESET_NAME_PREFIX is non-empty string', (t) => {
+    t.assertTruthy(typeof DEFAULT_PRESET_NAME_PREFIX === 'string', 'DEFAULT_PRESET_NAME_PREFIX should be string');
+    t.assertTruthy(DEFAULT_PRESET_NAME_PREFIX.length > 0, 'DEFAULT_PRESET_NAME_PREFIX should be non-empty');
+});

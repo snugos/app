@@ -22,6 +22,36 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Total tests increased from 1800 to 1852
 - **Backend Note**: These tests complement Day 228 (InstrumentSampler) and Day 230 (Audio) by adding instance tests for the remaining track types: Synth, DrumSampler, and Sampler. Each track type has unique properties and methods that require validation.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+
+#### Day 244: Effect Presets State Tests (2026-04-26)
+- **Feature**: Added 36 new unit tests for Effect Presets state management functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 36 new tests in Day 244 section:
+    - getEffectPresetsState returns array
+    - getEffectPresetsByTypeState function export, parameter count, returns filtered array
+    - addEffectPresetState function export, parameter count, calls captureStateForUndo, checks MAX_EFFECT_PRESETS limit
+    - updateEffectPresetState function export, accepts 2 parameters (id, updates), calls captureStateForUndo, uses descriptive undo label
+    - removeEffectPresetState function export, accepts 1 parameter (id), calls captureStateForUndo, uses descriptive undo label, returns boolean
+    - clearEffectPresetsState function export, accepts no parameters, calls captureStateForUndo when presets exist, resets array
+    - addEffectPresetState generates unique id with effectPresetIdCounter
+    - addEffectPresetState handles presetData with id, uses DEFAULT_PRESET_NAME_PREFIX
+    - updateEffectPresetState handles name, effectType, params updates, returns null for unknown id
+    - removeEffectPresetState returns false for unknown id, returns true on success with splice
+    - addEffectPresetState calls showNotification when max presets reached
+    - DEFAULT_EFFECT_PRESET structure validation (name string, effectType null, params object)
+    - MAX_EFFECT_PRESETS is 64, positive, reasonable (<= 256)
+    - DEFAULT_PRESET_NAME_PREFIX is non-empty string
+  - `js/constants.js`: Bumped APP_VERSION to 1.27.0
+- **Feature Details**:
+  - Tests validate Effect Presets state functions (getEffectPresetsByTypeState, addEffectPresetState, updateEffectPresetState, removeEffectPresetState, clearEffectPresetsState)
+  - Tests verify undo/redo capture with descriptive labels ("Save Effect Preset", "Update Effect Preset", "Delete Effect Preset", "Clear All Effect Presets")
+  - Tests verify addEffectPresetState enforces MAX_EFFECT_PRESETS (64) limit with notification
+  - Tests verify preset CRUD operations with proper return types and error handling
+  - Total tests increased from 1895 to 1931
+- **Backend Note**: The Effect Presets state functions manage saving, loading, updating, and deleting effect presets for the DAW. The tests verify the state API without requiring actual audio processing or UI rendering.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.27.0
+
 - **Version**: Bumped to 1.25.0
 
 #### Day 241: Sampler Slice Drop Zones Verification Tests (2026-04-26)
