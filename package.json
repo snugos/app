@@ -1,6 +1,15 @@
 {
+  "name": "snugos-daw",
+  "version": "1.33.0",
+  "description": "SnugOS - Browser-based DAW",
   "devDependencies": {
     "eslint": "^10.2.1",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "puppeteer": "^21.0.0",
+    "serve": "^14.2.0"
+  },
+  "scripts": {
+    "start": "serve -l 3000",
+    "test": "node scripts/run-tests.js"
   }
 }
