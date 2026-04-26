@@ -9948,3 +9948,216 @@ TestRunner.test("Track - rebuildEffectChain is a function", (t) => {
     const mockTrack = {};
     t.assertEqual(typeof mockTrack.rebuildEffectChain, 'function', 'rebuildEffectChain should be a function');
 });
+
+// ============================================
+// Day 250: Send Bus Audio Function Tests
+// ============================================
+
+TestRunner.test("Send Bus Audio - createSendBusInAudio is a function", (t) => {
+    t.assertEqual(typeof createSendBusInAudio, 'function', 'createSendBusInAudio should be a function');
+});
+
+TestRunner.test("Send Bus Audio - createSendBusInAudio accepts 2 parameters", (t) => {
+    t.assertEqual(createSendBusInAudio.length, 2, 'createSendBusInAudio should accept 2 parameters');
+});
+
+TestRunner.test("Send Bus Audio - deleteSendBusFromAudio is a function", (t) => {
+    t.assertEqual(typeof deleteSendBusFromAudio, 'function', 'deleteSendBusFromAudio should be a function');
+});
+
+TestRunner.test("Send Bus Audio - deleteSendBusFromAudio accepts 1 parameter", (t) => {
+    t.assertEqual(deleteSendBusFromAudio.length, 1, 'deleteSendBusFromAudio should accept 1 parameter');
+});
+
+TestRunner.test("Send Bus Audio - addEffectToSendBus is a function", (t) => {
+    t.assertEqual(typeof addEffectToSendBus, 'function', 'addEffectToSendBus should be a function');
+});
+
+TestRunner.test("Send Bus Audio - addEffectToSendBus accepts 3 parameters", (t) => {
+    t.assertEqual(addEffectToSendBus.length, 3, 'addEffectToSendBus should accept 3 parameters');
+});
+
+TestRunner.test("Send Bus Audio - removeEffectFromSendBus is a function", (t) => {
+    t.assertEqual(typeof removeEffectFromSendBus, 'function', 'removeEffectFromSendBus should be a function');
+});
+
+TestRunner.test("Send Bus Audio - removeEffectFromSendBus accepts 2 parameters", (t) => {
+    t.assertEqual(removeEffectFromSendBus.length, 2, 'removeEffectFromSendBus should accept 2 parameters');
+});
+
+TestRunner.test("Send Bus Audio - reorderEffectInSendBus is a function", (t) => {
+    t.assertEqual(typeof reorderEffectInSendBus, 'function', 'reorderEffectInSendBus should be a function');
+});
+
+TestRunner.test("Send Bus Audio - reorderEffectInSendBus accepts 3 parameters", (t) => {
+    t.assertEqual(reorderEffectInSendBus.length, 3, 'reorderEffectInSendBus should accept 3 parameters');
+});
+
+TestRunner.test("Send Bus Audio - updateSendBusEffectParam is a function", (t) => {
+    t.assertEqual(typeof updateSendBusEffectParam, 'function', 'updateSendBusEffectParam should be a function');
+});
+
+TestRunner.test("Send Bus Audio - updateSendBusEffectParam accepts 4 parameters", (t) => {
+    t.assertEqual(updateSendBusEffectParam.length, 4, 'updateSendBusEffectParam should accept 4 parameters');
+});
+
+TestRunner.test("Send Bus Audio - setSendBusLevel is a function", (t) => {
+    t.assertEqual(typeof setSendBusLevel, 'function', 'setSendBusLevel should be a function');
+});
+
+TestRunner.test("Send Bus Audio - setSendBusLevel accepts 2 parameters", (t) => {
+    t.assertEqual(setSendBusLevel.length, 2, 'setSendBusLevel should accept 2 parameters');
+});
+
+TestRunner.test("Send Bus Audio - setSendBusMuted is a function", (t) => {
+    t.assertEqual(typeof setSendBusMuted, 'function', 'setSendBusMuted should be a function');
+});
+
+TestRunner.test("Send Bus Audio - setSendBusMuted accepts 2 parameters", (t) => {
+    t.assertEqual(setSendBusMuted.length, 2, 'setSendBusMuted should accept 2 parameters');
+});
+
+TestRunner.test("Send Bus Audio - setRecordingInputGain is a function", (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test("Send Bus Audio - setRecordingInputGain accepts 1 parameter", (t) => {
+    t.assertEqual(setRecordingInputGain.length, 1, 'setRecordingInputGain should accept 1 parameter');
+});
+
+TestRunner.test("Send Bus Audio - All send bus audio functions are callable", (t) => {
+    const funcs = [
+        createSendBusInAudio,
+        deleteSendBusFromAudio,
+        addEffectToSendBus,
+        removeEffectFromSendBus,
+        reorderEffectInSendBus,
+        updateSendBusEffectParam,
+        setSendBusLevel,
+        setSendBusMuted,
+        setRecordingInputGain
+    ];
+    funcs.forEach((fn, i) => {
+        t.assertEqual(typeof fn, 'function', `Function at index ${i} should be a function`);
+    });
+});
+
+// ============================================
+// Day 250: SnugWindow Dragging/Resizing Tests
+// ============================================
+
+TestRunner.test("SnugWindow - makeDraggable is a function", (t) => {
+    t.assertEqual(typeof makeDraggable, 'function', 'makeDraggable should be a function');
+});
+
+TestRunner.test("SnugWindow - makeDraggable accepts 2 parameters", (t) => {
+    t.assertEqual(makeDraggable.length, 2, 'makeDraggable should accept 2 parameters');
+});
+
+TestRunner.test("SnugWindow - makeResizable is a function", (t) => {
+    t.assertEqual(typeof makeResizable, 'function', 'makeResizable should be a function');
+});
+
+TestRunner.test("SnugWindow - makeResizable accepts 2 parameters", (t) => {
+    t.assertEqual(makeResizable.length, 2, 'makeResizable should accept 2 parameters');
+});
+
+TestRunner.test("SnugWindow - bringWindowToFront is a function", (t) => {
+    t.assertEqual(typeof bringWindowToFront, 'function', 'bringWindowToFront should be a function');
+});
+
+TestRunner.test("SnugWindow - bringWindowToFront accepts 1 parameter", (t) => {
+    t.assertEqual(bringWindowToFront.length, 1, 'bringWindowToFront should accept 1 parameter');
+});
+
+TestRunner.test("SnugWindow - closeWindow is a function", (t) => {
+    t.assertEqual(typeof closeWindow, 'function', 'closeWindow should be a function');
+});
+
+TestRunner.test("SnugWindow - closeWindow accepts 1 parameter", (t) => {
+    t.assertEqual(closeWindow.length, 1, 'closeWindow should accept 1 parameter');
+});
+
+TestRunner.test("SnugWindow - toggleMaximize is a function on prototype", (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.toggleMaximize, 'function', 'toggleMaximize should be on prototype');
+});
+
+TestRunner.test("SnugWindow - applyState is a function on prototype", (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.applyState, 'function', 'applyState should be on prototype');
+});
+
+// ============================================
+// Day 250: Additional State Function Tests
+// ============================================
+
+TestRunner.test("State - updateTrackTemplateState is a function", (t) => {
+    t.assertEqual(typeof updateTrackTemplateState, 'function', 'updateTrackTemplateState should be a function');
+});
+
+TestRunner.test("State - updateTrackTemplateState accepts 2 parameters", (t) => {
+    t.assertEqual(updateTrackTemplateState.length, 2, 'updateTrackTemplateState should accept 2 parameters');
+});
+
+TestRunner.test("State - removeTrackTemplateState is a function", (t) => {
+    t.assertEqual(typeof removeTrackTemplateState, 'function', 'removeTrackTemplateState should be a function');
+});
+
+TestRunner.test("State - removeTrackTemplateState accepts 1 parameter", (t) => {
+    t.assertEqual(removeTrackTemplateState.length, 1, 'removeTrackTemplateState should accept 1 parameter');
+});
+
+TestRunner.test("State - getTrackTemplateByIdState is a function", (t) => {
+    t.assertEqual(typeof getTrackTemplateByIdState, 'function', 'getTrackTemplateByIdState should be a function');
+});
+
+TestRunner.test("State - getTrackTemplateByIdState accepts 1 parameter", (t) => {
+    t.assertEqual(getTrackTemplateByIdState.length, 1, 'getTrackTemplateByIdState should accept 1 parameter');
+});
+
+TestRunner.test("State - setTrackGroupColorState is a function", (t) => {
+    t.assertEqual(typeof setTrackGroupColorState, 'function', 'setTrackGroupColorState should be a function');
+});
+
+TestRunner.test("State - setTrackGroupColorState accepts 2 parameters", (t) => {
+    t.assertEqual(setTrackGroupColorState.length, 2, 'setTrackGroupColorState should accept 2 parameters');
+});
+
+TestRunner.test("State - setTrackGroupMutedState is a function", (t) => {
+    t.assertEqual(typeof setTrackGroupMutedState, 'function', 'setTrackGroupMutedState should be a function');
+});
+
+TestRunner.test("State - setTrackGroupMutedState accepts 2 parameters", (t) => {
+    t.assertEqual(setTrackGroupMutedState.length, 2, 'setTrackGroupMutedState should accept 2 parameters');
+});
+
+TestRunner.test("State - setTrackGroupSoloedState is a function", (t) => {
+    t.assertEqual(typeof setTrackGroupSoloedState, 'function', 'setTrackGroupSoloedState should be a function');
+});
+
+TestRunner.test("State - setTrackGroupSoloedState accepts 2 parameters", (t) => {
+    t.assertEqual(setTrackGroupSoloedState.length, 2, 'setTrackGroupSoloedState should accept 2 parameters');
+});
+
+TestRunner.test("State - updateMidiLearnMapping is a function", (t) => {
+    t.assertEqual(typeof updateMidiLearnMapping, 'function', 'updateMidiLearnMapping should be a function');
+});
+
+TestRunner.test("State - updateMidiLearnMapping accepts 3 parameters", (t) => {
+    t.assertEqual(updateMidiLearnMapping.length, 3, 'updateMidiLearnMapping should accept 3 parameters');
+});
+
+TestRunner.test("State - getMidiLearnMappingByIndex is a function", (t) => {
+    t.assertEqual(typeof getMidiLearnMappingByIndex, 'function', 'getMidiLearnMappingByIndex should be a function');
+});
+
+TestRunner.test("State - getMidiLearnMappingByIndex accepts 1 parameter", (t) => {
+    t.assertEqual(getMidiLearnMappingByIndex.length, 1, 'getMidiLearnMappingByIndex should accept 1 parameter');
+});
+
+TestRunner.test("State - clearMidiLearnMappings is a function", (t) => {
+    t.assertEqual(typeof clearMidiLearnMappings, 'function', 'clearMidiLearnMappings should be a function');
+});
+
+TestRunner.test("State - clearMidiLearnMappings accepts no parameters", (t) => {
+    t.assertEqual(clearMidiLearnMappings.length, 0, 'clearMidiLearnMappings should accept no parameters');
+});
