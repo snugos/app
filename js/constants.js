@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.46.0'; // Day 265: Sound Library Constants Tests (2026-04-26)
+export const APP_VERSION = '1.47.0'; // Day 266: Remaining Send Track & Swing Constants Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
