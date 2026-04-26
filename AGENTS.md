@@ -3575,3 +3575,19 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify toJSON serialization includes sequences
   - Total tests increased from 1689 to ~1706
 - **Version**: Bumped to 1.35.0
+
+#### Day 259: Complete Effects Registry Available Effects Tests (2026-04-26)
+- **Feature**: Added 125 new tests to complete Effects Registry coverage for all 24 effects
+- **Files Modified**:
+  - `js/tests.js`: Added 125 new tests in Day 259 section:
+    - 24 tests for displayName on each effect
+    - 24 tests for toneClass on each effect
+    - 24 tests for params array on each effect
+    - 24 tests for params having required properties (key, label, type, defaultValue)
+    - 24 tests for params having valid types (knob, slider, select, toggle, number)
+    - 1 test verifying total effect count is 24
+  - `js/constants.js`: Bumped APP_VERSION to 1.40.0
+- **Feature Details**:
+  - Effects tested: AutoFilter, AutoPanner, AutoWah, BitCrusher, Chebyshev, Chorus, Distortion, FeedbackDelay, Freeverb, FrequencyShifter, JCReverb, Phaser, PingPongDelay, PitchShift, Reverb, StereoWidener, Tremolo, Vibrato, Compressor, EQ3, Filter, Gate, Limiter, Mono
+  - Total tests increased from ~1961 to ~2086
+- **Version**: Bumped to 1.40.0

@@ -12641,3 +12641,70 @@ TestRunner.test('appServices - setTransportEventsInitialized function is exporte
 TestRunner.test('appServices - getIsReconstructingDAW function is exported', (t) => {
     t.assertEqual(typeof window.appServices?.getIsReconstructingDAW, 'function', 'getIsReconstructingDAW should be a function');
 });
+
+// Day 259: Complete Effects Registry Available Effects Tests (2026-04-26)
+// ============================================
+
+// Effects Registry - Complete AVAILABLE_EFFECTS Coverage Tests
+// Tests that verify all 24 available effects have proper structure
+
+const effectsToTest259 = [
+    'AutoFilter', 'AutoPanner', 'AutoWah', 'BitCrusher', 'Chebyshev',
+    'Chorus', 'Distortion', 'FeedbackDelay', 'Freeverb', 'FrequencyShifter',
+    'JCReverb', 'Phaser', 'PingPongDelay', 'PitchShift', 'Reverb',
+    'StereoWidener', 'Tremolo', 'Vibrato', 'Compressor', 'EQ3',
+    'Filter', 'Gate', 'Limiter', 'Mono'
+];
+
+effectsToTest259.forEach(effectName => {
+    TestRunner.test(`Effects Registry - ${effectName} has displayName`, (t) => {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        t.assertTruthy(effect, `${effectName} should exist in AVAILABLE_EFFECTS`);
+        t.assertEqual(typeof effect.displayName, 'string', `${effectName} should have displayName string`);
+        t.assertTruthy(effect.displayName.length > 0, `${effectName} displayName should not be empty`);
+    });
+});
+
+effectsToTest259.forEach(effectName => {
+    TestRunner.test(`Effects Registry - ${effectName} has toneClass`, (t) => {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        t.assertEqual(typeof effect.toneClass, 'string', `${effectName} should have toneClass string`);
+        t.assertTruthy(effect.toneClass.length > 0, `${effectName} toneClass should not be empty`);
+    });
+});
+
+effectsToTest259.forEach(effectName => {
+    TestRunner.test(`Effects Registry - ${effectName} has params array`, (t) => {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        t.assertTruthy(Array.isArray(effect.params), `${effectName} should have params array`);
+        t.assertTruthy(effect.params.length > 0, `${effectName} params should not be empty`);
+    });
+});
+
+effectsToTest259.forEach(effectName => {
+    TestRunner.test(`Effects Registry - ${effectName} params have required properties`, (t) => {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        effect.params.forEach((param, idx) => {
+            t.assertTruthy(param.hasOwnProperty('key'), `${effectName} param[${idx}] should have key`);
+            t.assertTruthy(param.hasOwnProperty('label'), `${effectName} param[${idx}] should have label`);
+            t.assertTruthy(param.hasOwnProperty('type'), `${effectName} param[${idx}] should have type`);
+            t.assertTruthy(param.hasOwnProperty('defaultValue'), `${effectName} param[${idx}] should have defaultValue`);
+        });
+    });
+});
+
+effectsToTest259.forEach(effectName => {
+    TestRunner.test(`Effects Registry - ${effectName} params have valid types`, (t) => {
+        const effect = AVAILABLE_EFFECTS[effectName];
+        const validTypes = ['knob', 'slider', 'select', 'toggle', 'number'];
+        effect.params.forEach((param, idx) => {
+            t.assertTruthy(validTypes.includes(param.type), `${effectName} param[${idx}] type should be valid`);
+        });
+    });
+});
+
+// Verify total effect count
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has all 24 effects', (t) => {
+    const effectCount = Object.keys(AVAILABLE_EFFECTS).length;
+    t.assertEqual(effectCount, 24, 'AVAILABLE_EFFECTS should have exactly 24 effects');
+});
