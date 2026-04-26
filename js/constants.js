@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.28.0'; // Day 246: InstrumentSampler & Audio Track UI Tests // Day 244: Effect Presets State Tests // Day 242: Synth, DrumSampler & Sampler Track Instance Tests
+export const APP_VERSION = '1.29.0'; // Day 247: Remaining UI Function & Mixer Tests // Day 246: InstrumentSampler & Audio Track UI Tests // Day 244: Effect Presets State Tests // Day 242: Synth, DrumSampler & Sampler Track Instance Tests
 
 
 // Performance Monitor Constants
