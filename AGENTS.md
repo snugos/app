@@ -1,4 +1,25 @@
 # SnugOS AGENTS.md - Agent Memory and Improvement Log
+# SnugOS AGENTS.md - Agent Memory and Improvement Log
+#### Day 263: MIDI Export/Import & Desktop Constants Tests (2026-04-26)
+- **Feature**: Added 45 new unit tests for MIDI Export/Import, Time Signature, Send Track, and Desktop Settings constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 45 new tests in Day 263 section:
+    - MIDI Export constants: MIDI_EXPORT_VELOCITY_SCALE (127), MIDI_DEFAULT_CHANNEL (0), MIDI_DEFAULT_PROGRAM (0), MIDI_EXPORT_TicksPerQuarterNote (480), MIDI_FILE_FORMAT (0), MIDI_FILE_TYPE_NAMES array, DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, MAX_MIDI_EXPORT_TRACKS (64)
+    - MIDI Import constants: MIDI_IMPORT_MIN_NOTES (1), MIDI_IMPORT_MAX_VELOCITY (127), MIDI_IMPORT_DEFAULT_VELOCITY (100), MIDI_IMPORT_DEFAULT_PROBABILITY (1.0), MIDI_IMPORT_SNAP_TO_GRID (true), MIDI_IMPORT_VELOCITY_SCALE (1/127)
+    - Time Signature: TIME_SIG_MAX_DENOMINATOR (16), validation for powers of 2
+    - Send Track: SEND_LEVEL_POST_FADER (true) boolean flag
+    - Desktop Settings: DESKTOP_BACKGROUND_KEY and DESKTOP_BG_TYPE_KEY namespacing
+    - Cross-constant validation: import/export scales are inverses, default < max velocity
+  - `js/constants.js`: Bumped APP_VERSION to 1.44.0
+- **Feature Details**:
+  - Tests validate MIDI Export constants for file format and velocity scaling
+  - Tests validate MIDI Import constants for note and velocity handling
+  - Tests verify TIME_SIG_MAX_DENOMINATOR is reasonable power of 2
+  - Tests verify SEND_LEVEL_POST_FADER controls send routing
+  - Tests verify Desktop Settings keys are namespaced with 'snugos'
+  - Tests verify import/export velocity scale consistency (inverse relationship)
+  - Total tests increased from 2063 to 2107
+- **Version**: Bumped to 1.44.0
 #### Day 258: appServices Main.js Function Tests (2026-04-26)
 - **Feature**: Added 60 new unit tests for appServices functions exported from main.js to expand test coverage
 - **Files Modified**:
