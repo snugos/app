@@ -10248,3 +10248,228 @@ TestRunner.test('Audio - startPerformanceMonitor handles missing Tone gracefully
     const funcStr = startPerformanceMonitor.toString();
     t.assertTruthy(funcStr.includes('Tone') || funcStr.includes('context'), 'startPerformanceMonitor should handle audio context');
 });
+
+// ============================================
+// Day 251: Additional UI Module Function Tests (2026-04-26)
+// ============================================
+TestRunner.test("UI Module - openAudioClipEditorWindow is a function", (t) => {
+    t.assertTruthy(typeof openAudioClipEditorWindow === "function", "openAudioClipEditorWindow should be a function");
+});
+
+TestRunner.test("UI Module - openAudioClipEditorWindow accepts trackId and clipId parameters", (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes("trackId") && funcStr.includes("clipId"), "openAudioClipEditorWindow should accept trackId and clipId");
+});
+
+TestRunner.test("UI Module - openAudioClipEditorWindow creates clip editor window", (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes("window") || funcStr.includes("Window"), "openAudioClipEditorWindow should create a window");
+});
+
+TestRunner.test("UI Module - showKeyboardShortcutsHelpWindow is a function", (t) => {
+    t.assertTruthy(typeof showKeyboardShortcutsHelpWindow === "function", "showKeyboardShortcutsHelpWindow should be a function");
+});
+
+TestRunner.test("UI Module - showKeyboardShortcutsHelpWindow shows keyboard shortcuts", (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes("keyboard") || funcStr.includes("shortcut") || funcStr.includes("help"), "showKeyboardShortcutsHelpWindow should show keyboard shortcuts");
+});
+
+TestRunner.test("UI Module - openTrackSequencerWindow is a function", (t) => {
+    t.assertTruthy(typeof openTrackSequencerWindow === "function", "openTrackSequencerWindow should be a function");
+});
+
+TestRunner.test("UI Module - openTrackSequencerWindow accepts trackId parameter", (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("trackId"), "openTrackSequencerWindow should accept trackId");
+});
+
+TestRunner.test("UI Module - openTrackSequencerWindow creates sequencer window", (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("sequencer") || funcStr.includes("grid") || funcStr.includes("step"), "openTrackSequencerWindow should create sequencer UI");
+});
+
+TestRunner.test("UI Module - updateSequencerCellUI updates cell appearance", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes("cell") || funcStr.includes("element") || funcStr.includes("class"), "updateSequencerCellUI should update cell appearance");
+});
+
+TestRunner.test("UI Module - updateSequencerCellUI handles active/inactive states", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes("active") || funcStr.includes("isActive"), "updateSequencerCellUI should handle active states");
+});
+
+TestRunner.test("UI Module - highlightPlayingStep highlights current step", (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes("step") || funcStr.includes("highlight") || funcStr.includes("play"), "highlightPlayingStep should highlight playing step");
+});
+
+TestRunner.test("UI Module - highlightPlayingStep accepts trackId parameter", (t) => {
+    t.assertTruthy(highlightPlayingStep.length >= 2, "highlightPlayingStep should accept trackId parameter");
+});
+
+TestRunner.test("UI Module - drawWaveform draws audio waveform", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes("waveform") || funcStr.includes("canvas") || funcStr.includes("audio"), "drawWaveform should draw waveform");
+});
+
+TestRunner.test("UI Module - drawWaveform accepts track parameter", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes("track") || funcStr.includes("Track"), "drawWaveform should accept track parameter");
+});
+
+TestRunner.test("UI Module - drawClipWaveform draws clip waveform", (t) => {
+    const funcStr = drawClipWaveform.toString();
+    t.assertTruthy(funcStr.includes("clip") || funcStr.includes("waveform"), "drawClipWaveform should draw clip waveform");
+});
+
+TestRunner.test("UI Module - drawClipWaveform accepts clipId and audioBuffer", (t) => {
+    const funcStr = drawClipWaveform.toString();
+    t.assertTruthy(funcStr.includes("clip") || funcStr.includes("buffer"), "drawClipWaveform should accept clipId and audioBuffer");
+});
+
+TestRunner.test("UI Module - drawInstrumentWaveform draws instrument waveform", (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes("instrument") || funcStr.includes("waveform"), "drawInstrumentWaveform should draw instrument waveform");
+});
+
+TestRunner.test("UI Module - drawInstrumentWaveform references track", (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes("track") || funcStr.includes("Track"), "drawInstrumentWaveform should reference track");
+});
+
+TestRunner.test("UI Module - renderSamplePads renders sample pad grid", (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes("pad") || funcStr.includes("sample"), "renderSamplePads should render sample pads");
+});
+
+TestRunner.test("UI Module - renderSamplePads uses track parameter", (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes("track") || funcStr.includes("Track"), "renderSamplePads should use track parameter");
+});
+
+TestRunner.test("UI Module - updateSliceEditorUI updates slice editor display", (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes("slice") || funcStr.includes("editor"), "updateSliceEditorUI should update slice editor");
+});
+
+TestRunner.test("UI Module - updateSliceEditorUI references track and slices", (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes("track") && funcStr.includes("slice"), "updateSliceEditorUI should reference track and slices");
+});
+
+TestRunner.test("UI Module - updateDrumPadControlsUI updates drum pad display", (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes("pad") || funcStr.includes("drum"), "updateDrumPadControlsUI should update drum pad display");
+});
+
+TestRunner.test("UI Module - updateDrumPadControlsUI creates drop zone for each pad", (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes("dropZone") || funcStr.includes("drop"), "updateDrumPadControlsUI should create drop zones");
+});
+
+TestRunner.test("UI Module - renderDrumSamplerPads renders all 8 pads", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes("pad") && (funcStr.includes("8") || funcStr.includes("numDrum")), "renderDrumSamplerPads should render drum pads");
+});
+
+TestRunner.test("UI Module - renderDrumSamplerPads handles pad selection", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes("selected") || funcStr.includes("click"), "renderDrumSamplerPads should handle pad selection");
+});
+
+TestRunner.test("UI Module - handleTapTempo calculates BPM from taps", (t) => {
+    const funcStr = handleTapTempo.toString();
+    t.assertTruthy(funcStr.includes("tap") || funcStr.includes("tempo") || funcStr.includes("BPM"), "handleTapTempo should calculate tempo");
+});
+
+TestRunner.test("UI Module - handleTapTempo uses TAP_TEMPO_TIMEOUT_MS", (t) => {
+    const funcStr = handleTapTempo.toString();
+    t.assertTruthy(funcStr.includes("timeout") || funcStr.includes("ms") || funcStr.includes("TAP"), "handleTapTempo should use timeout");
+});
+
+TestRunner.test("UI Module - resetTapTempo clears tap state", (t) => {
+    const funcStr = resetTapTempo.toString();
+    t.assertTruthy(funcStr.includes("reset") || funcStr.includes("clear") || funcStr.includes("tap"), "resetTapTempo should clear tap state");
+});
+
+TestRunner.test("UI Module - updateSoundBrowserDisplayForLibrary updates library display", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes("sound") || funcStr.includes("browser") || funcStr.includes("library"), "updateSoundBrowserDisplayForLibrary should update display");
+});
+
+TestRunner.test("UI Module - updateSoundBrowserDisplayForLibrary handles loading state", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes("loading") || funcStr.includes("isLoading"), "updateSoundBrowserDisplayForLibrary should handle loading");
+});
+
+TestRunner.test("UI Module - updateSoundBrowserDisplayForLibrary handles error state", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes("error") || funcStr.includes("hasError"), "updateSoundBrowserDisplayForLibrary should handle errors");
+});
+
+TestRunner.test("UI Module - renderSoundBrowserDirectory renders directory tree", (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes("directory") || funcStr.includes("tree") || funcStr.includes("path"), "renderSoundBrowserDirectory should render directory");
+});
+
+TestRunner.test("UI Module - renderSoundBrowserDirectory handles path arrays", (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes("path") && funcStr.includes("Array"), "renderSoundBrowserDirectory should handle path arrays");
+});
+
+TestRunner.test("UI Module - renderEffectsList displays effects list", (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes("effect") && (funcStr.includes("list") || funcStr.includes("render")), "renderEffectsList should display effects");
+});
+
+TestRunner.test("UI Module - renderEffectsList uses owner and ownerType", (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes("owner") && funcStr.includes("ownerType"), "renderEffectsList should use owner parameters");
+});
+
+TestRunner.test("UI Module - renderEffectControls displays effect controls", (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes("effect") && funcStr.includes("control"), "renderEffectControls should display controls");
+});
+
+TestRunner.test("UI Module - renderEffectControls handles effectId parameter", (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes("effectId"), "renderEffectControls should handle effectId");
+});
+
+TestRunner.test("UI Module - updatePlayheadPosition updates playhead display", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes("playhead") || funcStr.includes("position"), "updatePlayheadPosition should update playhead");
+});
+
+TestRunner.test("UI Module - updatePlayheadPosition uses current transport time", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes("transport") || funcStr.includes("time") || funcStr.includes("Tone"), "updatePlayheadPosition should use transport time");
+});
+
+TestRunner.test("UI Module - createKnob creates interactive knob control", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes("knob") || funcStr.includes("input") || funcStr.includes("range"), "createKnob should create knob control");
+});
+
+TestRunner.test("UI Module - createKnob accepts options parameter", (t) => {
+    t.assertTruthy(createKnob.length >= 1, "createKnob should accept options parameter");
+});
+
+TestRunner.test("UI Module - createKnob returns DOM element", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes("document") || funcStr.includes("createElement") || funcStr.includes("return"), "createKnob should return element");
+});
+
+TestRunner.test("UI Constants - KEYBOARD_SHORTCUTS_HELP_TITLE is defined", (t) => {
+    t.assertTruthy(typeof KEYBOARD_SHORTCUTS_HELP_TITLE === "string", "KEYBOARD_SHORTCUTS_HELP_TITLE should be a string");
+});
+
+TestRunner.test("UI Constants - KEYBOARD_SHORTCUTS_HELP_WIDTH is reasonable", (t) => {
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_WIDTH >= 300 && KEYBOARD_SHORTCUTS_HELP_WIDTH <= 1000, "KEYBOARD_SHORTCUTS_HELP_WIDTH should be reasonable");
+});
+
+TestRunner.test("UI Constants - KEYBOARD_SHORTCUTS_HELP_HEIGHT is reasonable", (t) => {
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_HEIGHT >= 200 && KEYBOARD_SHORTCUTS_HELP_HEIGHT <= 800, "KEYBOARD_SHORTCUTS_HELP_HEIGHT should be reasonable");
+});

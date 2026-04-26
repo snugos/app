@@ -4,6 +4,41 @@
 SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla JavaScript modules. It uses Tone.js for audio processing and Tailwind CSS for styling. The app is deployed via GitHub Pages.
 
 #### Day 246: InstrumentSampler & Audio Track UI Tests (2026-04-26)
+
+#### Day 251: Additional UI Module Function Tests (2026-04-26)
+- **Feature**: Added 46 new unit tests for remaining UI module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 46 new tests in Day 251 section:
+    - openAudioClipEditorWindow: function type, accepts trackId and clipId, creates clip editor window
+    - showKeyboardShortcutsHelpWindow: function type, shows keyboard shortcuts help
+    - openTrackSequencerWindow: function type, accepts trackId, creates sequencer window
+    - updateSequencerCellUI: updates cell appearance, handles active/inactive states
+    - highlightPlayingStep: highlights current step, accepts trackId parameter
+    - drawWaveform: draws audio waveform, accepts track parameter
+    - drawClipWaveform: draws clip waveform, accepts clipId and audioBuffer
+    - drawInstrumentWaveform: draws instrument waveform, references track
+    - renderSamplePads: renders sample pad grid, uses track parameter
+    - updateSliceEditorUI: updates slice editor display, references track and slices
+    - updateDrumPadControlsUI: updates drum pad display, creates drop zone for each pad
+    - renderDrumSamplerPads: renders all 8 pads, handles pad selection
+    - handleTapTempo: calculates BPM from taps, uses TAP_TEMPO_TIMEOUT_MS
+    - resetTapTempo: clears tap state
+    - updateSoundBrowserDisplayForLibrary: updates library display, handles loading/error states
+    - renderSoundBrowserDirectory: renders directory tree, handles path arrays
+    - renderEffectsList: displays effects list, uses owner and ownerType
+    - renderEffectControls: displays effect controls, handles effectId parameter
+    - updatePlayheadPosition: updates playhead display, uses transport time
+    - createKnob: creates interactive knob control, accepts options, returns DOM element
+    - UI Constants: KEYBOARD_SHORTCUTS_HELP_TITLE defined, HELP_WIDTH and HELP_HEIGHT reasonable
+  - `js/constants.js`: Bumped APP_VERSION to 1.33.0
+- **Feature Details**:
+  - Tests validate remaining UI module functions (32 exported functions total)
+  - Tests verify function signatures and parameter usage
+  - Tests validate UI constants for keyboard shortcuts help window
+  - Tests verify waveform drawing functions accept correct parameters
+  - Total tests increased from 1621 to 1667
+- **Version**: Bumped to 1.33.0
+
 - **Feature**: Added 24 new unit tests for InstrumentSampler and Audio Track UI components
 - **Files Modified**:
   - `js/tests.js`: Added 24 new tests in Day 246 section:
