@@ -36,7 +36,25 @@ import {
     AUTOMATION_LANE_PRECISION,
     AUTOMATION_LANE_STEP,
     AUTOMATION_LANE_PARAMETERS,
-    AUTOMATION_LANE_COLORS
+    AUTOMATION_LANE_COLORS,
+    TIME_SIG_MAX_DENOMINATOR,
+    SEND_LEVEL_POST_FADER,
+    MIDI_EXPORT_VELOCITY_SCALE,
+    MIDI_DEFAULT_CHANNEL,
+    MIDI_DEFAULT_PROGRAM,
+    MIDI_EXPORT_TicksPerQuarterNote,
+    MIDI_FILE_FORMAT,
+    MIDI_FILE_TYPE_NAMES,
+    DEFAULT_MIDI_EXPORT_FILENAME_PREFIX,
+    MAX_MIDI_EXPORT_TRACKS,
+    MIDI_IMPORT_MIN_NOTES,
+    MIDI_IMPORT_MAX_VELOCITY,
+    MIDI_IMPORT_DEFAULT_VELOCITY,
+    MIDI_IMPORT_DEFAULT_PROBABILITY,
+    MIDI_IMPORT_SNAP_TO_GRID,
+    MIDI_IMPORT_VELOCITY_SCALE,
+    DESKTOP_BACKGROUND_KEY,
+    DESKTOP_BG_TYPE_KEY
 } from './constants.js';
 import {
     getUndoStackState,
@@ -13669,4 +13687,184 @@ TestRunner.test('Track - getAutomationLaneCount returns correct count', (t) => {
     
     const count = track.getAutomationLaneCount('volume');
     t.assertEqual(count, 3, 'getAutomationLaneCount should return 3');
+});
+
+// ============================================
+// Day 263: MIDI Export/Import & Desktop Constants Tests (2026-04-26)
+// ============================================
+TestRunner.test('MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is 127', (t) => {
+    t.assertEqual(MIDI_EXPORT_VELOCITY_SCALE, 127, 'Velocity scale should be 127');
+});
+
+TestRunner.test('MIDI Export - MIDI_EXPORT_VELOCITY_SCALE is positive', (t) => {
+    t.assertTruthy(MIDI_EXPORT_VELOCITY_SCALE > 0, 'Velocity scale should be positive');
+});
+
+TestRunner.test('MIDI Export - MIDI_DEFAULT_CHANNEL is 0', (t) => {
+    t.assertEqual(MIDI_DEFAULT_CHANNEL, 0, 'Default MIDI channel should be 0');
+});
+
+TestRunner.test('MIDI Export - MIDI_DEFAULT_CHANNEL is in valid range', (t) => {
+    t.assertTruthy(MIDI_DEFAULT_CHANNEL >= 0 && MIDI_DEFAULT_CHANNEL <= 15, 'Channel should be 0-15');
+});
+
+TestRunner.test('MIDI Export - MIDI_DEFAULT_PROGRAM is 0', (t) => {
+    t.assertEqual(MIDI_DEFAULT_PROGRAM, 0, 'Default program should be 0');
+});
+
+TestRunner.test('MIDI Export - MIDI_DEFAULT_PROGRAM is non-negative', (t) => {
+    t.assertTruthy(MIDI_DEFAULT_PROGRAM >= 0, 'Program should be non-negative');
+});
+
+TestRunner.test('MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is 480', (t) => {
+    t.assertEqual(MIDI_EXPORT_TicksPerQuarterNote, 480, 'Ticks per quarter note should be 480');
+});
+
+TestRunner.test('MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is positive', (t) => {
+    t.assertTruthy(MIDI_EXPORT_TicksPerQuarterNote > 0, 'Ticks should be positive');
+});
+
+TestRunner.test('MIDI Export - MIDI_EXPORT_TicksPerQuarterNote is reasonable', (t) => {
+    t.assertTruthy(MIDI_EXPORT_TicksPerQuarterNote >= 96 && MIDI_EXPORT_TicksPerQuarterNote <= 960, 'Ticks should be reasonable (96-960)');
+});
+
+TestRunner.test('MIDI Export - MIDI_FILE_FORMAT is 0', (t) => {
+    t.assertEqual(MIDI_FILE_FORMAT, 0, 'MIDI file format should be 0');
+});
+
+TestRunner.test('MIDI Export - MIDI_FILE_FORMAT is valid', (t) => {
+    t.assertTruthy(MIDI_FILE_FORMAT >= 0 && MIDI_FILE_FORMAT <= 2, 'Format should be 0, 1, or 2');
+});
+
+TestRunner.test('MIDI Export - MIDI_FILE_TYPE_NAMES is array', (t) => {
+    t.assertTruthy(Array.isArray(MIDI_FILE_TYPE_NAMES), 'Type names should be array');
+});
+
+TestRunner.test('MIDI Export - MIDI_FILE_TYPE_NAMES contains Type 0', (t) => {
+    t.assertTruthy(MIDI_FILE_TYPE_NAMES.some(t => t.includes('Type 0')), 'Should contain Type 0');
+});
+
+TestRunner.test('MIDI Export - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is non-empty string', (t) => {
+    t.assertEqual(typeof DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, 'string', 'Prefix should be string');
+    t.assertTruthy(DEFAULT_MIDI_EXPORT_FILENAME_PREFIX.length > 0, 'Prefix should not be empty');
+});
+
+TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is 64', (t) => {
+    t.assertEqual(MAX_MIDI_EXPORT_TRACKS, 64, 'Max tracks should be 64');
+});
+
+TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is positive', (t) => {
+    t.assertTruthy(MAX_MIDI_EXPORT_TRACKS > 0, 'Max tracks should be positive');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is 1', (t) => {
+    t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'Min notes should be 1');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_MIN_NOTES is positive', (t) => {
+    t.assertTruthy(MIDI_IMPORT_MIN_NOTES > 0, 'Min notes should be positive');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_MAX_VELOCITY is 127', (t) => {
+    t.assertEqual(MIDI_IMPORT_MAX_VELOCITY, 127, 'Max velocity should be 127');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_MAX_VELOCITY is valid MIDI velocity', (t) => {
+    t.assertTruthy(MIDI_IMPORT_MAX_VELOCITY >= 1 && MIDI_IMPORT_MAX_VELOCITY <= 127, 'Max velocity should be valid MIDI range');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is 100', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_VELOCITY, 100, 'Default velocity should be 100');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is in valid range', (t) => {
+    t.assertTruthy(MIDI_IMPORT_DEFAULT_VELOCITY >= 1 && MIDI_IMPORT_DEFAULT_VELOCITY <= 127, 'Default velocity should be valid');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is 1.0', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_PROBABILITY, 1.0, 'Default probability should be 1.0');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_PROBABILITY is valid range', (t) => {
+    t.assertTruthy(MIDI_IMPORT_DEFAULT_PROBABILITY >= 0 && MIDI_IMPORT_DEFAULT_PROBABILITY <= 1, 'Probability should be 0-1');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is true', (t) => {
+    t.assertEqual(MIDI_IMPORT_SNAP_TO_GRID, true, 'Snap to grid should be true');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_SNAP_TO_GRID is boolean', (t) => {
+    t.assertEqual(typeof MIDI_IMPORT_SNAP_TO_GRID, 'boolean', 'Snap should be boolean');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is 1/127', (t) => {
+    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1/127, 'Velocity scale should be 1/127');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is positive', (t) => {
+    t.assertTruthy(MIDI_IMPORT_VELOCITY_SCALE > 0, 'Velocity scale should be positive');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_VELOCITY_SCALE is inverse of export scale', (t) => {
+    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1/MIDI_EXPORT_VELOCITY_SCALE, 'Import scale should be inverse of export');
+});
+
+TestRunner.test('Time Signature - TIME_SIG_MAX_DENOMINATOR is 16', (t) => {
+    t.assertEqual(TIME_SIG_MAX_DENOMINATOR, 16, 'Max denominator should be 16');
+});
+
+TestRunner.test('Time Signature - TIME_SIG_MAX_DENOMINATOR is positive', (t) => {
+    t.assertTruthy(TIME_SIG_MAX_DENOMINATOR > 0, 'Max denominator should be positive');
+});
+
+TestRunner.test('Time Signature - TIME_SIG_MAX_DENOMINATOR is reasonable power of 2', (t) => {
+    t.assertTruthy([1,2,4,8,16,32].includes(TIME_SIG_MAX_DENOMINATOR), 'Should be reasonable power of 2');
+});
+
+TestRunner.test('Send Track - SEND_LEVEL_POST_FADER is true', (t) => {
+    t.assertEqual(SEND_LEVEL_POST_FADER, true, 'Sends should be post-fader by default');
+});
+
+TestRunner.test('Send Track - SEND_LEVEL_POST_FADER is boolean', (t) => {
+    t.assertEqual(typeof SEND_LEVEL_POST_FADER, 'boolean', 'Post-fader flag should be boolean');
+});
+
+TestRunner.test('Desktop Settings - DESKTOP_BACKGROUND_KEY is a string', (t) => {
+    t.assertEqual(typeof DESKTOP_BACKGROUND_KEY, 'string', 'Key should be string');
+});
+
+TestRunner.test('Desktop Settings - DESKTOP_BACKGROUND_KEY is non-empty', (t) => {
+    t.assertTruthy(DESKTOP_BACKGROUND_KEY.length > 0, 'Key should not be empty');
+});
+
+TestRunner.test('Desktop Settings - DESKTOP_BACKGROUND_KEY contains snugos', (t) => {
+    t.assertTruthy(DESKTOP_BACKGROUND_KEY.includes('snugos'), 'Key should be namespaced');
+});
+
+TestRunner.test('Desktop Settings - DESKTOP_BG_TYPE_KEY is a string', (t) => {
+    t.assertEqual(typeof DESKTOP_BG_TYPE_KEY, 'string', 'Key should be string');
+});
+
+TestRunner.test('Desktop Settings - DESKTOP_BG_TYPE_KEY is non-empty', (t) => {
+    t.assertTruthy(DESKTOP_BG_TYPE_KEY.length > 0, 'Key should not be empty');
+});
+
+TestRunner.test('Desktop Settings - DESKTOP_BG_TYPE_KEY contains snugos', (t) => {
+    t.assertTruthy(DESKTOP_BG_TYPE_KEY.includes('snugos'), 'Key should be namespaced');
+});
+
+TestRunner.test('Desktop Settings - DESKTOP_BG_TYPE_KEY is different from DESKTOP_BACKGROUND_KEY', (t) => {
+    t.assertTruthy(DESKTOP_BG_TYPE_KEY !== DESKTOP_BACKGROUND_KEY, 'Keys should be different');
+});
+
+TestRunner.test('MIDI Export - MIDI_EXPORT and MIDI_IMPORT constants are consistent', (t) => {
+    t.assertEqual(MIDI_EXPORT_VELOCITY_SCALE * MIDI_IMPORT_VELOCITY_SCALE, 1, 'Import and export scales should be inverses');
+});
+
+TestRunner.test('MIDI Export - MAX_MIDI_EXPORT_TRACKS is at least 16', (t) => {
+    t.assertTruthy(MAX_MIDI_EXPORT_TRACKS >= 16, 'Max tracks should support typical setups');
+});
+
+TestRunner.test('MIDI Import - MIDI_IMPORT_DEFAULT_VELOCITY is less than MAX', (t) => {
+    t.assertTruthy(MIDI_IMPORT_DEFAULT_VELOCITY < MIDI_IMPORT_MAX_VELOCITY, 'Default should be less than max');
 });

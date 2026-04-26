@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.43.0'; // Day 262: Advanced Sequence Operation Tests (2026-04-26)
+export const APP_VERSION = '1.44.0'; // Day 263: MIDI Export/Import & Desktop Constants Tests (2026-04-26)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
