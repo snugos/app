@@ -1,5 +1,22 @@
 # SnugOS AGENTS.md - Agent Memory and Improvement Log
 # SnugOS AGENTS.md - Agent Memory and Improvement Log
+#### Day 266: Remaining Send Track & Swing Constants Tests (2026-04-27)
+- **Feature**: Added 40 new unit tests for remaining Send Track and Swing constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for DEFAULT_SEND_LEVEL, SEND_LEVEL_MIN, SEND_LEVEL_MAX, DEFAULT_SEND_PRE_FADER, SEND_PRE_FADER_ENABLED, MAX_SWING_AMOUNT, SWING_SUBDIVISION. Added 40 new tests in Day 266 section:
+    - Send Track Constants: DEFAULT_SEND_LEVEL is 0 (off/-infinity dB), SEND_LEVEL_MIN is 0, SEND_LEVEL_MAX is 1.2 (allows boosting above unity), DEFAULT_SEND_PRE_FADER is false (post-fader default), SEND_PRE_FADER_ENABLED is true (feature flag), SEND_LEVEL_POST_FADER and DEFAULT_SEND_PRE_FADER logical consistency, MAX_SEND_TRACKS is 8, DEFAULT_SEND_TRACK structure validation (name, effects, level, muted)
+    - Swing Constants: MAX_SWING_AMOUNT is 100 (0-100 percentage range), SWING_SUBDIVISION is 8 (applies to 8th notes/every other 16th note), SWING_SUBDIVISION is even and reasonable (4-32), SWING_SUBDIVISION relates to STEPS_PER_BAR (16/2=8 for standard 16th note swing), DEFAULT_SWING object structure (enabled is false, amount is 0)
+    - Cross-constant Validation: SEND_LEVEL_MIN <= DEFAULT_SEND_LEVEL <= SEND_LEVEL_MAX, DEFAULT_SWING.amount within MAX_SWING_AMOUNT
+  - `js/constants.js`: Bumped APP_VERSION to 1.47.0
+- **Feature Details**:
+  - Tests validate Send Track constants for send/aux bus configuration
+  - Tests verify SEND_LEVEL_MAX allows boosting above unity (1.0 = 0dB)
+  - Tests verify DEFAULT_SEND_PRE_FADER is false (post-fader routing by default)
+  - Tests verify SWING_SUBDIVISION = 8 matches STEPS_PER_BAR / 2 for standard 16th note swing
+  - Tests validate DEFAULT_SEND_TRACK structure (name: 'Send', effects: [], level: 1.0, muted: false)
+  - Tests verify cross-constant consistency and valid ranges
+  - Total tests increased from 2167 to 2207
+- **Version**: Bumped to 1.47.0
 #### Day 264: Comprehensive Performance Monitor Constants Tests (2026-04-26)
 - **Feature**: Added 22 new unit tests for Performance Monitor constants to expand test coverage
 - **Files Modified**:
