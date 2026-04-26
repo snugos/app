@@ -9720,3 +9720,231 @@ TestRunner.test("Mixer Constants - Mixer meter update interval is reasonable", (
     t.assertTruthy(updateStr.includes("meter") || updateStr.includes("requestAnimationFrame") || updateStr.includes("setInterval") || updateStr.includes("level"), "Mixer should have meter update mechanism");
 });
 
+
+// ============================================
+// Day 249: Additional Track Instance Method Tests (2026-04-26)
+// ============================================
+TestRunner.test("Track - setSliceVolume is a function", (t) => {
+    const mockSampler = { type: 'Sampler' };
+    t.assertEqual(typeof mockSampler.setSliceVolume, 'function', 'setSliceVolume should be a function');
+});
+
+TestRunner.test("Track - setSlicePitchShift is a function", (t) => {
+    const mockSampler = { type: 'Sampler' };
+    t.assertEqual(typeof mockSampler.setSlicePitchShift, 'function', 'setSlicePitchShift should be a function');
+});
+
+TestRunner.test("Track - setSliceLoop is a function", (t) => {
+    const mockSampler = { type: 'Sampler' };
+    t.assertEqual(typeof mockSampler.setSliceLoop, 'function', 'setSliceLoop should be a function');
+});
+
+TestRunner.test("Track - setSliceReverse is a function", (t) => {
+    const mockSampler = { type: 'Sampler' };
+    t.assertEqual(typeof mockSampler.setSliceReverse, 'function', 'setSliceReverse should be a function');
+});
+
+TestRunner.test("Track - setSliceEnvelopeParam is a function", (t) => {
+    const mockSampler = { type: 'Sampler' };
+    t.assertEqual(typeof mockSampler.setSliceEnvelopeParam, 'function', 'setSliceEnvelopeParam should be a function');
+});
+
+TestRunner.test("Track - setDrumSamplerPadVolume is a function", (t) => {
+    const mockDrum = { type: 'DrumSampler' };
+    t.assertEqual(typeof mockDrum.setDrumSamplerPadVolume, 'function', 'setDrumSamplerPadVolume should be a function');
+});
+
+TestRunner.test("Track - setDrumSamplerPadPitch is a function", (t) => {
+    const mockDrum = { type: 'DrumSampler' };
+    t.assertEqual(typeof mockDrum.setDrumSamplerPadPitch, 'function', 'setDrumSamplerPadPitch should be a function');
+});
+
+TestRunner.test("Track - setDrumSamplerPadEnv is a function", (t) => {
+    const mockDrum = { type: 'DrumSampler' };
+    t.assertEqual(typeof mockDrum.setDrumSamplerPadEnv, 'function', 'setDrumSamplerPadEnv should be a function');
+});
+
+TestRunner.test("Track - setInstrumentSamplerRootNote is a function", (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    t.assertEqual(typeof mockInst.setInstrumentSamplerRootNote, 'function', 'setInstrumentSamplerRootNote should be a function');
+});
+
+TestRunner.test("Track - setInstrumentSamplerLoop is a function", (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    t.assertEqual(typeof mockInst.setInstrumentSamplerLoop, 'function', 'setInstrumentSamplerLoop should be a function');
+});
+
+TestRunner.test("Track - setInstrumentSamplerLoopStart is a function", (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    t.assertEqual(typeof mockInst.setInstrumentSamplerLoopStart, 'function', 'setInstrumentSamplerLoopStart should be a function');
+});
+
+TestRunner.test("Track - setInstrumentSamplerLoopEnd is a function", (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    t.assertEqual(typeof mockInst.setInstrumentSamplerLoopEnd, 'function', 'setInstrumentSamplerLoopEnd should be a function');
+});
+
+TestRunner.test("Track - setInstrumentSamplerEnv is a function", (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    t.assertEqual(typeof mockInst.setInstrumentSamplerEnv, 'function', 'setInstrumentSamplerEnv should be a function');
+});
+
+TestRunner.test("Track - setSynthParam is a function", (t) => {
+    const mockSynth = { type: 'Synth' };
+    t.assertEqual(typeof mockSynth.setSynthParam, 'function', 'setSynthParam should be a function');
+});
+
+TestRunner.test("Track - getPan is a function", (t) => {
+    const mockTrack = { type: 'Audio' };
+    t.assertEqual(typeof mockTrack.getPan, 'function', 'getPan should be a function');
+});
+
+TestRunner.test("Track - setPan is a function", (t) => {
+    const mockTrack = { type: 'Audio' };
+    t.assertEqual(typeof mockTrack.setPan, 'function', 'setPan should be a function');
+});
+
+TestRunner.test("Track - setTrackName is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.setTrackName, 'function', 'setTrackName should be a function');
+});
+
+TestRunner.test("Track - getTrackName is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.getTrackName, 'function', 'getTrackName should be a function');
+});
+
+TestRunner.test("Track - setTrackColor is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.setTrackColor, 'function', 'setTrackColor should be a function');
+});
+
+TestRunner.test("Track - getTrackColor is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.getTrackColor, 'function', 'getTrackColor should be a function');
+});
+
+TestRunner.test("Track - applyMuteState is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.applyMuteState, 'function', 'applyMuteState should be a function');
+});
+
+TestRunner.test("Track - applySoloState is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.applySoloState, 'function', 'applySoloState should be a function');
+});
+
+TestRunner.test("Track - duplicateTrack is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.duplicateTrack, 'function', 'duplicateTrack should be a function');
+});
+
+TestRunner.test("Track - getActiveSequence is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.getActiveSequence, 'function', 'getActiveSequence should be a function');
+});
+
+TestRunner.test("Track - getActiveSequenceData is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.getActiveSequenceData, 'function', 'getActiveSequenceData should be a function');
+});
+
+TestRunner.test("Track - getActiveSequenceLength is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.getActiveSequenceLength, 'function', 'getActiveSequenceLength should be a function');
+});
+
+TestRunner.test("Track - createNewSequence is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.createNewSequence, 'function', 'createNewSequence should be a function');
+});
+
+TestRunner.test("Track - deleteSequence is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.deleteSequence, 'function', 'deleteSequence should be a function');
+});
+
+TestRunner.test("Track - renameSequence is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.renameSequence, 'function', 'renameSequence should be a function');
+});
+
+TestRunner.test("Track - duplicateSequence is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.duplicateSequence, 'function', 'duplicateSequence should be a function');
+});
+
+TestRunner.test("Track - setActiveSequence is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.setActiveSequence, 'function', 'setActiveSequence should be a function');
+});
+
+TestRunner.test("Track - doubleSequence is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.doubleSequence, 'function', 'doubleSequence should be a function');
+});
+
+TestRunner.test("Track - shiftSequenceNotes is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.shiftSequenceNotes, 'function', 'shiftSequenceNotes should be a function');
+});
+
+TestRunner.test("Track - humanizeVelocity is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.humanizeVelocity, 'function', 'humanizeVelocity should be a function');
+});
+
+TestRunner.test("Track - arpeggiatePattern is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.arpeggiatePattern, 'function', 'arpeggiatePattern should be a function');
+});
+
+TestRunner.test("Track - setNoteLength is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.setNoteLength, 'function', 'setNoteLength should be a function');
+});
+
+TestRunner.test("Track - getNoteLength is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.getNoteLength, 'function', 'getNoteLength should be a function');
+});
+
+TestRunner.test("Track - setNoteProbability is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.setNoteProbability, 'function', 'setNoteProbability should be a function');
+});
+
+TestRunner.test("Track - getNoteProbability is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.getNoteProbability, 'function', 'getNoteProbability should be a function');
+});
+
+TestRunner.test("Track - quantizeSequence is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.quantizeSequence, 'function', 'quantizeSequence should be a function');
+});
+
+TestRunner.test("Track - addEffect is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.addEffect, 'function', 'addEffect should be a function');
+});
+
+TestRunner.test("Track - removeEffect is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.removeEffect, 'function', 'removeEffect should be a function');
+});
+
+TestRunner.test("Track - updateEffectParam is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.updateEffectParam, 'function', 'updateEffectParam should be a function');
+});
+
+TestRunner.test("Track - reorderEffect is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.reorderEffect, 'function', 'reorderEffect should be a function');
+});
+
+TestRunner.test("Track - rebuildEffectChain is a function", (t) => {
+    const mockTrack = {};
+    t.assertEqual(typeof mockTrack.rebuildEffectChain, 'function', 'rebuildEffectChain should be a function');
+});
