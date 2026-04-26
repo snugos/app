@@ -42,6 +42,14 @@ export function initializeUIModule(appServicesFromMain) {
     if (!localAppServices.effectsRegistryAccess.synthEngineControlDefinitions) {
         localAppServices.effectsRegistryAccess.synthEngineControlDefinitions = {};
     }
+
+    // Expose UI functions to appServices for main.js access
+    if (!localAppServices.renderTimeline) {
+        localAppServices.renderTimeline = renderTimeline;
+    }
+    if (!localAppServices.openTimelineWindow) {
+        localAppServices.openTimelineWindow = openTimelineWindow;
+    }
 }
 
 // --- Knob UI ---
