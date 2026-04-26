@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.45.0'; // Day 264: Comprehensive Performance Monitor Constants Tests (2026-04-26)
+export const APP_VERSION = '1.46.0'; // Day 265: Sound Library Constants Tests (2026-04-26)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

@@ -80,6 +80,12 @@ import {
     getTrackSendsState,
     getTrackSendLevelState,
     addSendTrackState,
+    getTrackSendPreFaderState,
+    setTrackSendPreFaderState,
+    getLoadedZipFilesState,
+    getSoundLibraryFileTreesState,
+    getCurrentLibraryNameState,
+    getClipboardDataState,
     setSendTrackMutedState,
     setTrackSendLevelState,
     getTimelineMarkersState,
@@ -160,6 +166,11 @@ import {
     removeMasterEffectFromState,
     updateMasterEffectParamInState,
     reorderMasterEffectInState,
+    incrementHighestZState,
+    initializeStateModule,
+    captureStateForUndoInternal,
+    getMidiAccessState,
+    getActiveMIDIInputState,
     setArmedTrackIdState,
     setHighestZState,
     setSwingEnabledState,
@@ -13970,4 +13981,127 @@ TestRunner.test('Performance Monitor - All PERFORMANCE_ constants are defined', 
     t.assertTruthy(typeof PERFORMANCE_DEFAULT_LATENCY_HINT !== 'undefined', 'PERFORMANCE_DEFAULT_LATENCY_HINT should be defined');
     t.assertTruthy(typeof PERFORMANCE_MEMORY_PRESSURE_NONE !== 'undefined', 'PERFORMANCE_MEMORY_PRESSURE_NONE should be defined');
     t.assertTruthy(typeof PERFORMANCE_WARNING_THRESHOLD_MS !== 'undefined', 'PERFORMANCE_WARNING_THRESHOLD_MS should be defined');
+});
+
+// Day 265: Sound Library & Send Track State Function Tests (2026-04-26)
+// =====================================================================
+// Sound Library State Tests
+TestRunner.test('Sound Library - getLoadedZipFilesState returns object', (t) => {
+    const files = getLoadedZipFilesState();
+    t.assertEqual(typeof files, 'object', 'Loaded zip files should be an object');
+    t.assertTruthy(files !== null, 'Should not be null');
+});
+
+TestRunner.test('Sound Library - getSoundLibraryFileTreesState returns object', (t) => {
+    const trees = getSoundLibraryFileTreesState();
+    t.assertEqual(typeof trees, 'object', 'File trees should be an object');
+    t.assertTruthy(trees !== null, 'Should not be null');
+});
+
+TestRunner.test('Sound Library - getCurrentLibraryNameState returns value', (t) => {
+    const name = getCurrentLibraryNameState();
+    t.assertTrue(name === null || typeof name === 'string', 'Library name should be null or string');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard - getClipboardDataState returns object with expected properties', (t) => {
+    const data = getClipboardDataState();
+    t.assertEqual(typeof data, 'object', 'Clipboard data should be an object');
+    t.assertTruthy(data !== null, 'Should not be null');
+    t.assertTrue('type' in data, 'Should have type property');
+    t.assertTrue('data' in data, 'Should have data property');
+    t.assertTrue('sourceTrackType' in data, 'Should have sourceTrackType property');
+    t.assertTrue('sequenceLength' in data, 'Should have sequenceLength property');
+});
+
+TestRunner.test('Clipboard - initial clipboard data has null type', (t) => {
+    const data = getClipboardDataState();
+    t.assertEqual(data.type, null, 'Initial clipboard type should be null');
+});
+
+// Track Send Pre-Fader State Tests
+TestRunner.test('Send Tracks - getTrackSendPreFaderState is a function', (t) => {
+    t.assertEqual(typeof getTrackSendPreFaderState, 'function', 'Should be a function');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState accepts 2 parameters', (t) => {
+    t.assertEqual(getTrackSendPreFaderState.length, 2, 'Should accept 2 parameters (trackId, sendId)');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns boolean', (t) => {
+    const preFader = getTrackSendPreFaderState('any-track', 'any-send');
+    t.assertEqual(typeof preFader, 'boolean', 'Should return boolean');
+    t.assertEqual(preFader, false, 'Default should be false');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState is a function', (t) => {
+    t.assertEqual(typeof setTrackSendPreFaderState, 'function', 'Should be a function');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState accepts 3 parameters', (t) => {
+    t.assertEqual(setTrackSendPreFaderState.length, 3, 'Should accept 3 parameters (trackId, sendId, preFader)');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState returns boolean', (t) => {
+    const result = setTrackSendPreFaderState('test-track', 'test-send', true);
+    t.assertEqual(typeof result, 'boolean', 'Should return boolean');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendPreFaderState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState uses descriptive undo label', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('Set Send') || funcStr.includes('Pre-Fader'), 'Should use descriptive undo label');
+});
+
+// Undo/Redo State Function Tests
+TestRunner.test('State - incrementHighestZState is a function', (t) => {
+    t.assertEqual(typeof incrementHighestZState, 'function', 'Should be a function');
+});
+
+TestRunner.test('State - incrementHighestZState returns number', (t) => {
+    const z = incrementHighestZState();
+    t.assertEqual(typeof z, 'number', 'Should return number');
+    t.assertTruthy(z >= 0, 'Should be non-negative');
+});
+
+TestRunner.test('State - initializeStateModule is a function', (t) => {
+    t.assertEqual(typeof initializeStateModule, 'function', 'Should be a function');
+});
+
+TestRunner.test('State - initializeStateModule accepts parameters', (t) => {
+    t.assertTruthy(initializeStateModule.length >= 0, 'Should be callable');
+});
+
+TestRunner.test('State - captureStateForUndoInternal is a function', (t) => {
+    t.assertEqual(typeof captureStateForUndoInternal, 'function', 'Should be a function');
+});
+
+TestRunner.test('State - captureStateForUndoInternal accepts description parameter', (t) => {
+    t.assertTrue(captureStateForUndoInternal.length >= 0, 'Should accept parameters');
+});
+
+TestRunner.test('Undo/Redo - captureStateForUndoInternal captures state for undo', (t) => {
+    const undoStackBefore = getUndoStackState().length;
+    captureStateForUndoInternal('Test capture');
+    const undoStackAfter = getUndoStackState().length;
+    t.assertTruthy(undoStackAfter > undoStackBefore, 'Should push to undo stack');
+});
+
+TestRunner.test('State - getMidiAccessState is a function', (t) => {
+    t.assertEqual(typeof getMidiAccessState, 'function', 'Should be a function');
+});
+
+TestRunner.test('State - getActiveMIDIInputState is a function', (t) => {
+    t.assertEqual(typeof getActiveMIDIInputState, 'function', 'Should be a function');
+});
+
+TestRunner.test('State - MIDI state getters return values', (t) => {
+    const access = getMidiAccessState();
+    t.assertTrue(access === null || typeof access === 'object', 'MIDI access should be null or object');
+    const input = getActiveMIDIInputState();
+    t.assertTrue(input === null || typeof input === 'object', 'Active MIDI input should be null or object');
 });

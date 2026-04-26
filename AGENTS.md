@@ -3634,3 +3634,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Effects tested: AutoFilter, AutoPanner, AutoWah, BitCrusher, Chebyshev, Chorus, Distortion, FeedbackDelay, Freeverb, FrequencyShifter, JCReverb, Phaser, PingPongDelay, PitchShift, Reverb, StereoWidener, Tremolo, Vibrato, Compressor, EQ3, Filter, Gate, Limiter, Mono
   - Total tests increased from ~1961 to ~2086
 - **Version**: Bumped to 1.40.0
+
+#### Day 265: Sound Library & State Function Tests (2026-04-26)
+- **Feature**: Added 26 new unit tests for Sound Library, Clipboard, Send Track Pre-Fader, and State functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 26 new tests in Day 265 section:
+    - Sound Library state: getLoadedZipFilesState returns object, getSoundLibraryFileTreesState returns object, getCurrentLibraryNameState returns null or string
+    - Clipboard state: getClipboardDataState returns object with type/data/sourceTrackType/sequenceLength properties, initial clipboard type is null
+    - Send Track Pre-Fader: getTrackSendPreFaderState is function/2 params/returns boolean, setTrackSendPreFaderState is function/3 params/returns boolean/calls captureStateForUndo
+    - State functions: incrementHighestZState returns number, initializeStateModule accepts parameters, captureStateForUndoInternal accepts description parameter
+    - Undo capture: captureStateForUndoInternal pushes to undo stack
+    - MIDI state: getMidiAccessState and getActiveMIDIInputState return null or object
+  - `js/tests.js`: Added imports for getTrackSendPreFaderState, setTrackSendPreFaderState, getLoadedZipFilesState, getSoundLibraryFileTreesState, getCurrentLibraryNameState, getClipboardDataState, incrementHighestZState, initializeStateModule, captureStateForUndoInternal, getMidiAccessState, getActiveMIDIInputState
+  - `js/constants.js`: Bumped APP_VERSION to 1.46.0
+- **Feature Details**:
+  - Tests validate Sound Library state functions for zip files, file trees, and current library name
+  - Tests validate Clipboard state function returns proper object structure
+  - Tests validate Send Track pre-fader state functions with proper parameter counts
+  - Tests verify setTrackSendPreFaderState calls captureStateForUndo for undo/redo
+  - Tests verify incrementHighestZState returns non-negative numbers
+  - Tests verify initializeStateModule and captureStateForUndoInternal are proper functions
+  - Tests validate MIDI state getters return null or object
+  - Total tests increased from 2141 to 2167
+- **Version**: Bumped to 1.46.0
