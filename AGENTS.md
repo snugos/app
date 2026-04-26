@@ -4,33 +4,50 @@
 SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla JavaScript modules. It uses Tone.js for audio processing and Tailwind CSS for styling. The app is deployed via GitHub Pages.
 
 ## Tech Stack
-#### Day 238: MIDI Learn applyMidiLearnMapping & handleMIDIMessage Tests (2026-04-25)
-- **Feature**: Added 27 new unit tests for MIDI Learn applyMidiLearnMapping and handleMIDIMessage functions
-#### Day 242: Track Effects Instance Methods Tests (2026-04-26)
-- **Feature**: Added 32 new unit tests for Track Effects Instance Methods
+#### Day 242: Synth, DrumSampler & Sampler Track Instance Tests (2026-04-26)
+- **Feature**: Added 52 new unit tests for Synth, DrumSampler, and Sampler track instance properties and methods
 - **Files Modified**:
-  - `js/tests.js`: Added 32 new tests in Day 242 section:
-    - Track Effects - addEffect/removeEffect/updateEffectParam/reorderEffect method existence
-    - Track Effects - undo capture (_captureUndoState) for add/remove/reorder
-    - Track Effects - effectsRegistryAccess usage and createEffectInstance call
-    - Track Effects - activeEffects array manipulation (add, remove, reorder)
-    - Track Effects - dispose toneNode on removeEffect
-    - Track Effects - paramPath usage and rebuildEffectChain calls
-    - Track Effects - index clamping and early return when no change
-    - Track Effects - updateTrackUI calls for UI updates
-    - Track Effects - error handling for missing effects/registry
-    - Track Effects - effect wrapper structure (id, type, toneNode, params)
+  - `js/tests.js`: Added 52 new tests in Day 242 section:
+    - Synth Track: type (Synth), synthEngineType (MonoSynth default), synthParams object with oscillator/envelope/filter, instrument property, clipPlayers Map, timelineClips array, schedulePlayback and setVolume methods
+    - DrumSampler Track: type (DrumSampler), drumSamplerPads array with 8 pads by default, each pad has volume/pitchShift/envelope/status/sampleUrl/dbKey/originalFileName properties, clipPlayers Map, timelineClips array, schedulePlayback and setVolume methods
+    - Sampler Track: type (Sampler), slices array with numSlices (8) slices, each slice has offset/duration/volume/pitchShift/loop/reverse/envelope properties, samplerAudioData object with fileName/status, selectedSliceForEdit, waveformZoom, slicerIsPolyphonic (default true), schedulePlayback and setVolume methods
   - `js/constants.js`: Bumped APP_VERSION to 1.25.0
 - **Feature Details**:
-  - Tests verify Track class has addEffect, removeEffect, updateEffectParam, reorderEffect methods
-  - Tests verify undo capture for effect operations
-  - Tests verify effect registry access and instance creation
-  - Tests verify activeEffects array manipulation
-  - Tests verify error handling and UI updates
-  - Total tests increased from 1769 to 1801
-- **Backend Note**: The Track Effects methods handle per-track effect chain management (add, remove, update, reorder) with proper undo capture and Tone.js instance management.
+  - Tests validate Synth track properties (synthEngineType, synthParams with oscillator/envelope/filter, instrument, clipPlayers, timelineClips)
+  - Tests verify Synth track methods (schedulePlayback, setVolume)
+  - Tests validate DrumSampler track properties (drumSamplerPads array with 8 pads, each pad has required properties)
+  - Tests verify DrumSampler track methods (schedulePlayback, setVolume)
+  - Tests validate Sampler track properties (slices array with numSlices, samplerAudioData, selectedSliceForEdit, waveformZoom, slicerIsPolyphonic)
+  - Tests verify Sampler track methods (schedulePlayback, setVolume)
+  - Total tests increased from 1800 to 1852
+- **Backend Note**: These tests complement Day 228 (InstrumentSampler) and Day 230 (Audio) by adding instance tests for the remaining track types: Synth, DrumSampler, and Sampler. Each track type has unique properties and methods that require validation.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.25.0
+
+#### Day 241: Sampler Slice Drop Zones Verification Tests (2026-04-26)
+- **Feature**: Added 28 new unit tests for Sampler Slice Drop Zones verification
+- **Files Modified**:
+  - `js/tests.js`: Added 28 new tests in Day 241 section:
+    - createDropZoneHTML for Sampler with slice index (valid HTML, data attributes, ID format)
+    - createDropZoneHTML for InstrumentSampler and Audio track types
+    - createDropZoneHTML generates unique IDs for all 8 slices
+    - createDropZoneHTML handles all status types (empty, loaded, missing, error)
+    - createDropZoneHTML handles null slice index gracefully
+    - setupGenericDropZoneListeners function signature and parameter count
+    - setupGenericDropZoneListeners handles null element gracefully
+    - setupGenericDropZoneListeners adds dragover/dragleave/drop event listeners
+    - numSlices, samplerMIDINoteStart, computerKeySamplerMap constants validation
+  - `js/constants.js`: Bumped APP_VERSION to 1.24.0
+- **Feature Details**:
+  - Tests validate createDropZoneHTML generates proper drop zones for Sampler tracks with slice index
+  - Tests verify data attributes include pad-slice-index for slice identification
+  - Tests verify drop zone IDs are unique across all 8 slices
+  - Tests verify setupGenericDropZoneListeners handles drag-and-drop for Sampler type
+  - Tests verify Sampler keyboard mapping constants (numSlices=8, samplerMIDINoteStart=36)
+  - Total tests increased from 1741 to 1769
+- **Backend Note**: The Sampler track type uses slices (8 by default) for sample playback. These tests verify the drop zone infrastructure that allows users to load audio samples into specific slices via drag-and-drop from the sound browser or file system.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.24.0
 
 - **Files Modified**:
   - `js/tests.js`: Added 27 new tests in Day 238 section:
