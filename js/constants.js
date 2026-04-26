@@ -1,4 +1,5 @@
-export const APP_VERSION = '1.08.0'; // Day 225: Recording Constants Additional Tests
+export const APP_VERSION = '1.23.0'; // Day 240: SnugWindow & Utils Tests
+
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag

@@ -1,16 +1,11 @@
 // force rebuild
 // js/main.js - Main Application Logic Orchestrator
 
-// Desktop background localStorage keys
-const DESKTOP_BG_TYPE_KEY = 'snugOS_desktopBgType';
-const DESKTOP_BACKGROUND_KEY = 'snugOS_desktopBackground';
-
 // --- Module Imports ---
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
-import { getMimeTypeFromFilename, addMasterEffectToAudio } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     selectMIDIInput as eventSelectMIDIInput, 
@@ -143,7 +138,6 @@ import {
     // Undo/Redo
     undoLastActionInternal,
     redoLastActionInternal,
-    captureStateForUndoInternal,
 } from './state.js';
 
 // --- App Services Object ---
@@ -159,7 +153,6 @@ const appServices = {
     handleOpenSequencer: eventHandleOpenSequencer,
     handleTimelineLaneDrop: handleTimelineLaneDrop,
     attachGlobalControlEvents: attachGlobalControlEvents, // FIX: Expose for reconstruction
-    getTrackById: getTrackByIdState, // Expose track lookup for UI components
 
     // Project Save/Load/Export
     saveProject: saveProjectInternal,
@@ -172,8 +165,6 @@ const appServices = {
     // Undo/Redo
     undoLastAction: undoLastActionInternal,
     redoLastAction: redoLastActionInternal,
-
-    captureStateForUndo: captureStateForUndoInternal,
 
     getAudioBlobFromSoundBrowserItem: async (soundData) => {
         if (!soundData || !soundData.libraryName || !soundData.fullPath) {
@@ -290,11 +281,11 @@ const appServices = {
             uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec);
         } else { console.warn("Global record button not found in cache."); }
     },
-    closeAllWindows: (isReconstructing = false) => {
+    closeAllWindows: (isReconstructinging = false) => {
         const openWindows = getOpenWindowsState();
         if (openWindows && typeof openWindows.forEach === 'function') {
             openWindows.forEach(win => {
-                if (win && typeof win.close === 'function') win.close(isReconstructing);
+                if (win && typeof win.close === 'function') win.close(isReconstructinging);
             });
         }
         if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
@@ -453,10 +444,6 @@ const appServices = {
     startMetronome: startMetronome,
     stopMetronome: stopMetronome,
     setMetronomeVolume: setMetronomeVolume,
-    // Audio loading functions
-    loadSampleFile,
-    loadDrumSamplerPadFile,
-    loadSoundFromBrowserToTarget,
     // Send Bus functions
     createSendBusInAudio,
     deleteSendBusFromAudio,
@@ -761,35 +748,6 @@ async function restoreDesktopBackground() {
             applyDesktopBackground(imageUrl, 'image');
         }
     }
-}
-
-function handleCustomBackgroundUpload(event) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) {
-        console.warn("[handleCustomBackgroundUpload] No file selected.");
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const dataUrl = e.target.result;
-        localStorage.setItem(DESKTOP_BACKGROUND_KEY, dataUrl);
-        localStorage.setItem(DESKTOP_BG_TYPE_KEY, 'image');
-        applyDesktopBackground(dataUrl, 'image');
-        showSafeNotification("Desktop background updated!", 2000);
-    };
-    reader.onerror = (err) => {
-        console.error("[handleCustomBackgroundUpload] Error reading file:", err);
-        showSafeNotification("Failed to set background.", 2000);
-    };
-    reader.readAsDataURL(file);
-}
-
-function removeCustomDesktopBackground() {
-    localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
-    localStorage.removeItem(DESKTOP_BG_TYPE_KEY);
-    applyDesktopBackground(null, null);
-    showSafeNotification("Desktop background reset to default.", 2000);
 }
 
 

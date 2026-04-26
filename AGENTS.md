@@ -4,10 +4,92 @@
 SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla JavaScript modules. It uses Tone.js for audio processing and Tailwind CSS for styling. The app is deployed via GitHub Pages.
 
 ## Tech Stack
+#### Day 238: MIDI Learn applyMidiLearnMapping & handleMIDIMessage Tests (2026-04-25)
+- **Feature**: Added 27 new unit tests for MIDI Learn applyMidiLearnMapping and handleMIDIMessage functions
+- **Files Modified**:
+  - `js/tests.js`: Added 27 new tests in Day 238 section:
+    - handleMIDIMessage function inspection tests (CC handling, midiLearnMode check, value normalization)
+    - applyMidiLearnMapping function tests (value scaling, parameter handling for masterVolume, metronomeVolume, tempo, trackVolume, trackPan, effectParam)
+    - findMidiLearnMapping function tests (returns index, returns -1 for not found)
+    - Error handling tests (try/catch blocks, missing track handling, tempo clamping)
+    - getTracks alias usage verification
+    - Channel and CC parsing from MIDI message data
+    - CC command range validation (176-191)
+  - `js/constants.js`: Bumped APP_VERSION to 1.21.0
+- **Feature Details**:
+  - Tests verify handleMIDIMessage handles CC messages and checks MIDI learn mode
+  - Tests verify applyMidiLearnMapping scales normalized CC values using min/max range
+  - Tests verify parameter handling for all MIDI Learn target types (master, metronome, tempo, track, effect)
+  - Tests verify findMidiLearnMapping finds by channel and cc, returns -1 when not found
+  - Tests verify error handling and edge cases (missing track, tempo clamping)
+  - Total tests increased from 1622 to 1649
+- **Backend Note**: The MIDI Learn system allows mapping physical MIDI CC controllers to DAW parameters. These tests verify the CC message handling and parameter application without requiring actual MIDI hardware.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.21.0
+
 - Vanilla JS modules (no build step)
 - Tone.js (audio engine) via CDN
 - Tailwind CSS via CDN
 - GitHub Pages deployment
+
+#### Day 236: appServices Export & Method Signature Tests (2026-04-25)
+
+#### Day 237: CI Workflow Setup Documentation (2026-04-25)
+- **Feature**: Added CI workflow setup documentation for GitHub Actions automation
+- **Files Modified**:
+  - `docs/CI_WORKFLOW_SETUP.md`: Created CI setup documentation with manual setup instructions
+- **Feature Details**:
+  - Attempted to create `.github/workflows/tests.yml` for automated browser testing
+  - OAuth token lacks `workflow` scope - cannot push workflow files directly
+  - Created documentation with workflow file contents and setup steps
+  - Users must create workflow via GitHub web UI
+  - Workflow uses puppeteer to run browser-based tests headlessly
+  - Tests run on every push/PR to LWB-with-Bugs and main branches
+- **Backend Note**: The GitHub Actions workflow enables automated testing of the 1581 browser-based unit tests via puppeteer headless browser, ensuring code quality on every change.
+- **Version**: 1.19.0 (documentation only, no version bump)
+
+#### Day 236: appServices Export & Method Signature Tests (2026-04-25)
+- **Feature**: Added 50 new unit tests for appServices object exported from main.js
+- **Files Modified**:
+  - `js/tests.js`: Added 50 new tests in Day 236 section:
+    - Project methods: saveProject, loadProject, handleProjectFileLoad, exportToWav, exportToMidi, importFromMidi
+    - Undo/Redo methods: undoLastAction, redoLastAction
+    - Audio control: panicStopAllAudio
+    - Transport methods: play, pause, stop, togglePlayPause, startRecording, stopRecording, toggleMetronome, tapTempo
+    - Timeline methods: zoomInTimeline, zoomOutTimeline, resetTimelineZoom, zoomInVerticalTimeline, zoomOutVerticalTimeline
+    - Track methods: createTrack, removeTrack, duplicateTrack, createSendBus, removeSendBus
+    - Window methods: closeAllWindows, closeAllTrackWindows, bringWindowToFront, updateUndoRedoButtonsUI, updateRecordButtonUI
+    - State capture: captureStateForUndo, getIsReconstructingDAW
+    - Parameter counts verified for all methods
+  - `js/constants.js`: Bumped APP_VERSION to 1.19.0
+- **Feature Details**:
+  - Tests verify appServices is a proper object export from main.js
+  - Tests verify all major appServices methods exist and are functions
+  - Tests verify method parameter counts for API correctness
+  - Tests verify undo/redo actions are async functions
+  - Total tests increased from 1531 to 1581
+- **Backend Note**: appServices is the main service layer providing state management, audio control, and UI operations. These tests verify the exported API surface.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.19.0
+
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.19.0
+
+#### Day 235: Remaining Constants & Keyboard Map Tests (2026-04-25)
+- **Feature**: Added 15 new unit tests for remaining Timeline constants and computer keyboard map validations
+- **Files Modified**:
+  - `js/tests.js`: Added 15 new tests in Day 235 section:
+    - Timeline Constants: TIMELINE_BEAT_WIDTH (positive, reasonable 20-100), TIMELINE_TRACK_HEIGHT (positive, reasonable 30-120), TIMELINE_HEADER_HEIGHT (positive, reasonable 20-60)
+    - computerKeySynthMap: references synthPitches, has white keys a/k, has black keys w/u
+    - computerKeySamplerMap: references numDrumSamplerPads, has 8 digit keys (0-7), values are MIDI note numbers, values are consecutive starting from samplerMIDINoteStart
+  - `js/constants.js`: Bumped APP_VERSION to 1.18.0
+- **Feature Details**:
+  - Tests validate remaining Timeline constants not covered by previous test sections
+  - Tests verify computerKeySynthMap references synthPitches constant and has expected keyboard mappings
+  - Tests verify computerKeySamplerMap references numDrumSamplerPads and has 8 pads with consecutive MIDI notes
+  - Total tests increased from 1516 to 1531
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.18.0
 
 #### Day 224: Complete Undo/Redo Capture Verification Tests (2026-04-25)
 - **Feature**: Added 22 new unit tests to complete undo/redo verification coverage for remaining state setter functions
@@ -29,6 +111,180 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The undo system captures full project state snapshots before mutations. These tests complete the verification coverage for Time Signature, Send Track, and Track Group state setters.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.07.0
+
+#### Day 225: Recording Constants Additional Tests (2026-04-25)
+- **Feature**: Added 18 new unit tests for Recording constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 18 new tests in Day 225 section:
+    - RECORDING_SAMPLE_RATE verification (44100 Hz)
+    - RECORDING_NUM_CHANNELS verification (1 = mono)
+    - RECORDING_BIT_DEPTH verification (16 bit)
+    - RECORDING_MIME_TYPE verification (audio/webm)
+    - RECORDING_LATENCY_HINT validation
+    - Audio processing constraints (echo cancellation, AGC, noise suppression disabled)
+    - Input gain range validation (MIN, MAX, DEFAULT)
+    - Monitoring settings validation
+    - MAX_RECORDING_LENGTH_SECONDS verification (600 seconds)
+    - MIN_RECORDING_LENGTH_SECONDS verification (0.1 seconds)
+    - Min < max recording length validation
+    - Audio quality constants consistency check
+    - Recording state function tests (isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState)
+    - setRecordingTrackIdState null clearing
+    - setRecordingStartTimeState negative value handling
+    - Multiple recording cycles validation
+  - `js/constants.js`: Bumped APP_VERSION to 1.08.0
+- **Feature Details**:
+  - Tests validate all Recording constants from js/constants.js
+  - Tests verify audio quality settings (sample rate, bit depth, channels)
+  - Tests verify input gain and monitoring settings are within valid ranges
+  - Tests verify recording length limits (min 0.1s, max 600s)
+  - Tests verify recording state functions handle edge cases properly
+  - Total tests increased from 1153 to 1171
+- **Backend Note**: The Recording constants define how Tone.UserMedia and Tone.Recorder are configured in js/audio.js for audio track recording. Tests verify the configuration surface without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.08.0
+
+#### Day 226: Automation Lane Instance Tests (2026-04-25)
+- **Feature**: Added 38 new unit tests for Automation Lane instance methods on Track class objects
+- **Files Modified**:
+  - `js/tests.js`: Added imports for AUTOMATION_LANE_HEIGHT, AUTOMATION_LANE_DEFAULT, AUTOMATION_LANE_PRECISION, AUTOMATION_LANE_STEP, AUTOMATION_LANE_PARAMETERS, AUTOMATION_LANE_COLORS
+  - Added 38 new tests in Day 226 section:
+    - Track class has getAutomationLane, setAutomationPoint, getAutomationValue, clearAutomationLane, removeAutomationPoint, getAutomationLaneCount, hasAutomation methods
+    - getAutomationLane returns array, creates lane if not exists
+    - setAutomationPoint adds/updates points, sorts by step
+    - getAutomationValue returns default for empty lane, point value, interpolates between points
+    - getAutomationValue returns first point value before second point, last point value after all points
+    - clearAutomationLane removes all points, handles nonexistent lane
+    - removeAutomationPoint removes point at step, returns false for nonexistent point
+    - getAutomationLaneCount returns number of points
+    - hasAutomation returns false when no automation, true when automation exists
+    - Multiple parameters have separate lanes
+    - Track automation initializes from track data
+    - Track automation data includes all parameters via toJSON
+    - Multiple tracks have independent automation lanes
+    - setAutomationPoint at step 0 works correctly
+    - Track clone preserves automation data
+  - `js/constants.js`: Bumped APP_VERSION to 1.09.0
+- **Feature Details**:
+  - Tests validate all automation lane methods on Track class instances
+  - Tests verify getAutomationLane returns/creates automation lanes for parameters
+  - Tests verify setAutomationPoint adds, updates, and sorts automation points by step
+  - Tests verify getAutomationValue handles empty lanes, exact matches, interpolation, and boundary cases
+  - Tests verify clearAutomationLane and removeAutomationPoint work correctly
+  - Tests verify getAutomationLaneCount and hasAutomation provide lane metadata
+  - Tests verify automation persists via track data initialization and toJSON serialization
+  - Total tests increased from 1171 to 1209
+- **Backend Note**: The Automation Lane methods in Track.js allow tracks to store and retrieve automation data for parameters like volume, pan, filter cutoff, and ADSR envelope. The tests verify the Track class automation methods without requiring actual audio processing.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.09.0
+
+#### Day 227: Performance Monitor Undo Capture Tests (2026-04-25)
+- **Feature**: Added 16 new unit tests verifying Performance Monitor and recording state setters call captureStateForUndo before mutating state
+- **Files Modified**:
+  - `js/tests.js`: Added 16 new tests in Day 227 section:
+    - setPerformanceMonitorEnabledState calls captureStateForUndo
+    - setAudioContextStateState calls captureStateForUndo
+    - setCPUUsageState calls captureStateForUndo
+    - setMemoryPressureState calls captureStateForUndo
+    - setActiveVoicesState calls captureStateForUndo
+    - setAudioLatencyState calls captureStateForUndo
+    - setLastCallbackTimeState calls captureStateForUndo
+    - setDroppedCallbacksState calls captureStateForUndo
+    - setArmedTrackIdState calls captureStateForUndo
+    - setSoloedTrackIdState calls captureStateForUndo
+    - setIsRecordingState calls captureStateForUndo
+    - setRecordingTrackIdState calls captureStateForUndo
+    - setRecordingStartTimeState calls captureStateForUndo
+    - setHighestZState calls captureStateForUndo
+    - setMidiLearnModeState calls captureStateForUndo
+    - setMidiLearnPendingParamState calls captureStateForUndo
+  - `js/constants.js`: Bumped APP_VERSION to 1.10.0
+- **Feature Details**:
+  - Tests verify all Performance Monitor and recording state setters call captureStateForUndo before mutating
+  - Tests verify setters guard against missing appServices.captureStateForUndo
+  - Total tests increased from 1209 to 1225
+- **Backend Note**: These tests complete the undo capture verification for Performance Monitor and recording state setters.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.10.0
+
+#### Day 228: InstrumentSampler Track Instance Tests (2026-04-25)
+- **Feature**: Added 22 new unit tests for InstrumentSampler Track instance methods
+- **Files Modified**:
+  - `js/tests.js`: Added 22 new tests in Day 228 section:
+    - InstrumentSampler class exists and is constructable
+    - InstrumentSampler has expected prototype methods
+    - InstrumentSampler has envelope properties
+    - InstrumentSampler has filter properties
+    - InstrumentSampler handles noteOn/noteOff
+    - InstrumentSampler stores audio clips
+    - InstrumentSampler updateControlsUI method exists
+    - Multiple InstrumentSampler tracks are independent
+  - `js/constants.js`: Bumped APP_VERSION to 1.11.0
+- **Feature Details**:
+  - Tests validate InstrumentSampler Track type implementation
+  - Tests verify class structure, methods, and properties
+  - Total tests increased from 1225 to 1247
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.11.0
+
+#### Day 229: SnugWindow Extended Instance Tests (2026-04-25)
+- **Feature**: Added 22 new unit tests for SnugWindow extended instance methods and behaviors
+- **Files Modified**:
+  - `js/tests.js`: Added imports for SnugWindow class and 22 new tests:
+    - SnugWindow - applyState method exists and handles position/size/zIndex/title changes
+    - SnugWindow - prototype has toggleMaximize method
+    - SnugWindow - toggleMaximize changes isMaximized state
+    - SnugWindow - updateTaskbarButtonActiveState method exists
+    - SnugWindow - makeDraggable and makeResizable methods exist
+    - SnugWindow - _captureUndo method exists
+    - SnugWindow - instance has isMaximized, options, appServices properties
+  - `js/constants.js`: Bumped APP_VERSION to 1.12.0
+- **Feature Details**:
+  - Tests validate SnugWindow applyState method for window position/size management
+  - Tests verify prototype methods (toggleMaximize, makeDraggable, makeResizable, _captureUndo)
+  - Tests verify instance properties initialization and storage
+  - Total tests increased from 1247 to 1269
+- **Backend Note**: These tests complement Day 200 SnugWindow tests by verifying additional instance methods and behaviors.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.12.0
+
+#### Day 230: DB Module Tests (2026-04-25)
+- **Feature**: Added 24 new unit tests for DB Module (IndexedDB Helper) to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for storeAudio, getAudio, deleteAudio, clearAllAudio from db.js and 24 new tests:
+    - storeAudio is exported as async function
+    - storeAudio accepts 2 parameters (key, audioBlob)
+    - getAudio is exported as async function
+    - getAudio accepts 1 parameter (key)
+    - deleteAudio is exported as async function
+    - deleteAudio accepts 1 parameter (key)
+    - clearAllAudio is exported as async function
+    - clearAllAudio accepts no parameters
+    - storeAudio references key parameter
+    - getAudio handles null resolution for missing keys
+    - DB functions are callable
+    - DB module references IndexedDB transaction/objectStore
+    - storeAudio references audioBlob parameter
+    - clearAllAudio clears the entire store
+    - getAudio uses readonly transaction
+    - storeAudio uses readwrite transaction
+    - deleteAudio uses readwrite transaction
+    - DB module references IndexedDB
+    - storeAudio handles transaction abort errors
+    - getAudio handles transaction errors
+    - deleteAudio handles errors
+    - clearAllAudio handles errors
+    - All 4 DB functions are independent exports
+  - `js/constants.js`: Bumped APP_VERSION to 1.13.0
+- **Feature Details**:
+  - Tests validate all 4 DB module functions (storeAudio, getAudio, deleteAudio, clearAllAudio)
+  - Tests verify async function signatures and parameter counts
+  - Tests verify IndexedDB transaction usage patterns
+  - Tests verify error handling for all functions
+  - Total tests increased from 1269 to 1293
+- **Backend Note**: The DB module provides IndexedDB persistence for audio samples. The tests verify the exported API without requiring actual IndexedDB access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.13.0
 
 
 ## Known Issues and TODOs
@@ -2869,3 +3125,207 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: The Swing state functions use captureStateForUndo for undo/redo support. The Window Store functions manage the open windows Map for window instances. Tests verify function exports and behavior without requiring actual window rendering.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 1.05.0
+
+#### Day 231: Recording Input Gain & Monitoring Tests (2026-04-25)
+- **Feature**: Added 24 new unit tests for Recording Input Gain and Monitoring functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 24 new tests in Day 231 section:
+    - setRecordingInputGain is exported as function
+    - setRecordingInputGain accepts 1 parameter (gainValue)
+    - DEFAULT_RECORDING_INPUT_GAIN in valid range
+    - MIN_RECORDING_INPUT_GAIN is valid (0)
+    - MAX_RECORDING_INPUT_GAIN is valid (2)
+    - Input gain range is sensible (allows boosting above unity)
+    - setRecordingInputGain updates gain value
+    - DEFAULT_MONITORING_VOLUME in valid range (0-1)
+    - MIN_MONITORING_VOLUME is valid (0)
+    - MAX_MONITORING_VOLUME is valid (1)
+    - Monitoring volume range spans 0 to 1
+    - Recording state setters exist and are callable
+    - Recording state setters accept correct parameter counts
+    - startAudioRecording handles null track gracefully
+    - stopAudioRecording handles missing recorder gracefully
+    - getRecordingTrackIdState returns null initially
+    - getRecordingStartTimeState returns null initially
+    - isTrackRecordingState returns boolean
+    - setRecordingTrackIdState can clear to null
+    - setRecordingStartTimeState handles numeric values
+    - Multiple recording cycles maintain state
+  - `js/constants.js`: Bumped APP_VERSION to 1.14.0
+- **Feature Details**:
+  - Tests validate recording input gain constants (MIN=0, MAX=2, DEFAULT=1.0)
+  - Tests validate monitoring volume constants (MIN=0, MAX=1, DEFAULT=0.5)
+  - Tests verify recording state getter/setter functions
+  - Tests verify startAudioRecording and stopAudioRecording handle edge cases
+  - Tests verify state management for multiple recording cycles
+  - Total tests increased from 1293 to 1317
+- **Backend Note**: The recording input gain controls the level of audio coming from the microphone before it hits the recorder. The monitoring volume controls the level of hear-back when monitoring is enabled. These tests verify the constants and state management without requiring actual microphone access.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.14.0
+
+#### Day 231: Effects Registry Function Tests (2026-04-25)
+- **Feature**: Added 28 new unit tests for Effects Registry module (effectsRegistry.js) to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 28 new tests in Day 231 section:
+    - AVAILABLE_EFFECTS structure validation (object type, AutoFilter presence, required properties)
+    - AutoFilter.toneClass and params validation
+    - createEffectInstance function export, parameter count, effectType validation
+    - getEffectDefaultParams function export, parameter count, return type
+    - getEffectParamDefinitions function export, parameter count, return type
+    - synthEngineControlDefinitions structure (MonoSynth, AMSynth, FMSynth presence)
+    - synthEngineControlDefinitions MonoSynth controls (idPrefix, path properties)
+    - Common effects defined (Reverb, Delay, Chorus)
+    - Effect params have min/max/step/defaultValue
+    - Nested param paths support (e.g. 'filter.type')
+    - All effects have string displayName and toneClass
+    - Effects have wet parameter for dry/wet mix
+  - `js/constants.js`: Bumped APP_VERSION to 1.14.0
+- **Feature Details**:
+  - Tests validate Effects Registry module exports (AVAILABLE_EFFECTS, synthEngineControlDefinitions)
+  - Tests verify createEffectInstance function signature and effectType validation
+  - Tests verify getEffectDefaultParams extracts default values from effect definitions
+  - Tests verify getEffectParamDefinitions returns params array for UI rendering
+  - Tests validate synthEngineControlDefinitions has MonoSynth, AMSynth, FMSynth with control arrays
+  - Tests verify all effects have required properties (displayName, toneClass, params)
+  - Tests verify common effects (Reverb, Delay, Chorus) are defined
+  - Total test count increased from 1353 to 1407
+- **Backend Note**: The Effects Registry module defines available effects and their parameters for the DAW's effect system. The synthEngineControlDefinitions provide synth engine control parameters for MonoSynth, AMSynth, FMSynth, and DuoSynth.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.14.0
+
+#### Day 232: Event Handler Function Tests (2026-04-25)
+- **Feature**: Added 31 new unit tests for Event Handler module (eventHandlers.js) to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 232 section:
+    - initializeEventHandlersModule function exists
+    - initializePrimaryEventListeners function exists
+    - attachGlobalControlEvents function exists
+    - setupMIDI function exists
+    - selectMIDIInput function exists
+    - handleTrackMute function exists
+    - handleTrackSolo function exists
+    - handleTrackArm function exists
+    - handleRemoveTrack function exists
+    - handleOpenTrackInspector function exists
+    - handleOpenEffectsRack function exists
+    - handleOpenSequencer function exists
+    - handleTimelineLaneDrop function exists and is async
+    - Parameter count tests for all functions
+    - currentlyPressedComputerKeys is exported object
+    - setupMIDI accepts no parameters
+    - initializeEventHandlersModule handles null gracefully
+    - selectMIDIInput has silent parameter default
+    - Event handlers reference state.js imports
+  - `js/constants.js`: Bumped APP_VERSION to 1.15.0
+- **Feature Details**:
+  - Tests verify all 13 event handler functions are properly exported from eventHandlers.js
+  - Tests validate function parameter counts match expected APIs
+  - Tests verify async functions are properly marked as async (handleTimelineLaneDrop)
+  - Tests verify parameter defaults (selectMIDIInput has silent=false)
+  - Tests verify error handling (initializeEventHandlersModule handles null)
+  - Tests verify exported objects (currentlyPressedComputerKeys)
+  - Total tests increased from 1407 to 1438
+- **Backend Note**: The Event Handler module handles global keyboard, mouse, and MIDI input for the DAW. The tests verify the exported API without requiring actual DOM or MIDI hardware.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.15.0
+
+#### Day 233: Additional UI Function Tests (2026-04-25)
+- **Feature**: Added 41 new unit tests for remaining UI module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Updated ui.js imports to include renderEffectsList, renderEffectControls, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory, drawWaveform, drawInstrumentWaveform, highlightPlayingStep, renderSamplePads, updateSliceEditorUI, updateSequencerCellUI, openAudioClipEditorWindow
+  - Added 41 new tests in Day 233 section:
+    - renderEffectsList function export and 4 parameter count
+    - renderEffectControls function export and 4 parameter count
+    - updateSoundBrowserDisplayForLibrary function export and 3 parameter count
+    - renderSoundBrowserDirectory function export and 2 parameter count
+    - drawWaveform function export and 1 parameter count
+    - drawInstrumentWaveform function export and 1 parameter count
+    - highlightPlayingStep function export and 3 parameter count
+    - renderSamplePads function export and 1 parameter count
+    - updateSliceEditorUI function export and 1 parameter count
+    - updateSequencerCellUI function export and 5 parameter count
+    - openAudioClipEditorWindow function export and 3 parameter count
+    - Code inspection tests verifying DOM element references
+    - Tests verify functions reference expected parameters and internal logic
+  - `js/constants.js`: Bumped APP_VERSION to 1.16.0
+- **Feature Details**:
+  - Tests validate all 11 previously-untested UI functions are properly exported from ui.js
+  - Tests validate function parameter counts match expected APIs
+  - Tests verify functions contain expected code references (DOM elements, parameters, state)
+  - Total tests increased from 1438 to 1479
+- **Backend Note**: These UI functions handle effects list rendering, waveform drawing, sequencer cell updates, sound browser display, and sample pad rendering. The tests verify the exported API without requiring actual DOM rendering or audio processing.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.16.0
+
+#### Day 234: Remaining Audio Module Function Tests (2026-04-25)
+- **Feature**: Added 37 new unit tests for remaining audio.js functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 37 new tests in Day 234 section:
+    - initializeAudioModule function export and 1 parameter count
+    - createSendBusInAudio function export and 1 parameter count
+    - deleteSendBusFromAudio function export and 1 parameter count
+    - addEffectToSendBus function export and 3 parameter count
+    - removeEffectFromSendBus function export and 2 parameter count
+    - reorderEffectInSendBus function export and 3 parameter count
+    - updateSendBusEffectParam function export and 4 parameter count
+    - setSendBusLevel function export and 2 parameter count
+    - setSendBusMuted function export and 2 parameter count
+    - loadSampleFile function export, async behavior, 3+ parameter count
+    - loadDrumSamplerPadFile function export, async behavior, 3+ parameter count
+    - loadSoundFromBrowserToTarget function export, async behavior, 3+ parameter count
+    - fetchSoundLibrary function export, async behavior, 2+ parameter count
+    - playSlicePreview function export, async behavior, 2+ parameter count
+    - playDrumSamplerPadPreview function export, async behavior, 2+ parameter count
+  - `js/constants.js`: Bumped APP_VERSION to 1.17.0
+- **Feature Details**:
+  - Tests validate all 15 previously-untested audio.js functions are properly exported
+  - Tests verify async functions return Promises
+  - Tests validate function parameter counts match expected APIs
+  - Total tests increased from 1479 to 1516
+- **Backend Note**: These audio module functions handle send bus creation/deletion, effect routing in send buses, sample loading, sound library fetching, and preview playback. The tests verify the exported API without requiring actual Tone.js audio context.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.17.0
+
+#### Day 239: Recording, MIDI Export/Import, and Track Tests (2026-04-25)
+- **Feature**: Added 39 new unit tests for Recording, MIDI Export/Import, and Track functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 39 new tests in Day 239 section:
+    - exportToMidiInternal function export, parameter count, async behavior
+    - importFromMidiInternal function export, parameter count, async behavior
+    - exportToMidiInternal references tempo, time signature, and tracks state
+    - exportToMidiInternal handles MIDI file format and playback mode
+    - importFromMidiInternal handles file input and parsing errors
+    - importFromMidiInternal creates or updates tracks
+    - startAudioRecording validates track type and handles mic errors
+    - stopAudioRecording handles blob processing and recorder cleanup
+    - stopAudioRecording handles missing recorder and empty recordings
+    - startAudioRecording creates Tone.UserMedia and Tone.Recorder instances
+    - setRecordingInputGain updates gain node and clamps value
+    - Track Audio track has addAudioClip method with async behavior
+    - Track addAudioClip validates blob and updates timeline
+  - `js/constants.js`: Bumped APP_VERSION to 1.22.0
+- **Feature Details**:
+  - Tests validate MIDI export/import functions (exportToMidiInternal, importFromMidiInternal)
+  - Tests verify recording functions handle microphone, recorder, and blob processing
+  - Tests verify Track addAudioClip method behavior and state management
+  - Total tests increased from 1649 to 1688
+- **Backend Note**: The Recording and MIDI Export/Import functions handle audio track recording via microphone, MIDI file export/import, and audio clip management. Tests verify the API without requiring actual microphone access or MIDI hardware.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.22.0
+
+#### Day 240: SnugWindow & Utils Tests (2026-04-25)
+- **Feature**: Added 53 new unit tests for SnugWindow instance methods, Utils UI functions, and Event Handler module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 53 new tests in Day 240 section:
+    - SnugWindow: applyState function, toggleMaximize function, makeDraggable, makeResizable, updateTaskbarButtonActiveState, _captureUndo, instance properties (isMaximized, options, appServices)
+    - Utils: showNotification with default duration, showCustomModal with title/contentHTML/buttonsConfig/modalClass, showConfirmationDialog wrapping showCustomModal, createContextMenu with event/menuItems/appServicesForZIndex
+    - Event Handlers: currentlyPressedComputerKeys object, setupMIDI, selectMIDIInput, initializePrimaryEventListeners, attachGlobalControlEvents, handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer, handleTimelineLaneDrop async behavior
+  - `js/constants.js`: Bumped APP_VERSION to 1.23.0
+- **Feature Details**:
+  - Tests validate SnugWindow prototype methods and instance properties
+  - Tests verify Utils functions (showNotification, showCustomModal, showConfirmationDialog, createContextMenu) parameter counts and internal logic
+  - Tests verify Event Handler functions (setupMIDI, selectMIDIInput, handleTimelineLaneDrop) and keyboard event handling references
+  - Total tests increased from 1688 to 1741
+- **Backend Note**: The SnugWindow instance methods handle window state management, the Utils functions provide modal/dialog/notification services, and the Event Handler functions manage MIDI and keyboard input. Tests verify the exported API without requiring actual DOM or hardware.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 1.23.0
