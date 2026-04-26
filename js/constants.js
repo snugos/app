@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.25.0'; // Day 242: Synth, DrumSampler & Sampler Track Instance Tests
+export const APP_VERSION = '1.26.0'; // Day 243: Remaining Audio Module Function Tests
 
 
 // Performance Monitor Constants

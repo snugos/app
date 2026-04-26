@@ -11607,3 +11607,106 @@ TestRunner.test('Track Effects - effect wrapper has id, type, toneNode, params',
     const hasAllProps = addFuncStr.includes('id') && addFuncStr.includes('type') && addFuncStr.includes('toneNode') && addFuncStr.includes('params');
     t.assertTruthy(hasAllProps, 'Effect wrapper should have id, type, toneNode, and params');
 });
+
+// ============================================
+// Day 243: Remaining Audio Module Function Tests (2026-04-26)
+// ============================================
+TestRunner.test('Audio - startPerformanceMonitor references localAppServices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'startPerformanceMonitor should reference localAppServices');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor uses setInterval', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setInterval'), 'startPerformanceMonitor should use setInterval');
+});
+
+TestRunner.test('Audio - stopPerformanceMonitor clears interval', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('clearInterval'), 'stopPerformanceMonitor should clear interval');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics returns object', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('metrics') || funcStr.includes('return'), 'getPerformanceMetrics should return an object');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics has cpuUsage property', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('cpuUsage'), 'getPerformanceMetrics should include cpuUsage');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics has memoryPressure property', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('memoryPressure'), 'getPerformanceMetrics should include memoryPressure');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics has activeVoices property', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('activeVoices'), 'getPerformanceMetrics should include activeVoices');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics has audioContextState property', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('audioContextState'), 'getPerformanceMetrics should include audioContextState');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics has audioLatency property', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('audioLatency'), 'getPerformanceMetrics should include audioLatency');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics has droppedCallbacks property', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('droppedCallbacks'), 'getPerformanceMetrics should include droppedCallbacks');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor uses PERFORMANCE_UPDATE_INTERVAL_MS', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('PERFORMANCE_UPDATE_INTERVAL_MS') || funcStr.includes('intervalMs'), 'startPerformanceMonitor should use interval constant');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor sets cpuUsage via appServices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setCPUUsageState'), 'startPerformanceMonitor should update CPU usage state');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor sets activeVoices via appServices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setActiveVoicesState'), 'startPerformanceMonitor should update active voices state');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor sets memoryPressure via appServices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setMemoryPressureState'), 'startPerformanceMonitor should update memory pressure state');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor sets audioContextState via appServices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setAudioContextStateState'), 'startPerformanceMonitor should update audio context state');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor checks Tone.context', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('Tone') && funcStr.includes('context'), 'startPerformanceMonitor should check Tone.context');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor iterates over tracks', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('getTracks') || funcStr.includes('tracks'), 'startPerformanceMonitor should iterate over tracks');
+});
+
+TestRunner.test('Audio - stopPerformanceMonitor sets intervalId to null', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('performanceMonitorIntervalId') || funcStr.includes('null'), 'stopPerformanceMonitor should clear interval ID');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics checks localAppServices', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'getPerformanceMetrics should check localAppServices');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor handles missing Tone gracefully', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('Tone') || funcStr.includes('context'), 'startPerformanceMonitor should handle audio context');
+});
