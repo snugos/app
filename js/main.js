@@ -154,6 +154,9 @@ const appServices = {
     handleTimelineLaneDrop: handleTimelineLaneDrop,
     attachGlobalControlEvents: attachGlobalControlEvents, // FIX: Expose for reconstruction
     getTrackById: getTrackByIdState, // Expose track lookup for UI components
+    getTracks: getTracksState, // Expose tracks for Track.js and other modules
+    getSoloedTrackId: getSoloedTrackIdState, // Expose solo state for Track.js
+    getArmedTrackId: getArmedTrackIdState, // Expose armed state for Track.js
 
     // Project Save/Load/Export
     saveProject: saveProjectInternal,
