@@ -4,6 +4,7 @@
 // --- Module Imports ---
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
+import { getAudio as bgDbGetAudio, storeAudio as bgDbStoreAudio, deleteAudio as bgDbDeleteAudio } from './db.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
 import {
@@ -195,6 +196,24 @@ const appServices = {
         return null;
     },
 
+    loadAudioBufferSource: async (sampleSource) => {
+        // Load audio from Sound Browser (sampleSource has filePath, libraryName, fullPath, fileName)
+        if (!sampleSource || !sampleSource.filePath) {
+            console.warn("[AppServices loadAudioBufferSource] Invalid sampleSource:", sampleSource);
+            return null;
+        }
+        try {
+            const file = await appServices.getAudioBlobFromSoundBrowserItem(sampleSource);
+            if (file) {
+                const arrayBuffer = await file.arrayBuffer();
+                return arrayBuffer;
+            }
+        } catch (e) {
+            console.error("[AppServices loadAudioBufferSource] Error loading audio from Sound Browser:", e);
+        }
+        return null;
+    },
+
     panicStopAllAudio: () => {
         
         if (typeof Tone !== 'undefined') {
@@ -329,7 +348,7 @@ const appServices = {
     addMasterEffect: async (effectType) => {
         try {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
             if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
@@ -365,8 +384,8 @@ const appServices = {
     },
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructinging = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
