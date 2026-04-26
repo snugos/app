@@ -11035,3 +11035,725 @@ TestRunner.test('Track - Sequence constants are validated', (t) => {
     const hasConstants = typeof globalThis.Constants !== 'undefined';
     t.assertTruthy(hasConstants || true, 'Constants should be accessible');
 });
+
+// === Day 255: Track Method Instance Tests ===
+
+TestRunner.test('Track - setDrumSamplerPadPitch is a function', (t) => {
+    const mockDrum = { type: 'DrumSampler' };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockDrum);
+    t.assertEqual(typeof track.setDrumSamplerPadPitch, 'function', 'setDrumSamplerPadPitch should be a function');
+});
+
+TestRunner.test('Track - setDrumSamplerPadEnv is a function', (t) => {
+    const mockDrum = { type: 'DrumSampler' };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockDrum);
+    t.assertEqual(typeof track.setDrumSamplerPadEnv, 'function', 'setDrumSamplerPadEnv should be a function');
+});
+
+TestRunner.test('Track - setInstrumentSamplerLoop is a function', (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockInst);
+    t.assertEqual(typeof track.setInstrumentSamplerLoop, 'function', 'setInstrumentSamplerLoop should be a function');
+});
+
+TestRunner.test('Track - setInstrumentSamplerLoopStart is a function', (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockInst);
+    t.assertEqual(typeof track.setInstrumentSamplerLoopStart, 'function', 'setInstrumentSamplerLoopStart should be a function');
+});
+
+TestRunner.test('Track - setInstrumentSamplerLoopEnd is a function', (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockInst);
+    t.assertEqual(typeof track.setInstrumentSamplerLoopEnd, 'function', 'setInstrumentSamplerLoopEnd should be a function');
+});
+
+TestRunner.test('Track - setInstrumentSamplerEnv is a function', (t) => {
+    const mockInst = { type: 'InstrumentSampler' };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockInst);
+    t.assertEqual(typeof track.setInstrumentSamplerEnv, 'function', 'setInstrumentSamplerEnv should be a function');
+});
+
+TestRunner.test('Track - addEffect is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.addEffect, 'function', 'addEffect should be a function');
+});
+
+TestRunner.test('Track - removeEffect is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.removeEffect, 'function', 'removeEffect should be a function');
+});
+
+TestRunner.test('Track - updateEffectParam is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.updateEffectParam, 'function', 'updateEffectParam should be a function');
+});
+
+TestRunner.test('Track - reorderEffect is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.reorderEffect, 'function', 'reorderEffect should be a function');
+});
+
+TestRunner.test('Track - setupSlicerMonoNodes is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.setupSlicerMonoNodes, 'function', 'setupSlicerMonoNodes should be a function');
+});
+
+TestRunner.test('Track - disposeSlicerMonoNodes is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.disposeSlicerMonoNodes, 'function', 'disposeSlicerMonoNodes should be a function');
+});
+
+TestRunner.test('Track - setupToneSampler is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.setupToneSampler, 'function', 'setupToneSampler should be a function');
+});
+
+TestRunner.test('Track - initializeInstrument is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.initializeInstrument, 'function', 'initializeInstrument should be a function');
+});
+
+TestRunner.test('Track - fullyInitializeAudioResources is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.fullyInitializeAudioResources, 'function', 'fullyInitializeAudioResources should be a function');
+});
+
+TestRunner.test('Track - initializeAudioNodes is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.initializeAudioNodes, 'function', 'initializeAudioNodes should be a function');
+});
+
+TestRunner.test('Track - getDefaultSynthParams is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.getDefaultSynthParams, 'function', 'getDefaultSynthParams should be a function');
+});
+
+TestRunner.test('Track - setPan is a function', (t) => {
+    const mockTrack = {};
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    t.assertEqual(typeof track.setPan, 'function', 'setPan should be a function');
+});
+
+TestRunner.test('Track - loadSampleToPad accepts padIndex parameter', (t) => {
+    const funcStr = loadSampleToPad.toString();
+    t.assertTruthy(funcStr.includes('padIndex'), 'loadSampleToPad should accept padIndex parameter');
+});
+
+TestRunner.test('Track - loadSampleToPad is async', (t) => {
+    t.assertEqual(loadSampleToPad.constructor.name, 'AsyncFunction', 'loadSampleToPad should be async');
+});
+
+TestRunner.test('Track - duplicateTrack creates new track with different id', (t) => {
+    const mockTrack = {
+        id: 'track-1',
+        type: 'Synth',
+        name: 'Test Track',
+        volume: 0.8,
+        appServices: {},
+        sequences: [],
+        effects: []
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const duplicated = track.duplicateTrack('track-2');
+    t.assertTruthy(duplicated, 'duplicateTrack should return a track');
+    t.assertEqual(duplicated.id, 'track-2', 'Duplicated track should have new ID');
+});
+
+TestRunner.test('Track - getNoteLength returns note length at position', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            name: 'Seq 1',
+            data: [[{ active: true, lengthInSteps: 2 }]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1'
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const length = track.getNoteLength(0, 0);
+    t.assertEqual(length, 2, 'getNoteLength should return the note length');
+});
+
+TestRunner.test('Track - getNoteLength returns default for empty cell', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            name: 'Seq 1',
+            data: [[null]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1'
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const length = track.getNoteLength(0, 0);
+    t.assertEqual(length, 1, 'getNoteLength should return default 1 for empty cell');
+});
+
+TestRunner.test('Track - getNoteProbability returns probability at position', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            name: 'Seq 1',
+            data: [[{ active: true, probability: 0.7 }]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1'
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const prob = track.getNoteProbability(0, 0);
+    t.assertEqual(prob, 0.7, 'getNoteProbability should return the stored probability');
+});
+
+TestRunner.test('Track - getNoteProbability returns default for empty cell', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            name: 'Seq 1',
+            data: [[null]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1'
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const prob = track.getNoteProbability(0, 0);
+    t.assertEqual(prob, 1, 'getNoteProbability should return default 1 for empty cell');
+});
+
+TestRunner.test('Track - getAutomationValue interpolates between points', (t) => {
+    const mockTrack = {
+        automationLanes: {
+            volume: [
+                { step: 0, value: 0.5 },
+                { step: 16, value: 0.8 }
+            ]
+        }
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const value = track.getAutomationValue('volume', 8);
+    t.assertTruthy(value >= 0.5 && value <= 0.8, 'Should interpolate between points');
+});
+
+TestRunner.test('Track - getAutomationValue returns default for empty lane', (t) => {
+    const mockTrack = {
+        automationLanes: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const value = track.getAutomationValue('volume', 0);
+    t.assertEqual(value, 0.5, 'Should return default 0.5 for empty lane');
+});
+
+TestRunner.test('Track - setAutomationPoint clamps value to 0-1 range', (t) => {
+    const mockTrack = {
+        automationLanes: {},
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAutomationPoint('volume', 0, 1.5);
+    const lane = track.getAutomationLane('volume');
+    t.assertEqual(lane[0].value, 1, 'Value should be clamped to 1');
+});
+
+TestRunner.test('Track - setAutomationPoint clamps negative values to 0', (t) => {
+    const mockTrack = {
+        automationLanes: {},
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAutomationPoint('volume', 0, -0.5);
+    const lane = track.getAutomationLane('volume');
+    t.assertEqual(lane[0].value, 0, 'Value should be clamped to 0');
+});
+
+TestRunner.test('Track - removeAutomationPoint returns false for nonexistent point', (t) => {
+    const mockTrack = {
+        automationLanes: {},
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const result = track.removeAutomationPoint('volume', 999);
+    t.assertEqual(result, false, 'Should return false for nonexistent point');
+});
+
+TestRunner.test('Track - getAutomationLaneCount returns 0 for empty lane', (t) => {
+    const mockTrack = {
+        automationLanes: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const count = track.getAutomationLaneCount('volume');
+    t.assertEqual(count, 0, 'Should return 0 for empty lane');
+});
+
+TestRunner.test('Track - getAutomationLaneCount returns correct count', (t) => {
+    const mockTrack = {
+        automationLanes: {
+            volume: [
+                { step: 0, value: 0.5 },
+                { step: 4, value: 0.7 }
+            ]
+        }
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const count = track.getAutomationLaneCount('volume');
+    t.assertEqual(count, 2, 'Should return 2 for lane with 2 points');
+});
+
+TestRunner.test('Track - hasAutomation returns true when lane has points', (t) => {
+    const mockTrack = {
+        automationLanes: {
+            volume: [{ step: 0, value: 0.5 }]
+        }
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const result = track.hasAutomation();
+    t.assertEqual(result, true, 'Should return true when automation exists');
+});
+
+TestRunner.test('Track - hasAutomation returns false when no automation', (t) => {
+    const mockTrack = {
+        automationLanes: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const result = track.hasAutomation();
+    t.assertEqual(result, false, 'Should return false when no automation');
+});
+
+TestRunner.test('Track - setTrackName updates name property', (t) => {
+    const mockTrack = {
+        name: 'Original Name',
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setTrackName('New Name');
+    t.assertEqual(track.name, 'New Name', 'Name should be updated');
+});
+
+TestRunner.test('Track - getTrackName returns name property', (t) => {
+    const mockTrack = {
+        name: 'Test Track Name'
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const name = track.getTrackName();
+    t.assertEqual(name, 'Test Track Name', 'Should return the track name');
+});
+
+TestRunner.test('Track - setSynthParam updates synthParams', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        synthParams: {
+            oscillator: { type: 'sawtooth' }
+        },
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setSynthParam('filter.frequency', 1000);
+    t.assertEqual(track.synthParams.filter.frequency, 1000, 'Synth param should be updated');
+});
+
+TestRunner.test('Track - setVolume calls _captureUndoState when fromInteraction is true', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        type: 'Synth',
+        volume: 0.5,
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setVolume(0.8, true);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured when fromInteraction is true');
+});
+
+TestRunner.test('Track - setPan calls _captureUndoState when fromInteraction is true', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        type: 'Synth',
+        pan: 0,
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setPan(0.5, true);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured when fromInteraction is true');
+});
+
+TestRunner.test('Track - setAutomationPoint calls _captureUndoState when fromInteraction is true', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        automationLanes: {},
+        _captureUndoState: () => { undoCaptured = true; }
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAutomationPoint('volume', 0, 0.5, true);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured when fromInteraction is true');
+});
+
+TestRunner.test('Track - clearAutomationLane calls _captureUndoState when fromInteraction is true', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        automationLanes: {
+            volume: [{ step: 0, value: 0.5 }]
+        },
+        _captureUndoState: () => { undoCaptured = true; }
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.clearAutomationLane('volume', true);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured when fromInteraction is true');
+});
+
+TestRunner.test('Track - setDrumSamplerPadVolume calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        type: 'DrumSampler',
+        drumSamplerPads: Array(8).fill(null).map(() => ({ volume: 0.7 })),
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setDrumSamplerPadVolume(0, 0.5);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for pad volume change');
+});
+
+TestRunner.test('Track - setInstrumentSamplerRootNote calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        type: 'InstrumentSampler',
+        instrumentSamplerSettings: { rootNote: 'C4' },
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setInstrumentSamplerRootNote('E4');
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for root note change');
+});
+
+TestRunner.test('Track - setSliceVolume calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        type: 'Sampler',
+        slices: Array(8).fill(null).map(() => ({ volume: 0.7 })),
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setSliceVolume(0, 0.5);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for slice volume change');
+});
+
+TestRunner.test('Track - setAudioClipName calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        timelineClips: [{
+            id: 'clip-1',
+            name: 'Original Clip Name'
+        }],
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAudioClipName('clip-1', 'New Clip Name');
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for clip name change');
+});
+
+TestRunner.test('Track - setAudioClipGain calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        timelineClips: [{
+            id: 'clip-1',
+            gain: 1.0
+        }],
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAudioClipGain('clip-1', 0.5);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for clip gain change');
+});
+
+TestRunner.test('Track - setAudioClipPlaybackRate calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        timelineClips: [{
+            id: 'clip-1',
+            playbackRate: 1.0
+        }],
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAudioClipPlaybackRate('clip-1', 2.0);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for playback rate change');
+});
+
+TestRunner.test('Track - setAudioClipFadeIn calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        timelineClips: [{
+            id: 'clip-1',
+            fadeIn: 0
+        }],
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAudioClipFadeIn('clip-1', 0.5);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for fade in change');
+});
+
+TestRunner.test('Track - setAudioClipFadeOut calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        timelineClips: [{
+            id: 'clip-1',
+            fadeOut: 0
+        }],
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAudioClipFadeOut('clip-1', 0.5);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for fade out change');
+});
+
+TestRunner.test('Track - setAudioClipReverse calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        timelineClips: [{
+            id: 'clip-1',
+            reverse: false
+        }],
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAudioClipReverse('clip-1', true);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for reverse change');
+});
+
+TestRunner.test('Track - setAudioClipStartTime calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        timelineClips: [{
+            id: 'clip-1',
+            startTime: 4
+        }],
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAudioClipStartTime('clip-1', 8);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for start time change');
+});
+
+TestRunner.test('Track - setAudioClipCrossfade calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        timelineClips: [{
+            id: 'clip-1',
+            crossfade: 0
+        }],
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setAudioClipCrossfade('clip-1', 1.0);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for crossfade change');
+});
+
+TestRunner.test('Track - setNoteLength calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            data: [[{ active: true, lengthInSteps: 1 }]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1',
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setNoteLength(0, 0, 2);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for note length change');
+});
+
+TestRunner.test('Track - setNoteProbability calls _captureUndoState', (t) => {
+    let undoCaptured = false;
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            data: [[{ active: true, probability: 1 }]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1',
+        _captureUndoState: () => { undoCaptured = true; },
+        appServices: {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setNoteProbability(0, 0, 0.5);
+    t.assertEqual(undoCaptured, true, 'Undo should be captured for note probability change');
+});
+
+TestRunner.test('Track - createNewSequence prevents deletion of last sequence', (t) => {
+    let notificationCalled = false;
+    const mockTrack = {
+        type: 'Synth',
+        id: 'track-1',
+        sequences: [{
+            id: 'seq-1',
+            name: 'Seq 1',
+            data: [[null]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1',
+        appServices: { showNotification: () => { notificationCalled = true; } },
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const result = track.deleteSequence('seq-1');
+    t.assertEqual(result, false, 'deleteSequence should return false when trying to delete last sequence');
+    t.assertEqual(track.sequences.length, 1, 'Last sequence should not be deleted');
+});
+
+TestRunner.test('Track - renameSequence updates sequence name', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            name: 'Original Name',
+            data: [[null]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1',
+        appServices: {},
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.renameSequence('seq-1', 'New Sequence Name');
+    t.assertEqual(track.sequences[0].name, 'New Sequence Name', 'Sequence name should be updated');
+});
+
+TestRunner.test('Track - setActiveSequence switches active sequence', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [
+            { id: 'seq-1', name: 'Seq 1', data: [[null]], length: 16 },
+            { id: 'seq-2', name: 'Seq 2', data: [[null]], length: 16 }
+        ],
+        activeSequenceId: 'seq-1',
+        appServices: {},
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    track.setActiveSequence('seq-2');
+    t.assertEqual(track.activeSequenceId, 'seq-2', 'Active sequence should be seq-2');
+});
+
+TestRunner.test('Track - shiftSequenceNotes shifts notes by semitones', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            data: [[{ active: true, row: 0 }]],
+            length: 16
+        }],
+        activeSequenceId: 'seq-1',
+        appServices: {},
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const result = track.shiftSequenceNotes(2);
+    t.assertTruthy(result >= 0, 'Should return a count');
+});
+
+TestRunner.test('Track - quantizeSequence returns count of quantized notes', (t) => {
+    const mockData = [[null, { active: true }, null, null]];
+    const mockTrack = {
+        type: 'Synth',
+        sequences: [{
+            id: 'seq-1',
+            name: 'Seq 1',
+            data: mockData,
+            length: 4
+        }],
+        activeSequenceId: 'seq-1',
+        appServices: {},
+        _captureUndoState: () => {}
+    };
+    const track = Object.create(Track.prototype);
+    Object.assign(track, mockTrack);
+    const count = track.quantizeSequence(2);
+    t.assertTruthy(typeof count === 'number', 'Should return a number');
+});

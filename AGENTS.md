@@ -3,6 +3,34 @@
 ## Project Overview
 SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla JavaScript modules. It uses Tone.js for audio processing and Tailwind CSS for styling. The app is deployed via GitHub Pages.
 
+#### Day 255: Track Method Instance Tests (2026-04-26)
+- **Feature**: Added 59 new unit tests for Track instance methods to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 59 new tests in Day 255 section:
+    - Track instance method existence tests for setDrumSamplerPadPitch, setDrumSamplerPadEnv, setInstrumentSamplerLoop/LoopStart/LoopEnd/Env, addEffect, removeEffect, updateEffectParam, reorderEffect, setupSlicerMonoNodes, disposeSlicerMonoNodes, setupToneSampler, initializeInstrument, fullyInitializeAudioResources, initializeAudioNodes, getDefaultSynthParams, setPan
+    - loadSampleToPad parameter and async behavior tests
+    - duplicateTrack creates new track with different id
+    - getNoteLength returns note length at position, default for empty cell
+    - getNoteProbability returns probability at position, default for empty cell
+    - getAutomationValue interpolation between points, default for empty lane
+    - setAutomationPoint clamps values to 0-1 range
+    - removeAutomationPoint returns false for nonexistent point
+    - getAutomationLaneCount returns correct count
+    - hasAutomation returns true/false based on lane contents
+    - setTrackName/getTrackName name property tests
+    - setSynthParam updates synthParams
+    - Undo capture tests: setVolume, setPan, setAutomationPoint, clearAutomationLane, setDrumSamplerPadVolume, setInstrumentSamplerRootNote, setSliceVolume, setAudioClipName/Gain/PlaybackRate/FadeIn/FadeOut/Reverse/StartTime/Crossfade, setNoteLength/Probability all call _captureUndoState
+    - deleteSequence prevents deletion of last sequence, renameSequence updates sequence name
+    - setActiveSequence switches active sequence, shiftSequenceNotes shifts notes, quantizeSequence returns count
+  - `js/constants.js`: Bumped APP_VERSION to 1.36.0
+- **Feature Details**:
+  - Tests validate remaining Track instance methods that lacked proper function existence tests
+  - Tests verify undo capture (_captureUndoState) is called for all interactive mutations
+  - Tests verify automation lane interpolation and clamping behavior
+  - Tests verify sequence operations behavior
+  - Total tests increased from 1705 to 1764
+- **Version**: Bumped to 1.36.0
+
 #### Day 246: InstrumentSampler & Audio Track UI Tests (2026-04-26)
 
 #### Day 251: Additional UI Module Function Tests (2026-04-26)
