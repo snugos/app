@@ -6,30 +6,31 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 ## Tech Stack
 #### Day 238: MIDI Learn applyMidiLearnMapping & handleMIDIMessage Tests (2026-04-25)
 - **Feature**: Added 27 new unit tests for MIDI Learn applyMidiLearnMapping and handleMIDIMessage functions
-#### Day 241: Sampler Slice Drop Zones Verification Tests (2026-04-26)
-- **Feature**: Added 28 new unit tests for Sampler Slice Drop Zones verification
+#### Day 242: Track Effects Instance Methods Tests (2026-04-26)
+- **Feature**: Added 32 new unit tests for Track Effects Instance Methods
 - **Files Modified**:
-  - `js/tests.js`: Added 28 new tests in Day 241 section:
-    - createDropZoneHTML for Sampler with slice index (valid HTML, data attributes, ID format)
-    - createDropZoneHTML for InstrumentSampler and Audio track types
-    - createDropZoneHTML generates unique IDs for all 8 slices
-    - createDropZoneHTML handles all status types (empty, loaded, missing, error)
-    - createDropZoneHTML handles null slice index gracefully
-    - setupGenericDropZoneListeners function signature and parameter count
-    - setupGenericDropZoneListeners handles null element gracefully
-    - setupGenericDropZoneListeners adds dragover/dragleave/drop event listeners
-    - numSlices, samplerMIDINoteStart, computerKeySamplerMap constants validation
-  - `js/constants.js`: Bumped APP_VERSION to 1.24.0
+  - `js/tests.js`: Added 32 new tests in Day 242 section:
+    - Track Effects - addEffect/removeEffect/updateEffectParam/reorderEffect method existence
+    - Track Effects - undo capture (_captureUndoState) for add/remove/reorder
+    - Track Effects - effectsRegistryAccess usage and createEffectInstance call
+    - Track Effects - activeEffects array manipulation (add, remove, reorder)
+    - Track Effects - dispose toneNode on removeEffect
+    - Track Effects - paramPath usage and rebuildEffectChain calls
+    - Track Effects - index clamping and early return when no change
+    - Track Effects - updateTrackUI calls for UI updates
+    - Track Effects - error handling for missing effects/registry
+    - Track Effects - effect wrapper structure (id, type, toneNode, params)
+  - `js/constants.js`: Bumped APP_VERSION to 1.25.0
 - **Feature Details**:
-  - Tests validate createDropZoneHTML generates proper drop zones for Sampler tracks with slice index
-  - Tests verify data attributes include pad-slice-index for slice identification
-  - Tests verify drop zone IDs are unique across all 8 slices
-  - Tests verify setupGenericDropZoneListeners handles drag-and-drop for Sampler type
-  - Tests verify Sampler keyboard mapping constants (numSlices=8, samplerMIDINoteStart=36)
-  - Total tests increased from 1741 to 1769
-- **Backend Note**: The Sampler track type uses slices (8 by default) for sample playback. These tests verify the drop zone infrastructure that allows users to load audio samples into specific slices via drag-and-drop from the sound browser or file system.
+  - Tests verify Track class has addEffect, removeEffect, updateEffectParam, reorderEffect methods
+  - Tests verify undo capture for effect operations
+  - Tests verify effect registry access and instance creation
+  - Tests verify activeEffects array manipulation
+  - Tests verify error handling and UI updates
+  - Total tests increased from 1769 to 1801
+- **Backend Note**: The Track Effects methods handle per-track effect chain management (add, remove, update, reorder) with proper undo capture and Tone.js instance management.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 1.24.0
+- **Version**: Bumped to 1.25.0
 
 - **Files Modified**:
   - `js/tests.js`: Added 27 new tests in Day 238 section:

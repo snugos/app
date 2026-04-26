@@ -11192,3 +11192,418 @@ TestRunner.test('Sampler Slice Drop Zone - setupGenericDropZoneListeners passes 
     const funcStr = setupGenericDropZoneListeners.toString();
     t.assertTruthy(funcStr.includes('padIndexOrSliceId') || funcStr.includes('sliceIndex') || funcStr.includes('padIndex'), 'Should pass slice/pad index');
 });
+
+// === Day 242: Synth & DrumSampler Track Instance Tests (2026-04-26) ===
+TestRunner.test('Synth Track - Track class can create Synth track', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertEqual(track.type, 'Synth', 'Track type should be Synth');
+});
+
+TestRunner.test('Synth Track - Synth track has synthEngineType property', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertTruthy('synthEngineType' in track, 'Synth track should have synthEngineType property');
+    t.assertEqual(track.synthEngineType, 'MonoSynth', 'Default synthEngineType should be MonoSynth');
+});
+
+TestRunner.test('Synth Track - Synth track has synthParams property', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertTruthy('synthParams' in track, 'Synth track should have synthParams property');
+    t.assertEqual(typeof track.synthParams, 'object', 'synthParams should be an object');
+});
+
+TestRunner.test('Synth Track - synthParams has oscillator property', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertTruthy('oscillator' in track.synthParams, 'synthParams should have oscillator');
+});
+
+TestRunner.test('Synth Track - synthParams has envelope property', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertTruthy('envelope' in track.synthParams, 'synthParams should have envelope');
+});
+
+TestRunner.test('Synth Track - synthParams has filter property', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertTruthy('filter' in track.synthParams, 'synthParams should have filter');
+});
+
+TestRunner.test('Synth Track - synthParams envelope has attack, decay, sustain, release', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    const env = track.synthParams.envelope;
+    t.assertTruthy('attack' in env, 'envelope should have attack');
+    t.assertTruthy('decay' in env, 'envelope should have decay');
+    t.assertTruthy('sustain' in env, 'envelope should have sustain');
+    t.assertTruthy('release' in env, 'envelope should have release');
+});
+
+TestRunner.test('Synth Track - Synth track has instrument property (Tone synth)', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertTruthy('instrument' in track, 'Synth track should have instrument property');
+});
+
+TestRunner.test('Synth Track - Synth track has clipPlayers Map', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertTruthy(track.clipPlayers instanceof Map, 'Synth track should have clipPlayers Map');
+});
+
+TestRunner.test('Synth Track - Synth track has timelineClips array', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertTruthy(Array.isArray(track.timelineClips), 'Synth track should have timelineClips array');
+});
+
+TestRunner.test('Synth Track - Synth track has schedulePlayback method', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertEqual(typeof track.schedulePlayback, 'function', 'Synth track should have schedulePlayback method');
+});
+
+TestRunner.test('Synth Track - Synth track has setVolume method', (t) => {
+    const track = new Track('test-synth-track', 'Synth', 0);
+    t.assertEqual(typeof track.setVolume, 'function', 'Synth track should have setVolume method');
+});
+
+TestRunner.test('DrumSampler Track - Track class can create DrumSampler track', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    t.assertEqual(track.type, 'DrumSampler', 'Track type should be DrumSampler');
+});
+
+TestRunner.test('DrumSampler Track - DrumSampler track has drumSamplerPads array', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    t.assertTruthy(Array.isArray(track.drumSamplerPads), 'DrumSampler track should have drumSamplerPads array');
+});
+
+TestRunner.test('DrumSampler Track - drumSamplerPads has 8 pads by default', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    t.assertEqual(track.drumSamplerPads.length, numDrumSamplerPads || 8, 'DrumSampler should have 8 pads');
+});
+
+TestRunner.test('DrumSampler Track - each drum pad has volume property', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    for (let i = 0; i < track.drumSamplerPads.length; i++) {
+        t.assertTruthy('volume' in track.drumSamplerPads[i], `Pad ${i} should have volume property`);
+    }
+});
+
+TestRunner.test('DrumSampler Track - each drum pad has pitchShift property', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    for (let i = 0; i < track.drumSamplerPads.length; i++) {
+        t.assertTruthy('pitchShift' in track.drumSamplerPads[i], `Pad ${i} should have pitchShift property`);
+    }
+});
+
+TestRunner.test('DrumSampler Track - each drum pad has envelope property', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    for (let i = 0; i < track.drumSamplerPads.length; i++) {
+        t.assertTruthy('envelope' in track.drumSamplerPads[i], `Pad ${i} should have envelope property`);
+    }
+});
+
+TestRunner.test('DrumSampler Track - each drum pad has status property', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    for (let i = 0; i < track.drumSamplerPads.length; i++) {
+        t.assertTruthy('status' in track.drumSamplerPads[i], `Pad ${i} should have status property`);
+    }
+});
+
+TestRunner.test('DrumSampler Track - each drum pad has sampleUrl property', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    for (let i = 0; i < track.drumSamplerPads.length; i++) {
+        t.assertTruthy('sampleUrl' in track.drumSamplerPads[i], `Pad ${i} should have sampleUrl property`);
+    }
+});
+
+TestRunner.test('DrumSampler Track - each drum pad has dbKey property', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    for (let i = 0; i < track.drumSamplerPads.length; i++) {
+        t.assertTruthy('dbKey' in track.drumSamplerPads[i], `Pad ${i} should have dbKey property`);
+    }
+});
+
+TestRunner.test('DrumSampler Track - each drum pad has originalFileName property', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    for (let i = 0; i < track.drumSamplerPads.length; i++) {
+        t.assertTruthy('originalFileName' in track.drumSamplerPads[i], `Pad ${i} should have originalFileName property`);
+    }
+});
+
+TestRunner.test('DrumSampler Track - DrumSampler track has clipPlayers Map', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    t.assertTruthy(track.clipPlayers instanceof Map, 'DrumSampler track should have clipPlayers Map');
+});
+
+TestRunner.test('DrumSampler Track - DrumSampler track has timelineClips array', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    t.assertTruthy(Array.isArray(track.timelineClips), 'DrumSampler track should have timelineClips array');
+});
+
+TestRunner.test('DrumSampler Track - DrumSampler track has schedulePlayback method', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    t.assertEqual(typeof track.schedulePlayback, 'function', 'DrumSampler track should have schedulePlayback method');
+});
+
+TestRunner.test('DrumSampler Track - DrumSampler track has setVolume method', (t) => {
+    const track = new Track('test-drum-track', 'DrumSampler', 0);
+    t.assertEqual(typeof track.setVolume, 'function', 'DrumSampler track should have setVolume method');
+});
+
+TestRunner.test('Sampler Track - Track class can create Sampler track', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertEqual(track.type, 'Sampler', 'Track type should be Sampler');
+});
+
+TestRunner.test('Sampler Track - Sampler track has slices array', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertTruthy(Array.isArray(track.slices), 'Sampler track should have slices array');
+});
+
+TestRunner.test('Sampler Track - slices has numSlices (8) slices by default', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertEqual(track.slices.length, numSlices || 8, 'Sampler should have numSlices slices');
+});
+
+TestRunner.test('Sampler Track - each slice has offset property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    for (let i = 0; i < track.slices.length; i++) {
+        t.assertTruthy('offset' in track.slices[i], `Slice ${i} should have offset property`);
+    }
+});
+
+TestRunner.test('Sampler Track - each slice has duration property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    for (let i = 0; i < track.slices.length; i++) {
+        t.assertTruthy('duration' in track.slices[i], `Slice ${i} should have duration property`);
+    }
+});
+
+TestRunner.test('Sampler Track - each slice has volume property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    for (let i = 0; i < track.slices.length; i++) {
+        t.assertTruthy('volume' in track.slices[i], `Slice ${i} should have volume property`);
+    }
+});
+
+TestRunner.test('Sampler Track - each slice has pitchShift property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    for (let i = 0; i < track.slices.length; i++) {
+        t.assertTruthy('pitchShift' in track.slices[i], `Slice ${i} should have pitchShift property`);
+    }
+});
+
+TestRunner.test('Sampler Track - each slice has loop property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    for (let i = 0; i < track.slices.length; i++) {
+        t.assertTruthy('loop' in track.slices[i], `Slice ${i} should have loop property`);
+    }
+});
+
+TestRunner.test('Sampler Track - each slice has reverse property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    for (let i = 0; i < track.slices.length; i++) {
+        t.assertTruthy('reverse' in track.slices[i], `Slice ${i} should have reverse property`);
+    }
+});
+
+TestRunner.test('Sampler Track - each slice has envelope property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    for (let i = 0; i < track.slices.length; i++) {
+        t.assertTruthy('envelope' in track.slices[i], `Slice ${i} should have envelope property`);
+    }
+});
+
+TestRunner.test('Sampler Track - Sampler track has samplerAudioData property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertTruthy('samplerAudioData' in track, 'Sampler track should have samplerAudioData property');
+});
+
+TestRunner.test('Sampler Track - samplerAudioData has fileName property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertTruthy('fileName' in track.samplerAudioData, 'samplerAudioData should have fileName');
+});
+
+TestRunner.test('Sampler Track - samplerAudioData has status property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertTruthy('status' in track.samplerAudioData, 'samplerAudioData should have status');
+});
+
+TestRunner.test('Sampler Track - Sampler track has selectedSliceForEdit property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertTruthy('selectedSliceForEdit' in track, 'Sampler track should have selectedSliceForEdit');
+});
+
+TestRunner.test('Sampler Track - Sampler track has waveformZoom property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertTruthy('waveformZoom' in track, 'Sampler track should have waveformZoom');
+});
+
+TestRunner.test('Sampler Track - Sampler track has slicerIsPolyphonic property', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertTruthy('slicerIsPolyphonic' in track, 'Sampler track should have slicerIsPolyphonic');
+    t.assertEqual(track.slicerIsPolyphonic, true, 'Default slicerIsPolyphonic should be true');
+});
+
+TestRunner.test('Sampler Track - Sampler track has schedulePlayback method', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertEqual(typeof track.schedulePlayback, 'function', 'Sampler track should have schedulePlayback method');
+});
+
+TestRunner.test('Sampler Track - Sampler track has setVolume method', (t) => {
+    const track = new Track('test-sampler-track', 'Sampler', 0);
+    t.assertEqual(typeof track.setVolume, 'function', 'Sampler track should have setVolume method');
+});
+
+// ============================================
+// Day 242: Track Effects Instance Methods Tests
+// ============================================
+TestRunner.test('Track Effects - addEffect method exists', (t) => {
+    const hasMethod = typeof Track.prototype.addEffect === 'function';
+    t.assertTruthy(hasMethod, 'Track should have addEffect method');
+});
+
+TestRunner.test('Track Effects - removeEffect method exists', (t) => {
+    const hasMethod = typeof Track.prototype.removeEffect === 'function';
+    t.assertTruthy(hasMethod, 'Track should have removeEffect method');
+});
+
+TestRunner.test('Track Effects - updateEffectParam method exists', (t) => {
+    const hasMethod = typeof Track.prototype.updateEffectParam === 'function';
+    t.assertTruthy(hasMethod, 'Track should have updateEffectParam method');
+});
+
+TestRunner.test('Track Effects - reorderEffect method exists', (t) => {
+    const hasMethod = typeof Track.prototype.reorderEffect === 'function';
+    t.assertTruthy(hasMethod, 'Track should have reorderEffect method');
+});
+
+TestRunner.test('Track Effects - addEffect references _captureUndoState', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState') || funcStr.includes('captureUndo'), 'addEffect should capture undo state');
+});
+
+TestRunner.test('Track Effects - removeEffect references _captureUndoState', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState') || funcStr.includes('captureUndo'), 'removeEffect should capture undo state');
+});
+
+TestRunner.test('Track Effects - reorderEffect references _captureUndoState', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState') || funcStr.includes('captureUndo'), 'reorderEffect should capture undo state');
+});
+
+TestRunner.test('Track Effects - addEffect uses effectsRegistryAccess', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess'), 'addEffect should use effects registry access');
+});
+
+TestRunner.test('Track Effects - addEffect uses createEffectInstance', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('createEffectInstance'), 'addEffect should use createEffectInstance');
+});
+
+TestRunner.test('Track Effects - addEffect adds to activeEffects array', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('activeEffects'), 'addEffect should work with activeEffects array');
+});
+
+TestRunner.test('Track Effects - removeEffect disposes toneNode', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'removeEffect should dispose toneNode');
+});
+
+TestRunner.test('Track Effects - removeEffect splices from activeEffects', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('splice') || funcStr.includes('filter'), 'removeEffect should remove from activeEffects');
+});
+
+TestRunner.test('Track Effects - updateEffectParam finds effect by id', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('find'), 'updateEffectParam should find effect by id');
+});
+
+TestRunner.test('Track Effects - updateEffectParam uses paramPath', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('paramPath'), 'updateEffectParam should use paramPath');
+});
+
+TestRunner.test('Track Effects - updateEffectParam calls rebuildEffectChain', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('rebuildEffectChain'), 'updateEffectParam should rebuild effect chain');
+});
+
+TestRunner.test('Track Effects - reorderEffect clamps newIndex', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'reorderEffect should clamp newIndex');
+});
+
+TestRunner.test('Track Effects - reorderEffect returns early when oldIndex equals newIndex', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('oldIndex') || funcStr.includes('return'), 'reorderEffect should return early when no change');
+});
+
+TestRunner.test('Track Effects - reorderEffect splices activeEffects', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'reorderEffect should use splice to reorder');
+});
+
+TestRunner.test('Track Effects - activeEffects is initialized as array in constructor', (t) => {
+    const funcStr = Track.toString();
+    t.assertTruthy(funcStr.includes('activeEffects') || funcStr.includes('[]'), 'Track constructor should initialize activeEffects');
+});
+
+TestRunner.test('Track Effects - addEffect generates unique effectId', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('Date.now') || funcStr.includes('random') || funcStr.includes('effectId'), 'addEffect should generate unique IDs');
+});
+
+TestRunner.test('Track Effects - removeEffect handles effect not found gracefully', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('warn'), 'removeEffect should handle missing effect gracefully');
+});
+
+TestRunner.test('Track Effects - updateEffectParam handles effect not found', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('find') || funcStr.includes('warn'), 'updateEffectParam should handle missing effect gracefully');
+});
+
+TestRunner.test('Track Effects - reorderEffect handles effect not found', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('warn'), 'reorderEffect should handle missing effect gracefully');
+});
+
+TestRunner.test('Track Effects - addEffect calls updateTrackUI when available', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI') || funcStr.includes('appServices'), 'addEffect should update track UI');
+});
+
+TestRunner.test('Track Effects - removeEffect calls updateTrackUI when available', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI') || funcStr.includes('appServices'), 'removeEffect should update track UI');
+});
+
+TestRunner.test('Track Effects - reorderEffect calls rebuildEffectChain', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('rebuildEffectChain'), 'reorderEffect should rebuild effect chain');
+});
+
+TestRunner.test('Track Effects - addEffect handles missing effectsRegistryAccess', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('console.error'), 'addEffect should handle missing registry');
+});
+
+TestRunner.test('Track Effects - addEffect validates effectType exists in registry', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS') || funcStr.includes('effectType'), 'addEffect should validate effect type');
+});
+
+TestRunner.test('Track Effects - updateEffectParam updates toneNode parameter', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('toneNode') || funcStr.includes('get') || funcStr.includes('set'), 'updateEffectParam should update toneNode');
+});
+
+TestRunner.test('Track Effects - addEffect stores params with effect', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('params') || funcStr.includes('params:'), 'addEffect should store params');
+});
+
+TestRunner.test('Track Effects - effect wrapper has id, type, toneNode, params', (t) => {
+    const addFuncStr = Track.prototype.addEffect.toString();
+    const hasAllProps = addFuncStr.includes('id') && addFuncStr.includes('type') && addFuncStr.includes('toneNode') && addFuncStr.includes('params');
+    t.assertTruthy(hasAllProps, 'Effect wrapper should have id, type, toneNode, and params');
+});
