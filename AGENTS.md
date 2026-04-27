@@ -1,30 +1,25 @@
-#### Day 295: InstrumentSampler Undo Capture Verification Tests (2026-04-27)
-- **Feature**: Added 23 new unit tests for InstrumentSampler mutation methods undo capture verification
+#### Day 295: Track Instance Method Undo Capture Verification Tests (2026-04-27)
+- **Feature**: Added 32 new unit tests for Track instance methods undo capture verification
 - **Files Modified**:
-  - `js/tests.js`: Added 23 new tests in Day 295 section:
-    - setInstrumentSamplerLoop calls _captureUndoState with descriptive undo label
-    - setInstrumentSamplerRootNote calls _captureUndoState with descriptive undo label
-    - setInstrumentSamplerLoopStart calls _captureUndoState with descriptive undo label
-    - setInstrumentSamplerLoopEnd calls _captureUndoState with descriptive undo label
-    - setInstrumentSamplerEnv calls _captureUndoState with descriptive undo label
-    - Undo labels include track name (this.name)
-    - Null checks for instrumentSamplerSettings existence
-    - Envelope existence check in setInstrumentSamplerEnv
-    - Value parsing (parseFloat for time and envelope values)
-    - Boolean conversion (!!loop) for setInstrumentSamplerLoop
-    - Order of operations: _captureUndoState called before property mutation
-    - toneSampler update logic with disposed check
-    - setupToneSampler called after rootNote change
+  - `js/tests.js`: Added 32 new tests in Day 295 section:
+    - setTrackName calls _captureUndoState with descriptive "Rename track to" label
+    - setTrackColor calls _captureUndoState with descriptive "Set color on" label
+    - setSynthParam calls _captureUndoState with parameter path and track name
+    - addEffect calls _captureUndoState with "Add {effectType} effect to" label
+    - removeEffect calls _captureUndoState with "Remove effect from" label
+    - updateEffectParam calls _captureUndoState with "Set {paramPath} on {effect} effect on" label
+    - reorderEffect calls _captureUndoState with "Reorder {effectType} effect on" label
+    - duplicateTrack calls _captureUndoState with "Duplicate Track" label
+    - freezeTrack calls _captureUndoState with "Freeze track {name}" label
+    - bounceTrack does NOT call _captureUndoState (export operation, not undoable)
+    - loadSampleToPad calls _captureUndoState with "Load sample to pad {padIndex+1} on" label
   - `js/constants.js`: Bumped APP_VERSION to 1.76.0
 - **Feature Details**:
-  - Tests validate InstrumentSampler mutation methods call _captureUndoState before mutating state
-  - Tests verify descriptive undo labels (e.g., "Toggle loop on Track Name", "Set root note on Track Name")
-  - Tests verify order of operations (capture called before any property mutation)
-  - Tests verify proper null checks for instrumentSamplerSettings and envelope objects
-  - Tests verify value parsing (parseFloat for time/envelope values)
-  - Tests verify boolean conversion (!!loop) for setInstrumentSamplerLoop
-  - Tests verify toneSampler update logic with disposed check
-  - Total tests increased from 1337 to 1360
+  - Tests verify all Track instance mutation methods call _captureUndoState before mutating state
+  - Tests verify descriptive undo labels reference the specific operation and track name
+  - Tests verify bounceTrack does NOT call _captureUndoState (bounce is an export, not an undoable mutation)
+  - Tests verify loadSampleToPad references pad index (1-based) in undo label
+  - Total tests increased from 1360 to 1392
 - **Version**: Bumped to 1.76.0
 
 
