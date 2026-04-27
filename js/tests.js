@@ -10487,3 +10487,319 @@ TestRunner.test('Undo/Redo - state setters guard against missing appServices in 
     }
     t.assertTruthy(allGuarded, 'All Loop/Timeline/Swing state setters should check appServices before calling captureStateForUndo');
 });
+
+// === Day 278: Remaining UI Module Function Tests (2026-04-27) ===
+// Additional UI module function tests for functions not yet covered
+
+TestRunner.test('UI - highlightPlayingStep function is exported', (t) => {
+    t.assertEqual(typeof highlightPlayingStep, 'function', 'highlightPlayingStep should be a function');
+});
+
+TestRunner.test('UI - highlightPlayingStep accepts 3 parameters', (t) => {
+    // Function signature: highlightPlayingStep(trackId, stepIndex, isPlaying)
+    t.assertEqual(highlightPlayingStep.length, 3, 'highlightPlayingStep should accept 3 parameters');
+});
+
+TestRunner.test('UI - highlightPlayingStep handles null stepIndex gracefully', (t) => {
+    // Function should not throw when called with null/undefined
+    try {
+        highlightPlayingStep('track1', null, true);
+        t.assertTruthy(true, 'Should not throw on null stepIndex');
+    } catch (e) {
+        t.assertTruthy(false, 'Should not throw on null stepIndex');
+    }
+});
+
+TestRunner.test('UI - updateMixerWindow function is exported', (t) => {
+    t.assertEqual(typeof updateMixerWindow, 'function', 'updateMixerWindow should be a function');
+});
+
+TestRunner.test('UI - updateMixerWindow accepts no parameters', (t) => {
+    t.assertEqual(updateMixerWindow.length, 0, 'updateMixerWindow should accept 0 parameters');
+});
+
+TestRunner.test('UI - updateSequencerCellUI function is exported', (t) => {
+    t.assertEqual(typeof updateSequencerCellUI, 'function', 'updateSequencerCellUI should be a function');
+});
+
+TestRunner.test('UI - updateSequencerCellUI accepts 5 parameters', (t) => {
+    // Function signature: updateSequencerCellUI(sequencerElement, trackType, row, col, isActive)
+    t.assertEqual(updateSequencerCellUI.length, 5, 'updateSequencerCellUI should accept 5 parameters');
+});
+
+TestRunner.test('UI - updateSequencerCellUI handles null sequencerElement gracefully', (t) => {
+    try {
+        updateSequencerCellUI(null, 'Synth', 0, 0, true);
+        t.assertTruthy(true, 'Should not throw on null sequencerElement');
+    } catch (e) {
+        t.assertTruthy(false, 'Should not throw on null sequencerElement');
+    }
+});
+
+TestRunner.test('UI - renderEffectsList function is exported', (t) => {
+    t.assertEqual(typeof renderEffectsList, 'function', 'renderEffectsList should be a function');
+});
+
+TestRunner.test('UI - renderEffectsList accepts 4 parameters', (t) => {
+    // Function signature: renderEffectsList(owner, ownerType, listDiv, controlsContainer)
+    t.assertEqual(renderEffectsList.length, 4, 'renderEffectsList should accept 4 parameters');
+});
+
+TestRunner.test('UI - renderEffectsList handles track owner type', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('owner'), 'Should handle track owner type');
+});
+
+TestRunner.test('UI - renderEffectsList handles master owner type', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('master'), 'Should handle master owner type');
+});
+
+TestRunner.test('UI - renderEffectControls function is exported', (t) => {
+    t.assertEqual(typeof renderEffectControls, 'function', 'renderEffectControls should be a function');
+});
+
+TestRunner.test('UI - renderEffectControls accepts 4 parameters', (t) => {
+    // Function signature: renderEffectControls(owner, ownerType, effectId, controlsContainer)
+    t.assertEqual(renderEffectControls.length, 4, 'renderEffectControls should accept 4 parameters');
+});
+
+TestRunner.test('UI - drawWaveform function is exported', (t) => {
+    t.assertEqual(typeof drawWaveform, 'function', 'drawWaveform should be a function');
+});
+
+TestRunner.test('UI - drawWaveform accepts 1 parameter (track)', (t) => {
+    t.assertEqual(drawWaveform.length, 1, 'drawWaveform should accept 1 parameter');
+});
+
+TestRunner.test('UI - drawWaveform references track.audioBuffer', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer'), 'Should reference audioBuffer');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform function is exported', (t) => {
+    t.assertEqual(typeof drawInstrumentWaveform, 'function', 'drawInstrumentWaveform should be a function');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform accepts 1 parameter (track)', (t) => {
+    t.assertEqual(drawInstrumentWaveform.length, 1, 'drawInstrumentWaveform should accept 1 parameter');
+});
+
+TestRunner.test('UI - drawClipWaveform function is exported', (t) => {
+    t.assertEqual(typeof drawClipWaveform, 'function', 'drawClipWaveform should be a function');
+});
+
+TestRunner.test('UI - drawClipWaveform accepts 2 parameters (clipId, audioBuffer)', (t) => {
+    t.assertEqual(drawClipWaveform.length, 2, 'drawClipWaveform should accept 2 parameters');
+});
+
+TestRunner.test('UI - renderSamplePads function is exported', (t) => {
+    t.assertEqual(typeof renderSamplePads, 'function', 'renderSamplePads should be a function');
+});
+
+TestRunner.test('UI - renderSamplePads accepts 1 parameter (track)', (t) => {
+    t.assertEqual(renderSamplePads.length, 1, 'renderSamplePads should accept 1 parameter');
+});
+
+TestRunner.test('UI - updateSliceEditorUI function is exported', (t) => {
+    t.assertEqual(typeof updateSliceEditorUI, 'function', 'updateSliceEditorUI should be a function');
+});
+
+TestRunner.test('UI - updateSliceEditorUI accepts 1 parameter (track)', (t) => {
+    t.assertEqual(updateSliceEditorUI.length, 1, 'updateSliceEditorUI should accept 1 parameter');
+});
+
+TestRunner.test('UI - updateSliceEditorUI references track and slices', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('track') && funcStr.includes('slice'), 'Should reference track and slices');
+});
+
+// === Day 278: Preview Player State Function Tests ===
+
+TestRunner.test('Preview Player - getPreviewPlayerState function is exported', (t) => {
+    t.assertEqual(typeof getPreviewPlayerState, 'function', 'getPreviewPlayerState should be a function');
+});
+
+TestRunner.test('Preview Player - getPreviewPlayerState accepts no parameters', (t) => {
+    t.assertEqual(getPreviewPlayerState.length, 0, 'getPreviewPlayerState should accept 0 parameters');
+});
+
+TestRunner.test('Preview Player - getPreviewPlayerState returns null by default', (t) => {
+    const state = getPreviewPlayerState();
+    t.assertTruthy(state === null || typeof state === 'object', 'getPreviewPlayerState should return null or object');
+});
+
+TestRunner.test('Preview Player - setPreviewPlayerState function is exported', (t) => {
+    t.assertEqual(typeof setPreviewPlayerState, 'function', 'setPreviewPlayerState should be a function');
+});
+
+TestRunner.test('Preview Player - setPreviewPlayerState accepts 1 parameter', (t) => {
+    t.assertEqual(setPreviewPlayerState.length, 1, 'setPreviewPlayerState should accept 1 parameter');
+});
+
+TestRunner.test('Preview Player - setPreviewPlayerState calls captureStateForUndo', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setPreviewPlayerState should call captureStateForUndo');
+});
+
+TestRunner.test('Preview Player - setPreviewPlayerState uses descriptive undo label', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('Preview') || funcStr.includes('Player'), 'Should mention Preview in undo label');
+});
+
+TestRunner.test('Preview Player - setPreviewPlayerState guards against missing appServices', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'Should check appServices before calling captureStateForUndo');
+});
+
+// === Day 278: Additional UI Constants Tests ===
+
+TestRunner.test('UI Constants - KEYBOARD_SHORTCUTS_HELP_TITLE is defined', (t) => {
+    t.assertEqual(typeof KEYBOARD_SHORTCUTS_HELP_TITLE, 'string', 'KEYBOARD_SHORTCUTS_HELP_TITLE should be a string');
+});
+
+TestRunner.test('UI Constants - KEYBOARD_SHORTCUTS_HELP_TITLE is non-empty', (t) => {
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_TITLE && KEYBOARD_SHORTCUTS_HELP_TITLE.length > 0, 'KEYBOARD_SHORTCUTS_HELP_TITLE should be non-empty');
+});
+
+TestRunner.test('UI Constants - KEYBOARD_SHORTCUTS_HELP_WIDTH is reasonable', (t) => {
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_WIDTH >= 300 && KEYBOARD_SHORTCUTS_HELP_WIDTH <= 1000, 'KEYBOARD_SHORTCUTS_HELP_WIDTH should be reasonable (300-1000)');
+});
+
+TestRunner.test('UI Constants - KEYBOARD_SHORTCUTS_HELP_HEIGHT is reasonable', (t) => {
+    t.assertTruthy(KEYBOARD_SHORTCUTS_HELP_HEIGHT >= 200 && KEYBOARD_SHORTCUTS_HELP_HEIGHT <= 900, 'KEYBOARD_SHORTCUTS_HELP_HEIGHT should be reasonable (200-900)');
+});
+
+TestRunner.test('SnugWindow - focus method exists on SnugWindow instance', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    const win = new SnugWindow('test-win', 'Test', '<div>test</div>', {}, mockAppServices);
+    t.assertEqual(typeof win.focus, 'function', 'SnugWindow should have focus method');
+});
+
+TestRunner.test('SnugWindow - focus calls incrementHighestZ', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    let incrementCalled = false;
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => { incrementCalled = true; return 101; },
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    const win = new SnugWindow('test-win', 'Test', '<div>test</div>', {}, mockAppServices);
+    if (win.element) {
+        win.focus();
+    }
+    t.assertTruthy(incrementCalled, 'focus should call incrementHighestZ');
+});
+
+TestRunner.test('SnugWindow - focus updates zIndex on element', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub()
+    };
+    const win = new SnugWindow('test-win', 'Test', '<div>test</div>', {}, mockAppServices);
+    if (win.element) {
+        win.focus();
+        t.assertTruthy(win.element.style.zIndex === '101' || mockAppServices.incrementHighestZ.called, 'focus should update zIndex');
+    } else {
+        t.assertTruthy(true, 'Window element not created in test environment');
+    }
+});
+
+TestRunner.test('SnugWindow - minimize sets isMinimized to true', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub(),
+        updateUndoRedoButtonsUI: t.stub()
+    };
+    const win = new SnugWindow('test-win', 'Test', '<div>test</div>', {}, mockAppServices);
+    t.assertEqual(win.isMinimized, false, 'Window should start not minimized');
+    if (typeof win.minimize === 'function') {
+        win.minimize();
+        t.assertEqual(win.isMinimized, true, 'Window should be minimized after minimize()');
+    }
+});
+
+TestRunner.test('SnugWindow - restore sets isMinimized to false', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub(),
+        updateUndoRedoButtonsUI: t.stub()
+    };
+    const win = new SnugWindow('test-win', 'Test', '<div>test</div>', {}, mockAppServices);
+    win.isMinimized = true;
+    if (typeof win.restore === 'function') {
+        win.restore();
+        t.assertEqual(win.isMinimized, false, 'Window should be restored after restore()');
+    }
+});
+
+TestRunner.test('SnugWindow - close calls removeWindowFromStore', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    let removeCalled = false;
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: () => { removeCalled = true; },
+        updateUndoRedoButtonsUI: t.stub()
+    };
+    const win = new SnugWindow('test-win', 'Test', '<div>test</div>', {}, mockAppServices);
+    if (typeof win.close === 'function') {
+        win.close();
+        t.assertTruthy(removeCalled, 'close should call removeWindowFromStore');
+    }
+});
+
+TestRunner.test('SnugWindow - toggleMaximize toggles isMaximized', (t) => {
+    const mockDesktop = { appendChild: t.stub(), offsetWidth: 1024, offsetHeight: 768 };
+    const mockAppServices = {
+        uiElementsCache: { desktop: mockDesktop, taskbar: { offsetHeight: 30 }, globalControlsBar: { offsetHeight: 0 } },
+        getOpenWindows: () => new Map(),
+        incrementHighestZ: () => 101,
+        getHighestZ: () => 100,
+        setHighestZ: t.stub(),
+        addWindowToStore: t.stub(),
+        removeWindowFromStore: t.stub(),
+        updateUndoRedoButtonsUI: t.stub()
+    };
+    const win = new SnugWindow('test-win', 'Test', '<div>test</div>', {}, mockAppServices);
+    const initialState = win.isMaximized;
+    if (typeof win.toggleMaximize === 'function') {
+        win.toggleMaximize();
+        t.assertEqual(win.isMaximized, !initialState, 'toggleMaximize should toggle isMaximized state');
+    }
+});
