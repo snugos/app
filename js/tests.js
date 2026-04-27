@@ -2284,8 +2284,8 @@ TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
 // Playback Mode State Tests
 TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
     const mode = getPlaybackModeState();
-    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
-    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+    t.assertTrue(typeof mode === 'string', 'Playback mode should be a string');
+    t.assertTruthy(mode === 'sequencer' || mode === 'timeline', 'Playback mode should be sequencer or timeline');
 });
 
 // Tracks State Tests
@@ -3174,8 +3174,8 @@ TestRunner.test('Metronome - setMetronomeVolumeState updates state', (t) => {
 // Playback Mode State Tests
 TestRunner.test('Playback Mode - getPlaybackModeState returns value', (t) => {
     const mode = getPlaybackModeState();
-    t.assertTrue(typeof mode === 'number', 'Playback mode should be a number');
-    t.assertTruthy(mode >= 0 && mode <= 2, 'Playback mode should be 0-2');
+    t.assertTrue(typeof mode === 'string', 'Playback mode should be a string');
+    t.assertTruthy(mode === 'sequencer' || mode === 'timeline', 'Playback mode should be sequencer or timeline');
 });
 
 // Tracks State Tests
