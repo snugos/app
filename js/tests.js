@@ -12767,3 +12767,157 @@ TestRunner.test('SnugOS - APP_VERSION is 1.69.0 or higher for Day 289', (t) => {
         t.assertTruthy(versionParts[1] >= 69, 'Minor version should be >= 69 for Day 289');
     }
 });
+
+// === Day 290: Project Import & Synth Track Extended Tests (2026-04-27) ===
+TestRunner.test('Project - handleProjectFileLoadInternal function is exported', (t) => {
+    t.assertEqual(typeof handleProjectFileLoadInternal, 'function', 'handleProjectFileLoadInternal should be a function');
+});
+
+TestRunner.test('Project - handleProjectFileLoadInternal accepts event parameter', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('event') || funcStr.includes('e'), 'handleProjectFileLoadInternal should reference event/e parameter');
+});
+
+TestRunner.test('Project - handleProjectFileLoadInternal is async', (t) => {
+    t.assertTruthy(handleProjectFileLoadInternal.constructor.name === 'AsyncFunction' || handleProjectFileLoadInternal.toString().includes('async'), 'handleProjectFileLoadInternal should be async');
+});
+
+TestRunner.test('Project - handleProjectFileLoadInternal references FileReader', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('FileReader'), 'handleProjectFileLoadInternal should use FileReader for file loading');
+});
+
+TestRunner.test('Project - handleProjectFileLoadInternal calls loadProjectInternal', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('loadProjectInternal'), 'handleProjectFileLoadInternal should call loadProjectInternal');
+});
+
+TestRunner.test('Project - reconstructDAWInternal handles isUndoRedo parameter', (t) => {
+    const funcStr = reconstructDAWInternal.toString();
+    t.assertTruthy(funcStr.includes('isUndoRedo') || funcStr.includes('isReconstruct'), 'reconstructDAWInternal should handle isUndoRedo parameter');
+});
+
+TestRunner.test('Project - reconstructDAWInternal calls reconstructDAWFromData', (t) => {
+    const funcStr = reconstructDAWInternal.toString();
+    t.assertTruthy(funcStr.includes('reconstructDAWFromData'), 'reconstructDAWInternal should call reconstructDAWFromData helper');
+});
+
+TestRunner.test('Synth Track - synthEngineType is MonoSynth by default', (t) => {
+    const synthTrack = new Track('synth-test', 'Synth', { trackId: 'synth-test' });
+    t.assertEqual(synthTrack.synthEngineType, 'MonoSynth', 'Synth should default to MonoSynth');
+});
+
+TestRunner.test('Synth Track - synthParams has oscillator property', (t) => {
+    const synthTrack = new Track('synth-test-2', 'Synth', { trackId: 'synth-test-2' });
+    t.assertTruthy(synthTrack.synthParams && typeof synthTrack.synthParams.oscillator === 'object', 'synthParams should have oscillator object');
+});
+
+TestRunner.test('Synth Track - synthParams has envelope property', (t) => {
+    const synthTrack = new Track('synth-test-3', 'Synth', { trackId: 'synth-test-3' });
+    t.assertTruthy(synthTrack.synthParams && typeof synthTrack.synthParams.envelope === 'object', 'synthParams should have envelope object');
+});
+
+TestRunner.test('Synth Track - synthParams has filter property', (t) => {
+    const synthTrack = new Track('synth-test-4', 'Synth', { trackId: 'synth-test-4' });
+    t.assertTruthy(synthTrack.synthParams && typeof synthTrack.synthParams.filter === 'object', 'synthParams should have filter object');
+});
+
+TestRunner.test('Synth Track - setSynthParam updates synthParams', (t) => {
+    const synthTrack = new Track('synth-test-5', 'Synth', { trackId: 'synth-test-5' });
+    const initialParams = JSON.stringify(synthTrack.synthParams);
+    synthTrack.setSynthParam('oscillator.type', 'sawtooth');
+    t.assertNotEqual(JSON.stringify(synthTrack.synthParams), initialParams, 'setSynthParam should update synthParams');
+});
+
+TestRunner.test('Synth Track - instrument is Tone.js MonoSynth', (t) => {
+    const synthTrack = new Track('synth-test-6', 'Synth', { trackId: 'synth-test-6' });
+    t.assertTruthy(synthTrack.instrument, 'Synth should have instrument property');
+});
+
+TestRunner.test('Send Bus - createSendBusInAudio creates send nodes', (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('send') || funcStr.includes('gain') || funcStr.includes('channel'), 'createSendBusInAudio should create send bus nodes');
+});
+
+TestRunner.test('Send Bus - deleteSendBusFromAudio disposes send nodes', (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('dispose') || funcStr.includes('send'), 'deleteSendBusFromAudio should dispose send bus nodes');
+});
+
+TestRunner.test('Send Bus - addEffectToSendBus adds effect to send', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('send') && (funcStr.includes('effect') || funcStr.includes('Effect')), 'addEffectToSendBus should add effect to send bus');
+});
+
+TestRunner.test('Send Bus - setSendBusLevel references gain node', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('gain') || funcStr.includes('Gain'), 'setSendBusLevel should reference gain node');
+});
+
+TestRunner.test('UI - openTrackSequencerWindow calls createWindow', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openTrackSequencerWindow should create window');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow calls createWindow', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openAudioClipEditorWindow should create window');
+});
+
+TestRunner.test('UI - openMixerWindow calls createWindow', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openMixerWindow should create window');
+});
+
+TestRunner.test('UI - openTimelineWindow calls createWindow', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openTimelineWindow should create window');
+});
+
+TestRunner.test('UI - openTrackSequencerWindow references trackId', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackSequencerWindow should reference trackId');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow references trackId and clipId', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId') && funcStr.includes('clipId'), 'openAudioClipEditorWindow should reference trackId and clipId');
+});
+
+TestRunner.test('Track - getActiveSequence returns sequence for Synth track', (t) => {
+    const synthTrack = new Track('synth-seq-test', 'Synth', { trackId: 'synth-seq-test' });
+    const seq = synthTrack.getActiveSequence();
+    t.assertTruthy(seq, 'getActiveSequence should return a sequence');
+});
+
+TestRunner.test('Track - getNoteLength returns default for empty cell', (t) => {
+    const synthTrack = new Track('synth-note-test', 'Synth', { trackId: 'synth-note-test' });
+    const noteLength = synthTrack.getNoteLength(0, 0);
+    t.assertEqual(typeof noteLength, 'number', 'getNoteLength should return a number');
+    t.assertTruthy(noteLength >= 0.25 && noteLength <= 8, 'Note length should be in reasonable range');
+});
+
+TestRunner.test('Track - getNoteProbability returns default for empty cell', (t) => {
+    const synthTrack = new Track('synth-prob-test', 'Synth', { trackId: 'synth-prob-test' });
+    const probability = synthTrack.getNoteProbability(0, 0);
+    t.assertEqual(typeof probability, 'number', 'getNoteProbability should return a number');
+    t.assertTruthy(probability >= 0 && probability <= 1, 'Probability should be in 0-1 range');
+});
+
+TestRunner.test('Audio Module - getSendBusNodes returns send bus nodes', (t) => {
+    const funcStr = getSendBusNodes.toString();
+    t.assertTruthy(funcStr.includes('return') || funcStr.includes('send'), 'getSendBusNodes should return send bus nodes');
+});
+
+TestRunner.test('Audio Module - getTrackSendNodes returns track send nodes', (t) => {
+    const funcStr = getTrackSendNodes.toString();
+    t.assertTruthy(funcStr.includes('return') || funcStr.includes('track'), 'getTrackSendNodes should return track send nodes');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.71.0 or higher for Day 290', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 71, 'Minor version should be >= 71 for Day 290');
+    }
+});

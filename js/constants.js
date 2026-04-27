@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.70.0'; // Day 289: Undo/Redo State Function Extended Tests (2026-04-27)
+export const APP_VERSION = '1.71.0'; // Day 290: Project Import & Synth Track Extended Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

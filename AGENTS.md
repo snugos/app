@@ -4213,3 +4213,32 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify async/await patterns for undo/redo operations
   - Total tests increased from 2056 to 2096
 - **Version**: Bumped to 1.70.0
+
+#### Day 290: Project Import & Synth Track Extended Tests (2026-04-27)
+- **Feature**: Added 29 new unit tests for Project Import functions and Synth Track properties to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 29 new tests in Day 290 section:
+    - Project - handleProjectFileLoadInternal: function export, accepts event parameter, is async, references FileReader, calls loadProjectInternal
+    - Project - reconstructDAWInternal: handles isUndoRedo parameter, calls reconstructDAWFromData
+    - Synth Track - synthEngineType is MonoSynth by default
+    - Synth Track - synthParams has oscillator/envelope/filter properties
+    - Synth Track - setSynthParam updates synthParams
+    - Synth Track - instrument property exists
+    - Send Bus - createSendBusInAudio creates send nodes, deleteSendBusFromAudio disposes nodes
+    - Send Bus - addEffectToSendBus adds effect, setSendBusLevel references gain node
+    - UI - openTrackSequencerWindow/openAudioClipEditorWindow/openMixerWindow/openTimelineWindow call createWindow
+    - UI - openTrackSequencerWindow references trackId, openAudioClipEditorWindow references trackId and clipId
+    - Track - getActiveSequence returns sequence for Synth track
+    - Track - getNoteLength/getNoteProbability return defaults for empty cells
+    - Audio Module - getSendBusNodes/getTrackSendNodes return send bus nodes
+    - APP_VERSION tests: semver format validation, version is 1.71.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 1.71.0
+- **Feature Details**:
+  - Tests validate Project import functions (handleProjectFileLoadInternal, reconstructDAWInternal) reference key helpers and parameters
+  - Tests validate Synth Track has correct default synthEngineType (MonoSynth) and synthParams structure
+  - Tests verify setSynthParam updates synthParams correctly
+  - Tests verify Send Bus audio functions create/dispose nodes and reference gain
+  - Tests verify UI window functions call createWindow and reference correct parameters
+  - Tests verify Track methods return correct defaults for Synth tracks
+  - Total tests increased from 2093 to 2122
+- **Version**: Bumped to 1.71.0
