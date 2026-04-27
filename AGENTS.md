@@ -1,3 +1,27 @@
+#### Day 297: Audio Track UI & Controls Tests (2026-04-27)
+- **Feature**: Added 16 new unit tests for Audio Track UI components and constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 16 new tests in Day 297 section:
+    - buildAudioTrackInspectorDOM: function exists, returns string, includes recording controls section
+    - buildAudioTrackInspectorDOM: includes input device select, input gain placeholder, monitoring volume slider
+    - buildAudioTrackInspectorDOM: includes recording status indicator (Ready to Record / Recording...)
+    - buildAudioTrackInspectorDOM: handles DEFAULT_MONITORING_VOLUME when track property is undefined
+    - buildAudioTrackInspectorDOM: references track.id in all DOM element IDs
+    - initializeAudioTrackInspectorControls: function exists, accepts 2 parameters (track, winEl)
+    - Audio Track constants: track type validation (5 types including Audio)
+    - Audio Track constants: MONITORING_VOLUME constants (MIN/MAX/DEFAULT in valid 0-1 range)
+    - Audio Track constants: RECORDING_INPUT_GAIN constants (MIN/MAX/DEFAULT)
+  - `js/constants.js`: Bumped APP_VERSION to 1.78.0
+- **Feature Details**:
+  - Tests validate buildAudioTrackInspectorDOM creates recording input section with device select, gain knob, monitoring slider
+  - Tests verify recording status indicator shows "Ready to Record" or "Recording..." based on isRecording flag
+  - Tests verify monitoring volume defaults to 50% when track.monitoringVolume is undefined
+  - Tests verify all DOM IDs include track.id for proper element targeting
+  - Tests verify initializeAudioTrackInspectorControls sets up input device enumeration, gain knob, and monitoring slider
+  - Tests validate MONITORING_VOLUME and RECORDING_INPUT_GAIN constants are in valid ranges
+  - Total tests increased from 1424 to 1440
+- **Version**: Bumped to 1.78.0
+
 #### Day 296: DrumSampler Pad Drop Zone Verification Tests (2026-04-27)
 - **Feature**: Added 32 new unit tests for DrumSampler pad drop zone verification to expand test coverage
 - **Files Modified**:
