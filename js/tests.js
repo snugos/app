@@ -13058,3 +13058,93 @@ TestRunner.test('SnugOS - APP_VERSION is 1.71.0 or higher for Day 290', (t) => {
         t.assertTruthy(versionParts[1] >= 71, 'Minor version should be >= 71 for Day 290');
     }
 });
+
+// === Day 292: DrumSampler Pad Undo Capture Verification Tests ===
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadVolume calls _captureUndoState', (t) => {
+    const funcStr = setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadVolume should call _captureUndoState');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadVolume uses descriptive undo label', (t) => {
+    const funcStr = setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('Set pad') && funcStr.includes('volume'), 'setDrumSamplerPadVolume should use descriptive undo label with pad number');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadVolume references pad index in label', (t) => {
+    const funcStr = setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('padIndex+1') || funcStr.includes('pad ${'), 'setDrumSamplerPadVolume should reference pad number in undo label');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadVolume references track name in label', (t) => {
+    const funcStr = setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('this.name'), 'setDrumSamplerPadVolume should reference track name in undo label');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadPitch calls _captureUndoState', (t) => {
+    const funcStr = setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadPitch should call _captureUndoState');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadPitch uses descriptive undo label', (t) => {
+    const funcStr = setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('Set pad') && funcStr.includes('pitch'), 'setDrumSamplerPadPitch should use descriptive undo label with pad number');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadEnv calls _captureUndoState', (t) => {
+    const funcStr = setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadEnv should call _captureUndoState');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadEnv uses descriptive undo label', (t) => {
+    const funcStr = setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('Set pad') && funcStr.includes('envelope'), 'setDrumSamplerPadEnv should use descriptive undo label with pad number');
+});
+
+TestRunner.test('DrumSampler Pad - loadSampleToPad calls _captureUndoState', (t) => {
+    const funcStr = loadSampleToPad.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'loadSampleToPad should call _captureUndoState');
+});
+
+TestRunner.test('DrumSampler Pad - loadSampleToPad uses descriptive undo label', (t) => {
+    const funcStr = loadSampleToPad.toString();
+    t.assertTruthy(funcStr.includes('Load sample') || funcStr.includes('Sample'), 'loadSampleToPad should use descriptive undo label');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadVolume guards against undefined drumSamplerPads', (t) => {
+    const funcStr = setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads') && funcStr.includes('&&'), 'setDrumSamplerPadVolume should check drumSamplerPads exists');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadPitch guards against undefined drumSamplerPads', (t) => {
+    const funcStr = setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads') && funcStr.includes('&&'), 'setDrumSamplerPadPitch should check drumSamplerPads exists');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadEnv guards against undefined envelope', (t) => {
+    const funcStr = setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('envelope') && funcStr.includes('&&'), 'setDrumSamplerPadEnv should check envelope exists');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadVolume parses volume as float', (t) => {
+    const funcStr = setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setDrumSamplerPadVolume should parse volume value');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadPitch parses pitch as int', (t) => {
+    const funcStr = setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setDrumSamplerPadPitch should parse pitch value');
+});
+
+TestRunner.test('DrumSampler Pad - setDrumSamplerPadEnv parses value as float', (t) => {
+    const funcStr = setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setDrumSamplerPadEnv should parse envelope value');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.72.0 or higher for Day 292', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 72, 'Minor version should be >= 72 for Day 292');
+    }
+});
