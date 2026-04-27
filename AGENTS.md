@@ -1,3 +1,39 @@
+#### Day 298: Event Handlers Keyboard State & Track Control Tests (2026-04-27)
+- **Feature**: Added 27 new unit tests for Event Handlers keyboard state and track control functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for initializeEventHandlersModule and currentlyPressedComputerKeys. Added 27 new tests in Day 298 section:
+    - currentlyPressedComputerKeys: exported as object
+    - initializeEventHandlersModule: function export, 1 parameter (appServicesFromMain)
+    - keydown handler uses computerKeySynthMap/keyToMIDIMap
+    - keydown handler checks event.repeat to skip held keys
+    - keydown handler checks for active input/textarea elements
+    - keydown handler checks for meta/ctrl modifier keys
+    - keydown handler handles Ctrl+Z for undo, Ctrl+Y for redo
+    - keydown handler handles Ctrl+S for save, Ctrl+O for load, Ctrl+E for MIDI export
+    - keydown handler handles space for play/pause, Enter for record
+    - keydown handler handles Escape to close all windows
+    - keydown handler handles m for mute, s for solo, r for record arm, t for metronome
+    - keydown handler handles x/z for octave shift up/down with MIN/MAX_OCTAVE_SHIFT
+    - keydown handler calls handleComputerKeyOn for mapped keys
+    - keydown handler applies currentOctaveShift to MIDI note (multiplied by 12)
+    - keydown handler updates keyboard indicator UI
+    - keyup handler releases note via triggerRelease/releaseAll
+    - keyup handler uses getArmedTrackId to find armed track
+    - keyup handler checks and deletes from currentlyPressedComputerKeys
+  - `js/constants.js`: Bumped APP_VERSION to 1.78.0
+- **Feature Details**:
+  - Tests validate initializeEventHandlersModule is exported and accepts appServicesFromMain parameter
+  - Tests validate currentlyPressedComputerKeys is exported as an object for tracking pressed keys
+  - Tests verify keydown handler has proper event handling (repeat skip, input element detection, modifier checks)
+  - Tests verify keyboard shortcuts for undo/redo (Ctrl+Z/Y), save/load (Ctrl+S/O), MIDI export (Ctrl+E)
+  - Tests verify playback controls (space for play, Enter for record, Escape to close)
+  - Tests verify track controls (m for mute, s for solo, r for arm, t for metronome)
+  - Tests verify octave shift uses MIN_OCTAVE_SHIFT (-2) and MAX_OCTAVE_SHIFT (2) constants
+  - Tests verify computer keyboard to MIDI mapping (computerKeySynthMap) and octave shifting
+  - Tests verify keyup handler uses getArmedTrackId and triggerRelease for note release
+  - Total tests increased from 1442 to 1469
+- **Version**: Bumped to 1.78.0
+
 #### Day 297: Audio Track UI & Controls Tests (2026-04-27)
 - **Feature**: Added 16 new unit tests for Audio Track UI components and constants to expand test coverage
 - **Files Modified**:
