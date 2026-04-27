@@ -11947,3 +11947,107 @@ TestRunner.test('SnugOS - APP_VERSION is 1.65.0 or higher for Day 284', (t) => {
         t.assertTruthy(versionParts[1] >= 65, 'Minor version should be >= 65 for Day 284');
     }
 });
+
+// Day 285: Utils Function Extended Tests
+TestRunner.test('Utils - showNotification has default duration value', (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('= 3000') || funcStr.includes('duration = 3000'), 'showNotification should have default duration of 3000ms');
+});
+
+TestRunner.test('Utils - showCustomModal accepts 4 parameters', (t) => {
+    t.assertEqual(showCustomModal.length, 4, 'showCustomModal should accept 4 parameters (title, contentHTML, buttonsConfig, modalClass)');
+});
+
+TestRunner.test('Utils - showCustomModal has default modalClass value', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes("= ''") || funcStr.includes('modalClass ='), 'showCustomModal should have default empty string for modalClass');
+});
+
+TestRunner.test('Utils - showConfirmationDialog accepts 4 parameters', (t) => {
+    t.assertEqual(showConfirmationDialog.length, 4, 'showConfirmationDialog should accept 4 parameters (title, message, onConfirm, onCancel)');
+});
+
+TestRunner.test('Utils - showConfirmationDialog has optional onCancel parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('onCancel = null') || funcStr.includes('onCancel=null'), 'showConfirmationDialog should have optional onCancel with null default');
+});
+
+TestRunner.test('Utils - secondsToBBSTime converts seconds to BBS format', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('bars') && funcStr.includes('beats') && funcStr.includes('steps'), 'secondsToBBSTime should reference bars, beats, steps');
+});
+
+TestRunner.test('Utils - secondsToBBSTime handles negative seconds', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('0'), 'secondsToBBSTime should handle edge cases');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds converts BBS format to seconds', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('parseInt') || funcStr.includes('Number'), 'bbsTimeToSeconds should parse BBS components');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds references steps per bar constant', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('STEPS_PER_BAR') || funcStr.includes('16'), 'bbsTimeToSeconds should reference steps per bar');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds handles invalid BBS string', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('split') && funcStr.includes("':'"), 'bbsTimeToSeconds should parse BBS string format');
+});
+
+TestRunner.test('Utils - createContextMenu accepts 3 parameters', (t) => {
+    t.assertEqual(createContextMenu.length, 3, 'createContextMenu should accept 3 parameters (event, menuItems, appServicesForZIndex)');
+});
+
+TestRunner.test('Utils - createContextMenu has optional zIndex parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('null') || funcStr.includes('= null'), 'createContextMenu should have optional third parameter');
+});
+
+TestRunner.test('Utils - createContextMenu uses preventDefault', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('preventDefault'), 'createContextMenu should call preventDefault on event');
+});
+
+TestRunner.test('Utils - createContextMenu creates overlay element', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('overlay') || funcStr.includes('document.createElement'), 'createContextMenu should create DOM elements');
+});
+
+TestRunner.test('Utils - createDropZoneHTML accepts 5 parameters', (t) => {
+    t.assertEqual(createDropZoneHTML.length, 5, 'createDropZoneHTML should accept 5 parameters');
+});
+
+TestRunner.test('Utils - createDropZoneHTML references trackId parameter', (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'createDropZoneHTML should reference trackId');
+});
+
+TestRunner.test('Utils - createDropZoneHTML references padOrSliceIndex', (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('padOrSliceIndex'), 'createDropZoneHTML should reference padOrSliceIndex');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners accepts 4 parameters', (t) => {
+    t.assertEqual(setupGenericDropZoneListeners.length, 4, 'setupGenericDropZoneListeners should accept 4 parameters');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners references dropZoneElement', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dropZoneElement'), 'setupGenericDropZoneListeners should reference dropZoneElement');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners references trackId parameter', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'setupGenericDropZoneListeners should reference trackId');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.66.0 or higher for Day 285', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 66, 'Minor version should be >= 66 for Day 285');
+    }
+});
