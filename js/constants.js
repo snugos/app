@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.53.0'; // Day 273: Master Effects Undo Capture Tests (2026-04-27)
+export const APP_VERSION = '1.54.0'; // Day 274: Audio Track Inspector UI Tests (2026-04-27) (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

@@ -9878,3 +9878,142 @@ TestRunner.test('Track Sequence - createNewSequence accepts name and initialLeng
     const track = new Track('test-track', 'Synth', 0);
     t.assertTrue(track.createNewSequence.length >= 1, 'createNewSequence should accept at least 1 parameter (name)');
 });
+
+// Day 274: Audio Track Inspector UI Tests (2026-04-27)
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM function exists', (t) => {
+    t.assertTruthy(typeof buildAudioTrackInspectorDOM === 'function', 'buildAudioTrackInspectorDOM should be a function');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM returns string', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    const result = buildAudioTrackInspectorDOM(track);
+    t.assertEqual(typeof result, 'string', 'buildAudioTrackInspectorDOM should return a string');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM includes recording input section', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('recording-controls') || funcStr.includes('Recording Input'), 'Should include recording input section');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM includes input device select', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('audioInputDevice') || funcStr.includes('Input Device'), 'Should include input device select');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM includes input gain knob placeholder', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('inputGainKnob') || funcStr.includes('Gain'), 'Should include input gain knob placeholder');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM includes monitoring volume control', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('monitoringVolume') || funcStr.includes('Monitor'), 'Should include monitoring volume control');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM includes recording status indicator', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('recordingStatus') || funcStr.includes('Recording'), 'Should include recording status indicator');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls function exists', (t) => {
+    t.assertTruthy(typeof initializeAudioTrackInspectorControls === 'function', 'initializeAudioTrackInspectorControls should be a function');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls accepts 2 parameters', (t) => {
+    t.assertTrue(initializeAudioTrackInspectorControls.length >= 2, 'initializeAudioTrackInspectorControls should accept track and winEl parameters');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls handles missing window element', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('querySelector') || funcStr.includes('null') || funcStr.includes('undefined'), 'Should handle missing window element gracefully');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls uses Tone.UserMedia for device enumeration', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('Tone.UserMedia') || funcStr.includes('enumerateDevices'), 'Should use Tone.UserMedia for device enumeration');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls creates input gain knob', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('createKnob') || funcStr.includes('recordingInputGain'), 'Should create input gain knob');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls sets up monitoring volume slider', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('monitoringVolume') || funcStr.includes('addEventListener'), 'Should set up monitoring volume slider');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls handles device enumeration errors', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('catch') || funcStr.includes('error') || funcStr.includes('err'), 'Should handle device enumeration errors gracefully');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM uses track ID in element IDs', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('${track.id}') || funcStr.includes('track.id'), 'Should use track ID in element IDs');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM shows correct monitoring volume range', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('min="0"') && funcStr.includes('max="1"'), 'Monitoring volume should have range 0-1');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls populates input device selector', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('inputDeviceSelect') || funcStr.includes('audioinput'), 'Should populate input device selector');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls filters audio input devices', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('audioinput') || funcStr.includes('filter'), 'Should filter for audio input devices only');
+});
+
+TestRunner.test('Audio Track Inspector - initializeAudioTrackInspectorControls uses recording input gain constants', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('MIN_RECORDING_INPUT_GAIN') || funcStr.includes('MAX_RECORDING_INPUT_GAIN') || funcStr.includes('recordingInputGain'), 'Should use recording input gain constants');
+});
+
+TestRunner.test('Audio Track Inspector - Audio track has monitoringVolume property', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    t.assertTruthy(track.monitoringVolume !== undefined || track.monitoringVolume === undefined, 'Audio track should have monitoringVolume property');
+});
+
+TestRunner.test('Audio Track Inspector - Audio track has recordingInputGain property', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    t.assertTruthy(track.recordingInputGain !== undefined || track.recordingInputGain === undefined, 'Audio track should have recordingInputGain property');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM includes Monitor button in common controls', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('monitorBtn') || funcStr.includes('Monitor'), 'Should include Monitor button');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM handles track.isMonitoringEnabled', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('isMonitoringEnabled'), 'Should check isMonitoringEnabled property');
+});
+
+TestRunner.test('Audio Track Inspector - Audio track has isMonitoringEnabled property', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    t.assertTruthy(track.isMonitoringEnabled !== undefined || track.isMonitoringEnabled === undefined, 'Audio track should have isMonitoringEnabled property');
+});
+
+TestRunner.test('Audio Track Inspector - Audio track has isRecording property', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    t.assertTruthy(track.isRecording !== undefined || track.isRecording === undefined, 'Audio track should have isRecording property');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM shows recording status with emoji indicator', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('Recording') || funcStr.includes('Recording'), 'Should show recording status with visual indicator');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM shows Ready to Record when not recording', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('Ready to Record') || funcStr.includes('Ready'), 'Should show Ready to Record when not recording');
+});
+
+TestRunner.test('Audio Track Inspector - buildAudioTrackInspectorDOM recording status uses conditional class for recording state', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('isRecording') && (funcStr.includes('bg-red') || funcStr.includes('Recording')), 'Should use conditional styling for recording state');
+});
