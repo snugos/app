@@ -1,4 +1,20 @@
-# SnugOS AGENTS.md - Agent Memory and Improvement Log
+#### Day 268: InstrumentSampler Drop Zone Verification Tests (2026-04-27)
+- **Feature**: Added 27 new unit tests for InstrumentSampler drop zone verification to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for buildInstrumentSamplerSpecificInspectorDOM and initializeInstrumentSamplerSpecificControls from ui.js. Added 27 new tests in Day 268 section:
+    - buildInstrumentSamplerSpecificInspectorDOM function existence and return type
+    - Drop zone container creation with correct ID pattern
+    - Waveform canvas creation and ID formatting
+    - Root note select, loop controls, envelope placeholders, polyphony toggle
+    - createDropZoneHTML with InstrumentSampler type validation
+    - createDropZoneHTML status handling (loaded, missing, error)
+    - setupGenericDropZoneListeners drag-drop event handling
+    - initializeInstrumentSamplerSpecificControls function existence
+  - `js/constants.js`: Bumped APP_VERSION to 1.48.0
+- **Feature Details**:
+  - Tests validate InstrumentSampler uses single drop zone (vs DrumSampler's 8 pads)
+  - Total tests increased from 1366 to 1393
+- **Version**: Bumped to 1.48.0
 
 #### Day 267: appServices Undo Capture Flag Tests (2026-04-27)
 - **Feature**: Fixed isReconstructingDAW typo bugs and added 6 new unit tests for appServices undo capture flag
