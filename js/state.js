@@ -289,7 +289,7 @@ export function initializeStateModule(services) {
         appServices.getPlaybackMode = getPlaybackModeState;
     }
     if (appServices && typeof appServices.setPlaybackMode !== 'function') {
-        appServices.setPlaybackMode = setPlaybackModeStateInternal;
+        appServices.setPlaybackMode = setPlaybackModeState;
     }
 }
 
@@ -458,6 +458,14 @@ export function setRecordingStartTimeState(t) {
 export function getUndoStackState() { return undoStack; }
 export function getRedoStackState() { return redoStack; }
 export function getPlaybackModeState() { return globalPlaybackMode; }
+export function setPlaybackModeState(mode) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Playback Mode to ${mode}`);
+    }
+    if (mode === 'sequencer' || mode === 'timeline') {
+        globalPlaybackMode = mode;
+    }
+}
 
 // Metronome Getters/Setters
 export function getMetronomeEnabledState() { return metronomeEnabled; }
@@ -1362,7 +1370,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         }
         setMasterGainValueState(Number.isFinite(gs.masterVolume) ? gs.masterVolume : (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0);
         if (appServices && appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
-        setPlaybackModeStateInternal(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');
+        setPlaybackModeState(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');
         if (appServices && appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
         setHighestZState(Number.isFinite(gs.highestZIndex) ? gs.highestZIndex : 100);
 
