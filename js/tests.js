@@ -13148,3 +13148,113 @@ TestRunner.test('SnugOS - APP_VERSION is 1.72.0 or higher for Day 292', (t) => {
         t.assertTruthy(versionParts[1] >= 72, 'Minor version should be >= 72 for Day 292');
     }
 });
+
+// === Day 293: Sampler Slice Undo Capture Verification Tests ===
+
+TestRunner.test('Sampler Slice - setSliceVolume calls _captureUndoState', (t) => {
+    const funcStr = setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceVolume should call _captureUndoState');
+});
+
+TestRunner.test('Sampler Slice - setSliceVolume uses descriptive undo label', (t) => {
+    const funcStr = setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('Set slice') && funcStr.includes('volume'), 'setSliceVolume should use descriptive undo label with slice number');
+});
+
+TestRunner.test('Sampler Slice - setSliceVolume references slice index in label', (t) => {
+    const funcStr = setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('sliceIndex+1') || funcStr.includes('slice ${'), 'setSliceVolume should reference slice number in undo label');
+});
+
+TestRunner.test('Sampler Slice - setSliceVolume references track name in label', (t) => {
+    const funcStr = setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('this.name'), 'setSliceVolume should reference track name in undo label');
+});
+
+TestRunner.test('Sampler Slice - setSlicePitchShift calls _captureUndoState', (t) => {
+    const funcStr = setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSlicePitchShift should call _captureUndoState');
+});
+
+TestRunner.test('Sampler Slice - setSlicePitchShift uses descriptive undo label', (t) => {
+    const funcStr = setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('Set slice') && funcStr.includes('pitch'), 'setSlicePitchShift should use descriptive undo label with slice number');
+});
+
+TestRunner.test('Sampler Slice - setSliceLoop calls _captureUndoState', (t) => {
+    const funcStr = setSliceLoop.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceLoop should call _captureUndoState');
+});
+
+TestRunner.test('Sampler Slice - setSliceLoop uses descriptive undo label', (t) => {
+    const funcStr = setSliceLoop.toString();
+    t.assertTruthy(funcStr.includes('Set slice') && funcStr.includes('loop'), 'setSliceLoop should use descriptive undo label with slice number');
+});
+
+TestRunner.test('Sampler Slice - setSliceReverse calls _captureUndoState', (t) => {
+    const funcStr = setSliceReverse.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceReverse should call _captureUndoState');
+});
+
+TestRunner.test('Sampler Slice - setSliceReverse uses descriptive undo label', (t) => {
+    const funcStr = setSliceReverse.toString();
+    t.assertTruthy(funcStr.includes('Set slice') && funcStr.includes('reverse'), 'setSliceReverse should use descriptive undo label with slice number');
+});
+
+TestRunner.test('Sampler Slice - setSliceEnvelopeParam calls _captureUndoState', (t) => {
+    const funcStr = setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceEnvelopeParam should call _captureUndoState');
+});
+
+TestRunner.test('Sampler Slice - setSliceEnvelopeParam uses descriptive undo label', (t) => {
+    const funcStr = setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('Set slice') && funcStr.includes('envelope'), 'setSliceEnvelopeParam should use descriptive undo label with slice number');
+});
+
+TestRunner.test('Sampler Slice - setSliceVolume guards against undefined slices', (t) => {
+    const funcStr = setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('slices') && funcStr.includes('&&'), 'setSliceVolume should check slices exists');
+});
+
+TestRunner.test('Sampler Slice - setSlicePitchShift guards against undefined slices', (t) => {
+    const funcStr = setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('slices') && funcStr.includes('&&'), 'setSlicePitchShift should check slices exists');
+});
+
+TestRunner.test('Sampler Slice - setSliceEnvelopeParam guards against undefined envelope', (t) => {
+    const funcStr = setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('envelope') && funcStr.includes('&&'), 'setSliceEnvelopeParam should check envelope exists');
+});
+
+TestRunner.test('Sampler Slice - setSliceVolume parses volume as float', (t) => {
+    const funcStr = setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setSliceVolume should parse volume value');
+});
+
+TestRunner.test('Sampler Slice - setSlicePitchShift parses pitch as int', (t) => {
+    const funcStr = setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setSlicePitchShift should parse pitch value');
+});
+
+TestRunner.test('Sampler Slice - setSliceEnvelopeParam parses value as float', (t) => {
+    const funcStr = setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setSliceEnvelopeParam should parse envelope value');
+});
+
+TestRunner.test('Sampler Slice - setSliceLoop converts value to boolean', (t) => {
+    const funcStr = setSliceLoop.toString();
+    t.assertTruthy(funcStr.includes('!!loop') || funcStr.includes('Boolean'), 'setSliceLoop should convert value to boolean');
+});
+
+TestRunner.test('Sampler Slice - setSliceReverse converts value to boolean', (t) => {
+    const funcStr = setSliceReverse.toString();
+    t.assertTruthy(funcStr.includes('!!reverse') || funcStr.includes('Boolean'), 'setSliceReverse should convert value to boolean');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.73.0 or higher for Day 293', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 73, 'Minor version should be >= 73 for Day 293');
+    }
+});

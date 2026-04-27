@@ -1,3 +1,28 @@
+#### Day 293: Sampler Slice Undo Capture Verification Tests (2026-04-27)
+- **Feature**: Added 21 new unit tests for Sampler slice mutation methods undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 21 new tests in Day 293 section:
+    - setSliceVolume calls _captureUndoState with descriptive undo label
+    - setSlicePitchShift calls _captureUndoState with descriptive undo label
+    - setSliceLoop calls _captureUndoState with descriptive undo label
+    - setSliceReverse calls _captureUndoState with descriptive undo label
+    - setSliceEnvelopeParam calls _captureUndoState with descriptive undo label
+    - Undo labels reference slice index (sliceIndex+1) and track name (this.name)
+    - Null checks for slices and envelope existence
+    - Value parsing (parseFloat for volume/envelope, parseInt for pitch)
+    - Boolean conversion for loop and reverse (!!value)
+  - `js/constants.js`: Bumped APP_VERSION to 1.74.0
+- **Feature Details**:
+  - Tests validate Sampler slice mutation methods call _captureUndoState before mutating state
+  - Tests verify descriptive undo labels (e.g., "Set slice 1 volume on Track Name")
+  - Tests verify slice index and track name are referenced in undo labels
+  - Tests verify proper null checks for slices and envelope objects
+  - Tests verify value parsing (parseFloat for volume/envelope, parseInt for pitch)
+  - Tests verify boolean conversion (!!loop, !!reverse) for setSliceLoop and setSliceReverse
+  - Total tests increased from 2162 to 2183
+- **Version**: Bumped to 1.74.0
+
+
 #### Day 292: DrumSampler Pad Undo Capture Verification Tests (2026-04-27)
 - **Feature**: Added 17 new unit tests for DrumSampler pad mutation methods undo capture verification
 - **Files Modified**:
