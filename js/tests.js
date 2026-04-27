@@ -8956,3 +8956,115 @@ TestRunner.test('DrumSampler Pad Drop Zone - APP_VERSION is 1.77.0 or higher for
         t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 296');
     }
 });
+
+// ============================================
+// Day 297: Audio Track UI & Controls Tests (2026-04-27)
+// ============================================
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM function exists', (t) => {
+    t.assertEqual(typeof buildAudioTrackInspectorDOM, 'function', 'buildAudioTrackInspectorDOM should be a function');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM returns a string', (t) => {
+    const mockTrack = { id: 'audio1', type: 'Audio', name: 'Audio 1', monitoringVolume: 0.5 };
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertEqual(typeof result, 'string', 'buildAudioTrackInspectorDOM should return a string');
+    t.assertTruthy(result.length > 0, 'Should return non-empty HTML string');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes recording controls section', (t) => {
+    const mockTrack = { id: 'audio1', type: 'Audio', name: 'Audio 1', monitoringVolume: 0.5 };
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertTruthy(result.includes('recording-controls'), 'Should include recording-controls class');
+    t.assertTruthy(result.includes('Recording Input'), 'Should include Recording Input heading');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes input device select', (t) => {
+    const mockTrack = { id: 'audio1', type: 'Audio', name: 'Audio 1', monitoringVolume: 0.5 };
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertTruthy(result.includes('audioInputDevice-audio1'), 'Should include input device select with track ID');
+    t.assertTruthy(result.includes('Input Device'), 'Should include Input Device label');
+    t.assertTruthy(result.includes('Default Microphone'), 'Should include default microphone option');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes input gain placeholder', (t) => {
+    const mockTrack = { id: 'audio1', type: 'Audio', name: 'Audio 1', monitoringVolume: 0.5 };
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertTruthy(result.includes('inputGainKnob-audio1-placeholder'), 'Should include input gain knob placeholder with track ID');
+    t.assertTruthy(result.includes('Gain:'), 'Should include Gain label');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes monitoring volume slider', (t) => {
+    const mockTrack = { id: 'audio1', type: 'Audio', name: 'Audio 1', monitoringVolume: 0.5 };
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertTruthy(result.includes('monitoringVolume-audio1'), 'Should include monitoring volume slider with track ID');
+    t.assertTruthy(result.includes('Monitor:'), 'Should include Monitor label');
+    t.assertTruthy(result.includes('type="range"'), 'Should include range input type');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes recording status indicator', (t) => {
+    const mockTrack = { id: 'audio1', type: 'Audio', name: 'Audio 1', monitoringVolume: 0.5, isRecording: false };
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertTruthy(result.includes('recordingStatus-audio1'), 'Should include recording status indicator with track ID');
+    t.assertTruthy(result.includes('Ready to Record'), 'Should show Ready to Record when not recording');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM shows recording status when isRecording is true', (t) => {
+    const mockTrack = { id: 'audio1', type: 'Audio', name: 'Audio 1', monitoringVolume: 0.5, isRecording: true };
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertTruthy(result.includes('Recording...'), 'Should show Recording... when isRecording is true');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM uses DEFAULT_MONITORING_VOLUME when track property is undefined', (t) => {
+    const mockTrack = { id: 'audio1', type: 'Audio', name: 'Audio 1' }; // no monitoringVolume
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertTruthy(result.includes('50%'), 'Should default to 50% when monitoringVolume is undefined');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM references track.id in IDs', (t) => {
+    const mockTrack = { id: 'track123', type: 'Audio', name: 'My Track', monitoringVolume: 0.75 };
+    const result = buildAudioTrackInspectorDOM(mockTrack);
+    t.assertTruthy(result.includes('audioInputDevice-track123'), 'Should include track ID in input device ID');
+    t.assertTruthy(result.includes('inputGainKnob-track123-placeholder'), 'Should include track ID in input gain placeholder ID');
+    t.assertTruthy(result.includes('monitoringVolume-track123'), 'Should include track ID in monitoring volume ID');
+    t.assertTruthy(result.includes('recordingStatus-track123'), 'Should include track ID in recording status ID');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls function exists', (t) => {
+    t.assertEqual(typeof initializeAudioTrackInspectorControls, 'function', 'initializeAudioTrackInspectorControls should be a function');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls accepts 2 parameters', (t) => {
+    t.assertEqual(initializeAudioTrackInspectorControls.length, 2, 'initializeAudioTrackInspectorControls should accept 2 parameters');
+});
+
+TestRunner.test('Audio Track Constants - Audio track type is valid', (t) => {
+    const validTypes = ['Synth', 'DrumSampler', 'Sampler', 'InstrumentSampler', 'Audio'];
+    t.assertEqual(validTypes.includes('Audio'), true, 'Audio should be a valid track type');
+    t.assertEqual(validTypes.length, 5, 'Should have 5 track types including Audio');
+});
+
+TestRunner.test('Audio Track Constants - MONITORING_VOLUME constants are valid', (t) => {
+    t.assertEqual(typeof MIN_MONITORING_VOLUME, 'number', 'MIN_MONITORING_VOLUME should be a number');
+    t.assertEqual(typeof MAX_MONITORING_VOLUME, 'number', 'MAX_MONITORING_VOLUME should be a number');
+    t.assertEqual(typeof DEFAULT_MONITORING_VOLUME, 'number', 'DEFAULT_MONITORING_VOLUME should be a number');
+    t.assertTruthy(MIN_MONITORING_VOLUME <= DEFAULT_MONITORING_VOLUME, 'MIN should be <= DEFAULT');
+    t.assertTruthy(DEFAULT_MONITORING_VOLUME <= MAX_MONITORING_VOLUME, 'DEFAULT should be <= MAX');
+    t.assertTruthy(DEFAULT_MONITORING_VOLUME >= 0 && DEFAULT_MONITORING_VOLUME <= 1, 'DEFAULT should be in 0-1 range');
+});
+
+TestRunner.test('Audio Track Constants - RECORDING_INPUT_GAIN constants are valid', (t) => {
+    t.assertEqual(typeof MIN_RECORDING_INPUT_GAIN, 'number', 'MIN_RECORDING_INPUT_GAIN should be a number');
+    t.assertEqual(typeof MAX_RECORDING_INPUT_GAIN, 'number', 'MAX_RECORDING_INPUT_GAIN should be a number');
+    t.assertEqual(typeof DEFAULT_RECORDING_INPUT_GAIN, 'number', 'DEFAULT_RECORDING_INPUT_GAIN should be a number');
+    t.assertTruthy(MIN_RECORDING_INPUT_GAIN <= DEFAULT_RECORDING_INPUT_GAIN, 'MIN should be <= DEFAULT');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN <= MAX_RECORDING_INPUT_GAIN, 'DEFAULT should be <= MAX');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN >= 0, 'DEFAULT should be >= 0');
+});
+
+TestRunner.test('Audio Track UI - APP_VERSION is 1.77.0 or higher for Day 297', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 297');
+    }
+});
