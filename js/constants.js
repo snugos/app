@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.55.0'; // Day 274: Track Sequence Undo Capture Verification Tests (2026-04-27)
+export const APP_VERSION = '1.56.0'; // Day 275: SnugWindow Core Method Instance Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

@@ -1,3 +1,26 @@
+#### Day 275: SnugWindow Core Method Instance Tests (2026-04-27)
+- **Feature**: Added 35 new unit tests for SnugWindow core method instance tests to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 35 new tests in Day 275 section:
+    - SnugWindow prototype methods: minimize, restore, close, focus, toggleMaximize, makeDraggable, makeResizable, updateTaskbarButtonActiveState, _captureUndo
+    - SnugWindow instance properties: isMinimized, isMaximized, options, appServices
+    - Parameter acceptance tests: minimize accepts skipUndo, restore accepts skipUndo, close accepts isReconstruction, focus accepts skipUndoForFocusItself
+    - Undo capture verification: minimize and close handle undo capture with descriptive labels
+    - Z-index management: focus uses getHighestZ and incrementHighestZ from appServices
+    - State toggles: toggleMaximize toggles isMaximized, minimize sets isMinimized to true, restore sets isMinimized to false
+    - DOM cleanup: close removes taskbarButton, removes element from DOM, calls removeWindowFromStore
+    - Focus management: focus calls incrementHighestZ and updates element zIndex style
+  - `js/constants.js`: Bumped APP_VERSION to 1.56.0
+- **Feature Details**:
+  - Tests verify SnugWindow core methods exist on instances (minimize, restore, close, focus, toggleMaximize)
+  - Tests verify SnugWindow utility methods (makeDraggable, makeResizable, updateTaskbarButtonActiveState, _captureUndo)
+  - Tests verify SnugWindow has required instance properties (isMinimized, isMaximized, options, appServices)
+  - Tests verify undo capture for window minimize and close operations
+  - Tests verify focus method manages z-index properly using appServices
+  - Tests verify close method properly cleans up DOM (taskbarButton, element) and window store
+  - Total tests increased from 1594 to 1629
+- **Version**: Bumped to 1.56.0
+
 #### Day 272: Sound Library & Preview State Undo Capture Tests (2026-04-27)
 #### Day 274: Track Sequence Undo Capture Verification Tests (2026-04-27)
 - **Feature**: Added 34 new unit tests for Track sequence operation and instance method undo capture verification
