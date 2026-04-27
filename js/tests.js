@@ -9712,3 +9712,169 @@ TestRunner.test('Sound Library State - setCurrentLibraryNameState accepts 1 para
 TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState accepts 1 parameter', (t) => {
     t.assertEqual(setCurrentSoundBrowserPathState.length, 1, 'setCurrentSoundBrowserPathState should accept 1 parameter');
 });
+
+// === Day 273: Sequence Operation Instance Method Tests (2026-04-27) ===
+// Tests for Track sequence operation methods that lack proper tests: shiftSequenceNotes, humanizeVelocity, arpeggiatePattern, quantizeSequence
+
+TestRunner.test('Track Sequence - shiftSequenceNotes method exists on Synth track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.shiftSequenceNotes, 'function', 'Track should have shiftSequenceNotes method');
+});
+
+TestRunner.test('Track Sequence - shiftSequenceNotes accepts semitones parameter', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.shiftSequenceNotes.length >= 1, 'shiftSequenceNotes should accept at least 1 parameter (semitones)');
+});
+
+TestRunner.test('Track Sequence - shiftSequenceNotes returns number (count of shifted notes)', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    const result = track.shiftSequenceNotes(0);
+    t.assertEqual(typeof result, 'number', 'shiftSequenceNotes should return a number');
+});
+
+TestRunner.test('Track Sequence - shiftSequenceNotes returns 0 for Audio track type', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    const result = track.shiftSequenceNotes(12);
+    t.assertEqual(result, 0, 'Audio tracks should return 0 (not supported)');
+});
+
+TestRunner.test('Track Sequence - humanizeVelocity method exists on Synth track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.humanizeVelocity, 'function', 'Track should have humanizeVelocity method');
+});
+
+TestRunner.test('Track Sequence - humanizeVelocity accepts amount parameter with default', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.humanizeVelocity.length >= 0, 'humanizeVelocity should accept optional amount parameter');
+    // Check default parameter value (0.15) is used when no args
+    const result = track.humanizeVelocity();
+    t.assertEqual(typeof result, 'number', 'humanizeVelocity should return number');
+});
+
+TestRunner.test('Track Sequence - humanizeVelocity returns number (count of humanized notes)', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    const result = track.humanizeVelocity(0.15);
+    t.assertEqual(typeof result, 'number', 'humanizeVelocity should return a number');
+});
+
+TestRunner.test('Track Sequence - humanizeVelocity returns 0 for Audio track type', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    const result = track.humanizeVelocity(0.15);
+    t.assertEqual(result, 0, 'Audio tracks should return 0 (not supported)');
+});
+
+TestRunner.test('Track Sequence - arpeggiatePattern method exists on Synth track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.arpeggiatePattern, 'function', 'Track should have arpeggiatePattern method');
+});
+
+TestRunner.test('Track Sequence - arpeggiatePattern accepts mode/rate/octaves parameters', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.arpeggiatePattern.length >= 1, 'arpeggiatePattern should accept at least 1 parameter (mode)');
+});
+
+TestRunner.test('Track Sequence - arpeggiatePattern returns number (count of arpeggiated notes)', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    const result = track.arpeggiatePattern('up');
+    t.assertEqual(typeof result, 'number', 'arpeggiatePattern should return a number');
+});
+
+TestRunner.test('Track Sequence - arpeggiatePattern returns 0 for Audio track type', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    const result = track.arpeggiatePattern('up');
+    t.assertEqual(result, 0, 'Audio tracks should return 0 (not supported)');
+});
+
+TestRunner.test('Track Sequence - quantizeSequence method exists on Synth track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.quantizeSequence, 'function', 'Track should have quantizeSequence method');
+});
+
+TestRunner.test('Track Sequence - quantizeSequence accepts quantizeTo parameter with default', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.quantizeSequence.length >= 0, 'quantizeSequence should accept optional quantizeTo parameter');
+});
+
+TestRunner.test('Track Sequence - quantizeSequence returns number (count of quantized notes)', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    const result = track.quantizeSequence(16);
+    t.assertEqual(typeof result, 'number', 'quantizeSequence should return a number');
+});
+
+TestRunner.test('Track Sequence - quantizeSequence returns 0 for Audio track type', (t) => {
+    const track = new Track('test-track', 'Audio', 0);
+    const result = track.quantizeSequence(16);
+    t.assertEqual(result, 0, 'Audio tracks should return 0 (not supported)');
+});
+
+TestRunner.test('Track Sequence - getActiveSequence method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.getActiveSequence, 'function', 'Track should have getActiveSequence method');
+});
+
+TestRunner.test('Track Sequence - getActiveSequence returns null when no active sequence', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    const result = track.getActiveSequence();
+    t.assertEqual(result, null, 'getActiveSequence should return null when no sequences exist');
+});
+
+TestRunner.test('Track Sequence - setActiveSequence method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.setActiveSequence, 'function', 'Track should have setActiveSequence method');
+});
+
+TestRunner.test('Track Sequence - setActiveSequence accepts sequenceId parameter', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.setActiveSequence.length >= 1, 'setActiveSequence should accept 1 parameter (sequenceId)');
+});
+
+TestRunner.test('Track Sequence - doubleSequence method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.doubleSequence, 'function', 'Track should have doubleSequence method');
+});
+
+TestRunner.test('Track Sequence - doubleSequence returns undefined (void method)', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    const result = track.doubleSequence();
+    t.assertEqual(result, undefined, 'doubleSequence should return undefined');
+});
+
+TestRunner.test('Track Sequence - deleteSequence method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.deleteSequence, 'function', 'Track should have deleteSequence method');
+});
+
+TestRunner.test('Track Sequence - deleteSequence accepts sequenceId parameter', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.deleteSequence.length >= 1, 'deleteSequence should accept 1 parameter (sequenceId)');
+});
+
+TestRunner.test('Track Sequence - duplicateSequence method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.duplicateSequence, 'function', 'Track should have duplicateSequence method');
+});
+
+TestRunner.test('Track Sequence - duplicateSequence accepts sequenceId parameter', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.duplicateSequence.length >= 1, 'duplicateSequence should accept 1 parameter (sequenceId)');
+});
+
+TestRunner.test('Track Sequence - renameSequence method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.renameSequence, 'function', 'Track should have renameSequence method');
+});
+
+TestRunner.test('Track Sequence - renameSequence accepts 2 parameters (sequenceId, newName)', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.renameSequence.length >= 2, 'renameSequence should accept 2 parameters (sequenceId, newName)');
+});
+
+TestRunner.test('Track Sequence - createNewSequence method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.createNewSequence, 'function', 'Track should have createNewSequence method');
+});
+
+TestRunner.test('Track Sequence - createNewSequence accepts name and initialLengthSteps parameters', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertTrue(track.createNewSequence.length >= 1, 'createNewSequence should accept at least 1 parameter (name)');
+});

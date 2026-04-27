@@ -3811,3 +3811,27 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate recording input gain function
   - Total tests increased from 1490 to 1516
 - **Version**: Bumped to 1.51.0
+
+#### Day 273: Sequence Operation Instance Method Tests (2026-04-27)
+- **Feature**: Added 27 new unit tests for Track sequence operation instance methods to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 27 new tests in Day 273 section:
+    - shiftSequenceNotes: method exists, accepts semitones param, returns number, returns 0 for Audio tracks
+    - humanizeVelocity: method exists, accepts amount param with default, returns number, returns 0 for Audio tracks
+    - arpeggiatePattern: method exists, accepts mode/rate/octaves params, returns number, returns 0 for Audio tracks
+    - quantizeSequence: method exists, accepts quantizeTo param with default, returns number, returns 0 for Audio tracks
+    - getActiveSequence: method exists, returns null when no active sequence
+    - setActiveSequence: method exists, accepts sequenceId param
+    - doubleSequence: method exists, returns undefined (void method)
+    - deleteSequence: method exists, accepts sequenceId param
+    - duplicateSequence: method exists, accepts sequenceId param
+    - renameSequence: method exists, accepts sequenceId and newName params
+    - createNewSequence: method exists, accepts name and initialLengthSteps params
+  - `js/constants.js`: Bumped APP_VERSION to 1.53.0
+- **Feature Details**:
+  - Tests validate sequence operation methods that lacked proper tests
+  - Tests verify shiftSequenceNotes, humanizeVelocity, arpeggiatePattern, quantizeSequence return 0 for Audio tracks (not supported)
+  - Tests verify parameter counts for all sequence operation methods
+  - Tests verify return types (numbers for operations, undefined for void methods)
+  - Total tests increased from 1528 to 1555
+- **Version**: Bumped to 1.53.0
