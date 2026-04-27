@@ -1,3 +1,20 @@
+#### Day 281: Effects Registry Function Tests (2026-04-27)
+- **Feature**: Added 18 new unit tests for Effects Registry helper functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 18 new tests in Day 281 section:
+    - createEffectInstance: function export, 2 parameters, handles unknown effect type, handles undefined Tone.js
+    - getEffectDefaultParams: function export, 1 parameter, returns object for valid effect, returns empty object for unknown effect, includes wet parameter
+    - getEffectParamDefinitions: function export, 1 parameter, returns array for valid effect, returns empty array for unknown effect, includes parameter keys
+    - APP_VERSION tests: semver format validation, version is 1.62.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 1.62.0
+- **Feature Details**:
+  - Tests validate Effects Registry helper functions are properly exported from effectsRegistry.js
+  - Tests verify function parameter counts match expected APIs
+  - Tests verify error handling for unknown effect types
+  - Tests verify APP_VERSION follows semver format
+  - Total tests increased from 1837 to 1855
+- **Version**: Bumped to 1.62.0
+
 #### Day 279: Event Handlers Module Function Tests (2026-04-27)
 - **Feature**: Added 34 new unit tests for Event Handlers module functions to expand test coverage
 - **Files Modified**:
