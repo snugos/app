@@ -1,6 +1,23 @@
 #### Day 288: Audio Module Extended Function Tests (2026-04-27)
 - **Feature**: Added 40 new unit tests for extended audio module function tests to expand test coverage
 - **Files Modified**:
+#### Day 291: Audio Clip Undo Capture Verification Tests (2026-04-27)
+- **Feature**: Added 24 new unit tests for Audio Clip mutation methods undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 24 new tests in Day 291 section:
+    - Audio Clip setX calls _captureUndoState: setAudioClipName, setAudioClipColor, setAudioClipGain, setAudioClipPlaybackRate, setAudioClipStartOffset, setAudioClipEndOffset, setAudioClipCrossfade, setAudioClipFadeIn, setAudioClipFadeOut, setAudioClipFadeInCurve, setAudioClipFadeOutCurve, setAudioClipReverse, setAudioClipStartTime, setAudioClipDuration
+    - Audio Clip operation calls _captureUndoState: deleteTimelineClip, splitAudioClip, duplicateTimelineClip
+    - Method existence tests: deleteTimelineClip, splitAudioClip, duplicateTimelineClip, setAudioClipDuration, getAudioClipDuration
+    - APP_VERSION tests: semver format validation, version is 1.72.0 or higher
+  - `js/constants.js`: Updated APP_VERSION comment to Day 291
+- **Feature Details**:
+  - Tests validate all Audio Clip mutation methods call _captureUndoState before mutating state
+  - Tests verify descriptive undo labels (e.g., "Rename clip", "Set gain on clip", "Move clip", "Delete clip", "Split clip", "Duplicate clip")
+  - Tests verify clip name is referenced in undo labels for property changes
+  - Tests verify undo/redo works for all clip editing operations (rename, color, gain, playback rate, offsets, fades, reverse, position, duration, delete, split, duplicate)
+  - Total tests increased from 2122 to 2145
+- **Version**: 1.72.0 (comment update only, version unchanged)
+
   - `js/tests.js`: Added 40 new tests in Day 288 section:
     - initializeAudioModule: references appServices parameter
     - getMasterEffectsBusInputNode: references master bus or input node

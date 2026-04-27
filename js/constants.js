@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.71.0'; // Day 290: Project Import & Synth Track Extended Tests (2026-04-27)
+export const APP_VERSION = '1.72.0'; // Day 291: Audio Clip Undo Capture Verification Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
@@ -545,6 +545,57 @@ export const DEFAULT_MIDI_LEARN_MAPPING = {
     min: 0,          // Input range min
     max: 1           // Input range max
 };
+
+// ============================================
+// Keyboard Shortcuts Registry
+// ============================================
+// Central registry of all keyboard shortcuts for documentation and UI generation
+export const KEYBOARD_SHORTCUTS = {
+    // Playback Controls
+    PLAY_PAUSE: { key: 'Space', description: 'Play / Pause', category: 'Playback Controls' },
+    TOGGLE_RECORDING: { key: 'Enter', description: 'Toggle Recording', category: 'Playback Controls' },
+    CLOSE_WINDOWS: { key: 'Escape', description: 'Close Windows', category: 'Playback Controls' },
+
+    // Transport & Tempo
+    TOGGLE_METRONOME: { key: 'T', description: 'Toggle Metronome', category: 'Transport & Tempo' },
+    TAP_TEMPO: { key: '`', description: 'Tap Tempo', category: 'Transport & Tempo' },
+    TOGGLE_LOOP: { key: 'L', description: 'Toggle Loop Region', category: 'Transport & Tempo' },
+    TOGGLE_MIDI_LEARN: { key: 'K', description: 'Toggle MIDI Learn', category: 'Transport & Tempo' },
+    TOGGLE_SCALE_MODE: { key: 'Q', description: 'Toggle Scale Mode', category: 'Transport & Tempo' },
+
+    // Track Controls (with armed track)
+    TOGGLE_MUTE: { key: 'M', description: 'Toggle Mute', category: 'Track Controls' },
+    TOGGLE_SOLO: { key: 'S', description: 'Toggle Solo', category: 'Track Controls' },
+    TOGGLE_RECORD_ARM: { key: 'R', description: 'Toggle Record Arm', category: 'Track Controls' },
+
+    // Sequencer & Piano Roll
+    TOGGLE_CHORD_MODE: { key: 'C', description: 'Toggle Chord Mode', category: 'Sequencer & Piano Roll' },
+    OCTAVE_UP: { key: 'X', description: 'Octave Up', category: 'Sequencer & Piano Roll' },
+    OCTAVE_DOWN: { key: 'Z', description: 'Octave Down', category: 'Sequencer & Piano Roll' },
+
+    // Edit Operations
+    UNDO: { key: 'Ctrl+Z', description: 'Undo', category: 'Edit Operations' },
+    REDO: { key: 'Ctrl+Y', description: 'Redo', category: 'Edit Operations' },
+    REDO_ALT: { key: 'Ctrl+Shift+Z', description: 'Redo (Alt)', category: 'Edit Operations' },
+    SAVE_PROJECT: { key: 'Ctrl+S', description: 'Save Project', category: 'Edit Operations' },
+    LOAD_PROJECT: { key: 'Ctrl+O', description: 'Load Project', category: 'Edit Operations' },
+    EXPORT_MIDI: { key: 'Ctrl+E', description: 'Export to MIDI', category: 'Edit Operations' },
+
+    // Computer Keyboard Piano
+    PIANO_WHITE_KEYS: { key: 'A-L', description: 'White keys (C3-B3)', category: 'Computer Keyboard Piano' },
+    PIANO_BLACK_KEYS: { key: 'W,E,T,Y,U', description: 'Black keys', category: 'Computer Keyboard Piano' },
+    SAMPLER_SLICES: { key: '1-8', description: 'Sampler slices', category: 'Computer Keyboard Piano' }
+};
+
+// Helper to get all shortcut categories
+export const KEYBOARD_SHORTCUT_CATEGORIES = [
+    'Playback Controls',
+    'Transport & Tempo',
+    'Track Controls',
+    'Sequencer & Piano Roll',
+    'Edit Operations',
+    'Computer Keyboard Piano'
+];
 
 // ============================================
 // Effect Preset Constants

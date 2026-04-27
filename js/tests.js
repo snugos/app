@@ -4991,6 +4991,143 @@ TestRunner.test('Audio Clip Editor - Track class has getAudioClipStartTime metho
 TestRunner.test('Audio Clip Editor - Track class has _getAudioClip helper method', (t) => {
     const mockTrack = new Track('test-track', 'Audio', 0);
     t.assertEqual(typeof mockTrack._getAudioClip, 'function', 'Track should have _getAudioClip helper method');
+
+// === Day 291: Audio Clip Undo Capture Verification Tests ===
+// These tests verify that all Audio Clip mutation methods call _captureUndoState before mutating
+TestRunner.test('Audio Clip Editor - setAudioClipName calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipName.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipName should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Rename clip'), 'setAudioClipName should have descriptive undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipColor calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipColor.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipColor should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('clip.name'), 'setAudioClipColor should reference clip name in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipGain calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipGain.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipGain should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('clip.name'), 'setAudioClipGain should reference clip name in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipPlaybackRate calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipPlaybackRate.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipPlaybackRate should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('playback rate'), 'setAudioClipPlaybackRate should mention playback rate in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipStartOffset calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartOffset.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipStartOffset should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('start offset'), 'setAudioClipStartOffset should mention start offset in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipEndOffset calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipEndOffset should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('end offset'), 'setAudioClipEndOffset should mention end offset in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipCrossfade calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipCrossfade should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('crossfade'), 'setAudioClipCrossfade should mention crossfade in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipFadeIn calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeIn.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeIn should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('fade in'), 'setAudioClipFadeIn should mention fade in in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipFadeOut calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOut.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeOut should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('fade out'), 'setAudioClipFadeOut should mention fade out in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipFadeInCurve calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeInCurve should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('fade in curve'), 'setAudioClipFadeInCurve should mention fade in curve in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipFadeOutCurve calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeOutCurve should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('fade out curve'), 'setAudioClipFadeOutCurve should mention fade out curve in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipReverse calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipReverse.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipReverse should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('reverse'), 'setAudioClipReverse should mention reverse in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipStartTime calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipStartTime should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Move clip'), 'setAudioClipStartTime should have descriptive undo label');
+});
+
+TestRunner.test('Audio Clip Editor - setAudioClipDuration calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipDuration should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Resize clip'), 'setAudioClipDuration should have descriptive undo label');
+});
+
+TestRunner.test('Audio Clip Editor - deleteTimelineClip calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.deleteTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'deleteTimelineClip should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Delete clip'), 'deleteTimelineClip should have descriptive undo label');
+});
+
+TestRunner.test('Audio Clip Editor - splitAudioClip calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'splitAudioClip should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Split clip'), 'splitAudioClip should have descriptive undo label');
+});
+
+TestRunner.test('Audio Clip Editor - duplicateTimelineClip calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.duplicateTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'duplicateTimelineClip should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Duplicate clip'), 'duplicateTimelineClip should have descriptive undo label');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has deleteTimelineClip method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.deleteTimelineClip, 'function', 'Track should have deleteTimelineClip method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has splitAudioClip method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.splitAudioClip, 'function', 'Track should have splitAudioClip method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has duplicateTimelineClip method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.duplicateTimelineClip, 'function', 'Track should have duplicateTimelineClip method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has setAudioClipDuration method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.setAudioClipDuration, 'function', 'Track should have setAudioClipDuration method');
+});
+
+TestRunner.test('Audio Clip Editor - Track class has getAudioClipDuration method', (t) => {
+    const mockTrack = new Track('test-track', 'Audio', 0);
+    t.assertEqual(typeof mockTrack.getAudioClipDuration, 'function', 'Track should have getAudioClipDuration method');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.72.0 or higher for Day 291', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 72, 'Minor version should be >= 72 for Day 291');
+    }
+});
 });
 
 // ============================================
