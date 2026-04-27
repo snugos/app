@@ -1,3 +1,16 @@
+#### Day 270: Monitoring Volume Constants Fix (2026-04-27)
+- **Feature**: Fixed missing MIN/MAX/DEFAULT_MONITORING_VOLUME constants that Day 269 tests reference
+- **Files Modified**:
+  - `js/constants.js`: Added MIN_RECORDING_MONITORING_VOLUME, MAX_RECORDING_MONITORING_VOLUME constants and MIN_MONITORING_VOLUME, MAX_MONITORING_VOLUME, DEFAULT_MONITORING_VOLUME aliases for backwards compatibility
+  - `js/tests.js`: Added imports for MIN_MONITORING_VOLUME, MAX_MONITORING_VOLUME, DEFAULT_MONITORING_VOLUME
+  - `js/constants.js`: Bumped APP_VERSION to 1.50.0
+- **Feature Details**:
+  - Tests in Day 269 section reference MIN_MONITORING_VOLUME, MAX_MONITORING_VOLUME, and DEFAULT_MONITORING_VOLUME but these weren't defined in constants.js
+  - Added proper MIN_RECORDING_MONITORING_VOLUME and MAX_RECORDING_MONITORING_VOLUME constants (0 and 1)
+  - Created alias constants with shorter names for backwards compatibility with existing tests
+  - Constants now properly exported and imported in tests.js
+- **Version**: Bumped to 1.50.0
+
 #### Day 269: Desktop Settings & Sound Library State Tests (2026-04-27)
 - **Feature**: Added 21 new unit tests for Desktop Settings constants and Sound Library state functions to expand test coverage
 - **Files Modified**:

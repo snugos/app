@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.49.0'; // Day 269: Desktop Settings & Sound Library State Tests (2026-04-27)
+export const APP_VERSION = '1.50.0'; // Day 270: Monitoring Volume Constants Fix (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
@@ -421,6 +421,13 @@ export const MAX_RECORDING_INPUT_GAIN = 2.0; // Can boost input gain
 // Monitoring settings
 export const DEFAULT_RECORDING_MONITORING_ENABLED = false; // Monitoring off by default
 export const DEFAULT_RECORDING_MONITORING_VOLUME = 0.5; // Monitor volume (0-1)
+export const MIN_RECORDING_MONITORING_VOLUME = 0;
+export const MAX_RECORDING_MONITORING_VOLUME = 1;
+
+// Aliases for backwards compatibility with existing tests
+export const MIN_MONITORING_VOLUME = MIN_RECORDING_MONITORING_VOLUME;
+export const MAX_MONITORING_VOLUME = MAX_RECORDING_MONITORING_VOLUME;
+export const DEFAULT_MONITORING_VOLUME = DEFAULT_RECORDING_MONITORING_VOLUME;
 
 // Recording limits
 export const MAX_RECORDING_LENGTH_SECONDS = 600; // 10 minute max recording
