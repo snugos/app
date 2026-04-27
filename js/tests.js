@@ -8768,3 +8768,191 @@ TestRunner.test('SnugOS - APP_VERSION is 1.76.0 or higher for Day 295', (t) => {
         t.assertTruthy(versionParts[1] >= 76, 'Minor version should be >= 76 for Day 295');
     }
 });
+
+// === Day 296: DrumSampler Pad Drop Zone Verification Tests ===
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI uses correct container ID pattern', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumPadDropZoneContainer-${track.id}-${selectedPadIndex}'), 'Should use correct container ID pattern with track ID and selected pad index');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI queries for correct container', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('#drumPadDropZoneContainer-${track.id}-${selectedPadIndex}') || funcStr.includes('drumPadDropZoneContainer-${track.id}'), 'Should query container by ID');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI has fallback for legacy container', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('oldDropZoneContainer') || funcStr.includes('[id^="drumPadDropZoneContainer'), 'Should have fallback for legacy container ID pattern');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI renames container ID on fallback', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('.id =') && funcStr.includes('drumPadDropZoneContainer'), 'Should rename container ID to correct pattern on fallback');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI creates drop zone with correct input ID', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumPadFileInput-${track.id}-${selectedPadIndex}'), 'Should use correct file input ID pattern');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI passes pad index to createDropZoneHTML', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('createDropZoneHTML') && funcStr.includes('selectedPadIndex'), 'Should pass selectedPadIndex to createDropZoneHTML');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI passes DrumSampler type to createDropZoneHTML', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('createDropZoneHTML') && funcStr.includes("'DrumSampler'"), 'Should pass DrumSampler type to createDropZoneHTML');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI sets up drop zone listeners with correct callbacks', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('setupGenericDropZoneListeners'), 'Should call setupGenericDropZoneListeners');
+    t.assertTruthy(funcStr.includes('loadSoundFromBrowserToTarget'), 'Should pass loadSoundFromBrowserToTarget callback');
+    t.assertTruthy(funcStr.includes('loadDrumSamplerPadFile'), 'Should pass loadDrumSamplerPadFile callback');
+    t.assertTruthy(funcStr.includes('getTrackById'), 'Should pass getTrackById callback');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI handles missing drop zone container gracefully', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('if (dropZoneContainer)') || funcStr.includes('if (!dropZoneContainer)'), 'Should check if container exists before updating');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI accesses pad data from drumSamplerPads array', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads?.[selectedPadIndex]') || funcStr.includes('drumSamplerPads['), 'Should access pad data from drumSamplerPads array using selectedPadIndex');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI updates selected pad info display', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('selectedDrumPadInfo-${track.id}') || funcStr.includes('selectedDrumPadInfo'), 'Should update selected pad info display');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI sets file input onchange handler', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('fileInputEl.onchange') || funcStr.includes('.onchange ='), 'Should set file input onchange handler');
+    t.assertTruthy(funcStr.includes('loadDrumSamplerPadFile'), 'Should call loadDrumSamplerPadFile on file input change');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI updates envelope knobs', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumPadEnvAttack') || funcStr.includes('EnvAttack'), 'Should update envelope attack knob');
+    t.assertTruthy(funcStr.includes('drumPadEnvDecay') || funcStr.includes('EnvDecay'), 'Should update envelope decay knob');
+    t.assertTruthy(funcStr.includes('drumPadEnvSustain') || funcStr.includes('EnvSustain'), 'Should update envelope sustain knob');
+    t.assertTruthy(funcStr.includes('drumPadEnvRelease') || funcStr.includes('EnvRelease'), 'Should update envelope release knob');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI updates volume and pitch knobs', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumPadVolume') || funcStr.includes('Volume'), 'Should update volume knob');
+    t.assertTruthy(funcStr.includes('drumPadPitch') || funcStr.includes('Pitch'), 'Should update pitch knob');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI handles pad data fallback with defaults', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('volume: 0.7') && funcStr.includes('pitchShift: 0'), 'Should use default values for volume and pitch');
+    t.assertTruthy(funcStr.includes('attack: 0.005') && funcStr.includes('decay: 0.2'), 'Should use default values for envelope');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI accesses inspectorControls for knob updates', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('inspectorControls.drumPadVolume') || funcStr.includes('inspectorControls['), 'Should access inspectorControls for knob updates');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - updateDrumPadControlsUI checks track type before updating', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'DrumSampler'") || funcStr.includes('track.type'), 'Should check if track is DrumSampler type');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads uses numDrumSamplerPads constant', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('numDrumSamplerPads') || funcStr.includes('Constants.numDrumSamplerPads'), 'Should use numDrumSamplerPads constant for pad count');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads accesses drumSamplerPads array', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads'), 'Should access drumSamplerPads array');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads sets dataset.padIndex on buttons', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('dataset.padIndex') || funcStr.includes('.padIndex ='), 'Should set padIndex data attribute on pad buttons');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads handles selectedDrumPadForEdit state', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('selectedDrumPadForEdit'), 'Should check selectedDrumPadForEdit for highlighting');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads adds click event listener to pads', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') || funcStr.includes('onclick') || funcStr.includes('click'), 'Should add click handler to pad buttons');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads calls updateDrumPadControlsUI on pad click', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('updateDrumPadControlsUI'), 'Should call updateDrumPadControlsUI when pad is clicked');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads calls playDrumSamplerPadPreview on pad click', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('playDrumSamplerPadPreview'), 'Should call playDrumSamplerPadPreview for loaded pads');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads checks pad status for styling', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('status') && funcStr.includes('loaded'), 'Should check pad status for loaded styling');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - renderDrumSamplerPads checks dbKey for loaded state', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('dbKey'), 'Should check dbKey for determining loaded state');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML generates unique IDs for DrumSampler pads', (t) => {
+    const ids = [];
+    for (let i = 0; i < 8; i++) {
+        const html = createDropZoneHTML('track1', 'input'+i, 'DrumSampler', i, null);
+        const match = html.match(/id="([^"]+)"/);
+        if (match) ids.push(match[1]);
+    }
+    const uniqueIds = [...new Set(ids)];
+    t.assertEqual(ids.length, 8, 'Should have 8 drop zone IDs');
+    t.assertEqual(uniqueIds.length, 8, 'All DrumSampler pad drop zone IDs should be unique');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML includes data-pad-slice-index attribute', (t) => {
+    for (let i = 0; i < 8; i++) {
+        const html = createDropZoneHTML('track1', 'input'+i, 'DrumSampler', i, null);
+        t.assertTruthy(html.includes('data-pad-slice-index="'+i+'"'), 'Pad '+i+' should include data-pad-slice-index="'+i+'"');
+    }
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML handles all valid pad statuses', (t) => {
+    const statuses = ['empty', 'loaded', 'loading', 'missing', 'error'];
+    for (const status of statuses) {
+        const html = createDropZoneHTML('track1', 'input0', 'DrumSampler', 0, { status: status });
+        t.assertTruthy(html.length > 0, 'Should generate drop zone for status: '+status);
+    }
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML includes track ID and type data attributes', (t) => {
+    const html = createDropZoneHTML('myTrack', 'input0', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('data-track-id="myTrack"'), 'Should include data-track-id');
+    t.assertTruthy(html.includes('data-track-type="DrumSampler"'), 'Should include data-track-type');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML includes file input for audio upload', (t) => {
+    const html = createDropZoneHTML('track1', 'input0', 'DrumSampler', 0, null);
+    t.assertTruthy(html.includes('type="file"'), 'Should include file input');
+    t.assertTruthy(html.includes('accept="audio/'), 'Should accept audio files');
+});
+
+TestRunner.test('DrumSampler Pad Drop Zone - APP_VERSION is 1.77.0 or higher for Day 296', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 296');
+    }
+});
