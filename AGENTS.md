@@ -1,5 +1,23 @@
 # SnugOS AGENTS.md - Agent Memory and Improvement Log
-# SnugOS AGENTS.md - Agent Memory and Improvement Log
+
+#### Day 267: appServices Undo Capture Flag Tests (2026-04-27)
+- **Feature**: Fixed isReconstructingDAW typo bugs and added 6 new unit tests for appServices undo capture flag
+- **Files Modified**:
+  - `js/main.js`: Fixed typo on line 372: getIsReconstructingingDAW -> getIsReconstructingDAW. Also fixed line 353 and 389 variable checks
+  - `js/tests.js`: Added 6 new tests in Day 267 section:
+    - appServices - getIsReconstructingDAW is a function
+    - appServices - getIsReconstructingDAW returns boolean
+    - appServices - _isReconstructingDAW_flag exists and is boolean
+    - appServices - _isReconstructingDAW_flag defaults to false
+    - appServices - getIsReconstructingDAW returns _isReconstructingDAW_flag value
+    - appServices - getIsReconstructingDAW returns true when flag is true
+  - `js/constants.js`: Bumped APP_VERSION to 1.48.0
+- **Feature Details**:
+  - Fixed isReconstructingDAW typos causing undo capture to be skipped incorrectly during project reconstruction
+  - Tests validate getIsReconstructingDAW function and _isReconstructingDAW_flag for undo/redo skip logic
+  - Tests verify the flag controls whether undo captures are recorded during DAW operations
+  - Total tests increased from 2207 to 2213
+- **Version**: Bumped to 1.48.0
 #### Day 266: Remaining Send Track & Swing Constants Tests (2026-04-27)
 - **Feature**: Added 40 new unit tests for remaining Send Track and Swing constants to expand test coverage
 - **Files Modified**:

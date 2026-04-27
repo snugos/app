@@ -3424,7 +3424,148 @@ TestRunner.test('DrumSampler Pad - pad status transitions from empty to loaded',
     t.assertTruthy(funcStr.includes('loaded') || funcStr.includes('status'), 'Should handle status transitions');
 });
 
-// ============================================
+// === Day 267: InstrumentSampler Drop Zone Verification Tests ===
+
+// InstrumentSampler uses a single drop zone (not pads like DrumSampler)
+// The drop zone container ID follows the pattern: dropZoneContainer-${track.id}-instrumentsampler
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates drop zone container', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dropZoneContainer') || funcStr.includes('drop-zone'), 'Should create drop zone container');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM includes waveform canvas', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvas') || funcStr.includes('canvas'), 'Should include waveform canvas');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM includes root note select', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentRootNote') || funcStr.includes('Root Note'), 'Should include root note selector');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM includes loop controls', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopToggle') || funcStr.includes('Loop'), 'Should include loop toggle');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM includes envelope controls', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentEnvAttack') || funcStr.includes('Envelope'), 'Should include envelope controls');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM includes polyphony toggle', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentPolyphonyToggle') || funcStr.includes('Poly'), 'Should include polyphony toggle');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML generates valid HTML for InstrumentSampler', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should contain drop-zone class');
+    t.assertTruthy(html.includes('input1'), 'Should contain input ID');
+    t.assertTruthy(html.includes('Drag & Drop'), 'Should contain drag text');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML includes track ID in data attributes', (t) => {
+    const html = createDropZoneHTML('testTrack', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('data-track-id="testTrack"'), 'Should include track ID data attribute');
+    t.assertTruthy(html.includes('data-track-type="InstrumentSampler"'), 'Should include track type data attribute');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML generates correct drop zone class', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('class="drop-zone '), 'Should have drop-zone class');
+    t.assertTruthy(html.includes('drop-zone"'), 'Should close class attribute properly');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML includes file input with accept attribute', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('type="file"'), 'Should have file input type');
+    t.assertTruthy(html.includes('accept="audio/*, .sfz, .sf2"'), 'Should accept audio file types');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML includes upload label', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('Click to Upload'), 'Should have upload label');
+    t.assertTruthy(html.includes('for="input1"'), 'Should link label to file input');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML shows empty status for unloaded tracks', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('Drag & Drop Audio File'), 'Should show empty/drag-drop status text');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML shows loaded status correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, { status: 'loaded', originalFileName: 'piano.wav' });
+    t.assertTruthy(html.includes('Loaded:'), 'Should show loaded status');
+    t.assertTruthy(html.includes('piano.wav'), 'Should display file name');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML truncates long file names', (t) => {
+    const longName = 'this_is_a_very_long_file_name_that_should_be_truncated.wav';
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, { status: 'loaded', originalFileName: longName });
+    t.assertTruthy(html.includes('...') || !html.includes(longName), 'Long file names should be truncated');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML missing status shows relink button', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, { status: 'missing', originalFileName: 'missing.wav' });
+    t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing status class');
+    t.assertTruthy(html.includes('Relink'), 'Should have relink button');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML error status shows retry button', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, { status: 'error', originalFileName: 'error.wav' });
+    t.assertTruthy(html.includes('drop-zone-error'), 'Should have error status class');
+    t.assertTruthy(html.includes('Retry'), 'Should have retry button');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML loading status shows loading indicator', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, { status: 'loading', originalFileName: 'loading.wav' });
+    t.assertTruthy(html.includes('drop-zone-loading'), 'Should have loading status class');
+    t.assertTruthy(html.includes('Loading:'), 'Should show loading text');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - drop zone ID format is correct', (t) => {
+    const html = createDropZoneHTML('myTrack', 'myInput', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('id="dropZone-myTrack-instrumentsampler-'), 'Should have correct drop zone ID format');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - different track IDs produce different drop zone IDs', (t) => {
+    const html1 = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    const html2 = createDropZoneHTML('track2', 'input1', 'InstrumentSampler', null, null);
+    const id1 = html1.match(/id="([^"]+)"/)[1];
+    const id2 = html2.match(/id="([^"]+)"/)[1];
+    t.assertNotEqual(id1, id2, 'Different tracks should have different drop zone IDs');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML returns a string', (t) => {
+    const result = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertEqual(typeof result, 'string', 'createDropZoneHTML should return a string');
+    t.assertTruthy(result.length > 0, 'Result should not be empty');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML with null pad index handles correctly', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('drop-zone'), 'Should handle null pad index for InstrumentSampler');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML file input is hidden', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('hidden') || html.includes('display:none') || html.includes('class="hidden'), 'File input should be hidden');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - drop zone ID follows instrumentsampler naming convention', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    const match = html.match(/id="([^"]+)"/);
+    t.assertTruthy(match && match[1].includes('instrumentsampler'), 'Drop zone ID should include instrumentsampler naming');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM drop zone container ID pattern', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dropZoneContainer-${track.id}-instrumentsampler') || funcStr.includes('dropZoneContainer'), 'Drop zone container ID should include track ID and instrumentsampler type');
+});
+
+// === Day 206: DrumSampler Pad Drop Zones Comprehensive Verification ===
 // === Day 206: DrumSampler Pad Drop Zones Comprehensive Verification ===
 
 TestRunner.test('DrumSampler Pad Drop Zone - createDropZoneHTML generates unique IDs for all 8 pads', (t) => {
@@ -8664,3 +8805,39 @@ TestRunner.test('Send Track - DEFAULT_SEND_TRACK structure matches send track ob
     t.assertTruthy('level' in DEFAULT_SEND_TRACK, 'Should have level');
     t.assertTruthy('muted' in DEFAULT_SEND_TRACK, 'Should have muted');
 });
+
+// Day 267: appServices Undo Capture Flag Tests (2026-04-27)
+TestRunner.test("appServices - getIsReconstructingDAW is a function", (t) => {
+    t.assertEqual(typeof window.appServices?.getIsReconstructingDAW, "function", "getIsReconstructingDAW should be a function");
+});
+
+TestRunner.test("appServices - getIsReconstructingDAW returns boolean", (t) => {
+    const result = window.appServices?.getIsReconstructingDAW();
+    t.assertEqual(typeof result, "boolean", "getIsReconstructingDAW should return boolean");
+});
+
+TestRunner.test("appServices - _isReconstructingDAW_flag exists and is boolean", (t) => {
+    t.assertEqual(typeof window.appServices?._isReconstructingDAW_flag, "boolean", "_isReconstructingDAW_flag should be boolean");
+});
+
+TestRunner.test("appServices - _isReconstructingDAW_flag defaults to false", (t) => {
+    t.assertEqual(window.appServices?._isReconstructingDAW_flag, false, "_isReconstructingDAW_flag should default to false");
+});
+
+TestRunner.test("appServices - getIsReconstructingDAW returns _isReconstructingDAW_flag value", (t) => {
+    const result = window.appServices?.getIsReconstructingDAW();
+    t.assertEqual(result, false, "getIsReconstructingDAW should return false when flag is false");
+});
+
+TestRunner.test("appServices - getIsReconstructingDAW returns true when flag is true", (t) => {
+    const originalFlag = window.appServices?._isReconstructingDAW_flag;
+    if (window.appServices) {
+        window.appServices._isReconstructingDAW_flag = true;
+        const result = window.appServices?.getIsReconstructingDAW();
+        t.assertEqual(result, true, "getIsReconstructingDAW should return true when flag is true");
+        window.appServices._isReconstructingDAW_flag = originalFlag;
+    } else {
+        t.fail("window.appServices not available");
+    }
+});
+
