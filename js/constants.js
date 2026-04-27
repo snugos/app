@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.62.0'; // Day 281: Effects Registry Function Tests (2026-04-27)
+export const APP_VERSION = '1.63.0'; // Day 282: MIDI Export Function Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

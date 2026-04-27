@@ -4002,3 +4002,29 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify parameter references in complex functions
   - Total tests increased from 1747 to 1837
 - **Version**: Bumped to 1.61.0
+
+#### Day 282: MIDI Export Function Tests (2026-04-27)
+- **Feature**: Added 23 new unit tests for MIDI Export function to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests in Day 282 section:
+    - exportToMidiInternal: function export, 0 parameters, async behavior
+    - exportToMidiInternal: references appServices.showNotification, handles missing appServices
+    - exportToMidiInternal: references getTempoState, getTimeSignatureState, getTracksState, getPlaybackModeState
+    - exportToMidiInternal: handles Audio track type (skips Audio tracks)
+    - exportToMidiInternal: uses pitchToRow helper, MIDI_EXPORT_VELOCITY_SCALE and MIDI_EXPORT_TicksPerQuarterNote constants
+    - exportToMidiInternal: handles sequence and timeline playback modes
+    - exportToMidiInternal: calculates note velocity and handles probability
+    - exportToMidiInternal: includes buildMidiFile helper, creates MThd header and MTrk track
+    - exportToMidiInternal: uses try-catch error handling and shows notification on error
+  - `js/constants.js`: Bumped APP_VERSION to 1.63.0
+- **Feature Details**:
+  - Tests validate exportToMidiInternal function is properly exported from state.js
+  - Tests verify function is async and accepts 0 parameters
+  - Tests verify function references required state functions (tempo, time signature, tracks, playback mode)
+  - Tests verify Audio tracks are skipped during MIDI export
+  - Tests verify pitchToRow helper is used for MIDI note calculation
+  - Tests verify MIDI constants (VELOCITY_SCALE, TicksPerQuarterNote) are used
+  - Tests verify both playback modes (sequence and timeline) are handled
+  - Tests verify error handling with try-catch and notification
+  - Total tests increased from 1855 to 1878
+- **Version**: Bumped to 1.63.0

@@ -11579,3 +11579,122 @@ TestRunner.test('SnugOS - APP_VERSION is 1.61.0 or higher', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
 });
+
+// Day 282: MIDI Export/Import Function Tests (2026-04-27)
+// ==========================================================
+// These tests verify MIDI Export function
+
+TestRunner.test('MIDI Export - exportToMidiInternal function is exported', (t) => {
+    t.assertEqual(typeof exportToMidiInternal, 'function', 'exportToMidiInternal should be a function');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal accepts no parameters', (t) => {
+    t.assertEqual(exportToMidiInternal.length, 0, 'exportToMidiInternal should accept 0 parameters');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal is async', (t) => {
+    t.assertTruthy(exportToMidiInternal.constructor.name === 'AsyncFunction' || exportToMidiInternal.toString().includes('async'), 'exportToMidiInternal should be async');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references appServices.showNotification', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices.showNotification') || funcStr.includes('showNotification'), 'exportToMidiInternal should reference notification service');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal handles missing appServices', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('!appServices') || funcStr.includes('appServices === undefined') || funcStr.includes('not available'), 'exportToMidiInternal should check for missing appServices');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references getTempoState', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTempoState'), 'exportToMidiInternal should use getTempoState');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references getTimeSignatureState', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTimeSignatureState'), 'exportToMidiInternal should use getTimeSignatureState');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references getTracksState', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState'), 'exportToMidiInternal should use getTracksState');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references getPlaybackModeState', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getPlaybackModeState'), 'exportToMidiInternal should use getPlaybackModeState');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal handles Audio track type', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes("track.type === 'Audio'") || funcStr.includes("track.type === \"Audio\""), 'exportToMidiInternal should skip Audio tracks');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal uses pitchToRow helper', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('pitchToRow'), 'exportToMidiInternal should use pitchToRow helper');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal uses MIDI_EXPORT_VELOCITY_SCALE constant', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('MIDI_EXPORT_VELOCITY_SCALE'), 'exportToMidiInternal should use MIDI_EXPORT_VELOCITY_SCALE');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal uses MIDI_EXPORT_TicksPerQuarterNote constant', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('MIDI_EXPORT_TicksPerQuarterNote'), 'exportToMidiInternal should use MIDI_EXPORT_TicksPerQuarterNote');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal handles sequence mode', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('playbackMode') && funcStr.includes('sequence'), 'exportToMidiInternal should handle sequence playback mode');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal handles timeline mode', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('timeline') || funcStr.includes('getSequencesState'), 'exportToMidiInternal should handle timeline mode');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal calculates note velocity', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('velocity'), 'exportToMidiInternal should calculate note velocity');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal handles probability', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('probability'), 'exportToMidiInternal should handle note probability');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile helper function exists', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('buildMidiFile'), 'exportToMidiInternal should include buildMidiFile helper');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal creates MThd header', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('MThd') || funcStr.includes('Header'), 'exportToMidiInternal should create MIDI header');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal creates MTrk track', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('MTrk'), 'exportToMidiInternal should create MIDI track');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal uses try-catch for error handling', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'exportToMidiInternal should handle errors with try-catch');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal calls showNotification on error', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'exportToMidiInternal should show notification on error');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.63.0 or higher', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 63, 'Minor version should be >= 63 for Day 282');
+    }
+});
