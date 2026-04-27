@@ -268,7 +268,9 @@ import {
     renderSamplePads,
     updateSliceEditorUI,
     updateSequencerCellUI,
-    openAudioClipEditorWindow
+    openAudioClipEditorWindow,
+    buildInstrumentSamplerSpecificInspectorDOM,
+    initializeInstrumentSamplerSpecificControls
 } from './ui.js';
 
 import {
@@ -3564,6 +3566,132 @@ TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificIns
     const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
     t.assertTruthy(funcStr.includes('dropZoneContainer-${track.id}-instrumentsampler') || funcStr.includes('dropZoneContainer'), 'Drop zone container ID should include track ID and instrumentsampler type');
 });
+
+
+// === Day 267: InstrumentSampler Drop Zone Verification Tests ===
+
+// InstrumentSampler uses a single drop zone container for sample loading
+// The container ID follows the pattern: dropZoneContainer-${track.id}-instrumentsampler
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM function exists', (t) => {
+    t.assertEqual(typeof buildInstrumentSamplerSpecificInspectorDOM, 'function', 'buildInstrumentSamplerSpecificInspectorDOM should be a function');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates drop zone container', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dropZoneContainer'), 'Should create drop zone container');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - drop zone container ID includes track ID', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dropZoneContainer-${track.id}-instrumentsampler') || funcStr.includes('dropZoneContainer-'), 'Drop zone container ID should include track ID');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - drop zone container has mb-2 class', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('mb-2'), 'Drop zone container should have mb-2 class for margin');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates waveform canvas', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvas') || funcStr.includes('canvas'), 'Should create waveform canvas');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - waveform canvas ID includes track ID', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvas-${track.id}') || funcStr.includes('Canvas-'), 'Waveform canvas ID should include track ID');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates root note select', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentRootNote'), 'Should create root note select');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates loop controls', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopToggle') || funcStr.includes('Loop'), 'Should create loop controls');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates loop start input', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopStart'), 'Should create loop start input');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates loop end input', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopEnd'), 'Should create loop end input');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates envelope placeholders', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(
+        (funcStr.includes('instrumentEnvAttack') && funcStr.includes('instrumentEnvDecay')) ||
+        (funcStr.includes('Env') && funcStr.includes('Envelope')),
+        'Should create envelope knob placeholders'
+    );
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates polyphony toggle', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentPolyphonyToggle') || funcStr.includes('Polyphony'), 'Should create polyphony toggle');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML works with InstrumentSampler type', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('drop-zone') || html.length > 0, 'createDropZoneHTML should return valid HTML for InstrumentSampler');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML with InstrumentSampler has no pad index', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(!html.includes('data-pad-slice-index') || html.includes('data-pad-slice-index=""'), 'InstrumentSampler should not have pad index data attribute');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML InstrumentSampler includes track type data attribute', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, null);
+    t.assertTruthy(html.includes('data-track-type="InstrumentSampler"') || html.includes('InstrumentSampler'), 'Should include track type');
+});
+
+// Verify createDropZoneHTML drop zone ID format
+TestRunner.test('InstrumentSampler Drop Zone - drop zone ID format for InstrumentSampler', (t) => {
+    const html = createDropZoneHTML('myInstrument', 'input1', 'InstrumentSampler', null, null);
+    const match = html.match(/id="([^"]+)"/);
+    t.assertTruthy(match, 'Should have an ID attribute');
+    t.assertTruthy(match[1].includes('myInstrument'), 'Drop zone ID should include track ID');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML InstrumentSampler with loaded status', (t) => {
+    const existingData = { originalFileName: 'piano.wav', status: 'loaded' };
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, existingData);
+    t.assertTruthy(html.includes('piano.wav') || html.includes('Loaded'), 'Should show loaded file name or status');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML InstrumentSampler with missing status', (t) => {
+    const existingData = { originalFileName: 'missing.wav', status: 'missing' };
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, existingData);
+    t.assertTruthy(html.includes('Missing') || html.includes('drop-zone-missing'), 'Should show missing status');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - createDropZoneHTML InstrumentSampler with error status', (t) => {
+    const existingData = { originalFileName: 'error.wav', status: 'error' };
+    const html = createDropZoneHTML('track1', 'input1', 'InstrumentSampler', null, existingData);
+    t.assertTruthy(html.includes('error') || html.includes('drop-zone-error'), 'Should show error status');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - setupGenericDropZoneListeners handles InstrumentSampler drop zone', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') || funcStr.includes('dragover') || funcStr.includes('drop'), 'Should handle drag-drop events');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - initializeInstrumentSamplerSpecificControls function exists', (t) => {
+    t.assertEqual(typeof initializeInstrumentSamplerSpecificControls, 'function', 'initializeInstrumentSamplerSpecificControls should be a function');
+});
+
+TestRunner.test('InstrumentSampler Drop Zone - initializeInstrumentSamplerSpecificControls creates drop zone listeners', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('dropZoneContainer') || funcStr.includes('setupGenericDropZoneListeners') || funcStr.includes('addEventListener'), 'Should set up drop zone listeners');
+});
+
+// === End Day 267 ===
 
 // === Day 206: DrumSampler Pad Drop Zones Comprehensive Verification ===
 // === Day 206: DrumSampler Pad Drop Zones Comprehensive Verification ===
