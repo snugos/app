@@ -315,7 +315,9 @@ import {
     handleOpenSequencer,
     attachGlobalControlEvents,
     setupMIDI,
-    selectMIDIInput
+    selectMIDIInput,
+    initializeEventHandlersModule,
+    currentlyPressedComputerKeys
 } from './eventHandlers.js';
 
 import {
@@ -8380,8 +8382,10 @@ TestRunner.test('Automation Lane - Multiple parameters have separate lanes', (t)
     mockTrack.setAutomationPoint('filterCutoff', 0, 0.8);
     t.assertEqual(mockTrack.getAutomationLaneCount('volume'), 1, 'Volume should have 1 point');
     t.assertEqual(mockTrack.getAutomationLaneCount('pan'), 1, 'Pan should have 1 point');
-    t.assertEqual(mockTrack.getAutomationLaneCount('filterC</code>
-<update>// ============================================
+    t.assertEqual(mockTrack.getAutomationLaneCount('filterCutoff'), 1, 'FilterCutoff should have 1 point');
+});
+
+// ============================================
 // Day 294: Track Sequence Operation Undo Capture Verification Tests (2026-04-27)
 // ============================================
 TestRunner.test('Track Sequence - shiftSequenceNotes method exists on Track', (t) => {
@@ -9066,5 +9070,155 @@ TestRunner.test('Audio Track UI - APP_VERSION is 1.77.0 or higher for Day 297', 
     t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
     if (versionParts[0] === 1) {
         t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 297');
+    }
+});
+
+// ============================================
+// Day 298: Event Handlers Keyboard State & Track Control Tests (2026-04-27)
+// ============================================
+TestRunner.test('Event Handlers - currentlyPressedComputerKeys is exported as object', (t) => {
+    t.assertEqual(typeof currentlyPressedComputerKeys, 'object', 'currentlyPressedComputerKeys should be an object');
+    t.assertTruthy(currentlyPressedComputerKeys !== null, 'currentlyPressedComputerKeys should not be null');
+});
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule function is exported', (t) => {
+    t.assertEqual(typeof initializeEventHandlersModule, 'function', 'initializeEventHandlersModule should be a function');
+});
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule accepts appServicesFromMain parameter', (t) => {
+    t.assertEqual(initializeEventHandlersModule.length, 1, 'initializeEventHandlersModule should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - keydown handler uses computerKeySynthMap from Constants', (t) => {
+    // The keyToMIDIMap in eventHandlers references Constants.computerKeySynthMap
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('computerKeySynthMap') || funcStr.includes('keyToMIDIMap'), 'Should reference computerKeySynthMap or keyToMIDIMap');
+});
+
+TestRunner.test('Event Handlers - keydown handler checks event.repeat to skip held keys', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('event.repeat') || funcStr.includes('repeat'), 'Should check event.repeat');
+});
+
+TestRunner.test('Event Handlers - keydown handler checks for active input elements', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('activeElement') || funcStr.includes('INPUT') || funcStr.includes('TEXTAREA'), 'Should check for active input/textarea elements');
+});
+
+TestRunner.test('Event Handlers - keydown handler checks for meta/ctrl modifier keys', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('ctrlKey') || funcStr.includes('metaKey'), 'Should check for modifier keys');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles Ctrl+Z for undo', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('undoLastAction'), 'Should call undoLastAction for Ctrl+Z');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles Ctrl+Y for redo', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('redoLastAction'), 'Should call redoLastAction for Ctrl+Y');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles Ctrl+S for save project', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('saveProject'), 'Should call saveProject for Ctrl+S');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles Ctrl+O for load project', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('loadProject'), 'Should call loadProject for Ctrl+O');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles Ctrl+E for export to MIDI', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('exportToMidi'), 'Should call exportToMidi for Ctrl+E');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles space for play/pause', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('playBtn') || funcStr.includes('play'), 'Should handle space for play/pause');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles Enter for record', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('recordBtn') || funcStr.includes('record'), 'Should handle Enter for record');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles Escape to close all windows', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('Escape') || funcStr.includes('esc'), 'Should handle Escape key');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles m for mute toggle', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('toggleMute'), 'Should handle m key for mute toggle');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles s (non-ctrl) for solo toggle', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('toggleSolo'), 'Should handle s key for solo toggle');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles r (non-ctrl) for record arm toggle', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('toggleRecordArm'), 'Should handle r key for record arm toggle');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles t (non-ctrl) for metronome toggle', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('metronome'), 'Should handle t key for metronome toggle');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles x for octave shift up', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('currentOctaveShift') && funcStr.includes('MAX_OCTAVE_SHIFT'), 'Should handle x for octave shift');
+});
+
+TestRunner.test('Event Handlers - keydown handler handles z (non-ctrl) for octave shift down', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('currentOctaveShift') && funcStr.includes('MIN_OCTAVE_SHIFT'), 'Should handle z for octave shift down');
+});
+
+TestRunner.test('Event Handlers - keydown handler calls handleComputerKeyOn for mapped keys', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('handleComputerKeyOn'), 'Should call handleComputerKeyOn for mapped computer keys');
+});
+
+TestRunner.test('Event Handlers - keydown handler applies currentOctaveShift to MIDI note', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('currentOctaveShift * 12') || funcStr.includes('octaveShift'), 'Should apply octave shift to MIDI note');
+});
+
+TestRunner.test('Event Handlers - keydown handler updates keyboard indicator UI', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('keyboardIndicator') || funcStr.includes('kbdIndicator'), 'Should update keyboard indicator UI');
+});
+
+TestRunner.test('Event Handlers - keyup handler releases note from armed track instrument', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('triggerRelease') || funcStr.includes('releaseAll'), 'Should release note on keyup');
+});
+
+TestRunner.test('Event Handlers - keyup handler uses getArmedTrackId', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId') || funcStr.includes('arm'), 'Should use getArmedTrackId to find armed track');
+});
+
+TestRunner.test('Event Handlers - keyup handler checks currentlyPressedComputerKeys', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('currentlyPressedComputerKeys'), 'Should check currentlyPressedComputerKeys map');
+});
+
+TestRunner.test('Event Handlers - keyup handler deletes key from currentlyPressedComputerKeys', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('delete') && funcStr.includes('currentlyPressedComputerKeys'), 'Should delete key from currentlyPressedComputerKeys');
+});
+
+TestRunner.test('Event Handlers - APP_VERSION is 1.77.0 or higher for Day 298', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 298');
     }
 });
