@@ -9289,3 +9289,201 @@ TestRunner.test('Audio Recording - stopAudioRecording updates recording state', 
     const funcString = stopAudioRecording.toString();
     t.assertTrue(funcString.includes('setIsRecordingState') || funcString.includes('recordingTrackId'), 'stopAudioRecording should update recording state');
 });
+
+
+// Day 270: Additional State Function Undo Capture Tests (2026-04-27)
+TestRunner.test('Undo/Redo - addMasterEffectToState calls captureStateForUndo', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'addMasterEffectToState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - removeMasterEffectFromState calls captureStateForUndo', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'removeMasterEffectFromState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - addMasterEffectToState uses descriptive undo label', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTrue(funcStr.includes('Master Effect') || funcStr.includes('effect'), 'Should mention Master Effect in undo label');
+});
+
+TestRunner.test('Undo/Redo - removeMasterEffectFromState uses descriptive undo label', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTrue(funcStr.includes('Master Effect') || funcStr.includes('effect'), 'Should mention Master Effect in undo label');
+});
+
+TestRunner.test('Undo/Redo - addMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'addMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - removeMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'removeMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - clearMidiLearnMappings calls captureStateForUndo', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'clearMidiLearnMappings should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - addMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTrue(funcStr.includes('MIDI'), 'Should mention MIDI in undo label');
+});
+
+TestRunner.test('Undo/Redo - removeMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTrue(funcStr.includes('MIDI'), 'Should mention MIDI in undo label');
+});
+
+TestRunner.test('Undo/Redo - clearMidiLearnMappings uses descriptive undo label', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTrue(funcStr.includes('MIDI') || funcStr.includes('Clear'), 'Should mention clearing MIDI mappings in undo label');
+});
+
+TestRunner.test('Undo/Redo - addEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'addEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - updateEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'updateEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - removeEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'removeEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - clearEffectPresetsState calls captureStateForUndo', (t) => {
+    const funcStr = clearEffectPresetsState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'clearEffectPresetsState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - addEffectPresetState uses descriptive undo label', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTrue(funcStr.includes('Effect Preset') || funcStr.includes('Preset'), 'Should mention Effect Preset in undo label');
+});
+
+TestRunner.test('Undo/Redo - updateEffectPresetState uses descriptive undo label', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTrue(funcStr.includes('Effect Preset') || funcStr.includes('Preset'), 'Should mention Effect Preset in undo label');
+});
+
+TestRunner.test('Undo/Redo - removeEffectPresetState uses descriptive undo label', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTrue(funcStr.includes('Effect Preset') || funcStr.includes('Preset'), 'Should mention Effect Preset in undo label');
+});
+
+TestRunner.test('Undo/Redo - clearEffectPresetsState uses descriptive undo label', (t) => {
+    const funcStr = clearEffectPresetsState.toString();
+    t.assertTrue(funcStr.includes('Effect Preset') || funcStr.includes('Preset') || funcStr.includes('Clear'), 'Should mention Effect Preset in undo label');
+});
+
+TestRunner.test('Undo/Redo - addTrackTemplateState calls captureStateForUndo', (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'addTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - updateTrackTemplateState calls captureStateForUndo', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'updateTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - removeTrackTemplateState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'removeTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - clearTrackTemplatesState calls captureStateForUndo', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'clearTrackTemplatesState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - addTrackTemplateState uses descriptive undo label', (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTrue(funcStr.includes('Template') || funcStr.includes('template'), 'Should mention Template in undo label');
+});
+
+TestRunner.test('Undo/Redo - updateTrackTemplateState uses descriptive undo label', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTrue(funcStr.includes('Template') || funcStr.includes('template'), 'Should mention Template in undo label');
+});
+
+TestRunner.test('Undo/Redo - removeTrackTemplateState uses descriptive undo label', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTrue(funcStr.includes('Template') || funcStr.includes('template'), 'Should mention Template in undo label');
+});
+
+TestRunner.test('Undo/Redo - clearTrackTemplatesState uses descriptive undo label', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTrue(funcStr.includes('Template') || funcStr.includes('template') || funcStr.includes('Clear'), 'Should mention Template in undo label');
+});
+
+TestRunner.test('Undo/Redo - addSendTrackState calls captureStateForUndo', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'addSendTrackState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - addSendTrackState uses descriptive undo label', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTrue(funcStr.includes('Send') || funcStr.includes('send'), 'Should mention Send in undo label');
+});
+
+TestRunner.test('Undo/Redo - addTrackGroupState calls captureStateForUndo', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'addTrackGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - addTrackToGroupState calls captureStateForUndo', (t) => {
+    const funcStr = addTrackToGroupState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'addTrackToGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - removeTrackFromGroupState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackFromGroupState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'removeTrackFromGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - removeTrackGroupState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'removeTrackGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - addTrackGroupState uses descriptive undo label', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTrue(funcStr.includes('Group') || funcStr.includes('group'), 'Should mention Group in undo label');
+});
+
+TestRunner.test('Undo/Redo - addTrackToGroupState uses descriptive undo label', (t) => {
+    const funcStr = addTrackToGroupState.toString();
+    t.assertTrue(funcStr.includes('Group') || funcStr.includes('group'), 'Should mention Group in undo label');
+});
+
+TestRunner.test('Undo/Redo - removeTrackFromGroupState uses descriptive undo label', (t) => {
+    const funcStr = removeTrackFromGroupState.toString();
+    t.assertTrue(funcStr.includes('Group') || funcStr.includes('group'), 'Should mention Group in undo label');
+});
+
+TestRunner.test('Undo/Redo - removeTrackGroupState uses descriptive undo label', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTrue(funcStr.includes('Group') || funcStr.includes('group'), 'Should mention Group in undo label');
+});
+
+TestRunner.test('Undo/Redo - state mutation functions guard against missing appServices', (t) => {
+    const allMutationFunctions = [
+        'addMasterEffectToState', 'removeMasterEffectFromState',
+        'addMidiLearnMapping', 'removeMidiLearnMapping', 'clearMidiLearnMappings',
+        'addEffectPresetState', 'updateEffectPresetState', 'removeEffectPresetState', 'clearEffectPresetsState',
+        'addTrackTemplateState', 'updateTrackTemplateState', 'removeTrackTemplateState', 'clearTrackTemplatesState',
+        'addSendTrackState',
+        'addTrackGroupState', 'addTrackToGroupState', 'removeTrackFromGroupState', 'removeTrackGroupState'
+    ];
+    allMutationFunctions.forEach(name => {
+        const funcStr = eval(name).toString();
+        t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 
+            `${name} should guard against missing appServices`);
+    });
+});

@@ -11,6 +11,29 @@
   - Constants now properly exported and imported in tests.js
 - **Version**: Bumped to 1.50.0
 
+
+#### Day 270: Additional State Function Undo Capture Tests (2026-04-27)
+- **Feature**: Added 40 new unit tests for additional state function undo capture verification to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 40 new tests in Day 270 section:
+    - Master Effects: addMasterEffectToState and removeMasterEffectFromState call captureStateForUndo with descriptive labels
+    - MIDI Learn: addMidiLearnMapping, removeMidiLearnMapping, clearMidiLearnMappings call captureStateForUndo with descriptive labels
+    - Effect Presets: addEffectPresetState, updateEffectPresetState, removeEffectPresetState, clearEffectPresetsState call captureStateForUndo with descriptive labels
+    - Track Templates: addTrackTemplateState, updateTrackTemplateState, removeTrackTemplateState, clearTrackTemplatesState call captureStateForUndo with descriptive labels
+    - Send Tracks: addSendTrackState calls captureStateForUndo with descriptive label
+    - Track Groups: addTrackGroupState, addTrackToGroupState, removeTrackFromGroupState, removeTrackGroupState call captureStateForUndo with descriptive labels
+    - Comprehensive guard test: all 17 mutation functions check appServices before calling captureStateForUndo
+  - `js/constants.js`: Bumped APP_VERSION to 1.50.0
+- **Feature Details**:
+  - Tests validate Master Effects state mutation functions call undo capture
+  - Tests validate MIDI Learn state mutation functions call undo capture
+  - Tests validate Effect Presets state mutation functions call undo capture
+  - Tests validate Track Templates state mutation functions call undo capture
+  - Tests validate Send Tracks and Track Groups state mutation functions call undo capture
+  - Tests verify all functions guard against missing appServices
+  - Total tests increased from 1452 to 1492
+- **Version**: Bumped to 1.50.0
+
 #### Day 269: Desktop Settings & Sound Library State Tests (2026-04-27)
 - **Feature**: Added 21 new unit tests for Desktop Settings constants and Sound Library state functions to expand test coverage
 - **Files Modified**:

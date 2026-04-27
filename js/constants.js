@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.50.0'; // Day 270: Monitoring Volume Constants Fix (2026-04-27)
+export const APP_VERSION = '1.50.0'; // Day 270: Additional State Function Undo Capture Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
