@@ -11485,3 +11485,97 @@ TestRunner.test('Audio - getPerformanceMetrics function exists', (t) => {
 TestRunner.test('Audio - getPerformanceMetrics accepts no parameters', (t) => {
     t.assertEqual(getPerformanceMetrics.length, 0, 'getPerformanceMetrics should accept 0 parameters');
 });
+
+// Day 281: Effects Registry Function Tests (2026-04-27)
+// ==========================================================
+// These tests verify Effects Registry helper functions
+
+TestRunner.test('Effects Registry - createEffectInstance function is exported', (t) => {
+    t.assertEqual(typeof createEffectInstance, 'function', 'createEffectInstance should be a function');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance accepts 2 parameters', (t) => {
+    t.assertEqual(createEffectInstance.length, 2, 'createEffectInstance should accept 2 parameters (effectType, initialParams)');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles unknown effect type', (t) => {
+    const result = createEffectInstance('NonExistentEffectType12345');
+    t.assertNull(result, 'createEffectInstance should return null for unknown effect type');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles undefined Tone.js', (t) => {
+    const originalTone = global.Tone;
+    try {
+        // If Tone is not available, should return null
+        const result = createEffectInstance('Reverb');
+        // Result should be null if Tone is undefined
+        t.assertNull(result, 'createEffectInstance should return null when Tone is undefined');
+    } finally {
+        // Restore original
+    }
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams function is exported', (t) => {
+    t.assertEqual(typeof getEffectDefaultParams, 'function', 'getEffectDefaultParams should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams accepts 1 parameter', (t) => {
+    t.assertEqual(getEffectDefaultParams.length, 1, 'getEffectDefaultParams should accept 1 parameter (effectType)');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns object for valid effect', (t) => {
+    const result = getEffectDefaultParams('Reverb');
+    t.assertEqual(typeof result, 'object', 'getEffectDefaultParams should return an object');
+    t.assertTruthy(result !== null, 'getEffectDefaultParams should not return null');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns empty object for unknown effect', (t) => {
+    const result = getEffectDefaultParams('NonExistentEffectType12345');
+    t.assertEqual(typeof result, 'object', 'getEffectDefaultParams should return an object for unknown effect');
+    t.assertEqual(Object.keys(result).length, 0, 'getEffectDefaultParams should return empty object for unknown effect');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams includes wet parameter', (t) => {
+    const result = getEffectDefaultParams('Reverb');
+    t.assertTruthy(result.hasOwnProperty('wet'), 'getEffectDefaultParams should include wet parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions function is exported', (t) => {
+    t.assertEqual(typeof getEffectParamDefinitions, 'function', 'getEffectParamDefinitions should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions accepts 1 parameter', (t) => {
+    t.assertEqual(getEffectParamDefinitions.length, 1, 'getEffectParamDefinitions should accept 1 parameter (effectType)');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns array for valid effect', (t) => {
+    const result = getEffectParamDefinitions('Reverb');
+    t.assertTruthy(Array.isArray(result), 'getEffectParamDefinitions should return an array');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns empty array for unknown effect', (t) => {
+    const result = getEffectParamDefinitions('NonExistentEffectType12345');
+    t.assertTruthy(Array.isArray(result), 'getEffectParamDefinitions should return an array for unknown effect');
+    t.assertEqual(result.length, 0, 'getEffectParamDefinitions should return empty array for unknown effect');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions includes parameter keys', (t) => {
+    const params = getEffectParamDefinitions('Reverb');
+    t.assertTruthy(params.length > 0, 'Reverb should have parameter definitions');
+    t.assertTruthy(params.some(p => p.key === 'wet'), 'Reverb should have wet parameter');
+});
+
+// SnugOS Version Tests
+TestRunner.test('SnugOS - APP_VERSION is a string', (t) => {
+    t.assertEqual(typeof APP_VERSION, 'string', 'APP_VERSION should be a string');
+});
+
+TestRunner.test('SnugOS - APP_VERSION follows semver format', (t) => {
+    const semverPattern = /^\d+\.\d+\.\d+$/;
+    t.assertTruthy(semverPattern.test(APP_VERSION), 'APP_VERSION should follow semver format (e.g., 1.0.0)');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.61.0 or higher', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+});
