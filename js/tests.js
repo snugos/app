@@ -10329,3 +10329,71 @@ TestRunner.test('SnugWindow - focus updates element zIndex style', (t) => {
     const funcStr = SnugWindow.prototype.focus.toString();
     t.assertTruthy(funcStr.includes('style.zIndex') || funcStr.includes('zIndex'), 'focus should update zIndex');
 });
+
+// === Day 276: Playback Mode State Function Tests (2026-04-27) ===
+
+TestRunner.test('Playback Mode - setPlaybackModeState is a function', (t) => {
+    t.assertEqual(typeof setPlaybackModeState, 'function', 'setPlaybackModeState should be a function');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState accepts 1 parameter', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'setPlaybackModeState should accept 1 parameter');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setPlaybackModeState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Set Playback Mode'), 'setPlaybackModeState should use descriptive undo label');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState guards against missing appServices', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setPlaybackModeState should check appServices before calling captureStateForUndo');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState validates mode values', (t) => {
+    const original = getPlaybackModeState();
+    setPlaybackModeState('sequencer');
+    t.assertEqual(getPlaybackModeState(), 'sequencer', 'setPlaybackModeState should accept sequencer mode');
+    setPlaybackModeState('timeline');
+    t.assertEqual(getPlaybackModeState(), 'timeline', 'setPlaybackModeState should accept timeline mode');
+    setPlaybackModeState(original);
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState ignores invalid mode values', (t) => {
+    const original = getPlaybackModeState();
+    setPlaybackModeState('invalid');
+    t.assertEqual(getPlaybackModeState(), original, 'setPlaybackModeState should ignore invalid mode values');
+    setPlaybackModeState('sequencer');
+    setPlaybackModeState('invalid');
+    t.assertEqual(getPlaybackModeState(), 'sequencer', 'setPlaybackModeState should not change state for invalid mode');
+    setPlaybackModeState(original);
+});
+
+TestRunner.test('Playback Mode - globalPlaybackMode tracks state', (t) => {
+    const original = getPlaybackModeState();
+    setPlaybackModeState('timeline');
+    t.assertEqual(getPlaybackModeState(), 'timeline', 'globalPlaybackMode should update to timeline');
+    setPlaybackModeState('sequencer');
+    t.assertEqual(getPlaybackModeState(), 'sequencer', 'globalPlaybackMode should update to sequencer');
+    setPlaybackModeState(original);
+});
+
+TestRunner.test('Playback Mode - onPlaybackModeChange is a function', (t) => {
+    t.assertEqual(typeof onPlaybackModeChange, 'function', 'onPlaybackModeChange should be a function');
+});
+
+TestRunner.test('Playback Mode - onPlaybackModeChange accepts 1 parameter', (t) => {
+    const funcStr = onPlaybackModeChange.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match ? match[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'onPlaybackModeChange should accept 1 parameter');
+});
+
+TestRunner.test('Playback Mode - getPlaybackModeState returns string value', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTruthy(mode === 'sequencer' || mode === 'timeline', 'Playback mode should be sequencer or timeline');
+});
