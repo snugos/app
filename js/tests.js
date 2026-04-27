@@ -12051,3 +12051,72 @@ TestRunner.test('SnugOS - APP_VERSION is 1.66.0 or higher for Day 285', (t) => {
         t.assertTruthy(versionParts[1] >= 66, 'Minor version should be >= 66 for Day 285');
     }
 });
+
+// ============================================
+// Day 285: Additional UI Function Instance Tests
+// ============================================
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary function is exported', (t) => {
+    t.assertEqual(typeof updateSoundBrowserDisplayForLibrary, 'function', 'updateSoundBrowserDisplayForLibrary should be a function');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary accepts 1-3 parameters', (t) => {
+    t.assertTruthy(updateSoundBrowserDisplayForLibrary.length >= 1 && updateSoundBrowserDisplayForLibrary.length <= 3, 'updateSoundBrowserDisplayForLibrary should accept 1-3 parameters');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references libraryName parameter', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName'), 'updateSoundBrowserDisplayForLibrary should reference libraryName');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory function is exported', (t) => {
+    t.assertEqual(typeof renderSoundBrowserDirectory, 'function', 'renderSoundBrowserDirectory should be a function');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory accepts 2 parameters', (t) => {
+    t.assertEqual(renderSoundBrowserDirectory.length, 2, 'renderSoundBrowserDirectory should accept 2 parameters');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory references pathArray parameter', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('pathArray'), 'renderSoundBrowserDirectory should reference pathArray');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow function is exported', (t) => {
+    t.assertEqual(typeof openAudioClipEditorWindow, 'function', 'openAudioClipEditorWindow should be a function');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow accepts 3 parameters', (t) => {
+    t.assertEqual(openAudioClipEditorWindow.length, 3, 'openAudioClipEditorWindow should accept 3 parameters (trackId, clipId, savedState)');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow references trackId parameter', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId') || funcStr.includes('track'), 'openAudioClipEditorWindow should reference trackId');
+});
+
+TestRunner.test('UI - updateDrumPadControlsUI function is exported', (t) => {
+    t.assertEqual(typeof updateDrumPadControlsUI, 'function', 'updateDrumPadControlsUI should be a function');
+});
+
+TestRunner.test('UI - updateDrumPadControlsUI accepts 1 parameter', (t) => {
+    t.assertEqual(updateDrumPadControlsUI.length, 1, 'updateDrumPadControlsUI should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - updateDrumPadControlsUI references track parameter', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('track'), 'updateDrumPadControlsUI should reference track');
+});
+
+TestRunner.test('UI - updateDrumPadControlsUI calls setupGenericDropZoneListeners', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('setupGenericDropZoneListeners'), 'updateDrumPadControlsUI should call setupGenericDropZoneListeners');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.66.0 or higher for Day 285', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 66, 'Minor version should be >= 66 for Day 285');
+    }
+});
