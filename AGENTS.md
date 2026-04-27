@@ -1,4 +1,24 @@
 #### Day 272: Sound Library & Preview State Undo Capture Tests (2026-04-27)
+#### Day 274: Track Sequence Undo Capture Verification Tests (2026-04-27)
+- **Feature**: Added 34 new unit tests for Track sequence operation and instance method undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 34 new tests in Day 274 section:
+    - Sequence operations: shiftSequenceNotes, humanizeVelocity, arpeggiatePattern, quantizeSequence undo capture
+    - Sequence CRUD: createNewSequence, deleteSequence, renameSequence, duplicateSequence, setActiveSequence, doubleSequence undo capture
+    - Track instance methods: setVolume, setPan, setAutomationPoint, clearAutomationLane, setDrumSamplerPadVolume, setInstrumentSamplerRootNote, setSliceVolume
+    - Audio clip methods: setAudioClipName, setAudioClipGain, setAudioClipPlaybackRate, setAudioClipFadeIn, setAudioClipFadeOut, setAudioClipReverse, setAudioClipStartTime, setAudioClipCrossfade
+    - Note methods: setNoteLength, setNoteProbability undo capture verification
+    - _captureUndoState exists on all track types (Synth, DrumSampler, Sampler, Audio)
+  - `js/constants.js`: Bumped APP_VERSION to 1.55.0
+- **Feature Details**:
+  - Tests verify shiftSequenceNotes, arpeggiatePattern, quantizeSequence call _captureUndoState for undo support
+  - Tests verify humanizeVelocity does NOT call _captureUndoState (not undoable random operation)
+  - Tests verify all Track instance mutation methods call _captureUndoState with descriptive labels
+  - Tests verify _captureUndoState method exists on all track types
+  - Total tests increased from 1594 to 1628
+- **Version**: Bumped to 1.55.0
+
+
 - **Feature**: Added 12 new unit tests for Sound Library and Preview Player state mutation functions to expand test coverage
 - **Files Modified**:
   - `js/tests.js`: Added 12 new tests in Day 272 section:
