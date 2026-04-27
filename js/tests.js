@@ -11698,3 +11698,144 @@ TestRunner.test('SnugOS - APP_VERSION is 1.63.0 or higher', (t) => {
         t.assertTruthy(versionParts[1] >= 63, 'Minor version should be >= 63 for Day 282');
     }
 });
+
+// Day 283: Additional appServices UI Update Function Tests (2026-04-27)
+// =====================================================================
+// These tests verify additional appServices UI update functions
+
+TestRunner.test('appServices - updateTrackMeterUI is a function', (t) => {
+    t.assertEqual(typeof appServices.updateTrackMeterUI, 'function', 'updateTrackMeterUI should be a function');
+});
+
+TestRunner.test('appServices - updateTrackMeterUI accepts 3 parameters (trackId, level, isClipping)', (t) => {
+    t.assertEqual(appServices.updateTrackMeterUI.length, 3, 'updateTrackMeterUI should accept 3 parameters');
+});
+
+TestRunner.test('appServices - updateTrackMeterUI handles trackId parameter', (t) => {
+    const funcStr = appServices.updateTrackMeterUI.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'updateTrackMeterUI should reference trackId');
+});
+
+TestRunner.test('appServices - updateMasterEffectsRackUI is a function', (t) => {
+    t.assertEqual(typeof appServices.updateMasterEffectsRackUI, 'function', 'updateMasterEffectsRackUI should be a function');
+});
+
+TestRunner.test('appServices - updateMasterEffectsRackUI accepts 0 parameters', (t) => {
+    t.assertEqual(appServices.updateMasterEffectsRackUI.length, 0, 'updateMasterEffectsRackUI should accept 0 parameters');
+});
+
+TestRunner.test('appServices - updateMasterEffectsRackUI references getWindowByIdState', (t) => {
+    const funcStr = appServices.updateMasterEffectsRackUI.toString();
+    t.assertTruthy(funcStr.includes('getWindowByIdState'), 'updateMasterEffectsRackUI should use getWindowByIdState');
+});
+
+TestRunner.test('appServices - updateMidiLearnMappingsUI is a function', (t) => {
+    t.assertEqual(typeof appServices.updateMidiLearnMappingsUI, 'function', 'updateMidiLearnMappingsUI should be a function');
+});
+
+TestRunner.test('appServices - updateMidiLearnMappingsUI accepts 0 parameters', (t) => {
+    t.assertEqual(appServices.updateMidiLearnMappingsUI.length, 0, 'updateMidiLearnMappingsUI should accept 0 parameters');
+});
+
+TestRunner.test('appServices - updateMidiLearnMappingsUI references updateMidiLearnMappingsList', (t) => {
+    const funcStr = appServices.updateMidiLearnMappingsUI.toString();
+    t.assertTruthy(funcStr.includes('updateMidiLearnMappingsList'), 'updateMidiLearnMappingsUI should call updateMidiLearnMappingsList');
+});
+
+TestRunner.test('appServices - updateUndoRedoButtonsUI is a function', (t) => {
+    t.assertEqual(typeof appServices.updateUndoRedoButtonsUI, 'function', 'updateUndoRedoButtonsUI should be a function');
+});
+
+TestRunner.test('appServices - updateUndoRedoButtonsUI accepts 2 parameters', (t) => {
+    t.assertEqual(appServices.updateUndoRedoButtonsUI.length, 2, 'updateUndoRedoButtonsUI should accept 2 parameters');
+});
+
+TestRunner.test('appServices - updateRecordButtonUI is a function', (t) => {
+    t.assertEqual(typeof appServices.updateRecordButtonUI, 'function', 'updateRecordButtonUI should be a function');
+});
+
+TestRunner.test('appServices - updateRecordButtonUI accepts 1 parameter', (t) => {
+    t.assertEqual(appServices.updateRecordButtonUI.length, 1, 'updateRecordButtonUI should accept 1 parameter');
+});
+
+TestRunner.test('appServices - closeAllWindows is a function', (t) => {
+    t.assertEqual(typeof appServices.closeAllWindows, 'function', 'closeAllWindows should be a function');
+});
+
+TestRunner.test('appServices - closeAllWindows accepts 1 parameter (isReconstructing)', (t) => {
+    t.assertEqual(appServices.closeAllWindows.length, 1, 'closeAllWindows should accept 1 parameter');
+});
+
+TestRunner.test('appServices - closeAllTrackWindows is a function', (t) => {
+    t.assertEqual(typeof appServices.closeAllTrackWindows, 'function', 'closeAllTrackWindows should be a function');
+});
+
+TestRunner.test('appServices - closeAllTrackWindows accepts 1 parameter (trackIdToClose)', (t) => {
+    t.assertEqual(appServices.closeAllTrackWindows.length, 1, 'closeAllTrackWindows should accept 1 parameter');
+});
+
+TestRunner.test('appServices - createWindow is a function', (t) => {
+    t.assertEqual(typeof appServices.createWindow, 'function', 'createWindow should be a function');
+});
+
+TestRunner.test('appServices - createWindow accepts 4 parameters (id, title, content, options)', (t) => {
+    t.assertEqual(appServices.createWindow.length, 4, 'createWindow should accept 4 parameters');
+});
+
+TestRunner.test('appServices - updateTrackUI is a function', (t) => {
+    t.assertEqual(typeof appServices.updateTrackUI, 'function', 'updateTrackUI should be a function');
+});
+
+TestRunner.test('appServices - updateTrackUI accepts 3 parameters (trackId, reason, detail)', (t) => {
+    t.assertEqual(appServices.updateTrackUI.length, 3, 'updateTrackUI should accept 3 parameters');
+});
+
+TestRunner.test('appServices - addMasterEffect is an async function', (t) => {
+    const funcStr = appServices.addMasterEffect.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'addMasterEffect should be async');
+});
+
+TestRunner.test('appServices - addMasterEffect accepts 1 parameter (effectType)', (t) => {
+    t.assertEqual(appServices.addMasterEffect.length, 1, 'addMasterEffect should accept 1 parameter');
+});
+
+TestRunner.test('appServices - removeMasterEffect is an async function', (t) => {
+    const funcStr = appServices.removeMasterEffect.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'removeMasterEffect should be async');
+});
+
+TestRunner.test('appServices - removeMasterEffect accepts 1 parameter (effectId)', (t) => {
+    t.assertEqual(appServices.removeMasterEffect.length, 1, 'removeMasterEffect should accept 1 parameter');
+});
+
+TestRunner.test('appServices - updateMasterEffectParam is a function', (t) => {
+    t.assertEqual(typeof appServices.updateMasterEffectParam, 'function', 'updateMasterEffectParam should be a function');
+});
+
+TestRunner.test('appServices - updateMasterEffectParam accepts 3 parameters (effectId, paramPath, value)', (t) => {
+    t.assertEqual(appServices.updateMasterEffectParam.length, 3, 'updateMasterEffectParam should accept 3 parameters');
+});
+
+TestRunner.test('appServices - reorderMasterEffect is a function', (t) => {
+    t.assertEqual(typeof appServices.reorderMasterEffect, 'function', 'reorderMasterEffect should be a function');
+});
+
+TestRunner.test('appServices - reorderMasterEffect accepts 2 parameters (effectId, newIndex)', (t) => {
+    t.assertEqual(appServices.reorderMasterEffect.length, 2, 'reorderMasterEffect should accept 2 parameters');
+});
+
+TestRunner.test('appServices - setActualMasterVolume is a function', (t) => {
+    t.assertEqual(typeof appServices.setActualMasterVolume, 'function', 'setActualMasterVolume should be a function');
+});
+
+TestRunner.test('appServices - setActualMasterVolume accepts 1 parameter (volumeValue)', (t) => {
+    t.assertEqual(appServices.setActualMasterVolume.length, 1, 'setActualMasterVolume should accept 1 parameter');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.64.0 or higher for Day 283', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 64, 'Minor version should be >= 64 for Day 283');
+    }
+});
