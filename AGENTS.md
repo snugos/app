@@ -3949,3 +3949,39 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify all functions guard against missing appServices.captureStateForUndo
   - Total tests increased from 1633 to 1649
 - **Version**: Bumped to 1.58.0
+
+#### Day 280: Remaining Audio Module Function Tests (2026-04-27)
+- **Feature**: Added 90 new unit tests for remaining audio module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added imports for 14 new audio functions and 90 new tests in Day 280 section:
+    - initializeAudioModule: function export, 1 parameter
+    - initAudioContextAndMasterMeter: async function, 1 parameter, references isUserInitiated
+    - getMasterEffectsBusInputNode: function export, 0 parameters
+    - getActualMasterGainNode: function export, 0 parameters
+    - rebuildMasterEffectChain: function export, 0 parameters
+    - updateMasterEffectParamInAudio: function export, 3 parameters, references paramPath
+    - reorderMasterEffectInAudio: function export, 2 parameters
+    - updateMeters: function export, 3 parameters, references globalMasterMeterBar and tracks
+    - getMimeTypeFromFilename: function export, 1 parameter, references filename
+    - clearAllMasterEffectNodes: function export, 0 parameters
+    - autoSliceSample: function export, 2 parameters, references trackId
+    - playSlicePreview: function export, 2-4 parameters, references sliceIndex
+    - playDrumSamplerPadPreview: function export, 2-4 parameters, references padIndex
+    - loadSampleFile: async function, 2-4 parameters
+    - loadDrumSamplerPadFile: async function, 3-4 parameters, references padIndex
+    - loadSoundFromBrowserToTarget: async function, 2-4 parameters, references soundData
+    - fetchSoundLibrary: async function, 1-3 parameters, references libraryName
+    - addMasterEffectToAudio: async function, 3 parameters
+    - removeMasterEffectFromAudio: async function, 1 parameter
+    - Send bus functions: createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted
+    - Recording functions: setRecordingInputGain
+    - Track send functions: connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel, getSendBusNodes, getTrackSendNodes
+    - Performance functions: panicAllAudio, startPerformanceMonitor, stopPerformanceMonitor, getPerformanceMetrics
+  - `js/constants.js`: Bumped APP_VERSION to 1.61.0
+- **Feature Details**:
+  - Tests validate remaining audio module functions are properly exported from audio.js
+  - Tests verify function parameter counts match expected APIs
+  - Tests verify async functions are properly marked as async
+  - Tests verify parameter references in complex functions
+  - Total tests increased from 1747 to 1837
+- **Version**: Bumped to 1.61.0
