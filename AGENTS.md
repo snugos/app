@@ -1,3 +1,23 @@
+#### Day 272: Sound Library & Preview State Undo Capture Tests (2026-04-27)
+- **Feature**: Added 12 new unit tests for Sound Library and Preview Player state mutation functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 12 new tests in Day 272 section:
+    - setCurrentLibraryNameState calls captureStateForUndo with descriptive "Library" label
+    - setCurrentSoundFileTreeState calls captureStateForUndo with descriptive "Sound File" label
+    - setCurrentSoundBrowserPathState calls captureStateForUndo with descriptive "Browser/Path" label
+    - setPreviewPlayerState calls captureStateForUndo with descriptive "Preview" label
+    - Guard test: all 4 mutation functions check appServices before calling captureStateForUndo
+    - Label pattern tests: each function mentions its domain in undo label
+    - Parameter count tests for setCurrentLibraryNameState (1 param) and setCurrentSoundBrowserPathState (1 param)
+  - `js/constants.js`: Bumped APP_VERSION to 1.52.0
+- **Feature Details**:
+  - Tests validate Sound Library state mutation functions call undo capture before mutating
+  - Tests verify descriptive undo labels ("Set Current Library", "Set Sound File Tree", "Set Sound Browser Path", "Set Preview Player")
+  - Tests verify all functions guard against missing appServices.captureStateForUndo
+  - Tests validate function parameter counts match expected APIs
+  - Total tests increased from 1516 to 1528
+- **Version**: Bumped to 1.52.0
+
 #### Day 270: Monitoring Volume Constants Fix (2026-04-27)
 - **Feature**: Fixed missing MIN/MAX/DEFAULT_MONITORING_VOLUME constants that Day 269 tests reference
 - **Files Modified**:

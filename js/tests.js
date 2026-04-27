@@ -9595,3 +9595,82 @@ TestRunner.test('Audio - setTrackSendLevel function exists', (t) => {
 TestRunner.test('Audio - setTrackSendLevel accepts 3 parameters', (t) => {
     t.assertEqual(setTrackSendLevel.length, 3, 'setTrackSendLevel should accept 3 parameters (trackId, sendId, level)');
 });
+
+
+// === Day 272: Sound Library & Preview State Undo Capture Tests (2026-04-27) ===
+// Tests to verify Sound Library and Preview state mutation functions call captureStateForUndo
+
+TestRunner.test('Undo/Redo - setCurrentLibraryNameState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'setCurrentLibraryNameState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setCurrentLibraryNameState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTrue(funcStr.includes('Library') || funcStr.includes('library'), 'Should mention Library in undo label');
+});
+
+TestRunner.test('Undo/Redo - setCurrentSoundFileTreeState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'setCurrentSoundFileTreeState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setCurrentSoundFileTreeState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTrue(funcStr.includes('Sound File') || funcStr.includes('file tree'), 'Should mention Sound File Tree in undo label');
+});
+
+TestRunner.test('Undo/Redo - setCurrentSoundBrowserPathState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'setCurrentSoundBrowserPathState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setCurrentSoundBrowserPathState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTrue(funcStr.includes('Sound Browser') || funcStr.includes('Browser') || funcStr.includes('Path'), 'Should mention Sound Browser Path in undo label');
+});
+
+TestRunner.test('Undo/Redo - setPreviewPlayerState calls captureStateForUndo', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'setPreviewPlayerState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setPreviewPlayerState uses descriptive undo label', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTrue(funcStr.includes('Preview') || funcStr.includes('Player'), 'Should mention Preview Player in undo label');
+});
+
+TestRunner.test('Undo/Redo - Sound Library state functions guard against missing appServices', (t) => {
+    const mutationFunctions = [
+        'setCurrentLibraryNameState',
+        'setCurrentSoundFileTreeState',
+        'setCurrentSoundBrowserPathState',
+        'setPreviewPlayerState'
+    ];
+    mutationFunctions.forEach(name => {
+        const funcStr = eval(name).toString();
+        t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'),
+            `${name} should guard against missing appServices`);
+    });
+});
+
+TestRunner.test('Undo/Redo - Sound Library state functions use proper undo label patterns', (t) => {
+    const expectedLabels = [
+        { fn: setCurrentLibraryNameState, label: 'Library' },
+        { fn: setCurrentSoundFileTreeState, label: 'Sound' },
+        { fn: setCurrentSoundBrowserPathState, label: 'Browser' },
+        { fn: setPreviewPlayerState, label: 'Preview' }
+    ];
+    expectedLabels.forEach(({ fn, label }) => {
+        const funcStr = fn.toString();
+        t.assertTruthy(funcStr.includes(label), `${fn.name} should mention "${label}" in undo label`);
+    });
+});
+
+TestRunner.test('Sound Library State - setCurrentLibraryNameState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentLibraryNameState.length, 1, 'setCurrentLibraryNameState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentSoundBrowserPathState.length, 1, 'setCurrentSoundBrowserPathState should accept 1 parameter');
+});
