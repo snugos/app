@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.79.0'; // Day 299: Transport Controls Extended Tests (2026-04-27)
+export const APP_VERSION = '1.80.0'; // Day 300: Synth & Sampler Inspector UI Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

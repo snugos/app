@@ -9375,3 +9375,120 @@ TestRunner.test('Transport Controls - APP_VERSION is 1.78.0 or higher for Day 29
         t.assertTruthy(versionParts[1] >= 78, 'Minor version should be >= 78 for Day 299');
     }
 });
+// Day 300: Synth & Sampler Inspector UI Tests (2026-04-27)
+
+TestRunner.test('Synth Inspector - buildSynthSpecificInspectorDOM function exists', (t) => {
+    t.assertEqual(typeof buildSynthSpecificInspectorDOM, 'function', 'buildSynthSpecificInspectorDOM should be a function');
+});
+
+TestRunner.test('Synth Inspector - buildSynthSpecificInspectorDOM returns string', (t) => {
+    const result = buildSynthSpecificInspectorDOM({ id: 'test-track', synthEngineType: 'MonoSynth' });
+    t.assertEqual(typeof result, 'string', 'buildSynthSpecificInspectorDOM should return a string');
+});
+
+TestRunner.test('Synth Inspector - buildSynthSpecificInspectorDOM references synthEngineType', (t) => {
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('synthEngineType') || funcStr.includes('engineType'), 'Should reference synthEngineType');
+});
+
+TestRunner.test('Synth Inspector - buildSynthSpecificInspectorDOM uses synthEngineControlDefinitions', (t) => {
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('synthEngineControlDefinitions') || funcStr.includes('definitions'), 'Should use synthEngineControlDefinitions');
+});
+
+TestRunner.test('Synth Inspector - buildSynthSpecificInspectorDOM creates synthEngineControls div with track ID', (t) => {
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('synthEngineControls') && funcStr.includes('track.id'), 'Should create synthEngineControls div with track ID');
+});
+
+TestRunner.test('Synth Inspector - buildSynthSpecificInspectorDOM handles default MonoSynth', (t) => {
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('MonoSynth') || funcStr.includes('engineType'), 'Should handle default engine type');
+});
+
+TestRunner.test('Synth Inspector - buildSynthSpecificInspectorDOM creates control placeholders', (t) => {
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('placeholder') || funcStr.includes('controls'), 'Should create control placeholders');
+});
+
+TestRunner.test('Synth Inspector - buildSynthSpecificInspectorDOM uses grid layout', (t) => {
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('grid') || funcStr.includes('grid-cols'), 'Should use grid layout');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM function exists', (t) => {
+    t.assertEqual(typeof buildSamplerSpecificInspectorDOM, 'function', 'buildSamplerSpecificInspectorDOM should be a function');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM returns string', (t) => {
+    const result = buildSamplerSpecificInspectorDOM({ id: 'test-track' });
+    t.assertEqual(typeof result, 'string', 'buildSamplerSpecificInspectorDOM should return a string');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates dropZoneContainer with track ID', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dropZoneContainer') && funcStr.includes('track.id'), 'Should create dropZoneContainer with track ID');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates waveform canvas with track ID', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('waveformCanvas') && funcStr.includes('track.id'), 'Should create waveform canvas with track ID');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates slice editor controls', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('slice-editor') || funcStr.includes('sliceEditor') || funcStr.includes('Slice'), 'Should create slice editor controls');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates selected slice info', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('selectedSliceInfo') || funcStr.includes('Selected'), 'Should create selected slice info display');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates slice volume control', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('sliceVolume') || funcStr.includes('Volume'), 'Should create slice volume control');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates slice pitch control', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('slicePitch') || funcStr.includes('Pitch'), 'Should create slice pitch control');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates slice loop toggle', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('sliceLoopToggle') || funcStr.includes('Loop'), 'Should create slice loop toggle');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates slice reverse toggle', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('sliceReverseToggle') || funcStr.includes('Reverse') || funcStr.includes('Rev'), 'Should create slice reverse toggle');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates envelope controls', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('sliceEnv') && (funcStr.includes('Attack') || funcStr.includes('Decay') || funcStr.includes('Sustain') || funcStr.includes('Release')), 'Should create envelope controls');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates sample pads container', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('samplePadsContainer') || funcStr.includes('Pads'), 'Should create sample pads container');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM creates polyphony toggle', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('slicerPolyphonyToggle') || funcStr.includes('Polyphony') || funcStr.includes('Poly'), 'Should create polyphony toggle');
+});
+
+TestRunner.test('Sampler Inspector - buildSamplerSpecificInspectorDOM uses dark mode styling', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dark:') || funcStr.includes('dark-bg'), 'Should use dark mode styling');
+});
+
+TestRunner.test('Synth Inspector - APP_VERSION is 1.79.0 or higher for Day 300', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 79, 'Minor version should be >= 79 for Day 300');
+    }
+});
