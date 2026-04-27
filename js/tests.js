@@ -8446,4 +8446,153 @@ TestRunner.test('SnugOS - APP_VERSION is 1.75.0 or higher for Day 294', (t) => {
     if (versionParts[0] === 1) {
         t.assertTruthy(versionParts[1] >= 75, 'Minor version should be >= 75 for Day 294');
     }
+});// ============================================
+// Day 295: InstrumentSampler Undo Capture Verification Tests (2026-04-27)
+// ============================================
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoop uses descriptive undo label', (t) => {
+    const funcStr = track.setInstrumentSamplerLoop.toString();
+    t.assertTruthy(funcStr.includes('Toggle loop'), 'setInstrumentSamplerLoop should use "Toggle loop" in undo label');
+    t.assertTruthy(funcStr.includes('on ${this.name}') || funcStr.includes('on ' + '$\\{this.name\\}') || funcStr.includes('on ' + track.name), 'setInstrumentSamplerLoop should reference track name in undo label');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerRootNote uses descriptive undo label', (t) => {
+    const funcStr = track.setInstrumentSamplerRootNote.toString();
+    t.assertTruthy(funcStr.includes('Set root note'), 'setInstrumentSamplerRootNote should use "Set root note" in undo label');
+    t.assertTruthy(funcStr.includes('on ${this.name}') || funcStr.includes('on ' + '$\\{this.name\\}') || funcStr.includes('on ' + track.name), 'setInstrumentSamplerRootNote should reference track name in undo label');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopStart uses descriptive undo label', (t) => {
+    const funcStr = track.setInstrumentSamplerLoopStart.toString();
+    t.assertTruthy(funcStr.includes('Set loop start'), 'setInstrumentSamplerLoopStart should use "Set loop start" in undo label');
+    t.assertTruthy(funcStr.includes('on ${this.name}') || funcStr.includes('on ' + '$\\{this.name\\}') || funcStr.includes('on ' + track.name), 'setInstrumentSamplerLoopStart should reference track name in undo label');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopEnd uses descriptive undo label', (t) => {
+    const funcStr = track.setInstrumentSamplerLoopEnd.toString();
+    t.assertTruthy(funcStr.includes('Set loop end'), 'setInstrumentSamplerLoopEnd should use "Set loop end" in undo label');
+    t.assertTruthy(funcStr.includes('on ${this.name}') || funcStr.includes('on ' + '$\\{this.name\\}') || funcStr.includes('on ' + track.name), 'setInstrumentSamplerLoopEnd should reference track name in undo label');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerEnv uses descriptive undo label', (t) => {
+    const funcStr = track.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('Set ${param} envelope') || funcStr.includes('Set envelope'), 'setInstrumentSamplerEnv should use envelope in undo label');
+    t.assertTruthy(funcStr.includes('on ${this.name}') || funcStr.includes('on ' + '$\\{this.name\\}') || funcStr.includes('on ' + track.name), 'setInstrumentSamplerEnv should reference track name in undo label');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoop calls _captureUndoState before setting loop', (t) => {
+    const funcStr = track.setInstrumentSamplerLoop.toString();
+    const lines = funcStr.split('\n');
+    const captureIndex = lines.findIndex(l => l.includes('_captureUndoState'));
+    const settingIndex = lines.findIndex(l => l.includes('loop ='));
+    t.assertTruthy(captureIndex >= 0 && captureIndex < settingIndex, '_captureUndoState should be called before setting loop property');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopStart calls _captureUndoState before setting loopStart', (t) => {
+    const funcStr = track.setInstrumentSamplerLoopStart.toString();
+    const lines = funcStr.split('\n');
+    const captureIndex = lines.findIndex(l => l.includes('_captureUndoState'));
+    const settingIndex = lines.findIndex(l => l.includes('loopStart ='));
+    t.assertTruthy(captureIndex >= 0 && captureIndex < settingIndex, '_captureUndoState should be called before setting loopStart property');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopEnd calls _captureUndoState before setting loopEnd', (t) => {
+    const funcStr = track.setInstrumentSamplerLoopEnd.toString();
+    const lines = funcStr.split('\n');
+    const captureIndex = lines.findIndex(l => l.includes('_captureUndoState'));
+    const settingIndex = lines.findIndex(l => l.includes('loopEnd ='));
+    t.assertTruthy(captureIndex >= 0 && captureIndex < settingIndex, '_captureUndoState should be called before setting loopEnd property');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerEnv calls _captureUndoState before setting envelope', (t) => {
+    const funcStr = track.setInstrumentSamplerEnv.toString();
+    const lines = funcStr.split('\n');
+    const captureIndex = lines.findIndex(l => l.includes('_captureUndoState'));
+    const settingIndex = lines.findIndex(l => l.includes('envelope['));
+    t.assertTruthy(captureIndex >= 0 && captureIndex < settingIndex, '_captureUndoState should be called before setting envelope property');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerRootNote calls _captureUndoState before setting rootNote', (t) => {
+    const funcStr = track.setInstrumentSamplerRootNote.toString();
+    const lines = funcStr.split('\n');
+    const captureIndex = lines.findIndex(l => l.includes('_captureUndoState'));
+    const settingIndex = lines.findIndex(l => l.includes('rootNote ='));
+    t.assertTruthy(captureIndex >= 0 && captureIndex < settingIndex, '_captureUndoState should be called before setting rootNote property');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoop checks instrumentSamplerSettings existence', (t) => {
+    const funcStr = track.setInstrumentSamplerLoop.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings'), 'setInstrumentSamplerLoop should check instrumentSamplerSettings existence');
+    t.assertTruthy(funcStr.includes('if') || funcStr.includes('&&'), 'setInstrumentSamplerLoop should have null/undefined check');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerRootNote checks instrumentSamplerSettings existence', (t) => {
+    const funcStr = track.setInstrumentSamplerRootNote.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings'), 'setInstrumentSamplerRootNote should check instrumentSamplerSettings existence');
+    t.assertTruthy(funcStr.includes('if') || funcStr.includes('&&'), 'setInstrumentSamplerRootNote should have null/undefined check');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerEnv checks instrumentSamplerSettings and envelope existence', (t) => {
+    const funcStr = track.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings'), 'setInstrumentSamplerEnv should check instrumentSamplerSettings');
+    t.assertTruthy(funcStr.includes('envelope'), 'setInstrumentSamplerEnv should check envelope existence');
+    t.assertTruthy(funcStr.includes('if') || funcStr.includes('&&'), 'setInstrumentSamplerEnv should have null checks');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopStart uses parseFloat for time value', (t) => {
+    const funcStr = track.setInstrumentSamplerLoopStart.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setInstrumentSamplerLoopStart should use parseFloat for time conversion');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopEnd uses parseFloat for time value', (t) => {
+    const funcStr = track.setInstrumentSamplerLoopEnd.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setInstrumentSamplerLoopEnd should use parseFloat for time conversion');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerEnv uses parseFloat for envelope value', (t) => {
+    const funcStr = track.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setInstrumentSamplerEnv should use parseFloat for value conversion');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoop converts loop to boolean', (t) => {
+    const funcStr = track.setInstrumentSamplerLoop.toString();
+    t.assertTruthy(funcStr.includes('!!loop') || funcStr.includes('Boolean(loop)'), 'setInstrumentSamplerLoop should convert loop to boolean using !! or Boolean()');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerEnv updates toneSampler when not disposed', (t) => {
+    const funcStr = track.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('toneSampler'), 'setInstrumentSamplerEnv should update toneSampler');
+    t.assertTruthy(funcStr.includes('disposed'), 'setInstrumentSamplerEnv should check if toneSampler is disposed');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoop updates toneSampler.loop when not disposed', (t) => {
+    const funcStr = track.setInstrumentSamplerLoop.toString();
+    t.assertTruthy(funcStr.includes('toneSampler'), 'setInstrumentSamplerLoop should update toneSampler.loop');
+    t.assertTruthy(funcStr.includes('disposed'), 'setInstrumentSamplerLoop should check if toneSampler is disposed');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopStart updates toneSampler.loopStart when not disposed', (t) => {
+    const funcStr = track.setInstrumentSamplerLoopStart.toString();
+    t.assertTruthy(funcStr.includes('toneSampler'), 'setInstrumentSamplerLoopStart should update toneSampler.loopStart');
+    t.assertTruthy(funcStr.includes('disposed'), 'setInstrumentSamplerLoopStart should check if toneSampler is disposed');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerLoopEnd updates toneSampler.loopEnd when not disposed', (t) => {
+    const funcStr = track.setInstrumentSamplerLoopEnd.toString();
+    t.assertTruthy(funcStr.includes('toneSampler'), 'setInstrumentSamplerLoopEnd should update toneSampler.loopEnd');
+    t.assertTruthy(funcStr.includes('disposed'), 'setInstrumentSamplerLoopEnd should check if toneSampler is disposed');
+});
+
+TestRunner.test('InstrumentSampler - setInstrumentSamplerRootNote calls setupToneSampler after setting rootNote', (t) => {
+    const funcStr = track.setInstrumentSamplerRootNote.toString();
+    const setupIndex = funcStr.split('\n').findIndex(l => l.includes('setupToneSampler'));
+    const settingIndex = funcStr.split('\n').findIndex(l => l.includes('rootNote ='));
+    t.assertTruthy(setupIndex > settingIndex, 'setupToneSampler should be called after setting rootNote');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.76.0 or higher for Day 295', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 76, 'Minor version should be >= 76 for Day 295');
+    }
 });
