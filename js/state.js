@@ -381,6 +381,41 @@ export function getMidiLearnMappingByIndex(index) {
 export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
 export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
 export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
+export function setCurrentLibraryNameState(libraryName) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Current Library`);
+    }
+    currentLibraryNameGlobal = libraryName;
+}
+
+export function getCurrentSoundFileTreeState() { return soundLibraryFileTreesGlobal[currentLibraryNameGlobal] || null; }
+export function setCurrentSoundFileTreeState(fileTree) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Sound File Tree`);
+    }
+    if (currentLibraryNameGlobal) {
+        soundLibraryFileTreesGlobal[currentLibraryNameGlobal] = fileTree;
+    }
+}
+
+export function getCurrentSoundBrowserPathState() { return currentSoundBrowserPathGlobal || '/'; }
+export function setCurrentSoundBrowserPathState(path) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Sound Browser Path`);
+    }
+    currentSoundBrowserPathGlobal = path || '/'; 
+}
+
+let currentSoundBrowserPathGlobal = '/'; // Default path
+let previewPlayerState = null; // Preview player state
+
+export function getPreviewPlayerState() { return previewPlayerState; }
+export function setPreviewPlayerState(player) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Preview Player`);
+    }
+    previewPlayerState = player;
+}
 
 export function getClipboardDataState() { return clipboardDataGlobal; }
 
