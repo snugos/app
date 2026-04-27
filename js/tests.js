@@ -9312,6 +9312,44 @@ TestRunner.test('Undo/Redo - removeMasterEffectFromState uses descriptive undo l
     t.assertTrue(funcStr.includes('Master Effect') || funcStr.includes('effect'), 'Should mention Master Effect in undo label');
 });
 
+TestRunner.test('Undo/Redo - updateMasterEffectParamInState calls captureStateForUndo', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'updateMasterEffectParamInState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - updateMasterEffectParamInState uses descriptive undo label', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTrue(funcStr.includes('Master Effect') || funcStr.includes('effect'), 'Should mention Master Effect in undo label');
+});
+
+TestRunner.test('Undo/Redo - reorderMasterEffectInState calls captureStateForUndo', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTrue(funcStr.includes('captureStateForUndo'), 'reorderMasterEffectInState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - reorderMasterEffectInState uses descriptive undo label', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTrue(funcStr.includes('Master Effect') || funcStr.includes('effect') || funcStr.includes('Reorder'), 'Should mention Master Effect or Reorder in undo label');
+});
+
+TestRunner.test('Undo/Redo - updateMasterEffectParamInState guards against missing appServices', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'updateMasterEffectParamInState should check for appServices');
+});
+
+TestRunner.test('Undo/Redo - reorderMasterEffectInState guards against missing appServices', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'reorderMasterEffectInState should check for appServices');
+});
+
+TestRunner.test('Undo/Redo - updateMasterEffectParamInState parameter count', (t) => {
+    t.assertEqual(updateMasterEffectParamInState.length, 3, 'updateMasterEffectParamInState should accept 3 parameters (effectId, paramPath, value)');
+});
+
+TestRunner.test('Undo/Redo - reorderMasterEffectInState parameter count', (t) => {
+    t.assertEqual(reorderMasterEffectInState.length, 2, 'reorderMasterEffectInState should accept 2 parameters (effectId, newIndex)');
+});
+
 TestRunner.test('Undo/Redo - addMidiLearnMapping calls captureStateForUndo', (t) => {
     const funcStr = addMidiLearnMapping.toString();
     t.assertTrue(funcStr.includes('captureStateForUndo'), 'addMidiLearnMapping should call captureStateForUndo');
