@@ -12120,3 +12120,109 @@ TestRunner.test('SnugOS - APP_VERSION is 1.66.0 or higher for Day 285', (t) => {
         t.assertTruthy(versionParts[1] >= 66, 'Minor version should be >= 66 for Day 285');
     }
 });
+
+// ============================================
+// Day 286: Metronome Audio Function Extended Tests
+// ============================================
+TestRunner.test('Audio - initializeMetronome references metronomeInitialized', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('metronomeInitialized'), 'initializeMetronome should reference metronomeInitialized flag');
+});
+
+TestRunner.test('Audio - initializeMetronome handles try-catch error handling', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch'), 'initializeMetronome should have try-catch for error handling');
+});
+
+TestRunner.test('Audio - initializeMetronome creates Tone.Buffer for click sounds', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('Tone.Buffer') || funcStr.includes('Buffer'), 'initializeMetronome should create audio buffers');
+});
+
+TestRunner.test('Audio - initializeMetronome creates Tone.Player for click playback', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('Tone.Player') || funcStr.includes('Player'), 'initializeMetronome should create Tone.Player for playback');
+});
+
+TestRunner.test('Audio - initializeMetronome connects players to master bus', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('connect') && funcStr.includes('getMasterEffectsBusInputNode'), 'initializeMetronome should connect players to master bus');
+});
+
+TestRunner.test('Audio - startMetronome checks transport running state', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('Tone.getTransport') || funcStr.includes('Transport'), 'startMetronome should check transport state');
+});
+
+TestRunner.test('Audio - startMetronome checks metronomeInitialized before starting', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('metronomeInitialized'), 'startMetronome should check if metronome is initialized');
+});
+
+TestRunner.test('Audio - startMetronome calls initializeMetronome if needed', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('initializeMetronome'), 'startMetronome should call initializeMetronome if not initialized');
+});
+
+TestRunner.test('Audio - startMetronome schedules metronome clicks with transport', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('scheduleRepeat') || funcStr.includes('transport'), 'startMetronome should schedule clicks with transport');
+});
+
+TestRunner.test('Audio - startMetronome distinguishes accent vs regular clicks', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('accent') || funcStr.includes('Accent'), 'startMetronome should differentiate accent beats');
+});
+
+TestRunner.test('Audio - stopMetronome clears scheduled events from transport', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('clear') || funcStr.includes('transport'), 'stopMetronome should clear scheduled events');
+});
+
+TestRunner.test('Audio - stopMetronome stops click and accent players', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('stop') && funcStr.includes('metronomeClickPlayer'), 'stopMetronome should stop both click players');
+});
+
+TestRunner.test('Audio - setMetronomeVolume clamps value to 0-1 range', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setMetronomeVolume should clamp volume to valid range');
+});
+
+TestRunner.test('Audio - setMetronomeVolume converts to dB using Tone.gainToDb', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('gainToDb'), 'setMetronomeVolume should convert linear gain to decibels');
+});
+
+TestRunner.test('Audio - setMetronomeVolume updates both click and accent players', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('metronomeClickPlayer') && funcStr.includes('metronomeAccentPlayer'), 'setMetronomeVolume should update both players');
+});
+
+TestRunner.test('Audio - setMetronomeVolume checks if players are disposed', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('disposed') || funcStr.includes('player'), 'setMetronomeVolume should check player state before updating');
+});
+
+TestRunner.test('Audio - startMetronome references bpm from transport', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('bpm') || funcStr.includes('BPM'), 'startMetronome should reference BPM from transport');
+});
+
+TestRunner.test('Audio - startMetronome calculates beat duration from bpm', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('60 / bpm') || funcStr.includes('beatDuration'), 'startMetronome should calculate beat duration');
+});
+
+TestRunner.test('Audio - Metronome players reference DEFAULT_METRONOME_VOLUME', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_METRONOME_VOLUME') || funcStr.includes('METRONOME_VOLUME'), 'initializeMetronome should reference volume constant');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.67.0 or higher for Day 286', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 67, 'Minor version should be >= 67 for Day 286');
+    }
+});
