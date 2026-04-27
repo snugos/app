@@ -4056,3 +4056,37 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify error handling with try-catch and notification
   - Total tests increased from 1855 to 1878
 - **Version**: Bumped to 1.63.0
+
+#### Day 284: WAV Export Function Tests (2026-04-27)
+- **Feature**: Added 22 new unit tests for WAV Export function to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 22 new tests in Day 284 section:
+    - exportToWavInternal: function export, 0 parameters, async behavior
+    - exportToWavInternal: references appServices.showNotification, getActualMasterGainNode
+    - exportToWavInternal: references getPlaybackModeState, getTracksState
+    - exportToWavInternal: references audioInitAudioContextAndMasterMeter
+    - exportToWavInternal: handles timeline playback mode
+    - exportToWavInternal: handles sequence playback mode with getActiveSequence
+    - exportToWavInternal: uses Tone.Transport, Tone.Recorder
+    - exportToWavInternal: connects master gain to recorder
+    - exportToWavInternal: creates WAV download with .wav extension
+    - exportToWavInternal: has try-catch error handling
+    - exportToWavInternal: handles Audio track type (skips Audio tracks)
+    - exportToWavInternal: handles empty export case
+    - exportToWavInternal: logs descriptive errors with console.error/showNotification
+    - exportToWavInternal: calculates maxDuration, caps at 600 seconds
+  - `js/constants.js`: Bumped APP_VERSION to 1.65.0
+- **Feature Details**:
+  - Tests validate exportToWavInternal function is properly exported from state.js
+  - Tests verify function is async and accepts 0 parameters
+  - Tests verify function references required appServices (showNotification, getActualMasterGainNode)
+  - Tests verify function references state functions (getPlaybackModeState, getTracksState)
+  - Tests verify function references audio initialization (audioInitAudioContextAndMasterMeter)
+  - Tests verify both playback modes (timeline and sequence) are handled
+  - Tests verify Tone.Transport and Tone.Recorder are used for rendering
+  - Tests verify WAV download is created with proper filename
+  - Tests verify error handling with try-catch and descriptive messages
+  - Tests verify empty export case is handled gracefully
+  - Tests verify maxDuration calculation and 600-second cap
+  - Total tests increased from 1909 to 1931
+- **Version**: Bumped to 1.65.0

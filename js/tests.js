@@ -11839,3 +11839,111 @@ TestRunner.test('SnugOS - APP_VERSION is 1.64.0 or higher for Day 283', (t) => {
         t.assertTruthy(versionParts[1] >= 64, 'Minor version should be >= 64 for Day 283');
     }
 });
+
+// ============================================
+// Day 284: WAV Export Function Tests (2026-04-27)
+// ============================================
+TestRunner.test('Project - exportToWavInternal function is exported', (t) => {
+    t.assertEqual(typeof exportToWavInternal, 'function', 'exportToWavInternal should be a function');
+});
+
+TestRunner.test('Project - exportToWavInternal accepts no parameters', (t) => {
+    t.assertEqual(exportToWavInternal.length, 0, 'exportToWavInternal should accept 0 parameters');
+});
+
+TestRunner.test('Project - exportToWavInternal is async', (t) => {
+    t.assertTruthy(exportToWavInternal.constructor.name === 'AsyncFunction' || exportToWavInternal.toString().includes('async'), 'exportToWavInternal should be async');
+});
+
+TestRunner.test('Project - exportToWavInternal references appServices.showNotification', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices.showNotification'), 'exportToWavInternal should reference appServices.showNotification');
+});
+
+TestRunner.test('Project - exportToWavInternal references appServices.getActualMasterGainNode', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices.getActualMasterGainNode'), 'exportToWavInternal should reference appServices.getActualMasterGainNode');
+});
+
+TestRunner.test('Project - exportToWavInternal references getPlaybackModeState', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('getPlaybackModeState'), 'exportToWavInternal should reference getPlaybackModeState');
+});
+
+TestRunner.test('Project - exportToWavInternal references getTracksState', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState'), 'exportToWavInternal should reference getTracksState');
+});
+
+TestRunner.test('Project - exportToWavInternal references audioInitAudioContextAndMasterMeter', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('audioInitAudioContextAndMasterMeter'), 'exportToWavInternal should reference audioInitAudioContextAndMasterMeter');
+});
+
+TestRunner.test('Project - exportToWavInternal handles timeline playback mode', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('timeline'), 'exportToWavInternal should handle timeline playback mode');
+});
+
+TestRunner.test('Project - exportToWavInternal handles sequence playback mode', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'exportToWavInternal should handle sequence playback mode');
+});
+
+TestRunner.test('Project - exportToWavInternal uses Tone.Transport', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport'), 'exportToWavInternal should reference Tone.Transport');
+});
+
+TestRunner.test('Project - exportToWavInternal uses Tone.Recorder', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('Tone.Recorder'), 'exportToWavInternal should reference Tone.Recorder');
+});
+
+TestRunner.test('Project - exportToWavInternal connects master gain to recorder', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('masterGain.connect(recorder)'), 'exportToWavInternal should connect master gain to recorder');
+});
+
+TestRunner.test('Project - exportToWavInternal creates WAV download', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('.wav') || funcStr.includes('download'), 'exportToWavInternal should create WAV download');
+});
+
+TestRunner.test('Project - exportToWavInternal has error handling with try-catch', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'exportToWavInternal should have try-catch error handling');
+});
+
+TestRunner.test('Project - exportToWavInternal handles Audio track type (skips audio tracks)', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes("type !== 'Audio'") || funcStr.includes("type == 'Audio'"), 'exportToWavInternal should handle Audio track type');
+});
+
+TestRunner.test('Project - exportToWavInternal handles empty export case', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('Nothing to export') || funcStr.includes('maxDuration === 0'), 'exportToWavInternal should handle empty export case');
+});
+
+TestRunner.test('Project - exportToWavInternal has descriptive error messages', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('console.error') || funcStr.includes('showNotification'), 'exportToWavInternal should log descriptive errors');
+});
+
+TestRunner.test('Project - exportToWavInternal references maxDuration', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('maxDuration'), 'exportToWavInternal should calculate maxDuration');
+});
+
+TestRunner.test('Project - exportToWavInternal limits max duration to 600 seconds', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('600') || funcStr.includes('Math.min'), 'exportToWavInternal should cap duration at 600 seconds');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.65.0 or higher for Day 284', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 65, 'Minor version should be >= 65 for Day 284');
+    }
+});

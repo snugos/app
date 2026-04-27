@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.64.0'; // Day 283: Additional appServices UI Update Function Tests (2026-04-27)
+export const APP_VERSION = '1.65.0'; // Day 284: WAV Export Function Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
