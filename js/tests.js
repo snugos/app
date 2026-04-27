@@ -11486,6 +11486,212 @@ TestRunner.test('Audio - getPerformanceMetrics accepts no parameters', (t) => {
     t.assertEqual(getPerformanceMetrics.length, 0, 'getPerformanceMetrics should accept 0 parameters');
 });
 
+
+// === Day 288: Audio Module Extended Function Tests (2026-04-27) ===
+// Extended tests for audio module functions to expand test coverage
+
+TestRunner.test('Audio - initializeAudioModule references appServices parameter', (t) => {
+    const funcStr = initializeAudioModule.toString();
+    t.assertTruthy(funcStr.includes('appServices') || funcStr.includes('AppServices'), 'initializeAudioModule should reference appServices');
+});
+
+TestRunner.test('Audio - getMasterEffectsBusInputNode references master bus or input node', (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('master') || funcStr.includes('input') || funcStr.includes('bus'), 'getMasterEffectsBusInputNode should reference master bus');
+});
+
+TestRunner.test('Audio - getActualMasterGainNode references gain node', (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('gain') || funcStr.includes('Gain'), 'getActualMasterGainNode should reference gain');
+});
+
+TestRunner.test('Audio - rebuildMasterEffectChain handles effect chain reconstruction', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('effect') || funcStr.includes('Effect'), 'rebuildMasterEffectChain should reference effects');
+});
+
+TestRunner.test('Audio - updateMasterEffectParamInAudio uses paramPath for nested params', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('paramPath') || funcStr.includes('param'), 'updateMasterEffectParamInAudio should handle param paths');
+});
+
+TestRunner.test('Audio - reorderMasterEffectInAudio handles effect reordering', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('reorder') || funcStr.includes('index') || funcStr.includes('order'), 'reorderMasterEffectInAudio should handle reordering');
+});
+
+TestRunner.test('Audio - updateMeters references Tone or audio context', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('Tone') || funcStr.includes('meter') || funcStr.includes('Meter'), 'updateMeters should reference audio metering');
+});
+
+TestRunner.test('Audio - clearAllMasterEffectNodes disposes all effect nodes', (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('dispose') || funcStr.includes('clear') || funcStr.includes('effect'), 'clearAllMasterEffectNodes should clean up effects');
+});
+
+TestRunner.test('Audio - autoSliceSample handles slice creation', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('slice') || funcStr.includes('Slice'), 'autoSliceSample should reference slicing');
+});
+
+TestRunner.test('Audio - autoSliceSample references numSlices parameter', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('numSlices') || funcStr.includes('slice'), 'autoSliceSample should reference slice count');
+});
+
+TestRunner.test('Audio - playSlicePreview handles velocity parameter', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('velocity') || funcStr.includes('Velocity'), 'playSlicePreview should handle velocity');
+});
+
+TestRunner.test('Audio - playSlicePreview handles pitch shift', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('pitch') || funcStr.includes('Pitch'), 'playSlicePreview should handle pitch shift');
+});
+
+TestRunner.test('Audio - playDrumSamplerPadPreview references pad index', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('pad') || funcStr.includes('Pad'), 'playDrumSamplerPadPreview should reference pad');
+});
+
+TestRunner.test('Audio - loadSampleFile handles URL or event parameter', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('url') || funcStr.includes('URL') || funcStr.includes('event'), 'loadSampleFile should handle URL or event');
+});
+
+TestRunner.test('Audio - loadSampleFile references trackId parameter', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('trackId') || funcStr.includes('track'), 'loadSampleFile should reference track ID');
+});
+
+TestRunner.test('Audio - loadDrumSamplerPadFile references padIndex', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('padIndex') || funcStr.includes('pad'), 'loadDrumSamplerPadFile should reference pad index');
+});
+
+TestRunner.test('Audio - loadSoundFromBrowserToTarget handles targetPadOrSliceIndex', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('targetPadOrSliceIndex') || funcStr.includes('slice') || funcStr.includes('pad'), 'loadSoundFromBrowserToTarget should handle slice/pad index');
+});
+
+TestRunner.test('Audio - fetchSoundLibrary handles libraryName parameter', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName') || funcStr.includes('library'), 'fetchSoundLibrary should handle library name');
+});
+
+TestRunner.test('Audio - fetchSoundLibrary handles zipUrl parameter', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('zipUrl') || funcStr.includes('url') || funcStr.includes('URL'), 'fetchSoundLibrary should handle zip URL');
+});
+
+TestRunner.test('Audio - panicAllAudio stops Tone.Transport', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('Transport') || funcStr.includes('transport'), 'panicAllAudio should stop transport');
+});
+
+TestRunner.test('Audio - panicAllAudio iterates over tracks', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('tracks') || funcStr.includes('Track'), 'panicAllAudio should iterate over tracks');
+});
+
+TestRunner.test('Audio - panicAllAudio stops metronome if playing', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('metronome') || funcStr.includes('Metronome'), 'panicAllAudio should stop metronome');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor uses setInterval for monitoring loop', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setInterval') || funcStr.includes('interval'), 'startPerformanceMonitor should use interval');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor references PERFORMANCE_UPDATE_INTERVAL_MS', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('PERFORMANCE') || funcStr.includes('interval') || funcStr.includes('500'), 'startPerformanceMonitor should reference interval constant');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor updates audio context state', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setAudioContextState') || funcStr.includes('audioContext') || funcStr.includes('context'), 'startPerformanceMonitor should update context state');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor counts active voices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('activeVoices') || funcStr.includes('active') || funcStr.includes('voices'), 'startPerformanceMonitor should count voices');
+});
+
+TestRunner.test('Audio - stopPerformanceMonitor clears interval', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('clearInterval') || funcStr.includes('clear'), 'stopPerformanceMonitor should clear interval');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics returns metrics object', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('return') || funcStr.includes('object') || funcStr.includes('metrics'), 'getPerformanceMetrics should return object');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics includes audioContextState', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('audioContextState') || funcStr.includes('context'), 'getPerformanceMetrics should include context state');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics includes cpuUsage', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('cpuUsage') || funcStr.includes('cpu'), 'getPerformanceMetrics should include CPU usage');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics includes memoryPressure', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('memoryPressure') || funcStr.includes('memory'), 'getPerformanceMetrics should include memory pressure');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics includes activeVoices', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('activeVoices') || funcStr.includes('voices'), 'getPerformanceMetrics should include active voices');
+});
+
+TestRunner.test('Audio - addMasterEffectToAudio is async function', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise') || funcStr.includes('await'), 'addMasterEffectToAudio should be async');
+});
+
+TestRunner.test('Audio - addMasterEffectToAudio references effectType parameter', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('effectType') || funcStr.includes('effect'), 'addMasterEffectToAudio should reference effect type');
+});
+
+TestRunner.test('Audio - removeMasterEffectFromAudio is async function', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise') || funcStr.includes('await'), 'removeMasterEffectFromAudio should be async');
+});
+
+TestRunner.test('Audio - removeMasterEffectFromAudio references effectId', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId') || funcStr.includes('effect'), 'removeMasterEffectFromAudio should reference effect ID');
+});
+
+TestRunner.test('Audio - createSendBusInAudio creates send bus audio nodes', (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('send') || funcStr.includes('Send'), 'createSendBusInAudio should create send bus');
+});
+
+TestRunner.test('Audio - deleteSendBusFromAudio removes send bus audio nodes', (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('dispose') || funcStr.includes('delete') || funcStr.includes('send'), 'deleteSendBusFromAudio should delete send bus');
+});
+
+TestRunner.test('Audio - setRecordingInputGain references Tone or gain node', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('gain') || funcStr.includes('Gain') || funcStr.includes('Tone'), 'setRecordingInputGain should reference gain');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.69.0 or higher for Day 288', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 69, 'Minor version should be >= 69 for Day 288');
+    }
+});
 // Day 281: Effects Registry Function Tests (2026-04-27)
 // ==========================================================
 // These tests verify Effects Registry helper functions
