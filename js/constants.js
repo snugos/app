@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.60.0'; // Day 279: Event Handlers Module Function Tests (2026-04-27)
+export const APP_VERSION = '1.61.0'; // Day 280: Remaining Audio Module Function Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

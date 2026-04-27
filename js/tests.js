@@ -203,6 +203,19 @@ import {
 } from './state.js';
 
 import {
+    initializeAudioModule,
+    initAudioContextAndMasterMeter,
+    getMasterEffectsBusInputNode,
+    getActualMasterGainNode,
+    rebuildMasterEffectChain,
+    updateMasterEffectParamInAudio,
+    reorderMasterEffectInAudio,
+    updateMeters,
+    getMimeTypeFromFilename,
+    clearAllMasterEffectNodes,
+    autoSliceSample,
+    addMasterEffectToAudio,
+    removeMasterEffectFromAudio,
     startAudioRecording,
     stopAudioRecording,
     createSendBusInAudio,
@@ -11091,4 +11104,384 @@ TestRunner.test('Event Handlers - attachGlobalControlEvents references elements'
 TestRunner.test('Event Handlers - initializePrimaryEventListeners references appContext', (t) => {
     const funcStr = initializePrimaryEventListeners.toString();
     t.assertTruthy(funcStr.includes('appContext') || funcStr.includes('context'), 'initializePrimaryEventListeners should reference context');
+});
+
+// Day 280: Remaining Audio Module Function Tests (2026-04-27)
+TestRunner.test('Audio - initializeAudioModule function exists', (t) => {
+    t.assertEqual(typeof initializeAudioModule, 'function', 'initializeAudioModule should be a function');
+});
+
+TestRunner.test('Audio - initializeAudioModule accepts 1 parameter', (t) => {
+    t.assertEqual(initializeAudioModule.length, 1, 'initializeAudioModule should accept 1 parameter (appServicesFromMain)');
+});
+
+TestRunner.test('Audio - initAudioContextAndMasterMeter is async', (t) => {
+    t.assertEqual(typeof initAudioContextAndMasterMeter, 'function', 'initAudioContextAndMasterMeter should be a function');
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('async'), 'initAudioContextAndMasterMeter should be async');
+});
+
+TestRunner.test('Audio - initAudioContextAndMasterMeter references isUserInitiated parameter', (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('isUserInitiated'), 'initAudioContextAndMasterMeter should reference isUserInitiated');
+});
+
+TestRunner.test('Audio - getMasterEffectsBusInputNode function exists', (t) => {
+    t.assertEqual(typeof getMasterEffectsBusInputNode, 'function', 'getMasterEffectsBusInputNode should be a function');
+});
+
+TestRunner.test('Audio - getMasterEffectsBusInputNode accepts no parameters', (t) => {
+    t.assertEqual(getMasterEffectsBusInputNode.length, 0, 'getMasterEffectsBusInputNode should accept 0 parameters');
+});
+
+TestRunner.test('Audio - getActualMasterGainNode function exists', (t) => {
+    t.assertEqual(typeof getActualMasterGainNode, 'function', 'getActualMasterGainNode should be a function');
+});
+
+TestRunner.test('Audio - getActualMasterGainNode accepts no parameters', (t) => {
+    t.assertEqual(getActualMasterGainNode.length, 0, 'getActualMasterGainNode should accept 0 parameters');
+});
+
+TestRunner.test('Audio - rebuildMasterEffectChain function exists', (t) => {
+    t.assertEqual(typeof rebuildMasterEffectChain, 'function', 'rebuildMasterEffectChain should be a function');
+});
+
+TestRunner.test('Audio - rebuildMasterEffectChain accepts no parameters', (t) => {
+    t.assertEqual(rebuildMasterEffectChain.length, 0, 'rebuildMasterEffectChain should accept 0 parameters');
+});
+
+TestRunner.test('Audio - updateMasterEffectParamInAudio function exists', (t) => {
+    t.assertEqual(typeof updateMasterEffectParamInAudio, 'function', 'updateMasterEffectParamInAudio should be a function');
+});
+
+TestRunner.test('Audio - updateMasterEffectParamInAudio accepts 3 parameters', (t) => {
+    t.assertEqual(updateMasterEffectParamInAudio.length, 3, 'updateMasterEffectParamInAudio should accept 3 parameters (effectId, paramPath, value)');
+});
+
+TestRunner.test('Audio - updateMasterEffectParamInAudio references paramPath', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('paramPath'), 'updateMasterEffectParamInAudio should reference paramPath');
+});
+
+TestRunner.test('Audio - reorderMasterEffectInAudio function exists', (t) => {
+    t.assertEqual(typeof reorderMasterEffectInAudio, 'function', 'reorderMasterEffectInAudio should be a function');
+});
+
+TestRunner.test('Audio - reorderMasterEffectInAudio accepts 2 parameters', (t) => {
+    t.assertEqual(reorderMasterEffectInAudio.length, 2, 'reorderMasterEffectInAudio should accept 2 parameters (effectIdIgnored, newIndex)');
+});
+
+TestRunner.test('Audio - updateMeters function exists', (t) => {
+    t.assertEqual(typeof updateMeters, 'function', 'updateMeters should be a function');
+});
+
+TestRunner.test('Audio - updateMeters accepts 3 parameters', (t) => {
+    t.assertEqual(updateMeters.length, 3, 'updateMeters should accept 3 parameters (globalMasterMeterBar, mixerMasterMeterBar, tracks)');
+});
+
+TestRunner.test('Audio - updateMeters references globalMasterMeterBar', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('globalMasterMeterBar') || funcStr.includes('masterMeter'), 'updateMeters should reference master meter bar');
+});
+
+TestRunner.test('Audio - updateMeters references tracks parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('tracks'), 'updateMeters should reference tracks parameter');
+});
+
+TestRunner.test('Audio - getMimeTypeFromFilename function exists', (t) => {
+    t.assertEqual(typeof getMimeTypeFromFilename, 'function', 'getMimeTypeFromFilename should be a function');
+});
+
+TestRunner.test('Audio - getMimeTypeFromFilename accepts 1 parameter', (t) => {
+    t.assertEqual(getMimeTypeFromFilename.length, 1, 'getMimeTypeFromFilename should accept 1 parameter (filename)');
+});
+
+TestRunner.test('Audio - getMimeTypeFromFilename references filename parameter', (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('filename'), 'getMimeTypeFromFilename should reference filename parameter');
+});
+
+TestRunner.test('Audio - clearAllMasterEffectNodes function exists', (t) => {
+    t.assertEqual(typeof clearAllMasterEffectNodes, 'function', 'clearAllMasterEffectNodes should be a function');
+});
+
+TestRunner.test('Audio - clearAllMasterEffectNodes accepts no parameters', (t) => {
+    t.assertEqual(clearAllMasterEffectNodes.length, 0, 'clearAllMasterEffectNodes should accept 0 parameters');
+});
+
+TestRunner.test('Audio - autoSliceSample function exists', (t) => {
+    t.assertEqual(typeof autoSliceSample, 'function', 'autoSliceSample should be a function');
+});
+
+TestRunner.test('Audio - autoSliceSample accepts 1-2 parameters', (t) => {
+    t.assertEqual(autoSliceSample.length, 2, 'autoSliceSample should accept 2 parameters (trackId, numSlicesToCreate)');
+});
+
+TestRunner.test('Audio - autoSliceSample references trackId', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'autoSliceSample should reference trackId');
+});
+
+TestRunner.test('Audio - playSlicePreview function exists', (t) => {
+    t.assertEqual(typeof playSlicePreview, 'function', 'playSlicePreview should be a function');
+});
+
+TestRunner.test('Audio - playSlicePreview accepts 2-4 parameters', (t) => {
+    t.assertTrue(playSlicePreview.length >= 2 && playSlicePreview.length <= 4, 'playSlicePreview should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio - playSlicePreview references sliceIndex', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('sliceIndex'), 'playSlicePreview should reference sliceIndex');
+});
+
+TestRunner.test('Audio - playDrumSamplerPadPreview function exists', (t) => {
+    t.assertEqual(typeof playDrumSamplerPadPreview, 'function', 'playDrumSamplerPadPreview should be a function');
+});
+
+TestRunner.test('Audio - playDrumSamplerPadPreview accepts 2-4 parameters', (t) => {
+    t.assertTrue(playDrumSamplerPadPreview.length >= 2 && playDrumSamplerPadPreview.length <= 4, 'playDrumSamplerPadPreview should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio - playDrumSamplerPadPreview references padIndex', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('padIndex'), 'playDrumSamplerPadPreview should reference padIndex');
+});
+
+TestRunner.test('Audio - loadSampleFile function exists', (t) => {
+    t.assertEqual(typeof loadSampleFile, 'function', 'loadSampleFile should be a function');
+});
+
+TestRunner.test('Audio - loadSampleFile is async', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('async'), 'loadSampleFile should be async');
+});
+
+TestRunner.test('Audio - loadSampleFile accepts 2-4 parameters', (t) => {
+    t.assertTrue(loadSampleFile.length >= 2 && loadSampleFile.length <= 4, 'loadSampleFile should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio - loadDrumSamplerPadFile function exists', (t) => {
+    t.assertEqual(typeof loadDrumSamplerPadFile, 'function', 'loadDrumSamplerPadFile should be a function');
+});
+
+TestRunner.test('Audio - loadDrumSamplerPadFile is async', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('async'), 'loadDrumSamplerPadFile should be async');
+});
+
+TestRunner.test('Audio - loadDrumSamplerPadFile accepts 3-4 parameters', (t) => {
+    t.assertTrue(loadDrumSamplerPadFile.length >= 3 && loadDrumSamplerPadFile.length <= 4, 'loadDrumSamplerPadFile should accept 3-4 parameters');
+});
+
+TestRunner.test('Audio - loadDrumSamplerPadFile references padIndex', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('padIndex'), 'loadDrumSamplerPadFile should reference padIndex');
+});
+
+TestRunner.test('Audio - loadSoundFromBrowserToTarget function exists', (t) => {
+    t.assertEqual(typeof loadSoundFromBrowserToTarget, 'function', 'loadSoundFromBrowserToTarget should be a function');
+});
+
+TestRunner.test('Audio - loadSoundFromBrowserToTarget is async', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('async'), 'loadSoundFromBrowserToTarget should be async');
+});
+
+TestRunner.test('Audio - loadSoundFromBrowserToTarget accepts 2-4 parameters', (t) => {
+    t.assertTrue(loadSoundFromBrowserToTarget.length >= 2 && loadSoundFromBrowserToTarget.length <= 4, 'loadSoundFromBrowserToTarget should accept 2-4 parameters');
+});
+
+TestRunner.test('Audio - loadSoundFromBrowserToTarget references soundData', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('soundData'), 'loadSoundFromBrowserToTarget should reference soundData');
+});
+
+TestRunner.test('Audio - fetchSoundLibrary function exists', (t) => {
+    t.assertEqual(typeof fetchSoundLibrary, 'function', 'fetchSoundLibrary should be a function');
+});
+
+TestRunner.test('Audio - fetchSoundLibrary is async', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('async'), 'fetchSoundLibrary should be async');
+});
+
+TestRunner.test('Audio - fetchSoundLibrary accepts 1-3 parameters', (t) => {
+    t.assertTrue(fetchSoundLibrary.length >= 1 && fetchSoundLibrary.length <= 3, 'fetchSoundLibrary should accept 1-3 parameters');
+});
+
+TestRunner.test('Audio - fetchSoundLibrary references libraryName', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName'), 'fetchSoundLibrary should reference libraryName');
+});
+
+TestRunner.test('Audio - addMasterEffectToAudio function exists', (t) => {
+    t.assertEqual(typeof addMasterEffectToAudio, 'function', 'addMasterEffectToAudio should be a function');
+});
+
+TestRunner.test('Audio - addMasterEffectToAudio is async', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('async'), 'addMasterEffectToAudio should be async');
+});
+
+TestRunner.test('Audio - addMasterEffectToAudio accepts 3 parameters', (t) => {
+    t.assertEqual(addMasterEffectToAudio.length, 3, 'addMasterEffectToAudio should accept 3 parameters');
+});
+
+TestRunner.test('Audio - removeMasterEffectFromAudio function exists', (t) => {
+    t.assertEqual(typeof removeMasterEffectFromAudio, 'function', 'removeMasterEffectFromAudio should be a function');
+});
+
+TestRunner.test('Audio - removeMasterEffectFromAudio is async', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('async'), 'removeMasterEffectFromAudio should be async');
+});
+
+TestRunner.test('Audio - removeMasterEffectFromAudio accepts 1 parameter', (t) => {
+    t.assertEqual(removeMasterEffectFromAudio.length, 1, 'removeMasterEffectFromAudio should accept 1 parameter (effectId)');
+});
+
+TestRunner.test('Audio - createSendBusInAudio function exists', (t) => {
+    t.assertEqual(typeof createSendBusInAudio, 'function', 'createSendBusInAudio should be a function');
+});
+
+TestRunner.test('Audio - createSendBusInAudio accepts 1 parameter', (t) => {
+    t.assertEqual(createSendBusInAudio.length, 1, 'createSendBusInAudio should accept 1 parameter (sendId)');
+});
+
+TestRunner.test('Audio - deleteSendBusFromAudio function exists', (t) => {
+    t.assertEqual(typeof deleteSendBusFromAudio, 'function', 'deleteSendBusFromAudio should be a function');
+});
+
+TestRunner.test('Audio - deleteSendBusFromAudio accepts 1 parameter', (t) => {
+    t.assertEqual(deleteSendBusFromAudio.length, 1, 'deleteSendBusFromAudio should accept 1 parameter (sendId)');
+});
+
+TestRunner.test('Audio - addEffectToSendBus function exists', (t) => {
+    t.assertEqual(typeof addEffectToSendBus, 'function', 'addEffectToSendBus should be a function');
+});
+
+TestRunner.test('Audio - addEffectToSendBus accepts 3 parameters', (t) => {
+    t.assertEqual(addEffectToSendBus.length, 3, 'addEffectToSendBus should accept 3 parameters (sendId, effectType, params)');
+});
+
+TestRunner.test('Audio - removeEffectFromSendBus function exists', (t) => {
+    t.assertEqual(typeof removeEffectFromSendBus, 'function', 'removeEffectFromSendBus should be a function');
+});
+
+TestRunner.test('Audio - removeEffectFromSendBus accepts 2 parameters', (t) => {
+    t.assertEqual(removeEffectFromSendBus.length, 2, 'removeEffectFromSendBus should accept 2 parameters (sendId, effectId)');
+});
+
+TestRunner.test('Audio - reorderEffectInSendBus function exists', (t) => {
+    t.assertEqual(typeof reorderEffectInSendBus, 'function', 'reorderEffectInSendBus should be a function');
+});
+
+TestRunner.test('Audio - reorderEffectInSendBus accepts 3 parameters', (t) => {
+    t.assertEqual(reorderEffectInSendBus.length, 3, 'reorderEffectInSendBus should accept 3 parameters (sendId, effectId, newIndex)');
+});
+
+TestRunner.test('Audio - updateSendBusEffectParam function exists', (t) => {
+    t.assertEqual(typeof updateSendBusEffectParam, 'function', 'updateSendBusEffectParam should be a function');
+});
+
+TestRunner.test('Audio - updateSendBusEffectParam accepts 4 parameters', (t) => {
+    t.assertEqual(updateSendBusEffectParam.length, 4, 'updateSendBusEffectParam should accept 4 parameters (sendId, effectId, paramPath, value)');
+});
+
+TestRunner.test('Audio - setSendBusLevel function exists', (t) => {
+    t.assertEqual(typeof setSendBusLevel, 'function', 'setSendBusLevel should be a function');
+});
+
+TestRunner.test('Audio - setSendBusLevel accepts 2 parameters', (t) => {
+    t.assertEqual(setSendBusLevel.length, 2, 'setSendBusLevel should accept 2 parameters (sendId, level)');
+});
+
+TestRunner.test('Audio - setSendBusMuted function exists', (t) => {
+    t.assertEqual(typeof setSendBusMuted, 'function', 'setSendBusMuted should be a function');
+});
+
+TestRunner.test('Audio - setSendBusMuted accepts 2 parameters', (t) => {
+    t.assertEqual(setSendBusMuted.length, 2, 'setSendBusMuted should accept 2 parameters (sendId, muted)');
+});
+
+TestRunner.test('Audio - setRecordingInputGain function exists', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Audio - setRecordingInputGain accepts 1 parameter', (t) => {
+    t.assertEqual(setRecordingInputGain.length, 1, 'setRecordingInputGain should accept 1 parameter (gainValue)');
+});
+
+TestRunner.test('Audio - connectTrackToSendBus function exists', (t) => {
+    t.assertEqual(typeof connectTrackToSendBus, 'function', 'connectTrackToSendBus should be a function');
+});
+
+TestRunner.test('Audio - connectTrackToSendBus accepts 2 parameters', (t) => {
+    t.assertEqual(connectTrackToSendBus.length, 2, 'connectTrackToSendBus should accept 2 parameters (trackId, sendId)');
+});
+
+TestRunner.test('Audio - disconnectTrackFromSendBus function exists', (t) => {
+    t.assertEqual(typeof disconnectTrackFromSendBus, 'function', 'disconnectTrackFromSendBus should be a function');
+});
+
+TestRunner.test('Audio - disconnectTrackFromSendBus accepts 2 parameters', (t) => {
+    t.assertEqual(disconnectTrackFromSendBus.length, 2, 'disconnectTrackFromSendBus should accept 2 parameters (trackId, sendId)');
+});
+
+TestRunner.test('Audio - setTrackSendLevel function exists', (t) => {
+    t.assertEqual(typeof setTrackSendLevel, 'function', 'setTrackSendLevel should be a function');
+});
+
+TestRunner.test('Audio - setTrackSendLevel accepts 3 parameters', (t) => {
+    t.assertEqual(setTrackSendLevel.length, 3, 'setTrackSendLevel should accept 3 parameters (trackId, sendId, level)');
+});
+
+TestRunner.test('Audio - getSendBusNodes function exists', (t) => {
+    t.assertEqual(typeof getSendBusNodes, 'function', 'getSendBusNodes should be a function');
+});
+
+TestRunner.test('Audio - getSendBusNodes accepts no parameters', (t) => {
+    t.assertEqual(getSendBusNodes.length, 0, 'getSendBusNodes should accept 0 parameters');
+});
+
+TestRunner.test('Audio - getTrackSendNodes function exists', (t) => {
+    t.assertEqual(typeof getTrackSendNodes, 'function', 'getTrackSendNodes should be a function');
+});
+
+TestRunner.test('Audio - getTrackSendNodes accepts no parameters', (t) => {
+    t.assertEqual(getTrackSendNodes.length, 0, 'getTrackSendNodes should accept 0 parameters');
+});
+
+TestRunner.test('Audio - panicAllAudio function exists', (t) => {
+    t.assertEqual(typeof panicAllAudio, 'function', 'panicAllAudio should be a function');
+});
+
+TestRunner.test('Audio - panicAllAudio accepts no parameters', (t) => {
+    t.assertEqual(panicAllAudio.length, 0, 'panicAllAudio should accept 0 parameters');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor function exists', (t) => {
+    t.assertEqual(typeof startPerformanceMonitor, 'function', 'startPerformanceMonitor should be a function');
+});
+
+TestRunner.test('Audio - startPerformanceMonitor accepts no parameters', (t) => {
+    t.assertEqual(startPerformanceMonitor.length, 0, 'startPerformanceMonitor should accept 0 parameters');
+});
+
+TestRunner.test('Audio - stopPerformanceMonitor function exists', (t) => {
+    t.assertEqual(typeof stopPerformanceMonitor, 'function', 'stopPerformanceMonitor should be a function');
+});
+
+TestRunner.test('Audio - stopPerformanceMonitor accepts no parameters', (t) => {
+    t.assertEqual(stopPerformanceMonitor.length, 0, 'stopPerformanceMonitor should accept 0 parameters');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics function exists', (t) => {
+    t.assertEqual(typeof getPerformanceMetrics, 'function', 'getPerformanceMetrics should be a function');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics accepts no parameters', (t) => {
+    t.assertEqual(getPerformanceMetrics.length, 0, 'getPerformanceMetrics should accept 0 parameters');
 });
