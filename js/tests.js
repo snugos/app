@@ -273,6 +273,11 @@ import {
     updateSequencerCellUI,
     openAudioClipEditorWindow,
     buildInstrumentSamplerSpecificInspectorDOM,
+    buildSynthSpecificInspectorDOM,
+    buildDrumSamplerSpecificInspectorDOM,
+    buildSamplerSpecificInspectorDOM,
+    buildAudioTrackInspectorDOM,
+    buildTrackInspectorContentDOM,
     initializeInstrumentSamplerSpecificControls
 } from './ui.js';
 
@@ -3577,7 +3582,12 @@ TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificIns
 // The container ID follows the pattern: dropZoneContainer-${track.id}-instrumentsampler
 
 TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM function exists', (t) => {
-    t.assertEqual(typeof buildInstrumentSamplerSpecificInspectorDOM, 'function', 'buildInstrumentSamplerSpecificInspectorDOM should be a function');
+    t.assertEqual(typeof buildInstrumentSamplerSpecificInspectorDOM,
+    buildSynthSpecificInspectorDOM,
+    buildDrumSamplerSpecificInspectorDOM,
+    buildSamplerSpecificInspectorDOM,
+    buildAudioTrackInspectorDOM,
+    buildTrackInspectorContentDOM, 'function', 'buildInstrumentSamplerSpecificInspectorDOM should be a function');
 });
 
 TestRunner.test('InstrumentSampler Drop Zone - buildInstrumentSamplerSpecificInspectorDOM creates drop zone container', (t) => {
@@ -10802,4 +10812,135 @@ TestRunner.test('SnugWindow - toggleMaximize toggles isMaximized', (t) => {
         win.toggleMaximize();
         t.assertEqual(win.isMaximized, !initialState, 'toggleMaximize should toggle isMaximized state');
     }
+});
+
+// === Day 279: Additional Inspector DOM Builder Tests (2026-04-27) ===
+
+TestRunner.test('Inspector DOM - buildSynthSpecificInspectorDOM is exported', (t) => {
+    t.assertTruthy(typeof buildSynthSpecificInspectorDOM === 'function', 'buildSynthSpecificInspectorDOM should be a function');
+});
+
+TestRunner.test('Inspector DOM - buildSynthSpecificInspectorDOM accepts track parameter', (t) => {
+    t.assertTruthy(buildSynthSpecificInspectorDOM.length >= 1, 'buildSynthSpecificInspectorDOM should accept at least 1 parameter');
+});
+
+TestRunner.test('Inspector DOM - buildSynthSpecificInspectorDOM returns string', (t) => {
+    const mockTrack = { id: 'test-synth', synthEngineType: 'MonoSynth' };
+    const result = buildSynthSpecificInspectorDOM(mockTrack);
+    t.assertEqual(typeof result, 'string', 'buildSynthSpecificInspectorDOM should return a string');
+});
+
+TestRunner.test('Inspector DOM - buildSynthSpecificInspectorDOM includes synth engine controls div', (t) => {
+    const mockTrack = { id: 'test-synth', synthEngineType: 'MonoSynth' };
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('synthEngineControls') || funcStr.includes('grid'), 'Should include engine controls container');
+});
+
+TestRunner.test('Inspector DOM - buildDrumSamplerSpecificInspectorDOM is exported', (t) => {
+    t.assertTruthy(typeof buildDrumSamplerSpecificInspectorDOM === 'function', 'buildDrumSamplerSpecificInspectorDOM should be a function');
+});
+
+TestRunner.test('Inspector DOM - buildDrumSamplerSpecificInspectorDOM accepts track parameter', (t) => {
+    t.assertTruthy(buildDrumSamplerSpecificInspectorDOM.length >= 1, 'buildDrumSamplerSpecificInspectorDOM should accept at least 1 parameter');
+});
+
+TestRunner.test('Inspector DOM - buildDrumSamplerSpecificInspectorDOM returns string', (t) => {
+    const mockTrack = { id: 'test-drum', selectedDrumPadForEdit: 0 };
+    const result = buildDrumSamplerSpecificInspectorDOM(mockTrack);
+    t.assertEqual(typeof result, 'string', 'buildDrumSamplerSpecificInspectorDOM should return a string');
+});
+
+TestRunner.test('Inspector DOM - buildDrumSamplerSpecificInspectorDOM includes drum pad controls', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('drum-sampler-controls') || funcStr.includes('pad'), 'Should include drum pad controls');
+});
+
+TestRunner.test('Inspector DOM - buildDrumSamplerSpecificInspectorDOM includes selected pad info', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('selectedDrumPadInfo') || funcStr.includes('Edit Pad'), 'Should include selected pad info');
+});
+
+TestRunner.test('Inspector DOM - buildSamplerSpecificInspectorDOM is exported', (t) => {
+    t.assertTruthy(typeof buildSamplerSpecificInspectorDOM === 'function', 'buildSamplerSpecificInspectorDOM should be a function');
+});
+
+TestRunner.test('Inspector DOM - buildSamplerSpecificInspectorDOM accepts track parameter', (t) => {
+    t.assertTruthy(buildSamplerSpecificInspectorDOM.length >= 1, 'buildSamplerSpecificInspectorDOM should accept at least 1 parameter');
+});
+
+TestRunner.test('Inspector DOM - buildSamplerSpecificInspectorDOM returns string', (t) => {
+    const mockTrack = { id: 'test-sampler' };
+    const result = buildSamplerSpecificInspectorDOM(mockTrack);
+    t.assertEqual(typeof result, 'string', 'buildSamplerSpecificInspectorDOM should return a string');
+});
+
+TestRunner.test('Inspector DOM - buildSamplerSpecificInspectorDOM includes waveform section', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('waveform') || funcStr.includes('canvas'), 'Should include waveform section');
+});
+
+TestRunner.test('Inspector DOM - buildSamplerSpecificInspectorDOM includes slice editor controls', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('slice-editor') || funcStr.includes('slice'), 'Should include slice editor controls');
+});
+
+TestRunner.test('Inspector DOM - buildTrackInspectorContentDOM is exported', (t) => {
+    t.assertTruthy(typeof buildTrackInspectorContentDOM === 'function', 'buildTrackInspectorContentDOM should be a function');
+});
+
+TestRunner.test('Inspector DOM - buildTrackInspectorContentDOM accepts track parameter', (t) => {
+    t.assertTruthy(buildTrackInspectorContentDOM.length >= 1, 'buildTrackInspectorContentDOM should accept at least 1 parameter');
+});
+
+TestRunner.test('Inspector DOM - buildTrackInspectorContentDOM returns string', (t) => {
+    const mockTrack = { id: 'test-track', type: 'Synth', name: 'Test Track' };
+    const result = buildTrackInspectorContentDOM(mockTrack);
+    t.assertEqual(typeof result, 'string', 'buildTrackInspectorContentDOM should return a string');
+});
+
+TestRunner.test('Inspector DOM - buildAudioTrackInspectorDOM already has tests at line 9883+', (t) => {
+    // Audio track inspector DOM tests exist - verify the import worked
+    t.assertTruthy(typeof buildAudioTrackInspectorDOM === 'function', 'buildAudioTrackInspectorDOM should be imported');
+});
+
+TestRunner.test('Inspector DOM - All inspector DOM builders return strings', (t) => {
+    const synthTrack = { id: 's1', type: 'Synth', name: 'Synth Track', synthEngineType: 'MonoSynth' };
+    const drumTrack = { id: 'd1', type: 'DrumSampler', name: 'Drum Track', selectedDrumPadForEdit: 0 };
+    const samplerTrack = { id: 's2', type: 'Sampler', name: 'Sampler Track' };
+    const audioTrack = { id: 'a1', type: 'Audio', name: 'Audio Track' };
+    
+    const synthResult = buildSynthSpecificInspectorDOM(synthTrack);
+    const drumResult = buildDrumSamplerSpecificInspectorDOM(drumTrack);
+    const samplerResult = buildSamplerSpecificInspectorDOM(samplerTrack);
+    const audioResult = buildAudioTrackInspectorDOM(audioTrack);
+    
+    t.assertEqual(typeof synthResult, 'string', 'Synth inspector should return string');
+    t.assertEqual(typeof drumResult, 'string', 'DrumSampler inspector should return string');
+    t.assertEqual(typeof samplerResult, 'string', 'Sampler inspector should return string');
+    t.assertEqual(typeof audioResult, 'string', 'Audio inspector should return string');
+});
+
+TestRunner.test('Inspector DOM - All inspector DOM builders reference track ID', (t) => {
+    const funcStrSynth = buildSynthSpecificInspectorDOM.toString();
+    const funcStrDrum = buildDrumSamplerSpecificInspectorDOM.toString();
+    const funcStrSampler = buildSamplerSpecificInspectorDOM.toString();
+    const funcStrAudio = buildAudioTrackInspectorDOM.toString();
+    
+    // All should reference track.id somewhere
+    t.assertTruthy(
+        funcStrSynth.includes('track.id') || funcStrSynth.includes('track\\.id') || funcStrSynth.includes('${track.id}') || funcStrSynth.includes('track[\'id\']'),
+        'Synth inspector should reference track.id'
+    );
+    t.assertTruthy(
+        funcStrDrum.includes('track.id') || funcStrDrum.includes('track\\.id') || funcStrDrum.includes('${track.id}') || funcStrDrum.includes('track[\'id\']'),
+        'DrumSampler inspector should reference track.id'
+    );
+    t.assertTruthy(
+        funcStrSampler.includes('track.id') || funcStrSampler.includes('track\\.id') || funcStrSampler.includes('${track.id}') || funcStrSampler.includes('track[\'id\']'),
+        'Sampler inspector should reference track.id'
+    );
+    t.assertTruthy(
+        funcStrAudio.includes('track.id') || funcStrAudio.includes('track\\.id') || funcStrAudio.includes('${track.id}') || funcStrAudio.includes('track[\'id\']'),
+        'Audio inspector should reference track.id'
+    );
 });

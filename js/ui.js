@@ -5322,7 +5322,7 @@ export function showKeyboardShortcutsHelpWindow() {
                 <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+Shift+Z</kbd> <span class="text-slate-400">Redo (Alt)</span></div>
                 <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+S</kbd> <span class="text-slate-400">Save Project</span></div>
                 <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+O</kbd> <span class="text-slate-400">Load Project</span></div>
-                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+E</kbd> <span class="text-slate-400">Export to WAV</span></div>
+                <div><kbd class="px-1 py-0.5 bg-slate-700 rounded text-purple-300">Ctrl+E</kbd> <span class="text-slate-400">Export to MIDI</span></div>
             </div>
 
             <h3 class="text-sm font-semibold text-gray-200 border-b border-slate-600 pb-1 mt-3">Computer Keyboard Piano</h3>
