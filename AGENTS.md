@@ -1,3 +1,24 @@
+#### Day 287: Recording Function Extended Tests (2026-04-27)
+- **Feature**: Added 31 new unit tests for Recording audio module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 287 section:
+    - startAudioRecording: function export, Promise return, recorder initialization, Tone.Recorder creation, Tone.UserMedia handling, device enumeration, recorder.start() call, monitoringEnabled flag, error handling
+    - stopAudioRecording: function export, Promise return, recorder.stop() call, empty blob handling, addAudioClip call, mic disposal, recorder disposal, state clearing, timeout handling
+    - setRecordingInputGain: function export, 1 parameter, Infinity clamping, negative value clamping
+    - Recording state functions: isTrackRecordingState, getRecordingTrackIdState, getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - RECORDER_START_STATE and timeout handling verification
+    - APP_VERSION tests: semver format validation, version is 1.68.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 1.68.0
+- **Feature Details**:
+  - Tests validate Recording audio module functions are properly exported from audio.js
+  - Tests verify startAudioRecording creates Tone.Recorder, Tone.UserMedia, handles device enumeration, and connects to input gain
+  - Tests verify stopAudioRecording handles recorder.stop(), adds clips to track, disposes resources, and clears state
+  - Tests verify setRecordingInputGain clamps extreme values (Infinity, negative)
+  - Tests verify recording state functions are properly exported from state.js
+  - Total tests increased from 1985 to 2016
+- **Version**: Bumped to 1.68.0
+
+
 #### Day 285: Utils Function Extended Tests (2026-04-27)
 #### Day 286: Metronome Audio Function Extended Tests (2026-04-27)
 - **Feature**: Added 21 new unit tests for Metronome audio module functions to expand test coverage
