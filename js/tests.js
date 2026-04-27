@@ -8596,3 +8596,175 @@ TestRunner.test('SnugOS - APP_VERSION is 1.76.0 or higher for Day 295', (t) => {
         t.assertTruthy(versionParts[1] >= 76, 'Minor version should be >= 76 for Day 295');
     }
 });
+
+// ============================================
+// Day 295: Track Instance Method Undo Capture Verification Tests (2026-04-27)
+// ============================================
+TestRunner.test('Track Instance - setTrackName method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.setTrackName, 'function', 'Track should have setTrackName method');
+});
+
+TestRunner.test('Track Instance - setTrackName calls _captureUndoState', (t) => {
+    const funcStr = track.setTrackName.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setTrackName should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - setTrackName uses descriptive undo label', (t) => {
+    const funcStr = track.setTrackName.toString();
+    t.assertTruthy(funcStr.includes('Rename track to'), 'setTrackName should use descriptive undo label with \"Rename track to\"');
+});
+
+TestRunner.test('Track Instance - setTrackColor method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.setTrackColor, 'function', 'Track should have setTrackColor method');
+});
+
+TestRunner.test('Track Instance - setTrackColor calls _captureUndoState', (t) => {
+    const funcStr = track.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setTrackColor should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - setTrackColor uses descriptive undo label', (t) => {
+    const funcStr = track.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('Set color on'), 'setTrackColor should use descriptive undo label with \"Set color on\"');
+});
+
+TestRunner.test('Track Instance - Synth track has setSynthParam method', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.setSynthParam, 'function', 'Synth track should have setSynthParam method');
+});
+
+TestRunner.test('Track Instance - setSynthParam calls _captureUndoState', (t) => {
+    const funcStr = track.setSynthParam.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSynthParam should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - setSynthParam uses descriptive undo label', (t) => {
+    const funcStr = track.setSynthParam.toString();
+    t.assertTruthy(funcStr.includes('Set '), 'setSynthParam should use descriptive undo label with parameter path');
+    t.assertTruthy(funcStr.includes('on ${this.name}') || funcStr.includes('on ' + track.name), 'setSynthParam undo label should reference track name');
+});
+
+TestRunner.test('Track Instance - addEffect method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.addEffect, 'function', 'Track should have addEffect method');
+});
+
+TestRunner.test('Track Instance - addEffect calls _captureUndoState', (t) => {
+    const funcStr = track.addEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'addEffect should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - addEffect uses descriptive undo label', (t) => {
+    const funcStr = track.addEffect.toString();
+    t.assertTruthy(funcStr.includes('Add '), 'addEffect should use descriptive undo label with \"Add\"');
+    t.assertTruthy(funcStr.includes('effectType') || funcStr.includes('to ${this.name}'), 'addEffect undo label should include effect type and track name');
+});
+
+TestRunner.test('Track Instance - removeEffect method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.removeEffect, 'function', 'Track should have removeEffect method');
+});
+
+TestRunner.test('Track Instance - removeEffect calls _captureUndoState', (t) => {
+    const funcStr = track.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'removeEffect should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - removeEffect uses descriptive undo label', (t) => {
+    const funcStr = track.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('Remove effect'), 'removeEffect should use descriptive undo label with \"Remove effect\"');
+});
+
+TestRunner.test('Track Instance - updateEffectParam method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.updateEffectParam, 'function', 'Track should have updateEffectParam method');
+});
+
+TestRunner.test('Track Instance - updateEffectParam calls _captureUndoState', (t) => {
+    const funcStr = track.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'updateEffectParam should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - updateEffectParam uses descriptive undo label', (t) => {
+    const funcStr = track.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('Set '), 'updateEffectParam should use descriptive undo label with \"Set\"');
+    t.assertTruthy(funcStr.includes('effect on ${this.name}'), 'updateEffectParam undo label should reference effect and track name');
+});
+
+TestRunner.test('Track Instance - reorderEffect method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.reorderEffect, 'function', 'Track should have reorderEffect method');
+});
+
+TestRunner.test('Track Instance - reorderEffect calls _captureUndoState', (t) => {
+    const funcStr = track.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'reorderEffect should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - reorderEffect uses descriptive undo label', (t) => {
+    const funcStr = track.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('Reorder '), 'reorderEffect should use descriptive undo label with \"Reorder\"');
+});
+
+TestRunner.test('Track Instance - duplicateTrack method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.duplicateTrack, 'function', 'Track should have duplicateTrack method');
+});
+
+TestRunner.test('Track Instance - duplicateTrack calls _captureUndoState', (t) => {
+    const funcStr = track.duplicateTrack.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'duplicateTrack should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - duplicateTrack uses descriptive undo label', (t) => {
+    const funcStr = track.duplicateTrack.toString();
+    t.assertTruthy(funcStr.includes('Duplicate Track'), 'duplicateTrack should use descriptive undo label with \"Duplicate Track\"');
+});
+
+TestRunner.test('Track Instance - freezeTrack method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.freezeTrack, 'function', 'Track should have freezeTrack method');
+});
+
+TestRunner.test('Track Instance - freezeTrack calls _captureUndoState', (t) => {
+    const funcStr = track.freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'freezeTrack should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - freezeTrack uses descriptive undo label', (t) => {
+    const funcStr = track.freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('Freeze track'), 'freezeTrack should use descriptive undo label with \"Freeze track\"');
+});
+
+TestRunner.test('Track Instance - bounceTrack method exists on Track', (t) => {
+    const track = new Track('test-track', 'Synth', 0);
+    t.assertEqual(typeof track.bounceTrack, 'function', 'Track should have bounceTrack method');
+});
+
+TestRunner.test('Track Instance - bounceTrack does NOT call _captureUndoState', (t) => {
+    const funcStr = track.bounceTrack.toString();
+    t.assertFalse(funcStr.includes('_captureUndoState'), 'bounceTrack should NOT call _captureUndoState (bounce is export operation)');
+});
+
+TestRunner.test('Track Instance - loadSampleToPad calls _captureUndoState', (t) => {
+    const track = new Track('test-track', 'DrumSampler', 0);
+    const funcStr = track.loadSampleToPad.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'loadSampleToPad should call _captureUndoState');
+});
+
+TestRunner.test('Track Instance - loadSampleToPad uses descriptive undo label', (t) => {
+    const track = new Track('test-track', 'DrumSampler', 0);
+    const funcStr = track.loadSampleToPad.toString();
+    t.assertTruthy(funcStr.includes('Load sample to pad'), 'loadSampleToPad should use descriptive undo label with \"Load sample to pad\"');
+    t.assertTruthy(funcStr.includes('padIndex + 1') || funcStr.includes('${padIndex + 1}'), 'loadSampleToPad undo label should reference pad index (1-based)');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.76.0 or higher for Day 295', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 76, 'Minor version should be >= 76 for Day 295');
+    }
+});
