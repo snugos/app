@@ -1,4 +1,35 @@
 #### Day 299: Transport Controls Extended Tests (2026-04-27)
+#### Day 300: Synth & Sampler Inspector UI Tests (2026-04-27)
+- **Feature**: Added 24 new unit tests for Synth and Sampler Inspector UI functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 24 new tests in Day 300 section:
+    - buildSynthSpecificInspectorDOM: function exists, returns string, references synthEngineType
+    - buildSynthSpecificInspectorDOM: uses synthEngineControlDefinitions
+    - buildSynthSpecificInspectorDOM: creates synthEngineControls div with track ID
+    - buildSynthSpecificInspectorDOM: handles default MonoSynth engine type
+    - buildSynthSpecificInspectorDOM: creates control placeholders with grid layout
+    - buildSamplerSpecificInspectorDOM: function exists, returns string
+    - buildSamplerSpecificInspectorDOM: creates dropZoneContainer with track ID
+    - buildSamplerSpecificInspectorDOM: creates waveform canvas with track ID
+    - buildSamplerSpecificInspectorDOM: creates slice editor controls section
+    - buildSamplerSpecificInspectorDOM: creates selected slice info display
+    - buildSamplerSpecificInspectorDOM: creates slice volume/pitch controls
+    - buildSamplerSpecificInspectorDOM: creates slice loop/reverse toggles
+    - buildSamplerSpecificInspectorDOM: creates envelope controls (attack/decay/sustain/release)
+    - buildSamplerSpecificInspectorDOM: creates sample pads container
+    - buildSamplerSpecificInspectorDOM: creates polyphony toggle
+    - buildSamplerSpecificInspectorDOM: uses dark mode styling
+  - `js/constants.js`: Bumped APP_VERSION to 1.80.0
+- **Feature Details**:
+  - Tests validate buildSynthSpecificInspectorDOM creates engine controls using synthEngineControlDefinitions
+  - Tests verify synthEngineControls div uses track.id for unique element IDs
+  - Tests verify buildSamplerSpecificInspectorDOM creates all slice editor UI components
+  - Tests verify dropZoneContainer ID pattern: dropZoneContainer-${track.id}-sampler
+  - Tests verify waveformCanvas ID pattern: waveformCanvas-${track.id}
+  - Tests verify envelope controls include attack/decay/sustain/release sliders
+  - Total tests increased from 1498 to 1522
+- **Version**: Bumped to 1.80.0
+
 - **Feature**: Added 29 new unit tests for Transport Controls extended functionality to expand test coverage
 - **Files Modified**:
   - `js/tests.js`: Added 29 new tests in Day 299 section:
