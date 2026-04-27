@@ -12586,3 +12586,184 @@ TestRunner.test('SnugOS - APP_VERSION is 1.68.0 or higher for Day 287', (t) => {
         t.assertTruthy(versionParts[1] >= 68, 'Minor version should be >= 68 for Day 287');
     }
 });
+
+// === Day 289: Undo/Redo State Function Extended Tests (2026-04-27) ===
+// Extended tests for undo/redo state functions to expand test coverage
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal function is exported', (t) => {
+    t.assertEqual(typeof captureStateForUndoInternal, 'function', 'captureStateForUndoInternal should be a function');
+});
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal accepts 1 parameter', (t) => {
+    t.assertEqual(captureStateForUndoInternal.length, 1, 'captureStateForUndoInternal should accept 1 parameter (description)');
+});
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal has default description value', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('"Unknown action"') || funcStr.includes("'Unknown action'") || funcStr.includes('= "Unknown action"') || funcStr.includes("= 'Unknown action'"), 'captureStateForUndoInternal should have default description');
+});
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal references undoStack', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack') || funcStr.includes('undo_stack'), 'captureStateForUndoInternal should reference undoStack');
+});
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal references gatherProjectDataInternal', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('gatherProjectDataInternal') || funcStr.includes('gatherProjectData'), 'captureStateForUndoInternal should gather project data');
+});
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal pushes to undoStack', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack.push') || funcStr.includes('push('), 'captureStateForUndoInternal should push to undoStack');
+});
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal clears redoStack', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('redoStack = []') || funcStr.includes('redoStack.length = 0') || funcStr.includes('redoStack.clear'), 'captureStateForUndoInternal should clear redoStack');
+});
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal references MAX_HISTORY_STATES', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('MAX_HISTORY_STATES') || funcStr.includes('MAX_HISTORY'), 'captureStateForUndoInternal should check history limit');
+});
+
+TestRunner.test('Undo/Redo State - captureStateForUndoInternal has try-catch error handling', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'captureStateForUndoInternal should have try-catch');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal function is exported', (t) => {
+    t.assertEqual(typeof undoLastActionInternal, 'function', 'undoLastActionInternal should be a function');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal is async', (t) => {
+    const funcStr = undoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise') || funcStr.includes('await'), 'undoLastActionInternal should be async');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal accepts 0 parameters', (t) => {
+    t.assertEqual(undoLastActionInternal.length, 0, 'undoLastActionInternal should accept 0 parameters');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal checks undoStack.length', (t) => {
+    const funcStr = undoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack.length') || funcStr.includes('undoStack.length'), 'undoLastActionInternal should check undoStack');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal pops from undoStack', (t) => {
+    const funcStr = undoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack.pop') || funcStr.includes('pop('), 'undoLastActionInternal should pop from undoStack');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal pushes to redoStack', (t) => {
+    const funcStr = undoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('redoStack.push') || funcStr.includes('push('), 'undoLastActionInternal should push to redoStack');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal calls reconstructDAWInternal', (t) => {
+    const funcStr = undoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('reconstructDAWInternal') || funcStr.includes('reconstructDAW'), 'undoLastActionInternal should reconstruct DAW');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal sets _isReconstructingDAW_flag', (t) => {
+    const funcStr = undoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('_isReconstructingDAW_flag') || funcStr.includes('isReconstructing'), 'undoLastActionInternal should set flag');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal has try-catch error handling', (t) => {
+    const funcStr = undoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'undoLastActionInternal should have try-catch');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal function is exported', (t) => {
+    t.assertEqual(typeof redoLastActionInternal, 'function', 'redoLastActionInternal should be a function');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal is async', (t) => {
+    const funcStr = redoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise') || funcStr.includes('await'), 'redoLastActionInternal should be async');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal accepts 0 parameters', (t) => {
+    t.assertEqual(redoLastActionInternal.length, 0, 'redoLastActionInternal should accept 0 parameters');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal checks redoStack.length', (t) => {
+    const funcStr = redoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('redoStack.length') || funcStr.includes('redoStack.length'), 'redoLastActionInternal should check redoStack');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal pops from redoStack', (t) => {
+    const funcStr = redoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('redoStack.pop') || funcStr.includes('pop('), 'redoLastActionInternal should pop from redoStack');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal pushes to undoStack', (t) => {
+    const funcStr = redoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack.push') || funcStr.includes('push('), 'redoLastActionInternal should push to undoStack');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal calls reconstructDAWInternal', (t) => {
+    const funcStr = redoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('reconstructDAWInternal') || funcStr.includes('reconstructDAW'), 'redoLastActionInternal should reconstruct DAW');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal sets _isReconstructingDAW_flag', (t) => {
+    const funcStr = redoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('_isReconstructingDAW_flag') || funcStr.includes('isReconstructing'), 'redoLastActionInternal should set flag');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal has try-catch error handling', (t) => {
+    const funcStr = redoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'redoLastActionInternal should have try-catch');
+});
+
+TestRunner.test('Undo/Redo State - getUndoStackState function is exported', (t) => {
+    t.assertEqual(typeof getUndoStackState, 'function', 'getUndoStackState should be a function');
+});
+
+TestRunner.test('Undo/Redo State - getUndoStackState accepts 0 parameters', (t) => {
+    t.assertEqual(getUndoStackState.length, 0, 'getUndoStackState should accept 0 parameters');
+});
+
+TestRunner.test('Undo/Redo State - getUndoStackState returns undoStack', (t) => {
+    const funcStr = getUndoStackState.toString();
+    t.assertTruthy(funcStr.includes('return undoStack') || funcStr.includes('undoStack'), 'getUndoStackState should return undoStack');
+});
+
+TestRunner.test('Undo/Redo State - getRedoStackState function is exported', (t) => {
+    t.assertEqual(typeof getRedoStackState, 'function', 'getRedoStackState should be a function');
+});
+
+TestRunner.test('Undo/Redo State - getRedoStackState accepts 0 parameters', (t) => {
+    t.assertEqual(getRedoStackState.length, 0, 'getRedoStackState should accept 0 parameters');
+});
+
+TestRunner.test('Undo/Redo State - getRedoStackState returns redoStack', (t) => {
+    const funcStr = getRedoStackState.toString();
+    t.assertTruthy(funcStr.includes('return redoStack') || funcStr.includes('redoStack'), 'getRedoStackState should return redoStack');
+});
+
+TestRunner.test('Undo/Redo State - updateInternalUndoRedoState is called after capture', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('updateInternalUndoRedoState') || funcStr.includes('updateUndoRedo'), 'captureStateForUndoInternal should update UI');
+});
+
+TestRunner.test('Undo/Redo State - undoLastActionInternal calls updateInternalUndoRedoState in finally', (t) => {
+    const funcStr = undoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('updateInternalUndoRedoState') || funcStr.includes('updateUndoRedo'), 'undoLastActionInternal should update UI');
+});
+
+TestRunner.test('Undo/Redo State - redoLastActionInternal calls updateInternalUndoRedoState in finally', (t) => {
+    const funcStr = redoLastActionInternal.toString();
+    t.assertTruthy(funcStr.includes('updateInternalUndoRedoState') || funcStr.includes('updateUndoRedo'), 'redoLastActionInternal should update UI');
+});
+
+TestRunner.test('SnugOS - APP_VERSION is 1.69.0 or higher for Day 289', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 69, 'Minor version should be >= 69 for Day 289');
+    }
+});

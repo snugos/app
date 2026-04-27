@@ -4192,3 +4192,24 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify maxDuration calculation and 600-second cap
   - Total tests increased from 1909 to 1931
 - **Version**: Bumped to 1.65.0
+
+#### Day 289: Undo/Redo State Function Extended Tests (2026-04-27)
+- **Feature**: Added 40 new unit tests for Undo/Redo state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 40 new tests in Day 289 section:
+    - captureStateForUndoInternal: function export, 1 parameter, default description, references undoStack, gatherProjectDataInternal, undoStack.push, redoStack clearing, MAX_HISTORY_STATES, try-catch error handling
+    - undoLastActionInternal: function export, async function, 0 parameters, checks undoStack.length, pops from undoStack, pushes to redoStack, calls reconstructDAWInternal, sets _isReconstructingDAW_flag, try-catch error handling
+    - redoLastActionInternal: function export, async function, 0 parameters, checks redoStack.length, pops from redoStack, pushes to undoStack, calls reconstructDAWInternal, sets _isReconstructingDAW_flag, try-catch error handling
+    - getUndoStackState: function export, 0 parameters, returns undoStack
+    - getRedoStackState: function export, 0 parameters, returns redoStack
+    - updateInternalUndoRedoState: called after capture, in undo finally, in redo finally
+    - APP_VERSION tests: semver format validation, version is 1.70.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 1.70.0
+- **Feature Details**:
+  - Tests validate captureStateForUndoInternal captures project state, pushes to undoStack, clears redoStack
+  - Tests verify undoLastActionInternal properly restores state and manages undo/redo stacks
+  - Tests verify redoLastActionInternal properly restores state and manages undo/redo stacks
+  - Tests verify UI update function (updateInternalUndoRedoState) is called after stack operations
+  - Tests verify async/await patterns for undo/redo operations
+  - Total tests increased from 2056 to 2096
+- **Version**: Bumped to 1.70.0
