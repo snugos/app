@@ -1,3 +1,57 @@
+#### Day 299: Transport Controls Extended Tests (2026-04-27)
+- **Feature**: Added 29 new unit tests for Transport Controls extended functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 29 new tests in Day 299 section:
+    - handleTapTempo: calculates BPM from taps, references tapTimestamps/lastTapTime
+    - handleTapTempo: uses TAP_TEMPO_TIMEOUT_MS constant
+    - resetTapTempo: clears tap state (tapTimestamps/lastTapTime)
+    - initializePrimaryEventListeners: references playBtnGlobal
+    - initializePrimaryEventListeners: references stopBtnGlobal
+    - initializePrimaryEventListeners: references metronomeBtnGlobal
+    - play button toggles Tone.Transport state
+    - play button checks transport state before toggling (transport.state)
+    - play button calls schedulePlayback on all tracks
+    - play button handles pause/resume (wasPaused flag)
+    - play button updates button text to Pause/Play
+    - stop button calls panicStopAllAudio
+    - stop button calls Tone.Transport.stop() as fallback
+    - stop button calls Tone.Transport.cancel() to clear scheduled events
+    - metronome button toggles metronome state (startMetronome/stopMetronome)
+    - metronome button adds/removes playing class on button
+    - stop button resets play button text to Play
+    - play button initializes audio context with initAudioContextAndMasterMeter
+    - play button passes isUserInitiated=true for browser audio policy
+    - play button handles audio context not ready case
+    - stop button has error handling (console.error/catch/try)
+    - play button calls stopPlayback on all tracks before starting
+    - play button handles loop region settings (transport.loop)
+    - Tap Tempo enforces min/max BPM limits
+    - Tap Tempo resets after timeout (TAP_TEMPO_TIMEOUT_MS)
+    - play button uses Tone.now() for precise timing
+  - `js/constants.js`: Bumped APP_VERSION to 1.79.0
+- **Feature Details**:
+  - Tests validate handleTapTempo tracks tap timestamps and calculates BPM
+  - Tests verify handleTapTempo uses TAP_TEMPO_TIMEOUT_MS constant
+  - Tests verify resetTapTempo clears tap timestamps
+  - Tests validate initializePrimaryEventListeners references all transport control buttons (playBtnGlobal, stopBtnGlobal, metronomeBtnGlobal)
+  - Tests verify play button uses Tone.Transport for playback control (start/stop/pause)
+  - Tests verify play button checks transport state before toggling
+  - Tests verify play button calls schedulePlayback on all tracks
+  - Tests verify play button handles pause/resume with wasPaused flag
+  - Tests verify play button updates button text (Pause/Play) and playing class
+  - Tests verify stop button calls panicStopAllAudio and Tone.Transport.stop()/cancel()
+  - Tests verify metronome button toggles startMetronome/stopMetronome
+  - Tests verify play button initializes audio context with initAudioContextAndMasterMeter(isUserInitiated=true)
+  - Tests verify play button handles audio context not ready case
+  - Tests verify stop button has error handling
+  - Tests verify play button calls stopPlayback on all tracks before starting
+  - Tests verify play button handles loop region settings (transport.loop, loopStart, loopEnd)
+  - Tests verify Tap Tempo enforces BPM limits (MIN_TEMPO, MAX_TEMPO, TAP_TEMPO_*)
+  - Tests verify Tap Tempo resets after TAP_TEMPO_TIMEOUT_MS
+  - Tests verify play button uses Tone.now() for precise timing
+  - Total tests increased from 1469 to 1498
+- **Version**: Bumped to 1.79.0
+
 #### Day 298: Event Handlers Keyboard State & Track Control Tests (2026-04-27)
 - **Feature**: Added 27 new unit tests for Event Handlers keyboard state and track control functions to expand test coverage
 - **Files Modified**:

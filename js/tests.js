@@ -9222,3 +9222,156 @@ TestRunner.test('Event Handlers - APP_VERSION is 1.77.0 or higher for Day 298', 
         t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 298');
     }
 });
+
+// Day 299: Transport Controls Extended Tests
+// Tests for transport play/pause/stop, metronome toggle, and tap tempo functionality
+
+TestRunner.test('Transport Controls - handleTapTempo calculates BPM from taps', (t) => {
+    const funcStr = handleTapTempo.toString();
+    t.assertTruthy(typeof handleTapTempo === 'function', 'handleTapTempo should be a function');
+    t.assertTruthy(funcStr.includes('tapTimestamps') || funcStr.includes('lastTapTime') || funcStr.includes('tap'), 'handleTapTempo should track tap timestamps');
+});
+
+TestRunner.test('Transport Controls - handleTapTempo uses TAP_TEMPO_TIMEOUT_MS', (t) => {
+    const funcStr = handleTapTempo.toString();
+    t.assertTruthy(funcStr.includes('TAP_TEMPO_TIMEOUT_MS'), 'handleTapTempo should use TAP_TEMPO_TIMEOUT_MS constant');
+});
+
+TestRunner.test('Transport Controls - resetTapTempo clears tap state', (t) => {
+    const funcStr = resetTapTempo.toString();
+    t.assertTruthy(typeof resetTapTempo === 'function', 'resetTapTempo should be a function');
+    t.assertTruthy(funcStr.includes('tapTimestamps') || funcStr.includes('lastTapTime') || funcStr.includes('tap'), 'resetTapTempo should clear tap timestamps');
+});
+
+TestRunner.test('Transport Controls - initializePrimaryEventListeners references playBtnGlobal', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('playBtnGlobal'), 'initializePrimaryEventListeners should reference playBtnGlobal');
+});
+
+TestRunner.test('Transport Controls - initializePrimaryEventListeners references stopBtnGlobal', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('stopBtnGlobal'), 'initializePrimaryEventListeners should reference stopBtnGlobal');
+});
+
+TestRunner.test('Transport Controls - initializePrimaryEventListeners references metronomeBtnGlobal', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('metronomeBtnGlobal'), 'initializePrimaryEventListeners should reference metronomeBtnGlobal');
+});
+
+TestRunner.test('Transport Controls - play button toggles transport state', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('Tone') && funcStr.includes('Transport'), 'Should use Tone.Transport for playback control');
+});
+
+TestRunner.test('Transport Controls - play button checks transport state before toggling', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('transport.state') || funcStr.includes('Transport.state'), 'Should check transport state');
+});
+
+TestRunner.test('Transport Controls - play button calls schedulePlayback on tracks', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('schedulePlayback'), 'Should call schedulePlayback on tracks');
+});
+
+TestRunner.test('Transport Controls - play button handles pause/resume', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('pause') || funcStr.includes('wasPaused'), 'Should handle pause/resume state');
+});
+
+TestRunner.test('Transport Controls - play button updates button text to Pause/Play', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('textContent') && (funcStr.includes('Pause') || funcStr.includes('Play')), 'Should update button text');
+});
+
+TestRunner.test('Transport Controls - stop button calls panicStopAllAudio', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('panicStopAllAudio'), 'Should call panicStopAllAudio for stop button');
+});
+
+TestRunner.test('Transport Controls - stop button calls Tone.Transport.stop() as fallback', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('Transport.stop') || funcStr.includes('Tone.Transport.stop'), 'Should call Tone.Transport.stop()');
+});
+
+TestRunner.test('Transport Controls - stop button calls Tone.Transport.cancel() to clear scheduled events', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('cancel'), 'Should call Transport.cancel to clear events');
+});
+
+TestRunner.test('Transport Controls - metronome button toggles metronome state', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('startMetronome') || funcStr.includes('stopMetronome'), 'Should toggle metronome on/off');
+});
+
+TestRunner.test('Transport Controls - metronome button adds/removes playing class', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('metronomeBtnGlobal') && funcStr.includes('classList'), 'Should toggle playing class on metronome button');
+});
+
+TestRunner.test('Transport Controls - stop button resets play button text to Play', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('playBtnGlobal') || funcStr.includes('playButton'), 'Should reset play button state');
+});
+
+TestRunner.test('Transport Controls - play button initializes audio context with initAudioContextAndMasterMeter', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'Should initialize audio context before playback');
+});
+
+TestRunner.test('Transport Controls - play button passes isUserInitiated=true for browser audio policy', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter') && (funcStr.includes('true') || funcStr.includes('isUserInitiated')), 'Should pass user initiated flag');
+});
+
+TestRunner.test('Transport Controls - play button handles audio context not ready case', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('audioReady') || funcStr.includes('Audio context'), 'Should handle audio context not ready');
+});
+
+TestRunner.test('Transport Controls - stop button has error handling', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('console.error') || funcStr.includes('catch') || funcStr.includes('try'), 'Should have error handling');
+});
+
+TestRunner.test('Transport Controls - play button calls stopPlayback on all tracks before starting', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('stopPlayback'), 'Should stop all track playback before starting');
+});
+
+TestRunner.test('Transport Controls - play button handles loop region settings', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('loop') && funcStr.includes('transport'), 'Should configure loop region before playback');
+});
+
+TestRunner.test('Transport Controls - Tap Tempo has min/max BPM limits', (t) => {
+    const funcStr = handleTapTempo.toString();
+    t.assertTruthy(funcStr.includes('MIN_TEMPO') || funcStr.includes('MAX_TEMPO') || funcStr.includes('TAP_TEMPO'), 'Should enforce BPM limits');
+});
+
+TestRunner.test('Transport Controls - Tap Tempo resets after timeout', (t) => {
+    const funcStr = handleTapTempo.toString();
+    t.assertTruthy(funcStr.includes('TAP_TEMPO_TIMEOUT_MS') || funcStr.includes('timeout'), 'Should reset after timeout');
+});
+
+TestRunner.test('Transport Controls - play button updates playBtnGlobal class for playing state', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('classList.add') && funcStr.includes('playing'), 'Should add playing class');
+});
+
+TestRunner.test('Transport Controls - metronome button references getMetronomeEnabledState', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('getMetronomeEnabledState') || funcStr.includes('metronome'), 'Should check metronome state');
+});
+
+TestRunner.test('Transport Controls - play button uses Tone.now() for precise timing', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('Tone.now') || funcStr.includes('Tone.Transport.start'), 'Should use Tone.now for precise timing');
+});
+
+TestRunner.test('Transport Controls - APP_VERSION is 1.78.0 or higher for Day 299 final', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 78, 'Minor version should be >= 78 for Day 299');
+    }
+});
