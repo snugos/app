@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.50.0'; // Day 270: Additional State Function Undo Capture Tests (2026-04-27)
+export const APP_VERSION = '1.51.0'; // Day 271: Audio Module Function Existence Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
