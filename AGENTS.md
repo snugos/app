@@ -3878,3 +3878,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify return types (numbers for operations, undefined for void methods)
   - Total tests increased from 1528 to 1555
 - **Version**: Bumped to 1.53.0
+
+#### Day 276: Playback Mode State Function Tests (2026-04-27)
+- **Feature**: Added 11 new unit tests for Playback Mode state functions and fixed missing function definition
+- **Files Modified**:
+  - `js/state.js`: Added missing setPlaybackModeState export function with undo capture
+  - `js/tests.js`: Added 11 new tests in Day 276 section:
+    - setPlaybackModeState function type, parameter count (1), captureStateForUndo call
+    - setPlaybackModeState descriptive undo label ("Set Playback Mode")
+    - setPlaybackModeState appServices guard check before calling captureStateForUndo
+    - setPlaybackModeState validates mode values (sequencer/timeline)
+    - setPlaybackModeState ignores invalid mode values
+    - globalPlaybackMode tracks state correctly
+    - onPlaybackModeChange function type and parameter count (1)
+    - getPlaybackModeState returns string value verification
+  - `js/constants.js`: Bumped APP_VERSION to 1.57.0
+- **Feature Details**:
+  - Fixed missing setPlaybackModeState function that was referenced in main.js and eventHandlers.js but never defined
+  - Function accepts 'sequencer' or 'timeline' mode parameter, validates input, calls captureStateForUndo before mutating
+  - Fixed initializeStateModule to use setPlaybackModeState instead of undefined setPlaybackModeStateInternal
+  - Fixed reconstructDAWInternal to use setPlaybackModeState instead of undefined setPlaybackModeStateInternal
+  - Tests verify function signature, undo capture, mode validation, and state tracking
+  - Total tests increased from 1622 to 1633
+- **Version**: Bumped to 1.57.0
