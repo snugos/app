@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.48.0'; // Day 267: appServices Undo Capture Flag Tests (2026-04-27)
+export const APP_VERSION = '1.49.0'; // Day 269: Desktop Settings & Sound Library State Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

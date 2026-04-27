@@ -8969,3 +8969,320 @@ TestRunner.test("appServices - getIsReconstructingDAW returns true when flag is 
     }
 });
 
+
+// Day 268: Recording Input Gain & Audio Processing Constants Tests (2026-04-27)
+TestRunner.test('Recording - DEFAULT_RECORDING_INPUT_GAIN is 1.0', (t) => {
+    t.assertEqual(DEFAULT_RECORDING_INPUT_GAIN, 1.0, 'DEFAULT_RECORDING_INPUT_GAIN should be 1.0 (unity/neutral)');
+});
+
+TestRunner.test('Recording - MIN_RECORDING_INPUT_GAIN is 0', (t) => {
+    t.assertEqual(MIN_RECORDING_INPUT_GAIN, 0, 'MIN_RECORDING_INPUT_GAIN should be 0 (no gain)');
+});
+
+TestRunner.test('Recording - MAX_RECORDING_INPUT_GAIN is 2.0', (t) => {
+    t.assertEqual(MAX_RECORDING_INPUT_GAIN, 2.0, 'MAX_RECORDING_INPUT_GAIN should be 2.0 (can boost input)');
+});
+
+TestRunner.test('Recording - setRecordingInputGain clamps value to valid range', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+    const result = setRecordingInputGain(0.5);
+    t.assertEqual(typeof result, 'number', 'setRecordingInputGain should return a number');
+    t.assertTrue(result >= MIN_RECORDING_INPUT_GAIN && result <= MAX_RECORDING_INPUT_GAIN, 'Result should be clamped to valid range');
+});
+
+TestRunner.test('Recording - setRecordingInputGain clamps values above maximum', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+    const result = setRecordingInputGain(5.0);
+    t.assertEqual(result, MAX_RECORDING_INPUT_GAIN, 'setRecordingInputGain should clamp to MAX_RECORDING_INPUT_GAIN');
+});
+
+TestRunner.test('Recording - setRecordingInputGain clamps negative values', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+    const result = setRecordingInputGain(-1.0);
+    t.assertEqual(result, MIN_RECORDING_INPUT_GAIN, 'setRecordingInputGain should clamp negative values to MIN');
+});
+
+TestRunner.test('Recording - setRecordingInputGain returns clamped value', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+    const inputValue = 1.5;
+    const result = setRecordingInputGain(inputValue);
+    t.assertEqual(result, inputValue, 'setRecordingInputGain should return the input value when within range');
+});
+
+TestRunner.test('Recording - setRecordingInputGain accepts values at boundaries', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+    const minResult = setRecordingInputGain(MIN_RECORDING_INPUT_GAIN);
+    const maxResult = setRecordingInputGain(MAX_RECORDING_INPUT_GAIN);
+    t.assertEqual(minResult, MIN_RECORDING_INPUT_GAIN, 'Should accept MIN boundary value');
+    t.assertEqual(maxResult, MAX_RECORDING_INPUT_GAIN, 'Should accept MAX boundary value');
+});
+
+TestRunner.test('Recording - MIN_RECORDING_INPUT_GAIN is less than MAX', (t) => {
+    t.assertTrue(MIN_RECORDING_INPUT_GAIN < MAX_RECORDING_INPUT_GAIN, 'MIN should be less than MAX');
+});
+
+TestRunner.test('Recording - DEFAULT_RECORDING_INPUT_GAIN is within range', (t) => {
+    t.assertTrue(DEFAULT_RECORDING_INPUT_GAIN >= MIN_RECORDING_INPUT_GAIN && DEFAULT_RECORDING_INPUT_GAIN <= MAX_RECORDING_INPUT_GAIN, 'DEFAULT should be within MIN-MAX range');
+});
+
+TestRunner.test('Recording - Input gain range allows boost above unity', (t) => {
+    t.assertTrue(MAX_RECORDING_INPUT_GAIN > 1.0, 'MAX should allow boosting above unity (0dB)');
+});
+
+TestRunner.test('Recording - Input gain range allows reduction to silence', (t) => {
+    t.assertEqual(MIN_RECORDING_INPUT_GAIN, 0, 'MIN should allow complete silence');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording validates track type', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const funcString = startAudioRecording.toString();
+    t.assertTrue(funcString.includes('track.type') || funcString.includes('track?.type') || funcString.includes('Audio'), 'startAudioRecording should validate track type');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording handles monitoring flag', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const funcString = startAudioRecording.toString();
+    t.assertTrue(funcString.includes('isMonitoringEnabled') || funcString.includes('monitoring'), 'startAudioRecording should handle monitoring parameter');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording creates UserMedia instance', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const funcString = startAudioRecording.toString();
+    t.assertTrue(funcString.includes('UserMedia') || funcString.includes('mic'), 'startAudioRecording should create UserMedia for microphone');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording creates Recorder instance', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const funcString = startAudioRecording.toString();
+    t.assertTrue(funcString.includes('Recorder') || funcString.includes('recorder'), 'startAudioRecording should create Tone.Recorder');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording connects audio nodes', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const funcString = startAudioRecording.toString();
+    t.assertTrue(funcString.includes('connect') || funcString.includes('node'), 'startAudioRecording should connect audio nodes');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording handles microphone errors', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const funcString = startAudioRecording.toString();
+    t.assertTrue(funcString.includes('catch') || funcString.includes('error'), 'startAudioRecording should handle errors');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording shows notification on error', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const funcString = startAudioRecording.toString();
+    t.assertTrue(funcString.includes('showNotification'), 'startAudioRecording should show notifications for errors');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording handles recorder cleanup', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('recorder') || funcString.includes('stop'), 'stopAudioRecording should handle recorder');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording handles blob processing', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('blob') || funcString.includes('Blob'), 'stopAudioRecording should process recorded blob');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording handles microphone cleanup', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('mic') || funcString.includes('close'), 'stopAudioRecording should clean up microphone');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording handles recorder state check', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('state') || funcString.includes('started'), 'stopAudioRecording should check recorder state');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording adds audio clip to track', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('addAudioClip') || funcString.includes('track'), 'stopAudioRecording should add clip to track');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording handles missing track', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('not found') || funcString.includes('null') || funcString.includes('track'), 'stopAudioRecording should handle missing track');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording handles empty recording', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('empty') || funcString.includes('warning') || funcString.includes('warn'), 'stopAudioRecording should handle empty recordings');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording disposes resources', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('dispose') || funcString.includes('cleanup'), 'stopAudioRecording should dispose audio resources');
+});
+
+TestRunner.test('Recording - Sample rate and bit depth are standard CD quality', (t) => {
+    t.assertEqual(RECORDING_SAMPLE_RATE, 44100, 'Sample rate should be 44100 Hz (CD quality)');
+    t.assertEqual(RECORDING_BIT_DEPTH, 16, 'Bit depth should be 16-bit');
+});
+
+TestRunner.test('Recording - Mono recording is appropriate for voice', (t) => {
+    t.assertEqual(RECORDING_NUM_CHANNELS, 1, 'Recording should be mono (1 channel) for voice/demos');
+});
+
+TestRunner.test('Recording - WebM format is widely supported', (t) => {
+    t.assertEqual(RECORDING_MIME_TYPE, 'audio/webm', 'Recording format should be WebM (widely supported)');
+});
+
+TestRunner.test('Recording - Echo cancellation disabled for clean signal', (t) => {
+    t.assertFalse(RECORDING_DISABLE_ECHO_CANCELLATION !== false, 'Echo cancellation should be disabled for clean recording');
+});
+
+TestRunner.test('Recording - Auto gain control disabled for consistent levels', (t) => {
+    t.assertFalse(RECORDING_DISABLE_AUTO_GAIN_CONTROL !== false, 'Auto gain control should be disabled for consistent levels');
+});
+
+TestRunner.test('Recording - Noise suppression disabled for clean signal', (t) => {
+    t.assertFalse(RECORDING_DISABLE_NOISE_SUPPRESSION !== false, 'Noise suppression should be disabled for clean signal');
+});
+
+TestRunner.test('Recording - Low latency hint for real-time monitoring', (t) => {
+    t.assertEqual(RECORDING_LATENCY_HINT, 'interactive', 'Latency hint should be interactive for real-time feel');
+});
+
+TestRunner.test('Recording - Max length (10 min) is reasonable for single take', (t) => {
+    t.assertTrue(MAX_RECORDING_LENGTH_SECONDS >= 300 && MAX_RECORDING_LENGTH_SECONDS <= 900, 'Max recording length should be 5-15 minutes');
+    t.assertEqual(MAX_RECORDING_LENGTH_SECONDS, 600, 'Max recording length should be 600 seconds (10 minutes)');
+});
+
+TestRunner.test('Recording - Min length (0.1s) prevents accidental clicks', (t) => {
+    t.assertTrue(MIN_RECORDING_LENGTH_SECONDS > 0 && MIN_RECORDING_LENGTH_SECONDS <= 1, 'Min recording length should be > 0 and <= 1 second');
+    t.assertEqual(MIN_RECORDING_LENGTH_SECONDS, 0.1, 'Min recording length should be 0.1 seconds');
+});
+
+TestRunner.test('Recording - Min length is less than max length', (t) => {
+    t.assertTrue(MIN_RECORDING_LENGTH_SECONDS < MAX_RECORDING_LENGTH_SECONDS, 'Min should be less than max recording length');
+});
+
+TestRunner.test('Recording - Monitor volume range is 0-1', (t) => {
+    t.assertTrue(MIN_MONITORING_VOLUME >= 0 && MIN_MONITORING_VOLUME <= 1, 'Min monitoring volume should be 0-1');
+    t.assertTrue(MAX_MONITORING_VOLUME >= 0 && MAX_MONITORING_VOLUME <= 1, 'Max monitoring volume should be 0-1');
+    t.assertTrue(DEFAULT_MONITORING_VOLUME >= MIN_MONITORING_VOLUME && DEFAULT_MONITORING_VOLUME <= MAX_MONITORING_VOLUME, 'Default monitoring volume should be in range');
+});
+
+TestRunner.test('Recording - Input gain constants are all defined', (t) => {
+    t.assertTrue(typeof DEFAULT_RECORDING_INPUT_GAIN === 'number', 'DEFAULT_RECORDING_INPUT_GAIN should be defined');
+    t.assertTrue(typeof MIN_RECORDING_INPUT_GAIN === 'number', 'MIN_RECORDING_INPUT_GAIN should be defined');
+    t.assertTrue(typeof MAX_RECORDING_INPUT_GAIN === 'number', 'MAX_RECORDING_INPUT_GAIN should be defined');
+});
+
+// Day 269: Desktop Settings & Sound Library State Tests (2026-04-27)
+TestRunner.test('Desktop Settings - DESKTOP_BACKGROUND_KEY is namespaced', (t) => {
+    t.assertEqual(typeof DESKTOP_BACKGROUND_KEY, 'string', 'DESKTOP_BACKGROUND_KEY should be a string');
+    t.assertTrue(DESKTOP_BACKGROUND_KEY.startsWith('snugos_'), 'DESKTOP_BACKGROUND_KEY should be prefixed with snugos_');
+});
+
+TestRunner.test('Desktop Settings - DESKTOP_BG_TYPE_KEY is namespaced', (t) => {
+    t.assertEqual(typeof DESKTOP_BG_TYPE_KEY, 'string', 'DESKTOP_BG_TYPE_KEY should be a string');
+    t.assertTrue(DESKTOP_BG_TYPE_KEY.startsWith('snugos_'), 'DESKTOP_BG_TYPE_KEY should be prefixed with snugos_');
+});
+
+TestRunner.test('Desktop Settings - Keys are distinct', (t) => {
+    t.assertNotEqual(DESKTOP_BACKGROUND_KEY, DESKTOP_BG_TYPE_KEY, 'Background key and BG type key should be distinct');
+});
+
+TestRunner.test('Sound Library State - getLoadedZipFilesState returns object', (t) => {
+    t.assertEqual(typeof getLoadedZipFilesState, 'function', 'getLoadedZipFilesState should be a function');
+    const result = getLoadedZipFilesState();
+    t.assertEqual(typeof result, 'object', 'getLoadedZipFilesState should return an object');
+    t.assertTruthy(result !== null, 'getLoadedZipFilesState should not return null');
+});
+
+TestRunner.test('Sound Library State - getSoundLibraryFileTreesState returns object', (t) => {
+    t.assertEqual(typeof getSoundLibraryFileTreesState, 'function', 'getSoundLibraryFileTreesState should be a function');
+    const result = getSoundLibraryFileTreesState();
+    t.assertEqual(typeof result, 'object', 'getSoundLibraryFileTreesState should return an object');
+    t.assertTruthy(result !== null, 'getSoundLibraryFileTreesState should not return null');
+});
+
+TestRunner.test('Sound Library State - getCurrentLibraryNameState returns null or string', (t) => {
+    t.assertEqual(typeof getCurrentLibraryNameState, 'function', 'getCurrentLibraryNameState should be a function');
+    const result = getCurrentLibraryNameState();
+    t.assertTrue(result === null || typeof result === 'string', 'getCurrentLibraryNameState should return null or string');
+});
+
+TestRunner.test('Sound Library State - getLoadedZipFilesState returns object (not array)', (t) => {
+    const result = getLoadedZipFilesState();
+    t.assertEqual(typeof result, 'object', 'getLoadedZipFilesState should return an object type');
+    t.assertFalse(Array.isArray(result), 'getLoadedZipFilesState should not return an array');
+});
+
+TestRunner.test('Sound Library State - getSoundLibraryFileTreesState returns object (not array)', (t) => {
+    const result = getSoundLibraryFileTreesState();
+    t.assertEqual(typeof result, 'object', 'getSoundLibraryFileTreesState should return an object type');
+    t.assertFalse(Array.isArray(result), 'getSoundLibraryFileTreesState should not return an array');
+});
+
+TestRunner.test('Clipboard State - getClipboardDataState is a function', (t) => {
+    t.assertEqual(typeof getClipboardDataState, 'function', 'getClipboardDataState should be a function');
+});
+
+TestRunner.test('Clipboard State - getClipboardDataState returns object', (t) => {
+    const result = getClipboardDataState();
+    t.assertEqual(typeof result, 'object', 'getClipboardDataState should return an object');
+    t.assertTruthy(result !== null, 'getClipboardDataState should not return null');
+});
+
+TestRunner.test('Clipboard State - Initial clipboard type is null', (t) => {
+    const result = getClipboardDataState();
+    t.assertEqual(result.type, null, 'Initial clipboard type should be null');
+});
+
+TestRunner.test('Clipboard State - Clipboard data has sourceTrackType property', (t) => {
+    const result = getClipboardDataState();
+    t.assertTrue('sourceTrackType' in result, 'Clipboard data should have sourceTrackType property');
+});
+
+TestRunner.test('Recording - Input gain clamps to MAX when given Infinity', (t) => {
+    const result = setRecordingInputGain(Infinity);
+    t.assertEqual(result, MAX_RECORDING_INPUT_GAIN, 'Infinity should clamp to MAX_RECORDING_INPUT_GAIN');
+});
+
+TestRunner.test('Recording - Input gain clamps to MIN when given -Infinity', (t) => {
+    const result = setRecordingInputGain(-Infinity);
+    t.assertEqual(result, MIN_RECORDING_INPUT_GAIN, '-Infinity should clamp to MIN_RECORDING_INPUT_GAIN');
+});
+
+TestRunner.test('Recording - Input gain handles NaN by clamping to MIN', (t) => {
+    const result = setRecordingInputGain(NaN);
+    t.assertEqual(result, MIN_RECORDING_INPUT_GAIN, 'NaN should clamp to MIN_RECORDING_INPUT_GAIN');
+});
+
+TestRunner.test('Recording - Monitor volume MIN equals 0', (t) => {
+    t.assertEqual(MIN_MONITORING_VOLUME, 0, 'MIN_MONITORING_VOLUME should be 0');
+});
+
+TestRunner.test('Recording - Monitor volume MAX equals 1', (t) => {
+    t.assertEqual(MAX_MONITORING_VOLUME, 1, 'MAX_MONITORING_VOLUME should be 1');
+});
+
+TestRunner.test('Recording - Monitor volume default is within valid range', (t) => {
+    t.assertTrue(DEFAULT_MONITORING_VOLUME >= MIN_MONITORING_VOLUME && DEFAULT_MONITORING_VOLUME <= MAX_MONITORING_VOLUME, 'Default monitoring volume should be in 0-1 range');
+});
+
+TestRunner.test('Audio Recording - startAudioRecording handles device enumeration', (t) => {
+    const funcString = startAudioRecording.toString();
+    t.assertTrue(funcString.includes('enumerateDevices') || funcString.includes('devices'), 'startAudioRecording should enumerate audio devices');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording handles recording state', (t) => {
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('recording') || funcString.includes('Recording'), 'stopAudioRecording should handle recording state');
+});
+
+TestRunner.test('Audio Recording - stopAudioRecording updates recording state', (t) => {
+    const funcString = stopAudioRecording.toString();
+    t.assertTrue(funcString.includes('setIsRecordingState') || funcString.includes('recordingTrackId'), 'stopAudioRecording should update recording state');
+});

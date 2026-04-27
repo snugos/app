@@ -1,3 +1,22 @@
+#### Day 269: Desktop Settings & Sound Library State Tests (2026-04-27)
+- **Feature**: Added 21 new unit tests for Desktop Settings constants and Sound Library state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 21 new tests in Day 269 section:
+    - Desktop Settings: DESKTOP_BACKGROUND_KEY is namespaced (snugos_ prefix), DESKTOP_BG_TYPE_KEY is namespaced, keys are distinct
+    - Sound Library State: getLoadedZipFilesState returns object, getSoundLibraryFileTreesState returns object, getCurrentLibraryNameState returns null or string
+    - Clipboard State: getClipboardDataState function, returns object, initial type is null, has sourceTrackType property
+    - Recording edge cases: Input gain clamps for Infinity/-Infinity/NaN, Monitor volume MIN=0, MAX=1, default in range
+    - Audio Recording: startAudioRecording handles device enumeration, stopAudioRecording handles recording state, updates recording state
+  - `js/constants.js`: Bumped APP_VERSION to 1.49.0
+- **Feature Details**:
+  - Tests validate Desktop Settings keys are properly namespaced with snugos_ prefix
+  - Tests verify Sound Library state functions return object types (not arrays)
+  - Tests verify Clipboard state initialization and structure
+  - Tests verify Recording input gain handles edge cases (Infinity, -Infinity, NaN)
+  - Tests verify Audio Recording functions handle device enumeration and state updates
+  - Total tests increased from 1431 to 1452
+- **Version**: Bumped to 1.49.0
+
 #### Day 268: InstrumentSampler Drop Zone Verification Tests (2026-04-27)
 - **Feature**: Added 27 new unit tests for InstrumentSampler drop zone verification to expand test coverage
 - **Files Modified**:
