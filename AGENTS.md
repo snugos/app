@@ -1,3 +1,25 @@
+#### Day 292: DrumSampler Pad Undo Capture Verification Tests (2026-04-27)
+- **Feature**: Added 17 new unit tests for DrumSampler pad mutation methods undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 17 new tests in Day 292 section:
+    - setDrumSamplerPadVolume calls _captureUndoState with descriptive undo label
+    - setDrumSamplerPadPitch calls _captureUndoState with descriptive undo label
+    - setDrumSamplerPadEnv calls _captureUndoState with descriptive undo label
+    - loadSampleToPad calls _captureUndoState with descriptive undo label
+    - Undo labels reference pad index (padIndex+1) and track name (this.name)
+    - Null checks for drumSamplerPads and envelope existence
+    - Value parsing (parseFloat for volume/envelope, parseInt for pitch)
+  - `js/constants.js`: Bumped APP_VERSION to 1.73.0
+- **Feature Details**:
+  - Tests validate DrumSampler pad mutation methods call _captureUndoState before mutating state
+  - Tests verify descriptive undo labels (e.g., "Set pad 1 volume on Track Name")
+  - Tests verify pad index and track name are referenced in undo labels
+  - Tests verify proper null checks for drumSamplerPads and envelope objects
+  - Tests verify value parsing (parseFloat for volume/envelope, parseInt for pitch)
+  - Total tests increased from 2145 to 2162
+- **Version**: Bumped to 1.73.0
+
+
 #### Day 288: Audio Module Extended Function Tests (2026-04-27)
 - **Feature**: Added 40 new unit tests for extended audio module function tests to expand test coverage
 - **Files Modified**:
