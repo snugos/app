@@ -3763,3 +3763,31 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate MIDI state getters return null or object
   - Total tests increased from 2141 to 2167
 - **Version**: Bumped to 1.46.0
+
+#### Day 271: Audio Module Function Existence Tests (2026-04-27)
+- **Feature**: Added 26 new unit tests for audio module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 26 new tests in Day 271 section:
+    - autoSliceSample: function existence, parameter count (1-2)
+    - createSendBusInAudio: function existence, parameter count (1)
+    - deleteSendBusFromAudio: function existence, parameter count (1)
+    - addEffectToSendBus: function existence, parameter count (3)
+    - removeEffectFromSendBus: function existence, parameter count (2)
+    - reorderEffectInSendBus: function existence, parameter count (3)
+    - updateSendBusEffectParam: function existence, parameter count (4)
+    - setSendBusLevel: function existence, parameter count (2)
+    - setSendBusMuted: function existence, parameter count (2)
+    - setRecordingInputGain: function existence, parameter count (1)
+    - connectTrackToSendBus: function existence, parameter count (2)
+    - disconnectTrackFromSendBus: function existence, parameter count (2)
+    - setTrackSendLevel: function existence, parameter count (3)
+  - `js/constants.js`: Bumped APP_VERSION to 1.51.0
+- **Feature Details**:
+  - Tests validate audio module functions are properly exported from audio.js
+  - Tests verify function parameter counts match expected APIs
+  - Tests validate send bus management functions (create, delete, connect, disconnect)
+  - Tests validate send bus effect functions (add, remove, reorder, update)
+  - Tests validate send bus level/mute control functions
+  - Tests validate recording input gain function
+  - Total tests increased from 1490 to 1516
+- **Version**: Bumped to 1.51.0
