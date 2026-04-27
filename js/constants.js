@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.57.0'; // Day 276: Playback Mode State Function Fix (2026-04-27)
+export const APP_VERSION = '1.58.0'; // Day 276: Playback Mode State Function Fix (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

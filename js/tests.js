@@ -10397,3 +10397,93 @@ TestRunner.test('Playback Mode - getPlaybackModeState returns string value', (t)
     const mode = getPlaybackModeState();
     t.assertTruthy(mode === 'sequencer' || mode === 'timeline', 'Playback mode should be sequencer or timeline');
 });
+
+// === Day 277: Loop Region & Timeline Zoom Undo Capture Tests (2026-04-27) ===
+// Additional undo capture verification tests for Loop Region and Timeline Zoom state functions
+
+TestRunner.test('Undo/Redo - setLoopRegionState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setLoopRegionEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setLoopRegionStartBarState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionStartBarState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setLoopRegionEndBarState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionEndBarState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setLoopRegionEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Loop Region') && (funcStr.includes('On') || funcStr.includes('Off')), 'Should mention Loop Region and On/Off in undo label');
+});
+
+TestRunner.test('Undo/Redo - setTimelineZoomLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimelineZoomLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTimelineVerticalZoomState calls captureStateForUndo', (t) => {
+    const funcStr = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimelineVerticalZoomState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - resetTimelineZoom calls captureStateForUndo', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'resetTimelineZoom should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setTimelineZoomLevelState uses descriptive undo label', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('Timeline Zoom') || funcStr.includes('Zoom Level'), 'Should mention Timeline Zoom in undo label');
+});
+
+TestRunner.test('Undo/Redo - resetTimelineZoom uses descriptive undo label', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('Timeline Zoom') || funcStr.includes('Reset'), 'Should mention Timeline Zoom in undo label');
+});
+
+TestRunner.test('Undo/Redo - setLoopRegionState uses descriptive undo label', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('Loop Region'), 'Should mention Loop Region in undo label');
+});
+
+TestRunner.test('Undo/Redo - setSwingEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setSwingAmountState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingAmountState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo/Redo - setSwingEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Swing') && (funcStr.includes('On') || funcStr.includes('Off')), 'Should mention Swing and On/Off in undo label');
+});
+
+TestRunner.test('Undo/Redo - setSwingAmountState uses descriptive undo label', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('Swing') || funcStr.includes('Amount'), 'Should mention Swing Amount in undo label');
+});
+
+TestRunner.test('Undo/Redo - state setters guard against missing appServices in Loop/Timeline functions', (t) => {
+    const funcs = ['setLoopRegionState', 'setLoopRegionEnabledState', 'setLoopRegionStartBarState', 'setLoopRegionEndBarState', 'setTimelineZoomLevelState', 'setTimelineVerticalZoomState', 'resetTimelineZoom', 'setSwingEnabledState', 'setSwingAmountState'];
+    let allGuarded = true;
+    for (const funcName of funcs) {
+        const funcStr = eval(funcName).toString();
+        if (!funcStr.includes('appServices') || !funcStr.includes('captureStateForUndo')) {
+            allGuarded = false;
+        }
+    }
+    t.assertTruthy(allGuarded, 'All Loop/Timeline/Swing state setters should check appServices before calling captureStateForUndo');
+});

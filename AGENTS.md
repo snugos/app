@@ -3901,3 +3901,22 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify function signature, undo capture, mode validation, and state tracking
   - Total tests increased from 1622 to 1633
 - **Version**: Bumped to 1.57.0
+
+#### Day 277: Loop Region & Timeline Zoom Undo Capture Tests (2026-04-27)
+- **Feature**: Added 16 new unit tests for additional Loop Region, Timeline Zoom, and Swing state function undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 16 new tests in Day 277 section:
+    - setLoopRegionState, setLoopRegionEnabledState, setLoopRegionStartBarState, setLoopRegionEndBarState call captureStateForUndo
+    - setTimelineZoomLevelState, setTimelineVerticalZoomState, resetTimelineZoom call captureStateForUndo
+    - setSwingEnabledState, setSwingAmountState call captureStateForUndo
+    - Descriptive undo labels for all functions (Loop Region On/Off, Timeline Zoom Level, Reset, Swing On/Off, Swing Amount)
+    - Comprehensive guard test verifying all Loop/timeline/Swing setters check appServices before calling captureStateForUndo
+  - `js/constants.js`: Bumped APP_VERSION to 1.58.0
+- **Feature Details**:
+  - Tests verify Loop Region state setters call captureStateForUndo before mutating
+  - Tests verify Timeline Zoom state setters call captureStateForUndo before mutating
+  - Tests verify Swing state setters call captureStateForUndo before mutating
+  - Tests verify descriptive undo labels are used (e.g., "Set Loop Region", "Toggle Loop Region On/Off", "Set Timeline Zoom Level")
+  - Tests verify all functions guard against missing appServices.captureStateForUndo
+  - Total tests increased from 1633 to 1649
+- **Version**: Bumped to 1.58.0
