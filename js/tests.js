@@ -10944,3 +10944,151 @@ TestRunner.test('Inspector DOM - All inspector DOM builders reference track ID',
         'Audio inspector should reference track.id'
     );
 });
+
+// === Day 279: Event Handlers Module Function Tests ===
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule function is exported', (t) => {
+    t.assertEqual(typeof initializeEventHandlersModule, 'function', 'initializeEventHandlersModule should be a function');
+});
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule accepts 1 parameter', (t) => {
+    t.assertEqual(initializeEventHandlersModule.length, 1, 'initializeEventHandlersModule should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - initializePrimaryEventListeners function is exported', (t) => {
+    t.assertEqual(typeof initializePrimaryEventListeners, 'function', 'initializePrimaryEventListeners should be a function');
+});
+
+TestRunner.test('Event Handlers - initializePrimaryEventListeners accepts 1 parameter', (t) => {
+    t.assertEqual(initializePrimaryEventListeners.length, 1, 'initializePrimaryEventListeners should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - attachGlobalControlEvents function is exported', (t) => {
+    t.assertEqual(typeof attachGlobalControlEvents, 'function', 'attachGlobalControlEvents should be a function');
+});
+
+TestRunner.test('Event Handlers - attachGlobalControlEvents accepts 1 parameter', (t) => {
+    t.assertEqual(attachGlobalControlEvents.length, 1, 'attachGlobalControlEvents should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - setupMIDI function is exported', (t) => {
+    t.assertEqual(typeof setupMIDI, 'function', 'setupMIDI should be a function');
+});
+
+TestRunner.test('Event Handlers - setupMIDI accepts no parameters', (t) => {
+    t.assertEqual(setupMIDI.length, 0, 'setupMIDI should accept 0 parameters');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput function is exported', (t) => {
+    t.assertEqual(typeof selectMIDIInput, 'function', 'selectMIDIInput should be a function');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput accepts 1-2 parameters', (t) => {
+    t.assertTruthy(selectMIDIInput.length === 1 || selectMIDIInput.length === 2, 'selectMIDIInput should accept 1-2 parameters');
+});
+
+TestRunner.test('Event Handlers - handleTrackMute function is exported', (t) => {
+    t.assertEqual(typeof handleTrackMute, 'function', 'handleTrackMute should be a function');
+});
+
+TestRunner.test('Event Handlers - handleTrackMute accepts 1 parameter', (t) => {
+    t.assertEqual(handleTrackMute.length, 1, 'handleTrackMute should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - handleTrackSolo function is exported', (t) => {
+    t.assertEqual(typeof handleTrackSolo, 'function', 'handleTrackSolo should be a function');
+});
+
+TestRunner.test('Event Handlers - handleTrackSolo accepts 1 parameter', (t) => {
+    t.assertEqual(handleTrackSolo.length, 1, 'handleTrackSolo should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - handleTrackArm function is exported', (t) => {
+    t.assertEqual(typeof handleTrackArm, 'function', 'handleTrackArm should be a function');
+});
+
+TestRunner.test('Event Handlers - handleTrackArm accepts 1 parameter', (t) => {
+    t.assertEqual(handleTrackArm.length, 1, 'handleTrackArm should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - handleRemoveTrack function is exported', (t) => {
+    t.assertEqual(typeof handleRemoveTrack, 'function', 'handleRemoveTrack should be a function');
+});
+
+TestRunner.test('Event Handlers - handleRemoveTrack accepts 1 parameter', (t) => {
+    t.assertEqual(handleRemoveTrack.length, 1, 'handleRemoveTrack should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - handleOpenTrackInspector function is exported', (t) => {
+    t.assertEqual(typeof handleOpenTrackInspector, 'function', 'handleOpenTrackInspector should be a function');
+});
+
+TestRunner.test('Event Handlers - handleOpenTrackInspector accepts 1 parameter', (t) => {
+    t.assertEqual(handleOpenTrackInspector.length, 1, 'handleOpenTrackInspector should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - handleOpenEffectsRack function is exported', (t) => {
+    t.assertEqual(typeof handleOpenEffectsRack, 'function', 'handleOpenEffectsRack should be a function');
+});
+
+TestRunner.test('Event Handlers - handleOpenEffectsRack accepts 1 parameter', (t) => {
+    t.assertEqual(handleOpenEffectsRack.length, 1, 'handleOpenEffectsRack should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - handleOpenSequencer function is exported', (t) => {
+    t.assertEqual(typeof handleOpenSequencer, 'function', 'handleOpenSequencer should be a function');
+});
+
+TestRunner.test('Event Handlers - handleOpenSequencer accepts 1 parameter', (t) => {
+    t.assertEqual(handleOpenSequencer.length, 1, 'handleOpenSequencer should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput handles silent parameter', (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('silent') || funcStr.includes('silent = false'), 'selectMIDIInput should handle silent parameter');
+});
+
+TestRunner.test('Event Handlers - handleTrackMute references trackId', (t) => {
+    const funcStr = handleTrackMute.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'handleTrackMute should reference trackId');
+});
+
+TestRunner.test('Event Handlers - handleTrackSolo references trackId', (t) => {
+    const funcStr = handleTrackSolo.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'handleTrackSolo should reference trackId');
+});
+
+TestRunner.test('Event Handlers - handleTrackArm references trackId', (t) => {
+    const funcStr = handleTrackArm.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'handleTrackArm should reference trackId');
+});
+
+TestRunner.test('Event Handlers - handleRemoveTrack references trackId', (t) => {
+    const funcStr = handleRemoveTrack.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'handleRemoveTrack should reference trackId');
+});
+
+TestRunner.test('Event Handlers - handleOpenTrackInspector references trackId', (t) => {
+    const funcStr = handleOpenTrackInspector.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'handleOpenTrackInspector should reference trackId');
+});
+
+TestRunner.test('Event Handlers - handleOpenEffectsRack references trackId', (t) => {
+    const funcStr = handleOpenEffectsRack.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'handleOpenEffectsRack should reference trackId');
+});
+
+TestRunner.test('Event Handlers - handleOpenSequencer references trackId', (t) => {
+    const funcStr = handleOpenSequencer.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'handleOpenSequencer should reference trackId');
+});
+
+TestRunner.test('Event Handlers - attachGlobalControlEvents references elements', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('elements'), 'attachGlobalControlEvents should reference elements');
+});
+
+TestRunner.test('Event Handlers - initializePrimaryEventListeners references appContext', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('appContext') || funcStr.includes('context'), 'initializePrimaryEventListeners should reference context');
+});

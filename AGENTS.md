@@ -1,3 +1,32 @@
+#### Day 279: Event Handlers Module Function Tests (2026-04-27)
+- **Feature**: Added 34 new unit tests for Event Handlers module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 34 new tests in Day 279 section:
+    - initializeEventHandlersModule: function export, 1 parameter
+    - initializePrimaryEventListeners: function export, 1 parameter
+    - attachGlobalControlEvents: function export, 1 parameter
+    - setupMIDI: function export, 0 parameters
+    - selectMIDIInput: function export, 1-2 parameters (silent parameter)
+    - handleTrackMute: function export, 1 parameter
+    - handleTrackSolo: function export, 1 parameter
+    - handleTrackArm: function export, 1 parameter
+    - handleRemoveTrack: function export, 1 parameter
+    - handleOpenTrackInspector: function export, 1 parameter
+    - handleOpenEffectsRack: function export, 1 parameter
+    - handleOpenSequencer: function export, 1 parameter
+    - Reference tests: all track handlers reference trackId parameter
+    - Reference tests: attachGlobalControlEvents references elements
+    - Reference tests: initializePrimaryEventListeners references appContext
+  - `js/constants.js`: Bumped APP_VERSION to 1.60.0
+- **Feature Details**:
+  - Tests validate Event Handlers module functions are properly exported from eventHandlers.js
+  - Tests verify function parameter counts match expected APIs
+  - Tests verify all track handler functions reference the trackId parameter
+  - Tests verify attachGlobalControlEvents references elements parameter
+  - Tests verify initializePrimaryEventListeners references appContext
+  - Total tests increased from 1713 to 1747
+- **Version**: Bumped to 1.60.0
+
 #### Day 275: SnugWindow Core Method Instance Tests (2026-04-27)
 - **Feature**: Added 35 new unit tests for SnugWindow core method instance tests to expand test coverage
 - **Files Modified**:
