@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.74.0'; // Day 293: Sampler Slice Undo Capture Verification Tests (2026-04-27)
+export const APP_VERSION = '1.75.0'; // Day 294: Track Sequence Operation Undo Capture Verification Tests (2026-04-27)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
