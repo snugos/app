@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.81.0'; // Day 301: Recording End-to-End Workflow Tests (2026-04-28)
+export const APP_VERSION = '1.82.0'; // Day 302: Remaining UI Window Functions & Effects Rack Tests (2026-04-28)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

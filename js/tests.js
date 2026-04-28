@@ -291,7 +291,13 @@ import {
     buildSamplerSpecificInspectorDOM,
     buildAudioTrackInspectorDOM,
     buildTrackInspectorContentDOM,
-    initializeInstrumentSamplerSpecificControls
+    initializeInstrumentSamplerSpecificControls,
+    buildModularEffectsRackDOM,
+    showAddEffectModal,
+    applyTrackTemplate,
+    updateTrackTemplatesWindowContent,
+    showTemplateContextMenu,
+    buildMixerContentDOM
 } from './ui.js';
 
 import {
@@ -9644,5 +9650,134 @@ TestRunner.test('Recording E2E - APP_VERSION is 1.81.0 or higher for Day 301', (
     t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
     if (versionParts[0] === 1) {
         t.assertTruthy(versionParts[1] >= 81, 'Minor version should be >= 81 for Day 301');
+    }
+});
+
+// Day 302: Remaining UI Window Functions & Effects Rack Tests
+// ==========================================================
+TestRunner.test('UI - buildModularEffectsRackDOM function exists', (t) => {
+    const funcStr = buildModularEffectsRackDOM.toString();
+    t.assertTruthy(typeof buildModularEffectsRackDOM === 'function', 'buildModularEffectsRackDOM should be a function');
+    t.assertTruthy(funcStr.length > 0, 'buildModularEffectsRackDOM should have implementation');
+});
+
+TestRunner.test('UI - buildModularEffectsRackDOM returns string HTML', (t) => {
+    const result = buildModularEffectsRackDOM({id: 'track1', name: 'Track 1'}, 'track');
+    t.assertEqual(typeof result, 'string', 'buildModularEffectsRackDOM should return a string');
+    t.assertTruthy(result.includes('<div'), 'Should return HTML div element');
+});
+
+TestRunner.test('UI - buildModularEffectsRackDOM uses ownerId for DOM element IDs', (t) => {
+    const result = buildModularEffectsRackDOM({id: 'track1', name: 'Track 1'}, 'track');
+    t.assertTruthy(result.includes('effectsRackContent-track1'), 'Should include effectsRackContent with track ID');
+    t.assertTruthy(result.includes('effectsList-track1'), 'Should include effectsList with track ID');
+    t.assertTruthy(result.includes('addEffectBtn-track1'), 'Should include addEffectBtn with track ID');
+});
+
+TestRunner.test('UI - buildModularEffectsRackDOM handles master ownerType', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('effectsRackContent-master'), 'Should include master ID');
+    t.assertTruthy(result.includes('Master Bus'), 'Should display Master Bus name');
+});
+
+TestRunner.test('UI - buildModularEffectsRackDOM handles send ownerType', (t) => {
+    const result = buildModularEffectsRackDOM({id: 'send1', name: 'Send 1'}, 'send');
+    t.assertTruthy(result.includes('effectsRackContent-send1'), 'Should include send ID');
+});
+
+TestRunner.test('UI - buildModularEffectsRackDOM creates Add Effect button', (t) => {
+    const result = buildModularEffectsRackDOM({id: 'track1', name: 'Track 1'}, 'track');
+    t.assertTruthy(result.includes('Add Effect'), 'Should include Add Effect button');
+    t.assertTruthy(result.includes('addEffectBtn-track1'), 'Should have correct button ID');
+});
+
+TestRunner.test('UI - buildModularEffectsRackDOM creates effectsList container', (t) => {
+    const result = buildModularEffectsRackDOM({id: 'track1', name: 'Track 1'}, 'track');
+    t.assertTruthy(result.includes('effectsList-track1'), 'Should have effects list container');
+});
+
+TestRunner.test('UI - buildModularEffectsRackDOM creates effectControlsContainer', (t) => {
+    const result = buildModularEffectsRackDOM({id: 'track1', name: 'Track 1'}, 'track');
+    t.assertTruthy(result.includes('effectControlsContainer-track1'), 'Should have effect controls container');
+});
+
+TestRunner.test('UI - showAddEffectModal function exists', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(typeof showAddEffectModal === 'function', 'showAddEffectModal should be a function');
+    t.assertTruthy(funcStr.length > 0, 'showAddEffectModal should have implementation');
+});
+
+TestRunner.test('UI - showAddEffectModal accepts owner and ownerType parameters', (t) => {
+    t.assertEqual(showAddEffectModal.length, 2, 'showAddEffectModal should accept 2 parameters (owner, ownerType)');
+});
+
+TestRunner.test('UI - showAddEffectModal references showCustomModal', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(funcStr.includes('showCustomModal'), 'showAddEffectModal should call showCustomModal');
+});
+
+TestRunner.test('UI - showAddEffectModal references AVAILABLE_EFFECTS', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'showAddEffectModal should reference AVAILABLE_EFFECTS');
+});
+
+TestRunner.test('UI - showAddEffectModal uses ownerType for modal title', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(funcStr.includes('Add Effect to'), 'Modal title should include "Add Effect to"');
+    t.assertTruthy(funcStr.includes('Master Bus'), 'Should handle Master Bus case');
+});
+
+TestRunner.test('UI - applyTrackTemplate function exists', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(typeof applyTrackTemplate === 'function', 'applyTrackTemplate should be a function');
+    t.assertTruthy(funcStr.length > 0, 'applyTrackTemplate should have implementation');
+});
+
+TestRunner.test('UI - applyTrackTemplate accepts template parameter', (t) => {
+    t.assertEqual(applyTrackTemplate.length, 1, 'applyTrackTemplate should accept 1 parameter (template)');
+});
+
+TestRunner.test('UI - applyTrackTemplate references getTrackTemplatesState', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('getTrackTemplatesState') || funcStr.includes('templates'), 'applyTrackTemplate should reference track templates');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent function exists', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(typeof updateTrackTemplatesWindowContent === 'function', 'updateTrackTemplatesWindowContent should be a function');
+    t.assertTruthy(funcStr.length > 0, 'updateTrackTemplatesWindowContent should have implementation');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent accepts winElement parameter', (t) => {
+    t.assertEqual(updateTrackTemplatesWindowContent.length, 1, 'updateTrackTemplatesWindowContent should accept 1 parameter (winElement)');
+});
+
+TestRunner.test('UI - showTemplateContextMenu function exists', (t) => {
+    const funcStr = showTemplateContextMenu.toString();
+    t.assertTruthy(typeof showTemplateContextMenu === 'function', 'showTemplateContextMenu should be a function');
+    t.assertTruthy(funcStr.length > 0, 'showTemplateContextMenu should have implementation');
+});
+
+TestRunner.test('UI - showTemplateContextMenu accepts templateId, x, y parameters', (t) => {
+    t.assertEqual(showTemplateContextMenu.length, 3, 'showTemplateContextMenu should accept 3 parameters (templateId, x, y)');
+});
+
+TestRunner.test('UI - Mixer UI - buildMixerContentDOM function exists', (t) => {
+    const funcStr = buildMixerContentDOM.toString();
+    t.assertTruthy(typeof buildMixerContentDOM === 'function', 'buildMixerContentDOM should be a function');
+    t.assertTruthy(funcStr.length > 0, 'buildMixerContentDOM should have implementation');
+});
+
+TestRunner.test('UI - Mixer UI - buildMixerContentDOM returns string', (t) => {
+    const result = buildMixerContentDOM();
+    t.assertEqual(typeof result, 'string', 'buildMixerContentDOM should return a string');
+    t.assertTruthy(result.includes('mixer'), 'Should include mixer elements');
+});
+
+TestRunner.test('UI - APP_VERSION is 1.82.0 or higher for Day 302', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 82, 'Minor version should be >= 82 for Day 302');
     }
 });
