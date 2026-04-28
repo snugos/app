@@ -1,4 +1,33 @@
 
+#### Day 328: Event Handlers Extended Function Tests (2026-04-28)
+- **Feature**: Added 52 new unit tests for Event Handlers extended functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 52 new tests in Day 328 section:
+    - handleTimelineLaneDrop: function export, 4 parameters, async, validates required services
+    - handleTimelineLaneDrop: handles sequence-timeline-drag and sound-browser-item types
+    - handleTimelineLaneDrop: validates Audio track for audio files, prevents sequence clips on Audio tracks
+    - handleTimelineLaneDrop: calls addSequenceClipToTimeline, handles file drops, validates audio file type
+    - handleTimelineLaneDrop: has try-catch error handling
+    - toggleFullScreen: function exists, checks fullscreen state, has error handling
+    - onMIDIFailure: function exists, accepts message parameter, calls console.error and showNotification
+    - findMidiLearnMapping: function exists, accepts 2 parameters, uses channel and cc matching
+    - findMidiLearnMapping: returns index (findIndex), checks channel and cc match
+    - initializeEventHandlersModule: accepts appServices parameter
+    - initializePrimaryEventListeners: accepts appContext parameter
+    - attachGlobalControlEvents: accepts elements parameter
+    - selectMIDIInput: accepts deviceId and optional silent (1-2 parameters)
+  - `js/constants.js`: Bumped APP_VERSION to 2.08.0
+- **Feature Details**:
+  - Tests validate handleTimelineLaneDrop handles drag-drop for both sequence clips and sound browser items
+  - Tests verify handleTimelineLaneDrop validates track types and prevents invalid operations
+  - Tests verify toggleFullScreen checks fullscreen state and has proper error handling
+  - Tests verify onMIDIFailure handles MIDI initialization failures gracefully
+  - Tests verify findMidiLearnMapping finds existing mappings by channel and CC
+  - Tests validate function parameter counts for all event handler functions
+  - Total tests increased from 2155 to 2207
+- **Version**: Bumped to 2.08.0
+
+
 #### Day 326: MIDI Message Handler & Apply MIDI Learn Mapping Tests (2026-04-28)
 - **Feature**: Added 48 new unit tests for MIDI Message Handler and Apply MIDI Learn Mapping functions to expand test coverage
 - **Files Modified**:

@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.08.0'; // Day 328: Event Handlers Extended Function Tests (2026-04-28)
+export const APP_VERSION = '2.09.0'; // Day 329: Waveform Drawing Extended Function Tests (2026-04-28)
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

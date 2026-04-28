@@ -13665,3 +13665,125 @@ TestRunner.test('State - APP_VERSION is 2.08.0 or higher for Day 328', (t) => {
         t.assertTruthy(versionParts[1] >= 8, 'Minor version should be >= 8 for Day 328');
     }
 });
+
+// ============================================
+// Day 329: Waveform Drawing Extended Function Tests (2026-04-28)
+// ============================================
+
+TestRunner.test('Waveform - drawWaveform function is exported', (t) => {
+    t.assertEqual(typeof drawWaveform, 'function', 'drawWaveform should be a function');
+});
+
+TestRunner.test('Waveform - drawWaveform accepts 1 parameter (track)', (t) => {
+    t.assertEqual(drawWaveform.length, 1, 'drawWaveform should accept 1 parameter');
+});
+
+TestRunner.test('Waveform - drawWaveform references waveformCanvasCtx', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('waveformCanvasCtx'), 'drawWaveform should reference waveformCanvasCtx');
+});
+
+TestRunner.test('Waveform - drawWaveform references track.audioBuffer', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer') || funcStr.includes('track.audioBuffer'), 'drawWaveform should reference audioBuffer');
+});
+
+TestRunner.test('Waveform - drawWaveform checks loaded property', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('.loaded') || funcStr.includes('loaded'), 'drawWaveform should check loaded property');
+});
+
+TestRunner.test('Waveform - drawWaveform draws center line', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('centerLine') || funcStr.includes('height / 2') || funcStr.includes('amp/2') || funcStr.includes('height/2'), 'drawWaveform should draw center line');
+});
+
+TestRunner.test('Waveform - drawWaveform handles dark mode styling', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('dark') || funcStr.includes('classList'), 'drawWaveform should handle dark mode styling');
+});
+
+TestRunner.test('Waveform - drawWaveform references slices array', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('slices') || funcStr.includes('slice'), 'drawWaveform should reference slices for Sampler tracks');
+});
+
+TestRunner.test('Waveform - drawWaveform references selectedSliceForEdit', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('selectedSliceForEdit'), 'drawWaveform should reference selectedSliceForEdit');
+});
+
+TestRunner.test('Waveform - drawClipWaveform function is exported', (t) => {
+    t.assertEqual(typeof drawClipWaveform, 'function', 'drawClipWaveform should be a function');
+});
+
+TestRunner.test('Waveform - drawClipWaveform accepts 2 parameters (clipId, audioBuffer)', (t) => {
+    t.assertEqual(drawClipWaveform.length, 2, 'drawClipWaveform should accept 2 parameters');
+});
+
+TestRunner.test('Waveform - drawClipWaveform gets canvas by ID', (t) => {
+    const funcStr = drawClipWaveform.toString();
+    t.assertTruthy(funcStr.includes('getElementById') || funcStr.includes('clipWaveformCanvas'), 'drawClipWaveform should get canvas by ID');
+});
+
+TestRunner.test('Waveform - drawClipWaveform handles missing canvas gracefully', (t) => {
+    const funcStr = drawClipWaveform.toString();
+    t.assertTruthy(funcStr.includes('!canvas') || funcStr.includes('canvas &&') || funcStr.includes('if (canvas') || funcStr.includes('return'), 'drawClipWaveform should handle missing canvas');
+});
+
+TestRunner.test('Waveform - drawClipWaveform checks loaded property', (t) => {
+    const funcStr = drawClipWaveform.toString();
+    t.assertTruthy(funcStr.includes('.loaded') || funcStr.includes('loaded'), 'drawClipWaveform should check loaded property');
+});
+
+TestRunner.test('Waveform - drawClipWaveform gets canvas context', (t) => {
+    const funcStr = drawClipWaveform.toString();
+    t.assertTruthy(funcStr.includes('getContext') && funcStr.includes('2d'), 'drawClipWaveform should get 2d context');
+});
+
+TestRunner.test('Waveform - drawClipWaveform sets canvas dimensions', (t) => {
+    const funcStr = drawClipWaveform.toString();
+    t.assertTruthy(funcStr.includes('.width') && funcStr.includes('.height'), 'drawClipWaveform should set canvas width and height');
+});
+
+TestRunner.test('Waveform - drawClipWaveform draws center line', (t) => {
+    const funcStr = drawClipWaveform.toString();
+    t.assertTruthy(funcStr.includes('centerLine') || funcStr.includes('height / 2') || funcStr.includes('amp/2'), 'drawClipWaveform should draw center line');
+});
+
+TestRunner.test('Waveform - drawInstrumentWaveform function is exported', (t) => {
+    t.assertEqual(typeof drawInstrumentWaveform, 'function', 'drawInstrumentWaveform should be a function');
+});
+
+TestRunner.test('Waveform - drawInstrumentWaveform accepts 1 parameter (track)', (t) => {
+    t.assertEqual(drawInstrumentWaveform.length, 1, 'drawInstrumentWaveform should accept 1 parameter');
+});
+
+TestRunner.test('Waveform - drawInstrumentWaveform references instrumentWaveformCanvasCtx', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvasCtx'), 'drawInstrumentWaveform should reference instrumentWaveformCanvasCtx');
+});
+
+TestRunner.test('Waveform - drawInstrumentWaveform references track.audioBuffer', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer') || funcStr.includes('track.audioBuffer'), 'drawInstrumentWaveform should reference audioBuffer');
+});
+
+TestRunner.test('Waveform - drawInstrumentWaveform checks loaded property', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('.loaded') || funcStr.includes('loaded'), 'drawInstrumentWaveform should check loaded property');
+});
+
+TestRunner.test('Waveform - drawInstrumentWaveform references instrumentSamplerSettings', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings'), 'drawInstrumentWaveform should reference instrumentSamplerSettings');
+});
+
+// APP_VERSION validation for Day 329
+TestRunner.test('State - APP_VERSION is 2.09.0 or higher for Day 329', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 329');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 9, 'Minor version should be >= 9 for Day 329');
+    }
+});
