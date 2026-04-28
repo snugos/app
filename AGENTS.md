@@ -4973,3 +4973,28 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify all three waveform drawing functions check for loaded audioBuffer
   - Total tests increased from 1912 to 1938
 - **Version**: Bumped to 2.00.0
+
+#### Day 321: Export To MIDI Function Tests (2026-04-28)
+- **Feature**: Added 32 new unit tests for Export To MIDI Function to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 32 new tests in Day 321 section:
+    - exportToMidiInternal: function export, 0 parameters, async, references appServices.showNotification
+    - exportToMidiInternal: references getTempoState, getTimeSignatureState, getTracksState, getPlaybackModeState
+    - exportToMidiInternal: handles Audio track type, references getActiveSequence
+    - exportToMidiInternal: references MIDI_EXPORT_VELOCITY_SCALE, MIDI_EXPORT_TicksPerQuarterNote
+    - exportToMidiInternal: calculates step duration in ticks, references pitchToRow
+    - exportToMidiInternal: handles sequence and timeline playback modes
+    - exportToMidiInternal: builds track events (tempo, timeSig, trackName, noteOn, noteOff, endOfTrack)
+    - exportToMidiInternal: references buildMidiFile, handles empty notes case
+    - exportToMidiInternal: creates MIDI file download with Blob, handles errors
+    - exportToMidiInternal: uses MIDI_DEFAULT_CHANNEL, calculates microsecondsPerQuarter
+    - exportToMidiInternal: sorts notes by time, creates download anchor element
+  - `js/constants.js`: Bumped APP_VERSION to 2.01.0
+- **Feature Details**:
+  - Tests validate exportToMidiInternal function export and async behavior
+  - Tests verify exportToMidiInternal references all necessary state functions
+  - Tests verify exportToMidiInternal handles both sequence and timeline playback modes
+  - Tests verify exportToMidiInternal builds MIDI track events correctly
+  - Tests verify exportToMidiInternal creates file download for MIDI export
+  - Total tests increased from 1938 to 1970
+- **Version**: Bumped to 2.01.0
