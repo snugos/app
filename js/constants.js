@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.03.0'; // Day 323: Scale Mode & Chord Mode State Function Tests (2026-04-28)
+export const APP_VERSION = '2.04.0'; // Day 324: SnugWindow Instance Method Tests (2026-04-28)
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

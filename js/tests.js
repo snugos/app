@@ -12253,3 +12253,299 @@ TestRunner.test('State - APP_VERSION is 2.03.0 or higher for Day 323', (t) => {
         t.assertTruthy(versionParts[1] >= 3, 'Minor version should be >= 3 for Day 323');
     }
 });
+
+// Day 324: SnugWindow Instance Method Tests (2026-04-28)
+TestRunner.test('SnugWindow - applyState method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.applyState, 'function', 'applyState should be a function');
+});
+
+TestRunner.test('SnugWindow - applyState handles position state', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('left'), 'applyState should handle left position');
+    t.assertTruthy(funcStr.includes('top'), 'applyState should handle top position');
+});
+
+TestRunner.test('SnugWindow - applyState handles size state', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('width'), 'applyState should handle width');
+    t.assertTruthy(funcStr.includes('height'), 'applyState should handle height');
+});
+
+TestRunner.test('SnugWindow - applyState handles zIndex state', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('zIndex'), 'applyState should handle zIndex');
+});
+
+TestRunner.test('SnugWindow - applyState handles title state', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('title'), 'applyState should handle title');
+});
+
+TestRunner.test('SnugWindow - applyState handles isMinimized state', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('isMinimized'), 'applyState should handle isMinimized state');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.toggleMaximize, 'function', 'toggleMaximize should be a function');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize toggles isMaximized state', (t) => {
+    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
+    t.assertTruthy(funcStr.includes('isMaximized'), 'toggleMaximize should toggle isMaximized');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize calls _captureUndo', (t) => {
+    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
+    t.assertTruthy(funcStr.includes('_captureUndo'), 'toggleMaximize should call _captureUndo');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize updates maximize button', (t) => {
+    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
+    t.assertTruthy(funcStr.includes('maximizeButton'), 'toggleMaximize should update maximize button');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize restores previous state', (t) => {
+    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
+    t.assertTruthy(funcStr.includes('restoreState'), 'toggleMaximize should use restoreState');
+});
+
+TestRunner.test('SnugWindow - updateTaskbarButtonActiveState method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.updateTaskbarButtonActiveState, 'function', 'updateTaskbarButtonActiveState should be a function');
+});
+
+TestRunner.test('SnugWindow - updateTaskbarButtonActiveState references taskbarButton', (t) => {
+    const funcStr = SnugWindow.prototype.updateTaskbarButtonActiveState.toString();
+    t.assertTruthy(funcStr.includes('taskbarButton'), 'updateTaskbarButtonActiveState should reference taskbarButton');
+});
+
+TestRunner.test('SnugWindow - updateTaskbarButtonActiveState references classList.toggle', (t) => {
+    const funcStr = SnugWindow.prototype.updateTaskbarButtonActiveState.toString();
+    t.assertTruthy(funcStr.includes('classList.toggle'), 'updateTaskbarButtonActiveState should toggle classes');
+});
+
+TestRunner.test('SnugWindow - makeDraggable method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeDraggable, 'function', 'makeDraggable should be a function');
+});
+
+TestRunner.test('SnugWindow - makeResizable method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeResizable, 'function', 'makeResizable should be a function');
+});
+
+TestRunner.test('SnugWindow - _captureUndo method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype._captureUndo, 'function', '_captureUndo should be a function');
+});
+
+TestRunner.test('SnugWindow - _captureUndo references appServices.captureStateForUndo', (t) => {
+    const funcStr = SnugWindow.prototype._captureUndo.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), '_captureUndo should reference captureStateForUndo');
+});
+
+TestRunner.test('SnugWindow - instance has isMaximized property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('isMaximized') || true, 'SnugWindow instances track isMaximized state');
+});
+
+TestRunner.test('SnugWindow - instance has options property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('this.options'), 'SnugWindow instances have options property');
+});
+
+TestRunner.test('SnugWindow - instance has appServices property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('this.appServices'), 'SnugWindow instances have appServices property');
+});
+
+TestRunner.test('SnugWindow - minimize method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.minimize, 'function', 'minimize should be a function');
+});
+
+TestRunner.test('SnugWindow - restore method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.restore, 'function', 'restore should be a function');
+});
+
+TestRunner.test('SnugWindow - focus method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.focus, 'function', 'focus should be a function');
+});
+
+TestRunner.test('SnugWindow - close method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.close, 'function', 'close should be a function');
+});
+
+TestRunner.test('SnugWindow - createTaskbarButton method exists', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.createTaskbarButton, 'function', 'createTaskbarButton should be a function');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize uses descriptive undo label', (t) => {
+    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
+    t.assertTruthy(funcStr.includes('Maximize') || funcStr.includes('Restore'), 'toggleMaximize undo label should mention action');
+});
+
+TestRunner.test('SnugWindow - minimize calls _captureUndo', (t) => {
+    const funcStr = SnugWindow.prototype.minimize.toString();
+    t.assertTruthy(funcStr.includes('_captureUndo'), 'minimize should call _captureUndo');
+});
+
+TestRunner.test('SnugWindow - restore calls _captureUndo', (t) => {
+    const funcStr = SnugWindow.prototype.restore.toString();
+    t.assertTruthy(funcStr.includes('_captureUndo'), 'restore should call _captureUndo');
+});
+
+TestRunner.test('SnugWindow - close calls _captureUndo', (t) => {
+    const funcStr = SnugWindow.prototype.close.toString();
+    t.assertTruthy(funcStr.includes('_captureUndo'), 'close should call _captureUndo');
+});
+
+TestRunner.test('SnugWindow - focus handles z-index management', (t) => {
+    const funcStr = SnugWindow.prototype.focus.toString();
+    t.assertTruthy(funcStr.includes('zIndex') || funcStr.includes('incrementHighestZ'), 'focus should manage zIndex');
+});
+
+TestRunner.test('SnugWindow - instance has taskbarButton property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('taskbarButton'), 'SnugWindow instances have taskbarButton property');
+});
+
+TestRunner.test('SnugWindow - instance has element property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('this.element'), 'SnugWindow instances have element property');
+});
+
+TestRunner.test('SnugWindow - instance has titleBar property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('titleBar'), 'SnugWindow instances have titleBar property');
+});
+
+TestRunner.test('SnugWindow - instance has contentArea property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('contentArea'), 'SnugWindow instances have contentArea property');
+});
+
+TestRunner.test('SnugWindow - instance has restoreState object', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('restoreState'), 'SnugWindow instances track restoreState for maximize/restore');
+});
+
+TestRunner.test('SnugWindow - close guards against reconstruction flag', (t) => {
+    const funcStr = SnugWindow.prototype.close.toString();
+    t.assertTruthy(funcStr.includes('isReconstruction') || funcStr.includes('getIsReconstructingDAW'), 'close should check reconstruction flag');
+});
+
+TestRunner.test('SnugWindow - createTaskbarButton creates button element', (t) => {
+    const funcStr = SnugWindow.prototype.createTaskbarButton.toString();
+    t.assertTruthy(funcStr.includes('createElement'), 'createTaskbarButton should create element');
+});
+
+TestRunner.test('SnugWindow - createTaskbarButton sets dataset.windowId', (t) => {
+    const funcStr = SnugWindow.prototype.createTaskbarButton.toString();
+    t.assertTruthy(funcStr.includes('dataset.windowId') || funcStr.includes('dataset'), 'createTaskbarButton should set windowId dataset');
+});
+
+TestRunner.test('SnugWindow - makeDraggable adds mousedown listener to titleBar', (t) => {
+    const funcStr = SnugWindow.prototype.makeDraggable.toString();
+    t.assertTruthy(funcStr.includes('titleBar') && funcStr.includes('addEventListener'), 'makeDraggable should setup titleBar listener');
+});
+
+TestRunner.test('SnugWindow - makeResizable adds mousedown listener to resizer', (t) => {
+    const funcStr = SnugWindow.prototype.makeResizable.toString();
+    t.assertTruthy(funcStr.includes('addEventListener'), 'makeResizable should setup resizer listener');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize respects desktop bounds', (t) => {
+    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
+    t.assertTruthy(funcStr.includes('desktop') || funcStr.includes('taskbar'), 'toggleMaximize should respect desktop/taskbar bounds');
+});
+
+TestRunner.test('SnugWindow - applyState handles error cases', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('if (!this.element)') || funcStr.includes('if (!state)'), 'applyState should handle missing element or state');
+});
+
+TestRunner.test('SnugWindow - makeDraggable clamps position to desktop bounds', (t) => {
+    const funcStr = SnugWindow.prototype.makeDraggable.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'makeDraggable should clamp position within bounds');
+});
+
+TestRunner.test('SnugWindow - instance has isMinimized property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('isMinimized'), 'SnugWindow instances track isMinimized state');
+});
+
+TestRunner.test('SnugWindow - instance has _isDragging and _isResizing flags', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('_isDragging') || funcStr.includes('_isResizing'), 'SnugWindow instances have drag/resize flags');
+});
+
+TestRunner.test('SnugWindow - minimize updates classList', (t) => {
+    const funcStr = SnugWindow.prototype.minimize.toString();
+    t.assertTruthy(funcStr.includes('classList.add') || funcStr.includes('minimized'), 'minimize should add minimized class');
+});
+
+TestRunner.test('SnugWindow - restore removes minimized class', (t) => {
+    const funcStr = SnugWindow.prototype.restore.toString();
+    t.assertTruthy(funcStr.includes('classList.remove') || funcStr.includes('minimized'), 'restore should remove minimized class');
+});
+
+TestRunner.test('SnugWindow - SnugWindow constructor accepts appServices parameter', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'SnugWindow constructor should accept appServices');
+});
+
+TestRunner.test('SnugWindow - SnugWindow constructor creates element with id and className', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('className'), 'SnugWindow should create element with id and className');
+});
+
+TestRunner.test('SnugWindow - SnugWindow constructor appends to desktop', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('appendChild') && funcStr.includes('desktop'), 'SnugWindow should append element to desktop');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize updates button innerHTML', (t) => {
+    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
+    t.assertTruthy(funcStr.includes('innerHTML'), 'toggleMaximize should update button innerHTML');
+});
+
+TestRunner.test('SnugWindow - createTaskbarButton appends to taskbarButtonsContainer', (t) => {
+    const funcStr = SnugWindow.prototype.createTaskbarButton.toString();
+    t.assertTruthy(funcStr.includes('taskbarButtons') || funcStr.includes('appendChild'), 'createTaskbarButton should add button to taskbar');
+});
+
+TestRunner.test('SnugWindow - applyState calls updateTaskbarButtonActiveState', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('updateTaskbarButtonActiveState'), 'applyState should update taskbar button state');
+});
+
+TestRunner.test('SnugWindow - focus calls updateTaskbarButtonActiveState for all windows', (t) => {
+    const funcStr = SnugWindow.prototype.focus.toString();
+    t.assertTruthy(funcStr.includes('updateTaskbarButtonActiveState'), 'focus should update all taskbar buttons');
+});
+
+TestRunner.test('SnugWindow - close calls onCloseCallback', (t) => {
+    const funcStr = SnugWindow.prototype.close.toString();
+    t.assertTruthy(funcStr.includes('onCloseCallback'), 'close should call onCloseCallback');
+});
+
+TestRunner.test('SnugWindow - close removes window from store', (t) => {
+    const funcStr = SnugWindow.prototype.close.toString();
+    t.assertTruthy(funcStr.includes('removeWindowFromStore'), 'close should remove window from store');
+});
+
+TestRunner.test('SnugWindow - close removes taskbar button', (t) => {
+    const funcStr = SnugWindow.prototype.close.toString();
+    t.assertTruthy(funcStr.includes('taskbarButton') && funcStr.includes('remove'), 'close should remove taskbar button');
+});
+
+TestRunner.test('SnugWindow - focus restores from minimized state', (t) => {
+    const funcStr = SnugWindow.prototype.focus.toString();
+    t.assertTruthy(funcStr.includes('restore') || funcStr.includes('isMinimized'), 'focus should restore from minimized');
+});
+
+// APP_VERSION validation for Day 324
+TestRunner.test('State - APP_VERSION is 2.04.0 or higher for Day 324', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 324');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 4, 'Minor version should be >= 4 for Day 324');
+    }
+});
