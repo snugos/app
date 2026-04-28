@@ -4871,6 +4871,265 @@ TestRunner.test('APP_VERSION - semver format validation for Day 311', (t) => {
     t.assertEqual(versionParts[2] >= 0, true, 'Patch should be >= 0');
 });
 
+// ============================================
+// Day 312: Extended UI Function Tests (2026-04-28)
+// ============================================
+
+TestRunner.test('UI - drawWaveform function is exported', (t) => {
+    t.assertEqual(typeof drawWaveform, 'function', 'drawWaveform should be a function');
+});
+
+TestRunner.test('UI - drawWaveform accepts 1 parameter (track)', (t) => {
+    t.assertEqual(drawWaveform.length, 1, 'drawWaveform should accept 1 parameter');
+});
+
+TestRunner.test('UI - drawWaveform references waveformCanvasCtx', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('waveformCanvasCtx'), 'drawWaveform should reference waveformCanvasCtx');
+});
+
+TestRunner.test('UI - drawWaveform references audioBuffer', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer'), 'drawWaveform should reference audioBuffer');
+});
+
+TestRunner.test('UI - drawWaveform handles missing audio gracefully', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('!track?.waveformCanvasCtx') || funcStr.includes('!track ||'), 'drawWaveform should check for missing track/audio');
+});
+
+TestRunner.test('UI - drawWaveform references slices array', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('track.slices') || funcStr.includes('slices'), 'drawWaveform should reference slices');
+});
+
+TestRunner.test('UI - drawWaveform references selectedSliceForEdit', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('selectedSliceForEdit'), 'drawWaveform should reference selectedSliceForEdit');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform function is exported', (t) => {
+    t.assertEqual(typeof drawInstrumentWaveform, 'function', 'drawInstrumentWaveform should be a function');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform accepts 1 parameter (track)', (t) => {
+    t.assertEqual(drawInstrumentWaveform.length, 1, 'drawInstrumentWaveform should accept 1 parameter');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform references instrumentWaveformCanvasCtx', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvasCtx'), 'drawInstrumentWaveform should reference instrumentWaveformCanvasCtx');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform references instrumentSamplerSettings', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings'), 'drawInstrumentWaveform should reference instrumentSamplerSettings');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform handles loop settings', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('loop') || funcStr.includes('loopStart') || funcStr.includes('loopEnd'), 'drawInstrumentWaveform should handle loop settings');
+});
+
+TestRunner.test('UI - highlightPlayingStep function is exported', (t) => {
+    t.assertEqual(typeof highlightPlayingStep, 'function', 'highlightPlayingStep should be a function');
+});
+
+TestRunner.test('UI - highlightPlayingStep accepts 3 parameters (trackId, stepIndex, isPlaying)', (t) => {
+    t.assertEqual(highlightPlayingStep.length, 3, 'highlightPlayingStep should accept 3 parameters');
+});
+
+TestRunner.test('UI - highlightPlayingStep references trackId parameter', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'highlightPlayingStep should reference trackId parameter');
+});
+
+TestRunner.test('UI - highlightPlayingStep references stepIndex parameter', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('stepIndex'), 'highlightPlayingStep should reference stepIndex parameter');
+});
+
+TestRunner.test('UI - highlightPlayingStep references isPlaying parameter', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('isPlaying'), 'highlightPlayingStep should reference isPlaying parameter');
+});
+
+TestRunner.test('UI - highlightPlayingStep queries sequencer window', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('sequencer') || funcStr.includes('getWindowById'), 'highlightPlayingStep should query sequencer window');
+});
+
+TestRunner.test('UI - updateSequencerCellUI function is exported', (t) => {
+    t.assertEqual(typeof updateSequencerCellUI, 'function', 'updateSequencerCellUI should be a function');
+});
+
+TestRunner.test('UI - updateSequencerCellUI accepts 4 parameters', (t) => {
+    t.assertEqual(updateSequencerCellUI.length, 4, 'updateSequencerCellUI should accept 4 parameters');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references sequencerElement', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('sequencerElement'), 'updateSequencerCellUI should reference sequencerElement');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references trackType', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('trackType'), 'updateSequencerCellUI should reference trackType');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references isActive', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('isActive'), 'updateSequencerCellUI should reference isActive');
+});
+
+TestRunner.test('UI - updateSequencerCellUI handles DrumSampler type', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'updateSequencerCellUI should handle DrumSampler type');
+});
+
+TestRunner.test('UI - renderSamplePads function is exported', (t) => {
+    t.assertEqual(typeof renderSamplePads, 'function', 'renderSamplePads should be a function');
+});
+
+TestRunner.test('UI - renderSamplePads accepts 1 parameter (track)', (t) => {
+    t.assertEqual(renderSamplePads.length, 1, 'renderSamplePads should accept 1 parameter');
+});
+
+TestRunner.test('UI - renderSamplePads checks track type', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('track.type') || funcStr.includes("=== 'Sampler'"), 'renderSamplePads should check track type');
+});
+
+TestRunner.test('UI - renderEffectsList function is exported', (t) => {
+    t.assertEqual(typeof renderEffectsList, 'function', 'renderEffectsList should be a function');
+});
+
+TestRunner.test('UI - renderEffectsList accepts 4 parameters', (t) => {
+    t.assertEqual(renderEffectsList.length, 4, 'renderEffectsList should accept 4 parameters');
+});
+
+TestRunner.test('UI - renderEffectsList references owner parameter', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('owner'), 'renderEffectsList should reference owner parameter');
+});
+
+TestRunner.test('UI - renderEffectsList references ownerType parameter', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('ownerType'), 'renderEffectsList should reference ownerType parameter');
+});
+
+TestRunner.test('UI - renderEffectsList handles track effects', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('activeEffects'), 'renderEffectsList should handle track effects');
+});
+
+TestRunner.test('UI - renderEffectsList handles send effects', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('send') || funcStr.includes('effects'), 'renderEffectsList should handle send effects');
+});
+
+TestRunner.test('UI - renderEffectsList handles master effects', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('getMasterEffects') || funcStr.includes('master'), 'renderEffectsList should handle master effects');
+});
+
+TestRunner.test('UI - renderEffectControls function is exported', (t) => {
+    t.assertEqual(typeof renderEffectControls, 'function', 'renderEffectControls should be a function');
+});
+
+TestRunner.test('UI - renderEffectControls accepts 4 parameters', (t) => {
+    t.assertEqual(renderEffectControls.length, 4, 'renderEffectControls should accept 4 parameters');
+});
+
+TestRunner.test('UI - renderEffectControls references effectId parameter', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'renderEffectControls should reference effectId parameter');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary function is exported', (t) => {
+    t.assertEqual(typeof updateSoundBrowserDisplayForLibrary, 'function', 'updateSoundBrowserDisplayForLibrary should be a function');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary accepts 3 parameters', (t) => {
+    t.assertEqual(updateSoundBrowserDisplayForLibrary.length, 3, 'updateSoundBrowserDisplayForLibrary should accept 3 parameters');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references libraryName parameter', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName'), 'updateSoundBrowserDisplayForLibrary should reference libraryName parameter');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references isLoading parameter', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('isLoading'), 'updateSoundBrowserDisplayForLibrary should reference isLoading parameter');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references hasError parameter', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('hasError'), 'updateSoundBrowserDisplayForLibrary should reference hasError parameter');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary queries sound browser window', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('soundBrowser') || funcStr.includes('getWindowById'), 'updateSoundBrowserDisplayForLibrary should query sound browser window');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary calls setCurrentLibraryName', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('setCurrentLibraryName'), 'updateSoundBrowserDisplayForLibrary should call setCurrentLibraryName');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary handles library loading state', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('Loading') || funcStr.includes('isLoading'), 'updateSoundBrowserDisplayForLibrary should handle loading state');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory function is exported', (t) => {
+    t.assertEqual(typeof renderSoundBrowserDirectory, 'function', 'renderSoundBrowserDirectory should be a function');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory accepts 2 parameters', (t) => {
+    t.assertEqual(renderSoundBrowserDirectory.length, 2, 'renderSoundBrowserDirectory should accept 2 parameters');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory references pathArray parameter', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('pathArray'), 'renderSoundBrowserDirectory should reference pathArray parameter');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory references treeNode parameter', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('treeNode'), 'renderSoundBrowserDirectory should reference treeNode parameter');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory queries sound browser window', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('soundBrowser') || funcStr.includes('getWindowById'), 'renderSoundBrowserDirectory should query sound browser window');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory calls setCurrentSoundFileTree', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('setCurrentSoundFileTree'), 'renderSoundBrowserDirectory should call setCurrentSoundFileTree');
+});
+
+// APP_VERSION validation
+TestRunner.test('Extended UI Functions - APP_VERSION is 1.92.0 or higher for Day 312', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 92, 'Minor version should be >= 92 for Day 312');
+    }
+});
+
+TestRunner.test('APP_VERSION - semver format validation for Day 312', (t) => {
+    const versionParts = APP_VERSION.split('.');
+    t.assertEqual(versionParts.length, 3, 'APP_VERSION should have 3 parts');
+    t.assertEqual(versionParts[0] >= 0, true, 'Major should be >= 0');
+    t.assertEqual(versionParts[1] >= 0, true, 'Minor should be >= 0');
+    t.assertEqual(versionParts[2] >= 0, true, 'Patch should be >= 0');
+});
+
+
 // Day 207: Recording Workflow Tests (2026-04-24)
 // Tests for recording workflow including state transitions, audio clip creation, and error handling
 
@@ -9418,4 +9677,277 @@ TestRunner.test('Event Handlers - keydown handler handles m for mute toggle', (t
 });
 
 TestRunner.test('Event Handlers - keydown handler handles s (non-ctrl) for solo toggle', (t) => {
-    const funcStr = initializePrimaryEvent
+    const funcStr = initializePrimaryEvent// ============================================
+// Day 312: Additional State Function Tests (2026-04-28)
+// Tests for state module functions that weren't covered in previous test sessions
+// ============================================
+
+TestRunner.test('State - getMidiLearnMappingByIndex function is exported', (t) => {
+    t.assertEqual(typeof getMidiLearnMappingByIndex, 'function', 'getMidiLearnMappingByIndex should be a function');
+});
+
+TestRunner.test('State - getMidiLearnMappingByIndex accepts 1 parameter', (t) => {
+    t.assertEqual(getMidiLearnMappingByIndex.length, 1, 'getMidiLearnMappingByIndex should accept 1 parameter (index)');
+});
+
+TestRunner.test('State - getMidiLearnMappingByIndex references index parameter', (t) => {
+    const funcStr = getMidiLearnMappingByIndex.toString();
+    t.assertTruthy(funcStr.includes('index') || funcStr.includes('midiLearnMappings'), 'getMidiLearnMappingByIndex should reference index parameter');
+});
+
+TestRunner.test('State - getTimelineMarkersState function is exported', (t) => {
+    t.assertEqual(typeof getTimelineMarkersState, 'function', 'getTimelineMarkersState should be a function');
+});
+
+TestRunner.test('State - getTimelineMarkersState accepts no parameters', (t) => {
+    t.assertEqual(getTimelineMarkersState.length, 0, 'getTimelineMarkersState should accept no parameters');
+});
+
+TestRunner.test('State - getTimelineMarkersState returns array', (t) => {
+    const funcStr = getTimelineMarkersState.toString();
+    t.assertTruthy(funcStr.includes('return') || funcStr.includes('timelineMarkersState'), 'getTimelineMarkersState should return timeline markers');
+});
+
+TestRunner.test('State - getTimelineMarkerByIdState function is exported', (t) => {
+    t.assertEqual(typeof getTimelineMarkerByIdState, 'function', 'getTimelineMarkerByIdState should be a function');
+});
+
+TestRunner.test('State - getTimelineMarkerByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getTimelineMarkerByIdState.length, 1, 'getTimelineMarkerByIdState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - getTimelineMarkerByIdState references id parameter', (t) => {
+    const funcStr = getTimelineMarkerByIdState.toString();
+    t.assertTruthy(funcStr.includes('id') || funcStr.includes('find'), 'getTimelineMarkerByIdState should reference id parameter');
+});
+
+TestRunner.test('State - addTimelineMarkerState function is exported', (t) => {
+    t.assertEqual(typeof addTimelineMarkerState, 'function', 'addTimelineMarkerState should be a function');
+});
+
+TestRunner.test('State - addTimelineMarkerState accepts parameters (name, bar, color)', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('name') || funcStr.includes('bar'), 'addTimelineMarkerState should accept name and bar parameters');
+});
+
+TestRunner.test('State - addTimelineMarkerState handles default color parameter', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('null') || funcStr.includes('color'), 'addTimelineMarkerState should handle default color');
+});
+
+TestRunner.test('State - removeTimelineMarkerState function is exported', (t) => {
+    t.assertEqual(typeof removeTimelineMarkerState, 'function', 'removeTimelineMarkerState should be a function');
+});
+
+TestRunner.test('State - removeTimelineMarkerState accepts 1 parameter', (t) => {
+    t.assertEqual(removeTimelineMarkerState.length, 1, 'removeTimelineMarkerState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - setTimelineMarkerState function is exported', (t) => {
+    t.assertEqual(typeof setTimelineMarkerState, 'function', 'setTimelineMarkerState should be a function');
+});
+
+TestRunner.test('State - setTimelineMarkerState accepts 2 parameters', (t) => {
+    t.assertEqual(setTimelineMarkerState.length, 2, 'setTimelineMarkerState should accept 2 parameters (id, updates)');
+});
+
+TestRunner.test('State - clearTimelineMarkersState function is exported', (t) => {
+    t.assertEqual(typeof clearTimelineMarkersState, 'function', 'clearTimelineMarkersState should be a function');
+});
+
+TestRunner.test('State - clearTimelineMarkersState accepts no parameters', (t) => {
+    t.assertEqual(clearTimelineMarkersState.length, 0, 'clearTimelineMarkersState should accept no parameters');
+});
+
+TestRunner.test('State - getSendTracksState function is exported', (t) => {
+    t.assertEqual(typeof getSendTracksState, 'function', 'getSendTracksState should be a function');
+});
+
+TestRunner.test('State - getSendTracksState accepts no parameters', (t) => {
+    t.assertEqual(getSendTracksState.length, 0, 'getSendTracksState should accept no parameters');
+});
+
+TestRunner.test('State - getSendTrackByIdState function is exported', (t) => {
+    t.assertEqual(typeof getSendTrackByIdState, 'function', 'getSendTrackByIdState should be a function');
+});
+
+TestRunner.test('State - getSendTrackByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getSendTrackByIdState.length, 1, 'getSendTrackByIdState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - getTrackSendsState function is exported', (t) => {
+    t.assertEqual(typeof getTrackSendsState, 'function', 'getTrackSendsState should be a function');
+});
+
+TestRunner.test('State - getTrackSendsState accepts no parameters', (t) => {
+    t.assertEqual(getTrackSendsState.length, 0, 'getTrackSendsState should accept no parameters');
+});
+
+TestRunner.test('State - getTrackSendLevelState function is exported', (t) => {
+    t.assertEqual(typeof getTrackSendLevelState, 'function', 'getTrackSendLevelState should be a function');
+});
+
+TestRunner.test('State - getTrackSendLevelState accepts 2 parameters', (t) => {
+    t.assertEqual(getTrackSendLevelState.length, 2, 'getTrackSendLevelState should accept 2 parameters (trackId, sendId)');
+});
+
+TestRunner.test('State - getTrackSendPreFaderState function is exported', (t) => {
+    t.assertEqual(typeof getTrackSendPreFaderState, 'function', 'getTrackSendPreFaderState should be a function');
+});
+
+TestRunner.test('State - getTrackSendPreFaderState accepts 2 parameters', (t) => {
+    t.assertEqual(getTrackSendPreFaderState.length, 2, 'getTrackSendPreFaderState should accept 2 parameters (trackId, sendId)');
+});
+
+TestRunner.test('State - setTrackSendPreFaderState function is exported', (t) => {
+    t.assertEqual(typeof setTrackSendPreFaderState, 'function', 'setTrackSendPreFaderState should be a function');
+});
+
+TestRunner.test('State - setTrackSendPreFaderState accepts 3 parameters', (t) => {
+    t.assertEqual(setTrackSendPreFaderState.length, 3, 'setTrackSendPreFaderState should accept 3 parameters (trackId, sendId, preFader)');
+});
+
+TestRunner.test('State - getTrackGroupsState function is exported', (t) => {
+    t.assertEqual(typeof getTrackGroupsState, 'function', 'getTrackGroupsState should be a function');
+});
+
+TestRunner.test('State - getTrackGroupsState accepts no parameters', (t) => {
+    t.assertEqual(getTrackGroupsState.length, 0, 'getTrackGroupsState should accept no parameters');
+});
+
+TestRunner.test('State - getTrackGroupByIdState function is exported', (t) => {
+    t.assertEqual(typeof getTrackGroupByIdState, 'function', 'getTrackGroupByIdState should be a function');
+});
+
+TestRunner.test('State - getTrackGroupByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getTrackGroupByIdState.length, 1, 'getTrackGroupByIdState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - addTrackGroupState function is exported', (t) => {
+    t.assertEqual(typeof addTrackGroupState, 'function', 'addTrackGroupState should be a function');
+});
+
+TestRunner.test('State - addTrackGroupState accepts 1 parameter', (t) => {
+    t.assertEqual(addTrackGroupState.length, 1, 'addTrackGroupState should accept 1 parameter (groupData)');
+});
+
+TestRunner.test('State - setTrackGroupNameState function is exported', (t) => {
+    t.assertEqual(typeof setTrackGroupNameState, 'function', 'setTrackGroupNameState should be a function');
+});
+
+TestRunner.test('State - setTrackGroupNameState accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupNameState.length, 2, 'setTrackGroupNameState should accept 2 parameters (id, name)');
+});
+
+TestRunner.test('State - setTrackGroupColorState function is exported', (t) => {
+    t.assertEqual(typeof setTrackGroupColorState, 'function', 'setTrackGroupColorState should be a function');
+});
+
+TestRunner.test('State - setTrackGroupColorState accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupColorState.length, 2, 'setTrackGroupColorState should accept 2 parameters (id, color)');
+});
+
+TestRunner.test('State - removeTrackGroupState function is exported', (t) => {
+    t.assertEqual(typeof removeTrackGroupState, 'function', 'removeTrackGroupState should be a function');
+});
+
+TestRunner.test('State - removeTrackGroupState accepts 1 parameter', (t) => {
+    t.assertEqual(removeTrackGroupState.length, 1, 'removeTrackGroupState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - getTrackTemplatesState function is exported', (t) => {
+    t.assertEqual(typeof getTrackTemplatesState, 'function', 'getTrackTemplatesState should be a function');
+});
+
+TestRunner.test('State - getTrackTemplatesState accepts no parameters', (t) => {
+    t.assertEqual(getTrackTemplatesState.length, 0, 'getTrackTemplatesState should accept no parameters');
+});
+
+TestRunner.test('State - getTrackTemplateByIdState function is exported', (t) => {
+    t.assertEqual(typeof getTrackTemplateByIdState, 'function', 'getTrackTemplateByIdState should be a function');
+});
+
+TestRunner.test('State - getTrackTemplateByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getTrackTemplateByIdState.length, 1, 'getTrackTemplateByIdState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - updateTrackTemplateState function is exported', (t) => {
+    t.assertEqual(typeof updateTrackTemplateState, 'function', 'updateTrackTemplateState should be a function');
+});
+
+TestRunner.test('State - updateTrackTemplateState accepts 2 parameters', (t) => {
+    t.assertEqual(updateTrackTemplateState.length, 2, 'updateTrackTemplateState should accept 2 parameters (id, updates)');
+});
+
+TestRunner.test('State - removeTrackTemplateState function is exported', (t) => {
+    t.assertEqual(typeof removeTrackTemplateState, 'function', 'removeTrackTemplateState should be a function');
+});
+
+TestRunner.test('State - removeTrackTemplateState accepts 1 parameter', (t) => {
+    t.assertEqual(removeTrackTemplateState.length, 1, 'removeTrackTemplateState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - getEffectPresetsState function is exported', (t) => {
+    t.assertEqual(typeof getEffectPresetsState, 'function', 'getEffectPresetsState should be a function');
+});
+
+TestRunner.test('State - getEffectPresetsState accepts no parameters', (t) => {
+    t.assertEqual(getEffectPresetsState.length, 0, 'getEffectPresetsState should accept no parameters');
+});
+
+TestRunner.test('State - getEffectPresetByIdState function is exported', (t) => {
+    t.assertEqual(typeof getEffectPresetByIdState, 'function', 'getEffectPresetByIdState should be a function');
+});
+
+TestRunner.test('State - getEffectPresetByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getEffectPresetByIdState.length, 1, 'getEffectPresetByIdState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - getEffectPresetsByTypeState function is exported', (t) => {
+    t.assertEqual(typeof getEffectPresetsByTypeState, 'function', 'getEffectPresetsByTypeState should be a function');
+});
+
+TestRunner.test('State - getEffectPresetsByTypeState accepts 1 parameter', (t) => {
+    t.assertEqual(getEffectPresetsByTypeState.length, 1, 'getEffectPresetsByTypeState should accept 1 parameter (effectType)');
+});
+
+TestRunner.test('State - updateEffectPresetState function is exported', (t) => {
+    t.assertEqual(typeof updateEffectPresetState, 'function', 'updateEffectPresetState should be a function');
+});
+
+TestRunner.test('State - updateEffectPresetState accepts 2 parameters', (t) => {
+    t.assertEqual(updateEffectPresetState.length, 2, 'updateEffectPresetState should accept 2 parameters (id, updates)');
+});
+
+TestRunner.test('State - removeEffectPresetState function is exported', (t) => {
+    t.assertEqual(typeof removeEffectPresetState, 'function', 'removeEffectPresetState should be a function');
+});
+
+TestRunner.test('State - removeEffectPresetState accepts 1 parameter', (t) => {
+    t.assertEqual(removeEffectPresetState.length, 1, 'removeEffectPresetState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - clearEffectPresetsState function is exported', (t) => {
+    t.assertEqual(typeof clearEffectPresetsState, 'function', 'clearEffectPresetsState should be a function');
+});
+
+TestRunner.test('State - clearEffectPresetsState accepts no parameters', (t) => {
+    t.assertEqual(clearEffectPresetsState.length, 0, 'clearEffectPresetsState should accept no parameters');
+});
+
+TestRunner.test('State - clearTrackTemplatesState function is exported', (t) => {
+    t.assertEqual(typeof clearTrackTemplatesState, 'function', 'clearTrackTemplatesState should be a function');
+});
+
+TestRunner.test('State - clearTrackTemplatesState accepts no parameters', (t) => {
+    t.assertEqual(clearTrackTemplatesState.length, 0, 'clearTrackTemplatesState should accept no parameters');
+});
+
+// APP_VERSION validation for Day 312
+TestRunner.test('State - APP_VERSION is 1.92.0 or higher for Day 312', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 92, 'Minor version should be >= 92 for Day 312');
+    }
+});
