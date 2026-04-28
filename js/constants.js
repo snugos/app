@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.94.0'; // Day 314: Playback Mode State Tests (2026-04-28)
+export const APP_VERSION = '1.95.0'; // Day 315: Track Template & Color Swatch UI Functions Tests (2026-04-28)
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

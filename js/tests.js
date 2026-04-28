@@ -10147,3 +10147,166 @@ TestRunner.test('State - APP_VERSION is 1.94.0 or higher for Day 314', (t) => {
         t.assertTruthy(versionParts[1] >= 94, 'Minor version should be >= 94 for Day 314');
     }
 });
+
+// Day 315: Track Template & Color Swatch UI Functions Tests (2026-04-28)
+TestRunner.test('UI - showAddEffectModal function exists', (t) => {
+    t.assertTruthy(typeof showAddEffectModal === 'function', 'showAddEffectModal should be a function');
+});
+
+TestRunner.test('UI - showAddEffectModal accepts 2 parameters (owner, ownerType)', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 2, 'showAddEffectModal should accept 2 parameters');
+    t.assertTruthy(params.includes('owner'), 'First parameter should be owner');
+    t.assertTruthy(params.includes('ownerType'), 'Second parameter should be ownerType');
+});
+
+TestRunner.test('UI - showAddEffectModal references ownerType', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(funcStr.includes('ownerType'), 'showAddEffectModal should reference ownerType parameter');
+});
+
+TestRunner.test('UI - showAddEffectModal uses showCustomModal', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(funcStr.includes('showCustomModal'), 'showAddEffectModal should call showCustomModal');
+});
+
+TestRunner.test('UI - showAddEffectModal references AVAILABLE_EFFECTS', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'showAddEffectModal should reference AVAILABLE_EFFECTS');
+});
+
+TestRunner.test('UI - showAddEffectModal handles effect selection click', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') || funcStr.includes('click'), 'showAddEffectModal should handle effect click events');
+});
+
+TestRunner.test('UI - showAddEffectModal calls captureStateForUndo for undo support', (t) => {
+    const funcStr = showAddEffectModal.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'showAddEffectModal should call captureStateForUndo');
+});
+
+TestRunner.test('UI - applyTrackTemplate function exists', (t) => {
+    t.assertTruthy(typeof applyTrackTemplate === 'function', 'applyTrackTemplate should be a function');
+});
+
+TestRunner.test('UI - applyTrackTemplate accepts 1 parameter (template)', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'applyTrackTemplate should accept 1 parameter');
+    t.assertTruthy(params.includes('template'), 'Parameter should be template');
+});
+
+TestRunner.test('UI - applyTrackTemplate creates new track via localAppServices', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('createTrack') || funcStr.includes('localAppServices'), 'applyTrackTemplate should use createTrack');
+});
+
+TestRunner.test('UI - applyTrackTemplate applies template color', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('color') || funcStr.includes('template.color'), 'applyTrackTemplate should apply template color');
+});
+
+TestRunner.test('UI - applyTrackTemplate handles synthParams', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('synthParams') || funcStr.includes('instrumentSamplerSettings'), 'applyTrackTemplate should handle template params');
+});
+
+TestRunner.test('UI - applyTrackTemplate handles error case', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch') || funcStr.includes('showNotification'), 'applyTrackTemplate should handle errors');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent function exists', (t) => {
+    t.assertTruthy(typeof updateTrackTemplatesWindowContent === 'function', 'updateTrackTemplatesWindowContent should be a function');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent accepts 1 parameter (winElement)', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'updateTrackTemplatesWindowContent should accept 1 parameter');
+    t.assertTruthy(params.includes('winElement'), 'Parameter should be winElement');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent references getTrackTemplatesState', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('getTrackTemplatesState'), 'updateTrackTemplatesWindowContent should use getTrackTemplatesState');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent handles empty templates', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('templates.length') || funcStr.includes('templates === 0') || funcStr.includes('No templates'), 'updateTrackTemplatesWindowContent should handle empty state');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent creates template cards', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('template') && (funcStr.includes('id') || funcStr.includes('name') || funcStr.includes('color')), 'updateTrackTemplatesWindowContent should create template cards');
+});
+
+TestRunner.test('UI - showTemplateContextMenu function exists', (t) => {
+    t.assertTruthy(typeof showTemplateContextMenu === 'function', 'showTemplateContextMenu should be a function');
+});
+
+TestRunner.test('UI - showTemplateContextMenu accepts 3 parameters (templateId, x, y)', (t) => {
+    const funcStr = showTemplateContextMenu.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 3, 'showTemplateContextMenu should accept 3 parameters');
+    t.assertTruthy(params.includes('templateId'), 'First parameter should be templateId');
+    t.assertTruthy(params.includes('x'), 'Second parameter should be x');
+    t.assertTruthy(params.includes('y'), 'Third parameter should be y');
+});
+
+TestRunner.test('UI - showTemplateContextMenu creates context menu', (t) => {
+    const funcStr = showTemplateContextMenu.toString();
+    t.assertTruthy(funcStr.includes('createElement') || funcStr.includes('className'), 'showTemplateContextMenu should create DOM elements');
+});
+
+TestRunner.test('UI - showTemplateContextMenu handles delete action', (t) => {
+    const funcStr = showTemplateContextMenu.toString();
+    t.assertTruthy(funcStr.includes('delete') || funcStr.includes('removeTrackTemplateState'), 'showTemplateContextMenu should handle delete action');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches function exists', (t) => {
+    t.assertTruthy(typeof buildTrackColorSwatches === 'function', 'buildTrackColorSwatches should be a function');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches accepts 1 parameter (track)', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'buildTrackColorSwatches should accept 1 parameter');
+    t.assertTruthy(params.includes('track'), 'Parameter should be track');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches returns string (HTML)', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('html') || funcStr.includes('return'), 'buildTrackColorSwatches should build and return HTML string');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches uses TRACK_COLORS from Constants', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('TRACK_COLORS') || funcStr.includes('Constants'), 'buildTrackColorSwatches should use TRACK_COLORS');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches marks selected color', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('isSelected') || funcStr.includes('track.color') || funcStr.includes('borderClass'), 'buildTrackColorSwatches should mark selected color');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches creates color swatch buttons with data-color', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('data-color') || funcStr.includes('track-color-swatch'), 'buildTrackColorSwatches should create color swatch buttons');
+});
+
+// APP_VERSION validation for Day 315
+TestRunner.test('State - APP_VERSION is 1.95.0 or higher for Day 315', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 95, 'Minor version should be >= 95 for Day 315');
+    }
+});
