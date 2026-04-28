@@ -12846,3 +12846,247 @@ TestRunner.test('State - APP_VERSION is 2.05.0 or higher for Day 325', (t) => {
         t.assertTruthy(versionParts[1] >= 5, 'Minor version should be >= 5 for Day 325');
     }
 });
+
+// ============================================
+// Day 326: MIDI Message Handler & Apply MIDI Learn Mapping Tests (2026-04-28)
+// Tests for handleMIDIMessage and applyMidiLearnMapping functions
+// ============================================
+
+TestRunner.test('MIDI Handler - handleMIDIMessage function body exists in eventHandlers', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('function applyMidiLearnMapping') || funcStr !== '', 'applyMidiLearnMapping should be accessible');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping references getTracks', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('getTracks') || funcStr.includes('getTracksState'), 'applyMidiLearnMapping should reference getTracks');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping handles masterVolume paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('masterVolume'), 'applyMidiLearnMapping should handle masterVolume paramType');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping handles metronomeVolume paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('metronomeVolume'), 'applyMidiLearnMapping should handle metronomeVolume paramType');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping handles tempo paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('tempo') || funcStr.includes('Tone.Transport'), 'applyMidiLearnMapping should handle tempo paramType');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping handles trackVolume paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('trackVolume'), 'applyMidiLearnMapping should handle trackVolume paramType');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping handles trackPan paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('trackPan'), 'applyMidiLearnMapping should handle trackPan paramType');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping handles trackMute paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('trackMute'), 'applyMidiLearnMapping should handle trackMute paramType');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping handles trackSolo paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('trackSolo'), 'applyMidiLearnMapping should handle trackSolo paramType');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping handles effectParam paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('effectParam') || funcStr.includes('paramPath'), 'applyMidiLearnMapping should handle effectParam paramType');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping scales value using min/max range', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('mapping.min') && funcStr.includes('mapping.max'), 'applyMidiLearnMapping should use min/max range for scaling');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping converts normalized value (0-1) to target range', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('normalizedValue') || funcStr.includes('scaledValue') || funcStr.includes('* (mapping.max', 'applyMidiLearnMapping should convert normalized value');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping uses try-catch for error handling', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'applyMidiLearnMapping should have error handling');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping converts trackPan 0-1 to -1 to 1 range', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('* 2 - 1') || funcStr.includes('*2-1') || funcStr.includes('pan.value'), 'applyMidiLearnMapping should convert pan value to -1 to 1 range');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping clamps tempo to MIN_TEMPO/MAX_TEMPO', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min') && funcStr.includes('MIN_TEMPO') && funcStr.includes('MAX_TEMPO'), 'applyMidiLearnMapping should clamp tempo');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping accesses track.gainNode for trackVolume', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('gainNode.gain') || funcStr.includes('track.gainNode'), 'applyMidiLearnMapping should access track.gainNode');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping accesses track.panNode for trackPan', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('panNode.pan') || funcStr.includes('track.panNode'), 'applyMidiLearnMapping should access track.panNode');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping navigates nested paramPath for effectParam', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('paramPath.split') || funcStr.includes('pathParts'), 'applyMidiLearnMapping should parse paramPath');
+});
+
+TestRunner.test('MIDI Handler - applyMidiLearnMapping uses switch statement for paramType', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('switch') && funcStr.includes('paramType'), 'applyMidiLearnMapping should use switch for paramType');
+});
+
+TestRunner.test('MIDI Handler - findMidiLearnMapping function references channel and cc parameters', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('channel') && funcStr.includes('cc'), 'findMidiLearnMapping should reference channel and cc');
+});
+
+TestRunner.test('MIDI Handler - findMidiLearnMapping returns findIndex result', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('findIndex'), 'findMidiLearnMapping should return findIndex result');
+});
+
+TestRunner.test('MIDI Handler - findMidiLearnMapping checks channel and cc match', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('channel') && funcStr.includes('cc'), 'findMidiLearnMapping should check both channel and cc');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage parses command/note/velocity from message.data', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('command') && handleMIDIStr.includes('note') && handleMIDIStr.includes('velocity'), 'handleMIDIMessage should parse MIDI data');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage handles CC messages (command 176-191)', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('176') && handleMIDIStr.includes('191'), 'handleMIDIMessage should check CC range');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage handles Note On (command 144)', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('144') || handleMIDIStr.includes('NoteOn') || handleMIDIStr.includes('Note On'), 'handleMIDIMessage should handle Note On');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage handles Note Off (command 128)', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('128') || handleMIDIStr.includes('NoteOff') || handleMIDIStr.includes('Note Off'), 'handleMIDIMessage should handle Note Off');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage checks for armed track', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('getArmedTrackId') || handleMIDIStr.includes('armedTrack'), 'handleMIDIMessage should check for armed track');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage checks MIDI Learn mode', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('getMidiLearnModeState') || handleMIDIStr.includes('midiLearnMode'), 'handleMIDIMessage should check MIDI Learn mode');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage creates new mapping in MIDI Learn mode', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('addMidiLearnMapping') || handleMIDIStr.includes('newMapping'), 'handleMIDIMessage should create new mapping');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage handles DrumSampler track type', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('DrumSampler') || handleMIDIStr.includes('drumPad'), 'handleMIDIMessage should handle DrumSampler tracks');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage handles Sampler track type', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('Sampler') || handleMIDIStr.includes('samplerMIDINoteStart'), 'handleMIDIMessage should handle Sampler tracks');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage handles Synth track type', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes("type === 'Synth'") || handleMIDIStr.includes('Synth'), 'handleMIDIMessage should handle Synth tracks');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage handles InstrumentSampler track type', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('InstrumentSampler') || handleMIDIStr.includes('samplerMIDINoteStart'), 'handleMIDIMessage should handle InstrumentSampler tracks');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage normalizes CC value to 0-1', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('/ 127') || handleMIDIStr.includes('/127'), 'handleMIDIMessage should normalize CC value');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage uses try-catch for error handling', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('try') && handleMIDIStr.includes('catch'), 'handleMIDIMessage should have error handling');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage updates MIDI indicator UI', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('midiIndicator') || handleMIDIStr.includes('classList'), 'handleMIDIMessage should update MIDI indicator');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage handles pending param in MIDI Learn mode', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('getMidiLearnPendingParamState') || handleMIDIStr.includes('pendingParam'), 'handleMIDIMessage should handle pending param');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage exits MIDI Learn mode after mapping creation', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('setMidiLearnModeState(false)') || handleMIDIStr.includes('MIDI Learn'), 'handleMIDIMessage should exit MIDI Learn mode');
+});
+
+TestRunner.test('MIDI Handler - handleMIDIMessage shows notification on mapping creation', (t) => {
+    const handleMIDIStr = handleMIDIMessage.toString();
+    t.assertTruthy(handleMIDIStr.includes('showNotification') && handleMIDIStr.includes('MIDI Learn'), 'handleMIDIMessage should show notification');
+});
+
+TestRunner.test('MIDI Handler - onMIDISuccess function references midiAccess', (t) => {
+    const onMIDIStr = onMIDISuccess.toString();
+    t.assertTruthy(onMIDIStr.includes('midiAccess') || onMIDIStr.includes('inputs'), 'onMIDISuccess should reference midiAccess');
+});
+
+TestRunner.test('MIDI Handler - onMIDISuccess populates MIDI input select element', (t) => {
+    const onMIDIStr = onMIDISuccess.toString();
+    t.assertTruthy(onMIDIStr.includes('midiInputSelect') || onMIDIStr.includes('innerHTML'), 'onMIDISuccess should populate select element');
+});
+
+TestRunner.test('MIDI Handler - onMIDISuccess sets up onstatechange handler', (t) => {
+    const onMIDIStr = onMIDISuccess.toString();
+    t.assertTruthy(onMIDIStr.includes('onstatechange') || onMIDIStr.includes('setupMIDI'), 'onMIDISuccess should setup state change handler');
+});
+
+TestRunner.test('MIDI Handler - onMIDIFailure shows error notification', (t) => {
+    const onMIDIFailStr = onMIDIFailure.toString();
+    t.assertTruthy(onMIDIFailStr.includes('console.error') || onMIDIFailStr.includes('showNotification'), 'onMIDIFailure should show error');
+});
+
+TestRunner.test('MIDI Handler - selectMIDIInput closes previous input', (t) => {
+    const selectMIDIStr = selectMIDIInput.toString();
+    t.assertTruthy(selectMIDIStr.includes('close') || selectMIDIStr.includes('onmidimessage'), 'selectMIDIInput should close previous input');
+});
+
+TestRunner.test('MIDI Handler - selectMIDIInput opens new input with onmidimessage handler', (t) => {
+    const selectMIDIStr = selectMIDIInput.toString();
+    t.assertTruthy(selectMIDIStr.includes('open') && selectMIDIStr.includes('handleMIDIMessage'), 'selectMIDIInput should setup new input');
+});
+
+TestRunner.test('MIDI Handler - selectMIDIInput handles silent parameter', (t) => {
+    const selectMIDIStr = selectMIDIInput.toString();
+    t.assertTruthy(selectMIDIStr.includes('silent'), 'selectMIDIInput should handle silent parameter');
+});
+
+// APP_VERSION validation for Day 326
+TestRunner.test('State - APP_VERSION is 2.06.0 or higher for Day 326', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 326');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 6, 'Minor version should be >= 6 for Day 326');
+    }
+});

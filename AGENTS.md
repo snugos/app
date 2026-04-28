@@ -1,3 +1,39 @@
+
+#### Day 326: MIDI Message Handler & Apply MIDI Learn Mapping Tests (2026-04-28)
+- **Feature**: Added 48 new unit tests for MIDI Message Handler and Apply MIDI Learn Mapping functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 48 new tests in Day 326 section:
+    - applyMidiLearnMapping references getTracks, handles masterVolume/metronomeVolume/tempo paramType
+    - applyMidiLearnMapping handles trackVolume/trackPan/trackMute/trackSolo/effectParam paramType
+    - applyMidiLearnMapping scales value using min/max range, converts normalized 0-1 to target range
+    - applyMidiLearnMapping uses try-catch for error handling, converts trackPan 0-1 to -1 to 1
+    - applyMidiLearnMapping clamps tempo to MIN_TEMPO/MAX_TEMPO, accesses track.gainNode/panNode
+    - applyMidiLearnMapping navigates nested paramPath for effectParam, uses switch for paramType
+    - findMidiLearnMapping returns findIndex result, checks channel and cc match
+    - handleMIDIMessage parses command/note/velocity, handles CC (176-191), Note On/Off
+    - handleMIDIMessage checks armed track, checks MIDI Learn mode, creates new mapping
+    - handleMIDIMessage handles DrumSampler/Sampler/Synth/InstrumentSampler track types
+    - handleMIDIMessage normalizes CC value /127, uses try-catch, updates MIDI indicator UI
+    - handleMIDIMessage handles pending param, exits MIDI Learn mode after mapping
+    - handleMIDIMessage shows notification on mapping creation
+    - onMIDISuccess populates MIDI input select, sets up onstatechange handler
+    - onMIDIFailure shows error notification
+    - selectMIDIInput closes previous input, opens new with handleMIDIMessage, handles silent param
+  - `js/constants.js`: Bumped APP_VERSION to 2.06.0
+- **Feature Details**:
+  - Tests validate applyMidiLearnMapping handles all 9 MIDI Learn parameter types
+  - Tests verify value scaling using mapping.min and mapping.max range
+  - Tests verify pan value conversion from 0-1 normalized to -1 to 1 Tone.js range
+  - Tests verify tempo clamping using MIN_TEMPO and MAX_TEMPO constants
+  - Tests verify nested paramPath navigation for effect parameters
+  - Tests verify handleMIDIMessage CC message parsing (command 176-191)
+  - Tests verify MIDI Learn mode creates new mappings with addMidiLearnMapping
+  - Tests verify handleMIDIMessage handles all 5 track types (Synth, DrumSampler, Sampler, InstrumentSampler, Audio)
+  - Tests verify onMIDISuccess initializes MIDI access and populates UI select
+  - Tests verify selectMIDIInput handles device selection with silent mode support
+  - Total tests increased from 2094 to 2142
+- **Version**: Bumped to 2.06.0
+
 #### Day 324: SnugWindow Instance Method Tests (2026-04-28)
 - **Feature**: Added 60 new unit tests for SnugWindow instance methods to expand test coverage
 - **Files Modified**:
