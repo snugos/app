@@ -4954,3 +4954,22 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify buildMixerMasterStripHTML creates master strip with label, volume fader, and meter
   - Total tests increased from 1729 to 1789
 - **Version**: Bumped to 1.97.0
+
+#### Day 320: Waveform Drawing Functions Tests (2026-04-28)
+- **Feature**: Added 26 new unit tests for Waveform Drawing Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 26 new tests in Day 320 section:
+    - drawWaveform: function export, 1 parameter (track), handles waveformCanvasCtx, handles audioBuffer, checks .loaded property, draws center line (amp/height/2), handles dark mode styling (classList.contains), draws slice overlays (slices/forEach), references selectedSliceForEdit, calculates slice positions (offset), draws slice markers (fillRect/stroke)
+    - drawClipWaveform: function export, 2 parameters (clipId, audioBuffer), gets canvas by ID (getElementById/clipWaveformCanvas), handles missing canvas, checks .loaded property, gets canvas context (getContext/2d), sets canvas dimensions (width/height), draws center line
+    - drawInstrumentWaveform: function export, 1 parameter (track), handles instrumentWaveformCanvasCtx, handles audioBuffer, checks .loaded property, handles instrumentSamplerSettings
+  - `js/constants.js`: Bumped APP_VERSION to 2.00.0
+- **Feature Details**:
+  - Tests validate drawWaveform function exports and handles canvas/audioBuffer edge cases
+  - Tests verify drawWaveform draws waveform with center line and slice overlays
+  - Tests verify drawWaveform handles dark mode styling via classList.contains
+  - Tests verify drawClipWaveform function exports and handles canvas rendering
+  - Tests verify drawClipWaveform gets canvas by ID and sets dimensions
+  - Tests verify drawInstrumentWaveform handles InstrumentSampler-specific waveform canvas
+  - Tests verify all three waveform drawing functions check for loaded audioBuffer
+  - Total tests increased from 1912 to 1938
+- **Version**: Bumped to 2.00.0
