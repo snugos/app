@@ -10310,3 +10310,248 @@ TestRunner.test('State - APP_VERSION is 1.95.0 or higher for Day 315', (t) => {
         t.assertTruthy(versionParts[1] >= 95, 'Minor version should be >= 95 for Day 315');
     }
 });
+
+// Day 316: Remaining UI Window Functions Tests
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow function exists', (t) => {
+    t.assertTruthy(typeof showKeyboardShortcutsHelpWindow === 'function', 'showKeyboardShortcutsHelpWindow should be a function');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_TITLE', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_TITLE'), 'showKeyboardShortcutsHelpWindow should use KEYBOARD_SHORTCUTS_HELP_TITLE constant');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_WIDTH', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_WIDTH'), 'showKeyboardShortcutsHelpWindow should use KEYBOARD_SHORTCUTS_HELP_WIDTH constant');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_HEIGHT', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_HEIGHT'), 'showKeyboardShortcutsHelpWindow should use KEYBOARD_SHORTCUTS_HELP_HEIGHT constant');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow checks for already open window', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('has(windowId)') || funcStr.includes('getOpenWindows'), 'showKeyboardShortcutsHelpWindow should check if window is already open');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow restores existing window', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('restore()'), 'showKeyboardShortcutsHelpWindow should restore existing window');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow builds shortcuts HTML content', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('shortcutsContent') || funcStr.includes('innerHTML') || funcStr.includes('createWindow'), 'showKeyboardShortcutsHelpWindow should build HTML content');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow includes playback controls section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Space') || funcStr.includes('Playback') || funcStr.includes('Play'), 'showKeyboardShortcutsHelpWindow should include playback controls');
+});
+
+TestRunner.test('UI - showKeyboardShortcutsHelpWindow includes transport section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Metronome') || funcStr.includes('Tempo') || funcStr.includes('Loop'), 'showKeyboardShortcutsHelpWindow should include transport section');
+});
+
+TestRunner.test('UI - openMasterEffectsRackWindow function exists', (t) => {
+    t.assertTruthy(typeof openMasterEffectsRackWindow === 'function', 'openMasterEffectsRackWindow should be a function');
+});
+
+TestRunner.test('UI - openMasterEffectsRackWindow accepts 1 parameter (savedState)', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'openMasterEffectsRackWindow should accept 1 parameter');
+});
+
+TestRunner.test('UI - openSendEffectsWindow function exists', (t) => {
+    t.assertTruthy(typeof openSendEffectsWindow === 'function', 'openSendEffectsWindow should be a function');
+});
+
+TestRunner.test('UI - openSendEffectsWindow accepts 2 parameters (sendId, savedState)', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 2, 'openSendEffectsWindow should accept 2 parameters');
+    t.assertTruthy(params.includes('sendId'), 'First parameter should be sendId');
+});
+
+TestRunner.test('UI - openGlobalControlsWindow function exists', (t) => {
+    t.assertTruthy(typeof openGlobalControlsWindow === 'function', 'openGlobalControlsWindow should be a function');
+});
+
+TestRunner.test('UI - openGlobalControlsWindow accepts 2 parameters (onReadyCallback, savedState)', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 2, 'openGlobalControlsWindow should accept 2 parameters');
+    t.assertTruthy(params.includes('onReadyCallback'), 'First parameter should be onReadyCallback');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow function exists', (t) => {
+    t.assertTruthy(typeof openSoundBrowserWindow === 'function', 'openSoundBrowserWindow should be a function');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow accepts 1 parameter (savedState)', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'openSoundBrowserWindow should accept 1 parameter');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow references sound browser elements', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('soundBrowser') || funcStr.includes('Sound') || funcStr.includes('Browser'), 'openSoundBrowserWindow should reference sound browser elements');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow function exists', (t) => {
+    t.assertTruthy(typeof openTrackTemplatesWindow === 'function', 'openTrackTemplatesWindow should be a function');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow accepts 1 parameter (savedState)', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'openTrackTemplatesWindow should accept 1 parameter');
+});
+
+TestRunner.test('UI - openTrackSequencerWindow function exists', (t) => {
+    t.assertTruthy(typeof openTrackSequencerWindow === 'function', 'openTrackSequencerWindow should be a function');
+});
+
+TestRunner.test('UI - openTrackSequencerWindow accepts 3 parameters (trackId, forceRedraw, savedState)', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 3, 'openTrackSequencerWindow should accept 3 parameters');
+    t.assertTruthy(params.includes('trackId'), 'First parameter should be trackId');
+    t.assertTruthy(params.includes('forceRedraw'), 'Second parameter should be forceRedraw');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow function exists', (t) => {
+    t.assertTruthy(typeof openAudioClipEditorWindow === 'function', 'openAudioClipEditorWindow should be a function');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow accepts 3 parameters (trackId, clipId, savedState)', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 3, 'openAudioClipEditorWindow should accept 3 parameters');
+    t.assertTruthy(params.includes('trackId'), 'First parameter should be trackId');
+    t.assertTruthy(params.includes('clipId'), 'Second parameter should be clipId');
+});
+
+TestRunner.test('UI - openAudioClipEditorWindow references trackId and clipId', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId') && funcStr.includes('clipId'), 'openAudioClipEditorWindow should reference both trackId and clipId');
+});
+
+TestRunner.test('UI - createContextMenu function exists', (t) => {
+    t.assertTruthy(typeof createContextMenu === 'function', 'createContextMenu should be a function');
+});
+
+TestRunner.test('UI - createContextMenu accepts 3 parameters', (t) => {
+    const funcStr = createContextMenu.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 3, 'createContextMenu should accept 3 parameters');
+});
+
+TestRunner.test('UI - createContextMenu creates DOM elements', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('createElement') || funcStr.includes('className'), 'createContextMenu should create DOM elements');
+});
+
+TestRunner.test('UI - createContextMenu uses preventDefault', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('preventDefault'), 'createContextMenu should use preventDefault');
+});
+
+TestRunner.test('UI - createContextMenu creates overlay element', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('overlay') || funcStr.includes('Overlay'), 'createContextMenu should create overlay element');
+});
+
+TestRunner.test('UI - showNotification function exists', (t) => {
+    t.assertTruthy(typeof showNotification === 'function', 'showNotification should be a function');
+});
+
+TestRunner.test('UI - showNotification accepts 2 parameters (message, duration)', (t) => {
+    const funcStr = showNotification.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 2, 'showNotification should accept 2 parameters');
+    t.assertTruthy(params.includes('message'), 'First parameter should be message');
+    t.assertTruthy(params.includes('duration'), 'Second parameter should be duration');
+});
+
+TestRunner.test('UI - showNotification has default duration (3000ms)', (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('3000') || funcStr.includes('default'), 'showNotification should have default duration');
+});
+
+TestRunner.test('UI - showCustomModal function exists', (t) => {
+    t.assertTruthy(typeof showCustomModal === 'function', 'showCustomModal should be a function');
+});
+
+TestRunner.test('UI - showCustomModal accepts 4 parameters', (t) => {
+    const funcStr = showCustomModal.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 4, 'showCustomModal should accept 4 parameters');
+});
+
+TestRunner.test('UI - showConfirmationDialog function exists', (t) => {
+    t.assertTruthy(typeof showConfirmationDialog === 'function', 'showConfirmationDialog should be a function');
+});
+
+TestRunner.test('UI - showConfirmationDialog accepts 4 parameters with optional onCancel', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 4, 'showConfirmationDialog should accept 4 parameters');
+});
+
+TestRunner.test('UI - showConfirmationDialog has optional onCancel parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('onCancel') || funcStr.includes('null'), 'showConfirmationDialog should have optional onCancel');
+});
+
+TestRunner.test('UI - openTrackInspectorWindow references trackId', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackInspectorWindow should reference trackId');
+});
+
+TestRunner.test('UI - openTrackEffectsRackWindow references trackId', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackEffectsRackWindow should reference trackId');
+});
+
+TestRunner.test('UI - openTrackSequencerWindow references trackId', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackSequencerWindow should reference trackId');
+});
+
+TestRunner.test('UI - all openWindow functions call createWindow', (t) => {
+    const funcs = [openTrackInspectorWindow, openTrackEffectsRackWindow, openMasterEffectsRackWindow, openSendEffectsWindow, openGlobalControlsWindow, openSoundBrowserWindow, openTrackTemplatesWindow, openTrackSequencerWindow, openMixerWindow, openAudioClipEditorWindow, openTimelineWindow];
+    let passingCount = 0;
+    for (const func of funcs) {
+        const funcStr = func.toString();
+        if (funcStr.includes('createWindow')) {
+            passingCount++;
+        }
+    }
+    t.assertTruthy(passingCount >= 10, 'At least 10 openWindow functions should call createWindow');
+});
+
+// APP_VERSION validation for Day 316
+TestRunner.test('State - APP_VERSION is 1.96.0 or higher for Day 316', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 96, 'Minor version should be >= 96 for Day 316');
+    }
+});

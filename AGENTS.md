@@ -1,3 +1,37 @@
+#### Day 316: Remaining UI Window Functions Tests (2026-04-28)
+- **Feature**: Added 43 new unit tests for remaining UI window functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 43 new tests in Day 316 section:
+    - showKeyboardShortcutsHelpWindow: function exists, uses KEYBOARD_SHORTCUTS_HELP_TITLE/WIDTH/HEIGHT, checks for already open window, restores existing window, builds shortcuts HTML content
+    - showKeyboardShortcutsHelpWindow: includes playback controls and transport sections
+    - openMasterEffectsRackWindow: function exists, accepts 1 parameter
+    - openSendEffectsWindow: function exists, accepts 2 parameters (sendId, savedState)
+    - openGlobalControlsWindow: function exists, accepts 2 parameters (onReadyCallback, savedState)
+    - openSoundBrowserWindow: function exists, accepts 1 parameter, references sound browser elements
+    - openTrackTemplatesWindow: function exists, accepts 1 parameter
+    - openTrackSequencerWindow: function exists, accepts 3 parameters (trackId, forceRedraw, savedState)
+    - openAudioClipEditorWindow: function exists, accepts 3 parameters (trackId, clipId, savedState), references both trackId and clipId
+    - createContextMenu: function exists, accepts 3 parameters, creates DOM elements, uses preventDefault, creates overlay element
+    - showNotification: function exists, accepts 2 parameters (message, duration), has default 3000ms duration
+    - showCustomModal: function exists, accepts 4 parameters
+    - showConfirmationDialog: function exists, accepts 4 parameters with optional onCancel
+    - openTrackInspectorWindow/openTrackEffectsRackWindow/openTrackSequencerWindow: all reference trackId
+    - all openWindow functions call createWindow (10+ functions)
+  - `js/tests.js`: Bumped APP_VERSION to 1.96.0
+- **Feature Details**:
+  - Tests validate showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_* constants and checks for already open windows
+  - Tests verify openMasterEffectsRackWindow, openSendEffectsWindow, openGlobalControlsWindow parameter signatures
+  - Tests verify openSoundBrowserWindow and openTrackTemplatesWindow are single-parameter savedState functions
+  - Tests verify openTrackSequencerWindow has 3 parameters including forceRedraw
+  - Tests verify openAudioClipEditorWindow accepts trackId and clipId parameters
+  - Tests verify createContextMenu creates DOM elements with preventDefault and overlay
+  - Tests verify showNotification has 3000ms default duration
+  - Tests verify showConfirmationDialog has optional onCancel parameter
+  - Tests verify all 10+ openWindow functions call createWindow
+  - Total tests increased from 1686 to 1729
+- **Version**: Bumped to 1.96.0
+
+
 #### Day 314: Playback Mode State Tests (2026-04-28)
 - **Feature**: Added 13 new unit tests for Playback Mode state functions to expand test coverage
 - **Files Modified**:

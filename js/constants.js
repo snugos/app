@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.95.0'; // Day 315: Track Template & Color Swatch UI Functions Tests (2026-04-28)
+export const APP_VERSION = '1.96.0'; // Day 316: Remaining UI Window Functions Tests (2026-04-28)
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants
