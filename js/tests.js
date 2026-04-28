@@ -10175,3 +10175,243 @@ TestRunner.test('UI - APP_VERSION is 1.83.0 or higher for Day 303', (t) => {
         t.assertTruthy(versionParts[1] >= 83, 'Minor version should be >= 83 for Day 303');
     }
 });
+// Day 304: Sound Browser & Sample Pad UI Functions Tests (2026-04-28)
+// Additional tests for Sound Browser and Sample Pad UI functions
+
+TestRunner.test('UI - renderEffectsList function exists', (t) => {
+    t.assertEqual(typeof renderEffectsList, 'function', 'renderEffectsList should be a function');
+});
+
+TestRunner.test('UI - renderEffectsList accepts 4 parameters', (t) => {
+    t.assertEqual(renderEffectsList.length, 4, 'renderEffectsList should accept 4 parameters (owner, ownerType, listDiv, controlsContainer)');
+});
+
+TestRunner.test('UI - renderEffectsList creates effects list container', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('innerHTML') || funcStr.includes('createElement'), 'renderEffectsList should manipulate DOM');
+});
+
+TestRunner.test('UI - renderEffectsList handles empty effects array', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('length === 0') || funcStr.includes('no effects'), 'renderEffectsList should handle empty effects');
+});
+
+TestRunner.test('UI - renderEffectsList references activeEffects for track', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('activeEffects'), 'renderEffectsList should access activeEffects');
+});
+
+TestRunner.test('UI - renderEffectsList calls renderEffectControls on selection', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('renderEffectControls'), 'renderEffectsList should call renderEffectControls');
+});
+
+TestRunner.test('UI - renderEffectsList handles ownerType for track/send/master', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('ownerType') && (funcStr.includes('track') || funcStr.includes('send')), 'renderEffectsList should handle different owner types');
+});
+
+TestRunner.test('UI - renderEffectControls function exists', (t) => {
+    t.assertEqual(typeof renderEffectControls, 'function', 'renderEffectControls should be a function');
+});
+
+TestRunner.test('UI - renderEffectControls accepts 4 parameters', (t) => {
+    t.assertEqual(renderEffectControls.length, 4, 'renderEffectControls should accept 4 parameters (owner, ownerType, effectId, controlsContainer)');
+});
+
+TestRunner.test('UI - renderEffectControls creates parameter grid', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('grid') || funcStr.includes('createElement'), 'renderEffectControls should create controls grid');
+});
+
+TestRunner.test('UI - renderEffectControls references AVAILABLE_EFFECTS', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'renderEffectControls should access effect definitions');
+});
+
+TestRunner.test('UI - renderEffectControls handles missing effect gracefully', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('!effectWrapper') || funcStr.includes('not found') || funcStr.includes('error'), 'renderEffectControls should handle missing effect');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary function exists', (t) => {
+    t.assertEqual(typeof updateSoundBrowserDisplayForLibrary, 'function', 'updateSoundBrowserDisplayForLibrary should be a function');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary accepts 3 parameters', (t) => {
+    t.assertEqual(updateSoundBrowserDisplayForLibrary.length, 3, 'updateSoundBrowserDisplayForLibrary should accept 3 parameters (libraryName, isLoading, hasError)');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references getWindowById', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'updateSoundBrowserDisplayForLibrary should access window');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary calls setCurrentLibraryName', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('setCurrentLibraryName'), 'updateSoundBrowserDisplayForLibrary should set library name');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary handles loading state', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('Loading') || funcStr.includes('isLoading'), 'updateSoundBrowserDisplayForLibrary should handle loading state');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary handles error state', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('hasError') || funcStr.includes('Error'), 'updateSoundBrowserDisplayForLibrary should handle error state');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary calls renderSoundBrowserDirectory', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('renderSoundBrowserDirectory'), 'updateSoundBrowserDisplayForLibrary should call renderSoundBrowserDirectory');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory function exists', (t) => {
+    t.assertEqual(typeof renderSoundBrowserDirectory, 'function', 'renderSoundBrowserDirectory should be a function');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory accepts 2 parameters', (t) => {
+    t.assertEqual(renderSoundBrowserDirectory.length, 2, 'renderSoundBrowserDirectory should accept 2 parameters (pathArray, treeNode)');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory references getWindowById', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'renderSoundBrowserDirectory should access window');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory creates directory listing', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('innerHTML') || funcStr.includes('createElement') || funcStr.includes('listDiv'), 'renderSoundBrowserDirectory should create listing');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory handles pathArray', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('pathArray') || funcStr.includes('path'), 'renderSoundBrowserDirectory should handle path');
+});
+
+TestRunner.test('UI - drawWaveform function exists', (t) => {
+    t.assertEqual(typeof drawWaveform, 'function', 'drawWaveform should be a function');
+});
+
+TestRunner.test('UI - drawWaveform accepts 1 parameter (track)', (t) => {
+    t.assertEqual(drawWaveform.length, 1, 'drawWaveform should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - drawWaveform references track.audioBuffer', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer'), 'drawWaveform should access audioBuffer');
+});
+
+TestRunner.test('UI - drawWaveform references canvas or getContext', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('canvas') || funcStr.includes('getContext'), 'drawWaveform should use canvas');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform function exists', (t) => {
+    t.assertEqual(typeof drawInstrumentWaveform, 'function', 'drawInstrumentWaveform should be a function');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform accepts 1 parameter (track)', (t) => {
+    t.assertEqual(drawInstrumentWaveform.length, 1, 'drawInstrumentWaveform should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - drawInstrumentWaveform references track', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('track'), 'drawInstrumentWaveform should use track parameter');
+});
+
+TestRunner.test('UI - highlightPlayingStep function exists', (t) => {
+    t.assertEqual(typeof highlightPlayingStep, 'function', 'highlightPlayingStep should be a function');
+});
+
+TestRunner.test('UI - highlightPlayingStep accepts 4 parameters', (t) => {
+    t.assertEqual(highlightPlayingStep.length, 4, 'highlightPlayingStep should accept 4 parameters (trackId, stepIndex, isPlaying)');
+});
+
+TestRunner.test('UI - highlightPlayingStep uses trackId to find elements', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'highlightPlayingStep should use trackId');
+});
+
+TestRunner.test('UI - highlightPlayingStep toggles playing class', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('classList') || funcStr.includes('playing'), 'highlightPlayingStep should toggle classes');
+});
+
+TestRunner.test('UI - renderSamplePads function exists', (t) => {
+    t.assertEqual(typeof renderSamplePads, 'function', 'renderSamplePads should be a function');
+});
+
+TestRunner.test('UI - renderSamplePads accepts 1 parameter (track)', (t) => {
+    t.assertEqual(renderSamplePads.length, 1, 'renderSamplePads should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - renderSamplePads checks track.type === Sampler', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes("type") && funcStr.includes('Sampler'), 'renderSamplePads should check for Sampler type');
+});
+
+TestRunner.test('UI - renderSamplePads references slices array', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('slices'), 'renderSamplePads should access slices');
+});
+
+TestRunner.test('UI - renderSamplePads creates pad buttons', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('createElement') || funcStr.includes('button'), 'renderSamplePads should create buttons');
+});
+
+TestRunner.test('UI - renderSamplePads calls updateSliceEditorUI on click', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('updateSliceEditorUI'), 'renderSamplePads should call updateSliceEditorUI');
+});
+
+TestRunner.test('UI - updateSliceEditorUI function exists', (t) => {
+    t.assertEqual(typeof updateSliceEditorUI, 'function', 'updateSliceEditorUI should be a function');
+});
+
+TestRunner.test('UI - updateSliceEditorUI accepts 1 parameter (track)', (t) => {
+    t.assertEqual(updateSliceEditorUI.length, 1, 'updateSliceEditorUI should accept 1 parameter (track)');
+});
+
+TestRunner.test('UI - updateSliceEditorUI references selectedSliceForEdit', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('selectedSliceForEdit'), 'updateSliceEditorUI should access selected slice');
+});
+
+TestRunner.test('UI - updateSliceEditorUI updates volume and pitch knobs', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('sliceVolume') || funcStr.includes('volume'), 'updateSliceEditorUI should update volume');
+});
+
+TestRunner.test('UI - updateSliceEditorUI updates loop and reverse toggles', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('loop') || funcStr.includes('reverse'), 'updateSliceEditorUI should update toggles');
+});
+
+TestRunner.test('UI - updateSequencerCellUI function exists', (t) => {
+    t.assertEqual(typeof updateSequencerCellUI, 'function', 'updateSequencerCellUI should be a function');
+});
+
+TestRunner.test('UI - updateSequencerCellUI accepts 6 parameters', (t) => {
+    t.assertEqual(updateSequencerCellUI.length, 6, 'updateSequencerCellUI should accept 6 parameters (sequencerElement, trackType, row, col, isActive)');
+});
+
+TestRunner.test('UI - updateSequencerCellUI updates cell appearance', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('classList') || funcStr.includes('style') || funcStr.includes('background'), 'updateSequencerCellUI should update appearance');
+});
+
+TestRunner.test('UI - updateSequencerCellUI handles active/inactive states', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('isActive'), 'updateSequencerCellUI should handle active state');
+});
+
+TestRunner.test('UI - APP_VERSION is 1.84.0 or higher for Day 304', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 84, 'Minor version should be >= 84 for Day 304');
+    }
+});
