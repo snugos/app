@@ -4523,3 +4523,45 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify Track methods return correct defaults for Synth tracks
   - Total tests increased from 2093 to 2122
 - **Version**: Bumped to 1.71.0
+#### Day 301: Recording End-to-End Workflow Tests (2026-04-28)
+- **Feature**: Added 25 new unit tests for Recording end-to-end workflow to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 25 new tests in Day 301 section:
+    - startAudioRecording references Tone.UserMedia and Tone.Recorder
+    - startAudioRecording creates new mic and recorder instances
+    - startAudioRecording handles track validation (type === 'Audio')
+    - startAudioRecording updates recording state (setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState)
+    - startAudioRecording handles microphone permissions (NotAllowedError, NotFoundError)
+    - startAudioRecording connects audio nodes (mic.connect, recordingInputGainNode, recorder.start)
+    - startAudioRecording handles monitoring enabled (isMonitoringEnabled, track.inputChannel)
+    - startAudioRecording uses audio constraints (echoCancellation, autoGainControl, noiseSuppression disabled)
+    - startAudioRecording handles enumerateDevices
+    - stopAudioRecording handles null recorder gracefully
+    - stopAudioRecording stops recorder and gets blob
+    - stopAudioRecording processes recorded blob (blob.size, addAudioClip)
+    - stopAudioRecording clears recording state
+    - stopAudioRecording disposes audio resources (mic.close, recorder.dispose, disconnect)
+    - stopAudioRecording handles empty blob
+    - stopAudioRecording handles recording state checking
+    - setRecordingInputGain clamps gain values (Math.max/Math.min, MIN/MAX_RECORDING_INPUT_GAIN)
+    - setRecordingInputGain updates gain node (recordingInputGainNode.gain.value)
+    - Recording state functions integrate with audio module
+    - Track.addAudioClip is called with blob and start time
+    - Recording constants validate audio quality (RECORDING_SAMPLE_RATE, RECORDING_NUM_CHANNELS, RECORDING_BIT_DEPTH, RECORDING_MIME_TYPE)
+    - Input gain constants validate valid range (MIN/MAX/DEFAULT_RECORDING_INPUT_GAIN)
+    - Monitoring constants validate valid range (MIN/MAX/DEFAULT_RECORDING_MONITORING_VOLUME)
+    - APP_VERSION validation for Day 301
+  - `js/tests.js`: Added missing RECORDING_* constant imports
+- **Feature Details**:
+  - Tests validate startAudioRecording creates Tone.UserMedia and Tone.Recorder with proper audio constraints
+  - Tests verify startAudioRecording validates Audio track type and checks track.inputChannel
+  - Tests verify startAudioRecording updates recording state (isRecording, trackId, startTime)
+  - Tests verify startAudioRecording handles microphone permissions and device enumeration
+  - Tests verify stopAudioRecording handles null recorder, stops recorder, processes blob
+  - Tests verify stopAudioRecording clears recording state and disposes audio resources
+  - Tests verify setRecordingInputGain clamps values and updates gain node
+  - Tests verify recording constants define audio quality settings (44.1kHz, mono, 16-bit, webm)
+  - Tests verify input gain constants (0-2.0 range, default 1.0)
+  - Tests verify monitoring volume constants (0-1 range, default 0.5)
+  - Total tests increased from 1521 to 1546
+- **Version**: Bumped to 1.81.0
