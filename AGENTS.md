@@ -1,3 +1,32 @@
+#### Day 322: Metronome State Functions Tests (2026-04-28)
+- **Feature**: Added 20 new unit tests for Metronome State Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 20 new tests in Day 322 section:
+    - setMetronomeVolumeState: function export, 1 parameter, calls captureStateForUndo
+    - setMetronomeVolumeState: uses descriptive undo label ("Set Metronome Volume")
+    - setMetronomeVolumeState: guards against missing appServices
+    - setMetronomeVolumeState: clamps value to 0-1 range
+    - setMetronomeVolumeState: validates numeric input
+    - setMetronomeVolumeState: references volume parameter
+    - metronome constants: MIN_METRONOME_VOLUME (0), MAX_METRONOME_VOLUME (1), DEFAULT_METRONOME_VOLUME (0.5)
+    - metronome volume range validation
+    - metronome state roundtrip update
+    - metronome enabled state toggles correctly
+    - setMetronomeEnabledState: calls captureStateForUndo with descriptive label
+    - setMetronomeEnabledState: coerces to boolean
+    - metronome state persists after multiple updates
+  - `js/constants.js`: Bumped APP_VERSION to 2.02.0
+- **Feature Details**:
+  - Tests validate setMetronomeVolumeState function export and parameter count
+  - Tests verify setMetronomeVolumeState calls captureStateForUndo for undo support
+  - Tests verify descriptive undo label ("Set Metronome Volume")
+  - Tests verify setMetronomeVolumeState validates and clamps values to 0-1 range
+  - Tests verify setMetronomeEnabledState calls captureStateForUndo for undo support
+  - Tests verify metronome constants define valid ranges (0-1, default 0.5)
+  - Tests verify metronome state roundtrip and persistence
+  - Total tests increased from 1970 to 1990
+- **Version**: Bumped to 2.02.0
+
 #### Day 319: Recording Audio Module Functions Extended Tests (2026-04-28)
 - **Feature**: Added 49 new unit tests for Recording Audio Module Functions to expand test coverage
 - **Files Modified**:
