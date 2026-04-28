@@ -9983,3 +9983,88 @@ TestRunner.test('Mixer - APP_VERSION validation for Day 306', (t) => {
         t.assertTruthy(versionParts[1] >= 85, 'Minor version should be >= 85 for Day 306');
     }
 });
+// Day 307: Track Template Undo Capture Verification Tests (2026-04-28)
+// =================================================================
+
+TestRunner.test('Track Template - addTrackTemplateState calls captureStateForUndo', (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackTemplateState should reference captureStateForUndo');
+});
+
+TestRunner.test('Track Template - addTrackTemplateState uses descriptive undo label', (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('Save Track Template'), 'Should use descriptive undo label for save');
+});
+
+TestRunner.test('Track Template - addTrackTemplateState guards against missing appServices', (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('appServices.captureStateForUndo'), 'Should check appServices.captureStateForUndo exists');
+});
+
+TestRunner.test('Track Template - updateTrackTemplateState calls captureStateForUndo', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateTrackTemplateState should reference captureStateForUndo');
+});
+
+TestRunner.test('Track Template - updateTrackTemplateState uses descriptive undo label', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('Update Track Template'), 'Should use descriptive undo label for update');
+});
+
+TestRunner.test('Track Template - updateTrackTemplateState references template name in undo label', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('template.name'), 'Should reference template name in undo label');
+});
+
+TestRunner.test('Track Template - updateTrackTemplateState guards against missing appServices', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('appServices.captureStateForUndo'), 'Should check appServices.captureStateForUndo exists');
+});
+
+TestRunner.test('Track Template - removeTrackTemplateState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackTemplateState should reference captureStateForUndo');
+});
+
+TestRunner.test('Track Template - removeTrackTemplateState uses descriptive undo label', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('Delete Track Template'), 'Should use descriptive undo label for delete');
+});
+
+TestRunner.test('Track Template - removeTrackTemplateState references template name in undo label', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('template.name'), 'Should reference template name in undo label');
+});
+
+TestRunner.test('Track Template - removeTrackTemplateState guards against missing appServices', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('appServices.captureStateForUndo'), 'Should check appServices.captureStateForUndo exists');
+});
+
+TestRunner.test('Track Template - clearTrackTemplatesState calls captureStateForUndo when templates exist', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearTrackTemplatesState should reference captureStateForUndo');
+});
+
+TestRunner.test('Track Template - clearTrackTemplatesState uses descriptive undo label', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('Clear All Track Templates'), 'Should use descriptive undo label for clear');
+});
+
+TestRunner.test('Track Template - clearTrackTemplatesState only captures when templates exist', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('trackTemplatesState.length > 0'), 'Should check if templates exist before capturing');
+});
+
+TestRunner.test('Track Template - clearTrackTemplatesState guards against missing appServices', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('appServices.captureStateForUndo'), 'Should check appServices.captureStateForUndo exists');
+});
+
+TestRunner.test('Track Template - APP_VERSION validation for Day 307', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 85, 'Minor version should be >= 85 for Day 307');
+    }
+});
