@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.06.0'; // Day 326: MIDI Message Handler & Apply MIDI Learn Mapping Tests (2026-04-28)
+export const APP_VERSION = '2.07.0'; // Day 327: Track Instance Method Extended Tests (2026-04-28)
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

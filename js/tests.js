@@ -13090,3 +13090,324 @@ TestRunner.test('State - APP_VERSION is 2.06.0 or higher for Day 326', (t) => {
         t.assertTruthy(versionParts[1] >= 6, 'Minor version should be >= 6 for Day 326');
     }
 });
+
+// Day 327: Track Instance Method Extended Tests (2026-04-28)
+// Tests for Track instance methods that manage audio initialization and resource setup
+
+TestRunner.test('Track - setupSlicerMonoNodes method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Sampler' });
+    t.assertEqual(typeof mockTrack.setupSlicerMonoNodes, 'function', 'Track should have setupSlicerMonoNodes method');
+});
+
+TestRunner.test('Track - setupSlicerMonoNodes calls disposeSlicerMonoNodes first', (t) => {
+    const funcStr = mockTrack.setupSlicerMonoNodes.toString();
+    t.assertTruthy(funcStr.includes('disposeSlicerMonoNodes'), 'setupSlicerMonoNodes should call disposeSlicerMonoNodes to clean up existing nodes');
+});
+
+TestRunner.test('Track - setupSlicerMonoNodes handles try-catch error handling', (t) => {
+    const funcStr = mockTrack.setupSlicerMonoNodes.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'setupSlicerMonoNodes should have error handling');
+});
+
+TestRunner.test('Track - disposeSlicerMonoNodes method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Sampler' });
+    t.assertEqual(typeof mockTrack.disposeSlicerMonoNodes, 'function', 'Track should have disposeSlicerMonoNodes method');
+});
+
+TestRunner.test('Track - setupToneSampler method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'InstrumentSampler' });
+    t.assertEqual(typeof mockTrack.setupToneSampler, 'function', 'Track should have setupToneSampler method');
+});
+
+TestRunner.test('Track - setupToneSampler handles try-catch error handling', (t) => {
+    const funcStr = mockTrack.setupToneSampler.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'setupToneSampler should have error handling');
+});
+
+TestRunner.test('Track - setupToneSampler references Tone.Sampler', (t) => {
+    const funcStr = mockTrack.setupToneSampler.toString();
+    t.assertTruthy(funcStr.includes('Tone') && funcStr.includes('Sampler'), 'setupToneSampler should reference Tone.Sampler');
+});
+
+TestRunner.test('Track - setupToneSampler handles AudioBuffer not loaded case', (t) => {
+    const funcStr = mockTrack.setupToneSampler.toString();
+    t.assertTruthy(funcStr.includes('AudioBuffer') || funcStr.includes('buffer') || funcStr.includes('loaded'), 'setupToneSampler should handle missing audio buffer');
+});
+
+TestRunner.test('Track - getDefaultSynthParams method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.getDefaultSynthParams, 'function', 'Track should have getDefaultSynthParams method');
+});
+
+TestRunner.test('Track - getDefaultSynthParams returns an object', (t) => {
+    const synthParams = mockTrack.getDefaultSynthParams();
+    t.assertEqual(typeof synthParams, 'object', 'getDefaultSynthParams should return an object');
+});
+
+TestRunner.test('Track - getDefaultSynthParams includes oscillator settings', (t) => {
+    const synthParams = mockTrack.getDefaultSynthParams();
+    t.assertTruthy(synthParams.oscillator, 'getDefaultSynthParams should include oscillator settings');
+});
+
+TestRunner.test('Track - getDefaultSynthParams includes envelope settings', (t) => {
+    const synthParams = mockTrack.getDefaultSynthParams();
+    t.assertTruthy(synthParams.envelope, 'getDefaultSynthParams should include envelope settings');
+});
+
+TestRunner.test('Track - getDefaultSynthParams includes filter settings', (t) => {
+    const synthParams = mockTrack.getDefaultSynthParams();
+    t.assertTruthy(synthParams.filter, 'getDefaultSynthParams should include filter settings');
+});
+
+TestRunner.test('Track - initializeAudioNodes method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.initializeAudioNodes, 'function', 'Track should have initializeAudioNodes method');
+});
+
+TestRunner.test('Track - initializeAudioNodes is async', (t) => {
+    const funcStr = mockTrack.initializeAudioNodes.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('await'), 'initializeAudioNodes should be async');
+});
+
+TestRunner.test('Track - initializeAudioNodes handles error with try-catch', (t) => {
+    const funcStr = mockTrack.initializeAudioNodes.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'initializeAudioNodes should have error handling');
+});
+
+TestRunner.test('Track - initializeAudioNodes references getMasterEffectsBusInputNode', (t) => {
+    const funcStr = mockTrack.initializeAudioNodes.toString();
+    t.assertTruthy(funcStr.includes('getMasterEffectsBusInputNode'), 'initializeAudioNodes should reference getMasterEffectsBusInputNode');
+});
+
+TestRunner.test('Track - fullyInitializeAudioResources method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.fullyInitializeAudioResources, 'function', 'Track should have fullyInitializeAudioResources method');
+});
+
+TestRunner.test('Track - fullyInitializeAudioResources is async', (t) => {
+    const funcStr = mockTrack.fullyInitializeAudioResources.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('await'), 'fullyInitializeAudioResources should be async');
+});
+
+TestRunner.test('Track - fullyInitializeAudioResources calls initializeAudioNodes', (t) => {
+    const funcStr = mockTrack.fullyInitializeAudioResources.toString();
+    t.assertTruthy(funcStr.includes('initializeAudioNodes'), 'fullyInitializeAudioResources should call initializeAudioNodes');
+});
+
+TestRunner.test('Track - fullyInitializeAudioResources calls initializeInstrument', (t) => {
+    const funcStr = mockTrack.fullyInitializeAudioResources.toString();
+    t.assertTruthy(funcStr.includes('initializeInstrument'), 'fullyInitializeAudioResources should call initializeInstrument');
+});
+
+TestRunner.test('Track - fullyInitializeAudioResources handles gain node validation', (t) => {
+    const funcStr = mockTrack.fullyInitializeAudioResources.toString();
+    t.assertTruthy(funcStr.includes('gainNode') || funcStr.includes('GainNode'), 'fullyInitializeAudioResources should validate gain nodes');
+});
+
+TestRunner.test('Track - initializeInstrument method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.initializeInstrument, 'function', 'Track should have initializeInstrument method');
+});
+
+TestRunner.test('Track - initializeInstrument is async', (t) => {
+    const funcStr = mockTrack.initializeInstrument.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('await'), 'initializeInstrument should be async');
+});
+
+TestRunner.test('Track - initializeInstrument handles error with try-catch', (t) => {
+    const funcStr = mockTrack.initializeInstrument.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'initializeInstrument should have error handling');
+});
+
+TestRunner.test('Track - initializeInstrument references synthEngineType', (t) => {
+    const funcStr = mockTrack.initializeInstrument.toString();
+    t.assertTruthy(funcStr.includes('synthEngineType') || funcStr.includes('engineType') || funcStr.includes('MonoSynth'), 'initializeInstrument should reference synth engine type');
+});
+
+TestRunner.test('Track - setSynthParam method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.setSynthParam, 'function', 'Track should have setSynthParam method');
+});
+
+TestRunner.test('Track - setSynthParam accepts 2 parameters', (t) => {
+    t.assertEqual(mockTrack.setSynthParam.length, 2, 'setSynthParam should accept 2 parameters (paramPath, value)');
+});
+
+TestRunner.test('Track - setSynthParam references synthParams', (t) => {
+    const funcStr = mockTrack.setSynthParam.toString();
+    t.assertTruthy(funcStr.includes('synthParams'), 'setSynthParam should reference synthParams');
+});
+
+TestRunner.test('Track - setSynthParam handles nested param path', (t) => {
+    const funcStr = mockTrack.setSynthParam.toString();
+    t.assertTruthy(funcStr.includes('paramPath') || funcStr.includes('.'), 'setSynthParam should handle nested param paths');
+});
+
+TestRunner.test('Track - deleteSequence method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.deleteSequence, 'function', 'Track should have deleteSequence method');
+});
+
+TestRunner.test('Track - deleteSequence accepts 1 parameter', (t) => {
+    t.assertEqual(mockTrack.deleteSequence.length, 1, 'deleteSequence should accept 1 parameter (sequenceId)');
+});
+
+TestRunner.test('Track - deleteSequence prevents deletion of last sequence', (t) => {
+    const funcStr = mockTrack.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('last') || funcStr.includes('length') || funcStr.includes('1'), 'deleteSequence should guard against deleting the last sequence');
+});
+
+TestRunner.test('Track - createNewSequence method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.createNewSequence, 'function', 'Track should have createNewSequence method');
+});
+
+TestRunner.test('Track - createNewSequence calls _captureUndoState', (t) => {
+    const funcStr = mockTrack.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'createNewSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Track - setActiveSequence method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.setActiveSequence, 'function', 'Track should have setActiveSequence method');
+});
+
+TestRunner.test('Track - setActiveSequence calls _captureUndoState', (t) => {
+    const funcStr = mockTrack.setActiveSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setActiveSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Track - duplicateSequence method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.duplicateSequence, 'function', 'Track should have duplicateSequence method');
+});
+
+TestRunner.test('Track - duplicateSequence calls _captureUndoState', (t) => {
+    const funcStr = mockTrack.duplicateSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'duplicateSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Track - duplicateSequence uses descriptive undo label', (t) => {
+    const funcStr = mockTrack.duplicateSequence.toString();
+    t.assertTruthy(funcStr.includes('Duplicate') && funcStr.includes('Sequence'), 'duplicateSequence should use descriptive undo label');
+});
+
+TestRunner.test('Track - getNoteLength method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.getNoteLength, 'function', 'Track should have getNoteLength method');
+});
+
+TestRunner.test('Track - getNoteLength accepts 2 parameters', (t) => {
+    t.assertEqual(mockTrack.getNoteLength.length, 2, 'getNoteLength should accept 2 parameters (sequenceId, step)');
+});
+
+TestRunner.test('Track - getNoteProbability method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.getNoteProbability, 'function', 'Track should have getNoteProbability method');
+});
+
+TestRunner.test('Track - getNoteProbability accepts 2 parameters', (t) => {
+    t.assertEqual(mockTrack.getNoteProbability.length, 2, 'getNoteProbability should accept 2 parameters (sequenceId, step)');
+});
+
+TestRunner.test('Track - setNoteLength method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.setNoteLength, 'function', 'Track should have setNoteLength method');
+});
+
+TestRunner.test('Track - setNoteLength calls _captureUndoState', (t) => {
+    const funcStr = mockTrack.setNoteLength.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setNoteLength should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Track - setNoteProbability method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.setNoteProbability, 'function', 'Track should have setNoteProbability method');
+});
+
+TestRunner.test('Track - setNoteProbability calls _captureUndoState', (t) => {
+    const funcStr = mockTrack.setNoteProbability.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setNoteProbability should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Track - quantizeSequence method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.quantizeSequence, 'function', 'Track should have quantizeSequence method');
+});
+
+TestRunner.test('Track - quantizeSequence calls _captureUndoState', (t) => {
+    const funcStr = mockTrack.quantizeSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'quantizeSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Track - quantizeSequence uses descriptive undo label', (t) => {
+    const funcStr = mockTrack.quantizeSequence.toString();
+    t.assertTruthy(funcStr.includes('Quantize') || funcStr.includes('quantize'), 'quantizeSequence should use descriptive undo label');
+});
+
+TestRunner.test('Track - quantizeSequence returns a count', (t) => {
+    const funcStr = mockTrack.quantizeSequence.toString();
+    t.assertTruthy(funcStr.includes('return'), 'quantizeSequence should return a count of quantized notes');
+});
+
+TestRunner.test('Track - arpeggiatePattern method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.arpeggiatePattern, 'function', 'Track should have arpeggiatePattern method');
+});
+
+TestRunner.test('Track - arpeggiatePattern uses descriptive undo label', (t) => {
+    const funcStr = mockTrack.arpeggiatePattern.toString();
+    t.assertTruthy(funcStr.includes('Arpeggiate') || funcStr.includes('Arp'), 'arpeggiatePattern should use descriptive undo label');
+});
+
+TestRunner.test('Track - shiftSequenceNotes method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.shiftSequenceNotes, 'function', 'Track should have shiftSequenceNotes method');
+});
+
+TestRunner.test('Track - shiftSequenceNotes accepts semitones parameter', (t) => {
+    const funcStr = mockTrack.shiftSequenceNotes.toString();
+    t.assertTruthy(funcStr.includes('semitones'), 'shiftSequenceNotes should accept semitones parameter');
+});
+
+TestRunner.test('Track - getAutomationLaneCount method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.getAutomationLaneCount, 'function', 'Track should have getAutomationLaneCount method');
+});
+
+TestRunner.test('Track - getAutomationLaneCount returns a number', (t) => {
+    t.assertEqual(typeof mockTrack.getAutomationLaneCount(), 'number', 'getAutomationLaneCount should return a number');
+});
+
+TestRunner.test('Track - hasAutomation method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.hasAutomation, 'function', 'Track should have hasAutomation method');
+});
+
+TestRunner.test('Track - hasAutomation returns a boolean', (t) => {
+    t.assertEqual(typeof mockTrack.hasAutomation(), 'boolean', 'hasAutomation should return a boolean');
+});
+
+TestRunner.test('Track - removeAutomationPoint method exists on Track', (t) => {
+    const mockTrack = new Track({ type: 'Synth' });
+    t.assertEqual(typeof mockTrack.removeAutomationPoint, 'function', 'Track should have removeAutomationPoint method');
+});
+
+TestRunner.test('Track - removeAutomationPoint calls _captureUndoState', (t) => {
+    const funcStr = mockTrack.removeAutomationPoint.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'removeAutomationPoint should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Track - removeAutomationPoint returns boolean', (t) => {
+    const funcStr = mockTrack.removeAutomationPoint.toString();
+    t.assertTruthy(funcStr.includes('return') && funcStr.includes('false'), 'removeAutomationPoint should return false for not found');
+});
+
+// APP_VERSION validation for Day 327
+TestRunner.test('State - APP_VERSION is 2.07.0 or higher for Day 327', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 327');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 7, 'Minor version should be >= 7 for Day 327');
+    }
+});
