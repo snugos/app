@@ -5088,3 +5088,25 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify state roundtrips work correctly
   - Total tests increased from 1970 to 2034
 - **Version**: Bumped to 2.03.0
+
+#### Day 325: Effects Registry Helper Function Extended Tests (2026-04-28)
+- **Feature**: Added 47 new unit tests for Effects Registry helper functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 47 new tests in Day 325 section:
+    - createEffectInstance: function export, 2 parameters, handles AutoFilter/Compressor/Reverb/Chorus/FeedbackDelay/Distortion/valid types, handles unknown effect type, uses initialParams, handles undefined Tone.js
+    - getEffectDefaultParams: function export, 1 parameter, returns object for valid effect, empty for unknown, includes wet parameter, correct defaults for Compressor/Distortion/PitchShift/FeedbackDelay/Freeverb/EQ3
+    - getEffectParamDefinitions: function export, 1 parameter, returns array for valid effect, empty for unknown, includes key/label/type/min/max/defaultValue properties, correct params for AutoFilter/Compressor/EQ3/Distortion
+    - All major effect types (18 effects) tested for createEffectInstance, getEffectDefaultParams, getEffectParamDefinitions
+    - Correct structure verification for Reverb, Tremolo, Vibrato, Phaser, PingPongDelay, BitCrusher, AutoWah, AutoPanner
+  - `js/constants.js`: Bumped APP_VERSION to 2.05.0
+- **Feature Details**:
+  - Tests validate createEffectInstance handles all 18 major effect types (AutoFilter through StereoWidener)
+  - Tests verify createEffectInstance returns null for unknown effect types
+  - Tests verify createEffectInstance handles undefined Tone.js gracefully
+  - Tests verify getEffectDefaultParams returns correct nested param paths for effects like AutoFilter (filter.type)
+  - Tests verify getEffectDefaultParams returns correct default values for all major effects
+  - Tests verify getEffectParamDefinitions returns param definitions with all required properties (key, label, type, min, max, defaultValue)
+  - Tests verify select-type params have options array (Distortion oversample, etc.)
+  - Tests verify all 18 effect types have correct param structures
+  - Total tests increased from 2094 to 2141
+- **Version**: Bumped to 2.05.0
