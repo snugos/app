@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.82.0'; // Day 302: Remaining UI Window Functions & Effects Rack Tests (2026-04-28)
+export const APP_VERSION = '1.83.0'; // Day 303: Mixer UI Functions Extended Tests (2026-04-28)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
