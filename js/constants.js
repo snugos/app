@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.80.0'; // Day 300: Synth & Sampler Inspector UI Tests (2026-04-27)
+export const APP_VERSION = '1.81.0'; // Day 301: Recording End-to-End Workflow Tests (2026-04-28)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
