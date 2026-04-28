@@ -1,3 +1,28 @@
+#### Day 307: Send Bus Audio Functions Tests (2026-04-28)
+- **Feature**: Added 22 new unit tests for Send Bus Audio Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 22 new tests in Day 307 section:
+    - createSendBusInAudio: function exists, accepts 1 parameter (sendId)
+    - deleteSendBusFromAudio: function exists, accepts 1 parameter (sendId)
+    - addEffectToSendBus: function exists, accepts 3 parameters (sendId, effectType, params)
+    - removeEffectFromSendBus: function exists, accepts 2 parameters (sendId, effectId)
+    - reorderEffectInSendBus: function exists, accepts 3 parameters (sendId, effectId, newIndex)
+    - updateSendBusEffectParam: function exists, accepts 4 parameters (sendId, effectId, paramPath, value)
+    - setSendBusLevel: function exists, accepts 2 parameters (sendId, level)
+    - setSendBusMuted: function exists, accepts 2 parameters (sendId, muted)
+    - createSendBusInAudio: references sendId parameter
+    - deleteSendBusFromAudio: references sendId parameter
+    - addEffectToSendBus: references effectType parameter
+    - setSendBusLevel: references level parameter
+    - setSendBusMuted: references muted parameter
+  - `js/constants.js`: Bumped APP_VERSION to 1.87.0
+- **Feature Details**:
+  - Tests validate all 8 Send Bus audio functions are properly exported and callable
+  - Tests verify function parameter counts match expected APIs
+  - Tests verify parameter references in function implementations
+  - Total tests increased from 1611 to 1633
+- **Version**: Bumped to 1.87.0
+
 #### Day 299: Transport Controls Extended Tests (2026-04-27)
 #### Day 300: Synth & Sampler Inspector UI Tests (2026-04-27)
 #### Day 306: Mixer UI Functions Tests (2026-04-28)

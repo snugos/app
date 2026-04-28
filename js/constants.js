@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.87.0'; // Day 306: Mixer UI Functions Tests (2026-04-28)
+export const APP_VERSION = '1.87.0'; // Day 307: Send Bus Audio Functions Tests (2026-04-28)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
