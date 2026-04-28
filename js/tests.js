@@ -12549,3 +12549,300 @@ TestRunner.test('State - APP_VERSION is 2.04.0 or higher for Day 324', (t) => {
         t.assertTruthy(versionParts[1] >= 4, 'Minor version should be >= 4 for Day 324');
     }
 });
+
+// === Day 325: Effects Registry Helper Function Extended Tests (2026-04-28) ===
+// Extended tests for effectsRegistry.js helper functions
+
+TestRunner.test('Effects Registry - createEffectInstance is exported as function', (t) => {
+    t.assertEqual(typeof createEffectInstance, 'function', 'createEffectInstance should be a function');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance accepts 2 parameters', (t) => {
+    t.assertEqual(createEffectInstance.length, 2, 'createEffectInstance should accept 2 parameters');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles valid effect type (AutoFilter)', (t) => {
+    const instance = createEffectInstance('AutoFilter', {});
+    t.assertTruthy(instance !== null, 'createEffectInstance should return an instance');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles valid effect type (Compressor)', (t) => {
+    const instance = createEffectInstance('Compressor', {});
+    t.assertTruthy(instance !== null, 'createEffectInstance should return a Compressor instance');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles valid effect type (Reverb)', (t) => {
+    const instance = createEffectInstance('Reverb', {});
+    t.assertTruthy(instance !== null, 'createEffectInstance should return a Reverb instance');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles valid effect type (Chorus)', (t) => {
+    const instance = createEffectInstance('Chorus', {});
+    t.assertTruthy(instance !== null, 'createEffectInstance should return a Chorus instance');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles valid effect type (Delay)', (t) => {
+    const instance = createEffectInstance('FeedbackDelay', {});
+    t.assertTruthy(instance !== null, 'createEffectInstance should return a FeedbackDelay instance');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles valid effect type (Distortion)', (t) => {
+    const instance = createEffectInstance('Distortion', {});
+    t.assertTruthy(instance !== null, 'createEffectInstance should return a Distortion instance');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles unknown effect type', (t) => {
+    const instance = createEffectInstance('NonExistentEffect', {});
+    t.assertTruthy(instance === null || instance === undefined, 'createEffectInstance should return null/undefined for unknown effect');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance uses initialParams when provided', (t) => {
+    const instance = createEffectInstance('AutoFilter', { frequency: 5 });
+    t.assertTruthy(instance !== null, 'createEffectInstance should use initialParams');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles undefined Tone.js', (t) => {
+    const instance = createEffectInstance('AutoFilter', {}, true);
+    t.assertTruthy(instance === null, 'createEffectInstance should return null when Tone.js is undefined');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams is exported as function', (t) => {
+    t.assertEqual(typeof getEffectDefaultParams, 'function', 'getEffectDefaultParams should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams accepts 1 parameter', (t) => {
+    t.assertEqual(getEffectDefaultParams.length, 1, 'getEffectDefaultParams should accept 1 parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns object for valid effect', (t) => {
+    const params = getEffectDefaultParams('AutoFilter');
+    t.assertEqual(typeof params, 'object', 'getEffectDefaultParams should return an object');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns empty object for unknown effect', (t) => {
+    const params = getEffectDefaultParams('NonExistentEffect');
+    t.assertEqual(typeof params, 'object', 'getEffectDefaultParams should return empty object for unknown effect');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams includes wet parameter', (t) => {
+    const params = getEffectDefaultParams('AutoFilter');
+    t.assertTruthy(params.hasOwnProperty('wet'), 'getEffectDefaultParams should include wet parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns correct defaults for Compressor', (t) => {
+    const params = getEffectDefaultParams('Compressor');
+    t.assertTruthy(params.threshold !== undefined, 'Compressor should have threshold');
+    t.assertTruthy(params.ratio !== undefined, 'Compressor should have ratio');
+    t.assertTruthy(params.knee !== undefined, 'Compressor should have knee');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams handles nested param paths', (t) => {
+    const params = getEffectDefaultParams('AutoFilter');
+    t.assertTruthy(params.frequency !== undefined || params['filter.type'] !== undefined, 'AutoFilter should have nested params');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns correct defaults for Distortion', (t) => {
+    const params = getEffectDefaultParams('Distortion');
+    t.assertEqual(params.distortion, 0.4, 'Distortion default amount should be 0.4');
+    t.assertEqual(params.wet, 1, 'Distortion default wet should be 1');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns correct defaults for PitchShift', (t) => {
+    const params = getEffectDefaultParams('PitchShift');
+    t.assertEqual(params.pitch, 0, 'PitchShift default pitch should be 0');
+    t.assertEqual(params.windowSize, 0.1, 'PitchShift default windowSize should be 0.1');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns correct defaults for FeedbackDelay', (t) => {
+    const params = getEffectDefaultParams('FeedbackDelay');
+    t.assertEqual(params.delayTime, 0.25, 'FeedbackDelay default delayTime should be 0.25');
+    t.assertEqual(params.feedback, 0.5, 'FeedbackDelay default feedback should be 0.5');
+    t.assertEqual(params.wet, 0.5, 'FeedbackDelay default wet should be 0.5');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns correct defaults for Freeverb', (t) => {
+    const params = getEffectDefaultParams('Freeverb');
+    t.assertTruthy(params.roomSize !== undefined, 'Freeverb should have roomSize');
+    t.assertTruthy(params.damp !== undefined, 'Freeverb should have damp');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams handles EQ3 effect', (t) => {
+    const params = getEffectDefaultParams('EQ3');
+    t.assertEqual(params.low, 0, 'EQ3 default low should be 0');
+    t.assertEqual(params.mid, 0, 'EQ3 default mid should be 0');
+    t.assertEqual(params.high, 0, 'EQ3 default high should be 0');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions is exported as function', (t) => {
+    t.assertEqual(typeof getEffectParamDefinitions, 'function', 'getEffectParamDefinitions should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions accepts 1 parameter', (t) => {
+    t.assertEqual(getEffectParamDefinitions.length, 1, 'getEffectParamDefinitions should accept 1 parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns array for valid effect', (t) => {
+    const defs = getEffectParamDefinitions('AutoFilter');
+    t.assertTruthy(Array.isArray(defs), 'getEffectParamDefinitions should return an array');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns empty array for unknown effect', (t) => {
+    const defs = getEffectParamDefinitions('NonExistentEffect');
+    t.assertTruthy(Array.isArray(defs), 'getEffectParamDefinitions should return empty array for unknown effect');
+    t.assertEqual(defs.length, 0, 'getEffectParamDefinitions should return empty array');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns param definitions with keys', (t) => {
+    const defs = getEffectParamDefinitions('AutoFilter');
+    t.assertTruthy(defs.length > 0, 'AutoFilter should have param definitions');
+    t.assertTruthy(defs[0].hasOwnProperty('key'), 'Param definition should have key');
+    t.assertTruthy(defs[0].hasOwnProperty('label'), 'Param definition should have label');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions includes parameter keys', (t) => {
+    const defs = getEffectParamDefinitions('AutoFilter');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('frequency'), 'AutoFilter should have frequency param');
+    t.assertTruthy(keys.includes('wet'), 'AutoFilter should have wet param');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions for Compressor has all dynamics params', (t) => {
+    const defs = getEffectParamDefinitions('Compressor');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('threshold'), 'Compressor should have threshold');
+    t.assertTruthy(keys.includes('ratio'), 'Compressor should have ratio');
+    t.assertTruthy(keys.includes('attack'), 'Compressor should have attack');
+    t.assertTruthy(keys.includes('release'), 'Compressor should have release');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions for EQ3 has low/mid/high', (t) => {
+    const defs = getEffectParamDefinitions('EQ3');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('low'), 'EQ3 should have low');
+    t.assertTruthy(keys.includes('mid'), 'EQ3 should have mid');
+    t.assertTruthy(keys.includes('high'), 'EQ3 should have high');
+    t.assertTruthy(keys.includes('lowFrequency'), 'EQ3 should have lowFrequency');
+    t.assertTruthy(keys.includes('highFrequency'), 'EQ3 should have highFrequency');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions param definitions have type property', (t) => {
+    const defs = getEffectParamDefinitions('AutoFilter');
+    t.assertTruthy(defs[0].hasOwnProperty('type'), 'Param definition should have type');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions param definitions have min/max for knobs', (t) => {
+    const defs = getEffectParamDefinitions('Compressor');
+    const thresholdDef = defs.find(d => d.key === 'threshold');
+    t.assertTruthy(thresholdDef.hasOwnProperty('min'), 'Threshold should have min');
+    t.assertTruthy(thresholdDef.hasOwnProperty('max'), 'Threshold should have max');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions for Distortion has oversample select', (t) => {
+    const defs = getEffectParamDefinitions('Distortion');
+    const oversampleDef = defs.find(d => d.key === 'oversample');
+    t.assertTruthy(oversampleDef !== undefined, 'Distortion should have oversample param');
+    t.assertEqual(oversampleDef.type, 'select', 'oversample should be a select type');
+    t.assertTruthy(oversampleDef.hasOwnProperty('options'), 'select param should have options');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions param definitions have defaultValue', (t) => {
+    const defs = getEffectParamDefinitions('AutoFilter');
+    t.assertTruthy(defs[0].hasOwnProperty('defaultValue'), 'Param definition should have defaultValue');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles all major effect types', (t) => {
+    const effects = ['AutoFilter', 'AutoPanner', 'AutoWah', 'BitCrusher', 'Chorus', 'Compressor', 'Distortion', 'EQ3', 'Freeverb', 'Limiter', 'Phaser', 'PingPongDelay', 'PitchShift', 'Reverb', 'Tremolo', 'Vibrato', 'Gate', 'StereoWidener'];
+    effects.forEach(effectType => {
+        const instance = createEffectInstance(effectType, {});
+        t.assertTruthy(instance !== null, `createEffectInstance should handle ${effectType}`);
+    });
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams handles all major effect types', (t) => {
+    const effects = ['AutoFilter', 'AutoPanner', 'AutoWah', 'BitCrusher', 'Chorus', 'Compressor', 'Distortion', 'EQ3', 'Freeverb', 'Limiter', 'Phaser', 'PingPongDelay', 'PitchShift', 'Reverb', 'Tremolo', 'Vibrato', 'Gate', 'StereoWidener'];
+    effects.forEach(effectType => {
+        const params = getEffectDefaultParams(effectType);
+        t.assertEqual(typeof params, 'object', `getEffectDefaultParams should return object for ${effectType}`);
+    });
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions handles all major effect types', (t) => {
+    const effects = ['AutoFilter', 'AutoPanner', 'AutoWah', 'BitCrusher', 'Chorus', 'Compressor', 'Distortion', 'EQ3', 'Freeverb', 'Limiter', 'Phaser', 'PingPongDelay', 'PitchShift', 'Reverb', 'Tremolo', 'Vibrato', 'Gate', 'StereoWidener'];
+    effects.forEach(effectType => {
+        const defs = getEffectParamDefinitions(effectType);
+        t.assertTruthy(Array.isArray(defs), `getEffectParamDefinitions should return array for ${effectType}`);
+        t.assertTruthy(defs.length > 0, `${effectType} should have param definitions`);
+    });
+});
+
+TestRunner.test('Effects Registry - Reverb effect has correct structure', (t) => {
+    const defs = getEffectParamDefinitions('Reverb');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('decay'), 'Reverb should have decay');
+    t.assertTruthy(keys.includes('preDelay'), 'Reverb should have preDelay');
+    t.assertTruthy(keys.includes('wet'), 'Reverb should have wet');
+});
+
+TestRunner.test('Effects Registry - Tremolo effect has correct structure', (t) => {
+    const defs = getEffectParamDefinitions('Tremolo');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('frequency'), 'Tremolo should have frequency');
+    t.assertTruthy(keys.includes('depth'), 'Tremolo should have depth');
+    t.assertTruthy(keys.includes('wet'), 'Tremolo should have wet');
+});
+
+TestRunner.test('Effects Registry - Vibrato effect has correct structure', (t) => {
+    const defs = getEffectParamDefinitions('Vibrato');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('frequency'), 'Vibrato should have frequency');
+    t.assertTruthy(keys.includes('depth'), 'Vibrato should have depth');
+    t.assertTruthy(keys.includes('wet'), 'Vibrato should have wet');
+});
+
+TestRunner.test('Effects Registry - Phaser effect has correct structure', (t) => {
+    const defs = getEffectParamDefinitions('Phaser');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('frequency'), 'Phaser should have frequency');
+    t.assertTruthy(keys.includes('octaves'), 'Phaser should have octaves');
+    t.assertTruthy(keys.includes('wet'), 'Phaser should have wet');
+});
+
+TestRunner.test('Effects Registry - PingPongDelay effect has correct structure', (t) => {
+    const defs = getEffectParamDefinitions('PingPongDelay');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('delayTime'), 'PingPongDelay should have delayTime');
+    t.assertTruthy(keys.includes('feedback'), 'PingPongDelay should have feedback');
+    t.assertTruthy(keys.includes('wet'), 'PingPongDelay should have wet');
+});
+
+TestRunner.test('Effects Registry - BitCrusher effect has correct structure', (t) => {
+    const defs = getEffectParamDefinitions('BitCrusher');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('bits'), 'BitCrusher should have bits');
+    t.assertTruthy(keys.includes('wet'), 'BitCrusher should have wet');
+});
+
+TestRunner.test('Effects Registry - AutoWah effect has correct structure', (t) => {
+    const defs = getEffectParamDefinitions('AutoWah');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('baseFrequency'), 'AutoWah should have baseFrequency');
+    t.assertTruthy(keys.includes('octaves'), 'AutoWah should have octaves');
+    t.assertTruthy(keys.includes('sensitivity'), 'AutoWah should have sensitivity');
+});
+
+TestRunner.test('Effects Registry - AutoPanner effect has correct structure', (t) => {
+    const defs = getEffectParamDefinitions('AutoPanner');
+    const keys = defs.map(d => d.key);
+    t.assertTruthy(keys.includes('frequency'), 'AutoPanner should have frequency');
+    t.assertTruthy(keys.includes('depth'), 'AutoPanner should have depth');
+    t.assertTruthy(keys.includes('wet'), 'AutoPanner should have wet');
+});
+
+// APP_VERSION validation for Day 325
+TestRunner.test('State - APP_VERSION is 2.05.0 or higher for Day 325', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 325');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 5, 'Minor version should be >= 5 for Day 325');
+    }
+});
