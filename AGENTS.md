@@ -4604,3 +4604,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify updateSequencerCellUI handles both active and inactive cell states
   - Total tests increased from 1590 to 1636
 - **Version**: Bumped to 1.84.0
+
+#### Day 305: Internal DOM Build Functions Tests (2026-04-28)
+- **Feature**: Added 42 new unit tests for Internal DOM Build Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 42 new tests in Day 305 section:
+    - buildTrackColorSwatches: function exists, returns string, uses TRACK_COLORS, marks selected color, data-color attributes
+    - buildSynthEngineControls: function exists, accepts 3 parameters, uses synthEngineControlDefinitions, uses createKnob for knobs, creates select elements, references synthParams
+    - buildTrackInspectorContentDOM: function exists, accepts 1 parameter, returns string, handles all track types (Synth, Sampler, DrumSampler, InstrumentSampler, Audio), includes color swatches, name input, mute/solo/arm buttons
+    - buildSequencerContentDOM: function exists, accepts 4 parameters, returns string, references Constants.STEPS_PER_BAR, handles scale mode, handles chord mode, creates grid cells, handles automation, references synthPitches
+    - Constants tests: TRACK_COLORS array validation, valid hex colors, STEPS_PER_BAR power of 2, synthPitches array and count, SCALES scale types, CHORD_TYPES intervals, DEFAULT_CHORD_MODE structure, MAX_BARS reasonable, defaultVelocity range
+  - `js/constants.js`: Bumped APP_VERSION to 1.85.0
+- **Feature Details**:
+  - Tests validate internal DOM builder functions that were previously untested
+  - Tests verify buildTrackColorSwatches uses TRACK_COLORS from Constants and marks selected color
+  - Tests verify buildSynthEngineControls uses synthEngineControlDefinitions and creates knobs/selects
+  - Tests verify buildTrackInspectorContentDOM handles all 5 track types and includes common controls
+  - Tests verify buildSequencerContentDOM uses Constants, handles scale/chord modes, creates grid
+  - Tests validate Constants for TRACK_COLORS, STEPS_PER_BAR, synthPitches, SCALES, CHORD_TYPES
+  - Total tests increased from 1496 to 1538
+- **Version**: Bumped to 1.85.0
