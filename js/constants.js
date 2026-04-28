@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.00.0'; // Day 320: Waveform Drawing Functions Tests (2026-04-28)
+export const APP_VERSION = '2.01.0'; // Day 321: Export To MIDI Function Tests (2026-04-28)
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants
