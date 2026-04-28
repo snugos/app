@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.92.0'; // Day 312: Extended UI Function Tests (2026-04-28)
+export const APP_VERSION = '1.93.0'; // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';

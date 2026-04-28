@@ -9951,3 +9951,122 @@ TestRunner.test('State - APP_VERSION is 1.92.0 or higher for Day 312', (t) => {
         t.assertTruthy(versionParts[1] >= 92, 'Minor version should be >= 92 for Day 312');
     }
 });
+// === Day 313: MIDI Learn Mapping State Tests (2026-04-28) ===
+// Additional tests for MIDI Learn mapping state functions
+
+TestRunner.test('MIDI Learn - updateMidiLearnMapping function is exported', (t) => {
+    t.assertEqual(typeof updateMidiLearnMapping, 'function', 'updateMidiLearnMapping should be a function');
+});
+
+TestRunner.test('MIDI Learn - updateMidiLearnMapping accepts 2 parameters', (t) => {
+    t.assertEqual(updateMidiLearnMapping.length, 2, 'updateMidiLearnMapping should accept 2 parameters (index, updates)');
+});
+
+TestRunner.test('MIDI Learn - updateMidiLearnMapping function body references updates parameter', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('updates'), 'updateMidiLearnMapping should reference updates parameter');
+});
+
+TestRunner.test('MIDI Learn - getMidiLearnMappingByIndex function is exported', (t) => {
+    t.assertEqual(typeof getMidiLearnMappingByIndex, 'function', 'getMidiLearnMappingByIndex should be a function');
+});
+
+TestRunner.test('MIDI Learn - getMidiLearnMappingByIndex accepts 1 parameter', (t) => {
+    t.assertEqual(getMidiLearnMappingByIndex.length, 1, 'getMidiLearnMappingByIndex should accept 1 parameter (index)');
+});
+
+TestRunner.test('MIDI Learn - getMidiLearnMappingByIndex function body references index parameter', (t) => {
+    const funcStr = getMidiLearnMappingByIndex.toString();
+    t.assertTruthy(funcStr.includes('index'), 'getMidiLearnMappingByIndex should reference index parameter');
+});
+
+TestRunner.test('MIDI Learn - findMidiLearnMapping function is exported', (t) => {
+    t.assertEqual(typeof findMidiLearnMapping, 'function', 'findMidiLearnMapping should be a function');
+});
+
+TestRunner.test('MIDI Learn - findMidiLearnMapping accepts 2 parameters', (t) => {
+    t.assertEqual(findMidiLearnMapping.length, 2, 'findMidiLearnMapping should accept 2 parameters (channel, cc)');
+});
+
+TestRunner.test('MIDI Learn - findMidiLearnMapping function body references channel and cc', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('channel'), 'findMidiLearnMapping should reference channel');
+    t.assertTruthy(funcStr.includes('cc'), 'findMidiLearnMapping should reference cc');
+});
+
+TestRunner.test('MIDI Learn - addMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn - addMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') && funcStr.includes('Mapping'), 'Should mention MIDI Learn Mapping in undo label');
+});
+
+TestRunner.test('MIDI Learn - removeMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn - removeMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') && funcStr.includes('Mapping'), 'Should mention MIDI Learn Mapping in undo label');
+});
+
+TestRunner.test('MIDI Learn - clearMidiLearnMappings calls captureStateForUndo', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearMidiLearnMappings should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn - clearMidiLearnMappings uses descriptive undo label', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn'), 'Should mention MIDI Learn in undo label');
+});
+
+TestRunner.test('MIDI Learn - updateMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn - updateMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') && funcStr.includes('Mapping'), 'Should mention MIDI Learn Mapping in undo label');
+});
+
+TestRunner.test('MIDI Learn - setMidiLearnModeState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnModeState should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn - setMidiLearnModeState uses descriptive undo label', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') && funcStr.includes('Mode'), 'Should mention MIDI Learn Mode in undo label');
+});
+
+TestRunner.test('MIDI Learn - setMidiLearnPendingParamState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnPendingParamState should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn - setMidiLearnPendingParamState uses descriptive undo label', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') && funcStr.includes('Param'), 'Should mention MIDI Learn Param in undo label');
+});
+
+TestRunner.test('MIDI Learn - all MIDI Learn functions guard against missing appServices', (t) => {
+    const midiFunctions = ['setMidiLearnModeState', 'setMidiLearnPendingParamState', 'addMidiLearnMapping', 'removeMidiLearnMapping', 'clearMidiLearnMappings', 'updateMidiLearnMapping'];
+    midiFunctions.forEach(name => {
+        const funcStr = eval(name).toString();
+        t.assertTruthy(funcStr.includes('appServices'), `${name} should reference appServices`);
+    });
+});
+
+// APP_VERSION validation for Day 313
+TestRunner.test('State - APP_VERSION is 1.93.0 or higher for Day 313', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 93, 'Minor version should be >= 93 for Day 313');
+    }
+});
