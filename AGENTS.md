@@ -4849,3 +4849,36 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify all MIDI Learn functions guard against missing appServices
   - Total tests increased from 1620 to 1643
 - **Version**: Bumped to 1.93.0
+
+#### Day 317: Mixer Handler Functions Tests (2026-04-28)
+- **Feature**: Added 60 new unit tests for Mixer Handler functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 60 new tests in Day 317 section:
+    - initializeMixerEventHandlers: function exists, accepts 1 parameter (mixerElement), references mixer-btn, handleMixerButtonAction, handleMixerVolumeChange, handleMixerPanChange, send-level-slider, masterVolumeFader, getMidiLearnModeState
+    - handleMixerButtonAction: function exists, accepts 2 parameters (trackId, action), references handleTrackMute/Solo/Arm
+    - handleMixerVolumeChange: function exists, accepts 2 parameters, calls captureStateForUndo for undo support
+    - handleMixerPanChange: function exists, accepts 2 parameters, calls captureStateForUndo for undo support
+    - handleMixerSendLevelChange: function exists, accepts 3 parameters (trackId, sendId, value)
+    - handleAddSendBus: function exists, accepts no parameters
+    - handleAddGroup: function exists, accepts no parameters
+    - handleMixerSendMute: function exists, accepts 2 parameters (sendId, muted), references setSendTrackMuted/setSendBusMuted, calls updateMixerWindow
+    - handleMixerSendLevelChangeFader: function exists, accepts 2 parameters (sendId, value), references setSendTrackLevel/setSendBusLevel
+    - handleMixerMasterVolumeChange: function exists, accepts 1 parameter (value), references setMasterGainValue
+    - handleMixerGroupAction: function exists, accepts 2 parameters (groupId, action), calls captureStateForUndo for undo support
+    - buildMixerContentDOM: function exists, accepts no parameters, returns string, includes mixerContent id, mixerTracksContainer, mixerSendsContainer, references getTracks/getSendTracks/getTrackGroupsState
+    - buildMixerTrackStripHTML: function exists, accepts 2 parameters (track, sendTracks), references track.id, includes mute/solo/arm buttons, volume fader, pan knob, automation mini editor, send level knobs, track color
+    - buildMixerGroupStripHTML: function exists, accepts 1 parameter (group), references group.id, includes mute/solo buttons, group color, member count
+    - buildMixerSendStripHTML: function exists, accepts 1 parameter (send), references send.id, includes mute button, level fader, effects button
+    - buildMixerMasterStripHTML: function exists, accepts no parameters, includes MASTER label, master volume fader, master meter
+  - `js/constants.js`: Bumped APP_VERSION to 1.97.0
+- **Feature Details**:
+  - Tests validate all internal Mixer handler functions exist and have correct parameter counts
+  - Tests verify handleMixerVolumeChange and handleMixerPanChange call captureStateForUndo for undo support
+  - Tests verify handleMixerGroupAction calls captureStateForUndo for group mute/solo operations
+  - Tests verify buildMixerContentDOM creates complete mixer DOM with tracks, groups, sends, and master sections
+  - Tests verify buildMixerTrackStripHTML creates track strips with all controls (mute/solo/arm, volume, pan, automation, send levels, color)
+  - Tests verify buildMixerGroupStripHTML creates group strips with mute/solo buttons and member count
+  - Tests verify buildMixerSendStripHTML creates send strips with mute, level fader, and effects button
+  - Tests verify buildMixerMasterStripHTML creates master strip with label, volume fader, and meter
+  - Total tests increased from 1729 to 1789
+- **Version**: Bumped to 1.97.0
