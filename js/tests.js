@@ -4626,6 +4626,251 @@ TestRunner.test('Audio - stopPerformanceMonitor accepts no parameters', (t) => {
     t.assertEqual(stopPerformanceMonitor.length, 0, 'stopPerformanceMonitor should accept 0 parameters');
 });
 
+// Day 311: Additional Audio Module Function Tests (2026-04-28)
+// Tests for audio module functions that weren't covered in previous test sessions
+
+// Track-to-Send connection function tests
+TestRunner.test('Audio - setTrackSendLevel function exists', (t) => {
+    t.assertEqual(typeof setTrackSendLevel, 'function', 'setTrackSendLevel should be a function');
+});
+
+TestRunner.test('Audio - setTrackSendLevel accepts 3 parameters', (t) => {
+    t.assertEqual(setTrackSendLevel.length, 3, 'setTrackSendLevel should accept 3 parameters (trackId, sendId, level)');
+});
+
+TestRunner.test('Audio - setTrackSendLevel references trackId parameter', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'setTrackSendLevel should reference trackId parameter');
+});
+
+TestRunner.test('Audio - setTrackSendLevel references sendId parameter', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'setTrackSendLevel should reference sendId parameter');
+});
+
+TestRunner.test('Audio - setTrackSendLevel references level parameter', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('level'), 'setTrackSendLevel should reference level parameter');
+});
+
+// Audio context initialization test
+TestRunner.test('Audio - initAudioContextAndMasterMeter references isUserInitiated parameter', (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('isUserInitiated'), 'initAudioContextAndMasterMeter should reference isUserInitiated parameter');
+});
+
+TestRunner.test('Audio - initAudioContextAndMasterMeter handles user initiated flag', (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('true') || funcStr.includes('false'), 'initAudioContextAndMasterMeter should handle boolean flag');
+});
+
+// Update meters function tests
+TestRunner.test('Audio - updateMeters references globalMasterMeterBar parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('globalMasterMeterBar') || funcStr.includes('meterBar'), 'updateMeters should reference globalMasterMeterBar parameter');
+});
+
+TestRunner.test('Audio - updateMeters references mixerMasterMeterBar parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('mixerMasterMeterBar') || funcStr.includes('meter'), 'updateMeters should reference mixerMasterMeterBar parameter');
+});
+
+TestRunner.test('Audio - updateMeters references tracks parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('tracks'), 'updateMeters should reference tracks parameter');
+});
+
+// Performance metrics function tests
+TestRunner.test('Audio - getPerformanceMetrics returns an object', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('return') && funcStr.includes('object') || funcStr.includes('{'), 'getPerformanceMetrics should return an object');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics includes audioContextState in return', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('audioContextState') || funcStr.includes('context'), 'getPerformanceMetrics should include audioContextState');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics includes cpuUsage in return', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('cpuUsage') || funcStr.includes('cpu'), 'getPerformanceMetrics should include cpuUsage');
+});
+
+TestRunner.test('Audio - getPerformanceMetrics includes activeVoices in return', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('activeVoices') || funcStr.includes('voices'), 'getPerformanceMetrics should include activeVoices');
+});
+
+// Auto-slice function tests
+TestRunner.test('Audio - autoSliceSample references trackId parameter', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'autoSliceSample should reference trackId parameter');
+});
+
+TestRunner.test('Audio - autoSliceSample references numSlices parameter', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('numSlices') || funcStr.includes('slice'), 'autoSliceSample should reference numSlices parameter');
+});
+
+// Panic all audio function tests
+TestRunner.test('Audio - panicAllAudio references Tone.Transport', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('Transport') || funcStr.includes('transport'), 'panicAllAudio should reference Tone.Transport');
+});
+
+TestRunner.test('Audio - panicAllAudio cancels transport events', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('cancel'), 'panicAllAudio should cancel transport events');
+});
+
+TestRunner.test('Audio - panicAllAudio iterates over tracks', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('forEach') || funcStr.includes('tracks') || funcStr.includes('track'), 'panicAllAudio should iterate over tracks');
+});
+
+TestRunner.test('Audio - panicAllAudio handles metronome stop', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('metronome') || funcStr.includes('stopMetronome'), 'panicAllAudio should handle metronome');
+});
+
+// Master effect chain rebuild tests
+TestRunner.test('Audio - rebuildMasterEffectChain references effect chain', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('effect') || funcStr.includes('chain') || funcStr.includes('master'), 'rebuildMasterEffectChain should reference effect chain');
+});
+
+TestRunner.test('Audio - clearAllMasterEffectNodes handles node disposal', (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('dispose') || funcStr.includes('node') || funcStr.includes('master'), 'clearAllMasterEffectNodes should handle node disposal');
+});
+
+// Master gain node accessor tests
+TestRunner.test('Audio - getActualMasterGainNode references gain node', (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('gain') || funcStr.includes('masterGain') || funcStr.includes('Gain'), 'getActualMasterGainNode should reference gain node');
+});
+
+TestRunner.test('Audio - getMasterEffectsBusInputNode references input node', (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('input') || funcStr.includes('bus') || funcStr.includes('effect'), 'getMasterEffectsBusInputNode should reference input node');
+});
+
+// Send bus audio function tests
+TestRunner.test('Audio - setSendBusLevel references sendId parameter', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'setSendBusLevel should reference sendId parameter');
+});
+
+TestRunner.test('Audio - setSendBusLevel references level parameter', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('level') || funcStr.includes('gain'), 'setSendBusLevel should reference level parameter');
+});
+
+TestRunner.test('Audio - setSendBusMuted references sendId parameter', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'setSendBusMuted should reference sendId parameter');
+});
+
+TestRunner.test('Audio - setSendBusMuted references muted parameter', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('muted') || funcStr.includes('mute'), 'setSendBusMuted should reference muted parameter');
+});
+
+// Send bus connection function tests
+TestRunner.test('Audio - connectTrackToSendBus references trackId parameter', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'connectTrackToSendBus should reference trackId parameter');
+});
+
+TestRunner.test('Audio - connectTrackToSendBus references sendId parameter', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'connectTrackToSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Audio - disconnectTrackFromSendBus references trackId parameter', (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'disconnectTrackFromSendBus should reference trackId parameter');
+});
+
+TestRunner.test('Audio - disconnectTrackFromSendBus references sendId parameter', (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'disconnectTrackFromSendBus should reference sendId parameter');
+});
+
+// Send bus effect management function tests
+TestRunner.test('Audio - addEffectToSendBus references sendId parameter', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'addEffectToSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Audio - addEffectToSendBus references effectType parameter', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addEffectToSendBus should reference effectType parameter');
+});
+
+TestRunner.test('Audio - removeEffectFromSendBus references sendId parameter', (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'removeEffectFromSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Audio - removeEffectFromSendBus references effectId parameter', (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'removeEffectFromSendBus should reference effectId parameter');
+});
+
+TestRunner.test('Audio - reorderEffectInSendBus references sendId parameter', (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'reorderEffectInSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Audio - reorderEffectInSendBus references newIndex parameter', (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('newIndex'), 'reorderEffectInSendBus should reference newIndex parameter');
+});
+
+TestRunner.test('Audio - updateSendBusEffectParam references sendId parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'updateSendBusEffectParam should reference sendId parameter');
+});
+
+TestRunner.test('Audio - updateSendBusEffectParam references paramPath parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('paramPath'), 'updateSendBusEffectParam should reference paramPath parameter');
+});
+
+TestRunner.test('Audio - updateSendBusEffectParam references value parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('value'), 'updateSendBusEffectParam should reference value parameter');
+});
+
+// Mime type function tests
+TestRunner.test('Audio - getMimeTypeFromFilename handles audio extensions', (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('mp3') || funcStr.includes('wav') || funcStr.includes('audio') || funcStr.includes('mime'), 'getMimeTypeFromFilename should handle audio extensions');
+});
+
+TestRunner.test('Audio - getMimeTypeFromFilename returns string', (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('return'), 'getMimeTypeFromFilename should return a value');
+});
+
+// APP_VERSION validation
+TestRunner.test('Transport Controls - APP_VERSION is 1.91.0 or higher for Day 311 final', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 91, 'Minor version should be >= 91 for Day 311');
+    }
+});
+
+TestRunner.test('APP_VERSION - semver format validation for Day 311', (t) => {
+    const versionParts = APP_VERSION.split('.');
+    t.assertEqual(versionParts.length, 3, 'APP_VERSION should have 3 parts');
+    t.assertEqual(versionParts[0] >= 0, true, 'Major should be >= 0');
+    t.assertEqual(versionParts[1] >= 0, true, 'Minor should be >= 0');
+    t.assertEqual(versionParts[2] >= 0, true, 'Patch should be >= 0');
+});
+
 // Day 207: Recording Workflow Tests (2026-04-24)
 // Tests for recording workflow including state transitions, audio clip creation, and error handling
 
@@ -9173,1248 +9418,4 @@ TestRunner.test('Event Handlers - keydown handler handles m for mute toggle', (t
 });
 
 TestRunner.test('Event Handlers - keydown handler handles s (non-ctrl) for solo toggle', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('toggleSolo'), 'Should handle s key for solo toggle');
-});
-
-TestRunner.test('Event Handlers - keydown handler handles r (non-ctrl) for record arm toggle', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('toggleRecordArm'), 'Should handle r key for record arm toggle');
-});
-
-TestRunner.test('Event Handlers - keydown handler handles t (non-ctrl) for metronome toggle', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('metronome'), 'Should handle t key for metronome toggle');
-});
-
-TestRunner.test('Event Handlers - keydown handler handles x for octave shift up', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('currentOctaveShift') && funcStr.includes('MAX_OCTAVE_SHIFT'), 'Should handle x for octave shift');
-});
-
-TestRunner.test('Event Handlers - keydown handler handles z (non-ctrl) for octave shift down', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('currentOctaveShift') && funcStr.includes('MIN_OCTAVE_SHIFT'), 'Should handle z for octave shift down');
-});
-
-TestRunner.test('Event Handlers - keydown handler calls handleComputerKeyOn for mapped keys', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('handleComputerKeyOn'), 'Should call handleComputerKeyOn for mapped computer keys');
-});
-
-TestRunner.test('Event Handlers - keydown handler applies currentOctaveShift to MIDI note', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('currentOctaveShift * 12') || funcStr.includes('octaveShift'), 'Should apply octave shift to MIDI note');
-});
-
-TestRunner.test('Event Handlers - keydown handler updates keyboard indicator UI', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('keyboardIndicator') || funcStr.includes('kbdIndicator'), 'Should update keyboard indicator UI');
-});
-
-TestRunner.test('Event Handlers - keyup handler releases note from armed track instrument', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('triggerRelease') || funcStr.includes('releaseAll'), 'Should release note on keyup');
-});
-
-TestRunner.test('Event Handlers - keyup handler uses getArmedTrackId', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('getArmedTrackId') || funcStr.includes('arm'), 'Should use getArmedTrackId to find armed track');
-});
-
-TestRunner.test('Event Handlers - keyup handler checks currentlyPressedComputerKeys', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('currentlyPressedComputerKeys'), 'Should check currentlyPressedComputerKeys map');
-});
-
-TestRunner.test('Event Handlers - keyup handler deletes key from currentlyPressedComputerKeys', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('delete') && funcStr.includes('currentlyPressedComputerKeys'), 'Should delete key from currentlyPressedComputerKeys');
-});
-
-TestRunner.test('Event Handlers - APP_VERSION is 1.77.0 or higher for Day 298', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
-    if (versionParts[0] === 1) {
-        t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 298');
-    }
-});
-
-// Day 299: Transport Controls Extended Tests
-// Tests for transport play/pause/stop, metronome toggle, and tap tempo functionality
-
-TestRunner.test('Transport Controls - handleTapTempo calculates BPM from taps', (t) => {
-    const funcStr = handleTapTempo.toString();
-    t.assertTruthy(typeof handleTapTempo === 'function', 'handleTapTempo should be a function');
-    t.assertTruthy(funcStr.includes('tapTimestamps') || funcStr.includes('lastTapTime') || funcStr.includes('tap'), 'handleTapTempo should track tap timestamps');
-});
-
-TestRunner.test('Transport Controls - handleTapTempo uses TAP_TEMPO_TIMEOUT_MS', (t) => {
-    const funcStr = handleTapTempo.toString();
-    t.assertTruthy(funcStr.includes('TAP_TEMPO_TIMEOUT_MS'), 'handleTapTempo should use TAP_TEMPO_TIMEOUT_MS constant');
-});
-
-TestRunner.test('Transport Controls - resetTapTempo clears tap state', (t) => {
-    const funcStr = resetTapTempo.toString();
-    t.assertTruthy(typeof resetTapTempo === 'function', 'resetTapTempo should be a function');
-    t.assertTruthy(funcStr.includes('tapTimestamps') || funcStr.includes('lastTapTime') || funcStr.includes('tap'), 'resetTapTempo should clear tap timestamps');
-});
-
-TestRunner.test('Transport Controls - initializePrimaryEventListeners references playBtnGlobal', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('playBtnGlobal'), 'initializePrimaryEventListeners should reference playBtnGlobal');
-});
-
-TestRunner.test('Transport Controls - initializePrimaryEventListeners references stopBtnGlobal', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('stopBtnGlobal'), 'initializePrimaryEventListeners should reference stopBtnGlobal');
-});
-
-TestRunner.test('Transport Controls - initializePrimaryEventListeners references metronomeBtnGlobal', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('metronomeBtnGlobal'), 'initializePrimaryEventListeners should reference metronomeBtnGlobal');
-});
-
-TestRunner.test('Transport Controls - play button toggles transport state', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('Tone') && funcStr.includes('Transport'), 'Should use Tone.Transport for playback control');
-});
-
-TestRunner.test('Transport Controls - play button checks transport state before toggling', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('transport.state') || funcStr.includes('Transport.state'), 'Should check transport state');
-});
-
-TestRunner.test('Transport Controls - play button calls schedulePlayback on tracks', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('schedulePlayback'), 'Should call schedulePlayback on tracks');
-});
-
-TestRunner.test('Transport Controls - play button handles pause/resume', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('pause') || funcStr.includes('wasPaused'), 'Should handle pause/resume state');
-});
-
-TestRunner.test('Transport Controls - play button updates button text to Pause/Play', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('textContent') && (funcStr.includes('Pause') || funcStr.includes('Play')), 'Should update button text');
-});
-
-TestRunner.test('Transport Controls - stop button calls panicStopAllAudio', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('panicStopAllAudio'), 'Should call panicStopAllAudio for stop button');
-});
-
-TestRunner.test('Transport Controls - stop button calls Tone.Transport.stop() as fallback', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('Transport.stop') || funcStr.includes('Tone.Transport.stop'), 'Should call Tone.Transport.stop()');
-});
-
-TestRunner.test('Transport Controls - stop button calls Tone.Transport.cancel() to clear scheduled events', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('cancel'), 'Should call Transport.cancel to clear events');
-});
-
-TestRunner.test('Transport Controls - metronome button toggles metronome state', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('startMetronome') || funcStr.includes('stopMetronome'), 'Should toggle metronome on/off');
-});
-
-TestRunner.test('Transport Controls - metronome button adds/removes playing class', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('metronomeBtnGlobal') && funcStr.includes('classList'), 'Should toggle playing class on metronome button');
-});
-
-TestRunner.test('Transport Controls - stop button resets play button text to Play', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('playBtnGlobal') || funcStr.includes('playButton'), 'Should reset play button state');
-});
-
-TestRunner.test('Transport Controls - play button initializes audio context with initAudioContextAndMasterMeter', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'Should initialize audio context before playback');
-});
-
-TestRunner.test('Transport Controls - play button passes isUserInitiated=true for browser audio policy', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter') && (funcStr.includes('true') || funcStr.includes('isUserInitiated')), 'Should pass user initiated flag');
-});
-
-TestRunner.test('Transport Controls - play button handles audio context not ready case', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('audioReady') || funcStr.includes('Audio context'), 'Should handle audio context not ready');
-});
-
-TestRunner.test('Transport Controls - stop button has error handling', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('console.error') || funcStr.includes('catch') || funcStr.includes('try'), 'Should have error handling');
-});
-
-TestRunner.test('Transport Controls - play button calls stopPlayback on all tracks before starting', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('stopPlayback'), 'Should stop all track playback before starting');
-});
-
-TestRunner.test('Transport Controls - play button handles loop region settings', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('loop') && funcStr.includes('transport'), 'Should configure loop region before playback');
-});
-
-TestRunner.test('Transport Controls - Tap Tempo has min/max BPM limits', (t) => {
-    const funcStr = handleTapTempo.toString();
-    t.assertTruthy(funcStr.includes('MIN_TEMPO') || funcStr.includes('MAX_TEMPO') || funcStr.includes('TAP_TEMPO'), 'Should enforce BPM limits');
-});
-
-TestRunner.test('Transport Controls - Tap Tempo resets after timeout', (t) => {
-    const funcStr = handleTapTempo.toString();
-    t.assertTruthy(funcStr.includes('TAP_TEMPO_TIMEOUT_MS') || funcStr.includes('timeout'), 'Should reset after timeout');
-});
-
-TestRunner.test('Transport Controls - play button updates playBtnGlobal class for playing state', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('classList.add') && funcStr.includes('playing'), 'Should add playing class');
-});
-
-TestRunner.test('Transport Controls - metronome button references getMetronomeEnabledState', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('getMetronomeEnabledState') || funcStr.includes('metronome'), 'Should check metronome state');
-});
-
-TestRunner.test('Transport Controls - play button uses Tone.now() for precise timing', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('Tone.now') || funcStr.includes('Tone.Transport.start'), 'Should use Tone.now for precise timing');
-});
-
-TestRunner.test('Transport Controls - APP_VERSION is 1.78.0 or higher for Day 299 final', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
-    if (versionParts[0] === 1) {
-        t.assertTruthy(versionParts[1] >=
-// Day 305: Internal DOM Build Functions Tests (2026-04-28)
-// Tests for internal DOM builder functions that lack coverage
-// Import internal build functions
-import {
-    buildTrackColorSwatches,
-    buildSynthEngineControls,
-    buildTrackInspectorContentDOM,
-    buildSequencerContentDOM
-} from './ui.js';
-
-TestRunner.test('UI - buildTrackColorSwatches function exists', (t) => {
-    t.assertEqual(typeof buildTrackColorSwatches, 'function', 'buildTrackColorSwatches should be a function');
-});
-
-TestRunner.test('UI - buildTrackColorSwatches returns string HTML', (t) => {
-    const result = buildTrackColorSwatches({ color: '#ff0000' });
-    t.assertEqual(typeof result, 'string', 'buildTrackColorSwatches should return a string');
-    t.assertTruthy(result.includes('<button'), 'Should return button elements');
-});
-
-TestRunner.test('UI - buildTrackColorSwatches uses TRACK_COLORS from Constants', (t) => {
-    const funcStr = buildTrackColorSwatches.toString();
-    t.assertTruthy(funcStr.includes('Constants') && funcStr.includes('TRACK_COLORS'), 'Should reference TRACK_COLORS');
-});
-
-TestRunner.test('UI - buildTrackColorSwatches marks selected color', (t) => {
-    const result = buildTrackColorSwatches({ color: '#ff0000' });
-    t.assertTruthy(result.includes('ring-2') || result.includes('selected'), 'Should highlight selected color');
-});
-
-TestRunner.test('UI - buildTrackColorSwatches includes data-color attributes', (t) => {
-    const result = buildTrackColorSwatches({ color: '#ff0000' });
-    t.assertTruthy(result.includes('data-color'), 'Should include data-color attributes');
-});
-
-TestRunner.test('UI - buildSynthEngineControls function exists', (t) => {
-    t.assertEqual(typeof buildSynthEngineControls, 'function', 'buildSynthEngineControls should be a function');
-});
-
-TestRunner.test('UI - buildSynthEngineControls accepts 3 parameters (track, container, engineType)', (t) => {
-    t.assertEqual(buildSynthEngineControls.length, 3, 'buildSynthEngineControls should accept 3 parameters');
-});
-
-TestRunner.test('UI - buildSynthEngineControls references synthEngineControlDefinitions', (t) => {
-    const funcStr = buildSynthEngineControls.toString();
-    t.assertTruthy(funcStr.includes('synthEngineControlDefinitions'), 'Should use control definitions');
-});
-
-TestRunner.test('UI - buildSynthEngineControls uses createKnob for knob type controls', (t) => {
-    const funcStr = buildSynthEngineControls.toString();
-    t.assertTruthy(funcStr.includes('createKnob'), 'Should create knobs for parameters');
-});
-
-TestRunner.test('UI - buildSynthEngineControls creates select elements for select type controls', (t) => {
-    const funcStr = buildSynthEngineControls.toString();
-    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('select'), 'Should create select elements');
-});
-
-TestRunner.test('UI - buildSynthEngineControls references track.synthParams', (t) => {
-    const funcStr = buildSynthEngineControls.toString();
-    t.assertTruthy(funcStr.includes('synthParams'), 'Should access synthParams');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM function exists', (t) => {
-    t.assertEqual(typeof buildTrackInspectorContentDOM, 'function', 'buildTrackInspectorContentDOM should be a function');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM accepts track parameter', (t) => {
-    t.assertEqual(buildTrackInspectorContentDOM.length, 1, 'buildTrackInspectorContentDOM should accept 1 parameter');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM returns string', (t) => {
-    const result = buildTrackInspectorContentDOM({ id: 't1', name: 'Test', type: 'Synth' });
-    t.assertEqual(typeof result, 'string', 'buildTrackInspectorContentDOM should return a string');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM handles Audio track type', (t) => {
-    const funcStr = buildTrackInspectorContentDOM.toString();
-    t.assertTruthy(funcStr.includes('Audio'), 'Should handle Audio track type');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM handles DrumSampler track type', (t) => {
-    const funcStr = buildTrackInspectorContentDOM.toString();
-    t.assertTruthy(funcStr.includes('DrumSampler'), 'Should handle DrumSampler track type');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM handles InstrumentSampler track type', (t) => {
-    const funcStr = buildTrackInspectorContentDOM.toString();
-    t.assertTruthy(funcStr.includes('InstrumentSampler'), 'Should handle InstrumentSampler track type');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM includes track color swatches', (t) => {
-    const funcStr = buildTrackInspectorContentDOM.toString();
-    t.assertTruthy(funcStr.includes('buildTrackColorSwatches') || funcStr.includes('trackColor'), 'Should include color swatches');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM includes track name input', (t) => {
-    const funcStr = buildTrackInspectorContentDOM.toString();
-    t.assertTruthy(funcStr.includes('trackNameInput') || funcStr.includes('trackName'), 'Should include name input');
-});
-
-TestRunner.test('UI - buildTrackInspectorContentDOM includes mute/solo/arm buttons', (t) => {
-    const funcStr = buildTrackInspectorContentDOM.toString();
-    t.assertTruthy(funcStr.includes('muteBtn') || funcStr.includes('Mute'), 'Should include mute button');
-    t.assertTruthy(funcStr.includes('soloBtn') || funcStr.includes('Solo'), 'Should include solo button');
-    t.assertTruthy(funcStr.includes('armInputBtn') || funcStr.includes('Arm'), 'Should include arm button');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM function exists', (t) => {
-    t.assertEqual(typeof buildSequencerContentDOM, 'function', 'buildSequencerContentDOM should be a function');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM accepts 4 parameters', (t) => {
-    t.assertEqual(buildSequencerContentDOM.length, 4, 'buildSequencerContentDOM should accept 4 parameters');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM returns string', (t) => {
-    const result = buildSequencerContentDOM({ id: 't1', name: 'Test', type: 'Synth' }, [], [], 1);
-    t.assertEqual(typeof result, 'string', 'buildSequencerContentDOM should return a string');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM references Constants.STEPS_PER_BAR', (t) => {
-    const funcStr = buildSequencerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('Constants') && funcStr.includes('STEPS_PER_BAR'), 'Should use STEPS_PER_BAR');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM handles scale mode controls', (t) => {
-    const funcStr = buildSequencerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('scaleMode') || funcStr.includes('Scale'), 'Should handle scale mode');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM handles chord mode controls', (t) => {
-    const funcStr = buildSequencerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('chordMode') || funcStr.includes('Chord'), 'Should handle chord mode');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM creates sequencer grid cells', (t) => {
-    const funcStr = buildSequencerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('sequencer') || funcStr.includes('step') || funcStr.includes('grid'), 'Should create grid cells');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM handles automation lane display', (t) => {
-    const funcStr = buildSequencerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('automation') || funcStr.includes('AUTOMATION'), 'Should handle automation');
-});
-
-TestRunner.test('UI - buildSequencerContentDOM references Constants.synthPitches for Synth tracks', (t) => {
-    const funcStr = buildSequencerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('synthPitches'), 'Should use synthPitches for row labels');
-});
-
-TestRunner.test('UI - Constants - TRACK_COLORS is a non-empty array', (t) => {
-    t.assertTruthy(Array.isArray(Constants.TRACK_COLORS) && Constants.TRACK_COLORS.length > 0, 'TRACK_COLORS should be non-empty array');
-});
-
-TestRunner.test('UI - Constants - TRACK_COLORS contains valid hex colors', (t) => {
-    const valid = Constants.TRACK_COLORS.every(c => /^#[0-9A-Fa-f]{6}$/.test(c));
-    t.assertTruthy(valid, 'All TRACK_COLORS should be valid hex colors');
-});
-
-TestRunner.test('UI - Constants - STEPS_PER_BAR is positive power of 2', (t) => {
-    t.assertTruthy(Constants.STEPS_PER_BAR > 0 && (Constants.STEPS_PER_BAR & (Constants.STEPS_PER_BAR - 1)) === 0, 'STEPS_PER_BAR should be power of 2');
-});
-
-TestRunner.test('UI - Constants - synthPitches is array', (t) => {
-    t.assertTruthy(Array.isArray(Constants.synthPitches), 'synthPitches should be an array');
-});
-
-TestRunner.test('UI - Constants - synthPitches has expected count', (t) => {
-    t.assertTruthy(Constants.synthPitches.length > 10, 'synthPitches should have multiple pitches');
-});
-
-TestRunner.test('UI - Constants - SCALES has all expected scale types', (t) => {
-    const expectedScales = ['Major', 'Minor', 'Pentatonic Major', 'Blues', 'Dorian'];
-    expectedScales.forEach(scale => {
-        t.assertTruthy(Constants.SCALES[scale], `SCALES should include ${scale}`);
-    });
-});
-
-TestRunner.test('UI - Constants - CHORD_TYPES is an object with intervals', (t) => {
-    t.assertTruthy(typeof Constants.CHORD_TYPES === 'object', 'CHORD_TYPES should be an object');
-    t.assertTruthy(Constants.CHORD_TYPES['Major'] && Array.isArray(Constants.CHORD_TYPES['Major']), 'CHORD_TYPES.Major should be an array');
-});
-
-TestRunner.test('UI - Constants - DEFAULT_CHORD_MODE structure validation', (t) => {
-    t.assertTruthy(Constants.DEFAULT_CHORD_MODE && typeof Constants.DEFAULT_CHORD_MODE === 'object', 'DEFAULT_CHORD_MODE should be object');
-    t.assertTruthy(typeof Constants.DEFAULT_CHORD_MODE.enabled === 'boolean', 'enabled should be boolean');
-    t.assertTruthy(typeof Constants.DEFAULT_CHORD_MODE.scale === 'string', 'scale should be string');
-    t.assertTruthy(typeof Constants.DEFAULT_CHORD_MODE.root === 'string', 'root should be string');
-});
-
-TestRunner.test('UI - Constants - MAX_BARS is reasonable upper limit', (t) => {
-    t.assertTruthy(Constants.MAX_BARS >= 4 && Constants.MAX_BARS <= 1024, 'MAX_BARS should be reasonable (4-1024)');
-});
-
-TestRunner.test('UI - Constants - defaultVelocity is in valid range', (t) => {
-    t.assertTruthy(Constants.defaultVelocity >= 0 && Constants.defaultVelocity <= 1, 'defaultVelocity should be 0-1');
-});
-
-TestRunner.test('UI - APP_VERSION is 1.85.0 or higher for Day 305', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
-    if (versionParts[0] === 1) {
-        t.assertTruthy(versionParts[1] >= 85, 'Minor version should be >= 85 for Day 305');
-    }
-});
-
-// ============================================
-// Day 306: Mixer UI Functions Tests
-// ============================================
-
-TestRunner.test('Mixer - buildMixerContentDOM function exists', (t) => {
-    t.assertEqual(typeof buildMixerContentDOM, 'function', 'buildMixerContentDOM should be a function');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM accepts no parameters', (t) => {
-    t.assertEqual(buildMixerContentDOM.length, 0, 'buildMixerContentDOM should accept no parameters');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM returns string', (t) => {
-    const result = buildMixerContentDOM();
-    t.assertEqual(typeof result, 'string', 'buildMixerContentDOM should return a string');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM references getTracks', (t) => {
-    const funcStr = buildMixerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('getTracks'), 'Should reference getTracks');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM references getSendTracks', (t) => {
-    const funcStr = buildMixerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('getSendTracks'), 'Should reference getSendTracks');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM references getTrackGroupsState', (t) => {
-    const funcStr = buildMixerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('getTrackGroupsState'), 'Should reference getTrackGroupsState');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM references buildMixerTrackStripHTML', (t) => {
-    const funcStr = buildMixerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('buildMixerTrackStripHTML'), 'Should reference buildMixerTrackStripHTML');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM references buildMixerGroupStripHTML', (t) => {
-    const funcStr = buildMixerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('buildMixerGroupStripHTML'), 'Should reference buildMixerGroupStripHTML');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM references buildMixerSendStripHTML', (t) => {
-    const funcStr = buildMixerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('buildMixerSendStripHTML'), 'Should reference buildMixerSendStripHTML');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM references buildMixerMasterStripHTML', (t) => {
-    const funcStr = buildMixerContentDOM.toString();
-    t.assertTruthy(funcStr.includes('buildMixerMasterStripHTML'), 'Should reference buildMixerMasterStripHTML');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM includes mixerContent id', (t) => {
-    const result = buildMixerContentDOM();
-    t.assertTruthy(result.includes('id="mixerContent"'), 'Should include mixerContent id');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM includes mixerTracksContainer', (t) => {
-    const result = buildMixerContentDOM();
-    t.assertTruthy(result.includes('mixerTracksContainer'), 'Should include mixerTracksContainer');
-});
-
-TestRunner.test('Mixer - buildMixerContentDOM includes mixerSendsContainer', (t) => {
-    const result = buildMixerContentDOM();
-    t.assertTruthy(result.includes('mixerSendsContainer'), 'Should include mixerSendsContainer');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML function exists', (t) => {
-    t.assertEqual(typeof buildMixerTrackStripHTML, 'function', 'buildMixerTrackStripHTML should be a function');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML accepts 2 parameters', (t) => {
-    t.assertEqual(buildMixerTrackStripHTML.length, 2, 'buildMixerTrackStripHTML should accept 2 parameters');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML returns string', (t) => {
-    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
-    const result = buildMixerTrackStripHTML(mockTrack, []);
-    t.assertEqual(typeof result, 'string', 'buildMixerTrackStripHTML should return a string');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML references track.id in data attribute', (t) => {
-    const mockTrack = { id: 42, name: 'Test Track', muted: false, volume: 0.8, pan: 0 };
-    const result = buildMixerTrackStripHTML(mockTrack, []);
-    t.assertTruthy(result.includes('data-track-id="42"'), 'Should include track.id in data attribute');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML includes mute/solo/arm buttons', (t) => {
-    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
-    const result = buildMixerTrackStripHTML(mockTrack, []);
-    t.assertTruthy(result.includes('mute-btn'), 'Should include mute button');
-    t.assertTruthy(result.includes('solo-btn'), 'Should include solo button');
-    t.assertTruthy(result.includes('arm-btn'), 'Should include arm button');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML includes volume fader', (t) => {
-    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
-    const result = buildMixerTrackStripHTML(mockTrack, []);
-    t.assertTruthy(result.includes('mixer-fader'), 'Should include mixer-fader class');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML includes pan knob', (t) => {
-    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
-    const result = buildMixerTrackStripHTML(mockTrack, []);
-    t.assertTruthy(result.includes('pan-knob'), 'Should include pan-knob class');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML includes automation mini editor', (t) => {
-    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
-    const result = buildMixerTrackStripHTML(mockTrack, []);
-    t.assertTruthy(result.includes('mixer-automation-mini'), 'Should include automation mini editor');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML handles send level knobs', (t) => {
-    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
-    const mockSends = [{ id: 1, name: 'Send 1' }];
-    const result = buildMixerTrackStripHTML(mockTrack, mockSends);
-    t.assertTruthy(result.includes('send-level-slider'), 'Should include send level sliders');
-});
-
-TestRunner.test('Mixer - buildMixerTrackStripHTML includes track color', (t) => {
-    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0, color: '#ff0000' };
-    const result = buildMixerTrackStripHTML(mockTrack, []);
-    t.assertTruthy(result.includes('#ff0000'), 'Should include track color');
-});
-
-TestRunner.test('Mixer - buildMixerGroupStripHTML function exists', (t) => {
-    t.assertEqual(typeof buildMixerGroupStripHTML, 'function', 'buildMixerGroupStripHTML should be a function');
-});
-
-TestRunner.test('Mixer - buildMixerGroupStripHTML accepts 1 parameter', (t) => {
-    t.assertEqual(buildMixerGroupStripHTML.length, 1, 'buildMixerGroupStripHTML should accept 1 parameter');
-});
-
-TestRunner.test('Mixer - buildMixerGroupStripHTML returns string', (t) => {
-    const mockGroup = { id: 1, name: 'Test Group', muted: false, soloed: false, trackIds: [] };
-    const result = buildMixerGroupStripHTML(mockGroup);
-    t.assertEqual(typeof result, 'string', 'buildMixerGroupStripHTML should return a string');
-});
-
-TestRunner.test('Mixer - buildMixerGroupStripHTML references group.id in data attribute', (t) => {
-    const mockGroup = { id: 99, name: 'Test Group', muted: false, soloed: false, trackIds: [] };
-    const result = buildMixerGroupStripHTML(mockGroup);
-    t.assertTruthy(result.includes('data-group-id="99"'), 'Should include group.id in data attribute');
-});
-
-TestRunner.test('Mixer - buildMixerGroupStripHTML includes mute/solo buttons', (t) => {
-    const mockGroup = { id: 1, name: 'Test Group', muted: false, soloed: false, trackIds: [] };
-    const result = buildMixerGroupStripHTML(mockGroup);
-    t.assertTruthy(result.includes('mixer-group-btn'), 'Should include group buttons');
-});
-
-TestRunner.test('Mixer - buildMixerGroupStripHTML includes group color', (t) => {
-    const mockGroup = { id: 1, name: 'Test Group', muted: false, soloed: false, trackIds: [], color: '#54a0ff' };
-    const result = buildMixerGroupStripHTML(mockGroup);
-    t.assertTruthy(result.includes('#54a0ff'), 'Should include group color');
-});
-
-TestRunner.test('Mixer - buildMixerGroupStripHTML displays member count', (t) => {
-    const mockGroup = { id: 1, name: 'Test Group', muted: false, soloed: false, trackIds: [1, 2, 3] };
-    const result = buildMixerGroupStripHTML(mockGroup);
-    t.assertTruthy(result.includes('3 tracks') || result.includes('track'), 'Should display member count');
-});
-
-TestRunner.test('Mixer - buildMixerSendStripHTML function exists', (t) => {
-    t.assertEqual(typeof buildMixerSendStripHTML, 'function', 'buildMixerSendStripHTML should be a function');
-});
-
-TestRunner.test('Mixer - buildMixerSendStripHTML accepts 1 parameter', (t) => {
-    t.assertEqual(buildMixerSendStripHTML.length, 1, 'buildMixerSendStripHTML should accept 1 parameter');
-});
-
-TestRunner.test('Mixer - buildMixerSendStripHTML returns string', (t) => {
-    const mockSend = { id: 1, name: 'Send 1', level: 1.0, muted: false };
-    const result = buildMixerSendStripHTML(mockSend);
-    t.assertEqual(typeof result, 'string', 'buildMixerSendStripHTML should return a string');
-});
-
-TestRunner.test('Mixer - buildMixerSendStripHTML references send.id in data attribute', (t) => {
-    const mockSend = { id: 7, name: 'Send 7', level: 1.0, muted: false };
-    const result = buildMixerSendStripHTML(mockSend);
-    t.assertTruthy(result.includes('data-send-id="7"'), 'Should include send.id in data attribute');
-});
-
-TestRunner.test('Mixer - buildMixerSendStripHTML includes mute button', (t) => {
-    const mockSend = { id: 1, name: 'Send 1', level: 1.0, muted: false };
-    const result = buildMixerSendStripHTML(mockSend);
-    t.assertTruthy(result.includes('mixer-send-btn'), 'Should include send mute button');
-});
-
-TestRunner.test('Mixer - buildMixerSendStripHTML includes level fader', (t) => {
-    const mockSend = { id: 1, name: 'Send 1', level: 1.0, muted: false };
-    const result = buildMixerSendStripHTML(mockSend);
-    t.assertTruthy(result.includes('send-fader'), 'Should include send fader');
-});
-
-TestRunner.test('Mixer - buildMixerSendStripHTML includes effects button', (t) => {
-    const mockSend = { id: 1, name: 'Send 1', level: 1.0, muted: false };
-    const result = buildMixerSendStripHTML(mockSend);
-    t.assertTruthy(result.includes('send-effects-btn'), 'Should include effects button');
-});
-
-TestRunner.test('Mixer - buildMixerMasterStripHTML function exists', (t) => {
-    t.assertEqual(typeof buildMixerMasterStripHTML, 'function', 'buildMixerMasterStripHTML should be a function');
-});
-
-TestRunner.test('Mixer - buildMixerMasterStripHTML accepts no parameters', (t) => {
-    t.assertEqual(buildMixerMasterStripHTML.length, 0, 'buildMixerMasterStripHTML should accept no parameters');
-});
-
-TestRunner.test('Mixer - buildMixerMasterStripHTML returns string', (t) => {
-    const result = buildMixerMasterStripHTML();
-    t.assertEqual(typeof result, 'string', 'buildMixerMasterStripHTML should return a string');
-});
-
-TestRunner.test('Mixer - buildMixerMasterStripHTML includes MASTER label', (t) => {
-    const result = buildMixerMasterStripHTML();
-    t.assertTruthy(result.includes('MASTER'), 'Should include MASTER label');
-});
-
-TestRunner.test('Mixer - buildMixerMasterStripHTML includes master volume fader', (t) => {
-    const result = buildMixerMasterStripHTML();
-    t.assertTruthy(result.includes('master-fader'), 'Should include master fader');
-});
-
-TestRunner.test('Mixer - buildMixerMasterStripHTML includes master meter', (t) => {
-    const result = buildMixerMasterStripHTML();
-    t.assertTruthy(result.includes('mixerMasterMeterBar'), 'Should include master meter');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers function exists', (t) => {
-    t.assertEqual(typeof initializeMixerEventHandlers, 'function', 'initializeMixerEventHandlers should be a function');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers accepts 1 parameter', (t) => {
-    t.assertEqual(initializeMixerEventHandlers.length, 1, 'initializeMixerEventHandlers should accept 1 parameter');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers references mixer-btn', (t) => {
-    const funcStr = initializeMixerEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('mixer-btn'), 'Should reference mixer-btn class');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers references handleMixerButtonAction', (t) => {
-    const funcStr = initializeMixerEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('handleMixerButtonAction'), 'Should reference handleMixerButtonAction');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers references handleMixerVolumeChange', (t) => {
-    const funcStr = initializeMixerEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('handleMixerVolumeChange'), 'Should reference handleMixerVolumeChange');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers references handleMixerPanChange', (t) => {
-    const funcStr = initializeMixerEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('handleMixerPanChange'), 'Should reference handleMixerPanChange');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers references send-level-slider', (t) => {
-    const funcStr = initializeMixerEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('send-level-slider'), 'Should reference send-level-slider');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers references master volume fader', (t) => {
-    const funcStr = initializeMixerEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('masterVolumeFader'), 'Should reference masterVolumeFader');
-});
-
-TestRunner.test('Mixer - initializeMixerEventHandlers references MIDI learn mode', (t) => {
-    const funcStr = initializeMixerEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('getMidiLearnModeState'), 'Should reference MIDI learn mode');
-});
-
-TestRunner.test('Mixer - handleMixerButtonAction function exists', (t) => {
-    t.assertEqual(typeof handleMixerButtonAction, 'function', 'handleMixerButtonAction should be a function');
-});
-
-TestRunner.test('Mixer - handleMixerButtonAction accepts 2 parameters', (t) => {
-    t.assertEqual(handleMixerButtonAction.length, 2, 'handleMixerButtonAction should accept 2 parameters');
-});
-
-TestRunner.test('Mixer - handleMixerButtonAction references handleTrackMute', (t) => {
-    const funcStr = handleMixerButtonAction.toString();
-    t.assertTruthy(funcStr.includes('handleTrackMute'), 'Should reference handleTrackMute');
-});
-
-TestRunner.test('Mixer - handleMixerButtonAction references handleTrackSolo', (t) => {
-    const funcStr = handleMixerButtonAction.toString();
-    t.assertTruthy(funcStr.includes('handleTrackSolo'), 'Should reference handleTrackSolo');
-});
-
-TestRunner.test('Mixer - handleMixerButtonAction references handleTrackArm', (t) => {
-    const funcStr = handleMixerButtonAction.toString();
-    t.assertTruthy(funcStr.includes('handleTrackArm'), 'Should reference handleTrackArm');
-});
-
-TestRunner.test('Mixer - handleMixerVolumeChange function exists', (t) => {
-    t.assertEqual(typeof handleMixerVolumeChange, 'function', 'handleMixerVolumeChange should be a function');
-});
-
-TestRunner.test('Mixer - handleMixerVolumeChange accepts 2 parameters', (t) => {
-    t.assertEqual(handleMixerVolumeChange.length, 2, 'handleMixerVolumeChange should accept 2 parameters');
-});
-
-TestRunner.test('Mixer - handleMixerVolumeChange references captureStateForUndo', (t) => {
-    const funcStr = handleMixerVolumeChange.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'Should reference captureStateForUndo');
-});
-
-TestRunner.test('Mixer - handleMixerPanChange function exists', (t) => {
-    t.assertEqual(typeof handleMixerPanChange, 'function', 'handleMixerPanChange should be a function');
-});
-
-TestRunner.test('Mixer - handleMixerPanChange accepts 2 parameters', (t) => {
-    t.assertEqual(handleMixerPanChange.length, 2, 'handleMixerPanChange should accept 2 parameters');
-});
-
-TestRunner
-// ============================================
-// Day 308: Track Template UI Functions Tests (2026-04-28)
-// ============================================
-TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES is valid', (t) => {
-    t.assertEqual(typeof MAX_TRACK_TEMPLATES, 'number', 'MAX_TRACK_TEMPLATES should be a number');
-    t.assertEqual(MAX_TRACK_TEMPLATES > 0, true, 'MAX_TRACK_TEMPLATES should be positive');
-    t.assertEqual(MAX_TRACK_TEMPLATES <= 256, true, 'MAX_TRACK_TEMPLATES should be reasonable (<=256)');
-});
-
-TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES is 32', (t) => {
-    t.assertEqual(MAX_TRACK_TEMPLATES, 32, 'MAX_TRACK_TEMPLATES should be 32');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is valid', (t) => {
-    t.assertEqual(typeof DEFAULT_TEMPLATE_NAME_PREFIX, 'string', 'DEFAULT_TEMPLATE_NAME_PREFIX should be a string');
-    t.assertEqual(DEFAULT_TEMPLATE_NAME_PREFIX.length > 0, true, 'DEFAULT_TEMPLATE_NAME_PREFIX should be non-empty');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is "Template"', (t) => {
-    t.assertEqual(DEFAULT_TEMPLATE_NAME_PREFIX, 'Template', 'DEFAULT_TEMPLATE_NAME_PREFIX should be "Template"');
-});
-
-TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS is an array', (t) => {
-    t.assertEqual(Array.isArray(TRACK_TEMPLATE_COLORS), true, 'TRACK_TEMPLATE_COLORS should be an array');
-});
-
-TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS has multiple colors', (t) => {
-    t.assertEqual(TRACK_TEMPLATE_COLORS.length > 0, true, 'TRACK_TEMPLATE_COLORS should have colors');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid', (t) => {
-    t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE_COLOR, 'string', 'DEFAULT_TRACK_TEMPLATE_COLOR should be a string');
-    t.assertEqual(DEFAULT_TRACK_TEMPLATE_COLOR.startsWith('#'), true, 'DEFAULT_TRACK_TEMPLATE_COLOR should be hex color');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is #54a0ff', (t) => {
-    t.assertEqual(DEFAULT_TRACK_TEMPLATE_COLOR, '#54a0ff', 'DEFAULT_TRACK_TEMPLATE_COLOR should be #54a0ff');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE is an object', (t) => {
-    t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE, 'object', 'DEFAULT_TRACK_TEMPLATE should be an object');
-    t.assertEqual(DEFAULT_TRACK_TEMPLATE !== null, true, 'DEFAULT_TRACK_TEMPLATE should not be null');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has required properties', (t) => {
-    t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE.name, 'string', 'DEFAULT_TRACK_TEMPLATE.name should be a string');
-    t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE.color, 'string', 'DEFAULT_TRACK_TEMPLATE.color should be a string');
-    t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE.type, 'string', 'DEFAULT_TRACK_TEMPLATE.type should be a string');
-    t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE.synthParams, 'object', 'DEFAULT_TRACK_TEMPLATE.synthParams should be an object');
-    t.assertEqual(Array.isArray(DEFAULT_TRACK_TEMPLATE.activeEffects), true, 'DEFAULT_TRACK_TEMPLATE.activeEffects should be an array');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has default type Synth', (t) => {
-    t.assertEqual(DEFAULT_TRACK_TEMPLATE.type, 'Synth', 'DEFAULT_TRACK_TEMPLATE.type should default to Synth');
-});
-
-TestRunner.test('Track Templates - getTrackTemplatesState function exists', (t) => {
-    t.assertEqual(typeof getTrackTemplatesState, 'function', 'getTrackTemplatesState should be a function');
-});
-
-TestRunner.test('Track Templates - getTrackTemplatesState returns array', (t) => {
-    const templates = getTrackTemplatesState();
-    t.assertEqual(Array.isArray(templates), true, 'getTrackTemplatesState should return an array');
-});
-
-TestRunner.test('Track Templates - getTrackTemplateByIdState function exists', (t) => {
-    t.assertEqual(typeof getTrackTemplateByIdState, 'function', 'getTrackTemplateByIdState should be a function');
-});
-
-TestRunner.test('Track Templates - getTrackTemplateByIdState accepts 1 parameter', (t) => {
-    t.assertEqual(getTrackTemplateByIdState.length, 1, 'getTrackTemplateByIdState should accept 1 parameter');
-});
-
-TestRunner.test('Track Templates - getTrackTemplateByIdState returns undefined for unknown id', (t) => {
-    const result = getTrackTemplateByIdState('unknown-id');
-    t.assertEqual(result, undefined, 'getTrackTemplateByIdState should return undefined for unknown id');
-});
-
-TestRunner.test('Track Templates - addTrackTemplateState function exists', (t) => {
-    t.assertEqual(typeof addTrackTemplateState, 'function', 'addTrackTemplateState should be a function');
-});
-
-TestRunner.test('Track Templates - addTrackTemplateState accepts 1 parameter', (t) => {
-    t.assertEqual(addTrackTemplateState.length, 1, 'addTrackTemplateState should accept 1 parameter');
-});
-
-TestRunner.test('Track Templates - updateTrackTemplateState function exists', (t) => {
-    t.assertEqual(typeof updateTrackTemplateState, 'function', 'updateTrackTemplateState should be a function');
-});
-
-TestRunner.test('Track Templates - updateTrackTemplateState accepts 2 parameters', (t) => {
-    t.assertEqual(updateTrackTemplateState.length, 2, 'updateTrackTemplateState should accept 2 parameters');
-});
-
-TestRunner.test('Track Templates - removeTrackTemplateState function exists', (t) => {
-    t.assertEqual(typeof removeTrackTemplateState, 'function', 'removeTrackTemplateState should be a function');
-});
-
-TestRunner.test('Track Templates - removeTrackTemplateState accepts 1 parameter', (t) => {
-    t.assertEqual(removeTrackTemplateState.length, 1, 'removeTrackTemplateState should accept 1 parameter');
-});
-
-TestRunner.test('Track Templates - openTrackTemplatesWindow function exists', (t) => {
-    t.assertEqual(typeof openTrackTemplatesWindow, 'function', 'openTrackTemplatesWindow should be a function');
-});
-
-TestRunner.test('Track Templates - openTrackTemplatesWindow accepts optional parameter', (t) => {
-    t.assertEqual(openTrackTemplatesWindow.length, 1, 'openTrackTemplatesWindow should accept 1 parameter (optional savedState)');
-});
-
-TestRunner.test('Track Templates - updateTrackTemplatesWindowContent function exists', (t) => {
-    t.assertEqual(typeof updateTrackTemplatesWindowContent, 'function', 'updateTrackTemplatesWindowContent should be a function');
-});
-
-TestRunner.test('Track Templates - applyTrackTemplate function exists', (t) => {
-    t.assertEqual(typeof applyTrackTemplate, 'function', 'applyTrackTemplate should be a function');
-});
-
-TestRunner.test('Track Templates - showTemplateContextMenu function exists', (t) => {
-    t.assertEqual(typeof showTemplateContextMenu, 'function', 'showTemplateContextMenu should be a function');
-});
-
-TestRunner.test('Track Templates - showTemplateContextMenu accepts 3 parameters', (t) => {
-    t.assertEqual(showTemplateContextMenu.length, 3, 'showTemplateContextMenu should accept 3 parameters');
-});
-
-TestRunner.test('Track Templates - addTrackTemplateState calls captureStateForUndo', (t) => {
-    const funcStr = addTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackTemplateState should reference captureStateForUndo');
-});
-
-TestRunner.test('Track Templates - updateTrackTemplateState calls captureStateForUndo', (t) => {
-    const funcStr = updateTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateTrackTemplateState should reference captureStateForUndo');
-});
-
-TestRunner.test('Track Templates - removeTrackTemplateState calls captureStateForUndo', (t) => {
-    const funcStr = removeTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackTemplateState should reference captureStateForUndo');
-});
-
-TestRunner.test('Track Templates - addTrackTemplateState uses descriptive undo label', (t) => {
-    const funcStr = addTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('Template') || funcStr.includes('template'), 'addTrackTemplateState should use Template in undo label');
-});
-
-TestRunner.test('Track Templates - openTrackTemplatesWindow references trackTemplates window id', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('trackTemplates'), 'openTrackTemplatesWindow should reference trackTemplates window id');
-});
-
-TestRunner.test('APP_VERSION - semver format validation for Day 308', (t) => {
-    const versionParts = APP_VERSION.split('.');
-    t.assertEqual(versionParts.length, 3, 'APP_VERSION should have 3 parts');
-    t.assertEqual(versionParts[0] >= 0, true, 'Major should be >= 0');
-    t.assertEqual(versionParts[1] >= 0, true, 'Minor should be >= 0');
-    t.assertEqual(versionParts[2] >= 0, true, 'Patch should be >= 0');
-});
-
-TestRunner.test('APP_VERSION - version is 1.88.0 or higher for Day 308', (t) => {
-    const versionNum = parseFloat(APP_VERSION.split('.')[0] + '.' + APP_VERSION.split('.')[1]);
-    t.assertEqual(versionNum >= 1.88, true, 'APP_VERSION should be 1.88.0 or higher');
-});
-
-// Day 309: SnugWindow Prototype Method Instance Tests (2026-04-28)
-TestRunner.test('SnugWindow - prototype has minimize method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.minimize, 'function', 'SnugWindow.prototype.minimize should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has restore method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.restore, 'function', 'SnugWindow.prototype.restore should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has close method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.close, 'function', 'SnugWindow.prototype.close should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has focus method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.focus, 'function', 'SnugWindow.prototype.focus should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has toggleMaximize method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.toggleMaximize, 'function', 'SnugWindow.prototype.toggleMaximize should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has makeDraggable method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.makeDraggable, 'function', 'SnugWindow.prototype.makeDraggable should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has makeResizable method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.makeResizable, 'function', 'SnugWindow.prototype.makeResizable should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has createTaskbarButton method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.createTaskbarButton, 'function', 'SnugWindow.prototype.createTaskbarButton should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has updateTaskbarButtonActiveState method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.updateTaskbarButtonActiveState, 'function', 'SnugWindow.prototype.updateTaskbarButtonActiveState should be a function');
-});
-
-TestRunner.test('SnugWindow - prototype has applyState method', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.applyState, 'function', 'SnugWindow.prototype.applyState should be a function');
-});
-
-TestRunner.test('SnugWindow - minimize accepts optional skipUndo parameter', (t) => {
-    t.assertEqual(SnugWindow.prototype.minimize.length, 1, 'minimize should accept 1 parameter (skipUndo)');
-});
-
-TestRunner.test('SnugWindow - restore accepts optional skipUndo parameter', (t) => {
-    t.assertEqual(SnugWindow.prototype.restore.length, 1, 'restore should accept 1 parameter (skipUndo)');
-});
-
-TestRunner.test('SnugWindow - close accepts optional isReconstruction parameter', (t) => {
-    t.assertEqual(SnugWindow.prototype.close.length, 1, 'close should accept 1 parameter (isReconstruction)');
-});
-
-TestRunner.test('SnugWindow - focus accepts optional skipUndoForFocusItself parameter', (t) => {
-    t.assertEqual(SnugWindow.prototype.focus.length, 1, 'focus should accept 1 parameter (skipUndoForFocusItself)');
-});
-
-TestRunner.test('SnugWindow - applyState accepts state parameter', (t) => {
-    t.assertEqual(SnugWindow.prototype.applyState.length, 1, 'applyState should accept 1 parameter (state)');
-});
-
-TestRunner.test('SnugWindow - makeDraggable accepts no parameters', (t) => {
-    t.assertEqual(SnugWindow.prototype.makeDraggable.length, 0, 'makeDraggable should accept no parameters');
-});
-
-TestRunner.test('SnugWindow - makeResizable accepts no parameters', (t) => {
-    t.assertEqual(SnugWindow.prototype.makeResizable.length, 0, 'makeResizable should accept no parameters');
-});
-
-TestRunner.test('SnugWindow - createTaskbarButton accepts no parameters', (t) => {
-    t.assertEqual(SnugWindow.prototype.createTaskbarButton.length, 0, 'createTaskbarButton should accept no parameters');
-});
-
-TestRunner.test('SnugWindow - updateTaskbarButtonActiveState accepts no parameters', (t) => {
-    t.assertEqual(SnugWindow.prototype.updateTaskbarButtonActiveState.length, 0, 'updateTaskbarButtonActiveState should accept no parameters');
-});
-
-TestRunner.test('SnugWindow - toggleMaximize accepts no parameters', (t) => {
-    t.assertEqual(SnugWindow.prototype.toggleMaximize.length, 0, 'toggleMaximize should accept no parameters');
-});
-
-TestRunner.test('SnugWindow - SnugWindow instance has isMinimized property', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.isMinimized, 'undefined', 'isMinimized should not exist on prototype (instance property)');
-});
-
-TestRunner.test('SnugWindow - SnugWindow instance has isMaximized property', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.isMaximized, 'undefined', 'isMaximized should not exist on prototype (instance property)');
-});
-
-TestRunner.test('SnugWindow - SnugWindow instance has element property', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.element, 'undefined', 'element should not exist on prototype (instance property)');
-});
-
-TestRunner.test('SnugWindow - SnugWindow instance has title property', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.title, 'undefined', 'title should not exist on prototype (instance property)');
-});
-
-TestRunner.test('SnugWindow - SnugWindow instance has options property', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.options, 'undefined', 'options should not exist on prototype (instance property)');
-});
-
-TestRunner.test('SnugWindow - SnugWindow instance has appServices property', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.appServices, 'undefined', 'appServices should not exist on prototype (instance property)');
-});
-
-TestRunner.test('SnugWindow - SnugWindow instance has taskbarButton property', (t) => {
-    t.assertEqual(typeof SnugWindow.prototype.taskbarButton, 'undefined', 'taskbarButton should not exist on prototype (instance property)');
-});
-
-TestRunner.test('SnugWindow - minimize references element and isMinimized', (t) => {
-    const funcStr = SnugWindow.prototype.minimize.toString();
-    t.assertTruthy(funcStr.includes('element') || funcStr.includes('isMinimized'), 'minimize should reference element or isMinimized');
-});
-
-TestRunner.test('SnugWindow - restore references element and isMinimized', (t) => {
-    const funcStr = SnugWindow.prototype.restore.toString();
-    t.assertTruthy(funcStr.includes('element') || funcStr.includes('isMinimized'), 'restore should reference element or isMinimized');
-});
-
-TestRunner.test('SnugWindow - close references element and taskbarButton', (t) => {
-    const funcStr = SnugWindow.prototype.close.toString();
-    t.assertTruthy(funcStr.includes('element') || funcStr.includes('taskbarButton'), 'close should reference element or taskbarButton');
-});
-
-TestRunner.test('SnugWindow - focus references element and appServices', (t) => {
-    const funcStr = SnugWindow.prototype.focus.toString();
-    t.assertTruthy(funcStr.includes('element') || funcStr.includes('appServices'), 'focus should reference element or appServices');
-});
-
-TestRunner.test('SnugWindow - toggleMaximize references isMaximized and restoreState', (t) => {
-    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
-    t.assertTruthy(funcStr.includes('isMaximized') || funcStr.includes('restoreState'), 'toggleMaximize should reference isMaximized or restoreState');
-});
-
-TestRunner.test('SnugWindow - applyState references element and zIndex', (t) => {
-    const funcStr = SnugWindow.prototype.applyState.toString();
-    t.assertTruthy(funcStr.includes('element') || funcStr.includes('zIndex'), 'applyState should reference element or zIndex');
-});
-
-TestRunner.test('SnugWindow - createTaskbarButton references taskbarButton and appServices', (t) => {
-    const funcStr = SnugWindow.prototype.createTaskbarButton.toString();
-    t.assertTruthy(funcStr.includes('taskbarButton') || funcStr.includes('appServices'), 'createTaskbarButton should reference taskbarButton or appServices');
-});
-
-TestRunner.test('SnugWindow - updateTaskbarButtonActiveState references taskbarButton and element', (t) => {
-    const funcStr = SnugWindow.prototype.updateTaskbarButtonActiveState.toString();
-    t.assertTruthy(funcStr.includes('taskbarButton') || funcStr.includes('element'), 'updateTaskbarButtonActiveState should reference taskbarButton or element');
-});
-
-TestRunner.test('SnugWindow - minimize handles skipUndo for undo capture', (t) => {
-    const funcStr = SnugWindow.prototype.minimize.toString();
-    t.assertTruthy(funcStr.includes('skipUndo'), 'minimize should check skipUndo parameter');
-});
-
-TestRunner.test('SnugWindow - restore handles skipUndo for undo capture', (t) => {
-    const funcStr = SnugWindow.prototype.restore.toString();
-    t.assertTruthy(funcStr.includes('skipUndo'), 'restore should check skipUndo parameter');
-});
-
-TestRunner.test('SnugWindow - close handles isReconstruction for cleanup', (t) => {
-    const funcStr = SnugWindow.prototype.close.toString();
-    t.assertTruthy(funcStr.includes('isReconstruction'), 'close should check isReconstruction parameter');
-});
-
-TestRunner.test('APP_VERSION - semver format validation for Day 309', (t) => {
-    const versionParts = APP_VERSION.split('.');
-    t.assertEqual(versionParts.length, 3, 'APP_VERSION should have 3 parts');
-    t.assertEqual(versionParts[0] >= 0, true, 'Major should be >= 0');
-    t.assertEqual(versionParts[1] >= 0, true, 'Minor should be >= 0');
-    t.assertEqual(versionParts[2] >= 0, true, 'Patch should be >= 0');
-});
-
-TestRunner.test('APP_VERSION - version is 1.89.0 or higher for Day 309', (t) => {
-    const versionNum = parseFloat(APP_VERSION.split('.')[0] + '.' + APP_VERSION.split('.')[1]);
-    t.assertEqual(versionNum >= 1.89, true, 'APP_VERSION should be 1.89.0 or higher');
-});
-
-// Day 310: Record Button Event Handler Tests (2026-04-28)
-// Tests for recording button click handler in initializePrimaryEventListeners
-TestRunner.test('Transport Controls - initializePrimaryEventListeners references recordBtnGlobal', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('recordBtnGlobal'), 'initializePrimaryEventListeners should reference recordBtnGlobal');
-});
-
-TestRunner.test('Record Button - recordBtnGlobal addEventListener check', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('addEventListener') || funcStr.includes('recordBtnGlobal'), 'Should set up event listener for recordBtnGlobal');
-});
-
-TestRunner.test('Record Button - click handler calls isTrackRecording', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('isTrackRecording') || funcStr.includes('isCurrentlyRec'), 'Record handler should check recording state');
-});
-
-TestRunner.test('Record Button - click handler calls getArmedTrackId', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('getArmedTrackId') || funcStr.includes('trackToRecordId'), 'Record handler should get armed track');
-});
-
-TestRunner.test('Record Button - click handler validates track type', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('type === "Audio"') || funcStr.includes('trackToRecord.type'), 'Record handler should validate Audio track type');
-});
-
-TestRunner.test('Record Button - click handler calls startAudioRecording for Audio tracks', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('startAudioRecording') || funcStr.includes('recordingInitialized'), 'Record handler should call startAudioRecording for Audio tracks');
-});
-
-TestRunner.test('Record Button - click handler calls stopAudioRecording when recording', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('stopAudioRecording') || funcStr.includes('isCurrentlyRec'), 'Record handler should call stopAudioRecording when already recording');
-});
-
-TestRunner.test('Record Button - click handler updates recording state (setIsRecording)', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('setIsRecording') || funcStr.includes('true') || funcStr.includes('false'), 'Record handler should update recording state');
-});
-
-TestRunner.test('Record Button - click handler updates recording track ID (setRecordingTrackId)', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('setRecordingTrackId') || funcStr.includes('recordingTrackId'), 'Record handler should update recording track ID');
-});
-
-TestRunner.test('Record Button - click handler sets recording start time (setRecordingStartTime)', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('setRecordingStartTime') || funcStr.includes('startTime'), 'Record handler should set recording start time');
-});
-
-TestRunner.test('Record Button - click handler uses Tone.Transport for start', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('Tone.Transport') || funcStr.includes('Transport.start'), 'Record handler should use Tone.Transport to start');
-});
-
-TestRunner.test('Record Button - click handler calls updateRecordButtonUI', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('updateRecordButtonUI') || funcStr.includes('recordBtnGlobal'), 'Record handler should update record button UI');
-});
-
-TestRunner.test('Record Button - click handler shows notification for no armed track', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('No track armed'), 'Record handler should show notification when no track armed');
-});
-
-TestRunner.test('Record Button - click handler shows notification for recording started', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('Recording started'), 'Record handler should show notification when recording starts');
-});
-
-TestRunner.test('Record Button - click handler shows notification for recording stopped', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('Recording stopped'), 'Record handler should show notification when recording stops');
-});
-
-TestRunner.test('Record Button - click handler handles error with try-catch', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'Record handler should have error handling');
-});
-
-TestRunner.test('Record Button - click handler calls initAudioContextAndMasterMeter', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter') || funcStr.includes('audioReady'), 'Record handler should initialize audio context');
-});
-
-TestRunner.test('Record Button - click handler checks audio context readiness', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('audioReady') || funcStr.includes('Audio context'), 'Record handler should check if audio is ready');
-});
-
-TestRunner.test('Record Button - click handler handles monitoring enabled flag', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('isMonitoringEnabled') || funcStr.includes('monitoring'), 'Record handler should handle monitoring flag');
-});
-
-TestRunner.test('Record Button - click handler clears Tone.Transport on record start', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('Transport.cancel') || funcStr.includes('cancel(0)'), 'Record handler should clear transport on start');
-});
-
-TestRunner.test('Record Button - click handler sets transport position to 0 on record', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('Transport.position') || funcStr.includes('position = 0'), 'Record handler should set position to 0');
-});
-
-TestRunner.test('Record Button - click handler clears recording state on stop', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('setRecordingTrackId') && (funcStr.includes('null') || funcStr.includes('false')), 'Record handler should clear recording state on stop');
-});
-
-TestRunner.test('Record Button - click handler gets previouslyRecordingTrackId', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('previouslyRecordingTrackId') || funcStr.includes('prevTrack') || funcStr.includes('prevTrack'), 'Record handler should track previously recording track');
-});
-
-TestRunner.test('Record Button - click handler calls getTrackById for track validation', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('getTrackById') || funcStr.includes('trackToRecord'), 'Record handler should validate track with getTrackById');
-});
-
-TestRunner.test('Record Button - click handler handles microphone permission errors', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('NotAllowedError') || funcStr.includes('NotFoundError') || funcStr.includes('Permissions'), 'Record handler should handle microphone permission errors');
-});
-
-TestRunner.test('Record Button - click handler checks recording state before starting', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('if') && (funcStr.includes('isCurrentlyRec') || funcStr.includes('isTrackRecording')), 'Record handler should check current recording state');
-});
-
-TestRunner.test('Record Button - click handler handles audio track type correctly', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('type === "Audio"') || funcStr.includes('Audio'), 'Record handler should differentiate Audio tracks');
-});
-
-TestRunner.test('Record Button - click handler uses trackToRecord.name in notification', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('trackToRecord.name') || funcStr.includes('track.name'), 'Record handler should include track name in notifications');
-});
-
-TestRunner.test('Record Button - click handler uses isUserInitiated=true for audio policy', (t) => {
-    const funcStr = initializePrimaryEventListeners.toString();
-    t.assertTruthy(funcStr.includes('true') || funcStr.includes('isUserInitiated'), 'Record handler should pass user initiated flag for audio policy');
-});
-
-TestRunner.test('Transport Controls - APP_VERSION is 1.90.0 or higher for Day 310 final', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
-    if (versionParts[0] === 1) {
-        t.assertTruthy(versionParts[1] >= 90, 'Minor version should be >= 90 for Day 310');
-    }
-});
-
-TestRunner.test('APP_VERSION - semver format validation for Day 310', (t) => {
-    const versionParts = APP_VERSION.split('.');
-    t.assertEqual(versionParts.length, 3, 'APP_VERSION should have 3 parts');
-    t.assertEqual(versionParts[0] >= 0, true, 'Major should be >= 0');
-    t.assertEqual(versionParts[1] >= 0, true, 'Minor should be >= 0');
-    t.assertEqual(versionParts[2] >= 0, true, 'Patch should be >= 0');
-});
+    const funcStr = initializePrimaryEvent

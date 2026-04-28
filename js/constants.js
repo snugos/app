@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.90.0'; // Day 310: Record Button Event Handler Tests (2026-04-28) 
+export const APP_VERSION = '1.91.0'; // Day 310: Record Button Event Handler Tests (2026-04-28) 
 
 // Desktop Background Constants
 export const DESKTOP_BACKGROUND_KEY = 'snugos_desktop_background';
