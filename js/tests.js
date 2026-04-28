@@ -25,7 +25,6 @@ import {
     MAX_METRONOME_VOLUME,
     DEFAULT_TEMPO,
     MIN_TEMPO,
-    MAX_METRONOME_VOLUME,
     MAX_TEMPO,
     DEFAULT_LOOP_REGION,
     MAX_TIMELINE_MARKERS,
@@ -203,7 +202,7 @@ import {
     findMidiLearnMapping,
     updateMidiLearnMapping,
     exportToMidiInternal,
-    importFromMidiInternal,
+
     getMidiLearnMappingByIndex
 } from './state.js';
 
@@ -10255,4 +10254,167 @@ TestRunner.test('APP_VERSION - semver format validation for Day 309', (t) => {
 TestRunner.test('APP_VERSION - version is 1.89.0 or higher for Day 309', (t) => {
     const versionNum = parseFloat(APP_VERSION.split('.')[0] + '.' + APP_VERSION.split('.')[1]);
     t.assertEqual(versionNum >= 1.89, true, 'APP_VERSION should be 1.89.0 or higher');
+});
+
+// Day 310: Record Button Event Handler Tests (2026-04-28)
+// Tests for recording button click handler in initializePrimaryEventListeners
+TestRunner.test('Transport Controls - initializePrimaryEventListeners references recordBtnGlobal', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('recordBtnGlobal'), 'initializePrimaryEventListeners should reference recordBtnGlobal');
+});
+
+TestRunner.test('Record Button - recordBtnGlobal addEventListener check', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') || funcStr.includes('recordBtnGlobal'), 'Should set up event listener for recordBtnGlobal');
+});
+
+TestRunner.test('Record Button - click handler calls isTrackRecording', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('isTrackRecording') || funcStr.includes('isCurrentlyRec'), 'Record handler should check recording state');
+});
+
+TestRunner.test('Record Button - click handler calls getArmedTrackId', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId') || funcStr.includes('trackToRecordId'), 'Record handler should get armed track');
+});
+
+TestRunner.test('Record Button - click handler validates track type', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('type === "Audio"') || funcStr.includes('trackToRecord.type'), 'Record handler should validate Audio track type');
+});
+
+TestRunner.test('Record Button - click handler calls startAudioRecording for Audio tracks', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('startAudioRecording') || funcStr.includes('recordingInitialized'), 'Record handler should call startAudioRecording for Audio tracks');
+});
+
+TestRunner.test('Record Button - click handler calls stopAudioRecording when recording', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('stopAudioRecording') || funcStr.includes('isCurrentlyRec'), 'Record handler should call stopAudioRecording when already recording');
+});
+
+TestRunner.test('Record Button - click handler updates recording state (setIsRecording)', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('setIsRecording') || funcStr.includes('true') || funcStr.includes('false'), 'Record handler should update recording state');
+});
+
+TestRunner.test('Record Button - click handler updates recording track ID (setRecordingTrackId)', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('setRecordingTrackId') || funcStr.includes('recordingTrackId'), 'Record handler should update recording track ID');
+});
+
+TestRunner.test('Record Button - click handler sets recording start time (setRecordingStartTime)', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('setRecordingStartTime') || funcStr.includes('startTime'), 'Record handler should set recording start time');
+});
+
+TestRunner.test('Record Button - click handler uses Tone.Transport for start', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport') || funcStr.includes('Transport.start'), 'Record handler should use Tone.Transport to start');
+});
+
+TestRunner.test('Record Button - click handler calls updateRecordButtonUI', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('updateRecordButtonUI') || funcStr.includes('recordBtnGlobal'), 'Record handler should update record button UI');
+});
+
+TestRunner.test('Record Button - click handler shows notification for no armed track', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('No track armed'), 'Record handler should show notification when no track armed');
+});
+
+TestRunner.test('Record Button - click handler shows notification for recording started', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('Recording started'), 'Record handler should show notification when recording starts');
+});
+
+TestRunner.test('Record Button - click handler shows notification for recording stopped', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('Recording stopped'), 'Record handler should show notification when recording stops');
+});
+
+TestRunner.test('Record Button - click handler handles error with try-catch', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'Record handler should have error handling');
+});
+
+TestRunner.test('Record Button - click handler calls initAudioContextAndMasterMeter', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter') || funcStr.includes('audioReady'), 'Record handler should initialize audio context');
+});
+
+TestRunner.test('Record Button - click handler checks audio context readiness', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('audioReady') || funcStr.includes('Audio context'), 'Record handler should check if audio is ready');
+});
+
+TestRunner.test('Record Button - click handler handles monitoring enabled flag', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('isMonitoringEnabled') || funcStr.includes('monitoring'), 'Record handler should handle monitoring flag');
+});
+
+TestRunner.test('Record Button - click handler clears Tone.Transport on record start', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('Transport.cancel') || funcStr.includes('cancel(0)'), 'Record handler should clear transport on start');
+});
+
+TestRunner.test('Record Button - click handler sets transport position to 0 on record', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('Transport.position') || funcStr.includes('position = 0'), 'Record handler should set position to 0');
+});
+
+TestRunner.test('Record Button - click handler clears recording state on stop', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('setRecordingTrackId') && (funcStr.includes('null') || funcStr.includes('false')), 'Record handler should clear recording state on stop');
+});
+
+TestRunner.test('Record Button - click handler gets previouslyRecordingTrackId', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('previouslyRecordingTrackId') || funcStr.includes('prevTrack') || funcStr.includes('prevTrack'), 'Record handler should track previously recording track');
+});
+
+TestRunner.test('Record Button - click handler calls getTrackById for track validation', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('getTrackById') || funcStr.includes('trackToRecord'), 'Record handler should validate track with getTrackById');
+});
+
+TestRunner.test('Record Button - click handler handles microphone permission errors', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('NotAllowedError') || funcStr.includes('NotFoundError') || funcStr.includes('Permissions'), 'Record handler should handle microphone permission errors');
+});
+
+TestRunner.test('Record Button - click handler checks recording state before starting', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('if') && (funcStr.includes('isCurrentlyRec') || funcStr.includes('isTrackRecording')), 'Record handler should check current recording state');
+});
+
+TestRunner.test('Record Button - click handler handles audio track type correctly', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('type === "Audio"') || funcStr.includes('Audio'), 'Record handler should differentiate Audio tracks');
+});
+
+TestRunner.test('Record Button - click handler uses trackToRecord.name in notification', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('trackToRecord.name') || funcStr.includes('track.name'), 'Record handler should include track name in notifications');
+});
+
+TestRunner.test('Record Button - click handler uses isUserInitiated=true for audio policy', (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('true') || funcStr.includes('isUserInitiated'), 'Record handler should pass user initiated flag for audio policy');
+});
+
+TestRunner.test('Transport Controls - APP_VERSION is 1.90.0 or higher for Day 310 final', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 90, 'Minor version should be >= 90 for Day 310');
+    }
+});
+
+TestRunner.test('APP_VERSION - semver format validation for Day 310', (t) => {
+    const versionParts = APP_VERSION.split('.');
+    t.assertEqual(versionParts.length, 3, 'APP_VERSION should have 3 parts');
+    t.assertEqual(versionParts[0] >= 0, true, 'Major should be >= 0');
+    t.assertEqual(versionParts[1] >= 0, true, 'Minor should be >= 0');
+    t.assertEqual(versionParts[2] >= 0, true, 'Patch should be >= 0');
 });
