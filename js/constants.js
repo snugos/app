@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.98.0'; // Day 318: Timeline Window DOM Content & Rendering Tests (2026-04-28)
+export const APP_VERSION = '1.99.0'; // Day 319: Recording Audio Module Functions Extended Tests (2026-04-28)
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

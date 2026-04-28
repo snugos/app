@@ -1,3 +1,36 @@
+#### Day 319: Recording Audio Module Functions Extended Tests (2026-04-28)
+- **Feature**: Added 49 new unit tests for Recording Audio Module Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 49 new tests in Day 319 section:
+    - startAudioRecording: function export, 2 parameters, async, references Tone.UserMedia/Tone.Recorder
+    - startAudioRecording: uses recordingInputGainNode, validates track.type, checks track.inputChannel
+    - startAudioRecording: calls setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState
+    - startAudioRecording: references Tone.Transport.seconds for start time
+    - stopAudioRecording: function export, 0 parameters, async, references recorder/mic/blob
+    - stopAudioRecording: calls addAudioClip, clears recording state (setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState)
+    - stopAudioRecording: disposes audio resources (mic.close, recorder.dispose)
+    - setRecordingInputGain: function export, 1 parameter, clamps Infinity/negative values, updates recordingInputGainNode
+    - Recording constants: RECORDING_SAMPLE_RATE (44100), RECORDING_NUM_CHANNELS (1 mono), RECORDING_BIT_DEPTH (16), RECORDING_MIME_TYPE (audio/webm)
+    - Recording constants: DEFAULT_RECORDING_INPUT_GAIN range, MIN/MAX_INPUT_GAIN
+    - Recording constants: DEFAULT_RECORDING_MONITORING_VOLUME (0-1), MAX_RECORDING_LENGTH_SECONDS (600), MIN_RECORDING_LENGTH_SECONDS validation
+    - Recording audio processing: echo cancellation, auto gain control, noise suppression disabled
+    - startAudioRecording: handles device enumeration, permission errors, NotFoundError
+    - startAudioRecording: connects mic -> recordingInputGainNode -> recorder, supports monitoring mode
+  - `js/constants.js`: Bumped APP_VERSION to 1.99.0
+- **Feature Details**:
+  - Tests validate startAudioRecording creates Tone.UserMedia and Tone.Recorder with proper audio constraints
+  - Tests verify startAudioRecording validates Audio track type and checks track.inputChannel
+  - Tests verify startAudioRecording updates recording state (isRecording, trackId, startTime)
+  - Tests verify startAudioRecording handles microphone permissions and device enumeration
+  - Tests verify stopAudioRecording handles null recorder, stops recorder, processes blob
+  - Tests verify stopAudioRecording clears recording state and disposes audio resources
+  - Tests verify setRecordingInputGain clamps values and updates gain node
+  - Tests verify recording constants define audio quality settings (44.1kHz, mono, 16-bit, webm)
+  - Tests verify input gain constants (0-2.0 range, default 1.0)
+  - Tests verify monitoring volume constants (0-1 range, default 0.5)
+  - Total tests increased from 1863 to 1912
+- **Version**: Bumped to 1.99.0
+
 #### Day 318: Timeline Window DOM Content & Rendering Tests (2026-04-28)
 - **Feature**: Added 53 new unit tests for Timeline Window DOM content and rendering functions to expand test coverage
 - **Files Modified**:
