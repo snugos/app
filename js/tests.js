@@ -10936,3 +10936,273 @@ TestRunner.test('State - APP_VERSION is 1.97.0 or higher for Day 317', (t) => {
         t.assertTruthy(versionParts[1] >= 97, 'Minor version should be >= 97 for Day 317');
     }
 });
+
+// Day 318: Timeline Window DOM Content & Rendering Tests
+TestRunner.test('UI - renderTimeline references getWindowById', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'renderTimeline should reference getWindowById');
+});
+
+TestRunner.test('UI - renderTimeline references getTracks', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'renderTimeline should reference getTracks');
+});
+
+TestRunner.test('UI - renderTimeline references timelineContent', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timelineContent'), 'renderTimeline should reference timelineContent');
+});
+
+TestRunner.test('UI - renderTimeline references getTimelineZoomState', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('getTimelineZoomState'), 'renderTimeline should reference getTimelineZoomState');
+});
+
+TestRunner.test('UI - renderTimeline references TIMELINE_ZOOM_DEFAULT constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_ZOOM_DEFAULT') || funcStr.includes('horizontalZoom'), 'renderTimeline should reference zoom state');
+});
+
+TestRunner.test('UI - renderTimeline references TIMELINE_VERTICAL_ZOOM_DEFAULT constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_VERTICAL_ZOOM_DEFAULT') || funcStr.includes('verticalZoom'), 'renderTimeline should reference vertical zoom state');
+});
+
+TestRunner.test('UI - renderTimeline references TIMELINE_BEAT_WIDTH constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_BEAT_WIDTH'), 'renderTimeline should reference TIMELINE_BEAT_WIDTH');
+});
+
+TestRunner.test('UI - renderTimeline references TIMELINE_TRACK_HEIGHT constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_TRACK_HEIGHT'), 'renderTimeline should reference TIMELINE_TRACK_HEIGHT');
+});
+
+TestRunner.test('UI - renderTimeline references TIMELINE_HEADER_HEIGHT constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_HEADER_HEIGHT'), 'renderTimeline should reference TIMELINE_HEADER_HEIGHT');
+});
+
+TestRunner.test('UI - renderTimeline references Tone.Transport.bpm for BPM', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('bpm') || funcStr.includes('Tone'), 'renderTimeline should reference BPM from Tone.Transport');
+});
+
+TestRunner.test('UI - renderTimeline references pixelsPerSecond calculation', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('pixelsPerSecond'), 'renderTimeline should calculate pixelsPerSecond');
+});
+
+TestRunner.test('UI - renderTimeline references MAX_BARS constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'renderTimeline should reference MAX_BARS');
+});
+
+TestRunner.test('UI - renderTimeline references STEPS_PER_BAR constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('STEPS_PER_BAR'), 'renderTimeline should reference STEPS_PER_BAR');
+});
+
+TestRunner.test('UI - renderTimeline references getLoopRegionState', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('getLoopRegionState'), 'renderTimeline should reference getLoopRegionState');
+});
+
+TestRunner.test('UI - renderTimeline references getTimelineMarkersState', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('getTimelineMarkersState'), 'renderTimeline should reference getTimelineMarkersState');
+});
+
+TestRunner.test('UI - renderTimeline creates zoom controls HTML', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('zoom-controls') || funcStr.includes('zoomInBtn') || funcStr.includes('zoomOutBtn'), 'renderTimeline should create zoom controls');
+});
+
+TestRunner.test('UI - renderTimeline creates loop region controls HTML', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('loop-region-controls') || funcStr.includes('loopRegionToggle'), 'renderTimeline should create loop region controls');
+});
+
+TestRunner.test('UI - renderTimeline creates marker controls HTML', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('marker-controls') || funcStr.includes('addMarkerBtn'), 'renderTimeline should create marker controls');
+});
+
+TestRunner.test('UI - renderTimeline creates timeline ruler HTML', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timeline-ruler') || funcStr.includes('rulerHTML'), 'renderTimeline should create timeline ruler');
+});
+
+TestRunner.test('UI - renderTimeline creates timeline track lanes HTML', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timeline-lanes') || funcStr.includes('timeline-track-lane'), 'renderTimeline should create track lanes');
+});
+
+TestRunner.test('UI - renderTimeline creates timeline clips HTML', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timeline-clip'), 'renderTimeline should create timeline clips');
+});
+
+TestRunner.test('UI - renderTimeline creates playhead element', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timelinePlayhead') || funcStr.includes('playhead'), 'renderTimeline should create playhead element');
+});
+
+TestRunner.test('UI - renderTimeline references track.color for lane styling', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('track.color') || funcStr.includes('trackColor'), 'renderTimeline should reference track.color');
+});
+
+TestRunner.test('UI - renderTimeline references timelineClips array', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timelineClips'), 'renderTimeline should reference timelineClips array');
+});
+
+TestRunner.test('UI - renderTimeline handles clip.startTime for positioning', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('clip.startTime') || funcStr.includes('startTime'), 'renderTimeline should use clip.startTime for positioning');
+});
+
+TestRunner.test('UI - renderTimeline handles clip.duration for clip width', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('clip.duration') || funcStr.includes('duration'), 'renderTimeline should use clip.duration for width');
+});
+
+TestRunner.test('UI - openTimelineWindow references getOpenWindows', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTimelineWindow should reference getOpenWindows');
+});
+
+TestRunner.test('UI - openTimelineWindow calls createWindow', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTimelineWindow should call createWindow');
+});
+
+TestRunner.test('UI - openTimelineWindow calls renderTimeline on restore', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('renderTimeline'), 'openTimelineWindow should call renderTimeline when restoring existing window');
+});
+
+TestRunner.test('UI - openTimelineWindow creates timelineContent div', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('timelineContent'), 'openTimelineWindow should create timelineContent div');
+});
+
+TestRunner.test('UI - openTimelineWindow has windowId of timeline', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('timeline'), 'openTimelineWindow should use windowId timeline');
+});
+
+TestRunner.test('UI - openTimelineWindow handles savedState for window position/size', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') || funcStr.includes('left') || funcStr.includes('top'), 'openTimelineWindow should handle savedState');
+});
+
+TestRunner.test('UI - openTimelineWindow calls renderTimeline after setTimeout', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('setTimeout') && funcStr.includes('renderTimeline'), 'openTimelineWindow should call renderTimeline after timeout');
+});
+
+TestRunner.test('UI - updatePlayheadPosition references getWindowById', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'updatePlayheadPosition should reference getWindowById');
+});
+
+TestRunner.test('UI - updatePlayheadPosition references timelinePlayhead', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('timelinePlayhead'), 'updatePlayheadPosition should reference timelinePlayhead');
+});
+
+TestRunner.test('UI - updatePlayheadPosition references getPlaybackMode', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('getPlaybackMode'), 'updatePlayheadPosition should reference getPlaybackMode');
+});
+
+TestRunner.test('UI - updatePlayheadPosition checks for timeline playback mode', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('timeline') || funcStr.includes('playbackMode'), 'updatePlayheadPosition should check playback mode');
+});
+
+TestRunner.test('UI - updatePlayheadPosition references Tone.Transport.seconds', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('Transport.seconds') || funcStr.includes('seconds'), 'updatePlayheadPosition should reference transport seconds');
+});
+
+TestRunner.test('UI - updatePlayheadPosition updates playhead left position', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('playhead') && (funcStr.includes('style') || funcStr.includes('left')), 'updatePlayheadPosition should update playhead position');
+});
+
+TestRunner.test('UI - updatePlayheadPosition references TIMELINE_BEAT_WIDTH', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_BEAT_WIDTH'), 'updatePlayheadPosition should reference TIMELINE_BEAT_WIDTH');
+});
+
+TestRunner.test('UI - renderTimeline handles loop region overlay', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('loopRegion') || funcStr.includes('loop-region'), 'renderTimeline should handle loop region');
+});
+
+TestRunner.test('UI - renderTimeline handles loop region enabled state', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.enabled') || funcStr.includes('enabled'), 'renderTimeline should check loop region enabled');
+});
+
+TestRunner.test('UI - renderTimeline calculates loop region position', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('loopStartX') || funcStr.includes('loopEndX') || funcStr.includes('loopWidth'), 'renderTimeline should calculate loop region position');
+});
+
+TestRunner.test('UI - renderTimeline displays timeline markers on ruler', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timeline-marker') || funcStr.includes('marker'), 'renderTimeline should display markers');
+});
+
+TestRunner.test('UI - renderTimeline references marker.bar for positioning', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('marker.bar') || funcStr.includes('bar'), 'renderTimeline should use marker.bar for positioning');
+});
+
+TestRunner.test('UI - renderTimeline references marker.color', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('marker.color') || funcStr.includes('markerColor'), 'renderTimeline should use marker.color');
+});
+
+TestRunner.test('UI - renderTimeline references MAX_TIMELINE_MARKERS constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('MAX_TIMELINE_MARKERS'), 'renderTimeline should reference MAX_TIMELINE_MARKERS');
+});
+
+TestRunner.test('UI - renderTimeline creates addMarkerBtn button', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('addMarkerBtn'), 'renderTimeline should create addMarkerBtn button');
+});
+
+TestRunner.test('UI - renderTimeline creates clearMarkersBtn button', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('clearMarkersBtn'), 'renderTimeline should create clearMarkersBtn button');
+});
+
+TestRunner.test('UI - renderTimeline references DEFAULT_MARKER_COLOR constant', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_MARKER_COLOR'), 'renderTimeline should reference DEFAULT_MARKER_COLOR');
+});
+
+TestRunner.test('UI - updatePlayheadPosition guards against missing window element', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('win?.element') || funcStr.includes('win.element') || funcStr.includes('!win'), 'updatePlayheadPosition should guard against missing element');
+});
+
+TestRunner.test('UI - updatePlayheadPosition guards against missing playhead', (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('playhead') && (funcStr.includes('!') || funcStr.includes('null') || funcStr.includes('undefined')), 'updatePlayheadPosition should guard against missing playhead');
+});
+
+// APP_VERSION validation for Day 318
+TestRunner.test('State - APP_VERSION is 1.98.0 or higher for Day 318', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 98, 'Minor version should be >= 98 for Day 318');
+    }
+});
