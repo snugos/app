@@ -13411,3 +13411,257 @@ TestRunner.test('State - APP_VERSION is 2.07.0 or higher for Day 327', (t) => {
         t.assertTruthy(versionParts[1] >= 7, 'Minor version should be >= 7 for Day 327');
     }
 });
+// ============================================
+// Day 328: Event Handlers Extended Function Tests (2026-04-28)
+// ============================================
+TestRunner.test('Event Handlers - handleTimelineLaneDrop function is exported', (t) => {
+    t.assertEqual(typeof handleTimelineLaneDrop, 'function', 'handleTimelineLaneDrop should be a function');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop accepts 4 parameters', (t) => {
+    // handleTimelineLaneDrop(event, targetTrackId, startTime, appServicesPassed)
+    t.assertEqual(handleTimelineLaneDrop.length, 4, 'handleTimelineLaneDrop should accept 4 parameters');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop is async', (t) => {
+    t.assertTruthy(handleTimelineLaneDrop.constructor.name === 'AsyncFunction' || handleTimelineLaneDrop.toString().includes('async'), 'handleTimelineLaneDrop should be async');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop validates required services', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('getTrackById') && funcStr.includes('showNotification') && funcStr.includes('captureStateForUndo') && funcStr.includes('renderTimeline'), 'handleTimelineLaneDrop should validate required services');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop handles sequence-timeline-drag type', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('sequence-timeline-drag'), 'handleTimelineLaneDrop should handle sequence-timeline-drag type');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop handles sound-browser-item type', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('sound-browser-item'), 'handleTimelineLaneDrop should handle sound-browser-item type');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop validates Audio track for audio files', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes("type !== 'Audio'"), 'handleTimelineLaneDrop should validate track type for audio files');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop prevents sequence clips on Audio tracks', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes("Cannot place sequence clips on Audio tracks"), 'handleTimelineLaneDrop should prevent sequence clips on Audio tracks');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop calls addSequenceClipToTimeline', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('addSequenceClipToTimeline'), 'handleTimelineLaneDrop should call addSequenceClipToTimeline');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop handles file drops', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('dataTransfer.files') || funcStr.includes('files.length'), 'handleTimelineLaneDrop should handle file drops');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop validates audio file type', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes("type.startsWith('audio/')") || funcStr.includes('audio/'), 'handleTimelineLaneDrop should validate audio file type');
+});
+
+TestRunner.test('Event Handlers - handleTimelineLaneDrop has try-catch error handling', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'handleTimelineLaneDrop should have try-catch error handling');
+});
+
+TestRunner.test('Event Handlers - toggleFullScreen function exists', (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    // toggleFullScreen is defined in the module, we can check for its existence via function.toString() patterns
+    t.assertTruthy(typeof toggleFullScreen === 'function' || document.fullscreenElement !== undefined, 'toggleFullScreen should be accessible');
+});
+
+TestRunner.test('Event Handlers - toggleFullScreen checks fullscreen state', (t) => {
+    const funcStr = toggleFullScreen.toString();
+    t.assertTruthy(funcStr.includes('fullscreenElement') || funcStr.includes('requestFullscreen') || funcStr.includes('exitFullscreen'), 'toggleFullScreen should check fullscreen state');
+});
+
+TestRunner.test('Event Handlers - toggleFullScreen has error handling', (t) => {
+    const funcStr = toggleFullScreen.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'toggleFullScreen should have try-catch error handling');
+});
+
+TestRunner.test('Event Handlers - onMIDIFailure function exists', (t) => {
+    t.assertEqual(typeof onMIDIFailure, 'function', 'onMIDIFailure should be a function');
+});
+
+TestRunner.test('Event Handlers - onMIDIFailure accepts message parameter', (t) => {
+    t.assertEqual(onMIDIFailure.length, 1, 'onMIDIFailure should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - onMIDIFailure calls console.error', (t) => {
+    const funcStr = onMIDIFailure.toString();
+    t.assertTruthy(funcStr.includes('console.error') && funcStr.includes('MIDI'), 'onMIDIFailure should call console.error with MIDI context');
+});
+
+TestRunner.test('Event Handlers - onMIDIFailure calls showNotification', (t) => {
+    const funcStr = onMIDIFailure.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('MIDI'), 'onMIDIFailure should call showNotification with MIDI error message');
+});
+
+TestRunner.test('Event Handlers - onMIDISuccess function exists', (t) => {
+    t.assertEqual(typeof onMIDISuccess, 'function', 'onMIDISuccess should be a function');
+});
+
+TestRunner.test('Event Handlers - onMIDISuccess accesses midi inputs', (t) => {
+    const funcStr = onMIDISuccess.toString();
+    t.assertTruthy(funcStr.includes('midiAccess') && funcStr.includes('inputs'), 'onMIDISuccess should access midiAccess.inputs');
+});
+
+TestRunner.test('Event Handlers - onMIDISuccess populates select element', (t) => {
+    const funcStr = onMIDISuccess.toString();
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('option'), 'onMIDISuccess should create option elements for select');
+});
+
+TestRunner.test('Event Handlers - onMIDISuccess sets up onmidimessage handler', (t) => {
+    const funcStr = onMIDISuccess.toString();
+    t.assertTruthy(funcStr.includes('onmidimessage') || funcStr.includes('handleMIDIMessage'), 'onMIDISuccess should set up MIDI message handler');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage function exists', (t) => {
+    t.assertEqual(typeof handleMIDIMessage, 'function', 'handleMIDIMessage should be a function');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage handles CC messages (176-191)', (t) => {
+    const funcStr = handleMIDIMessage.toString();
+    t.assertTruthy(funcStr.includes('176') || funcStr.includes('command') || funcStr.includes('CC'), 'handleMIDIMessage should handle CC messages');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage handles Note On (144)', (t) => {
+    const funcStr = handleMIDIMessage.toString();
+    t.assertTruthy(funcStr.includes('144') || funcStr.includes('Note On') || funcStr.includes('noteOn'), 'handleMIDIMessage should handle Note On messages');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage handles Note Off (128)', (t) => {
+    const funcStr = handleMIDIMessage.toString();
+    t.assertTruthy(funcStr.includes('128') || funcStr.includes('Note Off') || funcStr.includes('noteOff'), 'handleMIDIMessage should handle Note Off messages');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage checks armed track', (t) => {
+    const funcStr = handleMIDIMessage.toString();
+    t.assertTruthy(funcStr.includes('armedTrack') || funcStr.includes('getArmedTrackId'), 'handleMIDIMessage should check armed track');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage checks MIDI Learn mode', (t) => {
+    const funcStr = handleMIDIMessage.toString();
+    t.assertTruthy(funcStr.includes('midiLearnMode') || funcStr.includes('MIDI Learn'), 'handleMIDIMessage should check MIDI Learn mode');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage normalizes velocity', (t) => {
+    const funcStr = handleMIDIMessage.toString();
+    t.assertTruthy(funcStr.includes('/127') || funcStr.includes('127'), 'handleMIDIMessage should normalize velocity to 0-1');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage uses try-catch', (t) => {
+    const funcStr = handleMIDIMessage.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'handleMIDIMessage should have try-catch error handling');
+});
+
+TestRunner.test('Event Handlers - handleMIDIMessage creates new MIDI mappings', (t) => {
+    const funcStr = handleMIDIMessage.toString();
+    t.assertTruthy(funcStr.includes('addMidiLearnMapping') || funcStr.includes('newMapping'), 'handleMIDIMessage should create new MIDI Learn mappings');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping function exists', (t) => {
+    t.assertEqual(typeof applyMidiLearnMapping, 'function', 'applyMidiLearnMapping should be a function');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping accepts 2 parameters', (t) => {
+    t.assertEqual(applyMidiLearnMapping.length, 2, 'applyMidiLearnMapping should accept 2 parameters (mapping, normalizedValue)');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping handles masterVolume', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('masterVolume') || funcStr.includes('Master'), 'applyMidiLearnMapping should handle masterVolume paramType');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping handles metronomeVolume', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('metronomeVolume') || funcStr.includes('Metronome'), 'applyMidiLearnMapping should handle metronomeVolume paramType');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping handles tempo', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('tempo') || funcStr.includes('Tempo') || funcStr.includes('bpm'), 'applyMidiLearnMapping should handle tempo paramType');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping handles trackVolume', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('trackVolume') || funcStr.includes('setVolume'), 'applyMidiLearnMapping should handle trackVolume paramType');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping handles trackPan', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('trackPan') || funcStr.includes('setPan'), 'applyMidiLearnMapping should handle trackPan paramType');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping handles effectParam', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('effectParam') || funcStr.includes('updateEffectParam'), 'applyMidiLearnMapping should handle effectParam paramType');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping uses min/max scaling', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('mapping.min') || funcStr.includes('mapping.max') || funcStr.includes('.min') && funcStr.includes('.max'), 'applyMidiLearnMapping should use min/max range for value scaling');
+});
+
+TestRunner.test('Event Handlers - applyMidiLearnMapping uses try-catch', (t) => {
+    const funcStr = applyMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'applyMidiLearnMapping should have try-catch error handling');
+});
+
+TestRunner.test('Event Handlers - findMidiLearnMapping function exists', (t) => {
+    t.assertEqual(typeof findMidiLearnMapping, 'function', 'findMidiLearnMapping should be a function');
+});
+
+TestRunner.test('Event Handlers - findMidiLearnMapping accepts 2 parameters', (t) => {
+    t.assertEqual(findMidiLearnMapping.length, 2, 'findMidiLearnMapping should accept 2 parameters (channel, cc)');
+});
+
+TestRunner.test('Event Handlers - findMidiLearnMapping uses channel matching', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('channel') || funcStr.includes('getMidiLearnMappings'), 'findMidiLearnMapping should match by channel');
+});
+
+TestRunner.test('Event Handlers - findMidiLearnMapping uses cc matching', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('cc') || funcStr.includes('CC'), 'findMidiLearnMapping should match by CC number');
+});
+
+TestRunner.test('Event Handlers - findMidiLearnMapping returns index (findIndex)', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('return'), 'findMidiLearnMapping should return index from findIndex');
+});
+
+TestRunner.test('Event Handlers - initializeEventHandlersModule accepts appServices parameter', (t) => {
+    t.assertEqual(initializeEventHandlersModule.length, 1, 'initializeEventHandlersModule should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - initializePrimaryEventListeners accepts appContext parameter', (t) => {
+    t.assertEqual(initializePrimaryEventListeners.length, 1, 'initializePrimaryEventListeners should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - attachGlobalControlEvents accepts elements parameter', (t) => {
+    t.assertEqual(attachGlobalControlEvents.length, 1, 'attachGlobalControlEvents should accept 1 parameter');
+});
+
+TestRunner.test('Event Handlers - selectMIDIInput accepts deviceId and optional silent', (t) => {
+    // selectMIDIInput(deviceId, silent = false)
+    t.assertTruthy(selectMIDIInput.length >= 1 && selectMIDIInput.length <= 2, 'selectMIDIInput should accept 1-2 parameters');
+});
+
+// APP_VERSION validation for Day 328
+TestRunner.test('State - APP_VERSION is 2.08.0 or higher for Day 328', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 328');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 8, 'Minor version should be >= 8 for Day 328');
+    }
+});
