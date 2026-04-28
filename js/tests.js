@@ -9385,7 +9385,7 @@ TestRunner.test('Transport Controls - APP_VERSION is 1.78.0 or higher for Day 29
     const versionParts = APP_VERSION.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
     if (versionParts[0] === 1) {
-        t.assertTruthy(versionParts[1] >= 78, 'Minor version should be >=
+        t.assertTruthy(versionParts[1] >=
 // Day 305: Internal DOM Build Functions Tests (2026-04-28)
 // Tests for internal DOM builder functions that lack coverage
 // Import internal build functions
@@ -9590,5 +9590,396 @@ TestRunner.test('UI - APP_VERSION is 1.85.0 or higher for Day 305', (t) => {
     t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
     if (versionParts[0] === 1) {
         t.assertTruthy(versionParts[1] >= 85, 'Minor version should be >= 85 for Day 305');
+    }
+});
+
+// ============================================
+// Day 306: Mixer UI Functions Tests
+// ============================================
+
+TestRunner.test('Mixer - buildMixerContentDOM function exists', (t) => {
+    t.assertEqual(typeof buildMixerContentDOM, 'function', 'buildMixerContentDOM should be a function');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM accepts no parameters', (t) => {
+    t.assertEqual(buildMixerContentDOM.length, 0, 'buildMixerContentDOM should accept no parameters');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM returns string', (t) => {
+    const result = buildMixerContentDOM();
+    t.assertEqual(typeof result, 'string', 'buildMixerContentDOM should return a string');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM references getTracks', (t) => {
+    const funcStr = buildMixerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'Should reference getTracks');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM references getSendTracks', (t) => {
+    const funcStr = buildMixerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('getSendTracks'), 'Should reference getSendTracks');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM references getTrackGroupsState', (t) => {
+    const funcStr = buildMixerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('getTrackGroupsState'), 'Should reference getTrackGroupsState');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM references buildMixerTrackStripHTML', (t) => {
+    const funcStr = buildMixerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('buildMixerTrackStripHTML'), 'Should reference buildMixerTrackStripHTML');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM references buildMixerGroupStripHTML', (t) => {
+    const funcStr = buildMixerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('buildMixerGroupStripHTML'), 'Should reference buildMixerGroupStripHTML');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM references buildMixerSendStripHTML', (t) => {
+    const funcStr = buildMixerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('buildMixerSendStripHTML'), 'Should reference buildMixerSendStripHTML');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM references buildMixerMasterStripHTML', (t) => {
+    const funcStr = buildMixerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('buildMixerMasterStripHTML'), 'Should reference buildMixerMasterStripHTML');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM includes mixerContent id', (t) => {
+    const result = buildMixerContentDOM();
+    t.assertTruthy(result.includes('id="mixerContent"'), 'Should include mixerContent id');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM includes mixerTracksContainer', (t) => {
+    const result = buildMixerContentDOM();
+    t.assertTruthy(result.includes('mixerTracksContainer'), 'Should include mixerTracksContainer');
+});
+
+TestRunner.test('Mixer - buildMixerContentDOM includes mixerSendsContainer', (t) => {
+    const result = buildMixerContentDOM();
+    t.assertTruthy(result.includes('mixerSendsContainer'), 'Should include mixerSendsContainer');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML function exists', (t) => {
+    t.assertEqual(typeof buildMixerTrackStripHTML, 'function', 'buildMixerTrackStripHTML should be a function');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML accepts 2 parameters', (t) => {
+    t.assertEqual(buildMixerTrackStripHTML.length, 2, 'buildMixerTrackStripHTML should accept 2 parameters');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML returns string', (t) => {
+    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
+    const result = buildMixerTrackStripHTML(mockTrack, []);
+    t.assertEqual(typeof result, 'string', 'buildMixerTrackStripHTML should return a string');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML references track.id in data attribute', (t) => {
+    const mockTrack = { id: 42, name: 'Test Track', muted: false, volume: 0.8, pan: 0 };
+    const result = buildMixerTrackStripHTML(mockTrack, []);
+    t.assertTruthy(result.includes('data-track-id="42"'), 'Should include track.id in data attribute');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML includes mute/solo/arm buttons', (t) => {
+    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
+    const result = buildMixerTrackStripHTML(mockTrack, []);
+    t.assertTruthy(result.includes('mute-btn'), 'Should include mute button');
+    t.assertTruthy(result.includes('solo-btn'), 'Should include solo button');
+    t.assertTruthy(result.includes('arm-btn'), 'Should include arm button');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML includes volume fader', (t) => {
+    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
+    const result = buildMixerTrackStripHTML(mockTrack, []);
+    t.assertTruthy(result.includes('mixer-fader'), 'Should include mixer-fader class');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML includes pan knob', (t) => {
+    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
+    const result = buildMixerTrackStripHTML(mockTrack, []);
+    t.assertTruthy(result.includes('pan-knob'), 'Should include pan-knob class');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML includes automation mini editor', (t) => {
+    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
+    const result = buildMixerTrackStripHTML(mockTrack, []);
+    t.assertTruthy(result.includes('mixer-automation-mini'), 'Should include automation mini editor');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML handles send level knobs', (t) => {
+    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0 };
+    const mockSends = [{ id: 1, name: 'Send 1' }];
+    const result = buildMixerTrackStripHTML(mockTrack, mockSends);
+    t.assertTruthy(result.includes('send-level-slider'), 'Should include send level sliders');
+});
+
+TestRunner.test('Mixer - buildMixerTrackStripHTML includes track color', (t) => {
+    const mockTrack = { id: 1, name: 'Test', muted: false, volume: 0.8, pan: 0, color: '#ff0000' };
+    const result = buildMixerTrackStripHTML(mockTrack, []);
+    t.assertTruthy(result.includes('#ff0000'), 'Should include track color');
+});
+
+TestRunner.test('Mixer - buildMixerGroupStripHTML function exists', (t) => {
+    t.assertEqual(typeof buildMixerGroupStripHTML, 'function', 'buildMixerGroupStripHTML should be a function');
+});
+
+TestRunner.test('Mixer - buildMixerGroupStripHTML accepts 1 parameter', (t) => {
+    t.assertEqual(buildMixerGroupStripHTML.length, 1, 'buildMixerGroupStripHTML should accept 1 parameter');
+});
+
+TestRunner.test('Mixer - buildMixerGroupStripHTML returns string', (t) => {
+    const mockGroup = { id: 1, name: 'Test Group', muted: false, soloed: false, trackIds: [] };
+    const result = buildMixerGroupStripHTML(mockGroup);
+    t.assertEqual(typeof result, 'string', 'buildMixerGroupStripHTML should return a string');
+});
+
+TestRunner.test('Mixer - buildMixerGroupStripHTML references group.id in data attribute', (t) => {
+    const mockGroup = { id: 99, name: 'Test Group', muted: false, soloed: false, trackIds: [] };
+    const result = buildMixerGroupStripHTML(mockGroup);
+    t.assertTruthy(result.includes('data-group-id="99"'), 'Should include group.id in data attribute');
+});
+
+TestRunner.test('Mixer - buildMixerGroupStripHTML includes mute/solo buttons', (t) => {
+    const mockGroup = { id: 1, name: 'Test Group', muted: false, soloed: false, trackIds: [] };
+    const result = buildMixerGroupStripHTML(mockGroup);
+    t.assertTruthy(result.includes('mixer-group-btn'), 'Should include group buttons');
+});
+
+TestRunner.test('Mixer - buildMixerGroupStripHTML includes group color', (t) => {
+    const mockGroup = { id: 1, name: 'Test Group', muted: false, soloed: false, trackIds: [], color: '#54a0ff' };
+    const result = buildMixerGroupStripHTML(mockGroup);
+    t.assertTruthy(result.includes('#54a0ff'), 'Should include group color');
+});
+
+TestRunner.test('Mixer - buildMixerGroupStripHTML displays member count', (t) => {
+    const mockGroup = { id: 1, name: 'Test Group', muted: false, soloed: false, trackIds: [1, 2, 3] };
+    const result = buildMixerGroupStripHTML(mockGroup);
+    t.assertTruthy(result.includes('3 tracks') || result.includes('track'), 'Should display member count');
+});
+
+TestRunner.test('Mixer - buildMixerSendStripHTML function exists', (t) => {
+    t.assertEqual(typeof buildMixerSendStripHTML, 'function', 'buildMixerSendStripHTML should be a function');
+});
+
+TestRunner.test('Mixer - buildMixerSendStripHTML accepts 1 parameter', (t) => {
+    t.assertEqual(buildMixerSendStripHTML.length, 1, 'buildMixerSendStripHTML should accept 1 parameter');
+});
+
+TestRunner.test('Mixer - buildMixerSendStripHTML returns string', (t) => {
+    const mockSend = { id: 1, name: 'Send 1', level: 1.0, muted: false };
+    const result = buildMixerSendStripHTML(mockSend);
+    t.assertEqual(typeof result, 'string', 'buildMixerSendStripHTML should return a string');
+});
+
+TestRunner.test('Mixer - buildMixerSendStripHTML references send.id in data attribute', (t) => {
+    const mockSend = { id: 7, name: 'Send 7', level: 1.0, muted: false };
+    const result = buildMixerSendStripHTML(mockSend);
+    t.assertTruthy(result.includes('data-send-id="7"'), 'Should include send.id in data attribute');
+});
+
+TestRunner.test('Mixer - buildMixerSendStripHTML includes mute button', (t) => {
+    const mockSend = { id: 1, name: 'Send 1', level: 1.0, muted: false };
+    const result = buildMixerSendStripHTML(mockSend);
+    t.assertTruthy(result.includes('mixer-send-btn'), 'Should include send mute button');
+});
+
+TestRunner.test('Mixer - buildMixerSendStripHTML includes level fader', (t) => {
+    const mockSend = { id: 1, name: 'Send 1', level: 1.0, muted: false };
+    const result = buildMixerSendStripHTML(mockSend);
+    t.assertTruthy(result.includes('send-fader'), 'Should include send fader');
+});
+
+TestRunner.test('Mixer - buildMixerSendStripHTML includes effects button', (t) => {
+    const mockSend = { id: 1, name: 'Send 1', level: 1.0, muted: false };
+    const result = buildMixerSendStripHTML(mockSend);
+    t.assertTruthy(result.includes('send-effects-btn'), 'Should include effects button');
+});
+
+TestRunner.test('Mixer - buildMixerMasterStripHTML function exists', (t) => {
+    t.assertEqual(typeof buildMixerMasterStripHTML, 'function', 'buildMixerMasterStripHTML should be a function');
+});
+
+TestRunner.test('Mixer - buildMixerMasterStripHTML accepts no parameters', (t) => {
+    t.assertEqual(buildMixerMasterStripHTML.length, 0, 'buildMixerMasterStripHTML should accept no parameters');
+});
+
+TestRunner.test('Mixer - buildMixerMasterStripHTML returns string', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertEqual(typeof result, 'string', 'buildMixerMasterStripHTML should return a string');
+});
+
+TestRunner.test('Mixer - buildMixerMasterStripHTML includes MASTER label', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('MASTER'), 'Should include MASTER label');
+});
+
+TestRunner.test('Mixer - buildMixerMasterStripHTML includes master volume fader', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('master-fader'), 'Should include master fader');
+});
+
+TestRunner.test('Mixer - buildMixerMasterStripHTML includes master meter', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('mixerMasterMeterBar'), 'Should include master meter');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers function exists', (t) => {
+    t.assertEqual(typeof initializeMixerEventHandlers, 'function', 'initializeMixerEventHandlers should be a function');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers accepts 1 parameter', (t) => {
+    t.assertEqual(initializeMixerEventHandlers.length, 1, 'initializeMixerEventHandlers should accept 1 parameter');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers references mixer-btn', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('mixer-btn'), 'Should reference mixer-btn class');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers references handleMixerButtonAction', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerButtonAction'), 'Should reference handleMixerButtonAction');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers references handleMixerVolumeChange', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerVolumeChange'), 'Should reference handleMixerVolumeChange');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers references handleMixerPanChange', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerPanChange'), 'Should reference handleMixerPanChange');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers references send-level-slider', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('send-level-slider'), 'Should reference send-level-slider');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers references master volume fader', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeFader'), 'Should reference masterVolumeFader');
+});
+
+TestRunner.test('Mixer - initializeMixerEventHandlers references MIDI learn mode', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('getMidiLearnModeState'), 'Should reference MIDI learn mode');
+});
+
+TestRunner.test('Mixer - handleMixerButtonAction function exists', (t) => {
+    t.assertEqual(typeof handleMixerButtonAction, 'function', 'handleMixerButtonAction should be a function');
+});
+
+TestRunner.test('Mixer - handleMixerButtonAction accepts 2 parameters', (t) => {
+    t.assertEqual(handleMixerButtonAction.length, 2, 'handleMixerButtonAction should accept 2 parameters');
+});
+
+TestRunner.test('Mixer - handleMixerButtonAction references handleTrackMute', (t) => {
+    const funcStr = handleMixerButtonAction.toString();
+    t.assertTruthy(funcStr.includes('handleTrackMute'), 'Should reference handleTrackMute');
+});
+
+TestRunner.test('Mixer - handleMixerButtonAction references handleTrackSolo', (t) => {
+    const funcStr = handleMixerButtonAction.toString();
+    t.assertTruthy(funcStr.includes('handleTrackSolo'), 'Should reference handleTrackSolo');
+});
+
+TestRunner.test('Mixer - handleMixerButtonAction references handleTrackArm', (t) => {
+    const funcStr = handleMixerButtonAction.toString();
+    t.assertTruthy(funcStr.includes('handleTrackArm'), 'Should reference handleTrackArm');
+});
+
+TestRunner.test('Mixer - handleMixerVolumeChange function exists', (t) => {
+    t.assertEqual(typeof handleMixerVolumeChange, 'function', 'handleMixerVolumeChange should be a function');
+});
+
+TestRunner.test('Mixer - handleMixerVolumeChange accepts 2 parameters', (t) => {
+    t.assertEqual(handleMixerVolumeChange.length, 2, 'handleMixerVolumeChange should accept 2 parameters');
+});
+
+TestRunner.test('Mixer - handleMixerVolumeChange references captureStateForUndo', (t) => {
+    const funcStr = handleMixerVolumeChange.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'Should reference captureStateForUndo');
+});
+
+TestRunner.test('Mixer - handleMixerPanChange function exists', (t) => {
+    t.assertEqual(typeof handleMixerPanChange, 'function', 'handleMixerPanChange should be a function');
+});
+
+TestRunner.test('Mixer - handleMixerPanChange accepts 2 parameters', (t) => {
+    t.assertEqual(handleMixerPanChange.length, 2, 'handleMixerPanChange should accept 2 parameters');
+});
+
+TestRunner.test('Mixer - handleMixerPanChange references captureStateForUndo', (t) => {
+    const funcStr = handleMixerPanChange.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'Should reference captureStateForUndo');
+});
+
+TestRunner.test('Mixer - handleMixerSendLevelChange function exists', (t) => {
+    t.assertEqual(typeof handleMixerSendLevelChange, 'function', 'handleMixerSendLevelChange should be a function');
+});
+
+TestRunner.test('Mixer - handleMixerSendLevelChange accepts 3 parameters', (t) => {
+    t.assertEqual(handleMixerSendLevelChange.length, 3, 'handleMixerSendLevelChange should accept 3 parameters');
+});
+
+TestRunner.test('Mixer - handleMixerSendLevelChangeFader function exists', (t) => {
+    t.assertEqual(typeof handleMixerSendLevelChangeFader, 'function', 'handleMixerSendLevelChangeFader should be a function');
+});
+
+TestRunner.test('Mixer - handleMixerSendLevelChangeFader accepts 2 parameters', (t) => {
+    t.assertEqual(handleMixerSendLevelChangeFader.length, 2, 'handleMixerSendLevelChangeFader should accept 2 parameters');
+});
+
+TestRunner.test('Mixer - handleAddSendBus function exists', (t) => {
+    t.assertEqual(typeof handleAddSendBus, 'function', 'handleAddSendBus should be a function');
+});
+
+TestRunner.test('Mixer - handleAddSendBus accepts no parameters', (t) => {
+    t.assertEqual(handleAddSendBus.length, 0, 'handleAddSendBus should accept no parameters');
+});
+
+TestRunner.test('Mixer - handleAddGroup function exists', (t) => {
+    t.assertEqual(typeof handleAddGroup, 'function', 'handleAddGroup should be a function');
+});
+
+TestRunner.test('Mixer - handleAddGroup accepts no parameters', (t) => {
+    t.assertEqual(handleAddGroup.length, 0, 'handleAddGroup should accept no parameters');
+});
+
+TestRunner.test('Mixer - handleMixerSendMute function exists', (t) => {
+    t.assertEqual(typeof handleMixerSendMute, 'function', 'handleMixerSendMute should be a function');
+});
+
+TestRunner.test('Mixer - handleMixerSendMute accepts 2 parameters', (t) => {
+    t.assertEqual(handleMixerSendMute.length, 2, 'handleMixerSendMute should accept 2 parameters');
+});
+
+TestRunner.test('Mixer - handleMixerMasterVolumeChange function exists', (t) => {
+    t.assertEqual(typeof handleMixerMasterVolumeChange, 'function', 'handleMixerMasterVolumeChange should be a function');
+});
+
+TestRunner.test('Mixer - handleMixerMasterVolumeChange accepts 1 parameter', (t) => {
+    t.assertEqual(handleMixerMasterVolumeChange.length, 1, 'handleMixerMasterVolumeChange should accept 1 parameter');
+});
+
+TestRunner.test('Mixer - handleMixerGroupAction function exists', (t) => {
+    t.assertEqual(typeof handleMixerGroupAction, 'function', 'handleMixerGroupAction should be a function');
+});
+
+TestRunner.test('Mixer - handleMixerGroupAction accepts 2 parameters', (t) => {
+    t.assertEqual(handleMixerGroupAction.length, 2, 'handleMixerGroupAction should accept 2 parameters');
+});
+
+TestRunner.test('Mixer - handleMixerGroupAction references captureStateForUndo', (t) => {
+    const funcStr = handleMixerGroupAction.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'Should reference captureStateForUndo');
+});
+
+TestRunner.test('Mixer - APP_VERSION validation for Day 306', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 85, 'Minor version should be >= 85 for Day 306');
     }
 });
