@@ -5027,3 +5027,35 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify exportToMidiInternal creates file download for MIDI export
   - Total tests increased from 1938 to 1970
 - **Version**: Bumped to 2.01.0
+
+#### Day 323: Scale Mode & Chord Mode State Functions Tests (2026-04-28)
+- **Feature**: Added 64 new unit tests for Scale Mode and Chord Mode state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 64 new tests in Day 323 section:
+    - Scale Mode State: getScaleModeState returns object, getScaleModeEnabledState returns boolean, getScaleModeScaleState returns string, getScaleModeRootState returns string, getScaleModeLockState returns boolean
+    - Scale Mode State: setScaleModeEnabledState accepts boolean, coerces truthy/falsy, calls captureStateForUndo with descriptive toggle label ("Toggle Scale Mode On/Off")
+    - Scale Mode State: setScaleModeScaleState accepts valid scale name, falls back to Major for invalid, calls captureStateForUndo with descriptive label ("Set Scale to ...")
+    - Scale Mode State: setScaleModeRootState accepts valid root note, falls back to C for invalid, calls captureStateForUndo with descriptive label ("Set Scale Root to ...")
+    - Scale Mode State: setScaleModeLockState accepts boolean, coerces truthy/falsy, calls captureStateForUndo with descriptive label ("Enable/Disable Scale Lock")
+    - Scale Mode State: setScaleModeState updates full state object, calls captureStateForUndo
+    - Scale Mode State: roundtrip all scale mode settings (enabled, scale, root, lock)
+    - Chord Mode State: setChordModeEnabledState function export, 1 parameter, calls captureStateForUndo with descriptive toggle label ("Toggle Chord Mode On/Off")
+    - Chord Mode State: setChordModeRootState function export, 1 parameter, calls captureStateForUndo, validates root value (0-11)
+    - Chord Mode State: setChordModeTypeState function export, 1 parameter, calls captureStateForUndo, defaults to major for invalid type
+    - Chord Mode State: setChordModeLockState function export, 1 parameter, calls captureStateForUndo, coerces truthy/falsy to boolean
+    - Chord Mode State: setChordVoicingState function export, 1 parameter, calls captureStateForUndo, defaults to closed for invalid voicing
+    - Chord Mode State: roundtrip all chord mode settings (enabled, root, type, lock, voicing)
+    - APP_VERSION validation for Day 323
+  - `js/constants.js`: Bumped APP_VERSION to 2.03.0
+- **Feature Details**:
+  - Tests validate Scale Mode state getter/setter functions (enabled, scale, root, lock)
+  - Tests verify all Scale Mode setters call captureStateForUndo for undo support
+  - Tests verify descriptive undo labels for Scale Mode operations
+  - Tests verify Scale Mode setters handle invalid values with proper fallbacks
+  - Tests validate Chord Mode state getter/setter functions (enabled, root, type, lock, voicing)
+  - Tests verify all Chord Mode setters call captureStateForUndo for undo support
+  - Tests verify Chord Mode setters handle invalid values with proper fallbacks
+  - Tests verify truthy/falsy coercion for boolean setters
+  - Tests verify state roundtrips work correctly
+  - Total tests increased from 1970 to 2034
+- **Version**: Bumped to 2.03.0
