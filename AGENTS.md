@@ -1,3 +1,49 @@
+#### Day 310: Record Button Event Handler Tests (2026-04-28)
+- **Feature**: Added 31 new unit tests for Record Button Event Handler to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 310 section:
+    - initializePrimaryEventListeners references recordBtnGlobal
+    - Record button addEventListener setup
+    - isTrackRecording check for toggle behavior
+    - getArmedTrackId for armed track detection
+    - Track type validation for Audio tracks
+    - startAudioRecording call for Audio track recording
+    - stopAudioRecording call when already recording
+    - setIsRecording state updates
+    - setRecordingTrackId state updates
+    - setRecordingStartTime state updates
+    - Tone.Transport for record start
+    - updateRecordButtonUI call
+    - Notification for no armed track
+    - Notification for recording started/stopped
+    - Try-catch error handling
+    - initAudioContextAndMasterMeter call
+    - Audio context readiness check
+    - Monitoring enabled flag handling
+    - Tone.Transport.cancel on record start
+    - Transport.position reset to 0
+    - Recording state clearing on stop
+    - Previously recording track tracking
+    - getTrackById for track validation
+    - Microphone permission error handling
+    - Recording state check before starting
+    - Audio track type handling
+    - Track name in notifications
+    - isUserInitiated=true for audio policy
+  - `js/constants.js`: Bumped APP_VERSION to 1.90.0
+- **Feature Details**:
+  - Tests validate record button click handler references recordBtnGlobal
+  - Tests verify recording toggle behavior (start/stop based on isTrackRecording state)
+  - Tests verify armed track detection via getArmedTrackId
+  - Tests verify Audio track type validation before recording
+  - Tests verify audio context initialization for browser audio policy
+  - Tests verify state updates (isRecording, trackId, startTime) during recording lifecycle
+  - Tests verify transport control (cancel, position reset) for clean recording start
+  - Tests verify error handling with try-catch blocks
+  - Tests verify notification messages for user feedback
+  - Total tests increased from 1675 to 1706
+- **Version**: Bumped to 1.90.0
+
 #### Day 309: SnugWindow Prototype Method Instance Tests (2026-04-28)
 - **Feature**: Added 40 new unit tests for SnugWindow prototype methods and instance properties to expand test coverage
 - **Files Modified**:
