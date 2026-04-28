@@ -11890,3 +11890,366 @@ TestRunner.test('State - APP_VERSION is 2.02.0 or higher for Day 322', (t) => {
         t.assertTruthy(versionParts[1] >= 2, 'Minor version should be >= 2 for Day 322');
     }
 });
+
+// ============================================
+// Day 323: Scale Mode & Chord Mode State Function Tests
+// ============================================
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState function export', (t) => {
+    t.assertEqual(typeof setScaleModeEnabledState, 'function', 'setScaleModeEnabledState should be a function');
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeEnabledState.length, 1, 'setScaleModeEnabledState should accept 1 parameter');
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { called = true; label = l; };
+    }
+    setScaleModeEnabledState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setScaleModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState uses descriptive undo label', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { label = l; };
+    }
+    setScaleModeEnabledState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(label.includes('Scale Mode') && label.includes('On'), 'Undo label should mention Scale Mode and On');
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState guards against missing appServices', (t) => {
+    const originalAppServices = window.appServices;
+    window.appServices = {};
+    try {
+        setScaleModeEnabledState(true);
+        t.assertTruthy(true, 'setScaleModeEnabledState should not throw without appServices');
+    } catch (e) {
+        t.assertFail('setScaleModeEnabledState should handle missing appServices');
+    } finally {
+        window.appServices = originalAppServices;
+    }
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState coerces to boolean', (t) => {
+    setScaleModeEnabledState('yes');
+    t.assertEqual(getScaleModeEnabledState(), true, 'String "yes" should coerce to true');
+    setScaleModeEnabledState(null);
+    t.assertEqual(getScaleModeEnabledState(), false, 'null should coerce to false');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState function export', (t) => {
+    t.assertEqual(typeof setScaleModeScaleState, 'function', 'setScaleModeScaleState should be a function');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeScaleState.length, 1, 'setScaleModeScaleState should accept 1 parameter');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = () => { called = true; };
+    }
+    setScaleModeScaleState('Minor');
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setScaleModeScaleState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState uses descriptive undo label', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { label = l; };
+    }
+    setScaleModeScaleState('Pentatonic');
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(label.includes('Scale'), 'Undo label should mention Scale');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState defaults to Major for invalid scale', (t) => {
+    setScaleModeScaleState('InvalidScale');
+    t.assertEqual(getScaleModeScaleState(), 'Major', 'Invalid scale should default to Major');
+});
+
+TestRunner.test('Scale Mode - setScaleModeRootState function export', (t) => {
+    t.assertEqual(typeof setScaleModeRootState, 'function', 'setScaleModeRootState should be a function');
+});
+
+TestRunner.test('Scale Mode - setScaleModeRootState accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeRootState.length, 1, 'setScaleModeRootState should accept 1 parameter');
+});
+
+TestRunner.test('Scale Mode - setScaleModeRootState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = () => { called = true; };
+    }
+    setScaleModeRootState('G');
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setScaleModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeRootState uses descriptive undo label', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { label = l; };
+    }
+    setScaleModeRootState('D');
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(label.includes('Scale Root'), 'Undo label should mention Scale Root');
+});
+
+TestRunner.test('Scale Mode - setScaleModeLockState function export', (t) => {
+    t.assertEqual(typeof setScaleModeLockState, 'function', 'setScaleModeLockState should be a function');
+});
+
+TestRunner.test('Scale Mode - setScaleModeLockState accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeLockState.length, 1, 'setScaleModeLockState should accept 1 parameter');
+});
+
+TestRunner.test('Scale Mode - setScaleModeLockState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = () => { called = true; };
+    }
+    setScaleModeLockState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setScaleModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeLockState uses descriptive undo label', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { label = l; };
+    }
+    setScaleModeLockState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(label.includes('Scale Lock'), 'Undo label should mention Scale Lock');
+});
+
+TestRunner.test('Scale Mode - setScaleModeLockState coerces to boolean', (t) => {
+    setScaleModeLockState('yes');
+    t.assertEqual(getScaleModeLockState(), true, 'String "yes" should coerce to true');
+    setScaleModeLockState(null);
+    t.assertEqual(getScaleModeLockState(), false, 'null should coerce to false');
+});
+
+TestRunner.test('Scale Mode - state roundtrip update', (t) => {
+    setScaleModeEnabledState(true);
+    setScaleModeScaleState('Minor');
+    setScaleModeRootState('A');
+    setScaleModeLockState(true);
+    t.assertEqual(getScaleModeEnabledState(), true, 'Scale mode should be enabled');
+    t.assertEqual(getScaleModeScaleState(), 'Minor', 'Scale should be Minor');
+    t.assertEqual(getScaleModeRootState(), 'A', 'Root should be A');
+    t.assertEqual(getScaleModeLockState(), true, 'Scale lock should be enabled');
+});
+
+// Chord Mode state function tests
+TestRunner.test('Chord Mode - setChordModeEnabledState function export', (t) => {
+    t.assertEqual(typeof setChordModeEnabledState, 'function', 'setChordModeEnabledState should be a function');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeEnabledState.length, 1, 'setChordModeEnabledState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { called = true; label = l; };
+    }
+    setChordModeEnabledState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setChordModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState uses descriptive undo label', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { label = l; };
+    }
+    setChordModeEnabledState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(label.includes('Chord Mode') && label.includes('On'), 'Undo label should mention Chord Mode and On');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState guards against missing appServices', (t) => {
+    const originalAppServices = window.appServices;
+    window.appServices = {};
+    try {
+        setChordModeEnabledState(true);
+        t.assertTruthy(true, 'setChordModeEnabledState should not throw without appServices');
+    } catch (e) {
+        t.assertFail('setChordModeEnabledState should handle missing appServices');
+    } finally {
+        window.appServices = originalAppServices;
+    }
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState coerces to boolean', (t) => {
+    setChordModeEnabledState('yes');
+    t.assertEqual(getChordModeEnabledState(), true, 'String "yes" should coerce to true');
+    setChordModeEnabledState(null);
+    t.assertEqual(getChordModeEnabledState(), false, 'null should coerce to false');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState function export', (t) => {
+    t.assertEqual(typeof setChordModeRootState, 'function', 'setChordModeRootState should be a function');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeRootState.length, 1, 'setChordModeRootState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = () => { called = true; };
+    }
+    setChordModeRootState(7);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setChordModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState function export', (t) => {
+    t.assertEqual(typeof setChordModeTypeState, 'function', 'setChordModeTypeState should be a function');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeTypeState.length, 1, 'setChordModeTypeState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = () => { called = true; };
+    }
+    setChordModeTypeState('diminished');
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setChordModeTypeState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState defaults to major for invalid type', (t) => {
+    setChordModeTypeState('invalid');
+    t.assertEqual(getChordModeTypeState(), 'major', 'Invalid type should default to major');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState function export', (t) => {
+    t.assertEqual(typeof setChordModeLockState, 'function', 'setChordModeLockState should be a function');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeLockState.length, 1, 'setChordModeLockState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = () => { called = true; };
+    }
+    setChordModeLockState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setChordModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState coerces to boolean', (t) => {
+    setChordModeLockState('yes');
+    t.assertEqual(getChordModeLockState(), true, 'String "yes" should coerce to true');
+    setChordModeLockState(null);
+    t.assertEqual(getChordModeLockState(), false, 'null should coerce to false');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState function export', (t) => {
+    t.assertEqual(typeof setChordVoicingState, 'function', 'setChordVoicingState should be a function');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordVoicingState.length, 1, 'setChordVoicingState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = () => { called = true; };
+    }
+    setChordVoicingState('spread');
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setChordVoicingState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState defaults to closed for invalid voicing', (t) => {
+    setChordVoicingState('invalid');
+    t.assertEqual(getChordVoicingState(), 'closed', 'Invalid voicing should default to closed');
+});
+
+TestRunner.test('Chord Mode - state roundtrip update', (t) => {
+    setChordModeEnabledState(true);
+    setChordModeRootState(4);
+    setChordModeTypeState('minor');
+    setChordModeLockState(true);
+    setChordVoicingState('open');
+    t.assertEqual(getChordModeEnabledState(), true, 'Chord mode should be enabled');
+    t.assertEqual(getChordModeRootState(), 4, 'Root should be 4');
+    t.assertEqual(getChordModeTypeState(), 'minor', 'Type should be minor');
+    t.assertEqual(getChordModeLockState(), true, 'Chord lock should be enabled');
+    t.assertEqual(getChordVoicingState(), 'open', 'Voicing should be open');
+});
+
+// APP_VERSION validation for Day 323
+TestRunner.test('State - APP_VERSION is 2.03.0 or higher for Day 323', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 323');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 3, 'Minor version should be >= 3 for Day 323');
+    }
+});
