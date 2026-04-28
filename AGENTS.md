@@ -1,3 +1,42 @@
+#### Day 318: Timeline Window DOM Content & Rendering Tests (2026-04-28)
+- **Feature**: Added 53 new unit tests for Timeline Window DOM content and rendering functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 53 new tests in Day 318 section:
+    - renderTimeline: references getWindowById, getTracks, timelineContent, getTimelineZoomState
+    - renderTimeline: references TIMELINE_ZOOM_DEFAULT, TIMELINE_VERTICAL_ZOOM_DEFAULT, TIMELINE_BEAT_WIDTH, TIMELINE_TRACK_HEIGHT, TIMELINE_HEADER_HEIGHT
+    - renderTimeline: references Tone.Transport.bpm, pixelsPerSecond, MAX_BARS, STEPS_PER_BAR
+    - renderTimeline: references getLoopRegionState, getTimelineMarkersState
+    - renderTimeline: creates zoom controls HTML (zoom-controls, zoomInBtn, zoomOutBtn)
+    - renderTimeline: creates loop region controls HTML (loop-region-controls, loopRegionToggle)
+    - renderTimeline: creates marker controls HTML (marker-controls, addMarkerBtn, clearMarkersBtn)
+    - renderTimeline: creates timeline ruler HTML (timeline-ruler, rulerHTML)
+    - renderTimeline: creates timeline track lanes HTML (timeline-lanes, timeline-track-lane)
+    - renderTimeline: creates timeline clips HTML (timeline-clip)
+    - renderTimeline: creates playhead element (timelinePlayhead, playhead)
+    - renderTimeline: references track.color, timelineClips, clip.startTime, clip.duration
+    - openTimelineWindow: references getOpenWindows, calls createWindow, calls renderTimeline on restore
+    - openTimelineWindow: creates timelineContent div, uses windowId 'timeline', handles savedState
+    - openTimelineWindow: calls renderTimeline after setTimeout
+    - updatePlayheadPosition: references getWindowById, timelinePlayhead, getPlaybackMode
+    - updatePlayheadPosition: checks timeline playback mode, references Tone.Transport.seconds
+    - updatePlayheadPosition: updates playhead left position, references TIMELINE_BEAT_WIDTH
+    - renderTimeline: handles loop region overlay, loopRegion.enabled, loop region positioning
+    - renderTimeline: displays timeline markers (timeline-marker), references marker.bar, marker.color
+    - renderTimeline: references MAX_TIMELINE_MARKERS, DEFAULT_MARKER_COLOR, creates marker buttons
+    - updatePlayheadPosition: guards against missing window element and playhead
+  - `js/constants.js`: Bumped APP_VERSION to 1.98.0
+- **Feature Details**:
+  - Tests validate renderTimeline uses correct window, tracks, and timeline zoom state references
+  - Tests verify renderTimeline creates zoom controls, loop region controls, marker controls
+  - Tests verify renderTimeline creates timeline ruler, track lanes, clips, and playhead
+  - Tests verify renderTimeline references track.color and timelineClips for proper display
+  - Tests verify openTimelineWindow properly creates window, handles restore, calls renderTimeline
+  - Tests verify updatePlayheadPosition uses getPlaybackMode and Tone.Transport.seconds
+  - Tests verify renderTimeline handles loop region overlay with loopStartX/loopEndX/loopWidth
+  - Tests verify renderTimeline displays markers using marker.bar and marker.color
+  - Total tests increased from 1810 to 1863
+- **Version**: Bumped to 1.98.0
+
 #### Day 316: Remaining UI Window Functions Tests (2026-04-28)
 - **Feature**: Added 43 new unit tests for remaining UI window functions to expand test coverage
 - **Files Modified**:
