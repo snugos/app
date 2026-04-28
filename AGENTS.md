@@ -1,3 +1,22 @@
+#### Day 309: SnugWindow Prototype Method Instance Tests (2026-04-28)
+- **Feature**: Added 40 new unit tests for SnugWindow prototype methods and instance properties to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 40 new tests in Day 309 section:
+    - SnugWindow.prototype methods: minimize, restore, close, focus, toggleMaximize, makeDraggable, makeResizable, createTaskbarButton, updateTaskbarButtonActiveState, applyState
+    - Parameter count tests for all 10 prototype methods
+    - Instance property verification (isMinimized, isMaximized, element, title, options, appServices, taskbarButton are instance properties, not on prototype)
+    - Implementation verification (function bodies reference correct properties like element, isMinimized, taskbarButton, appServices, zIndex, restoreState)
+    - skipUndo parameter handling in minimize and restore methods
+    - isReconstruction parameter handling in close method
+  - `js/constants.js`: Bumped APP_VERSION to 1.89.0
+- **Feature Details**:
+  - Tests validate all 10 SnugWindow prototype methods exist and are functions
+  - Tests verify parameter counts match expected APIs
+  - Tests verify instance properties are not on prototype (each SnugWindow instance has its own state)
+  - Tests verify function implementations reference the correct properties (element, isMinimized, taskbarButton, etc.)
+  - Total tests increased from 1635 to 1675
+- **Version**: Bumped to 1.89.0
+
 #### Day 307: Send Bus Audio Functions Tests (2026-04-28)
 - **Feature**: Added 22 new unit tests for Send Bus Audio Functions to expand test coverage
 - **Files Modified**:

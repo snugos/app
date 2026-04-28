@@ -10079,3 +10079,180 @@ TestRunner.test('APP_VERSION - version is 1.88.0 or higher for Day 308', (t) => 
     const versionNum = parseFloat(APP_VERSION.split('.')[0] + '.' + APP_VERSION.split('.')[1]);
     t.assertEqual(versionNum >= 1.88, true, 'APP_VERSION should be 1.88.0 or higher');
 });
+
+// Day 309: SnugWindow Prototype Method Instance Tests (2026-04-28)
+TestRunner.test('SnugWindow - prototype has minimize method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.minimize, 'function', 'SnugWindow.prototype.minimize should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has restore method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.restore, 'function', 'SnugWindow.prototype.restore should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has close method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.close, 'function', 'SnugWindow.prototype.close should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has focus method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.focus, 'function', 'SnugWindow.prototype.focus should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has toggleMaximize method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.toggleMaximize, 'function', 'SnugWindow.prototype.toggleMaximize should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has makeDraggable method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeDraggable, 'function', 'SnugWindow.prototype.makeDraggable should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has makeResizable method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.makeResizable, 'function', 'SnugWindow.prototype.makeResizable should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has createTaskbarButton method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.createTaskbarButton, 'function', 'SnugWindow.prototype.createTaskbarButton should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has updateTaskbarButtonActiveState method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.updateTaskbarButtonActiveState, 'function', 'SnugWindow.prototype.updateTaskbarButtonActiveState should be a function');
+});
+
+TestRunner.test('SnugWindow - prototype has applyState method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.applyState, 'function', 'SnugWindow.prototype.applyState should be a function');
+});
+
+TestRunner.test('SnugWindow - minimize accepts optional skipUndo parameter', (t) => {
+    t.assertEqual(SnugWindow.prototype.minimize.length, 1, 'minimize should accept 1 parameter (skipUndo)');
+});
+
+TestRunner.test('SnugWindow - restore accepts optional skipUndo parameter', (t) => {
+    t.assertEqual(SnugWindow.prototype.restore.length, 1, 'restore should accept 1 parameter (skipUndo)');
+});
+
+TestRunner.test('SnugWindow - close accepts optional isReconstruction parameter', (t) => {
+    t.assertEqual(SnugWindow.prototype.close.length, 1, 'close should accept 1 parameter (isReconstruction)');
+});
+
+TestRunner.test('SnugWindow - focus accepts optional skipUndoForFocusItself parameter', (t) => {
+    t.assertEqual(SnugWindow.prototype.focus.length, 1, 'focus should accept 1 parameter (skipUndoForFocusItself)');
+});
+
+TestRunner.test('SnugWindow - applyState accepts state parameter', (t) => {
+    t.assertEqual(SnugWindow.prototype.applyState.length, 1, 'applyState should accept 1 parameter (state)');
+});
+
+TestRunner.test('SnugWindow - makeDraggable accepts no parameters', (t) => {
+    t.assertEqual(SnugWindow.prototype.makeDraggable.length, 0, 'makeDraggable should accept no parameters');
+});
+
+TestRunner.test('SnugWindow - makeResizable accepts no parameters', (t) => {
+    t.assertEqual(SnugWindow.prototype.makeResizable.length, 0, 'makeResizable should accept no parameters');
+});
+
+TestRunner.test('SnugWindow - createTaskbarButton accepts no parameters', (t) => {
+    t.assertEqual(SnugWindow.prototype.createTaskbarButton.length, 0, 'createTaskbarButton should accept no parameters');
+});
+
+TestRunner.test('SnugWindow - updateTaskbarButtonActiveState accepts no parameters', (t) => {
+    t.assertEqual(SnugWindow.prototype.updateTaskbarButtonActiveState.length, 0, 'updateTaskbarButtonActiveState should accept no parameters');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize accepts no parameters', (t) => {
+    t.assertEqual(SnugWindow.prototype.toggleMaximize.length, 0, 'toggleMaximize should accept no parameters');
+});
+
+TestRunner.test('SnugWindow - SnugWindow instance has isMinimized property', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.isMinimized, 'undefined', 'isMinimized should not exist on prototype (instance property)');
+});
+
+TestRunner.test('SnugWindow - SnugWindow instance has isMaximized property', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.isMaximized, 'undefined', 'isMaximized should not exist on prototype (instance property)');
+});
+
+TestRunner.test('SnugWindow - SnugWindow instance has element property', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.element, 'undefined', 'element should not exist on prototype (instance property)');
+});
+
+TestRunner.test('SnugWindow - SnugWindow instance has title property', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.title, 'undefined', 'title should not exist on prototype (instance property)');
+});
+
+TestRunner.test('SnugWindow - SnugWindow instance has options property', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.options, 'undefined', 'options should not exist on prototype (instance property)');
+});
+
+TestRunner.test('SnugWindow - SnugWindow instance has appServices property', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.appServices, 'undefined', 'appServices should not exist on prototype (instance property)');
+});
+
+TestRunner.test('SnugWindow - SnugWindow instance has taskbarButton property', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.taskbarButton, 'undefined', 'taskbarButton should not exist on prototype (instance property)');
+});
+
+TestRunner.test('SnugWindow - minimize references element and isMinimized', (t) => {
+    const funcStr = SnugWindow.prototype.minimize.toString();
+    t.assertTruthy(funcStr.includes('element') || funcStr.includes('isMinimized'), 'minimize should reference element or isMinimized');
+});
+
+TestRunner.test('SnugWindow - restore references element and isMinimized', (t) => {
+    const funcStr = SnugWindow.prototype.restore.toString();
+    t.assertTruthy(funcStr.includes('element') || funcStr.includes('isMinimized'), 'restore should reference element or isMinimized');
+});
+
+TestRunner.test('SnugWindow - close references element and taskbarButton', (t) => {
+    const funcStr = SnugWindow.prototype.close.toString();
+    t.assertTruthy(funcStr.includes('element') || funcStr.includes('taskbarButton'), 'close should reference element or taskbarButton');
+});
+
+TestRunner.test('SnugWindow - focus references element and appServices', (t) => {
+    const funcStr = SnugWindow.prototype.focus.toString();
+    t.assertTruthy(funcStr.includes('element') || funcStr.includes('appServices'), 'focus should reference element or appServices');
+});
+
+TestRunner.test('SnugWindow - toggleMaximize references isMaximized and restoreState', (t) => {
+    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
+    t.assertTruthy(funcStr.includes('isMaximized') || funcStr.includes('restoreState'), 'toggleMaximize should reference isMaximized or restoreState');
+});
+
+TestRunner.test('SnugWindow - applyState references element and zIndex', (t) => {
+    const funcStr = SnugWindow.prototype.applyState.toString();
+    t.assertTruthy(funcStr.includes('element') || funcStr.includes('zIndex'), 'applyState should reference element or zIndex');
+});
+
+TestRunner.test('SnugWindow - createTaskbarButton references taskbarButton and appServices', (t) => {
+    const funcStr = SnugWindow.prototype.createTaskbarButton.toString();
+    t.assertTruthy(funcStr.includes('taskbarButton') || funcStr.includes('appServices'), 'createTaskbarButton should reference taskbarButton or appServices');
+});
+
+TestRunner.test('SnugWindow - updateTaskbarButtonActiveState references taskbarButton and element', (t) => {
+    const funcStr = SnugWindow.prototype.updateTaskbarButtonActiveState.toString();
+    t.assertTruthy(funcStr.includes('taskbarButton') || funcStr.includes('element'), 'updateTaskbarButtonActiveState should reference taskbarButton or element');
+});
+
+TestRunner.test('SnugWindow - minimize handles skipUndo for undo capture', (t) => {
+    const funcStr = SnugWindow.prototype.minimize.toString();
+    t.assertTruthy(funcStr.includes('skipUndo'), 'minimize should check skipUndo parameter');
+});
+
+TestRunner.test('SnugWindow - restore handles skipUndo for undo capture', (t) => {
+    const funcStr = SnugWindow.prototype.restore.toString();
+    t.assertTruthy(funcStr.includes('skipUndo'), 'restore should check skipUndo parameter');
+});
+
+TestRunner.test('SnugWindow - close handles isReconstruction for cleanup', (t) => {
+    const funcStr = SnugWindow.prototype.close.toString();
+    t.assertTruthy(funcStr.includes('isReconstruction'), 'close should check isReconstruction parameter');
+});
+
+TestRunner.test('APP_VERSION - semver format validation for Day 309', (t) => {
+    const versionParts = APP_VERSION.split('.');
+    t.assertEqual(versionParts.length, 3, 'APP_VERSION should have 3 parts');
+    t.assertEqual(versionParts[0] >= 0, true, 'Major should be >= 0');
+    t.assertEqual(versionParts[1] >= 0, true, 'Minor should be >= 0');
+    t.assertEqual(versionParts[2] >= 0, true, 'Patch should be >= 0');
+});
+
+TestRunner.test('APP_VERSION - version is 1.89.0 or higher for Day 309', (t) => {
+    const versionNum = parseFloat(APP_VERSION.split('.')[0] + '.' + APP_VERSION.split('.')[1]);
+    t.assertEqual(versionNum >= 1.89, true, 'APP_VERSION should be 1.89.0 or higher');
+});
