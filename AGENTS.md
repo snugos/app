@@ -1,3 +1,32 @@
+#### Day 324: SnugWindow Instance Method Tests (2026-04-28)
+- **Feature**: Added 60 new unit tests for SnugWindow instance methods to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 60 new tests in Day 324 section:
+    - SnugWindow - applyState method exists, handles position/size/zIndex/title/isMinimized state
+    - SnugWindow - toggleMaximize method exists, toggles isMaximized state, calls _captureUndo, updates maximize button, uses restoreState
+    - SnugWindow - updateTaskbarButtonActiveState method exists, references taskbarButton and classList.toggle
+    - SnugWindow - makeDraggable/makeResizable methods exist, add event listeners, clamp bounds
+    - SnugWindow - _captureUndo method exists, references appServices.captureStateForUndo
+    - SnugWindow - instance has isMaximized, options, appServices, taskbarButton, element, titleBar, contentArea, restoreState, isMinimized, _isDragging, _isResizing properties
+    - SnugWindow - minimize/restore/focus/close methods exist, handle classList updates and z-index management
+    - SnugWindow - createTaskbarButton method exists, creates button element, sets dataset.windowId
+    - SnugWindow - minimize/restore/close call _captureUndo for undo support
+    - SnugWindow - close guards against reconstruction flag (isReconstruction/getIsReconstructingDAW)
+    - SnugWindow - toggleMaximize uses descriptive undo label (Maximize/Restore)
+    - SnugWindow - applyState handles error cases (missing element or state)
+    - SnugWindow - focus restores from minimized state
+  - `js/constants.js`: Bumped APP_VERSION to 2.04.0
+- **Feature Details**:
+  - Tests validate SnugWindow prototype methods for window state management
+  - Tests verify undo capture (_captureUndo) is called for maximize, minimize, restore, close operations
+  - Tests verify window position/size clamping within desktop bounds
+  - Tests verify taskbar button state management and active/inactive styling
+  - Tests verify window drag/resize functionality with proper event listeners
+  - Tests verify window restoration from maximized state
+  - Tests verify reconstruction flag guards for close operation
+  - Total tests increased from 2034 to 2094
+- **Version**: Bumped to 2.04.0
+
 #### Day 322: Metronome State Functions Tests (2026-04-28)
 - **Feature**: Added 20 new unit tests for Metronome State Functions to expand test coverage
 - **Files Modified**:
