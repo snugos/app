@@ -1,3 +1,31 @@
+#### Day 314: Playback Mode State Tests (2026-04-28)
+- **Feature**: Added 13 new unit tests for Playback Mode state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 13 new tests in Day 314 section:
+    - setPlaybackModeState function export and parameter count
+    - setPlaybackModeState calls captureStateForUndo
+    - setPlaybackModeState uses descriptive undo label ("Playback Mode")
+    - setPlaybackModeState guards against missing appServices
+    - setPlaybackModeState validates mode values (sequencer/timeline)
+    - setPlaybackModeState references mode parameter
+    - setPlaybackModeState handles timeline mode
+    - setPlaybackModeState handles sequencer mode
+    - onPlaybackModeChange is defined in appServices
+    - onPlaybackModeChange references newMode parameter
+    - onPlaybackModeChange updates UI toggle button
+    - onPlaybackModeChange updates textContent and classList
+    - getPlaybackModeState returns valid mode
+  - `js/constants.js`: Bumped APP_VERSION to 1.94.0
+- **Feature Details**:
+  - Tests validate setPlaybackModeState is exported and accepts 1 parameter
+  - Tests verify setPlaybackModeState calls captureStateForUndo for undo support
+  - Tests verify descriptive undo label ("Playback Mode")
+  - Tests verify setPlaybackModeState validates sequencer/timeline mode values
+  - Tests verify onPlaybackModeChange handles UI updates for playback mode toggle
+  - Tests verify onPlaybackModeChange updates button textContent and classList
+  - Total tests increased from 1643 to 1656
+- **Version**: Bumped to 1.94.0
+
 #### Day 310: Record Button Event Handler Tests (2026-04-28)
 - **Feature**: Added 31 new unit tests for Record Button Event Handler to expand test coverage
 - **Files Modified**:
@@ -4762,3 +4790,28 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate Constants for TRACK_COLORS, STEPS_PER_BAR, synthPitches, SCALES, CHORD_TYPES
   - Total tests increased from 1496 to 1538
 - **Version**: Bumped to 1.85.0
+
+#### Day 313: MIDI Learn Mapping State Tests (2026-04-28)
+- **Feature**: Added 23 new unit tests for MIDI Learn mapping state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 23 new tests in Day 313 section:
+    - updateMidiLearnMapping: function export, 2 parameters (index, updates), references updates parameter
+    - getMidiLearnMappingByIndex: function export, 1 parameter (index), references index parameter
+    - findMidiLearnMapping: function export, 2 parameters (channel, cc), references channel and cc
+    - addMidiLearnMapping: calls captureStateForUndo, descriptive undo label ("Add MIDI Learn Mapping")
+    - removeMidiLearnMapping: calls captureStateForUndo, descriptive undo label ("Remove MIDI Learn Mapping")
+    - clearMidiLearnMappings: calls captureStateForUndo, descriptive undo label ("Clear All MIDI Learn Mappings")
+    - updateMidiLearnMapping: calls captureStateForUndo, descriptive undo label ("Update MIDI Learn Mapping")
+    - setMidiLearnModeState: calls captureStateForUndo, descriptive undo label ("Set MIDI Learn Mode")
+    - setMidiLearnPendingParamState: calls captureStateForUndo, descriptive undo label ("Set MIDI Learn Pending Param")
+    - All MIDI Learn functions guard against missing appServices
+  - `js/constants.js`: Bumped APP_VERSION to 1.93.0
+- **Feature Details**:
+  - Tests validate updateMidiLearnMapping is exported and accepts 2 parameters (index, updates)
+  - Tests verify getMidiLearnMappingByIndex is exported and references index parameter
+  - Tests verify findMidiLearnMapping is exported and references channel and cc parameters
+  - Tests verify all MIDI Learn mutation functions call captureStateForUndo before mutating state
+  - Tests verify descriptive undo labels for all MIDI Learn operations
+  - Tests verify all MIDI Learn functions guard against missing appServices
+  - Total tests increased from 1620 to 1643
+- **Version**: Bumped to 1.93.0

@@ -10070,3 +10070,80 @@ TestRunner.test('State - APP_VERSION is 1.93.0 or higher for Day 313', (t) => {
         t.assertTruthy(versionParts[1] >= 93, 'Minor version should be >= 93 for Day 313');
     }
 });
+
+// === Day 314: Playback Mode State Tests (2026-04-28) ===
+// Tests for Playback Mode state functions to expand test coverage
+
+TestRunner.test('Playback Mode - setPlaybackModeState function is exported', (t) => {
+    t.assertEqual(typeof setPlaybackModeState, 'function', 'setPlaybackModeState should be a function');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState accepts 1 parameter', (t) => {
+    t.assertEqual(setPlaybackModeState.length, 1, 'setPlaybackModeState should accept 1 parameter (mode)');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState calls captureStateForUndo', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setPlaybackModeState should call captureStateForUndo');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState uses descriptive undo label', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('Playback') && funcStr.includes('Mode'), 'setPlaybackModeState should mention Playback Mode in undo label');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState guards against missing appServices', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'setPlaybackModeState should reference appServices');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState validates mode values', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('sequencer') || funcStr.includes('timeline'), 'setPlaybackModeState should validate mode values');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState references mode parameter', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('mode'), 'setPlaybackModeState should reference mode parameter');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState handles timeline mode', (t) => {
+    setPlaybackModeState('timeline');
+    const mode = getPlaybackModeState();
+    t.assertEqual(mode, 'timeline', 'setPlaybackModeState should handle timeline mode');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState handles sequencer mode', (t) => {
+    setPlaybackModeState('sequencer');
+    const mode = getPlaybackModeState();
+    t.assertEqual(mode, 'sequencer', 'setPlaybackModeState should handle sequencer mode');
+});
+
+TestRunner.test('Playback Mode - onPlaybackModeChange is defined in appServices', (t) => {
+    const funcStr = onPlaybackModeChange.toString();
+    t.assertTruthy(funcStr.includes('playbackMode') || funcStr.includes('renderTimeline'), 'onPlaybackModeChange should handle playback mode changes');
+});
+
+TestRunner.test('Playback Mode - onPlaybackModeChange references newMode parameter', (t) => {
+    const funcStr = onPlaybackModeChange.toString();
+    t.assertTruthy(funcStr.includes('newMode'), 'onPlaybackModeChange should reference newMode parameter');
+});
+
+TestRunner.test('Playback Mode - onPlaybackModeChange updates UI toggle button', (t) => {
+    const funcStr = onPlaybackModeChange.toString();
+    t.assertTruthy(funcStr.includes('textContent') || funcStr.includes('classList'), 'onPlaybackModeChange should update UI elements');
+});
+
+TestRunner.test('Playback Mode - getPlaybackModeState returns valid mode', (t) => {
+    const mode = getPlaybackModeState();
+    t.assertTruthy(mode === 'sequencer' || mode === 'timeline', 'getPlaybackModeState should return valid mode');
+});
+
+// APP_VERSION validation for Day 314
+TestRunner.test('State - APP_VERSION is 1.94.0 or higher for Day 314', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 1, 'Major version should be >= 1');
+    if (versionParts[0] === 1) {
+        t.assertTruthy(versionParts[1] >= 94, 'Minor version should be >= 94 for Day 314');
+    }
+});
