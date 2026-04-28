@@ -11733,3 +11733,160 @@ TestRunner.test('State - APP_VERSION is 2.01.0 or higher for Day 321', (t) => {
         t.assertTruthy(versionParts[1] >= 1, 'Minor version should be >= 1 for Day 321');
     }
 });
+
+// ============================================
+// Day 322: Metronome State Functions Tests (2026-04-28)
+// Tests for metronome state management and undo support
+// ============================================
+
+TestRunner.test('Metronome - setMetronomeVolumeState function is exported', (t) => {
+    t.assertEqual(typeof setMetronomeVolumeState, 'function', 'setMetronomeVolumeState should be a function');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState accepts 1 parameter', (t) => {
+    t.assertEqual(setMetronomeVolumeState.length, 1, 'setMetronomeVolumeState should accept 1 parameter');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { called = true; label = l; };
+    }
+    setMetronomeVolumeState(0.8);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setMetronomeVolumeState should call captureStateForUndo');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState uses descriptive undo label', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { label = l; };
+    }
+    setMetronomeVolumeState(0.6);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(label.includes('Metronome Volume'), 'Undo label should mention Metronome Volume');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState guards against missing appServices', (t) => {
+    const originalAppServices = window.appServices;
+    window.appServices = {};
+    try {
+        setMetronomeVolumeState(0.5);
+        t.assertTruthy(true, 'setMetronomeVolumeState should not throw without appServices');
+    } catch (e) {
+        t.assertFail('setMetronomeVolumeState should handle missing appServices');
+    } finally {
+        window.appServices = originalAppServices;
+    }
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState clamps value to 0-1 range', (t) => {
+    setMetronomeVolumeState(1.5);
+    t.assertLessOrEqual(getMetronomeVolumeState(), 1, 'Volume should be clamped to max 1');
+    setMetronomeVolumeState(-0.5);
+    t.assertGreaterOrEqual(getMetronomeVolumeState(), 0, 'Volume should be clamped to min 0');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState validates numeric input', (t) => {
+    setMetronomeVolumeState('invalid');
+    const vol = getMetronomeVolumeState();
+    t.assertEqual(typeof vol, 'number', 'Volume should be a valid number after invalid input');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState references volume parameter', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('volume'), 'setMetronomeVolumeState should reference volume parameter');
+});
+
+TestRunner.test('Metronome - MIN_METRONOME_VOLUME is 0', (t) => {
+    t.assertEqual(MIN_METRONOME_VOLUME, 0, 'MIN_METRONOME_VOLUME should be 0');
+});
+
+TestRunner.test('Metronome - MAX_METRONOME_VOLUME is 1', (t) => {
+    t.assertEqual(MAX_METRONOME_VOLUME, 1, 'MAX_METRONOME_VOLUME should be 1');
+});
+
+TestRunner.test('Metronome - DEFAULT_METRONOME_VOLUME is 0.5', (t) => {
+    t.assertEqual(DEFAULT_METRONOME_VOLUME, 0.5, 'DEFAULT_METRONOME_VOLUME should be 0.5');
+});
+
+TestRunner.test('Metronome - DEFAULT_METRONOME_VOLUME is within valid range', (t) => {
+    t.assertTruthy(DEFAULT_METRONOME_VOLUME >= MIN_METRONOME_VOLUME && DEFAULT_METRONOME_VOLUME <= MAX_METRONOME_VOLUME, 'DEFAULT_METRONOME_VOLUME should be within valid range');
+});
+
+TestRunner.test('Metronome - metronome volume range is valid', (t) => {
+    t.assertTruthy(MIN_METRONOME_VOLUME <= MAX_METRONOME_VOLUME, 'MIN_METRONOME_VOLUME should be <= MAX_METRONOME_VOLUME');
+    t.assertTruthy(DEFAULT_METRONOME_VOLUME >= MIN_METRONOME_VOLUME && DEFAULT_METRONOME_VOLUME <= MAX_METRONOME_VOLUME, 'DEFAULT_METRONOME_VOLUME should be within min/max range');
+});
+
+TestRunner.test('Metronome - metronome state roundtrip update', (t) => {
+    setMetronomeVolumeState(0.75);
+    t.assertEqual(getMetronomeVolumeState(), 0.75, 'Metronome volume should be 0.75 after setting');
+    setMetronomeVolumeState(0.25);
+    t.assertEqual(getMetronomeVolumeState(), 0.25, 'Metronome volume should be 0.25 after second setting');
+});
+
+TestRunner.test('Metronome - metronome enabled state toggles correctly', (t) => {
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled');
+    setMetronomeEnabledState(false);
+    t.assertEqual(getMetronomeEnabledState(), false, 'Metronome should be disabled');
+    setMetronomeEnabledState(true);
+    t.assertEqual(getMetronomeEnabledState(), true, 'Metronome should be enabled again');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState calls captureStateForUndo', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let called = false;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { called = true; label = l; };
+    }
+    setMetronomeEnabledState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(called, 'setMetronomeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState uses descriptive undo label', (t) => {
+    const originalCapture = window.appServices?.captureStateForUndo;
+    let label = '';
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = (l) => { label = l; };
+    }
+    setMetronomeEnabledState(true);
+    if (window.appServices) {
+        window.appServices.captureStateForUndo = originalCapture;
+    }
+    t.assertTruthy(label.includes('Metronome'), 'Undo label should mention Metronome');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState coerces to boolean', (t) => {
+    setMetronomeEnabledState('yes');
+    t.assertEqual(getMetronomeEnabledState(), true, 'String "yes" should coerce to true');
+    setMetronomeEnabledState(null);
+    t.assertEqual(getMetronomeEnabledState(), false, 'null should coerce to false');
+});
+
+TestRunner.test('Metronome - metronome state persists after multiple updates', (t) => {
+    setMetronomeEnabledState(true);
+    setMetronomeVolumeState(0.8);
+    t.assertTruthy(getMetronomeEnabledState() === true && getMetronomeVolumeState() === 0.8, 'Both metronome states should persist');
+});
+
+// APP_VERSION validation for Day 322
+TestRunner.test('State - APP_VERSION is 2.02.0 or higher for Day 322', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 322');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 2, 'Minor version should be >= 2 for Day 322');
+    }
+});
