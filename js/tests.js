@@ -2322,3 +2322,59 @@ TestRunner.test('Recording - Latency hint is reasonable', (t) => {
 // ============================================
 TestRunner.test('Audio Recording - startAudioRecording accepts track and monitoring params', (t) => {
     t.assertEqual(typeof start
+// ============================================
+// Day 351: Mixer Master Strip UI Tests
+// ============================================
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML function exists', (t) => {
+    t.assertEqual(typeof buildMixerMasterStripHTML, 'function', 'buildMixerMasterStripHTML should be a function');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML returns string', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertEqual(typeof result, 'string', 'buildMixerMasterStripHTML should return a string');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML includes MASTER label', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('MASTER'), 'Should include MASTER label');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML includes master meter bar', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('mixerMasterMeterBar') || result.includes('masterMeter'), 'Should include master meter bar element');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML includes master volume fader', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('masterVolumeFader'), 'Should include masterVolumeFader');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML includes Volume label', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.toLowerCase().includes('volume'), 'Should include Volume label');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML references getMasterGainValue', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('getMasterGainValue') || result.includes('masterVolume'), 'Should reference master gain value');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML uses correct CSS classes', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('mixer-master-strip'), 'Should use mixer-master-strip class');
+    t.assertTruthy(result.includes('bg-[') || result.includes('#1e1e1e'), 'Should use dark theme styling');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML creates proper DOM structure', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('<div'), 'Should contain div elements');
+    t.assertTruthy(result.includes('</div>'), 'Should close div elements');
+    t.assertTruthy(result.includes('<input'), 'Should contain input element for fader');
+});
+
+TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML input has correct attributes', (t) => {
+    const result = buildMixerMasterStripHTML();
+    t.assertTruthy(result.includes('type="range"'), 'Fader input should be type range');
+    t.assertTruthy(result.includes('min="0"') || result.includes("min='0'"), 'Fader should have min 0');
+    t.assertTruthy(result.includes('max="100"') || result.includes("max='100'"), 'Fader should have max 100');
+});
