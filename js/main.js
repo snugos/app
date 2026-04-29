@@ -566,6 +566,49 @@ const appServices = {
             console.error(`[AppServices loadSoundFromBrowserToTarget] Error loading file ${file.name}:`, error);
             showSafeNotification(`Failed to load ${file.name}.`, 3000);
         }
+    },
+
+    // --- Missing appServices - Added to fix incomplete features ---
+    getActiveTrackForInteraction: () => {
+        const activeId = getActiveSequencerTrackIdState();
+        if (activeId) {
+            const track = getTrackByIdState(activeId);
+            if (track) return track;
+        }
+        const tracks = getTracksState();
+        return tracks && tracks.length > 0 ? tracks[0] : null;
+    },
+
+    openTrackSequencerWindow: (trackId, forceRedraw = false, savedState = null) => {
+        if (typeof openTrackSequencerWindow === 'function') {
+            openTrackSequencerWindow(trackId, forceRedraw, savedState);
+        } else {
+            console.warn("[AppServices openTrackSequencerWindow] openTrackSequencerWindow not available from ui module");
+        }
+    },
+
+    openTrackInspectorWindow: (trackId, savedState = null) => {
+        if (typeof openTrackInspectorWindow === 'function') {
+            openTrackInspectorWindow(trackId, savedState);
+        } else {
+            console.warn("[AppServices openTrackInspectorWindow] openTrackInspectorWindow not available from ui module");
+        }
+    },
+
+    openTrackEffectsRackWindow: (trackId, savedState = null) => {
+        if (typeof openTrackEffectsRackWindow === 'function') {
+            openTrackEffectsRackWindow(trackId, savedState);
+        } else {
+            console.warn("[AppServices openTrackEffectsRackWindow] openTrackEffectsRackWindow not available from ui module");
+        }
+    },
+
+    showKeyboardShortcutsHelp: () => {
+        if (typeof showKeyboardShortcutsHelpWindow === 'function') {
+            showKeyboardShortcutsHelpWindow();
+        } else {
+            console.warn("[AppServices showKeyboardShortcutsHelp] showKeyboardShortcutsHelpWindow not available from ui module");
+        }
     }
 };
 
