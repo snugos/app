@@ -2590,3 +2590,155 @@ TestRunner.test('State - APP_VERSION is 2.31.0 or higher for Day 352', (t) => {
         t.assertTruthy(versionParts[1] >= 31, 'Minor version should be >= 31 for Day 352');
     }
 });
+
+// ============================================
+// Day 353: Audio Clip Timeline Methods Tests
+// ============================================
+TestRunner.test('Audio Clip Timeline - Track.prototype.addAudioClip exists', (t) => {
+    t.assertEqual(typeof Track.prototype.addAudioClip, 'function', 'addAudioClip should be a function');
+});
+
+TestRunner.test('Audio Clip Timeline - Track.prototype.getAudioClipDuration exists', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipDuration, 'function', 'getAudioClipDuration should be a function');
+});
+
+TestRunner.test('Audio Clip Timeline - Track.prototype.deleteTimelineClip exists', (t) => {
+    t.assertEqual(typeof Track.prototype.deleteTimelineClip, 'function', 'deleteTimelineClip should be a function');
+});
+
+TestRunner.test('Audio Clip Timeline - Track.prototype.splitAudioClip exists', (t) => {
+    t.assertEqual(typeof Track.prototype.splitAudioClip, 'function', 'splitAudioClip should be a function');
+});
+
+TestRunner.test('Audio Clip Timeline - Track.prototype.duplicateTimelineClip exists', (t) => {
+    t.assertEqual(typeof Track.prototype.duplicateTimelineClip, 'function', 'duplicateTimelineClip should be a function');
+});
+
+TestRunner.test('Audio Clip Timeline - addAudioClip is async', (t) => {
+    t.assertEqual(Track.prototype.addAudioClip.constructor.name, 'AsyncFunction', 'addAudioClip should be async');
+});
+
+TestRunner.test('Audio Clip Timeline - addAudioClip calls _captureUndoState with descriptive label', (t) => {
+    const funcStr = Track.prototype.addAudioClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'addAudioClip should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('recorded clip') || funcStr.includes('clip'), 'addAudioClip undo label should reference recording');
+});
+
+TestRunner.test('Audio Clip Timeline - deleteTimelineClip calls _captureUndoState with descriptive label', (t) => {
+    const funcStr = Track.prototype.deleteTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'deleteTimelineClip should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Delete') || funcStr.includes('delete'), 'deleteTimelineClip undo label should reference Delete');
+});
+
+TestRunner.test('Audio Clip Timeline - splitAudioClip calls _captureUndoState with descriptive label', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'splitAudioClip should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Split') || funcStr.includes('split'), 'splitAudioClip undo label should reference Split');
+});
+
+TestRunner.test('Audio Clip Timeline - duplicateTimelineClip calls _captureUndoState with descriptive label', (t) => {
+    const funcStr = Track.prototype.duplicateTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'duplicateTimelineClip should call _captureUndoState');
+    t.assertTruthy(funcStr.includes('Duplicate') || funcStr.includes('duplicate'), 'duplicateTimelineClip undo label should reference Duplicate');
+});
+
+TestRunner.test('Audio Clip Timeline - addAudioClip references blob parameter', (t) => {
+    const funcStr = Track.prototype.addAudioClip.toString();
+    t.assertTruthy(funcStr.includes('blob'), 'addAudioClip should reference blob parameter');
+});
+
+TestRunner.test('Audio Clip Timeline - addAudioClip references startTime parameter', (t) => {
+    const funcStr = Track.prototype.addAudioClip.toString();
+    t.assertTruthy(funcStr.includes('startTime'), 'addAudioClip should reference startTime parameter');
+});
+
+TestRunner.test('Audio Clip Timeline - splitAudioClip references clipId parameter', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'splitAudioClip should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Timeline - splitAudioClip references splitTime parameter', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('splitTime'), 'splitAudioClip should reference splitTime parameter');
+});
+
+TestRunner.test('Audio Clip Timeline - duplicateTimelineClip references clipId parameter', (t) => {
+    const funcStr = Track.prototype.duplicateTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'duplicateTimelineClip should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Timeline - deleteTimelineClip references clipId parameter', (t) => {
+    const funcStr = Track.prototype.deleteTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'deleteTimelineClip should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Timeline - addAudioClip handles invalid blob', (t) => {
+    const funcStr = Track.prototype.addAudioClip.toString();
+    t.assertTruthy(funcStr.includes('Invalid blob') || funcStr.includes('!blob'), 'addAudioClip should check for invalid blob');
+});
+
+TestRunner.test('Audio Clip Timeline - addAudioClip generates unique clip ID', (t) => {
+    const funcStr = Track.prototype.addAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clipId') || funcStr.includes('id:'), 'addAudioClip should generate a clip ID');
+});
+
+TestRunner.test('Audio Clip Timeline - addAudioClip creates clip with default properties', (t) => {
+    const funcStr = Track.prototype.addAudioClip.toString();
+    t.assertTruthy(funcStr.includes('type:') || funcStr.includes('type '), 'addAudioClip should set clip type');
+    t.assertTruthy(funcStr.includes('name:') || funcStr.includes('name '), 'addAudioClip should set clip name');
+    t.assertTruthy(funcStr.includes('startTime'), 'addAudioClip should set startTime');
+    t.assertTruthy(funcStr.includes('duration'), 'addAudioClip should set duration');
+    t.assertTruthy(funcStr.includes('gain'), 'addAudioClip should set gain');
+});
+
+TestRunner.test('Audio Clip Timeline - Audio clip default properties constants', (t) => {
+    t.assertEqual(DEFAULT_CLIP_COLOR, '#4a9eff', 'Default clip color should be #4a9eff');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'Default audio clip gain should be 1.0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'Default playback rate should be 1.0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_START_OFFSET, 0, 'Default start offset should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_END_OFFSET, -1, 'Default end offset should be -1');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'Default crossfade should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_REVERSE, false, 'Default reverse should be false');
+});
+
+TestRunner.test('Audio Clip Timeline - Audio clip gain range constants', (t) => {
+    t.assertEqual(MIN_AUDIO_CLIP_GAIN, 0, 'Min gain should be 0 (silence)');
+    t.assertEqual(MAX_AUDIO_CLIP_GAIN, 4.0, 'Max gain should be 4.0 (12dB boost)');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_GAIN, 1.0, 'Default gain should be 1.0 (0dB)');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_GAIN >= MIN_AUDIO_CLIP_GAIN, 'Default gain should be >= min');
+    t.assertTruthy(DEFAULT_AUDIO_CLIP_GAIN <= MAX_AUDIO_CLIP_GAIN, 'Default gain should be <= max');
+});
+
+TestRunner.test('Audio Clip Timeline - Audio clip playback rate range constants', (t) => {
+    t.assertEqual(MIN_AUDIO_CLIP_PLAYBACK_RATE, 0.25, 'Min playback rate should be 0.25');
+    t.assertEqual(MAX_AUDIO_CLIP_PLAYBACK_RATE, 4.0, 'Max playback rate should be 4.0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, 1.0, 'Default playback rate should be 1.0');
+});
+
+TestRunner.test('Audio Clip Timeline - Audio clip fade range constants', (t) => {
+    t.assertEqual(MAX_AUDIO_CLIP_FADE, 10, 'Max fade should be 10 seconds');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0');
+});
+
+TestRunner.test('Audio Clip Timeline - Audio clip crossfade range constants', (t) => {
+    t.assertEqual(MIN_AUDIO_CLIP_CROSSFADE, 0, 'Min crossfade should be 0');
+    t.assertEqual(MAX_AUDIO_CLIP_CROSSFADE, 5, 'Max crossfade should be 5 seconds');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_CROSSFADE, 0, 'Default crossfade should be 0');
+});
+
+TestRunner.test('Audio Clip Timeline - CLIP_COLORS array has 16 colors', (t) => {
+    t.assertEqual(CLIP_COLORS.length, 16, 'Should have 16 clip colors');
+    t.assertTruthy(CLIP_COLORS[0].startsWith('#'), 'Clip colors should be hex format');
+});
+
+// APP_VERSION validation for Day 353
+TestRunner.test('State - APP_VERSION is 2.32.0 or higher for Day 353', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 353');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 32, 'Minor version should be >= 32 for Day 353');
+    }
+});

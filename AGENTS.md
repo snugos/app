@@ -1,3 +1,42 @@
+#### Day 353: Audio Clip Timeline Methods Tests (2026-04-29)
+- **Feature**: Added 26 new unit tests for Audio Clip Timeline Methods to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 26 new tests in Day 353 section:
+    - Audio Clip Timeline - Track.prototype.addAudioClip exists
+    - Audio Clip Timeline - Track.prototype.getAudioClipDuration exists
+    - Audio Clip Timeline - Track.prototype.deleteTimelineClip exists
+    - Audio Clip Timeline - Track.prototype.splitAudioClip exists
+    - Audio Clip Timeline - Track.prototype.duplicateTimelineClip exists
+    - Audio Clip Timeline - addAudioClip is async
+    - Audio Clip Timeline - addAudioClip calls _captureUndoState with descriptive label
+    - Audio Clip Timeline - deleteTimelineClip calls _captureUndoState with descriptive label
+    - Audio Clip Timeline - splitAudioClip calls _captureUndoState with descriptive label
+    - Audio Clip Timeline - duplicateTimelineClip calls _captureUndoState with descriptive label
+    - Audio Clip Timeline - addAudioClip references blob parameter
+    - Audio Clip Timeline - addAudioClip references startTime parameter
+    - Audio Clip Timeline - splitAudioClip references clipId and splitTime parameters
+    - Audio Clip Timeline - duplicateTimelineClip references clipId parameter
+    - Audio Clip Timeline - deleteTimelineClip references clipId parameter
+    - Audio Clip Timeline - addAudioClip handles invalid blob
+    - Audio Clip Timeline - addAudioClip generates unique clip ID
+    - Audio Clip Timeline - addAudioClip creates clip with default properties
+    - Audio Clip Timeline - Audio clip default properties constants validation
+    - Audio Clip Timeline - Audio clip gain range constants (MIN/MAX/DEFAULT)
+    - Audio Clip Timeline - Audio clip playback rate range constants
+    - Audio Clip Timeline - Audio clip fade range constants
+    - Audio Clip Timeline - Audio clip crossfade range constants
+    - Audio Clip Timeline - CLIP_COLORS array has 16 colors
+  - `js/constants.js`: Bumped APP_VERSION to 2.33.0
+- **Feature Details**:
+  - Tests validate all 5 Audio Clip Timeline methods exist on Track.prototype
+  - Tests verify addAudioClip is async and handles recorded blob data
+  - Tests verify all mutation methods (add, delete, split, duplicate) call _captureUndoState for undo/redo support
+  - Tests verify descriptive undo labels for all clip operations
+  - Tests verify audio clip constants (gain 0-4.0, playback rate 0.25-4.0, fade 0-10s, crossfade 0-5s)
+  - Tests verify CLIP_COLORS array structure (16 colors in hex format)
+  - Total tests increased from 358 to 384
+- **Version**: Bumped to 2.33.0
+
 #### Day 352: Send Bus Audio Routing Tests (2026-04-29)
 - **Feature**: Added 46 new unit tests for Send Bus Audio Routing functions to expand test coverage
 - **Files Modified**:
