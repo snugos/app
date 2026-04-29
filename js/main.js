@@ -599,11 +599,7 @@ const appServices = {
     },
 
     showKeyboardShortcutsHelp: () => {
-        if (typeof showKeyboardShortcutsHelpWindow === 'function') {
-            showKeyboardShortcutsHelpWindow();
-        } else {
-            console.warn("[AppServices showKeyboardShortcutsHelp] showKeyboardShortcutsHelpWindow not available from ui module");
-        }
+        showKeyboardShortcutsHelpWindow();
     },
 
     openMixerWindow: (savedState = null) => {
