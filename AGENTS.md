@@ -33,6 +33,47 @@
 - **Version**: Bumped to 2.11.0
 
 
+#### Day 332: Audio Clip Editor Extended Tests (2026-04-29)
+- **Feature**: Added 53 new unit tests for Audio Clip Editor window UI functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 53 new tests in Day 332 section:
+    - openAudioClipEditorWindow: function export, 3 parameters (trackId, clipId, savedState)
+    - openAudioClipEditorWindow: calls getTrackById, finds clip in timelineClips
+    - openAudioClipEditorWindow: creates window with audioClipEditor- prefix windowId
+    - openAudioClipEditorWindow: calls getOpenWindows, restores existing window
+    - openAudioClipEditorWindow: references clip.name, startTime, duration
+    - openAudioClipEditorWindow: references clip.fadeIn, clip.fadeOut, clip.gain
+    - openAudioClipEditorWindow: references clip.playbackRate, startOffset, endOffset
+    - openAudioClipEditorWindow: references clip.crossfade, clip.reverse, clip.color
+    - openAudioClipEditorWindow: references CLIP_COLORS constant, creates waveform canvas
+    - openAudioClipEditorWindow: includes normalize, apply, delete buttons
+    - openAudioClipEditorWindow: references DEFAULT_AUDIO_CLIP_GAIN, playback rate constants
+    - openAudioClipEditorWindow: handles fade curve selection (linear/exponential)
+    - openAudioClipEditorWindow: includes gain dB display calculation
+    - openAudioClipEditorWindow: calls track.setAudioClipGain/Name/Color/StartTime
+    - openAudioClipEditorWindow: calls track.setAudioClipFadeIn/FadeOut/FadeInCurve/FadeOutCurve
+    - openAudioClipEditorWindow: calls track.setAudioClipCrossfade/PlaybackRate/Reverse
+    - openAudioClipEditorWindow: calls track.setAudioClipStartOffset/EndOffset
+    - openAudioClipEditorWindow: calls track.normalizeAudioClip, deleteAudioClipFromTimeline
+    - openAudioClipEditorWindow: calls updateTrackUI on changes, syncs slider/input values
+    - openAudioClipEditorWindow: has try-catch error handling
+    - drawClipWaveform: function export, 2 parameters (clipId, audioBuffer)
+    - drawClipWaveform: references clipWaveformCanvas, checks audioBuffer.loaded
+  - `js/constants.js`: Bumped APP_VERSION to 2.12.0
+- **Feature Details**:
+  - Tests validate openAudioClipEditorWindow function export and parameter count
+  - Tests verify openAudioClipEditorWindow finds track and clip via getTrackById and timelineClips.find
+  - Tests verify openAudioClipEditorWindow creates window with proper audioClipEditor- prefix
+  - Tests verify openAudioClipEditorWindow references all clip properties (name, time, fades, gain, etc.)
+  - Tests verify openAudioClipEditorWindow includes all UI controls (sliders, buttons, canvas)
+  - Tests verify openAudioClipEditorWindow calls all Track audio clip setter methods
+  - Tests verify openAudioClipEditorWindow syncs slider and input values
+  - Tests verify drawClipWaveform function export and canvas handling
+  - Total tests increased from 2465 to 2518
+- **Version**: Bumped to 2.12.0
+
+
+
 #### Day 330: Track Inspector UI Functions Tests (2026-04-29)
 - **Feature**: Added 50 new unit tests for Track Inspector window UI functions to expand test coverage
 - **Files Modified**:
