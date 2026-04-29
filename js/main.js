@@ -609,6 +609,70 @@ const appServices = {
         } else {
             console.warn("[AppServices showKeyboardShortcutsHelp] showKeyboardShortcutsHelpWindow not available from ui module");
         }
+    },
+
+    openMixerWindow: (savedState = null) => {
+        if (typeof openMixerWindow === 'function') {
+            openMixerWindow(savedState);
+        } else {
+            console.warn("[AppServices openMixerWindow] openMixerWindow not available from ui module");
+        }
+    },
+
+    openSoundBrowserWindow: (savedState = null) => {
+        if (typeof openSoundBrowserWindow === 'function') {
+            openSoundBrowserWindow(savedState);
+        } else {
+            console.warn("[AppServices openSoundBrowserWindow] openSoundBrowserWindow not available from ui module");
+        }
+    },
+
+    openGlobalControlsWindow: (onReadyCallback = null, savedState = null) => {
+        if (typeof openGlobalControlsWindow === 'function') {
+            openGlobalControlsWindow(onReadyCallback, savedState);
+        } else {
+            console.warn("[AppServices openGlobalControlsWindow] openGlobalControlsWindow not available from ui module");
+        }
+    },
+
+    openMasterEffectsRackWindow: (savedState = null) => {
+        if (typeof openMasterEffectsRackWindow === 'function') {
+            openMasterEffectsRackWindow(savedState);
+        } else {
+            console.warn("[AppServices openMasterEffectsRackWindow] openMasterEffectsRackWindow not available from ui module");
+        }
+    },
+
+    openTimelineWindow: (savedState = null) => {
+        if (typeof openTimelineWindow === 'function') {
+            openTimelineWindow(savedState);
+        } else {
+            console.warn("[AppServices openTimelineWindow] openTimelineWindow not available from ui module");
+        }
+    },
+
+    openSendEffectsWindow: (sendId, savedState = null) => {
+        if (typeof openSendEffectsWindow === 'function') {
+            openSendEffectsWindow(sendId, savedState);
+        } else {
+            console.warn("[AppServices openSendEffectsWindow] openSendEffectsWindow not available from ui module");
+        }
+    },
+
+    openTrackTemplatesWindow: (savedState = null) => {
+        if (typeof openTrackTemplatesWindow === 'function') {
+            openTrackTemplatesWindow(savedState);
+        } else {
+            console.warn("[AppServices openTrackTemplatesWindow] openTrackTemplatesWindow not available from ui module");
+        }
+    },
+
+    openAudioClipEditorWindow: (trackId, clipId, savedState = null) => {
+        if (typeof openAudioClipEditorWindow === 'function') {
+            openAudioClipEditorWindow(trackId, clipId, savedState);
+        } else {
+            console.warn("[AppServices openAudioClipEditorWindow] openAudioClipEditorWindow not available from ui module");
+        }
     }
 };
 
