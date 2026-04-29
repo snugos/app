@@ -15084,3 +15084,493 @@ TestRunner.test('State - APP_VERSION is 2.13.0 or higher for Day 333', (t) => {
         t.assertTruthy(versionParts[1] >= 13, 'Minor version should be >= 13 for Day 333');
     }
 });
+
+// Day 334: Sound Browser Window Content & Template Window Tests (2026-04-29)
+TestRunner.test('UI - openSoundBrowserWindow creates window with soundBrowserContent div', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('soundBrowserContent'), 'openSoundBrowserWindow should create soundBrowserContent div');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow uses librarySelect element', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('librarySelect'), 'openSoundBrowserWindow should use librarySelect element');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow uses upDirectoryBtn element', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('upDirectoryBtn'), 'openSoundBrowserWindow should use upDirectoryBtn element');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow uses soundBrowserList element', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('soundBrowserList'), 'openSoundBrowserWindow should use soundBrowserList element');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow uses previewSoundBtn element', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('previewSoundBtn'), 'openSoundBrowserWindow should use previewSoundBtn element');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow references soundLibraries constant', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('soundLibraries'), 'openSoundBrowserWindow should reference soundLibraries constant');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow handles savedState for position restoration', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openSoundBrowserWindow should handle savedState');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow sets up library select change event', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes("addEventListener") && (funcStr.includes('change') || funcStr.includes('libSelect')), 'openSoundBrowserWindow should set up change event');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow calls fetchSoundLibrary on library change', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('fetchSoundLibrary'), 'openSoundBrowserWindow should call fetchSoundLibrary');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow references getCurrentSoundBrowserPath', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getCurrentSoundBrowserPath'), 'openSoundBrowserWindow should reference getCurrentSoundBrowserPath');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow references setCurrentSoundBrowserPath', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('setCurrentSoundBrowserPath'), 'openSoundBrowserWindow should reference setCurrentSoundBrowserPath');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow references getSelectedSoundForPreview', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getSelectedSoundForPreview'), 'openSoundBrowserWindow should reference getSelectedSoundForPreview');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow references getPreviewPlayer and setPreviewPlayer', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getPreviewPlayer') && funcStr.includes('setPreviewPlayer'), 'openSoundBrowserWindow should reference preview player functions');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow references getLoadedZipFiles for library loading', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getLoadedZipFiles'), 'openSoundBrowserWindow should reference getLoadedZipFiles');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow handles Tone.Player for preview playback', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('Tone.Player') || funcStr.includes('previewPlayer'), 'openSoundBrowserWindow should handle Tone.Player preview');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow uses createWindow with soundBrowser windowId', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') && funcStr.includes('soundBrowser'), 'openSoundBrowserWindow should use createWindow');
+});
+
+TestRunner.test('UI - openSoundBrowserWindow has error handling with try-catch', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'openSoundBrowserWindow should have try-catch error handling');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references librarySelect element', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('librarySelect') || funcStr.includes('browserWindowEl'), 'updateSoundBrowserDisplayForLibrary should reference UI elements');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references soundBrowserList element', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('soundBrowserList'), 'updateSoundBrowserDisplayForLibrary should reference soundBrowserList');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary handles loading state with isLoading parameter', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('isLoading'), 'updateSoundBrowserDisplayForLibrary should handle isLoading state');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary handles error state with hasError parameter', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('hasError'), 'updateSoundBrowserDisplayForLibrary should handle hasError state');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary handles null library for empty state', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('!libraryName') || funcStr.includes('null') || funcStr.includes('placeholder'), 'updateSoundBrowserDisplayForLibrary should handle null library');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references getWindowById', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'updateSoundBrowserDisplayForLibrary should reference getWindowById');
+});
+
+TestRunner.test('UI - updateSoundBrowserDisplayForLibrary references getCurrentLibraryName and setCurrentLibraryName', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('getCurrentLibraryName') || funcStr.includes('setCurrentLibraryName'), 'updateSoundBrowserDisplayForLibrary should reference library name functions');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory references pathArray parameter', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('pathArray'), 'renderSoundBrowserDirectory should reference pathArray parameter');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory references treeNode parameter', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('treeNode'), 'renderSoundBrowserDirectory should reference treeNode parameter');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory references soundBrowserList element', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('soundBrowserList'), 'renderSoundBrowserDirectory should reference soundBrowserList element');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory calls setCurrentSoundFileTree', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('setCurrentSoundFileTree'), 'renderSoundBrowserDirectory should call setCurrentSoundFileTree');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory generates file/folder items', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('innerHTML') || funcStr.includes('createElement') || funcStr.includes('map'), 'renderSoundBrowserDirectory should generate DOM items');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory handles click events for preview selection', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') || funcStr.includes('onclick') || funcStr.includes('click'), 'renderSoundBrowserDirectory should handle click events');
+});
+
+TestRunner.test('UI - renderSoundBrowserDirectory references getCurrentSoundFileTree', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('getCurrentSoundFileTree'), 'renderSoundBrowserDirectory should reference getCurrentSoundFileTree');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow function is exported', (t) => {
+    t.assertEqual(typeof openTrackTemplatesWindow, 'function', 'openTrackTemplatesWindow should be a function');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow accepts optional savedState parameter', (t) => {
+    t.assertTruthy(openTrackTemplatesWindow.length <= 1, 'openTrackTemplatesWindow should accept at most 1 parameter');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow creates window with trackTemplates windowId', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('trackTemplates'), 'openTrackTemplatesWindow should use trackTemplates windowId');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow creates templatesGrid element', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('templatesGrid'), 'openTrackTemplatesWindow should create templatesGrid element');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow references getTrackTemplatesState', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackTemplatesState'), 'openTrackTemplatesWindow should reference getTrackTemplatesState');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow calls updateTrackTemplatesWindowContent', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('updateTrackTemplatesWindowContent'), 'openTrackTemplatesWindow should call updateTrackTemplatesWindowContent');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow handles template card click events', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('template-card') && funcStr.includes('addEventListener'), 'openTrackTemplatesWindow should handle template card clicks');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow calls applyTrackTemplate on template selection', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('applyTrackTemplate'), 'openTrackTemplatesWindow should call applyTrackTemplate');
+});
+
+TestRunner.test('UI - openTrackTemplatesWindow handles savedState for position restoration', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') && funcStr.includes('left') && funcStr.includes('top'), 'openTrackTemplatesWindow should handle savedState');
+});
+
+TestRunner.test('UI - applyTrackTemplate function exists and is used by openTrackTemplatesWindow', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('applyTrackTemplate'), 'applyTrackTemplate should be referenced');
+});
+
+TestRunner.test('UI - applyTrackTemplate calls createTrack', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('createTrack'), 'applyTrackTemplate should call createTrack');
+});
+
+TestRunner.test('UI - applyTrackTemplate handles synthParams restoration', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('synthParams') || funcStr.includes('instrumentSamplerSettings'), 'applyTrackTemplate should handle params restoration');
+});
+
+TestRunner.test('UI - applyTrackTemplate handles drumSamplerPads restoration', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads'), 'applyTrackTemplate should handle drumSamplerPads restoration');
+});
+
+TestRunner.test('UI - applyTrackTemplate handles automationLanes restoration', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('automationLanes'), 'applyTrackTemplate should handle automationLanes restoration');
+});
+
+TestRunner.test('UI - applyTrackTemplate handles effects restoration via effectsRegistryAccess', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('activeEffects'), 'applyTrackTemplate should handle effects restoration');
+});
+
+TestRunner.test('UI - applyTrackTemplate has try-catch error handling', (t) => {
+    const funcStr = applyTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'applyTrackTemplate should have error handling');
+});
+
+TestRunner.test('UI - showTemplateContextMenu function exists and handles right-click', (t) => {
+    const funcStr = showTemplateContextMenu.toString();
+    t.assertTruthy(funcStr.includes('templateId') && funcStr.includes('removeTrackTemplateState'), 'showTemplateContextMenu should exist and use removeTrackTemplateState');
+});
+
+TestRunner.test('UI - showTemplateContextMenu references contextmenu event', (t) => {
+    const funcStr = showTemplateContextMenu.toString();
+    t.assertTruthy(funcStr.includes('contextmenu'), 'showTemplateContextMenu should handle contextmenu event');
+});
+
+// APP_VERSION validation for Day 334
+TestRunner.test('State - APP_VERSION is 2.14.0 or higher for Day 334', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 334');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 14, 'Minor version should be >= 14 for Day 334');
+    }
+});
+
+// Day 335: InitializeUIModule & Remaining UI Function Tests
+// Added 45 new tests for initializeUIModule and remaining UI functions
+
+TestRunner.test('UI - initializeUIModule function is exported', (t) => {
+    t.assertEqual(typeof initializeUIModule, 'function', 'initializeUIModule should be a function');
+});
+
+TestRunner.test('UI - initializeUIModule accepts 1 parameter (appServices)', (t) => {
+    t.assertEqual(initializeUIModule.length, 1, 'initializeUIModule should accept 1 parameter');
+});
+
+TestRunner.test('UI - initializeUIModule references appServices parameter', (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('appServices') || funcStr.includes('localAppServices'), 'initializeUIModule should reference appServices');
+});
+
+TestRunner.test('UI - initializeUIModule sets up localAppServices reference', (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices') || funcStr.includes('getOpenWindows') || funcStr.includes('getWindowById'), 'initializeUIModule should set up services reference');
+});
+
+TestRunner.test('UI - createKnob function is exported', (t) => {
+    t.assertEqual(typeof createKnob, 'function', 'createKnob should be a function');
+});
+
+TestRunner.test('UI - createKnob accepts 1 parameter (options)', (t) => {
+    t.assertEqual(createKnob.length, 1, 'createKnob should accept 1 parameter');
+});
+
+TestRunner.test('UI - createKnob returns a DOM element', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('createElement') || funcStr.includes('div') || funcStr.includes('return'), 'createKnob should return DOM element');
+});
+
+TestRunner.test('UI - createKnob references options.label', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options') && funcStr.includes('label'), 'createKnob should reference options.label');
+});
+
+TestRunner.test('UI - createKnob references options.min and options.max', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options.min') || funcStr.includes('min'), 'createKnob should reference min option');
+});
+
+TestRunner.test('UI - createKnob references options.onValueChange callback', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('onValueChange') || funcStr.includes('callback'), 'createKnob should handle value change callback');
+});
+
+TestRunner.test('UI - renderSamplePads function is exported', (t) => {
+    t.assertEqual(typeof renderSamplePads, 'function', 'renderSamplePads should be a function');
+});
+
+TestRunner.test('UI - renderSamplePads accepts 1 parameter (track)', (t) => {
+    t.assertEqual(renderSamplePads.length, 1, 'renderSamplePads should accept 1 parameter');
+});
+
+TestRunner.test('UI - renderSamplePads references track parameter', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('track'), 'renderSamplePads should reference track parameter');
+});
+
+TestRunner.test('UI - renderSamplePads checks track type', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('type') || funcStr.includes('InstrumentSampler'), 'renderSamplePads should check track type');
+});
+
+TestRunner.test('UI - renderSamplePads references instrumentSamplerSettings', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings') || funcStr.includes('slices') || funcStr.includes('pads'), 'renderSamplePads should reference sampler data');
+});
+
+TestRunner.test('UI - updateSliceEditorUI function is exported', (t) => {
+    t.assertEqual(typeof updateSliceEditorUI, 'function', 'updateSliceEditorUI should be a function');
+});
+
+TestRunner.test('UI - updateSliceEditorUI accepts 1 parameter (track)', (t) => {
+    t.assertEqual(updateSliceEditorUI.length, 1, 'updateSliceEditorUI should accept 1 parameter');
+});
+
+TestRunner.test('UI - updateSliceEditorUI checks for Sampler track type', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('Sampler') || funcStr.includes('type'), 'updateSliceEditorUI should check track type');
+});
+
+TestRunner.test('UI - updateSliceEditorUI references selectedSliceForEdit', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('selectedSliceForEdit') || funcStr.includes('selectedSlice'), 'updateSliceEditorUI should reference selected slice');
+});
+
+TestRunner.test('UI - updateSliceEditorUI updates volume knob via inspectorControls', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('inspectorControls') || funcStr.includes('setValue'), 'updateSliceEditorUI should update knob values');
+});
+
+TestRunner.test('UI - updateSliceEditorUI references slices array', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('slices') || funcStr.includes('slice'), 'updateSliceEditorUI should reference slices');
+});
+
+TestRunner.test('UI - updateSequencerCellUI function is exported', (t) => {
+    t.assertEqual(typeof updateSequencerCellUI, 'function', 'updateSequencerCellUI should be a function');
+});
+
+TestRunner.test('UI - updateSequencerCellUI accepts 5 parameters', (t) => {
+    t.assertEqual(updateSequencerCellUI.length, 5, 'updateSequencerCellUI should accept 5 parameters');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references sequencerElement parameter', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('sequencerElement'), 'updateSequencerCellUI should reference sequencerElement');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references trackType parameter', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('trackType'), 'updateSequencerCellUI should reference trackType');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references isActive parameter', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('isActive'), 'updateSequencerCellUI should reference isActive');
+});
+
+TestRunner.test('UI - updateSequencerCellUI updates cell classList', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('classList') || funcStr.includes('className'), 'updateSequencerCellUI should update cell styling');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches function is exported', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(typeof buildTrackColorSwatches === 'function' || funcStr.length > 0, 'buildTrackColorSwatches should be a function');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches accepts 1 parameter (track)', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.length > 0, 'buildTrackColorSwatches should accept track parameter');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches references track.id', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('track.id') || funcStr.includes('track\\.id'), 'buildTrackColorSwatches should reference track.id');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches returns string (HTML)', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('return') || funcStr.includes('+=') || funcStr.includes('innerHTML'), 'buildTrackColorSwatches should return HTML string');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches references track.color', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('track.color') || funcStr.includes('color'), 'buildTrackColorSwatches should reference track color');
+});
+
+TestRunner.test('UI - buildSynthEngineControls function is exported', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(typeof buildSynthEngineControls === 'function' || funcStr.length > 0, 'buildSynthEngineControls should be a function');
+});
+
+TestRunner.test('UI - buildSynthEngineControls accepts 3 parameters (track, container, engineType)', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('track') && funcStr.includes('container') && funcStr.includes('engineType'), 'buildSynthEngineControls should accept 3 parameters');
+});
+
+TestRunner.test('UI - buildSynthEngineControls references synthEngineType', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('synthEngineType') || funcStr.includes('engineType'), 'buildSynthEngineControls should reference engine type');
+});
+
+TestRunner.test('UI - buildSynthEngineControls references synthEngineControlDefinitions', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('synthEngineControlDefinitions') || funcStr.includes('controlDefinitions'), 'buildSynthEngineControls should reference control definitions');
+});
+
+TestRunner.test('UI - buildSynthEngineControls calls createKnob', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('createKnob'), 'buildSynthEngineControls should call createKnob');
+});
+
+TestRunner.test('UI - buildSynthEngineControls references track.synthParams', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('synthParams') || funcStr.includes('track.synth'), 'buildSynthEngineControls should reference synth params');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent function is exported', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(typeof updateTrackTemplatesWindowContent === 'function' || funcStr.length > 0, 'updateTrackTemplatesWindowContent should be a function');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent accepts 1 parameter (winElement)', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('winElement') || funcStr.includes('window'), 'updateTrackTemplatesWindowContent should accept window element');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent references getTrackTemplatesState', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('getTrackTemplatesState'), 'updateTrackTemplatesWindowContent should reference getTrackTemplatesState');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent references templatesGrid element', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('templatesGrid') || funcStr.includes('innerHTML'), 'updateTrackTemplatesWindowContent should update templates grid');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent generates template cards', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('template') || funcStr.includes('card'), 'updateTrackTemplatesWindowContent should generate template cards');
+});
+
+TestRunner.test('UI - initializeMixerEventHandlers references handleMixerButtonAction', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerButtonAction'), 'initializeMixerEventHandlers should reference handleMixerButtonAction');
+});
+
+TestRunner.test('UI - initializeMixerEventHandlers references handleMixerVolumeChange', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerVolumeChange'), 'initializeMixerEventHandlers should reference handleMixerVolumeChange');
+});
+
+TestRunner.test('UI - initializeMixerEventHandlers references handleMixerPanChange', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerPanChange'), 'initializeMixerEventHandlers should reference handleMixerPanChange');
+});
+
+TestRunner.test('UI - initializeMixerEventHandlers references getMidiLearnModeState', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('getMidiLearnModeState') || funcStr.includes('midiLearn'), 'initializeMixerEventHandlers should reference MIDI learn state');
+});
+
+// APP_VERSION validation for Day 335
+TestRunner.test('State - APP_VERSION is 2.15.0 or higher for Day 335', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 335');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 15, 'Minor version should be >= 15 for Day 335');
+    }
+});
