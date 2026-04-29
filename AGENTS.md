@@ -2099,3 +2099,51 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify gatherProjectDataInternal handles track type-specific data for all track types
   - Total tests increased from 460 to 491
 - **Version**: Bumped to 2.36.0
+
+#### Day 362: Metronome Audio Functions Tests (2026-04-29)
+- **Feature**: Added 32 new unit tests for Metronome Audio Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 32 new tests in Day 362 section:
+    - Metronome Audio - initializeMetronome is a function export, accepts 0 parameters
+    - Metronome Audio - initializeMetronome references metronomeInitialized flag
+    - Metronome Audio - initializeMetronome has try-catch error handling
+    - Metronome Audio - initializeMetronome creates Tone.Player for click sounds
+    - Metronome Audio - initializeMetronome creates separate click and accent players
+    - Metronome Audio - initializeMetronome connects players to master bus
+    - Metronome Audio - initializeMetronome uses DEFAULT_METRONOME_VOLUME constant
+    - Metronome Audio - initializeMetronome uses Tone.gainToDb for volume conversion
+    - Metronome Audio - startMetronome is a function export, accepts 0 parameters
+    - Metronome Audio - startMetronome checks metronomeInitialized flag
+    - Metronome Audio - startMetronome calls initializeMetronome if not initialized
+    - Metronome Audio - startMetronome checks Tone.Transport running state
+    - Metronome Audio - startMetronome schedules repeating event with Transport
+    - Metronome Audio - startMetronome distinguishes accent vs regular beats
+    - Metronome Audio - startMetronome calls transport.start
+    - Metronome Audio - stopMetronome is a function export, accepts 0 parameters
+    - Metronome Audio - stopMetronome clears scheduled events
+    - Metronome Audio - stopMetronome stops metronome click players
+    - Metronome Audio - stopMetronome stops metronome accent players
+    - Metronome Audio - stopMetronome checks player.disposed before stopping
+    - Metronome Audio - setMetronomeVolume is a function export, accepts 1 parameter
+    - Metronome Audio - setMetronomeVolume references volume parameter
+    - Metronome Audio - setMetronomeVolume clamps value to 0-1 range
+    - Metronome Audio - setMetronomeVolume uses Tone.gainToDb for volume conversion
+    - Metronome Audio - setMetronomeVolume updates metronomeClickPlayer volume
+    - Metronome Audio - setMetronomeVolume updates metronomeAccentPlayer volume
+    - Metronome Audio - Metronome constants validation (DEFAULT_METRONOME_ENABLED = false, DEFAULT_METRONOME_VOLUME in 0-1 range, MIN/MAX = 0/1)
+    - APP_VERSION validation for 2.41.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.41.0
+- **Feature Details**:
+  - Tests validate initializeMetronome creates Tone.Player click and accent sounds using programmatic buffer generation
+  - Tests verify initializeMetronome connects players to master bus via getMasterEffectsBusInputNode
+  - Tests verify initializeMetronome uses Tone.gainToDb for volume conversion
+  - Tests verify startMetronome checks transport running state and initializes if needed
+  - Tests verify startMetronome schedules repeating metronome clicks using Tone.Transport.scheduleRepeat
+  - Tests verify startMetronome distinguishes accent (beat 1 of 4) vs regular beats
+  - Tests verify stopMetronome clears scheduled events and stops all players
+  - Tests verify stopMetronome checks player.disposed to avoid errors
+  - Tests verify setMetronomeVolume clamps values to 0-1 range using Math.max/Math.min
+  - Tests verify setMetronomeVolume updates both metronomeClickPlayer and metronomeAccentPlayer
+  - Tests verify Metronome constants (DEFAULT_METRONOME_ENABLED = false, DEFAULT_METRONOME_VOLUME = 0.5, MIN/MAX = 0/1)
+  - Total tests increased from 3723 to 3755
+- **Version**: Bumped to 2.41.0

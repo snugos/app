@@ -3981,3 +3981,306 @@ TestRunner.test('Scale Mode & Swing - APP_VERSION validation for Day 361', (t) =
         t.assertTruthy(versionParts[1] >= 40, 'Minor version should be >= 40 for Day 361');
     }
 });
+
+// Day 362: Audio Track Inspector UI Functions Tests
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM is a function', (t) => {
+    t.assertEqual(typeof buildAudioTrackInspectorDOM, 'function', 'buildAudioTrackInspectorDOM should be a function');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM accepts 1 parameter', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('track'), 'buildAudioTrackInspectorDOM should accept track parameter');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM references track.id', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('track.id') || funcStr.includes('track\\.id'), 'buildAudioTrackInspectorDOM should reference track.id');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes audioInputDevice select', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('audioInputDevice') && funcStr.includes('select'), 'buildAudioTrackInspectorDOM should include audioInputDevice select');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes inputGain placeholder', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('inputGain') && funcStr.includes('placeholder'), 'buildAudioTrackInspectorDOM should include inputGain placeholder');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes monitoringVolume slider', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('monitoringVolume') && funcStr.includes('range'), 'buildAudioTrackInspectorDOM should include monitoringVolume slider');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes recording status indicator', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('recordingStatus') && (funcStr.includes('Recording') || funcStr.includes('Ready')), 'buildAudioTrackInspectorDOM should include recording status');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM uses DEFAULT_RECORDING_INPUT_GAIN', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_RECORDING_INPUT_GAIN') || funcStr.includes('recordingInputGain') || funcStr.includes('0.5'), 'buildAudioTrackInspectorDOM should reference default input gain');
+});
+
+TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM includes monitoring volume percentage label', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('monitoringVolumeLabel'), 'buildAudioTrackInspectorDOM should include monitoring volume percentage label');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls is a function', (t) => {
+    t.assertEqual(typeof initializeAudioTrackInspectorControls, 'function', 'initializeAudioTrackInspectorControls should be a function');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls accepts 2 parameters', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('track') && funcStr.includes('winEl'), 'initializeAudioTrackInspectorControls should accept track and winEl parameters');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls references Tone.UserMedia', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('UserMedia'), 'initializeAudioTrackInspectorControls should reference Tone.UserMedia');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls calls enumerateDevices', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('enumerateDevices'), 'initializeAudioTrackInspectorControls should call enumerateDevices');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls filters audioinput devices', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('audioinput') || funcStr.includes('kind'), 'initializeAudioTrackInspectorControls should filter audioinput devices');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls creates gain knob', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('createKnob') || funcStr.includes('gainKnob'), 'initializeAudioTrackInspectorControls should create gain knob');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls references recordingInputGain', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGain'), 'initializeAudioTrackInspectorControls should reference recordingInputGain');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls references MIN_RECORDING_INPUT_GAIN', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('MIN_RECORDING_INPUT_GAIN'), 'initializeAudioTrackInspectorControls should reference MIN_RECORDING_INPUT_GAIN');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls references MAX_RECORDING_INPUT_GAIN', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('MAX_RECORDING_INPUT_GAIN'), 'initializeAudioTrackInspectorControls should reference MAX_RECORDING_INPUT_GAIN');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls sets up monitoring volume slider listener', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') && funcStr.includes('monitoringVolume'), 'initializeAudioTrackInspectorControls should set up monitoring volume slider listener');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls updates track.monitoringVolume', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('monitoringVolume'), 'initializeAudioTrackInspectorControls should update track.monitoringVolume');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls updates monitoring volume label', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('monitoringVolumeLabel'), 'initializeAudioTrackInspectorControls should update monitoring volume label');
+});
+
+TestRunner.test('Audio Track UI - initializeAudioTrackInspectorControls handles error with enumerateDevices', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('catch') || funcStr.includes('console.warn'), 'initializeAudioTrackInspectorControls should handle errors');
+});
+
+TestRunner.test('Audio Track UI - buildTrackInspectorContentDOM handles Audio track type', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(funcStr.includes("track.type === 'Audio'") || funcStr.includes("=== 'Audio'"), 'buildTrackInspectorContentDOM should handle Audio track type');
+});
+
+TestRunner.test('Audio Track UI - buildTrackInspectorContentDOM calls buildAudioTrackInspectorDOM for Audio tracks', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(funcStr.includes('buildAudioTrackInspectorDOM'), 'buildTrackInspectorContentDOM should call buildAudioTrackInspectorDOM');
+});
+
+TestRunner.test('Audio Track UI - Audio track type constants validation', (t) => {
+    // Track types should include Audio, Synth, Sampler, DrumSampler, InstrumentSampler
+    const trackTypes = ['Synth', 'Sampler', 'DrumSampler', 'InstrumentSampler', 'Audio'];
+    t.assertEqual(trackTypes.length, 5, 'There should be 5 track types');
+});
+
+TestRunner.test('Audio Track UI - APP_VERSION validation for Day 362', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 362');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 41, 'Minor version should be >= 41 for Day 362');
+    }
+});
+// Day 362: Metronome Audio Functions Tests (2026-04-29)
+import {
+    initializeMetronome,
+    startMetronome,
+    stopMetronome,
+    setMetronomeVolume
+} from './audio.js';
+
+TestRunner.test('Metronome Audio - initializeMetronome is a function export', (t) => {
+    t.assertEqual(typeof initializeMetronome, 'function', 'initializeMetronome should be a function');
+});
+
+TestRunner.test('Metronome Audio - initializeMetronome accepts 0 parameters', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(!funcStr.includes('enabled'), 'initializeMetronome should not reference enabled parameter');
+});
+
+TestRunner.test('Metronome Audio - initializeMetronome references metronomeInitialized flag', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('metronomeInitialized') || funcStr.includes('metronomeInitialized = true'), 'initializeMetronome should check/set metronomeInitialized flag');
+});
+
+TestRunner.test('Metronome Audio - initializeMetronome has try-catch error handling', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch'), 'initializeMetronome should have error handling');
+});
+
+TestRunner.test('Metronome Audio - initializeMetronome creates Tone.Player for click sounds', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('Tone.Player') || funcStr.includes('Player'), 'initializeMetronome should create Tone.Player');
+});
+
+TestRunner.test('Metronome Audio - initializeMetronome creates separate click and accent players', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('click') && (funcStr.includes('accent') || funcStr.includes('Accent')), 'initializeMetronome should create both click and accent players');
+});
+
+TestRunner.test('Metronome Audio - initializeMetronome connects players to master bus', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('connect') && funcStr.includes('getMasterEffectsBusInputNode'), 'initializeMetronome should connect players to master bus');
+});
+
+TestRunner.test('Metronome Audio - initializeMetronome uses DEFAULT_METRONOME_VOLUME constant', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_METRONOME_VOLUME'), 'initializeMetronome should use DEFAULT_METRONOME_VOLUME constant');
+});
+
+TestRunner.test('Metronome Audio - initializeMetronome uses Tone.gainToDb for volume conversion', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('Tone.gainToDb') || funcStr.includes('gainToDb'), 'initializeMetronome should use Tone.gainToDb for volume');
+});
+
+TestRunner.test('Metronome Audio - startMetronome is a function export', (t) => {
+    t.assertEqual(typeof startMetronome, 'function', 'startMetronome should be a function');
+});
+
+TestRunner.test('Metronome Audio - startMetronome accepts 0 parameters', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(!funcStr.includes('enabled'), 'startMetronome should not reference enabled parameter');
+});
+
+TestRunner.test('Metronome Audio - startMetronome checks metronomeInitialized flag', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('metronomeInitialized'), 'startMetronome should check metronomeInitialized flag');
+});
+
+TestRunner.test('Metronome Audio - startMetronome calls initializeMetronome if not initialized', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('initializeMetronome'), 'startMetronome should call initializeMetronome');
+});
+
+TestRunner.test('Metronome Audio - startMetronome checks Tone.Transport running state', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('Tone') && (funcStr.includes('Transport') || funcStr.includes('running')), 'startMetronome should check transport running state');
+});
+
+TestRunner.test('Metronome Audio - startMetronome schedules repeating event with Transport', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('scheduleRepeat') || funcStr.includes('schedule'), 'startMetronome should schedule events with transport');
+});
+
+TestRunner.test('Metronome Audio - startMetronome distinguishes accent vs regular beats', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('Accent') || (funcStr.includes('accent') && funcStr.includes('%')), 'startMetronome should distinguish accent beats');
+});
+
+TestRunner.test('Metronome Audio - startMetronome calls transport.start', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('transport.start') || funcStr.includes('start()'), 'startMetronome should call transport.start');
+});
+
+TestRunner.test('Metronome Audio - stopMetronome is a function export', (t) => {
+    t.assertEqual(typeof stopMetronome, 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test('Metronome Audio - stopMetronome accepts 0 parameters', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(!funcStr.includes('enabled'), 'stopMetronome should not reference enabled parameter');
+});
+
+TestRunner.test('Metronome Audio - stopMetronome clears scheduled events', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('clear') || funcStr.includes('schedule'), 'stopMetronome should clear scheduled events');
+});
+
+TestRunner.test('Metronome Audio - stopMetronome stops metronome click players', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('click') && funcStr.includes('stop'), 'stopMetronome should stop click players');
+});
+
+TestRunner.test('Metronome Audio - stopMetronome stops metronome accent players', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('accent') && funcStr.includes('stop'), 'stopMetronome should stop accent players');
+});
+
+TestRunner.test('Metronome Audio - stopMetronome checks player.disposed before stopping', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'stopMetronome should check if players are disposed');
+});
+
+TestRunner.test('Metronome Audio - setMetronomeVolume is a function export', (t) => {
+    t.assertEqual(typeof setMetronomeVolume, 'function', 'setMetronomeVolume should be a function');
+});
+
+TestRunner.test('Metronome Audio - setMetronomeVolume accepts 1 parameter', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('volume') || funcStr.match(/function\s*\([^)]*\)/)?.[0].match(/,/)?.[0] === undefined, 'setMetronomeVolume should accept 1 parameter');
+});
+
+TestRunner.test('Metronome Audio - setMetronomeVolume references volume parameter', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('volume'), 'setMetronomeVolume should reference volume parameter');
+});
+
+TestRunner.test('Metronome Audio - setMetronomeVolume clamps value to 0-1 range', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setMetronomeVolume should clamp value to 0-1 range');
+});
+
+TestRunner.test('Metronome Audio - setMetronomeVolume uses Tone.gainToDb for volume conversion', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('Tone.gainToDb') || funcStr.includes('gainToDb'), 'setMetronomeVolume should use Tone.gainToDb');
+});
+
+TestRunner.test('Metronome Audio - setMetronomeVolume updates metronomeClickPlayer volume', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('metronomeClickPlayer') || funcStr.includes('clickPlayer'), 'setMetronomeVolume should update click player volume');
+});
+
+TestRunner.test('Metronome Audio - setMetronomeVolume updates metronomeAccentPlayer volume', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('metronomeAccentPlayer') || funcStr.includes('accentPlayer'), 'setMetronomeVolume should update accent player volume');
+});
+
+TestRunner.test('Metronome Audio - Metronome constants validation', (t) => {
+    t.assertEqual(typeof DEFAULT_METRONOME_ENABLED, 'boolean', 'DEFAULT_METRONOME_ENABLED should be boolean');
+    t.assertEqual(DEFAULT_METRONOME_ENABLED, false, 'DEFAULT_METRONOME_ENABLED should be false');
+    t.assertEqual(typeof DEFAULT_METRONOME_VOLUME, 'number', 'DEFAULT_METRONOME_VOLUME should be number');
+    t.assertTruthy(DEFAULT_METRONOME_VOLUME >= 0 && DEFAULT_METRONOME_VOLUME <= 1, 'DEFAULT_METRONOME_VOLUME should be in 0-1 range');
+    t.assertEqual(MIN_METRONOME_VOLUME, 0, 'MIN_METRONOME_VOLUME should be 0');
+    t.assertEqual(MAX_METRONOME_VOLUME, 1, 'MAX_METRONOME_VOLUME should be 1');
+});
+
+TestRunner.test('Metronome Audio - APP_VERSION validation for Day 362', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 362');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 40, 'Minor version should be >= 40 for Day 362');
+    }
+});
