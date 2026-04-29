@@ -793,6 +793,28 @@ export function addSendTrackState(sendData) {
     sendTracksState.push(sendTrack);
     return sendTrack;
 }
+export function setSendTrackNameState(sendId, name) {
+    const send = sendTracksState.find(s => s.id === sendId);
+    if (send) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Rename Send "${send.name}" to "${name}"`);
+        }
+        send.name = name || `Send ${sendId}`;
+        return true;
+    }
+    return false;
+}
+export function setSendTrackLevelState(sendId, level) {
+    const send = sendTracksState.find(s => s.id === sendId);
+    if (send) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Send "${send.name}" level`);
+        }
+        send.level = Math.max(0, Math.min(1.5, parseFloat(level) || 0));
+        return true;
+    }
+    return false;
+}
 export function setSendTrackMutedState(sendId, muted) {
     const send = sendTracksState.find(s => s.id === sendId);
     if (send) {
