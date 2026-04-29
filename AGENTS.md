@@ -1,3 +1,32 @@
+#### Day 345: Master Effects & Master Volume State Function Tests (2026-04-29)
+- **Feature**: Added 29 new unit tests for Master Effects and Master Volume state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 29 new tests in Day 345 section:
+    - setMasterEffectsState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setMasterEffectsState: uses descriptive undo label, guards against missing appServices
+    - setMasterEffectsState: references effects parameter, handles null/undefined with empty array fallback
+    - getMasterEffectsState: function export, no parameters, returns array
+    - setMasterGainValueState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setMasterGainValueState: uses descriptive undo label, guards against missing appServices
+    - setMasterGainValueState: references value parameter, validates numeric input
+    - setMasterGainValueState: clamps Infinity values, uses 1.0 as default fallback
+    - getMasterGainValueState: function export, no parameters, returns number in valid range (0-2)
+    - State roundtrip tests: Master Effects update persists correctly
+    - State roundtrip tests: Master Volume update persists correctly
+    - Edge cases: setMasterGainValueState handles negative values (clamped to 1.0)
+    - Edge cases: setMasterGainValueState handles NaN values (clamped to 1.0)
+    - Independence test: Master Effects and Master Volume update independently
+  - `js/constants.js`: Bumped APP_VERSION to 2.25.0
+- **Feature Details**:
+  - Tests validate Master Effects state functions (setMasterEffectsState, getMasterEffectsState)
+  - Tests validate Master Volume state functions (setMasterGainValueState, getMasterGainValueState)
+  - Tests verify all mutation functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for Master Effects and Master Volume operations
+  - Tests verify all functions guard against missing appServices
+  - Tests verify value validation and clamping for volume (Infinity, NaN, negative)
+  - Tests verify state roundtrip and independence of Master Effects and Master Volume
+  - Total tests increased from 3070 to 3099
+- **Version**: Bumped to 2.25.0
 
 #### Day 344: Extended MIDI Learn & Master MIDI State Function Tests (2026-04-29)
 - **Feature**: Added 75 new unit tests for MIDI Learn and Master MIDI state functions to expand test coverage

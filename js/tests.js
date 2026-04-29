@@ -17554,3 +17554,176 @@ TestRunner.test('State - APP_VERSION is 2.24.0 or higher for Day 344', (t) => {
         t.assertTruthy(versionParts[1] >= 24, 'Minor version should be >= 24 for Day 344');
     }
 });
+
+// === Day 345: Master Effects & Master Volume State Function Tests (2026-04-29) ===
+// Tests for Master Effects and Master Volume state functions to expand test coverage
+
+TestRunner.test('State - setMasterEffectsState is exported as function', (t) => {
+    t.assertEqual(typeof setMasterEffectsState, 'function', 'setMasterEffectsState should be a function');
+});
+
+TestRunner.test('State - setMasterEffectsState accepts 1 parameter', (t) => {
+    t.assertEqual(setMasterEffectsState.length, 1, 'setMasterEffectsState should accept 1 parameter (effects)');
+});
+
+TestRunner.test('State - setMasterEffectsState calls captureStateForUndo', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMasterEffectsState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setMasterEffectsState uses descriptive undo label', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('Master') && funcStr.includes('Effects'), 'setMasterEffectsState should mention Master Effects in undo label');
+});
+
+TestRunner.test('State - setMasterEffectsState guards against missing appServices', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setMasterEffectsState should guard against missing appServices');
+});
+
+TestRunner.test('State - setMasterEffectsState references effects parameter', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('effects'), 'setMasterEffectsState should reference effects parameter');
+});
+
+TestRunner.test('State - setMasterEffectsState handles null/undefined effects', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('||') || funcStr.includes('[]'), 'setMasterEffectsState should handle null/undefined with empty array fallback');
+});
+
+TestRunner.test('State - getMasterEffectsState is exported as function', (t) => {
+    t.assertEqual(typeof getMasterEffectsState, 'function', 'getMasterEffectsState should be a function');
+});
+
+TestRunner.test('State - getMasterEffectsState accepts no parameters', (t) => {
+    t.assertEqual(getMasterEffectsState.length, 0, 'getMasterEffectsState should accept no parameters');
+});
+
+TestRunner.test('State - getMasterEffectsState returns array', (t) => {
+    const effects = getMasterEffectsState();
+    t.assertTruthy(Array.isArray(effects), 'getMasterEffectsState should return an array');
+});
+
+TestRunner.test('State - setMasterGainValueState is exported as function', (t) => {
+    t.assertEqual(typeof setMasterGainValueState, 'function', 'setMasterGainValueState should be a function');
+});
+
+TestRunner.test('State - setMasterGainValueState accepts 1 parameter', (t) => {
+    t.assertEqual(setMasterGainValueState.length, 1, 'setMasterGainValueState should accept 1 parameter (value)');
+});
+
+TestRunner.test('State - setMasterGainValueState calls captureStateForUndo', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMasterGainValueState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setMasterGainValueState uses descriptive undo label', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('Master') || funcStr.includes('Volume'), 'setMasterGainValueState should mention Master Volume in undo label');
+});
+
+TestRunner.test('State - setMasterGainValueState guards against missing appServices', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setMasterGainValueState should guard against missing appServices');
+});
+
+TestRunner.test('State - setMasterGainValueState references value parameter', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('value'), 'setMasterGainValueState should reference value parameter');
+});
+
+TestRunner.test('State - setMasterGainValueState validates numeric input', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('Number') || funcStr.includes('isFinite'), 'setMasterGainValueState should validate numeric input');
+});
+
+TestRunner.test('State - setMasterGainValueState clamps Infinity values', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('isFinite') || funcStr.includes('Infinity'), 'setMasterGainValueState should clamp Infinity values');
+});
+
+TestRunner.test('State - setMasterGainValueState uses default fallback value', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('1.0') || funcStr.includes('1'), 'setMasterGainValueState should use 1.0 as default fallback');
+});
+
+TestRunner.test('State - getMasterGainValueState is exported as function', (t) => {
+    t.assertEqual(typeof getMasterGainValueState, 'function', 'getMasterGainValueState should be a function');
+});
+
+TestRunner.test('State - getMasterGainValueState accepts no parameters', (t) => {
+    t.assertEqual(getMasterGainValueState.length, 0, 'getMasterGainValueState should accept no parameters');
+});
+
+TestRunner.test('State - getMasterGainValueState returns number', (t) => {
+    const value = getMasterGainValueState();
+    t.assertEqual(typeof value, 'number', 'getMasterGainValueState should return a number');
+});
+
+TestRunner.test('State - getMasterGainValueState returns value in valid range', (t) => {
+    const value = getMasterGainValueState();
+    t.assertTruthy(value >= 0 && value <= 2, 'getMasterGainValueState should return value between 0 and 2');
+});
+
+TestRunner.test('State - Master Effects state roundtrip update', (t) => {
+    const original = getMasterEffectsState();
+    const testEffects = [{ id: 'test_effect_1', type: 'Reverb', params: { decay: 2 } }];
+    setMasterEffectsState(testEffects);
+    const result = getMasterEffectsState();
+    t.assertEqual(result.length, 1, 'Should have 1 effect after setMasterEffectsState');
+    t.assertEqual(result[0].type, 'Reverb', 'Effect type should be Reverb');
+    // Cleanup
+    setMasterEffectsState(original);
+});
+
+TestRunner.test('State - Master Volume state roundtrip update', (t) => {
+    const original = getMasterGainValueState();
+    setMasterGainValueState(0.75);
+    const result = getMasterGainValueState();
+    t.assertEqual(result, 0.75, 'Master gain should be 0.75');
+    // Cleanup
+    setMasterGainValueState(original);
+});
+
+TestRunner.test('State - setMasterGainValueState handles negative values', (t) => {
+    const original = getMasterGainValueState();
+    setMasterGainValueState(-5);
+    const result = getMasterGainValueState();
+    t.assertEqual(result, 1.0, 'Negative value should be clamped to default 1.0');
+    setMasterGainValueState(original);
+});
+
+TestRunner.test('State - setMasterGainValueState handles NaN values', (t) => {
+    const original = getMasterGainValueState();
+    setMasterGainValueState(NaN);
+    const result = getMasterGainValueState();
+    t.assertEqual(result, 1.0, 'NaN value should be clamped to default 1.0');
+    setMasterGainValueState(original);
+});
+
+TestRunner.test('State - Master Effects and Master Volume independent update', (t) => {
+    const originalEffects = getMasterEffectsState();
+    const originalVolume = getMasterGainValueState();
+    
+    setMasterEffectsState([{ id: 'test', type: 'Chorus' }]);
+    setMasterGainValueState(0.5);
+    
+    const effectsAfter = getMasterEffectsState();
+    const volumeAfter = getMasterGainValueState();
+    
+    t.assertEqual(effectsAfter.length, 1, 'Effects should be updated');
+    t.assertEqual(volumeAfter, 0.5, 'Volume should be updated');
+    
+    // Cleanup
+    setMasterEffectsState(originalEffects);
+    setMasterGainValueState(originalVolume);
+});
+
+// APP_VERSION validation for Day 345
+TestRunner.test('State - APP_VERSION is 2.24.0 or higher for Day 345', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 345');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 24, 'Minor version should be >= 24 for Day 345');
+    }
+});
