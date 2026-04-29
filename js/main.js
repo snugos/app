@@ -12,7 +12,7 @@ import {
     createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus,
     reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted,
     connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel,
-    getSendBusNodes, getTrackSendNodes
+    getSendBusNodes, getTrackSendNodes, getMimeTypeFromFilename
 } from './audio.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
