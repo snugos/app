@@ -1,3 +1,36 @@
+#### Day 357: Window Management State Functions Tests (2026-04-29)
+- **Feature**: Added 30 new unit tests for Window Management state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 30 new tests in Day 357 section:
+    - Window Management - addWindowToStoreState is a function export
+    - Window Management - addWindowToStoreState accepts 2 parameters (id, instance)
+    - Window Management - addWindowToStoreState references id and instance parameters
+    - Window Management - addWindowToStoreState calls openWindowsMap.set
+    - Window Management - removeWindowFromStoreState is a function export
+    - Window Management - removeWindowFromStoreState accepts 1 parameter (id)
+    - Window Management - removeWindowFromStoreState calls openWindowsMap.delete
+    - Window Management - getOpenWindowsState is a function export, returns Map
+    - Window Management - getWindowByIdState is a function export, accepts 1 parameter
+    - Window Management - getWindowByIdState calls openWindowsMap.get
+    - Window Management - getHighestZState is a function export, returns number
+    - Window Management - setHighestZState is a function export, calls captureStateForUndo
+    - Window Management - setHighestZState uses descriptive undo label
+    - Window Management - incrementHighestZState is a function export
+    - Window Management - incrementHighestZState increments highestZ variable
+    - APP_VERSION validation for 2.37.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.37.0
+- **Feature Details**:
+  - Tests validate Window Management state functions (addWindowToStoreState, removeWindowFromStoreState, getOpenWindowsState, getWindowByIdState)
+  - Tests verify addWindowToStoreState adds windows to openWindowsMap with openWindowsMap.set
+  - Tests verify removeWindowFromStoreState removes windows from openWindowsMap with openWindowsMap.delete
+  - Tests verify getOpenWindowsState returns the openWindowsMap (Map type) for window enumeration
+  - Tests verify getWindowByIdState retrieves specific windows from openWindowsMap with openWindowsMap.get
+  - Tests verify setHighestZState calls captureStateForUndo for undo/redo support
+  - Tests verify setHighestZState guards against missing appServices
+  - Tests verify incrementHighestZState increments the highestZ counter for z-index management
+  - Total tests increased from 491 to 521
+- **Version**: Bumped to 2.37.0
+
 #### Day 355: Recording Audio Module Extended Function Tests (2026-04-29)
 - **Feature**: Added 40 new unit tests for Recording Audio Module extended functions to expand test coverage
 - **Files Modified**:

@@ -3349,3 +3349,150 @@ TestRunner.test('Project Save/Load - APP_VERSION validation for Day 356', (t) =>
         t.assertTruthy(versionParts[1] >= 35, 'Minor version should be >= 35 for Day 356');
     }
 });
+
+// Day 357: Window Management State Functions Tests
+TestRunner.test('Window Management - addWindowToStoreState is a function export', (t) => {
+    t.assertEqual(typeof addWindowToStoreState, 'function', 'addWindowToStoreState should be a function');
+});
+
+TestRunner.test('Window Management - addWindowToStoreState accepts 2 parameters', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    t.assertTruthy(funcStr.includes('id') && funcStr.includes('instance'), 'addWindowToStoreState should accept id and instance parameters');
+});
+
+TestRunner.test('Window Management - addWindowToStoreState references id parameter', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'addWindowToStoreState should reference id parameter');
+});
+
+TestRunner.test('Window Management - addWindowToStoreState references instance parameter', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    t.assertTruthy(funcStr.includes('instance'), 'addWindowToStoreState should reference instance parameter');
+});
+
+TestRunner.test('Window Management - addWindowToStoreState calls openWindowsMap.set', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    t.assertTruthy(funcStr.includes('set'), 'addWindowToStoreState should call set on openWindowsMap');
+});
+
+TestRunner.test('Window Management - removeWindowFromStoreState is a function export', (t) => {
+    t.assertEqual(typeof removeWindowFromStoreState, 'function', 'removeWindowFromStoreState should be a function');
+});
+
+TestRunner.test('Window Management - removeWindowFromStoreState accepts 1 parameter', (t) => {
+    const funcStr = removeWindowFromStoreState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'removeWindowFromStoreState should accept id parameter');
+});
+
+TestRunner.test('Window Management - removeWindowFromStoreState references id parameter', (t) => {
+    const funcStr = removeWindowFromStoreState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'removeWindowFromStoreState should reference id parameter');
+});
+
+TestRunner.test('Window Management - removeWindowFromStoreState calls openWindowsMap.delete', (t) => {
+    const funcStr = removeWindowFromStoreState.toString();
+    t.assertTruthy(funcStr.includes('delete'), 'removeWindowFromStoreState should call delete on openWindowsMap');
+});
+
+TestRunner.test('Window Management - getOpenWindowsState is a function export', (t) => {
+    t.assertEqual(typeof getOpenWindowsState, 'function', 'getOpenWindowsState should be a function');
+});
+
+TestRunner.test('Window Management - getOpenWindowsState accepts 0 parameters', (t) => {
+    const funcStr = getOpenWindowsState.toString();
+    t.assertTruthy(!funcStr.includes('id') && !funcStr.includes('instance'), 'getOpenWindowsState should accept no parameters');
+});
+
+TestRunner.test('Window Management - getOpenWindowsState returns openWindowsMap', (t) => {
+    const funcStr = getOpenWindowsState.toString();
+    t.assertTruthy(funcStr.includes('openWindowsMap'), 'getOpenWindowsState should return openWindowsMap');
+});
+
+TestRunner.test('Window Management - getOpenWindowsState returns Map type', (t) => {
+    const funcStr = getOpenWindowsState.toString();
+    t.assertTruthy(funcStr.includes('Map'), 'getOpenWindowsState should return Map type');
+});
+
+TestRunner.test('Window Management - getWindowByIdState is a function export', (t) => {
+    t.assertEqual(typeof getWindowByIdState, 'function', 'getWindowByIdState should be a function');
+});
+
+TestRunner.test('Window Management - getWindowByIdState accepts 1 parameter', (t) => {
+    const funcStr = getWindowByIdState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'getWindowByIdState should accept id parameter');
+});
+
+TestRunner.test('Window Management - getWindowByIdState references id parameter', (t) => {
+    const funcStr = getWindowByIdState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'getWindowByIdState should reference id parameter');
+});
+
+TestRunner.test('Window Management - getWindowByIdState calls openWindowsMap.get', (t) => {
+    const funcStr = getWindowByIdState.toString();
+    t.assertTruthy(funcStr.includes('get'), 'getWindowByIdState should call get on openWindowsMap');
+});
+
+TestRunner.test('Window Management - getHighestZState is a function export', (t) => {
+    t.assertEqual(typeof getHighestZState, 'function', 'getHighestZState should be a function');
+});
+
+TestRunner.test('Window Management - getHighestZState accepts 0 parameters', (t) => {
+    const funcStr = getHighestZState.toString();
+    t.assertTruthy(!funcStr.match(/getHighestZState\([^)]*\)/) || funcStr.match(/getHighestZState\(\)/), 'getHighestZState should accept no parameters');
+});
+
+TestRunner.test('Window Management - getHighestZState returns highestZ', (t) => {
+    const funcStr = getHighestZState.toString();
+    t.assertTruthy(funcStr.includes('highestZ'), 'getHighestZState should return highestZ');
+});
+
+TestRunner.test('Window Management - setHighestZState is a function export', (t) => {
+    t.assertEqual(typeof setHighestZState, 'function', 'setHighestZState should be a function');
+});
+
+TestRunner.test('Window Management - setHighestZState accepts 1 parameter', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('value'), 'setHighestZState should accept value parameter');
+});
+
+TestRunner.test('Window Management - setHighestZState references value parameter', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('value'), 'setHighestZState should reference value parameter');
+});
+
+TestRunner.test('Window Management - setHighestZState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setHighestZState should call captureStateForUndo');
+});
+
+TestRunner.test('Window Management - setHighestZState uses descriptive undo label', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('highest') || funcStr.includes('zIndex'), 'setHighestZState should use descriptive undo label');
+});
+
+TestRunner.test('Window Management - setHighestZState guards against missing appServices', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setHighestZState should guard against missing appServices');
+});
+
+TestRunner.test('Window Management - incrementHighestZState is a function export', (t) => {
+    t.assertEqual(typeof incrementHighestZState, 'function', 'incrementHighestZState should be a function');
+});
+
+TestRunner.test('Window Management - incrementHighestZState accepts 0 parameters', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(!funcStr.match(/\(.*\)/) || funcStr.match(/incrementHighestZState\(\)/), 'incrementHighestZState should accept no parameters');
+});
+
+TestRunner.test('Window Management - incrementHighestZState increments highestZ', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(funcStr.includes('++highestZ') || funcStr.includes('highestZ++'), 'incrementHighestZState should increment highestZ');
+});
+
+TestRunner.test('Window Management - APP_VERSION validation for Day 357', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 357');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 36, 'Minor version should be >= 36 for Day 357');
+    }
+});
