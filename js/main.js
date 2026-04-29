@@ -172,6 +172,21 @@ const appServices = {
     getSoloedTrackId: getSoloedTrackIdState, // Expose solo state for Track.js
     getArmedTrackId: getArmedTrackIdState, // Expose armed state for Track.js
 
+    // Add Track - orchestrator that calls state.js function and opens sequencer if needed
+    addTrack: async (type, options = {}) => {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Add ${type} Track`);
+        }
+        const newTrack = await addTrackToStateInternal(type, { name: options.name });
+        if (newTrack && appServices.updateTrackUI) {
+            appServices.updateTrackUI(newTrack.id, 'trackAdded');
+        }
+        if (newTrack && type !== 'Audio' && appServices.openTrackSequencerWindow) {
+            appServices.openTrackSequencerWindow(newTrack.id, true);
+        }
+        return newTrack;
+    },
+
     // Project Save/Load/Export
     saveProject: saveProjectInternal,
     loadProject: loadProjectInternal,

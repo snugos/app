@@ -297,6 +297,25 @@ export function initializeStateModule(services) {
 export function getTracksState() { return tracks; }
 export function getTrackByIdState(id) { return tracks.find(t => t.id === id); }
 
+// --- Track Addition ---
+export async function addTrackToStateInternal(type, trackData = {}, isUserAction = true) {
+    const { Track } = await import('./Track.js');
+    const newId = trackData.id !== undefined ? trackData.id : ++trackIdCounter;
+    const newTrack = new Track(newId, type, trackData, appServices);
+    
+    if (isUserAction && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Add ${type} Track "${newTrack.name}"`);
+    }
+    
+    tracks.push(newTrack);
+    
+    if (appServices.updateTrackUI) {
+        appServices.updateTrackUI(newTrack.id, 'trackAdded');
+    }
+    
+    return newTrack;
+}
+
 // --- Track Removal ---
 export function removeTrackFromStateInternal(trackId) {
     const index = tracks.findIndex(t => t.id === trackId);
