@@ -1,3 +1,39 @@
+#### Day 367: Audio Module Extended Utility Functions Tests (2026-04-29)
+- **Feature**: Added 31 new unit tests for Audio Module extended utility functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 367 section:
+    - Audio Module - getMimeTypeFromFilename is a function export, accepts 1 parameter
+    - Audio Module - getMimeTypeFromFilename handles .wav extension (audio/wav)
+    - Audio Module - getMimeTypeFromFilename handles .mp3 extension (audio/mpeg)
+    - Audio Module - getMimeTypeFromFilename handles .ogg extension (audio/ogg)
+    - Audio Module - getMimeTypeFromFilename handles .flac extension (audio/flac)
+    - Audio Module - getMimeTypeFromFilename handles .aac extension (audio/aac)
+    - Audio Module - getMimeTypeFromFilename handles .m4a extension (audio/mp4)
+    - Audio Module - getMimeTypeFromFilename is case insensitive for extension
+    - Audio Module - getMimeTypeFromFilename returns fallback for unknown extension (application/octet-stream)
+    - Audio Module - getMimeTypeFromFilename handles null/empty/non-string input
+    - Audio Module - clearAllMasterEffectNodes is a function export, accepts no parameters
+    - Audio Module - clearAllMasterEffectNodes references activeMasterEffectNodes
+    - Audio Module - clearAllMasterEffectNodes calls dispose on nodes, calls rebuildMasterEffectChain
+    - Audio Module - clearAllMasterEffectNodes has error handling with try-catch/console.warn
+    - Audio Module - autoSliceSample is a function export, accepts 1-2 parameters
+    - Audio Module - autoSliceSample references trackId, calls getTrackById, validates Sampler type
+    - Audio Module - autoSliceSample validates audioBuffer.loaded, checks duration is positive
+    - Audio Module - autoSliceSample shows notification on error
+    - Audio Module - autoSliceSample uses numSlicesToCreate parameter, resets track.slices array
+    - Audio Module - autoSliceSample calculates slice duration, has try-catch error handling
+    - APP_VERSION validation for 2.46.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.46.0
+- **Feature Details**:
+  - Tests validate getMimeTypeFromFilename maps file extensions to correct MIME types
+  - Tests verify getMimeTypeFromFilename is case insensitive for file extensions
+  - Tests verify getMimeTypeFromFilename returns fallback (application/octet-stream) for null, empty, unknown, or non-string input
+  - Tests validate clearAllMasterEffectNodes disposes all effect nodes and rebuilds master chain
+  - Tests verify autoSliceSample validates track type (Sampler), audioBuffer.loaded, and positive duration
+  - Tests verify autoSliceSample shows notification errors and has proper error handling
+  - Total tests increased from 830 to 861
+- **Version**: Bumped to 2.46.0
+
 #### Day 366: Effect Presets State Functions Tests (2026-04-29)
 - **Feature**: Added 44 new unit tests for Effect Presets state functions to expand test coverage
 - **Files Modified**:

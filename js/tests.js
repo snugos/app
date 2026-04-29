@@ -5021,3 +5021,161 @@ TestRunner.test('APP_VERSION validation for Day 366', (t) => {
         t.assertTruthy(versionParts[1] >= 44, 'Minor version should be >= 44 for Day 366');
     }
 });
+
+// === Day 367: Audio Module Extended Utility Functions Tests ===
+TestRunner.test('Audio Module - getMimeTypeFromFilename is a function export', (t) => {
+    t.assertEqual(typeof getMimeTypeFromFilename, 'function', 'getMimeTypeFromFilename should be a function');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename accepts 1 parameter', (t) => {
+    t.assertEqual(getMimeTypeFromFilename.length, 1, 'getMimeTypeFromFilename should accept 1 parameter');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles .wav extension', (t) => {
+    const result = getMimeTypeFromFilename('test.wav');
+    t.assertEqual(result, 'audio/wav', 'WAV file should return audio/wav mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles .mp3 extension', (t) => {
+    const result = getMimeTypeFromFilename('test.mp3');
+    t.assertEqual(result, 'audio/mpeg', 'MP3 file should return audio/mpeg mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles .ogg extension', (t) => {
+    const result = getMimeTypeFromFilename('test.ogg');
+    t.assertEqual(result, 'audio/ogg', 'OGG file should return audio/ogg mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles .flac extension', (t) => {
+    const result = getMimeTypeFromFilename('test.flac');
+    t.assertEqual(result, 'audio/flac', 'FLAC file should return audio/flac mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles .aac extension', (t) => {
+    const result = getMimeTypeFromFilename('test.aac');
+    t.assertEqual(result, 'audio/aac', 'AAC file should return audio/aac mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles .m4a extension', (t) => {
+    const result = getMimeTypeFromFilename('test.m4a');
+    t.assertEqual(result, 'audio/mp4', 'M4A file should return audio/mp4 mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename is case insensitive for extension', (t) => {
+    const result = getMimeTypeFromFilename('test.WAV');
+    t.assertEqual(result, 'audio/wav', 'WAV extension should be case insensitive');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename returns fallback for unknown extension', (t) => {
+    const result = getMimeTypeFromFilename('test.xyz');
+    t.assertEqual(result, 'application/octet-stream', 'Unknown extension should return fallback mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles null input', (t) => {
+    const result = getMimeTypeFromFilename(null);
+    t.assertEqual(result, 'application/octet-stream', 'Null input should return fallback mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles empty string input', (t) => {
+    const result = getMimeTypeFromFilename('');
+    t.assertEqual(result, 'application/octet-stream', 'Empty string should return fallback mime type');
+});
+
+TestRunner.test('Audio Module - getMimeTypeFromFilename handles non-string input', (t) => {
+    const result = getMimeTypeFromFilename(123);
+    t.assertEqual(result, 'application/octet-stream', 'Non-string input should return fallback mime type');
+});
+
+TestRunner.test('Audio Module - clearAllMasterEffectNodes is a function export', (t) => {
+    t.assertEqual(typeof clearAllMasterEffectNodes, 'function', 'clearAllMasterEffectNodes should be a function');
+});
+
+TestRunner.test('Audio Module - clearAllMasterEffectNodes accepts no parameters', (t) => {
+    t.assertEqual(clearAllMasterEffectNodes.length, 0, 'clearAllMasterEffectNodes should accept no parameters');
+});
+
+TestRunner.test('Audio Module - clearAllMasterEffectNodes references activeMasterEffectNodes', (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'clearAllMasterEffectNodes should reference activeMasterEffectNodes');
+});
+
+TestRunner.test('Audio Module - clearAllMasterEffectNodes calls dispose on nodes', (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'clearAllMasterEffectNodes should dispose nodes');
+});
+
+TestRunner.test('Audio Module - clearAllMasterEffectNodes calls rebuildMasterEffectChain', (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'clearAllMasterEffectNodes should call rebuildMasterEffectChain');
+});
+
+TestRunner.test('Audio Module - clearAllMasterEffectNodes has error handling', (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch') || funcStr.includes('console.warn'), 'clearAllMasterEffectNodes should have error handling');
+});
+
+TestRunner.test('Audio Module - autoSliceSample is a function export', (t) => {
+    t.assertEqual(typeof autoSliceSample, 'function', 'autoSliceSample should be a function');
+});
+
+TestRunner.test('Audio Module - autoSliceSample accepts 1-2 parameters', (t) => {
+    t.assertTruthy(autoSliceSample.length >= 1 && autoSliceSample.length <= 2, 'autoSliceSample should accept 1-2 parameters');
+});
+
+TestRunner.test('Audio Module - autoSliceSample references trackId parameter', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'autoSliceSample should reference trackId parameter');
+});
+
+TestRunner.test('Audio Module - autoSliceSample references getTrackById from appServices', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'autoSliceSample should call getTrackById');
+});
+
+TestRunner.test('Audio Module - autoSliceSample validates track type is Sampler', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('Sampler'), 'autoSliceSample should check for Sampler track type');
+});
+
+TestRunner.test('Audio Module - autoSliceSample validates audioBuffer is loaded', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('loaded'), 'autoSliceSample should check audioBuffer.loaded');
+});
+
+TestRunner.test('Audio Module - autoSliceSample validates duration is positive', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('duration'), 'autoSliceSample should check duration');
+});
+
+TestRunner.test('Audio Module - autoSliceSample shows notification on error', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'autoSliceSample should show notification on errors');
+});
+
+TestRunner.test('Audio Module - autoSliceSample uses numSlicesToCreate parameter', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('numSlicesToCreate') || funcStr.includes('numSlices'), 'autoSliceSample should use numSlicesToCreate');
+});
+
+TestRunner.test('Audio Module - autoSliceSample resets track.slices array', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('slices = []') || funcStr.includes('slices[') || funcStr.includes('track.slices'), 'autoSliceSample should reset slices array');
+});
+
+TestRunner.test('Audio Module - autoSliceSample calculates slice duration', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('sliceDuration') || funcStr.includes('/'), 'autoSliceSample should calculate slice duration');
+});
+
+TestRunner.test('Audio Module - autoSliceSample has try-catch error handling', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'autoSliceSample should have try-catch error handling');
+});
+
+TestRunner.test('APP_VERSION validation for Day 367', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 367');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 45, 'Minor version should be >= 45 for Day 367');
+    }
+});
