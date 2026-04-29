@@ -542,6 +542,65 @@ const appServices = {
     }
 };
 
+// ============================================
+// Missing appServices - Added to fix incomplete features
+// ============================================
+
+// Show notification function - wraps utility function with error handling
+appServices.showNotification = (message, duration = 3000) => {
+    try {
+        if (typeof utilShowNotification === 'function') {
+            utilShowNotification(message, duration);
+        } else {
+            console.warn("[AppServices showNotification] utilShowNotification not available");
+        }
+    } catch (e) {
+        console.warn("[AppServices showNotification] Error:", e);
+    }
+};
+
+// Create file input for MIDI import - dynamically creates and triggers file input
+appServices.createFileInputForMidiImport = () => {
+    try {
+        const existingInput = document.getElementById('midiFileInputImport');
+        if (existingInput) existingInput.remove();
+        
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = 'midiFileInputImport';
+        fileInput.accept = '.mid,.midi,audio/midi,audio/x-midi';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+        
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                // Import MIDI logic would go here - for now just notify
+                appServices.showNotification(`MIDI file "${file.name}" selected for import.`, 3000);
+            } catch (err) {
+                console.error("[AppServices createFileInputForMidiImport] Error reading file:", err);
+                appServices.showNotification(`Failed to read MIDI file: ${err.message}`, 5000);
+            }
+            
+            fileInput.remove();
+        });
+        
+        fileInput.click();
+    } catch (error) {
+        console.error("[AppServices createFileInputForMidiImport] Error:", error);
+        throw error;
+    }
+};
+
+// Audio functions exposed from audio.js
+appServices.initAudioContextAndMasterMeter = initAudioContextAndMasterMeter;
+appServices.clearAllMasterEffectNodes = clearAllMasterEffectNodes;
+appServices.addMasterEffectToAudio = addMasterEffectToAudio;
+appServices.getActualMasterGainNode = getActualMasterGainNode;
+
 // --- Internal helpers (avoid name collisions) ---
 function handleTrackUIUpdate(trackId, reason, detail) {
     if (!getTrackByIdState) { console.warn("[Main UI Update] getTrackByIdState service not available."); return; }
