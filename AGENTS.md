@@ -1891,3 +1891,50 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Files Modified**:
   - `js/tests.js`: Added 27 new tests in Day 238 section:
     - handleMIDIMessage function inspection tests (CC handling
+#### Day 356: Project Save/Load Functions Tests (2026-04-29)
+- **Feature**: Added 31 new unit tests for Project Save/Load functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 356 section:
+    - Project Save/Load - saveProjectInternal is a function export
+    - Project Save/Load - loadProjectInternal is a function export
+    - Project Save/Load - handleProjectFileLoadInternal is a function export
+    - Project Save/Load - exportToWavInternal is a function export
+    - Project Save/Load - saveProjectInternal calls gatherProjectDataInternal
+    - Project Save/Load - saveProjectInternal creates Blob and triggers download
+    - Project Save/Load - saveProjectInternal uses .snug file extension
+    - Project Save/Load - saveProjectInternal has try-catch error handling
+    - Project Save/Load - saveProjectInternal calls showNotification
+    - Project Save/Load - loadProjectInternal triggers file input click
+    - Project Save/Load - loadProjectInternal has error handling
+    - Project Save/Load - handleProjectFileLoadInternal is async function
+    - Project Save/Load - handleProjectFileLoadInternal validates .snug extension
+    - Project Save/Load - handleProjectFileLoadInternal uses FileReader
+    - Project Save/Load - handleProjectFileLoadInternal parses JSON
+    - Project Save/Load - handleProjectFileLoadInternal calls reconstructDAWInternal
+    - Project Save/Load - handleProjectFileLoadInternal clears undo/redo stacks
+    - Project Save/Load - handleProjectFileLoadInternal has error handling
+    - Project Save/Load - handleProjectFileLoadInternal calls showNotification
+    - Project Save/Load - handleProjectFileLoadInternal handles invalid file types
+    - Project Save/Load - exportToWavInternal is async function
+    - Project Save/Load - exportToWavInternal validates appServices
+    - Project Save/Load - gatherProjectDataInternal is a function export
+    - Project Save/Load - gatherProjectDataInternal includes version (APP_VERSION)
+    - Project Save/Load - gatherProjectDataInternal includes globalSettings (tempo, etc.)
+    - Project Save/Load - gatherProjectDataInternal includes masterEffects
+    - Project Save/Load - gatherProjectDataInternal includes sendTracks
+    - Project Save/Load - gatherProjectDataInternal includes tracks
+    - Project Save/Load - gatherProjectDataInternal handles track type-specific data (Synth, Sampler, DrumSampler)
+    - Project Save/Load - gatherProjectDataInternal has error handling
+    - APP_VERSION validation for 2.36.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.36.0
+- **Feature Details**:
+  - Tests validate Project Save/Load functions (saveProjectInternal, loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal)
+  - Tests verify saveProjectInternal gathers project data, creates Blob, and triggers download with .snug extension
+  - Tests verify loadProjectInternal triggers hidden file input for project selection
+  - Tests verify handleProjectFileLoadInternal parses .snug files using FileReader and JSON.parse
+  - Tests verify handleProjectFileLoadInternal calls reconstructDAWInternal after loading
+  - Tests verify handleProjectFileLoadInternal clears undo/redo stacks for new project
+  - Tests verify gatherProjectDataInternal collects all DAW state (globalSettings, masterEffects, sendTracks, tracks)
+  - Tests verify gatherProjectDataInternal handles track type-specific data for all track types
+  - Total tests increased from 460 to 491
+- **Version**: Bumped to 2.36.0
