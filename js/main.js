@@ -605,8 +605,23 @@ appServices.createFileInputForMidiImport = () => {
             
             try {
                 const arrayBuffer = await file.arrayBuffer();
-                // Import MIDI logic would go here - for now just notify
-                appServices.showNotification(`MIDI file "${file.name}" selected for import.`, 3000);
+                
+                // Parse MIDI file and import notes
+                const midiData = parseMidiFile(new Uint8Array(arrayBuffer));
+                
+                if (!midiData || midiData.tracks.length === 0) {
+                    appServices.showNotification(`No MIDI data found in "${file.name}".`, 3000);
+                    return;
+                }
+                
+                // Import MIDI data into the DAW
+                const result = await importMidiDataToTracks(midiData);
+                
+                if (result && result.totalNotes > 0) {
+                    appServices.showNotification(`Imported ${result.totalNotes} notes into ${result.tracksCreated} track(s) from "${file.name}".`, 4000);
+                } else {
+                    appServices.showNotification(`No notes found in "${file.name}".`, 3000);
+                }
             } catch (err) {
                 console.error("[AppServices createFileInputForMidiImport] Error reading file:", err);
                 appServices.showNotification(`Failed to read MIDI file: ${err.message}`, 5000);
@@ -621,6 +636,296 @@ appServices.createFileInputForMidiImport = () => {
         throw error;
     }
 };
+
+// MIDI file parser - parses Standard MIDI File format 0 or 1
+function parseMidiFile(data) {
+    // Helper to read variable-length quantity
+    function readVLQ(buffer, offset) {
+        let value = 0;
+        let bytesRead = 0;
+        while (offset < buffer.length) {
+            const byte = buffer[offset++];
+            bytesRead++;
+            value = (value << 7) | (byte & 0x7F);
+            if (!(byte & 0x80)) break;
+        }
+        return { value, bytesRead };
+    }
+    
+    // Helper to read 32-bit big-endian
+    function readInt32(buffer, offset) {
+        return (buffer[offset] << 24) | (buffer[offset + 1] << 16) | 
+               (buffer[offset + 2] << 8) | buffer[offset + 3];
+    }
+    
+    // Helper to read 16-bit big-endian
+    function readInt16(buffer, offset) {
+        return (buffer[offset] << 8) | buffer[offset + 1];
+    }
+    
+    // Verify header
+    const header = String.fromCharCode(...data.slice(0, 4));
+    if (header !== 'MThd') {
+        throw new Error('Invalid MIDI file: missing MThd header');
+    }
+    
+    const headerLength = readInt32(data, 4);
+    const format = readInt16(data, 8);
+    const numTracks = readInt16(data, 10);
+    const division = readInt16(data, 12);
+    
+    // Get ticks per quarter note (if bit 15 is set, it's SMPTE, otherwise it's ticks per quarter)
+    let ticksPerQuarter = division;
+    if (division & 0x8000) {
+        // SMPTE format - use default 480
+        ticksPerQuarter = 480;
+    }
+    
+    const tracks = [];
+    let offset = 8 + headerLength;
+    
+    for (let t = 0; t < numTracks && offset < data.length; t++) {
+        const trackHeader = String.fromCharCode(...data.slice(offset, offset + 4));
+        if (trackHeader !== 'MTrk') break;
+        
+        offset += 4;
+        const trackLength = readInt32(data, offset);
+        offset += 4;
+        
+        const trackEnd = offset + trackLength;
+        const events = [];
+        let currentTime = 0;
+        let runningStatus = 0;
+        
+        while (offset < trackEnd) {
+            // Read delta time
+            const deltaResult = readVLQ(data, offset);
+            currentTime += deltaResult.value;
+            offset += deltaResult.bytesRead;
+            
+            if (offset >= data.length) break;
+            
+            let status = data[offset];
+            
+            // Handle running status
+            if (!(status & 0x80)) {
+                // Data byte, use last running status
+                status = runningStatus;
+            } else {
+                offset++;
+                if (status < 0xF0) {
+                    runningStatus = status;
+                }
+            }
+            
+            // Parse events based on status
+            if (status === 0xFF) {
+                // Meta event
+                const metaType = data[offset++];
+                const lengthResult = readVLQ(data, offset);
+                offset += lengthResult.bytesRead;
+                
+                if (metaType === 0x51 && lengthResult.value === 3) {
+                    // Tempo change
+                    const tempo = ((data[offset] << 16) | (data[offset + 1] << 8) | data[offset + 2]);
+                    events.push({ type: 'tempo', time: currentTime, tempo });
+                }
+                offset += lengthResult.value;
+            } else if ((status & 0xF0) === 0x90) {
+                // Note On (or Note Off with velocity 0)
+                const channel = status & 0x0F;
+                const note = data[offset++];
+                const velocity = data[offset++];
+                
+                if (velocity > 0) {
+                    events.push({ type: 'noteOn', time: currentTime, channel, note, velocity });
+                } else {
+                    events.push({ type: 'noteOff', time: currentTime, channel, note, velocity: 0 });
+                }
+            } else if ((status & 0xF0) === 0x80) {
+                // Note Off
+                const channel = status & 0x0F;
+                const note = data[offset++];
+                const velocity = data[offset++];
+                events.push({ type: 'noteOff', time: currentTime, channel, note, velocity });
+            } else if ((status & 0xF0) === 0xA0) {
+                // Aftertouch
+                offset += 2;
+            } else if ((status & 0xF0) === 0xB0) {
+                // Control Change
+                offset += 2;
+            } else if ((status & 0xF0) === 0xC0) {
+                // Program Change
+                offset++;
+            } else if ((status & 0xF0) === 0xD0) {
+                // Channel Aftertouch
+                offset++;
+            } else if ((status & 0xF0) === 0xE0) {
+                // Pitch Bend
+                offset += 2;
+            } else if (status === 0xF0 || status === 0xF7) {
+                // SysEx - skip
+                const lengthResult = readVLQ(data, offset);
+                offset += lengthResult.bytesRead + lengthResult.value;
+            } else if (status === 0xFE) {
+                // Real time - skip
+            } else {
+                // Unknown - try to recover
+                if (offset < data.length && data[offset] < 0x80) {
+                    offset++;
+                }
+            }
+            
+            // Check for end of track
+            if (offset < trackEnd && data[offset] === 0xFF && data[offset + 1] === 0x2F) {
+                offset += 3;
+                break;
+            }
+        }
+        
+        tracks.push({ events });
+        offset = trackEnd;
+    }
+    
+    return { tracks, ticksPerQuarter };
+}
+
+// Import parsed MIDI data into DAW tracks
+async function importMidiDataToTracks(midiData) {
+    const { tracks: midiTracks, ticksPerQuarter } = midiData;
+    const { addTrackToStateInternal, getTracksState, showNotification } = await import('./state.js');
+    
+    // Collect all note events across all tracks
+    const allNoteEvents = [];
+    let defaultTempo = 500000; // 120 BPM default
+    
+    for (const midiTrack of midiTracks) {
+        for (const event of midiTrack.events) {
+            if (event.type === 'tempo') {
+                defaultTempo = event.tempo;
+            } else if (event.type === 'noteOn') {
+                allNoteEvents.push(event);
+            }
+        }
+    }
+    
+    if (allNoteEvents.length === 0) {
+        return { totalNotes: 0, tracksCreated: 0 };
+    }
+    
+    // Group notes by channel
+    const channelNotes = {};
+    for (const noteEvent of allNoteEvents) {
+        const ch = noteEvent.channel;
+        if (!channelNotes[ch]) channelNotes[ch] = [];
+        channelNotes[ch].push(noteEvent);
+    }
+    
+    // Create tracks per channel (or consolidate if just one)
+    const existingTracks = getTracksState() || [];
+    let tracksCreated = 0;
+    let totalNotes = 0;
+    
+    for (const [channel, notes] of Object.entries(channelNotes)) {
+        if (notes.length === 0) continue;
+        
+        // Determine track type based on note range
+        const notesInChannel = notes.filter(n => n.type === 'noteOn');
+        const noteNumbers = notesInChannel.map(n => n.note);
+        const minNote = Math.min(...noteNumbers);
+        const maxNote = Math.max(...noteNumbers);
+        
+        // Determine if drum track (notes 36-43 are GM drums) or melodic
+        const isDrumTrack = (minNote >= 35 && maxNote <= 57) || (minNote >= 36 && maxNote <= 43);
+        const trackType = isDrumTrack ? 'DrumSampler' : 'Synth';
+        
+        // Create new track
+        const trackName = isDrumTrack ? `Drums (Ch ${parseInt(channel) + 1})` : `MIDI (Ch ${parseInt(channel) + 1})`;
+        const newTrack = await addTrackToStateInternal(trackType, { name: trackName });
+        
+        if (!newTrack) continue;
+        tracksCreated++;
+        
+        // Get or create a sequence for the track
+        let sequence = newTrack.getActiveSequence ? newTrack.getActiveSequence() : null;
+        if (!sequence && newTrack.sequences && newTrack.sequences.length > 0) {
+            sequence = newTrack.sequences[0];
+        }
+        
+        if (!sequence) continue;
+        
+        // Convert note times to steps (assuming 16 steps per bar at 480 ticks per quarter)
+        const stepsPerQuarter = 4; // 16th notes
+        const ticksPerStep = ticksPerQuarter / stepsPerQuarter;
+        const stepsPerBar = 16;
+        
+        // Calculate the maximum time to determine sequence length
+        const maxTicks = Math.max(...notesInChannel.map(n => n.time));
+        const estimatedBars = Math.ceil(maxTicks / (ticksPerQuarter * 4)) + 1;
+        
+        // Process each note
+        for (const noteEvent of notesInChannel) {
+            const absoluteTicks = noteEvent.time;
+            const step = Math.floor(absoluteTicks / ticksPerStep);
+            const bar = Math.floor(step / stepsPerBar);
+            const stepInBar = step % stepsPerBar;
+            
+            // Determine row based on note number
+            let row;
+            if (isDrumTrack) {
+                // Map drum notes to rows 0-7
+                row = noteEvent.note - 36;
+                if (row < 0) row = 0;
+                if (row > 7) row = 7;
+            } else {
+                // Map melodic notes to rows (C3 = row 0 as base)
+                const baseNote = 48; // C3
+                row = noteEvent.note - baseNote;
+                if (row < 0) row = 0;
+                if (row > 15) row = 15;
+            }
+            
+            // Find corresponding note-off event
+            const noteOffEvents = allNoteEvents.filter(n => 
+                n.type === 'noteOff' && 
+                n.note === noteEvent.note && 
+                n.channel === noteEvent.channel &&
+                n.time > noteEvent.time
+            );
+            
+            let noteLength = 1;
+            if (noteOffEvents.length > 0) {
+                const firstOff = noteOffEvents.reduce(( earliest, e) => 
+                    e.time < earliest.time ? e : earliest
+                );
+                const offStep = Math.floor(firstOff.time / ticksPerStep);
+                noteLength = Math.max(1, offStep - step);
+            }
+            
+            // Set the cell in the sequence data
+            if (sequence.data && sequence.data[row]) {
+                // Ensure column exists
+                while (sequence.data[row].length <= stepInBar + bar * stepsPerBar) {
+                    sequence.data[row].push(null);
+                }
+                
+                sequence.data[row][stepInBar + bar * stepsPerBar] = {
+                    active: true,
+                    velocity: noteEvent.velocity / 127,
+                    length: noteLength
+                };
+                totalNotes++;
+            }
+        }
+        
+        // Notify UI to update
+        if (appServices.updateTrackUI) {
+            appServices.updateTrackUI(newTrack.id, 'sequencerContentChanged');
+        }
+    }
+    
+    return { totalNotes, tracksCreated };
+}
 
 // Audio functions exposed from audio.js
 appServices.initAudioContextAndMasterMeter = initAudioContextAndMasterMeter;
