@@ -17727,3 +17727,196 @@ TestRunner.test('State - APP_VERSION is 2.24.0 or higher for Day 345', (t) => {
         t.assertTruthy(versionParts[1] >= 24, 'Minor version should be >= 24 for Day 345');
     }
 });
+
+// === Day 346: Recording State Function Undo Capture Tests (2026-04-29) ===
+// Tests for Recording State functions undo capture verification
+
+TestRunner.test('State - setIsRecordingState is exported as function', (t) => {
+    t.assertEqual(typeof setIsRecordingState, 'function', 'setIsRecordingState should be a function');
+});
+
+TestRunner.test('State - setIsRecordingState accepts 1 parameter', (t) => {
+    t.assertEqual(setIsRecordingState.length, 1, 'setIsRecordingState should accept 1 parameter (val)');
+});
+
+TestRunner.test('State - setIsRecordingState calls captureStateForUndo', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setIsRecordingState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setIsRecordingState uses descriptive undo label', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('Recording') || funcStr.includes('recording'), 'setIsRecordingState should mention Recording in undo label');
+});
+
+TestRunner.test('State - setIsRecordingState guards against missing appServices', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setIsRecordingState should guard against missing appServices');
+});
+
+TestRunner.test('State - setIsRecordingState references val parameter', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('val'), 'setIsRecordingState should reference val parameter');
+});
+
+TestRunner.test('State - setIsRecordingState coerces to boolean', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setIsRecordingState should coerce value to boolean');
+});
+
+TestRunner.test('State - setRecordingTrackIdState is exported as function', (t) => {
+    t.assertEqual(typeof setRecordingTrackIdState, 'function', 'setRecordingTrackIdState should be a function');
+});
+
+TestRunner.test('State - setRecordingTrackIdState accepts 1 parameter', (t) => {
+    t.assertEqual(setRecordingTrackIdState.length, 1, 'setRecordingTrackIdState should accept 1 parameter (id)');
+});
+
+TestRunner.test('State - setRecordingTrackIdState calls captureStateForUndo', (t) => {
+    const funcStr = setRecordingTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setRecordingTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setRecordingTrackIdState uses descriptive undo label', (t) => {
+    const funcStr = setRecordingTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('Recording') || funcStr.includes('Track'), 'setRecordingTrackIdState should mention Recording Track in undo label');
+});
+
+TestRunner.test('State - setRecordingTrackIdState guards against missing appServices', (t) => {
+    const funcStr = setRecordingTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setRecordingTrackIdState should guard against missing appServices');
+});
+
+TestRunner.test('State - setRecordingTrackIdState references id parameter', (t) => {
+    const funcStr = setRecordingTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'setRecordingTrackIdState should reference id parameter');
+});
+
+TestRunner.test('State - setRecordingStartTimeState is exported as function', (t) => {
+    t.assertEqual(typeof setRecordingStartTimeState, 'function', 'setRecordingStartTimeState should be a function');
+});
+
+TestRunner.test('State - setRecordingStartTimeState accepts 1 parameter', (t) => {
+    t.assertEqual(setRecordingStartTimeState.length, 1, 'setRecordingStartTimeState should accept 1 parameter (t)');
+});
+
+TestRunner.test('State - setRecordingStartTimeState calls captureStateForUndo', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setRecordingStartTimeState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setRecordingStartTimeState uses descriptive undo label', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('Recording') || funcStr.includes('Start'), 'setRecordingStartTimeState should mention Recording Start Time in undo label');
+});
+
+TestRunner.test('State - setRecordingStartTimeState guards against missing appServices', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setRecordingStartTimeState should guard against missing appServices');
+});
+
+TestRunner.test('State - setRecordingStartTimeState references t parameter', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('t'), 'setRecordingStartTimeState should reference t parameter');
+});
+
+TestRunner.test('State - isTrackRecordingState is exported as function', (t) => {
+    t.assertEqual(typeof isTrackRecordingState, 'function', 'isTrackRecordingState should be a function');
+});
+
+TestRunner.test('State - isTrackRecordingState accepts no parameters', (t) => {
+    t.assertEqual(isTrackRecordingState.length, 0, 'isTrackRecordingState should accept no parameters');
+});
+
+TestRunner.test('State - isTrackRecordingState returns boolean', (t) => {
+    const result = isTrackRecordingState();
+    t.assertEqual(typeof result, 'boolean', 'isTrackRecordingState should return a boolean');
+});
+
+TestRunner.test('State - getRecordingTrackIdState is exported as function', (t) => {
+    t.assertEqual(typeof getRecordingTrackIdState, 'function', 'getRecordingTrackIdState should be a function');
+});
+
+TestRunner.test('State - getRecordingTrackIdState accepts no parameters', (t) => {
+    t.assertEqual(getRecordingTrackIdState.length, 0, 'getRecordingTrackIdState should accept no parameters');
+});
+
+TestRunner.test('State - getRecordingStartTimeState is exported as function', (t) => {
+    t.assertEqual(typeof getRecordingStartTimeState, 'function', 'getRecordingStartTimeState should be a function');
+});
+
+TestRunner.test('State - getRecordingStartTimeState accepts no parameters', (t) => {
+    t.assertEqual(getRecordingStartTimeState.length, 0, 'getRecordingStartTimeState should accept no parameters');
+});
+
+TestRunner.test('State - Recording state functions independent update', (t) => {
+    // Save original state
+    const originalRecording = isTrackRecordingState();
+    const originalTrackId = getRecordingTrackIdState();
+    const originalStartTime = getRecordingStartTimeState();
+    
+    // Test independent updates
+    setIsRecordingState(true);
+    setRecordingTrackIdState('test-track-123');
+    setRecordingStartTimeState(10.5);
+    
+    t.assertEqual(isTrackRecordingState(), true, 'Recording state should be true');
+    t.assertEqual(getRecordingTrackIdState(), 'test-track-123', 'Track ID should be updated');
+    t.assertEqual(getRecordingStartTimeState(), 10.5, 'Start time should be updated');
+    
+    // Cleanup
+    setIsRecordingState(originalRecording);
+    setRecordingTrackIdState(originalTrackId);
+    setRecordingStartTimeState(originalStartTime);
+});
+
+TestRunner.test('State - setIsRecordingState handles various truthy/falsy values', (t) => {
+    const original = isTrackRecordingState();
+    
+    setIsRecordingState(1);
+    t.assertEqual(isTrackRecordingState(), true, 'Truthy value 1 should set recording to true');
+    
+    setIsRecordingState(0);
+    t.assertEqual(isTrackRecordingState(), false, 'Falsy value 0 should set recording to false');
+    
+    setIsRecordingState('yes');
+    t.assertEqual(isTrackRecordingState(), true, 'Truthy string should set recording to true');
+    
+    setIsRecordingState(null);
+    t.assertEqual(isTrackRecordingState(), false, 'Null should set recording to false');
+    
+    setIsRecordingState(original);
+});
+
+TestRunner.test('State - setRecordingTrackIdState accepts null to clear', (t) => {
+    const original = getRecordingTrackIdState();
+    
+    setRecordingTrackIdState('some-track');
+    t.assertEqual(getRecordingTrackIdState(), 'some-track', 'Track ID should be set');
+    
+    setRecordingTrackIdState(null);
+    t.assertEqual(getRecordingTrackIdState(), null, 'Track ID should be cleared with null');
+    
+    setRecordingTrackIdState(original);
+});
+
+TestRunner.test('State - setRecordingStartTimeState accepts numeric values', (t) => {
+    const original = getRecordingStartTimeState();
+    
+    setRecordingStartTimeState(0);
+    t.assertEqual(getRecordingStartTimeState(), 0, 'Start time should accept 0');
+    
+    setRecordingStartTimeState(99.9);
+    t.assertEqual(getRecordingStartTimeState(), 99.9, 'Start time should accept decimal');
+    
+    setRecordingStartTimeState(original);
+});
+
+// APP_VERSION validation for Day 346
+TestRunner.test('State - APP_VERSION is 2.25.0 or higher for Day 346', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 346');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 25, 'Minor version should be >= 25 for Day 346');
+    }
+});

@@ -1,3 +1,35 @@
+#### Day 346: Recording State Function Undo Capture Tests (2026-04-29)
+- **Feature**: Added 31 new unit tests for Recording State functions undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 346 section:
+    - setIsRecordingState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setIsRecordingState: uses descriptive undo label (Recording), guards against missing appServices
+    - setIsRecordingState: references val parameter, coerces to boolean with !!
+    - setRecordingTrackIdState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setRecordingTrackIdState: uses descriptive undo label (Recording Track), guards against missing appServices
+    - setRecordingTrackIdState: references id parameter, accepts null to clear
+    - setRecordingStartTimeState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setRecordingStartTimeState: uses descriptive undo label (Recording Start Time), guards against missing appServices
+    - setRecordingStartTimeState: references t parameter, accepts numeric values
+    - isTrackRecordingState: function export, no parameters, returns boolean
+    - getRecordingTrackIdState: function export, no parameters
+    - getRecordingStartTimeState: function export, no parameters
+    - Recording state functions: independent update verification
+    - Edge cases: setIsRecordingState handles various truthy/falsy values (1, 0, 'yes', null)
+    - Edge cases: setRecordingTrackIdState accepts null to clear track ID
+    - Edge cases: setRecordingStartTimeState accepts 0 and decimal values
+  - `js/constants.js`: Bumped APP_VERSION to 2.26.0
+- **Feature Details**:
+  - Tests validate Recording state functions call undo capture before mutating
+  - Tests validate setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState call captureStateForUndo
+  - Tests verify descriptive undo labels for all Recording state operations
+  - Tests verify all functions guard against missing appServices
+  - Tests verify boolean coercion for setIsRecordingState (!!val pattern)
+  - Tests verify parameter references for all recording state functions
+  - Tests verify independent update of recording state components
+  - Total tests increased from 3099 to 3130
+- **Version**: Bumped to 2.26.0
+
 #### Day 345: Master Effects & Master Volume State Function Tests (2026-04-29)
 - **Feature**: Added 29 new unit tests for Master Effects and Master Volume state functions to expand test coverage
 - **Files Modified**:
