@@ -17068,3 +17068,137 @@ TestRunner.test('State - APP_VERSION is 2.22.0 or higher for Day 342', (t) => {
         t.assertTruthy(versionParts[1] >= 22, 'Minor version should be >= 22 for Day 342');
     }
 });
+
+// ============================================
+// Day 343: Send Track State Function Extended Tests
+// ============================================
+TestRunner.test('State - setSendTrackNameState is exported as function', (t) => {
+    t.assertEqual(typeof setSendTrackNameState, 'function', 'setSendTrackNameState should be a function');
+});
+
+TestRunner.test('State - setSendTrackNameState accepts 2 parameters', (t) => {
+    t.assertEqual(setSendTrackNameState.length, 2, 'setSendTrackNameState should accept 2 parameters');
+});
+
+TestRunner.test('State - setSendTrackNameState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackNameState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setSendTrackNameState uses descriptive undo label', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('Rename') || funcStr.includes('Send'), 'setSendTrackNameState should use descriptive undo label');
+});
+
+TestRunner.test('State - setSendTrackNameState guards against missing appServices', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setSendTrackNameState should guard against missing appServices');
+});
+
+TestRunner.test('State - setSendTrackNameState references sendId and name parameters', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('sendId') && funcStr.includes('name'), 'setSendTrackNameState should reference both parameters');
+});
+
+TestRunner.test('State - setSendTrackLevelState is exported as function', (t) => {
+    t.assertEqual(typeof setSendTrackLevelState, 'function', 'setSendTrackLevelState should be a function');
+});
+
+TestRunner.test('State - setSendTrackLevelState accepts 2 parameters', (t) => {
+    t.assertEqual(setSendTrackLevelState.length, 2, 'setSendTrackLevelState should accept 2 parameters');
+});
+
+TestRunner.test('State - setSendTrackLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setSendTrackLevelState uses descriptive undo label', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('level') || funcStr.includes('Send'), 'setSendTrackLevelState should use descriptive undo label');
+});
+
+TestRunner.test('State - setSendTrackLevelState clamps level to valid range', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'setSendTrackLevelState should clamp level');
+});
+
+TestRunner.test('State - setSendTrackLevelState guards against missing appServices', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setSendTrackLevelState should guard against missing appServices');
+});
+
+TestRunner.test('State - setSendTrackLevelState references sendId and level parameters', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('sendId') && funcStr.includes('level'), 'setSendTrackLevelState should reference both parameters');
+});
+
+TestRunner.test('State - setSendTrackEffectsState is exported as function', (t) => {
+    t.assertEqual(typeof setSendTrackEffectsState, 'function', 'setSendTrackEffectsState should be a function');
+});
+
+TestRunner.test('State - setSendTrackEffectsState accepts 2 parameters', (t) => {
+    t.assertEqual(setSendTrackEffectsState.length, 2, 'setSendTrackEffectsState should accept 2 parameters');
+});
+
+TestRunner.test('State - setSendTrackEffectsState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackEffectsState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setSendTrackEffectsState uses descriptive undo label', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('effect') || funcStr.includes('Send'), 'setSendTrackEffectsState should use descriptive undo label');
+});
+
+TestRunner.test('State - setSendTrackEffectsState guards against missing appServices', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setSendTrackEffectsState should guard against missing appServices');
+});
+
+TestRunner.test('State - setSendTrackEffectsState references sendId and effects parameters', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('sendId') && funcStr.includes('effects'), 'setSendTrackEffectsState should reference both parameters');
+});
+
+TestRunner.test('State - removeSendTrackState is exported as function', (t) => {
+    t.assertEqual(typeof removeSendTrackState, 'function', 'removeSendTrackState should be a function');
+});
+
+TestRunner.test('State - removeSendTrackState accepts 1 parameter', (t) => {
+    t.assertEqual(removeSendTrackState.length, 1, 'removeSendTrackState should accept 1 parameter');
+});
+
+TestRunner.test('State - removeSendTrackState calls captureStateForUndo', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeSendTrackState should call captureStateForUndo');
+});
+
+TestRunner.test('State - removeSendTrackState uses descriptive undo label', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('Remove') || funcStr.includes('Delete') || funcStr.includes('Send'), 'removeSendTrackState should use descriptive undo label');
+});
+
+TestRunner.test('State - removeSendTrackState guards against missing appServices', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'removeSendTrackState should guard against missing appServices');
+});
+
+TestRunner.test('State - removeSendTrackState references sendId parameter', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'removeSendTrackState should reference sendId parameter');
+});
+
+TestRunner.test('State - removeSendTrackState updates sendTracksState with splice or filter', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('splice') || funcStr.includes('filter'), 'removeSendTrackState should update sendTracksState');
+});
+
+// APP_VERSION validation for Day 343
+TestRunner.test('State - APP_VERSION is 2.23.0 or higher for Day 343', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 343');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 23, 'Minor version should be >= 23 for Day 343');
+    }
+});
