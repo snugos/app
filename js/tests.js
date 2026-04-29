@@ -100,6 +100,13 @@ import {
     getLoadedZipFilesState,
     getSoundLibraryFileTreesState,
     getCurrentLibraryNameState,
+    getCurrentSoundFileTreeState,
+    getCurrentSoundBrowserPathState,
+    getPreviewPlayerState,
+    setCurrentLibraryNameState,
+    setCurrentSoundFileTreeState,
+    setCurrentSoundBrowserPathState,
+    setPreviewPlayerState,
     getClipboardDataState,
     setSendTrackMutedState,
     setTrackSendLevelState,
@@ -14405,5 +14412,122 @@ TestRunner.test('State - APP_VERSION is 2.11.0 or higher for Day 331', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 331');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 11, 'Minor version should be >= 11 for Day 331');
+    }
+});
+
+// ============================================
+// Day 332: Sound Library State Extended Tests
+// ============================================
+TestRunner.test('Sound Library State - getCurrentSoundFileTreeState function is exported', (t) => {
+    t.assertEqual(typeof getCurrentSoundFileTreeState, 'function', 'getCurrentSoundFileTreeState should be exported');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundFileTreeState accepts no parameters', (t) => {
+    t.assertEqual(getCurrentSoundFileTreeState.length, 0, 'getCurrentSoundFileTreeState should accept no parameters');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundFileTreeState returns object or null', (t) => {
+    const result = getCurrentSoundFileTreeState();
+    t.assertTruthy(result === null || typeof result === 'object', 'getCurrentSoundFileTreeState should return object or null');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundBrowserPathState function is exported', (t) => {
+    t.assertEqual(typeof getCurrentSoundBrowserPathState, 'function', 'getCurrentSoundBrowserPathState should be exported');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundBrowserPathState accepts no parameters', (t) => {
+    t.assertEqual(getCurrentSoundBrowserPathState.length, 0, 'getCurrentSoundBrowserPathState should accept no parameters');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundBrowserPathState returns string', (t) => {
+    const result = getCurrentSoundBrowserPathState();
+    t.assertEqual(typeof result, 'string', 'getCurrentSoundBrowserPathState should return string');
+});
+
+TestRunner.test('Sound Library State - getPreviewPlayerState function is exported', (t) => {
+    t.assertEqual(typeof getPreviewPlayerState, 'function', 'getPreviewPlayerState should be exported');
+});
+
+TestRunner.test('Sound Library State - getPreviewPlayerState accepts no parameters', (t) => {
+    t.assertEqual(getPreviewPlayerState.length, 0, 'getPreviewPlayerState should accept no parameters');
+});
+
+TestRunner.test('Sound Library State - getPreviewPlayerState returns object', (t) => {
+    const result = getPreviewPlayerState();
+    t.assertEqual(typeof result, 'object', 'getPreviewPlayerState should return object');
+});
+
+TestRunner.test('Sound Library State - setCurrentLibraryNameState function is exported', (t) => {
+    t.assertEqual(typeof setCurrentLibraryNameState, 'function', 'setCurrentLibraryNameState should be exported');
+});
+
+TestRunner.test('Sound Library State - setCurrentLibraryNameState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentLibraryNameState.length, 1, 'setCurrentLibraryNameState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Library State - setCurrentLibraryNameState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setCurrentLibraryNameState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Library State - setCurrentLibraryNameState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('Library') || funcStr.includes('library'), 'setCurrentLibraryNameState should reference Library in undo label');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundFileTreeState function is exported', (t) => {
+    t.assertEqual(typeof setCurrentSoundFileTreeState, 'function', 'setCurrentSoundFileTreeState should be exported');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundFileTreeState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentSoundFileTreeState.length, 1, 'setCurrentSoundFileTreeState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundFileTreeState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setCurrentSoundFileTreeState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState function is exported', (t) => {
+    t.assertEqual(typeof setCurrentSoundBrowserPathState, 'function', 'setCurrentSoundBrowserPathState should be exported');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentSoundBrowserPathState.length, 1, 'setCurrentSoundBrowserPathState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setCurrentSoundBrowserPathState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('Browser') || funcStr.includes('Path') || funcStr.includes('path'), 'setCurrentSoundBrowserPathState should reference Browser or Path in undo label');
+});
+
+TestRunner.test('Sound Library State - setPreviewPlayerState function is exported', (t) => {
+    t.assertEqual(typeof setPreviewPlayerState, 'function', 'setPreviewPlayerState should be exported');
+});
+
+TestRunner.test('Sound Library State - setPreviewPlayerState accepts 1 parameter', (t) => {
+    t.assertEqual(setPreviewPlayerState.length, 1, 'setPreviewPlayerState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Library State - setPreviewPlayerState calls captureStateForUndo', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setPreviewPlayerState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Library State - setPreviewPlayerState uses descriptive undo label', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('Preview') || funcStr.includes('preview'), 'setPreviewPlayerState should reference Preview in undo label');
+});
+
+TestRunner.test('State - APP_VERSION is 2.12.0 or higher for Day 332', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 332');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 12, 'Minor version should be >= 12 for Day 332');
     }
 });

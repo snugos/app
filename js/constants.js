@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.11.0'; // Day 331: Sequencer Content DOM Extended Functions Tests (2026-04-29)
+export const APP_VERSION = '2.12.0'; // Day 332: Sound Library State Extended Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants
