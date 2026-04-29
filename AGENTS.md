@@ -1,3 +1,41 @@
+#### Day 338: Track Group State CRUD Undo Capture Tests (2026-04-29)
+- **Feature**: Added 54 new unit tests for Track Group state CRUD functions undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 54 new tests in Day 338 section:
+    - addTrackGroupState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - addTrackGroupState: uses Track Group in undo label, references groupData parameter
+    - addTrackToGroupState: function export, 2 parameters, calls captureStateForUndo
+    - addTrackToGroupState: uses descriptive undo label, references groupId and trackId parameters
+    - removeTrackFromGroupState: function export, 2 parameters, calls captureStateForUndo
+    - removeTrackFromGroupState: uses descriptive undo label, finds group by id
+    - removeTrackGroupState: calls captureStateForUndo with descriptive label
+    - setTrackGroupNameState: function export, 2 parameters, calls captureStateForUndo
+    - setTrackGroupColorState: function export, 2 parameters, calls captureStateForUndo
+    - setTrackGroupMutedState: function export, 2 parameters, calls captureStateForUndo
+    - setTrackGroupSoloedState: function export, 2 parameters, calls captureStateForUndo
+    - Undo/Redo verification: all 8 Track Group state mutation functions call captureStateForUndo
+    - Undo/Redo verification: descriptive undo labels for addTrackGroupState (Add/Create Track Group)
+    - Undo/Redo verification: descriptive undo labels for addTrackToGroupState (Track Group/Add)
+    - Undo/Redo verification: descriptive undo labels for removeTrackFromGroupState (Track Group/Remove)
+    - Undo/Redo verification: descriptive undo labels for removeTrackGroupState (Delete/Remove Track Group)
+    - Undo/Redo verification: descriptive undo labels for setTrackGroupNameState (Track Group)
+    - Undo/Redo verification: descriptive undo labels for setTrackGroupColorState (Track Group)
+    - Guards: all Track Group state functions guard against missing appServices
+    - Parameter reference tests: all functions reference their respective parameters
+    - State update tests: addTrackGroupState updates trackGroupsState with push
+    - State update tests: removeTrackGroupState updates trackGroupsState with filter/splice
+  - `js/constants.js`: Bumped APP_VERSION to 2.18.0
+- **Feature Details**:
+  - Tests validate all 8 Track Group state mutation functions exist with correct signatures
+  - Tests verify all mutation functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Track Group operations
+  - Tests verify parameter references for all state functions
+  - Tests verify state update mechanisms (push, filter, find)
+  - Total tests increased from 2774 to 2828
+- **Version**: Bumped to 2.18.0
+
+
+
 #### Day 331: Sequencer Content DOM Extended Functions Tests (2026-04-29)
 - **Feature**: Added 55 new unit tests for Sequencer Content DOM and Track Sequencer Window UI functions to expand test coverage
 - **Files Modified**:
