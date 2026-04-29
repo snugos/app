@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.23.0'; // Day 343: Send Track State Function Extended Tests
+export const APP_VERSION = '2.24.0'; // Day 344: Extended MIDI Learn & Master MIDI State Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

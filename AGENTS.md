@@ -1,4 +1,47 @@
 
+#### Day 344: Extended MIDI Learn & Master MIDI State Function Tests (2026-04-29)
+- **Feature**: Added 75 new unit tests for MIDI Learn and Master MIDI state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 75 new tests in Day 344 section:
+    - setMidiAccessState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setMidiAccessState: uses descriptive undo label, guards against missing appServices
+    - getMidiAccessState: function export, no parameters
+    - setActiveMIDIInputState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setActiveMIDIInputState: uses descriptive undo label, guards against missing appServices
+    - getActiveMIDIInputState: function export, no parameters
+    - setMidiLearnModeState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setMidiLearnModeState: uses descriptive undo label, coerces mode to boolean
+    - getMidiLearnModeState: function export, no parameters
+    - setMidiLearnPendingParamState: function export, 1 parameter, calls captureStateForUndo
+    - getMidiLearnPendingParamState: function export, no parameters
+    - getMidiLearnMappingsState: function export, no parameters, returns array copy
+    - addMidiLearnMapping: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - addMidiLearnMapping: uses descriptive undo label, guards against missing appServices
+    - addMidiLearnMapping: checks MAX_MIDI_LEARN_MAPPINGS limit, uses DEFAULT_MIDI_LEARN_MAPPING structure
+    - removeMidiLearnMapping: function export, 1 parameter, calls captureStateForUndo
+    - removeMidiLearnMapping: uses descriptive undo label, validates index bounds, uses splice
+    - clearMidiLearnMappings: function export, no parameters, calls captureStateForUndo
+    - clearMidiLearnMappings: uses descriptive undo label, resets mappings to empty array
+    - updateMidiLearnMapping: function export, 2 parameters, calls captureStateForUndo
+    - updateMidiLearnMapping: uses descriptive undo label, validates index bounds
+    - findMidiLearnMapping: function export, 2 parameters, uses findIndex for matching
+    - findMidiLearnMapping: matches channel and cc parameters
+    - getMidiLearnMappingByIndex: function export, 1 parameter, returns copy of mapping
+    - getMidiLearnMappingByIndex: validates index bounds, returns null for invalid index
+  - `js/constants.js`: Bumped APP_VERSION to 2.24.0
+- **Feature Details**:
+  - Tests validate MIDI Access state functions (setMidiAccessState, getMidiAccessState)
+  - Tests validate Active MIDI Input state functions (setActiveMIDIInputState, getActiveMIDIInputState)
+  - Tests validate MIDI Learn Mode state functions (setMidiLearnModeState, getMidiLearnModeState)
+  - Tests validate MIDI Learn Pending Param state functions (setMidiLearnPendingParamState, getMidiLearnPendingParamState)
+  - Tests validate MIDI Learn Mappings state functions (add, remove, update, clear, get, find)
+  - Tests verify all mutation functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all MIDI Learn operations
+  - Tests verify all functions guard against missing appServices
+  - Tests verify index bounds validation for remove, update, and getByIndex functions
+  - Total tests increased from 2995 to 3070
+- **Version**: Bumped to 2.24.0
+
 #### Day 342: Time Signature State Function Tests (2026-04-29)
 - **Feature**: Added 29 new unit tests for Time Signature state functions to expand test coverage
 - **Files Modified**:

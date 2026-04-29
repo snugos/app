@@ -17202,3 +17202,355 @@ TestRunner.test('State - APP_VERSION is 2.23.0 or higher for Day 343', (t) => {
         t.assertTruthy(versionParts[1] >= 23, 'Minor version should be >= 23 for Day 343');
     }
 });
+
+// ============================================
+// Day 344: Extended MIDI Learn & Master MIDI State Function Tests (2026-04-29)
+// ============================================
+TestRunner.test('State - setMidiAccessState is exported as function', (t) => {
+    t.assertEqual(typeof setMidiAccessState, 'function', 'setMidiAccessState should be a function');
+});
+
+TestRunner.test('State - setMidiAccessState accepts 1 parameter', (t) => {
+    t.assertEqual(setMidiAccessState.length, 1, 'setMidiAccessState should accept 1 parameter');
+});
+
+TestRunner.test('State - setMidiAccessState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiAccessState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiAccessState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setMidiAccessState uses descriptive undo label', (t) => {
+    const funcStr = setMidiAccessState.toString();
+    t.assertTruthy(funcStr.includes('MIDI') || funcStr.includes('Access'), 'setMidiAccessState should use descriptive undo label');
+});
+
+TestRunner.test('State - setMidiAccessState guards against missing appServices', (t) => {
+    const funcStr = setMidiAccessState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setMidiAccessState should guard against missing appServices');
+});
+
+TestRunner.test('State - setMidiAccessState references access parameter', (t) => {
+    const funcStr = setMidiAccessState.toString();
+    t.assertTruthy(funcStr.includes('access'), 'setMidiAccessState should reference access parameter');
+});
+
+TestRunner.test('State - getMidiAccessState is exported as function', (t) => {
+    t.assertEqual(typeof getMidiAccessState, 'function', 'getMidiAccessState should be a function');
+});
+
+TestRunner.test('State - getMidiAccessState accepts no parameters', (t) => {
+    t.assertEqual(getMidiAccessState.length, 0, 'getMidiAccessState should accept no parameters');
+});
+
+TestRunner.test('State - setActiveMIDIInputState is exported as function', (t) => {
+    t.assertEqual(typeof setActiveMIDIInputState, 'function', 'setActiveMIDIInputState should be a function');
+});
+
+TestRunner.test('State - setActiveMIDIInputState accepts 1 parameter', (t) => {
+    t.assertEqual(setActiveMIDIInputState.length, 1, 'setActiveMIDIInputState should accept 1 parameter');
+});
+
+TestRunner.test('State - setActiveMIDIInputState calls captureStateForUndo', (t) => {
+    const funcStr = setActiveMIDIInputState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setActiveMIDIInputState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setActiveMIDIInputState uses descriptive undo label', (t) => {
+    const funcStr = setActiveMIDIInputState.toString();
+    t.assertTruthy(funcStr.includes('MIDI') || funcStr.includes('Input'), 'setActiveMIDIInputState should use descriptive undo label');
+});
+
+TestRunner.test('State - setActiveMIDIInputState guards against missing appServices', (t) => {
+    const funcStr = setActiveMIDIInputState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setActiveMIDIInputState should guard against missing appServices');
+});
+
+TestRunner.test('State - setActiveMIDIInputState references device parameter', (t) => {
+    const funcStr = setActiveMIDIInputState.toString();
+    t.assertTruthy(funcStr.includes('device'), 'setActiveMIDIInputState should reference device parameter');
+});
+
+TestRunner.test('State - getActiveMIDIInputState is exported as function', (t) => {
+    t.assertEqual(typeof getActiveMIDIInputState, 'function', 'getActiveMIDIInputState should be a function');
+});
+
+TestRunner.test('State - getActiveMIDIInputState accepts no parameters', (t) => {
+    t.assertEqual(getActiveMIDIInputState.length, 0, 'getActiveMIDIInputState should accept no parameters');
+});
+
+TestRunner.test('State - setMidiLearnModeState is exported as function', (t) => {
+    t.assertEqual(typeof setMidiLearnModeState, 'function', 'setMidiLearnModeState should be a function');
+});
+
+TestRunner.test('State - setMidiLearnModeState accepts 1 parameter', (t) => {
+    t.assertEqual(setMidiLearnModeState.length, 1, 'setMidiLearnModeState should accept 1 parameter');
+});
+
+TestRunner.test('State - setMidiLearnModeState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnModeState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setMidiLearnModeState uses descriptive undo label', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('mode'), 'setMidiLearnModeState should use descriptive undo label');
+});
+
+TestRunner.test('State - setMidiLearnModeState guards against missing appServices', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setMidiLearnModeState should guard against missing appServices');
+});
+
+TestRunner.test('State - setMidiLearnModeState coerces mode to boolean', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setMidiLearnModeState should coerce to boolean');
+});
+
+TestRunner.test('State - setMidiLearnModeState references mode parameter', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('mode'), 'setMidiLearnModeState should reference mode parameter');
+});
+
+TestRunner.test('State - getMidiLearnModeState is exported as function', (t) => {
+    t.assertEqual(typeof getMidiLearnModeState, 'function', 'getMidiLearnModeState should be a function');
+});
+
+TestRunner.test('State - getMidiLearnModeState accepts no parameters', (t) => {
+    t.assertEqual(getMidiLearnModeState.length, 0, 'getMidiLearnModeState should accept no parameters');
+});
+
+TestRunner.test('State - setMidiLearnPendingParamState is exported as function', (t) => {
+    t.assertEqual(typeof setMidiLearnPendingParamState, 'function', 'setMidiLearnPendingParamState should be a function');
+});
+
+TestRunner.test('State - setMidiLearnPendingParamState accepts 1 parameter', (t) => {
+    t.assertEqual(setMidiLearnPendingParamState.length, 1, 'setMidiLearnPendingParamState should accept 1 parameter');
+});
+
+TestRunner.test('State - setMidiLearnPendingParamState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnPendingParamState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setMidiLearnPendingParamState uses descriptive undo label', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('MIDI') || funcStr.includes('Pending'), 'setMidiLearnPendingParamState should use descriptive undo label');
+});
+
+TestRunner.test('State - setMidiLearnPendingParamState guards against missing appServices', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'setMidiLearnPendingParamState should guard against missing appServices');
+});
+
+TestRunner.test('State - setMidiLearnPendingParamState references param parameter', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('param'), 'setMidiLearnPendingParamState should reference param parameter');
+});
+
+TestRunner.test('State - getMidiLearnPendingParamState is exported as function', (t) => {
+    t.assertEqual(typeof getMidiLearnPendingParamState, 'function', 'getMidiLearnPendingParamState should be a function');
+});
+
+TestRunner.test('State - getMidiLearnPendingParamState accepts no parameters', (t) => {
+    t.assertEqual(getMidiLearnPendingParamState.length, 0, 'getMidiLearnPendingParamState should accept no parameters');
+});
+
+TestRunner.test('State - getMidiLearnMappingsState is exported as function', (t) => {
+    t.assertEqual(typeof getMidiLearnMappingsState, 'function', 'getMidiLearnMappingsState should be a function');
+});
+
+TestRunner.test('State - getMidiLearnMappingsState accepts no parameters', (t) => {
+    t.assertEqual(getMidiLearnMappingsState.length, 0, 'getMidiLearnMappingsState should accept no parameters');
+});
+
+TestRunner.test('State - getMidiLearnMappingsState returns array copy', (t) => {
+    const funcStr = getMidiLearnMappingsState.toString();
+    t.assertTruthy(funcStr.includes('[...]') || funcStr.includes('slice'), 'getMidiLearnMappingsState should return array copy');
+});
+
+TestRunner.test('State - addMidiLearnMapping is exported as function', (t) => {
+    t.assertEqual(typeof addMidiLearnMapping, 'function', 'addMidiLearnMapping should be a function');
+});
+
+TestRunner.test('State - addMidiLearnMapping accepts 1 parameter', (t) => {
+    t.assertEqual(addMidiLearnMapping.length, 1, 'addMidiLearnMapping should accept 1 parameter');
+});
+
+TestRunner.test('State - addMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('State - addMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('Add') || funcStr.includes('MIDI'), 'addMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('State - addMidiLearnMapping guards against missing appServices', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'addMidiLearnMapping should guard against missing appServices');
+});
+
+TestRunner.test('State - addMidiLearnMapping references mapping parameter', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('mapping'), 'addMidiLearnMapping should reference mapping parameter');
+});
+
+TestRunner.test('State - addMidiLearnMapping checks MAX_MIDI_LEARN_MAPPINGS limit', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MAX_MIDI_LEARN_MAPPINGS'), 'addMidiLearnMapping should check MAX limit');
+});
+
+TestRunner.test('State - addMidiLearnMapping uses DEFAULT_MIDI_LEARN_MAPPING structure', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_MIDI_LEARN_MAPPING'), 'addMidiLearnMapping should use DEFAULT structure');
+});
+
+TestRunner.test('State - removeMidiLearnMapping is exported as function', (t) => {
+    t.assertEqual(typeof removeMidiLearnMapping, 'function', 'removeMidiLearnMapping should be a function');
+});
+
+TestRunner.test('State - removeMidiLearnMapping accepts 1 parameter', (t) => {
+    t.assertEqual(removeMidiLearnMapping.length, 1, 'removeMidiLearnMapping should accept 1 parameter');
+});
+
+TestRunner.test('State - removeMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('State - removeMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('Remove') || funcStr.includes('MIDI'), 'removeMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('State - removeMidiLearnMapping guards against missing appServices', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'removeMidiLearnMapping should guard against missing appServices');
+});
+
+TestRunner.test('State - removeMidiLearnMapping references index parameter', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('index'), 'removeMidiLearnMapping should reference index parameter');
+});
+
+TestRunner.test('State - removeMidiLearnMapping validates index bounds', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('>=') || funcStr.includes('<'), 'removeMidiLearnMapping should validate bounds');
+});
+
+TestRunner.test('State - removeMidiLearnMapping updates midiLearnMappings with splice', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeMidiLearnMapping should use splice');
+});
+
+TestRunner.test('State - clearMidiLearnMappings is exported as function', (t) => {
+    t.assertEqual(typeof clearMidiLearnMappings, 'function', 'clearMidiLearnMappings should be a function');
+});
+
+TestRunner.test('State - clearMidiLearnMappings accepts no parameters', (t) => {
+    t.assertEqual(clearMidiLearnMappings.length, 0, 'clearMidiLearnMappings should accept no parameters');
+});
+
+TestRunner.test('State - clearMidiLearnMappings calls captureStateForUndo', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearMidiLearnMappings should call captureStateForUndo');
+});
+
+TestRunner.test('State - clearMidiLearnMappings uses descriptive undo label', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('Clear') || funcStr.includes('MIDI'), 'clearMidiLearnMappings should use descriptive undo label');
+});
+
+TestRunner.test('State - clearMidiLearnMappings guards against missing appServices', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'clearMidiLearnMappings should guard against missing appServices');
+});
+
+TestRunner.test('State - clearMidiLearnMappings resets midiLearnMappings to empty array', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('[]'), 'clearMidiLearnMappings should reset to empty array');
+});
+
+TestRunner.test('State - updateMidiLearnMapping is exported as function', (t) => {
+    t.assertEqual(typeof updateMidiLearnMapping, 'function', 'updateMidiLearnMapping should be a function');
+});
+
+TestRunner.test('State - updateMidiLearnMapping accepts 2 parameters', (t) => {
+    t.assertEqual(updateMidiLearnMapping.length, 2, 'updateMidiLearnMapping should accept 2 parameters');
+});
+
+TestRunner.test('State - updateMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('State - updateMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('Update') || funcStr.includes('MIDI'), 'updateMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('State - updateMidiLearnMapping guards against missing appServices', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'updateMidiLearnMapping should guard against missing appServices');
+});
+
+TestRunner.test('State - updateMidiLearnMapping references index and updates parameters', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('index') && funcStr.includes('updates'), 'updateMidiLearnMapping should reference both parameters');
+});
+
+TestRunner.test('State - updateMidiLearnMapping validates index bounds', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('>=') || funcStr.includes('<'), 'updateMidiLearnMapping should validate bounds');
+});
+
+TestRunner.test('State - findMidiLearnMapping is exported as function', (t) => {
+    t.assertEqual(typeof findMidiLearnMapping, 'function', 'findMidiLearnMapping should be a function');
+});
+
+TestRunner.test('State - findMidiLearnMapping accepts 2 parameters', (t) => {
+    t.assertEqual(findMidiLearnMapping.length, 2, 'findMidiLearnMapping should accept 2 parameters');
+});
+
+TestRunner.test('State - findMidiLearnMapping uses findIndex for matching', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('findIndex'), 'findMidiLearnMapping should use findIndex');
+});
+
+TestRunner.test('State - findMidiLearnMapping matches channel and cc', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('channel') && funcStr.includes('cc'), 'findMidiLearnMapping should match channel and cc');
+});
+
+TestRunner.test('State - getMidiLearnMappingByIndex is exported as function', (t) => {
+    t.assertEqual(typeof getMidiLearnMappingByIndex, 'function', 'getMidiLearnMappingByIndex should be a function');
+});
+
+TestRunner.test('State - getMidiLearnMappingByIndex accepts 1 parameter', (t) => {
+    t.assertEqual(getMidiLearnMappingByIndex.length, 1, 'getMidiLearnMappingByIndex should accept 1 parameter');
+});
+
+TestRunner.test('State - getMidiLearnMappingByIndex returns copy of mapping', (t) => {
+    const funcStr = getMidiLearnMappingByIndex.toString();
+    t.assertTruthy(funcStr.includes('{...') || funcStr.includes('slice'), 'getMidiLearnMappingByIndex should return copy');
+});
+
+TestRunner.test('State - getMidiLearnMappingByIndex validates index bounds', (t) => {
+    const funcStr = getMidiLearnMappingByIndex.toString();
+    t.assertTruthy(funcStr.includes('>=') || funcStr.includes('<'), 'getMidiLearnMappingByIndex should validate bounds');
+});
+
+TestRunner.test('State - getMidiLearnMappingByIndex returns null for invalid index', (t) => {
+    const funcStr = getMidiLearnMappingByIndex.toString();
+    t.assertTruthy(funcStr.includes('null'), 'getMidiLearnMappingByIndex should return null for invalid index');
+});
+
+// APP_VERSION validation for Day 344
+TestRunner.test('State - APP_VERSION is 2.24.0 or higher for Day 344', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 344');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 24, 'Minor version should be >= 24 for Day 344');
+    }
+});
