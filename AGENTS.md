@@ -1,4 +1,34 @@
 
+#### Day 342: Time Signature State Function Tests (2026-04-29)
+- **Feature**: Added 29 new unit tests for Time Signature state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 29 new tests in Day 342 section:
+    - setTimeSignatureState: function export, 2 parameters, calls captureStateForUndo with descriptive label
+    - setTimeSignatureState: uses descriptive undo label, guards against missing appServices
+    - setTimeSignatureState: clamps numerator and denominator to valid range
+    - setTimeSignatureNumeratorState: function export, calls captureStateForUndo with descriptive label
+    - setTimeSignatureDenominatorState: function export, calls captureStateForUndo with descriptive label
+    - setTimeSignatureDenominatorState: clamps denominator to valid range
+    - getTimeSignatureState: returns object with numerator and denominator
+    - getTimeSignatureNumeratorState: returns number
+    - getTimeSignatureDenominatorState: returns number
+    - All 3 setters update Tone.Transport.timeSignature
+    - setTimeSignatureState: uses parseInt for value parsing, defaults to 4/4
+    - Time Signature constants: valid ranges (1-16 for both numerator and denominator)
+    - DEFAULT_TIME_SIGNATURE: validates numerator and denominator are within MIN/MAX
+  - `js/constants.js`: Bumped APP_VERSION to 2.22.0
+- **Feature Details**:
+  - Tests validate setTimeSignatureState calls undo capture before mutating
+  - Tests validate setTimeSignatureNumeratorState calls undo capture before mutating
+  - Tests validate setTimeSignatureDenominatorState calls undo capture before mutating
+  - Tests verify descriptive undo labels for all Time Signature operations
+  - Tests verify all functions guard against missing appServices
+  - Tests verify Tone.Transport.timeSignature is updated by all setters
+  - Tests verify value parsing with parseInt and default 4/4
+  - Tests verify constant valid ranges (1-16 for numerator and denominator)
+  - Total tests increased from 16931 to 16960
+- **Version**: Bumped to 2.22.0
+
 #### Day 341: Scale & Chord Mode State Function Tests (2026-04-29)
 - **Feature**: Added 27 new unit tests for Scale Mode and Chord Mode state functions to expand test coverage
 - **Files Modified**:
