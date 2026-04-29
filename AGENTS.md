@@ -1,3 +1,29 @@
+#### Day 365: Timeline Zoom State Functions Tests (2026-04-29)
+- **Feature**: Added 31 new unit tests for Timeline Zoom state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 365 section:
+    - Timeline Zoom - setTimelineZoomLevelState is a function export, accepts 1 parameter, calls captureStateForUndo
+    - Timeline Zoom - setTimelineZoomLevelState uses descriptive undo label, guards against missing appServices, clamps value to valid range, uses parseFloat for value parsing
+    - Timeline Zoom - setTimelineVerticalZoomState is a function export, accepts 1 parameter, calls captureStateForUndo, uses descriptive undo label, clamps value to valid range
+    - Timeline Zoom - zoomInTimeline/zoomOutTimeline are function exports, call setTimelineZoomLevelState, increase/decrease zoom level
+    - Timeline Zoom - zoomInVerticalTimeline/zoomOutVerticalTimeline are function exports, call setTimelineVerticalZoomState
+    - Timeline Zoom - resetTimelineZoom is a function export, calls captureStateForUndo, uses descriptive undo label, resets both horizontal and vertical zoom
+    - Timeline Zoom - getTimelineZoomState/getTimelineZoomLevelState/getTimelineVerticalZoomState are function exports
+    - Timeline Zoom - Timeline zoom constants use TIMELINE_ZOOM prefix
+    - APP_VERSION validation for 2.44.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.44.0
+- **Feature Details**:
+  - Tests validate Timeline Zoom state setter functions (setTimelineZoomLevelState, setTimelineVerticalZoomState)
+  - Tests verify all Timeline Zoom setters call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Timeline Zoom operations (Set Timeline Zoom Level, Set Timeline Vertical Zoom, Reset Timeline Zoom)
+  - Tests verify value clamping using Math.max/Math.min for zoom level bounds
+  - Tests verify zoomIn/zoomOut functions use TIMELINE_ZOOM_STEP constant
+  - Tests verify resetTimelineZoom resets both horizontal and vertical to default values
+  - Tests validate getter functions return proper types (object/number)
+  - Total tests increased from 755 to 786
+- **Version**: Bumped to 2.44.0
+
+
 #### Day 364: Sequence & Note Methods Tests (2026-04-29)
 - **Feature**: Added 52 new unit tests for Sequence and Note Methods to expand test coverage
 - **Files Modified**:
