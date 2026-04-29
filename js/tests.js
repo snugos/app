@@ -15814,3 +15814,290 @@ TestRunner.test('State - APP_VERSION is 2.16.0 or higher for Day 336', (t) => {
         t.assertTruthy(versionParts[1] >= 16, 'Minor version should be >= 16 for Day 336');
     }
 });
+
+// ============================================
+// Day 337: Loop Region & Swing State Function Tests
+// ============================================
+TestRunner.test('State - Loop Region - getLoopRegionState function is exported', (t) => {
+    t.assertEqual(typeof getLoopRegionState, 'function', 'getLoopRegionState should be a function');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionState accepts no parameters', (t) => {
+    t.assertEqual(getLoopRegionState.length, 0, 'getLoopRegionState should accept no parameters');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionState returns object', (t) => {
+    const result = getLoopRegionState();
+    t.assertEqual(typeof result, 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy(result !== null, 'getLoopRegionState should not return null');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionState returns object with enabled property', (t) => {
+    const result = getLoopRegionState();
+    t.assertTruthy('enabled' in result, 'getLoopRegionState result should have enabled property');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionState returns object with startBar property', (t) => {
+    const result = getLoopRegionState();
+    t.assertTruthy('startBar' in result, 'getLoopRegionState result should have startBar property');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionState returns object with endBar property', (t) => {
+    const result = getLoopRegionState();
+    t.assertTruthy('endBar' in result, 'getLoopRegionState result should have endBar property');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionState returns copy (not reference)', (t) => {
+    const result1 = getLoopRegionState();
+    const result2 = getLoopRegionState();
+    t.assertFalse(result1 === result2, 'getLoopRegionState should return a copy, not the same reference');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionState function is exported', (t) => {
+    t.assertEqual(typeof setLoopRegionState, 'function', 'setLoopRegionState should be a function');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionState accepts 1 parameter (state)', (t) => {
+    t.assertEqual(setLoopRegionState.length, 1, 'setLoopRegionState should accept 1 parameter');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionState should call captureStateForUndo');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionState uses descriptive undo label', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('Set Loop Region') || funcStr.includes('Loop Region'), 'setLoopRegionState should use descriptive undo label');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionEnabledState function is exported', (t) => {
+    t.assertEqual(typeof getLoopRegionEnabledState, 'function', 'getLoopRegionEnabledState should be a function');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    const result = getLoopRegionEnabledState();
+    t.assertEqual(typeof result, 'boolean', 'getLoopRegionEnabledState should return boolean');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionEnabledState function is exported', (t) => {
+    t.assertEqual(typeof setLoopRegionEnabledState, 'function', 'setLoopRegionEnabledState should be a function');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionEnabledState accepts 1 parameter (enabled)', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('enabled'), 'setLoopRegionEnabledState should accept enabled parameter');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionEnabledState uses descriptive undo label with On/Off', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('On') && funcStr.includes('Off'), 'setLoopRegionEnabledState should use On/Off in undo label');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionStartBarState function is exported', (t) => {
+    t.assertEqual(typeof getLoopRegionStartBarState, 'function', 'getLoopRegionStartBarState should be a function');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    const result = getLoopRegionStartBarState();
+    t.assertEqual(typeof result, 'number', 'getLoopRegionStartBarState should return number');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionStartBarState value is positive', (t) => {
+    const result = getLoopRegionStartBarState();
+    t.assertTruthy(result >= 1, 'getLoopRegionStartBarState should return value >= 1');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionStartBarState function is exported', (t) => {
+    t.assertEqual(typeof setLoopRegionStartBarState, 'function', 'setLoopRegionStartBarState should be a function');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionStartBarState accepts 1 parameter (bar)', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('bar'), 'setLoopRegionStartBarState should accept bar parameter');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionStartBarState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionStartBarState should call captureStateForUndo');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionStartBarState clamps minimum to 1', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('1'), 'setLoopRegionStartBarState should clamp minimum to 1');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionStartBarState parses integer', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setLoopRegionStartBarState should parse integer');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionEndBarState function is exported', (t) => {
+    t.assertEqual(typeof getLoopRegionEndBarState, 'function', 'getLoopRegionEndBarState should be a function');
+});
+
+TestRunner.test('State - Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    const result = getLoopRegionEndBarState();
+    t.assertEqual(typeof result, 'number', 'getLoopRegionEndBarState should return number');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionEndBarState function is exported', (t) => {
+    t.assertEqual(typeof setLoopRegionEndBarState, 'function', 'setLoopRegionEndBarState should be a function');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionEndBarState accepts 1 parameter (bar)', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('bar'), 'setLoopRegionEndBarState should accept bar parameter');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionEndBarState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionEndBarState should call captureStateForUndo');
+});
+
+TestRunner.test('State - Loop Region - setLoopRegionEndBarState clamps to be >= startBar', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('startBar') || funcStr.includes('Math.max'), 'setLoopRegionEndBarState should clamp to startBar');
+});
+
+TestRunner.test('State - Swing - getSwingState function is exported', (t) => {
+    t.assertEqual(typeof getSwingState, 'function', 'getSwingState should be a function');
+});
+
+TestRunner.test('State - Swing - getSwingState accepts no parameters', (t) => {
+    t.assertEqual(getSwingState.length, 0, 'getSwingState should accept no parameters');
+});
+
+TestRunner.test('State - Swing - getSwingState returns object', (t) => {
+    const result = getSwingState();
+    t.assertEqual(typeof result, 'object', 'getSwingState should return an object');
+});
+
+TestRunner.test('State - Swing - getSwingState returns object with enabled property', (t) => {
+    const result = getSwingState();
+    t.assertTruthy('enabled' in result, 'getSwingState result should have enabled property');
+});
+
+TestRunner.test('State - Swing - getSwingState returns object with amount property', (t) => {
+    const result = getSwingState();
+    t.assertTruthy('amount' in result, 'getSwingState result should have amount property');
+});
+
+TestRunner.test('State - Swing - getSwingState returns copy (not reference)', (t) => {
+    const result1 = getSwingState();
+    const result2 = getSwingState();
+    t.assertFalse(result1 === result2, 'getSwingState should return a copy, not the same reference');
+});
+
+TestRunner.test('State - Swing - setSwingState function is exported', (t) => {
+    t.assertEqual(typeof setSwingState, 'function', 'setSwingState should be a function');
+});
+
+TestRunner.test('State - Swing - setSwingState accepts 1 parameter (state)', (t) => {
+    t.assertEqual(setSwingState.length, 1, 'setSwingState should accept 1 parameter');
+});
+
+TestRunner.test('State - Swing - setSwingState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingState should call captureStateForUndo');
+});
+
+TestRunner.test('State - Swing - setSwingState uses descriptive undo label', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('Swing'), 'setSwingState should use descriptive undo label with "Swing"');
+});
+
+TestRunner.test('State - Swing - getSwingEnabledState function is exported', (t) => {
+    t.assertEqual(typeof getSwingEnabledState, 'function', 'getSwingEnabledState should be a function');
+});
+
+TestRunner.test('State - Swing - getSwingEnabledState returns boolean', (t) => {
+    const result = getSwingEnabledState();
+    t.assertEqual(typeof result, 'boolean', 'getSwingEnabledState should return boolean');
+});
+
+TestRunner.test('State - Swing - setSwingEnabledState function is exported', (t) => {
+    t.assertEqual(typeof setSwingEnabledState, 'function', 'setSwingEnabledState should be a function');
+});
+
+TestRunner.test('State - Swing - setSwingEnabledState accepts 1 parameter (enabled)', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('enabled'), 'setSwingEnabledState should accept enabled parameter');
+});
+
+TestRunner.test('State - Swing - setSwingEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('State - Swing - setSwingEnabledState uses descriptive undo label with On/Off', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('On') && funcStr.includes('Off'), 'setSwingEnabledState should use On/Off in undo label');
+});
+
+TestRunner.test('State - Swing - getSwingAmountState function is exported', (t) => {
+    t.assertEqual(typeof getSwingAmountState, 'function', 'getSwingAmountState should be a function');
+});
+
+TestRunner.test('State - Swing - getSwingAmountState returns number', (t) => {
+    const result = getSwingAmountState();
+    t.assertEqual(typeof result, 'number', 'getSwingAmountState should return number');
+});
+
+TestRunner.test('State - Swing - getSwingAmountState value is in valid range (0-100)', (t) => {
+    const result = getSwingAmountState();
+    t.assertTruthy(result >= 0 && result <= 100, 'getSwingAmountState should return value between 0 and 100');
+});
+
+TestRunner.test('State - Swing - setSwingAmountState function is exported', (t) => {
+    t.assertEqual(typeof setSwingAmountState, 'function', 'setSwingAmountState should be a function');
+});
+
+TestRunner.test('State - Swing - setSwingAmountState accepts 1 parameter (amount)', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('amount'), 'setSwingAmountState should accept amount parameter');
+});
+
+TestRunner.test('State - Swing - setSwingAmountState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingAmountState should call captureStateForUndo');
+});
+
+TestRunner.test('State - Swing - setSwingAmountState clamps value to 0-100 range', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setSwingAmountState should clamp value');
+});
+
+TestRunner.test('State - Swing - setSwingAmountState clamps maximum to 100', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('100'), 'setSwingAmountState should clamp maximum to 100');
+});
+
+TestRunner.test('State - Swing - setSwingAmountState parses integer', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setSwingAmountState should parse integer');
+});
+
+// APP_VERSION validation for Day 337
+TestRunner.test('State - APP_VERSION is 2.17.0 or higher for Day 337', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 337');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 17, 'Minor version should be >= 17 for Day 337');
+    }
+});

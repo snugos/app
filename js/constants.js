@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.16.0'; // Day 336: Metronome Audio & Send Bus Function Tests
+export const APP_VERSION = '2.17.0'; // Day 337: Loop Region & Swing State Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

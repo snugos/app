@@ -5353,3 +5353,42 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate State metronome functions call captureStateForUndo with descriptive labels
   - Total tests increased from 2671 to 2717
 - **Version**: Bumped to 2.16.0
+
+#### Day 337: Loop Region & Swing State Function Tests (2026-04-29)
+- **Feature**: Added 57 new unit tests for Loop Region and Swing state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 57 new tests in Day 337 section:
+    - Loop Region - getLoopRegionState: function export, no parameters, returns object with enabled/startBar/endBar properties
+    - Loop Region - getLoopRegionState: returns copy (not reference)
+    - Loop Region - setLoopRegionState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - Loop Region - getLoopRegionEnabledState: returns boolean
+    - Loop Region - setLoopRegionEnabledState: accepts enabled parameter, calls captureStateForUndo with On/Off label
+    - Loop Region - getLoopRegionStartBarState: returns number >= 1
+    - Loop Region - setLoopRegionStartBarState: accepts bar parameter, clamps minimum to 1, parses integer
+    - Loop Region - setLoopRegionStartBarState: calls captureStateForUndo
+    - Loop Region - getLoopRegionEndBarState: returns number
+    - Loop Region - setLoopRegionEndBarState: accepts bar parameter, clamps to >= startBar
+    - Loop Region - setLoopRegionEndBarState: calls captureStateForUndo
+    - Swing - getSwingState: function export, no parameters, returns object with enabled/amount properties
+    - Swing - getSwingState: returns copy (not reference)
+    - Swing - setSwingState: function export, 1 parameter, calls captureStateForUndo with "Swing" label
+    - Swing - getSwingEnabledState: returns boolean
+    - Swing - setSwingEnabledState: accepts enabled parameter, calls captureStateForUndo with On/Off label
+    - Swing - getSwingAmountState: returns number in 0-100 range
+    - Swing - setSwingAmountState: accepts amount parameter, clamps to 0-100 range, parses integer
+    - Swing - setSwingAmountState: calls captureStateForUndo
+  - `js/constants.js`: Bumped APP_VERSION to 2.17.0
+- **Feature Details**:
+  - Tests validate Loop Region state getter/setter functions exist and are properly exported
+  - Tests verify getLoopRegionState returns object copy with enabled/startBar/endBar
+  - Tests verify setLoopRegionState calls captureStateForUndo with descriptive "Set Loop Region" label
+  - Tests verify setLoopRegionEnabledState uses toggle label with On/Off
+  - Tests verify setLoopRegionStartBarState clamps minimum to 1 and parses integer
+  - Tests verify setLoopRegionEndBarState clamps to be >= startBar
+  - Tests validate Swing state getter/setter functions exist and are properly exported
+  - Tests verify getSwingState returns object copy with enabled/amount
+  - Tests verify setSwingState calls captureStateForUndo with "Swing" label
+  - Tests verify setSwingEnabledState uses toggle label with On/Off
+  - Tests verify setSwingAmountState clamps value to 0-100 range and parses integer
+  - Total tests increased from 2717 to 2774
+- **Version**: Bumped to 2.17.0
