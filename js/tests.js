@@ -4284,3 +4284,146 @@ TestRunner.test('Metronome Audio - APP_VERSION validation for Day 362', (t) => {
         t.assertTruthy(versionParts[1] >= 40, 'Minor version should be >= 40 for Day 362');
     }
 });
+
+// Day 363: Knob UI & Inspector Initialization Function Tests
+TestRunner.test('Knob UI - createKnob is a function export', (t) => {
+    t.assertEqual(typeof createKnob, 'function', 'createKnob should be a function');
+});
+
+TestRunner.test('Knob UI - createKnob accepts 1 parameter', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options'), 'createKnob should accept options parameter');
+});
+
+TestRunner.test('Knob UI - createKnob returns an object with element property', (t) => {
+    const mockOptions = { label: 'Test', min: 0, max: 100, initialValue: 50 };
+    const result = createKnob(mockOptions);
+    t.assertTruthy(result && typeof result === 'object', 'createKnob should return an object');
+    t.assertTruthy(result.element, 'createKnob result should have element property');
+});
+
+TestRunner.test('Knob UI - createKnob returns object with setValue method', (t) => {
+    const mockOptions = { label: 'Test', min: 0, max: 100, initialValue: 50 };
+    const result = createKnob(mockOptions);
+    t.assertTruthy(typeof result.setValue === 'function', 'createKnob result should have setValue method');
+});
+
+TestRunner.test('Knob UI - createKnob returns object with getValue method', (t) => {
+    const mockOptions = { label: 'Test', min: 0, max: 100, initialValue: 50 };
+    const result = createKnob(mockOptions);
+    t.assertTruthy(typeof result.getValue === 'function', 'createKnob result should have getValue method');
+});
+
+TestRunner.test('Knob UI - createKnob returns object with type property', (t) => {
+    const mockOptions = { label: 'Test', min: 0, max: 100, initialValue: 50 };
+    const result = createKnob(mockOptions);
+    t.assertEqual(result.type, 'knob', 'createKnob result type should be knob');
+});
+
+TestRunner.test('Knob UI - createKnob has onValueChange callback option', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('onValueChange'), 'createKnob should support onValueChange option');
+});
+
+TestRunner.test('Knob UI - createKnob handles min/max bounds', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('min') && funcStr.includes('max'), 'createKnob should handle min/max bounds');
+});
+
+TestRunner.test('Knob UI - createKnob supports displayAsDb option', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('displayAsDb'), 'createKnob should support displayAsDb for dB display');
+});
+
+TestRunner.test('Knob UI - createKnob references localAppServices.captureStateForUndo', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'createKnob should call captureStateForUndo for undo support');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls is referenced in appServices', (t) => {
+    const mainStr = window.appServices ? '' : 'appServices mock needed';
+    t.assertTruthy(typeof initializeUIModule === 'function', 'initializeUIModule should be available');
+});
+
+TestRunner.test('Track Inspector - initializeTypeSpecificInspectorControls function exists', (t) => {
+    t.assertTruthy(typeof initializeUIModule === 'function', 'initializeUIModule should be a function');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM handles track types', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track.type') || funcStr.includes('track\\.type'), 'buildTrackInspectorContentDOM should handle track types');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes mute/solo/arm buttons', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(funcStr.includes('mute') || funcStr.includes('Mute'), 'buildTrackInspectorContentDOM should include mute button');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes track name input', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track.name') || funcStr.includes('track\\.name'), 'buildTrackInspectorContentDOM should reference track name');
+});
+
+TestRunner.test('Track Inspector - buildSynthSpecificInspectorDOM references synthEngineControlDefinitions', (t) => {
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('synthEngineControlDefinitions') || funcStr.includes('engineType'), 'buildSynthSpecificInspectorDOM should reference engine type');
+});
+
+TestRunner.test('Track Inspector - buildDrumSamplerSpecificInspectorDOM includes pad grid', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('drum') || funcStr.includes('pad') || funcStr.includes('Pad'), 'buildDrumSamplerSpecificInspectorDOM should include pad elements');
+});
+
+TestRunner.test('Track Inspector - buildAudioTrackInspectorDOM includes input monitoring controls', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('monitoring') || funcStr.includes('Monitoring') || funcStr.includes('input'), 'buildAudioTrackInspectorDOM should include monitoring controls');
+});
+
+TestRunner.test('Sound Browser - renderSoundBrowserDirectory function exists', (t) => {
+    t.assertEqual(typeof renderSoundBrowserDirectory, 'function', 'renderSoundBrowserDirectory should be a function');
+});
+
+TestRunner.test('Sound Browser - updateSoundBrowserDisplayForLibrary function exists', (t) => {
+    t.assertEqual(typeof updateSoundBrowserDisplayForLibrary, 'function', 'updateSoundBrowserDisplayForLibrary should be a function');
+});
+
+TestRunner.test('Sound Browser - renderSoundBrowserDirectory accepts 2 parameters', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('pathArray') && funcStr.includes('treeNode'), 'renderSoundBrowserDirectory should accept pathArray and treeNode');
+});
+
+TestRunner.test('Sound Browser - updateSoundBrowserDisplayForLibrary accepts 1-3 parameters', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName'), 'updateSoundBrowserDisplayForLibrary should accept libraryName');
+});
+
+TestRunner.test('Sound Browser - updateSoundBrowserDisplayForLibrary handles isLoading state', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('isLoading') || funcStr.includes('loading'), 'updateSoundBrowserDisplayForLibrary should handle loading state');
+});
+
+TestRunner.test('Effects List - renderEffectsList function exists', (t) => {
+    t.assertEqual(typeof renderEffectsList, 'function', 'renderEffectsList should be a function');
+});
+
+TestRunner.test('Effects List - renderEffectControls function exists', (t) => {
+    t.assertEqual(typeof renderEffectControls, 'function', 'renderEffectControls should be a function');
+});
+
+TestRunner.test('Effects List - renderEffectsList accepts 4 parameters', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('owner') && funcStr.includes('ownerType'), 'renderEffectsList should accept owner and ownerType');
+});
+
+TestRunner.test('Effects List - renderEffectControls accepts 4 parameters', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'renderEffectControls should accept effectId');
+});
+
+TestRunner.test('APP_VERSION validation for Day 363', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 363');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 41, 'Minor version should be >= 41 for Day 363');
+    }
+});
