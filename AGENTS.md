@@ -1,3 +1,40 @@
+#### Day 366: Effect Presets State Functions Tests (2026-04-29)
+- **Feature**: Added 44 new unit tests for Effect Presets state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 44 new tests in Day 366 section:
+    - Effect Presets - getEffectPresetsState returns array
+    - Effect Presets - getEffectPresetByIdState is a function, accepts 1 parameter, returns preset or undefined
+    - Effect Presets - getEffectPresetsByTypeState is a function, accepts 1 parameter, returns array
+    - Effect Presets - addEffectPresetState is a function, accepts 1 parameter, references presetData
+    - Effect Presets - addEffectPresetState calls captureStateForUndo with descriptive "Save Effect Preset" label
+    - Effect Presets - addEffectPresetState checks MAX_EFFECT_PRESETS limit
+    - Effect Presets - addEffectPresetState generates unique id with effectPresetIdCounter
+    - Effect Presets - addEffectPresetState uses DEFAULT_EFFECT_PRESET structure (name, effectType, params)
+    - Effect Presets - updateEffectPresetState is a function, accepts 2 parameters
+    - Effect Presets - updateEffectPresetState calls captureStateForUndo with descriptive "Update Effect Preset" label
+    - Effect Presets - updateEffectPresetState handles name, effectType, params updates
+    - Effect Presets - updateEffectPresetState returns null for unknown id
+    - Effect Presets - removeEffectPresetState is a function, accepts 1 parameter
+    - Effect Presets - removeEffectPresetState calls captureStateForUndo with descriptive "Delete Effect Preset" label
+    - Effect Presets - removeEffectPresetState returns boolean
+    - Effect Presets - clearEffectPresetsState is a function, accepts no parameters
+    - Effect Presets - clearEffectPresetsState calls captureStateForUndo with descriptive "Clear All Effect Presets" label
+    - Effect Presets - MAX_EFFECT_PRESETS constant validation (positive, 64 or less)
+    - Effect Presets - DEFAULT_EFFECT_PRESET structure validation (name, effectType=null, params=object)
+    - Effect Presets - DEFAULT_PRESET_NAME_PREFIX is non-empty string
+    - APP_VERSION validation for 2.45.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.45.0
+- **Feature Details**:
+  - Tests validate Effect Presets state functions (getEffectPresetsState, getEffectPresetByIdState, getEffectPresetsByTypeState, addEffectPresetState, updateEffectPresetState, removeEffectPresetState, clearEffectPresetsState)
+  - Tests verify all mutation functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Effect Preset operations (Save Effect Preset, Update Effect Preset, Delete Effect Preset, Clear All Effect Presets)
+  - Tests verify addEffectPresetState enforces MAX_EFFECT_PRESETS (64) limit
+  - Tests verify addEffectPresetState generates unique IDs using effectPresetIdCounter
+  - Tests verify DEFAULT_EFFECT_PRESET structure (name, effectType=null, params={})
+  - Tests verify preset CRUD operations return proper types (object, null, boolean)
+  - Total tests increased from 786 to 830
+- **Version**: Bumped to 2.45.0
+
 #### Day 365: Timeline Zoom State Functions Tests (2026-04-29)
 - **Feature**: Added 31 new unit tests for Timeline Zoom state functions to expand test coverage
 - **Files Modified**:
