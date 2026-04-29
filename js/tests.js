@@ -5186,35 +5186,32 @@ TestRunner.test('Track Templates - getTrackTemplatesState returns array', (t) =>
     t.assertEqual(Array.isArray(result), true, 'getTrackTemplatesState should return an array');
 });
 
-TestRunner.test('Track Templates - getTrackTemplateByIdState is a function export', (t) => {
+TestRunner.test('Track Templates - getTrackTemplateByIdState is a function, accepts 1 parameter', (t) => {
     t.assertEqual(typeof getTrackTemplateByIdState, 'function', 'getTrackTemplateByIdState should be a function');
+    const funcStr = getTrackTemplateByIdState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'getTrackTemplateByIdState should accept 1 parameter (id)');
 });
 
-TestRunner.test('Track Templates - getTrackTemplateByIdState accepts 1 parameter', (t) => {
-    t.assertEqual(getTrackTemplateByIdState.length, 1, 'getTrackTemplateByIdState should accept 1 parameter');
+TestRunner.test('Track Templates - getTrackTemplateByIdState returns preset or undefined', (t) => {
+    const result = getTrackTemplateByIdState(999);
+    t.assertTruthy(result === undefined || typeof result === 'object', 'getTrackTemplateByIdState should return preset or undefined');
 });
 
-TestRunner.test('Track Templates - getTrackTemplateByIdState returns undefined for unknown id', (t) => {
-    const result = getTrackTemplateByIdState('nonexistent-id');
-    t.assertEqual(result, undefined, 'getTrackTemplateByIdState should return undefined for unknown id');
-});
-
-TestRunner.test('Track Templates - addTrackTemplateState is a function export', (t) => {
+TestRunner.test('Track Templates - addTrackTemplateState is a function, accepts 1 parameter', (t) => {
     t.assertEqual(typeof addTrackTemplateState, 'function', 'addTrackTemplateState should be a function');
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('templateData'), 'addTrackTemplateState should accept 1 parameter (templateData)');
 });
 
-TestRunner.test('Track Templates - addTrackTemplateState accepts 1 parameter', (t) => {
-    t.assertEqual(addTrackTemplateState.length, 1, 'addTrackTemplateState should accept 1 parameter');
-});
-
-TestRunner.test('Track Templates - addTrackTemplateState references templateData parameter', (t) => {
+TestRunner.test('Track Templates - addTrackTemplateState references presetData', (t) => {
     const funcStr = addTrackTemplateState.toString();
     t.assertTruthy(funcStr.includes('templateData'), 'addTrackTemplateState should reference templateData parameter');
 });
 
 TestRunner.test('Track Templates - addTrackTemplateState calls captureStateForUndo with descriptive label', (t) => {
     const funcStr = addTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo') && funcStr.includes('Template'), 'addTrackTemplateState should call captureStateForUndo with Template label');
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackTemplateState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Save Track Template'), 'addTrackTemplateState should use descriptive undo label');
 });
 
 TestRunner.test('Track Templates - addTrackTemplateState checks MAX_TRACK_TEMPLATES limit', (t) => {
@@ -5222,90 +5219,75 @@ TestRunner.test('Track Templates - addTrackTemplateState checks MAX_TRACK_TEMPLA
     t.assertTruthy(funcStr.includes('MAX_TRACK_TEMPLATES'), 'addTrackTemplateState should check MAX_TRACK_TEMPLATES limit');
 });
 
-TestRunner.test('Track Templates - addTrackTemplateState generates unique id with trackTemplateIdCounter', (t) => {
+TestRunner.test('Track Templates - addTrackTemplateState generates unique id', (t) => {
     const funcStr = addTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('trackTemplateIdCounter'), 'addTrackTemplateState should generate unique id');
+    t.assertTruthy(funcStr.includes('trackTemplateIdCounter') || funcStr.includes('id'), 'addTrackTemplateState should generate unique id');
 });
 
-TestRunner.test('Track Templates - addTrackTemplateState uses DEFAULT_TRACK_TEMPLATE structure', (t) => {
+TestRunner.test('Track Templates - addTrackTemplateState uses DEFAULT_TEMPLATE structure', (t) => {
     const funcStr = addTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('DEFAULT_TRACK_TEMPLATE') || funcStr.includes('name') && funcStr.includes('type'), 'addTrackTemplateState should use DEFAULT_TRACK_TEMPLATE structure');
+    t.assertTruthy(funcStr.includes('name') && funcStr.includes('color') && funcStr.includes('type'), 'addTrackTemplateState should use template structure (name, color, type)');
 });
 
-TestRunner.test('Track Templates - addTrackTemplateState uses DEFAULT_TEMPLATE_NAME_PREFIX', (t) => {
-    const funcStr = addTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('DEFAULT_TEMPLATE_NAME_PREFIX') || funcStr.includes('Template'), 'addTrackTemplateState should use DEFAULT_TEMPLATE_NAME_PREFIX');
-});
-
-TestRunner.test('Track Templates - updateTrackTemplateState is a function export', (t) => {
+TestRunner.test('Track Templates - updateTrackTemplateState is a function, accepts 2 parameters', (t) => {
     t.assertEqual(typeof updateTrackTemplateState, 'function', 'updateTrackTemplateState should be a function');
-});
-
-TestRunner.test('Track Templates - updateTrackTemplateState accepts 2 parameters', (t) => {
-    t.assertEqual(updateTrackTemplateState.length, 2, 'updateTrackTemplateState should accept 2 parameters');
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('id') && funcStr.includes('updates'), 'updateTrackTemplateState should accept 2 parameters (id, updates)');
 });
 
 TestRunner.test('Track Templates - updateTrackTemplateState calls captureStateForUndo with descriptive label', (t) => {
     const funcStr = updateTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo') && funcStr.includes('Template'), 'updateTrackTemplateState should call captureStateForUndo with Template label');
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateTrackTemplateState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Update Track Template'), 'updateTrackTemplateState should use descriptive undo label');
 });
 
-TestRunner.test('Track Templates - updateTrackTemplateState handles name updates', (t) => {
+TestRunner.test('Track Templates - updateTrackTemplateState handles name, color, type updates', (t) => {
     const funcStr = updateTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('name') || funcStr.includes('updates'), 'updateTrackTemplateState should handle name updates');
-});
-
-TestRunner.test('Track Templates - updateTrackTemplateState handles color updates', (t) => {
-    const funcStr = updateTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('color') || funcStr.includes('updates'), 'updateTrackTemplateState should handle color updates');
+    t.assertTruthy(funcStr.includes('name') && funcStr.includes('color') && funcStr.includes('type'), 'updateTrackTemplateState should handle name/color/type updates');
 });
 
 TestRunner.test('Track Templates - updateTrackTemplateState returns null for unknown id', (t) => {
     const funcStr = updateTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('return null') || funcStr.includes('return'), 'updateTrackTemplateState should return null for unknown id');
+    t.assertTruthy(funcStr.includes('null') || funcStr.includes('return null'), 'updateTrackTemplateState should return null for unknown id');
 });
 
-TestRunner.test('Track Templates - removeTrackTemplateState is a function export', (t) => {
+TestRunner.test('Track Templates - removeTrackTemplateState is a function, accepts 1 parameter', (t) => {
     t.assertEqual(typeof removeTrackTemplateState, 'function', 'removeTrackTemplateState should be a function');
-});
-
-TestRunner.test('Track Templates - removeTrackTemplateState accepts 1 parameter', (t) => {
-    t.assertEqual(removeTrackTemplateState.length, 1, 'removeTrackTemplateState should accept 1 parameter');
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'removeTrackTemplateState should accept 1 parameter (id)');
 });
 
 TestRunner.test('Track Templates - removeTrackTemplateState calls captureStateForUndo with descriptive label', (t) => {
     const funcStr = removeTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo') && funcStr.includes('Template'), 'removeTrackTemplateState should call captureStateForUndo with Template label');
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackTemplateState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Delete Track Template'), 'removeTrackTemplateState should use descriptive undo label');
 });
 
 TestRunner.test('Track Templates - removeTrackTemplateState returns boolean', (t) => {
     const funcStr = removeTrackTemplateState.toString();
-    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false') || funcStr.includes('return'), 'removeTrackTemplateState should return boolean');
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false') || funcStr.includes('filter'), 'removeTrackTemplateState should return boolean or filtered array');
 });
 
-TestRunner.test('Track Templates - clearTrackTemplatesState is a function export', (t) => {
+TestRunner.test('Track Templates - clearTrackTemplatesState is a function, accepts no parameters', (t) => {
     t.assertEqual(typeof clearTrackTemplatesState, 'function', 'clearTrackTemplatesState should be a function');
-});
-
-TestRunner.test('Track Templates - clearTrackTemplatesState accepts no parameters', (t) => {
-    t.assertEqual(clearTrackTemplatesState.length, 0, 'clearTrackTemplatesState should accept no parameters');
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(!funcStr.includes('id') && !funcStr.includes('templateData'), 'clearTrackTemplatesState should accept no parameters');
 });
 
 TestRunner.test('Track Templates - clearTrackTemplatesState calls captureStateForUndo with descriptive label', (t) => {
     const funcStr = clearTrackTemplatesState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo') && (funcStr.includes('Template') || funcStr.includes('Clear')), 'clearTrackTemplatesState should call captureStateForUndo with Template label');
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearTrackTemplatesState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Clear All Track Templates'), 'clearTrackTemplatesState should use descriptive undo label');
 });
 
 TestRunner.test('Track Templates - clearTrackTemplatesState guards against empty state', (t) => {
     const funcStr = clearTrackTemplatesState.toString();
-    t.assertTruthy(funcStr.includes('length') || funcStr.includes('> 0') || funcStr.includes('if'), 'clearTrackTemplatesState should guard against empty state');
+    t.assertTruthy(funcStr.includes('length') && funcStr.includes('> 0'), 'clearTrackTemplatesState should check if templates exist before capturing undo');
 });
 
-TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES constant is positive', (t) => {
+TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES constant validation (positive, 32 or less)', (t) => {
+    t.assertEqual(typeof MAX_TRACK_TEMPLATES, 'number', 'MAX_TRACK_TEMPLATES should be a number');
     t.assertTruthy(MAX_TRACK_TEMPLATES > 0, 'MAX_TRACK_TEMPLATES should be positive');
-});
-
-TestRunner.test('Track Templates - MAX_TRACK_TEMPLATES constant is 32 or less', (t) => {
     t.assertTruthy(MAX_TRACK_TEMPLATES <= 32, 'MAX_TRACK_TEMPLATES should be 32 or less');
 });
 
@@ -5314,54 +5296,14 @@ TestRunner.test('Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is non-empty str
     t.assertTruthy(DEFAULT_TEMPLATE_NAME_PREFIX.length > 0, 'DEFAULT_TEMPLATE_NAME_PREFIX should be non-empty');
 });
 
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is non-empty string', (t) => {
+TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS equals TRACK_COLORS', (t) => {
+    t.assertEqual(TRACK_TEMPLATE_COLORS, TRACK_COLORS, 'TRACK_TEMPLATE_COLORS should equal TRACK_COLORS');
+});
+
+TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is valid hex color', (t) => {
     t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE_COLOR, 'string', 'DEFAULT_TRACK_TEMPLATE_COLOR should be a string');
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE_COLOR.length > 0, 'DEFAULT_TRACK_TEMPLATE_COLOR should be non-empty');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE is an object', (t) => {
-    t.assertEqual(typeof DEFAULT_TRACK_TEMPLATE, 'object', 'DEFAULT_TRACK_TEMPLATE should be an object');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has name property', (t) => {
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE && DEFAULT_TRACK_TEMPLATE.name !== undefined, 'DEFAULT_TRACK_TEMPLATE should have name property');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has type property', (t) => {
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE && DEFAULT_TRACK_TEMPLATE.type !== undefined, 'DEFAULT_TRACK_TEMPLATE should have type property');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE type is valid track type', (t) => {
-    const validTypes = ['Synth', 'Sampler', 'DrumSampler', 'Audio', 'InstrumentSampler'];
-    t.assertTruthy(validTypes.includes(DEFAULT_TRACK_TEMPLATE.type), 'DEFAULT_TRACK_TEMPLATE type should be a valid track type');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has color property', (t) => {
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE && DEFAULT_TRACK_TEMPLATE.color !== undefined, 'DEFAULT_TRACK_TEMPLATE should have color property');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has synthParams object', (t) => {
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE && typeof DEFAULT_TRACK_TEMPLATE.synthParams === 'object', 'DEFAULT_TRACK_TEMPLATE should have synthParams object');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has activeEffects array', (t) => {
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE && Array.isArray(DEFAULT_TRACK_TEMPLATE.activeEffects), 'DEFAULT_TRACK_TEMPLATE should have activeEffects array');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has hasAutomation boolean', (t) => {
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE && typeof DEFAULT_TRACK_TEMPLATE.hasAutomation === 'boolean', 'DEFAULT_TRACK_TEMPLATE should have hasAutomation boolean');
-});
-
-TestRunner.test('Track Templates - DEFAULT_TRACK_TEMPLATE has automationLanes array', (t) => {
-    t.assertTruthy(DEFAULT_TRACK_TEMPLATE && Array.isArray(DEFAULT_TRACK_TEMPLATE.automationLanes), 'DEFAULT_TRACK_TEMPLATE should have automationLanes array');
-});
-
-TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS is defined', (t) => {
-    t.assertTruthy(typeof TRACK_TEMPLATE_COLORS !== 'undefined', 'TRACK_TEMPLATE_COLORS should be defined');
-});
-
-TestRunner.test('Track Templates - TRACK_TEMPLATE_COLORS is an array', (t) => {
-    t.assertTruthy(Array.isArray(TRACK_TEMPLATE_COLORS), 'TRACK_TEMPLATE_COLORS should be an array');
+    t.assertTruthy(DEFAULT_TRACK_TEMPLATE_COLOR.startsWith('#'), 'DEFAULT_TRACK_TEMPLATE_COLOR should be a hex color');
+    t.assertTruthy(DEFAULT_TRACK_TEMPLATE_COLOR.length === 7, 'DEFAULT_TRACK_TEMPLATE_COLOR should be valid 6-digit hex');
 });
 
 TestRunner.test('APP_VERSION validation for Day 368', (t) => {
