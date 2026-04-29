@@ -1,3 +1,40 @@
+#### Day 354: Ghost Track & Loop Region State Undo Capture Tests (2026-04-29)
+- **Feature**: Added 57 new unit tests for Ghost Track and Loop Region state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 57 new tests in Day 354 section:
+    - Ghost Track State - setGhostTrackIdState is a function export
+    - Ghost Track State - setGhostTrackIdState accepts 1 parameter
+    - Ghost Track State - setGhostTrackIdState calls captureStateForUndo with descriptive label
+    - Ghost Track State - setGhostTrackIdState uses conditional label based on trackId
+    - Ghost Track State - setGhostTrackIdState guards against missing appServices
+    - Ghost Track State - setGhostTrackIdState handles trackId value
+    - Ghost Track State - getGhostTrackIdState returns null or string
+    - Ghost Track State - Ghost track state independence verification
+    - Loop Region - setLoopRegionState is a function export
+    - Loop Region - setLoopRegionState accepts 1 parameter
+    - Loop Region - setLoopRegionState calls captureStateForUndo with descriptive label
+    - Loop Region - setLoopRegionState guards against missing appServices
+    - Loop Region - setLoopRegionEnabledState is a function export, calls captureStateForUndo
+    - Loop Region - setLoopRegionEnabledState coerces to boolean
+    - Loop Region - setLoopRegionStartBarState is a function export, calls captureStateForUndo
+    - Loop Region - setLoopRegionStartBarState clamps bar value to valid range (MAX_BARS)
+    - Loop Region - setLoopRegionEndBarState is a function export, calls captureStateForUndo
+    - Loop Region - setLoopRegionEndBarState clamps bar value to valid range (MAX_BARS)
+    - Loop Region - getLoopRegionState returns object with enabled/startBar/endBar properties
+    - APP_VERSION validation for 2.33.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.34.0
+- **Feature Details**:
+  - Tests validate Ghost Track state functions (setGhostTrackIdState, getGhostTrackIdState)
+  - Tests verify setGhostTrackIdState uses conditional undo labels (Set/Clear Ghost Track)
+  - Tests validate Loop Region state functions (setLoopRegionState, setLoopRegionEnabledState, setLoopRegionStartBarState, setLoopRegionEndBarState)
+  - Tests verify all mutation functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Ghost Track and Loop Region operations
+  - Tests verify all functions guard against missing appServices
+  - Tests verify Loop Region bar values are clamped to MAX_BARS
+  - Tests verify Loop Region state structure (enabled, startBar, endBar properties)
+  - Total tests increased from 384 to 442
+- **Version**: Bumped to 2.34.0
+
 #### Day 353: Audio Clip Timeline Methods Tests (2026-04-29)
 - **Feature**: Added 26 new unit tests for Audio Clip Timeline Methods to expand test coverage
 - **Files Modified**:
