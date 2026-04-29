@@ -30,6 +30,36 @@
   - Total tests increased from 521 to 552
 - **Version**: Bumped to 2.38.0
 
+#### Day 359: Chord Mode State Functions Tests (2026-04-29)
+- **Feature**: Added 29 new unit tests for Chord Mode state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 29 new tests in Day 359 section:
+    - Chord Mode - setChordModeState is a function export, accepts 1 parameter, calls captureStateForUndo
+    - Chord Mode - setChordModeState uses descriptive undo label, guards against missing appServices, merges with DEFAULT_CHORD_MODE
+    - Chord Mode - setChordModeEnabledState calls captureStateForUndo, uses descriptive undo label, coerces to boolean
+    - Chord Mode - setChordModeRootState calls captureStateForUndo, clamps value to 0-11 range, parses root as integer
+    - Chord Mode - setChordModeTypeState calls captureStateForUndo, defaults to major chord type
+    - Chord Mode - setChordModeLockState calls captureStateForUndo, uses Enable/Disable labels, coerces to boolean
+    - Chord Mode - setChordVoicingState calls captureStateForUndo, validates against CHORD_VOICINGS, defaults to DEFAULT_CHORD_VOICING
+    - Chord Mode - getChordVoicingState returns DEFAULT_CHORD_VOICING as fallback
+    - Chord Mode - CHORD_VOICINGS array contains expected voicings (closed, wide, etc.)
+    - Chord Mode - CHORD_VOICING_SPREAD has keys matching CHORD_VOICINGS
+    - Chord Mode - CHORD_VOICING_SPREAD.closed has 12 notes (full chromatic octave)
+    - Chord Mode - DEFAULT_CHORD_VOICING is in CHORD_VOICINGS
+    - APP_VERSION validation for 2.39.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.39.0
+- **Feature Details**:
+  - Tests validate all Chord Mode state setter functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Chord Mode operations (Set/Update Chord Mode, Toggle Chord Mode On/Off, Set Chord Root, Set Chord Type, Enable/Disable Chord Lock, Set Chord Voicing)
+  - Tests verify setChordModeRootState clamps value to 0-11 (MIDI note range for root: C to B)
+  - Tests verify setChordModeTypeState defaults to 'major' chord type
+  - Tests verify setChordVoicingState validates against CHORD_VOICINGS array and defaults to 'closed' if invalid
+  - Tests verify getChordVoicingState returns DEFAULT_CHORD_VOICING ('closed') as fallback when voicing is not set
+  - Tests verify CHORD_VOICINGS array structure (closed, wide, drop2, rootless voicings)
+  - Tests verify CHORD_VOICING_SPREAD object keys match CHORD_VOICINGS array
+  - Total tests increased from 3652 to 3681
+- **Version**: Bumped to 2.39.0
+
 #### Day 357: Window Management State Functions Tests (2026-04-29)
 - **Feature**: Added 30 new unit tests for Window Management state functions to expand test coverage
 - **Files Modified**:

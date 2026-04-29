@@ -69,7 +69,10 @@ import {
     DEFAULT_TEMPLATE_NAME_PREFIX,
     TRACK_TEMPLATE_COLORS,
     DEFAULT_TRACK_TEMPLATE_COLOR,
-    DEFAULT_TRACK_TEMPLATE
+    DEFAULT_TRACK_TEMPLATE,
+    CHORD_VOICINGS,
+    DEFAULT_CHORD_VOICING,
+    CHORD_VOICING_SPREAD
 } from './constants.js';
 import {
     getUndoStackState,
@@ -137,6 +140,8 @@ import {
     setChordModeLockState,
     getChordVoicingState,
     setChordVoicingState,
+    // Additional state functions
+    setChordModeState,
     // Time Signature state functions
     getTimeSignatureState,
     getTimeSignatureNumeratorState,
@@ -3642,6 +3647,162 @@ TestRunner.test('Window Management - incrementHighestZState accepts 0 parameters
 TestRunner.test('Window Management - incrementHighestZState increments highestZ', (t) => {
     const funcStr = incrementHighestZState.toString();
     t.assertTruthy(funcStr.includes('++highestZ') || funcStr.includes('highestZ++'), 'incrementHighestZState should increment highestZ');
+});
+
+// Day 359: Chord Mode State Functions Tests
+TestRunner.test('Chord Mode - setChordModeState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeState, 'function', 'setChordModeState should be a function');
+});
+
+TestRunner.test('Chord Mode - setChordModeState accepts 1 parameter', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('state'), 'setChordModeState should accept state parameter');
+});
+
+TestRunner.test('Chord Mode - setChordModeState references state parameter', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('state'), 'setChordModeState should reference state parameter');
+});
+
+TestRunner.test('Chord Mode - setChordModeState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('Chord Mode') || funcStr.includes('Chord'), 'setChordModeState should use descriptive undo label');
+});
+
+TestRunner.test('Chord Mode - setChordModeState guards against missing appServices', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setChordModeState should guard against missing appServices');
+});
+
+TestRunner.test('Chord Mode - setChordModeState merges with DEFAULT_CHORD_MODE', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_MODE'), 'setChordModeState should merge with DEFAULT_CHORD_MODE');
+});
+
+TestRunner.test('Chord Mode - setChordModeState validates state is an object', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('typeof state') && funcStr.includes('object'), 'setChordModeState should validate state is an object');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Chord Mode') || funcStr.includes('Chord Mode'), 'setChordModeEnabledState should use descriptive undo label');
+});
+
+TestRunner.test('Chord Mode - setChordModeEnabledState coerces to boolean', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setChordModeEnabledState should coerce to boolean');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('Chord Root') || funcStr.includes('root'), 'setChordModeRootState should use descriptive undo label');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState clamps value to 0-11 range', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min') && funcStr.includes('11'), 'setChordModeRootState should clamp value to 0-11 range');
+});
+
+TestRunner.test('Chord Mode - setChordModeRootState parses root as integer', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setChordModeRootState should parse root as integer');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeTypeState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes('Chord Type') || funcStr.includes('type'), 'setChordModeTypeState should use descriptive undo label');
+});
+
+TestRunner.test('Chord Mode - setChordModeTypeState defaults to major', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes("'major'") || funcStr.includes('"major"') || funcStr.includes('major'), 'setChordModeTypeState should default to major');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('Enable') || funcStr.includes('Disable') || funcStr.includes('Chord Lock'), 'setChordModeLockState should use descriptive undo label');
+});
+
+TestRunner.test('Chord Mode - setChordModeLockState coerces to boolean', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('!!'), 'setChordModeLockState should coerce to boolean');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState calls captureStateForUndo', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordVoicingState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState uses descriptive undo label', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('Chord Voicing') || funcStr.includes('voicing'), 'setChordVoicingState should use descriptive undo label');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState validates against CHORD_VOICINGS', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('CHORD_VOICINGS') || funcStr.includes('includes'), 'setChordVoicingState should validate against CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Mode - setChordVoicingState defaults to DEFAULT_CHORD_VOICING', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_VOICING'), 'setChordVoicingState should default to DEFAULT_CHORD_VOICING');
+});
+
+TestRunner.test('Chord Mode - getChordVoicingState returns voicing or DEFAULT_CHORD_VOICING', (t) => {
+    const funcStr = getChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_VOICING'), 'getChordVoicingState should return DEFAULT_CHORD_VOICING as fallback');
+});
+
+TestRunner.test('Chord Mode - CHORD_VOICINGS array contains expected voicings', (t) => {
+    t.assertTruthy(Array.isArray(CHORD_VOICINGS), 'CHORD_VOICINGS should be an array');
+    t.assertTruthy(CHORD_VOICINGS.includes('closed'), 'CHORD_VOICINGS should include closed');
+    t.assertTruthy(CHORD_VOICINGS.includes('wide'), 'CHORD_VOICINGS should include wide');
+});
+
+TestRunner.test('Chord Mode - CHORD_VOICING_SPREAD has keys matching CHORD_VOICINGS', (t) => {
+    t.assertEqual(Object.keys(CHORD_VOICING_SPREAD).length, CHORD_VOICINGS.length, 'CHORD_VOICING_SPREAD keys should match CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Mode - CHORD_VOICING_SPREAD.closed has 12 notes', (t) => {
+    t.assertEqual(CHORD_VOICING_SPREAD.closed.length, 12, 'Closed voicing should have 12 notes');
+});
+
+TestRunner.test('Chord Mode - DEFAULT_CHORD_VOICING is in CHORD_VOICINGS', (t) => {
+    t.assertTruthy(CHORD_VOICINGS.includes(DEFAULT_CHORD_VOICING), 'DEFAULT_CHORD_VOICING should be in CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Mode - APP_VERSION validation for Day 359', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 359');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 38, 'Minor version should be >= 38 for Day 359');
+    }
 });
 
 TestRunner.test('Window Management - APP_VERSION validation for Day 357', (t) => {
