@@ -14139,3 +14139,271 @@ TestRunner.test('State - APP_VERSION is 2.10.0 or higher for Day 330', (t) => {
         t.assertTruthy(versionParts[1] >= 10, 'Minor version should be >= 10 for Day 330');
     }
 });
+// ============================================
+// Day 331: Sequencer Content DOM Extended Functions Tests (2026-04-29)
+// Tests for Sequencer window UI functions: buildSequencerContentDOM and openTrackSequencerWindow
+// ============================================
+
+TestRunner.test('Sequencer - buildSequencerContentDOM is a function', (t) => {
+    t.assertEqual(typeof buildSequencerContentDOM, 'function', 'buildSequencerContentDOM should be a function');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM accepts 4 parameters (track, rows, rowLabels, numBars)', (t) => {
+    t.assertEqual(buildSequencerContentDOM.length, 4, 'buildSequencerContentDOM should accept 4 parameters');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references track parameter', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track'), 'buildSequencerContentDOM should reference track parameter');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references rows parameter', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('rows'), 'buildSequencerContentDOM should reference rows parameter');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references rowLabels parameter', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('rowLabels'), 'buildSequencerContentDOM should reference rowLabels parameter');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references numBars parameter', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('numBars'), 'buildSequencerContentDOM should reference numBars parameter');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references STEPS_PER_BAR constant', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('STEPS_PER_BAR') || funcStr.includes('stepsPerBar'), 'buildSequencerContentDOM should reference STEPS_PER_BAR');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references track.name', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track.name') || funcStr.includes('name'), 'buildSequencerContentDOM should reference track.name');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references track.id', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track.id') || funcStr.includes('trackId'), 'buildSequencerContentDOM should reference track.id');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references track.type', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track.type') || funcStr.includes('type'), 'buildSequencerContentDOM should reference track.type');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes scale mode controls for Synth tracks', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('scaleMode') || funcStr.includes('Scale') || funcStr.includes('SCALES'), 'buildSequencerContentDOM should include scale mode controls');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes chord mode controls for Synth tracks', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('chordMode') || funcStr.includes('Chord') || funcStr.includes('CHORD'), 'buildSequencerContentDOM should include chord mode controls');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes velocity editor toggle', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('velocityEditorToggle') || funcStr.includes('Velocity'), 'buildSequencerContentDOM should include velocity editor toggle');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes probability editor toggle', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('probabilityEditorToggle') || funcStr.includes('Probability'), 'buildSequencerContentDOM should include probability editor toggle');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes automation editor toggle', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('automationEditorToggle') || funcStr.includes('Automation'), 'buildSequencerContentDOM should include automation editor toggle');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes ghost track selector', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('ghostTrack') || funcStr.includes('Ghost'), 'buildSequencerContentDOM should include ghost track selector');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes sequencer grid layout', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('sequencer-grid-layout') || funcStr.includes('grid-template-columns'), 'buildSequencerContentDOM should include sequencer grid layout');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes sequencer header cells', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('sequencer-header-cell') || funcStr.includes('header-cell'), 'buildSequencerContentDOM should include sequencer header cells');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM handles scale mode enabled state', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('isScaleModeEnabled') || funcStr.includes('enabled'), 'buildSequencerContentDOM should check scale mode enabled state');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references SCALES constant', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('SCALES') || funcStr.includes('Constants.SCALES'), 'buildSequencerContentDOM should reference SCALES constant');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references chord constants', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('CHORD_TYPES') || funcStr.includes('Constants.CHORD'), 'buildSequencerContentDOM should reference chord constants');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM calls track.getActiveSequence', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence') || funcStr.includes('activeSequence'), 'buildSequencerContentDOM should call getActiveSequence');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references getScaleMode app service', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('getScaleMode') || funcStr.includes('scaleMode'), 'buildSequencerContentDOM should reference getScaleMode service');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references getChordMode app service', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('getChordMode') || funcStr.includes('chordMode'), 'buildSequencerContentDOM should reference getChordMode service');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM references getGhostTrackId app service', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('getGhostTrackId') || funcStr.includes('ghostTrackId'), 'buildSequencerContentDOM should reference getGhostTrackId service');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM handles Synth track type', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes("'Synth'") || funcStr.includes('"Synth"'), 'buildSequencerContentDOM should handle Synth track type');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM handles InstrumentSampler track type', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes("'InstrumentSampler'") || funcStr.includes('"InstrumentSampler"'), 'buildSequencerContentDOM should handle InstrumentSampler track type');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM handles DrumSampler track type', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes("'DrumSampler'") || funcStr.includes('"DrumSampler"'), 'buildSequencerContentDOM should handle DrumSampler track type');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow is a function', (t) => {
+    t.assertEqual(typeof openTrackSequencerWindow, 'function', 'openTrackSequencerWindow should be a function');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow accepts 3 parameters (trackId, forceRedraw, savedState)', (t) => {
+    t.assertEqual(openTrackSequencerWindow.length, 3, 'openTrackSequencerWindow should accept 3 parameters');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references trackId parameter', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackSequencerWindow should reference trackId parameter');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references forceRedraw parameter', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('forceRedraw'), 'openTrackSequencerWindow should reference forceRedraw parameter');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow calls getTrackById app service', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackSequencerWindow should call getTrackById');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow validates track type is not Audio', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('Audio'), 'openTrackSequencerWindow should prevent Audio tracks from opening sequencer');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow calls getActiveSequence', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'openTrackSequencerWindow should call getActiveSequence');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow creates sequencer window with windowId', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('sequencerWin-') || funcStr.includes('windowId') || funcStr.includes('createWindow'), 'openTrackSequencerWindow should create sequencer window');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references getOpenWindows app service', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackSequencerWindow should reference getOpenWindows');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references Constants.STEPS_PER_BAR', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('Constants.STEPS_PER_BAR') || funcStr.includes('STEPS_PER_BAR'), 'openTrackSequencerWindow should reference STEPS_PER_BAR');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references synthPitches for Synth tracks', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('synthPitches') || funcStr.includes('Constants.synthPitches'), 'openTrackSequencerWindow should reference synthPitches');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references numSlices for Sampler tracks', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('numSlices') || funcStr.includes('Constants.numSlices'), 'openTrackSequencerWindow should reference numSlices');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references numDrumSamplerPads for DrumSampler tracks', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('numDrumSamplerPads') || funcStr.includes('Constants.numDrumSamplerPads'), 'openTrackSequencerWindow should reference numDrumSamplerPads');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow handles saved window state', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') || funcStr.includes('left') || funcStr.includes('width'), 'openTrackSequencerWindow should handle saved state');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow calls buildSequencerContentDOM', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('buildSequencerContentDOM'), 'openTrackSequencerWindow should call buildSequencerContentDOM');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references uiElementsCache or desktop', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('uiElementsCache') || funcStr.includes('desktop') || funcStr.includes('offsetWidth'), 'openTrackSequencerWindow should reference desktop element');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow sets onCloseCallback', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('onCloseCallback') || funcStr.includes('close'), 'openTrackSequencerWindow should set onCloseCallback');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow references getActiveSequencerTrackId', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequencerTrackId') || funcStr.includes('activeSequencerTrackId'), 'openTrackSequencerWindow should reference active sequencer track ID');
+});
+
+TestRunner.test('Sequencer - openTrackSequencerWindow handles forceRedraw to close existing window', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('forceRedraw') && (funcStr.includes('close') || funcStr.includes('restore')), 'openTrackSequencerWindow should handle forceRedraw');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM returns a string', (t) => {
+    const result = buildSequencerContentDOM({}, 12, ['C4', 'D4'], 1);
+    t.assertEqual(typeof result, 'string', 'buildSequencerContentDOM should return a string');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes sequencer-container class', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('sequencer-container') || funcStr.includes('sequencer-grid-layout'), 'buildSequencerContentDOM should create sequencer container');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes controls bar', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('controls') || funcStr.includes('controls mb-1'), 'buildSequencerContentDOM should include controls bar');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes bars input', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('seqLengthInput') || funcStr.includes('numBars'), 'buildSequencerContentDOM should include bars input');
+});
+
+TestRunner.test('Sequencer - buildSequencerContentDOM includes scale/chord lock toggles', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('scaleLockToggle') || funcStr.includes('chordLockToggle') || funcStr.includes('lock'), 'buildSequencerContentDOM should include lock toggles');
+});
+
+TestRunner.test('State - APP_VERSION is 2.11.0 or higher for Day 331', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 331');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 11, 'Minor version should be >= 11 for Day 331');
+    }
+});

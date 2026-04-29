@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.10.0'; // Day 330: Track Inspector UI Functions Tests (2026-04-29)
+export const APP_VERSION = '2.11.0'; // Day 331: Sequencer Content DOM Extended Functions Tests (2026-04-29)
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

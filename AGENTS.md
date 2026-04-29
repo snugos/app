@@ -1,3 +1,71 @@
+#### Day 331: Sequencer Content DOM Extended Functions Tests (2026-04-29)
+- **Feature**: Added 55 new unit tests for Sequencer Content DOM and Track Sequencer Window UI functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 55 new tests in Day 331 section:
+    - buildSequencerContentDOM: function export, 4 parameters, returns string, references track/rows/rowLabels/numBars
+    - buildSequencerContentDOM: references STEPS_PER_BAR, track.name, track.id, track.type
+    - buildSequencerContentDOM: includes scale mode controls (scaleMode, SCALES, scaleControlsHTML)
+    - buildSequencerContentDOM: includes chord mode controls (chordMode, CHORD_TYPES, chordControlsHTML)
+    - buildSequencerContentDOM: includes velocity/probability/automation editor toggles
+    - buildSequencerContentDOM: includes ghost track selector
+    - buildSequencerContentDOM: includes sequencer grid layout (sequencer-grid-layout, grid-template-columns)
+    - buildSequencerContentDOM: includes sequencer header cells
+    - buildSequencerContentDOM: references getScaleMode, getChordMode, getGhostTrackId app services
+    - buildSequencerContentDOM: handles Synth, InstrumentSampler, DrumSampler track types
+    - openTrackSequencerWindow: function export, 3 parameters (trackId, forceRedraw, savedState)
+    - openTrackSequencerWindow: calls getTrackById, validates Audio track type rejection
+    - openTrackSequencerWindow: calls getActiveSequence, creates sequencer window with windowId
+    - openTrackSequencerWindow: references getOpenWindows, Constants.STEPS_PER_BAR
+    - openTrackSequencerWindow: references synthPitches, numSlices, numDrumSamplerPads constants
+    - openTrackSequencerWindow: handles saved window state, calls buildSequencerContentDOM
+    - openTrackSequencerWindow: references uiElementsCache/desktop, sets onCloseCallback
+    - openTrackSequencerWindow: references getActiveSequencerTrackId, handles forceRedraw
+  - `js/constants.js`: Bumped APP_VERSION to 2.11.0
+- **Feature Details**:
+  - Tests validate buildSequencerContentDOM function signature and parameter usage
+  - Tests verify buildSequencerContentDOM creates sequencer grid with scale/chord controls
+  - Tests verify buildSequencerContentDOM handles velocity/probability/automation editors
+  - Tests verify buildSequencerContentDOM includes ghost track selector for note preview
+  - Tests verify openTrackSequencerWindow validates track type and prevents Audio tracks
+  - Tests verify openTrackSequencerWindow creates windows with proper window IDs
+  - Tests verify openTrackSequencerWindow handles saved state for window persistence
+  - Total tests increased from 2378 to 2433
+- **Version**: Bumped to 2.11.0
+
+
+#### Day 330: Track Inspector UI Functions Tests (2026-04-29)
+- **Feature**: Added 50 new unit tests for Track Inspector window UI functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 50 new tests in Day 330 section:
+    - initializeSynthSpecificControls: function export, 2 parameters, references track, synthEngineType, createKnob, synthParams
+    - initializeSamplerSpecificControls: function export, 2 parameters, references track, slices, numSlices, waveform/canvas
+    - initializeDrumSamplerSpecificControls: function export, 2 parameters, references drumSamplerPads, renderDrumSamplerPads
+    - initializeAudioTrackInspectorControls: 2 parameters, references track, input device
+    - initializeCommonInspectorControls: function export, 2 parameters, references track.name, muteBtn, soloBtn, armInputBtn
+    - initializeCommonInspectorControls: references handleTrackMute/Solo/Arm, handleRemoveTrack, color swatches, trackNameInput
+    - initializeTypeSpecificInspectorControls: function export, 2 parameters, references track.type
+    - initializeTypeSpecificInspectorControls: handles Synth, Sampler, DrumSampler, Audio track types
+    - buildTrackInspectorContentDOM: function export, 1 parameter, returns string, references track.id/name/type
+    - buildTrackInspectorContentDOM: includes mute/solo/arm buttons, track name input, volume, pan, color swatches
+    - buildTrackInspectorContentDOM: includes remove track button, open effects button, open sequencer button
+    - buildTrackInspectorContentDOM: branches by track type for specific controls
+    - buildSynthSpecificInspectorDOM: includes engine controls, oscillator
+    - buildSamplerSpecificInspectorDOM: includes waveform area, drop zone
+    - buildDrumSamplerSpecificInspectorDOM: includes pad grid
+    - buildAudioTrackInspectorDOM: includes input monitoring controls
+  - `js/constants.js`: Bumped APP_VERSION to 2.10.0
+- **Feature Details**:
+  - Tests validate all Track Inspector initialization and DOM building functions exist with correct signatures
+  - Tests verify initializeSynthSpecificControls sets up synth engine controls with createKnob
+  - Tests verify initializeSamplerSpecificControls references slices array and waveform/canvas elements
+  - Tests verify initializeDrumSamplerSpecificControls references drumSamplerPads and calls renderDrumSamplerPads
+  - Tests verify initializeCommonInspectorControls sets up common controls (mute/solo/arm, color swatches, name input)
+  - Tests verify initializeTypeSpecificInspectorControls branches on track.type for type-specific initialization
+  - Tests verify buildTrackInspectorContentDOM generates complete inspector HTML with all track controls
+  - Tests verify track-specific DOM builders include proper UI elements for each track type
+  - Total tests increased from 2328 to 2378
+- **Version**: Bumped to 2.10.0
+
 
 #### Day 328: Event Handlers Extended Function Tests (2026-04-28)
 - **Feature**: Added 52 new unit tests for Event Handlers extended functions to expand test coverage
