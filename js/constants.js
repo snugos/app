@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.13.0'; // Day 332: Sound Library State Extended Tests
+export const APP_VERSION = '2.14.0'; // Day 334: Sound Browser Window Content & Template Window Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants
