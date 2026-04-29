@@ -428,6 +428,12 @@ export function setLoadedZipFilesState(files) {
     loadedZipFilesGlobal = files || {}; 
 }
 export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
+export function setSoundLibraryFileTreesState(trees) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Sound Library File Trees`);
+    }
+    soundLibraryFileTreesGlobal = trees || {};
+}
 export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
 export function setCurrentLibraryNameState(libraryName) { 
     if (appServices.captureStateForUndo) {
