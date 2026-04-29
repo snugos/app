@@ -1,3 +1,53 @@
+#### Day 369: MIDI Export/Import Functions Tests (2026-04-29)
+- **Feature**: Added 41 new unit tests for MIDI Export/Import functions and helper functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 41 new tests in Day 369 section:
+    - MIDI Export - exportToMidiInternal is a function export
+    - MIDI Export - exportToMidiInternal is async
+    - MIDI Export - exportToMidiInternal calls showNotification
+    - MIDI Export - exportToMidiInternal validates appServices
+    - MIDI Export - exportToMidiInternal references getTempoState
+    - MIDI Export - exportToMidiInternal references getTimeSignatureState
+    - MIDI Export - exportToMidiInternal references getTracksState
+    - MIDI Export - exportToMidiInternal references getPlaybackModeState
+    - MIDI Export - exportToMidiInternal checks for notes to export
+    - MIDI Export - exportToMidiInternal uses MIDI_EXPORT_TicksPerQuarterNote
+    - MIDI Export - exportToMidiInternal uses MIDI_DEFAULT_CHANNEL
+    - MIDI Export - exportToMidiInternal calls buildMidiFile
+    - MIDI Export - buildMidiFile is a function
+    - MIDI Export - buildMidiFile accepts 2 parameters (events, ticksPerQuarter)
+    - MIDI Export - buildMidiFile creates MIDI header with MThd
+    - MIDI Export - buildMidiFile creates MIDI track with MTrk
+    - MIDI Export - buildMidiFile handles noteOn events
+    - MIDI Export - buildMidiFile handles noteOff events
+    - MIDI Export - buildMidiFile handles tempo events
+    - MIDI Export - buildMidiFile handles timeSig events
+    - MIDI Export - buildMidiFile handles trackName events
+    - MIDI Export - buildMidiFile handles endOfTrack events
+    - MIDI Export - buildMidiFile writes variable length quantities
+    - MIDI Export - buildMidiFile returns Uint8Array
+    - MIDI Export - pitchToRow is a function, accepts 2 parameters (rowIndex, trackType)
+    - MIDI Export - pitchToRow handles Synth, DrumSampler, and Sampler track types
+    - MIDI Export - noteNameToMidiNumber is a function, handles note name and octave
+    - MIDI Export - bufferToWav is a function, handles audio buffer with channels
+    - MIDI Export - bufferToWav creates WAV header (RIFF/WAVE)
+    - MIDI Export - bufferToWav handles PCM format
+    - MIDI Export Constants - MIDI_EXPORT_VELOCITY_SCALE is 127
+    - MIDI Export Constants - MIDI_EXPORT_TicksPerQuarterNote is 480
+    - MIDI Export Constants - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is non-empty string
+    - MIDI Export Constants - MAX_MIDI_EXPORT_TRACKS is 64
+    - APP_VERSION validation for 2.48.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.48.0
+- **Feature Details**:
+  - Tests validate exportToMidiInternal function (async, validates appServices, references state functions)
+  - Tests validate buildMidiFile function (creates proper MIDI file structure with MThd/MTrk chunks)
+  - Tests validate pitchToRow function (converts row index to MIDI note based on track type)
+  - Tests validate noteNameToMidiNumber function (converts note names to MIDI numbers)
+  - Tests validate bufferToWav function (creates WAV file from AudioBuffer with proper headers)
+  - Tests validate MIDI export constants (velocity scale, ticks per quarter note, filename prefix, max tracks)
+  - Total tests increased from 886 to 927
+- **Version**: Bumped to 2.48.0
+
 #### Day 368: Track Template State Functions Tests (2026-04-29)
 - **Feature**: Added 24 new unit tests for Track Templates state functions to expand test coverage
 - **Files Modified**:
