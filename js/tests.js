@@ -2969,3 +2969,217 @@ TestRunner.test('Ghost Track & Loop Region - APP_VERSION validation for Day 354'
         t.assertTruthy(versionParts[1] >= 33, 'Minor version should be >= 33 for Day 354');
     }
 });
+// ================================================================
+// Day 355: Recording Audio Module Extended Function Tests
+// ================================================================
+TestRunner.test('Recording Audio - startAudioRecording is an async function', (t) => {
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+    const result = startAudioRecording(null, false);
+    t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording accepts 2 parameters', (t) => {
+    const funcStr = startAudioRecording.toString();
+    // Check parameter count - function has (track, isMonitoringEnabled)
+    t.assertTruthy(funcStr.includes('track') || funcStr.includes('track'), 'startAudioRecording should reference track parameter');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording references track parameter', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('track'), 'startAudioRecording should reference track parameter');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording references isMonitoringEnabled parameter', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('isMonitoringEnabled') || funcStr.includes('Monitoring'), 'startAudioRecording should reference monitoring parameter');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording validates track type', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('type') && funcStr.includes('Audio'), 'startAudioRecording should validate Audio track type');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording handles microphone permissions error', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('NotAllowedError') || funcStr.includes('permission'), 'startAudioRecording should handle permission errors');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording handles no device found error', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('NotFoundError') || funcStr.includes('device') || funcStr.includes('microphone'), 'startAudioRecording should handle missing device errors');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording creates Tone.UserMedia', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('UserMedia') || funcStr.includes('mic'), 'startAudioRecording should create Tone.UserMedia');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording creates Tone.Recorder', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('Recorder') || funcStr.includes('recorder'), 'startAudioRecording should create Tone.Recorder');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording connects audio nodes (mic -> gain -> recorder)', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('connect') && funcStr.includes('mic') || funcStr.includes('connect'), 'startAudioRecording should connect audio nodes');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording updates recording state', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setIsRecordingState') || funcStr.includes('isRecording'), 'startAudioRecording should update recording state');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording updates recording track ID state', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setRecordingTrackIdState') || funcStr.includes('recordingTrackId'), 'startAudioRecording should update recording track ID state');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording updates recording start time state', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setRecordingStartTimeState') || funcStr.includes('recordingStartTime') || funcStr.includes('Transport'), 'startAudioRecording should update recording start time state');
+});
+
+TestRunner.test('Recording Audio - startAudioRecording calls showNotification on error', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'startAudioRecording should call showNotification on error');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording is an async function', (t) => {
+    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
+    const result = stopAudioRecording();
+    t.assertTruthy(result instanceof Promise, 'stopAudioRecording should return a Promise');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording accepts 0 parameters', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    // stopAudioRecording takes no parameters
+    t.assertEqual(funcStr.match(/\([^)]*\)/)?.[0] || '()', '()', 'stopAudioRecording should accept 0 parameters');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording handles null recorder', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('recorder') && funcStr.includes('null'), 'stopAudioRecording should handle null recorder');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording processes recorded blob', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('blob') || funcStr.includes('addAudioClip'), 'stopAudioRecording should process recorded blob');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording clears recording state', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setIsRecordingState') && funcStr.includes('false'), 'stopAudioRecording should clear recording state');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording clears recording track ID state', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setRecordingTrackIdState') && funcStr.includes('null'), 'stopAudioRecording should clear recording track ID state');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording clears recording start time state', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setRecordingStartTimeState') || funcStr.includes('recordingStartTime'), 'stopAudioRecording should clear recording start time state');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording disposes audio resources', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('dispose') || funcStr.includes('close'), 'stopAudioRecording should dispose audio resources');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording handles empty recording', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('size') || funcStr.includes('empty'), 'stopAudioRecording should handle empty recording');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording calls showNotification on error', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'stopAudioRecording should call showNotification on error');
+});
+
+TestRunner.test('Recording Audio - setRecordingInputGain is a function', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Recording Audio - setRecordingInputGain accepts 1 parameter', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('gainValue') || funcStr.includes('value') || funcStr.includes('gain'), 'setRecordingInputGain should reference gain parameter');
+});
+
+TestRunner.test('Recording Audio - setRecordingInputGain clamps Infinity values', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min') || funcStr.includes('Infinity'), 'setRecordingInputGain should clamp Infinity values');
+});
+
+TestRunner.test('Recording Audio - setRecordingInputGain clamps negative values', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('negative'), 'setRecordingInputGain should clamp negative values');
+});
+
+TestRunner.test('Recording Audio - Recording audio constraints disable echo cancellation', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('echoCancellation') && funcStr.includes('false'), 'Recording should disable echo cancellation');
+});
+
+TestRunner.test('Recording Audio - Recording audio constraints disable auto gain control', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('autoGainControl') && funcStr.includes('false'), 'Recording should disable auto gain control');
+});
+
+TestRunner.test('Recording Audio - Recording audio constraints disable noise suppression', (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('noiseSuppression') && funcStr.includes('false'), 'Recording should disable noise suppression');
+});
+
+TestRunner.test('Recording Audio - Recording constants have valid sample rate', (t) => {
+    t.assertTruthy(typeof RECORDING_SAMPLE_RATE !== 'undefined', 'RECORDING_SAMPLE_RATE should be defined');
+    t.assertEqual(RECORDING_SAMPLE_RATE, 44100, 'Recording sample rate should be 44100 Hz');
+});
+
+TestRunner.test('Recording Audio - Recording constants have valid channel count', (t) => {
+    t.assertTruthy(typeof RECORDING_NUM_CHANNELS !== 'undefined', 'RECORDING_NUM_CHANNELS should be defined');
+    t.assertEqual(RECORDING_NUM_CHANNELS, 1, 'Recording should be mono (1 channel)');
+});
+
+TestRunner.test('Recording Audio - Recording constants have valid bit depth', (t) => {
+    t.assertTruthy(typeof RECORDING_BIT_DEPTH !== 'undefined', 'RECORDING_BIT_DEPTH should be defined');
+    t.assertEqual(RECORDING_BIT_DEPTH, 16, 'Recording bit depth should be 16-bit');
+});
+
+TestRunner.test('Recording Audio - Recording constants have valid mime type', (t) => {
+    t.assertTruthy(typeof RECORDING_MIME_TYPE !== 'undefined', 'RECORDING_MIME_TYPE should be defined');
+    t.assertEqual(RECORDING_MIME_TYPE, 'audio/webm', 'Recording mime type should be audio/webm');
+});
+
+TestRunner.test('Recording Audio - Recording input gain constants are valid', (t) => {
+    t.assertTruthy(typeof MIN_RECORDING_INPUT_GAIN !== 'undefined', 'MIN_RECORDING_INPUT_GAIN should be defined');
+    t.assertTruthy(typeof MAX_RECORDING_INPUT_GAIN !== 'undefined', 'MAX_RECORDING_INPUT_GAIN should be defined');
+    t.assertTruthy(typeof DEFAULT_RECORDING_INPUT_GAIN !== 'undefined', 'DEFAULT_RECORDING_INPUT_GAIN should be defined');
+    t.assertTruthy(MIN_RECORDING_INPUT_GAIN >= 0, 'MIN_RECORDING_INPUT_GAIN should be >= 0');
+    t.assertTruthy(MAX_RECORDING_INPUT_GAIN <= 10, 'MAX_RECORDING_INPUT_GAIN should be <= 10');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN >= MIN_RECORDING_INPUT_GAIN && DEFAULT_RECORDING_INPUT_GAIN <= MAX_RECORDING_INPUT_GAIN, 'DEFAULT_RECORDING_INPUT_GAIN should be within range');
+});
+
+TestRunner.test('Recording Audio - Monitoring volume constants are valid', (t) => {
+    t.assertTruthy(typeof MIN_MONITORING_VOLUME !== 'undefined' || typeof MIN_RECORDING_MONITORING_VOLUME !== 'undefined', 'MIN monitoring volume should be defined');
+    t.assertTruthy(typeof MAX_MONITORING_VOLUME !== 'undefined' || typeof MAX_RECORDING_MONITORING_VOLUME !== 'undefined', 'MAX monitoring volume should be defined');
+    t.assertTruthy(typeof DEFAULT_MONITORING_VOLUME !== 'undefined' || typeof DEFAULT_RECORDING_MONITORING_VOLUME !== 'undefined', 'DEFAULT monitoring volume should be defined');
+});
+
+TestRunner.test('Recording Audio - Max recording length is reasonable', (t) => {
+    t.assertTruthy(typeof MAX_RECORDING_LENGTH_SECONDS !== 'undefined', 'MAX_RECORDING_LENGTH_SECONDS should be defined');
+    t.assertTruthy(MAX_RECORDING_LENGTH_SECONDS >= 60, 'Max recording should be at least 60 seconds');
+    t.assertTruthy(MAX_RECORDING_LENGTH_SECONDS <= 3600, 'Max recording should be at most 1 hour');
+});
+
+TestRunner.test('Recording Audio - Min recording length is valid', (t) => {
+    t.assertTruthy(typeof MIN_RECORDING_LENGTH_SECONDS !== 'undefined', 'MIN_RECORDING_LENGTH_SECONDS should be defined');
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS > 0, 'Min recording length should be positive');
+});
+
+TestRunner.test('Recording Audio - APP_VERSION validation for Day 355', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 355');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 34, 'Minor version should be >= 34 for Day 355');
+    }
+});

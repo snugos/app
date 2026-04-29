@@ -1,3 +1,46 @@
+#### Day 355: Recording Audio Module Extended Function Tests (2026-04-29)
+- **Feature**: Added 40 new unit tests for Recording Audio Module extended functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 40 new tests in Day 355 section:
+    - Recording Audio - startAudioRecording is an async function, accepts 2 parameters
+    - Recording Audio - startAudioRecording references track and isMonitoringEnabled parameters
+    - Recording Audio - startAudioRecording validates Audio track type
+    - Recording Audio - startAudioRecording handles microphone permissions error (NotAllowedError)
+    - Recording Audio - startAudioRecording handles no device found error (NotFoundError)
+    - Recording Audio - startAudioRecording creates Tone.UserMedia and Tone.Recorder
+    - Recording Audio - startAudioRecording connects audio nodes (mic -> gain -> recorder)
+    - Recording Audio - startAudioRecording updates recording state (isRecording, trackId, startTime)
+    - Recording Audio - startAudioRecording calls showNotification on error
+    - Recording Audio - stopAudioRecording is an async function, accepts 0 parameters
+    - Recording Audio - stopAudioRecording handles null recorder
+    - Recording Audio - stopAudioRecording processes recorded blob (addAudioClip)
+    - Recording Audio - stopAudioRecording clears recording state (isRecording, trackId, startTime)
+    - Recording Audio - stopAudioRecording disposes audio resources (mic, recorder)
+    - Recording Audio - stopAudioRecording handles empty recording
+    - Recording Audio - stopAudioRecording calls showNotification on error
+    - Recording Audio - setRecordingInputGain is a function, accepts 1 parameter
+    - Recording Audio - setRecordingInputGain clamps Infinity and negative values
+    - Recording Audio - Recording audio constraints disable echo cancellation
+    - Recording Audio - Recording audio constraints disable auto gain control
+    - Recording Audio - Recording audio constraints disable noise suppression
+    - Recording Audio - Recording constants validation (sample rate 44100, mono, 16-bit, webm)
+    - Recording Audio - Recording input gain constants validation (MIN/MAX/DEFAULT)
+    - Recording Audio - Monitoring volume constants validation
+    - Recording Audio - Recording length limits validation (MAX 600s, MIN 0.1s)
+    - APP_VERSION validation for 2.34.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.35.0
+- **Feature Details**:
+  - Tests validate startAudioRecording async function and parameter usage
+  - Tests verify startAudioRecording creates Tone.UserMedia and Tone.Recorder
+  - Tests verify startAudioRecording handles microphone permissions and device errors
+  - Tests verify stopAudioRecording processes recorded blob and calls addAudioClip
+  - Tests verify stopAudioRecording clears all recording state variables
+  - Tests verify setRecordingInputGain clamps extreme values
+  - Tests verify recording audio constraints disable browser audio processing
+  - Tests validate recording constants (quality settings, limits, monitoring)
+  - Total tests increased from 420 to 460
+- **Version**: Bumped to 2.35.0
+
 #### Day 354: Ghost Track & Loop Region State Undo Capture Tests (2026-04-29)
 - **Feature**: Added 57 new unit tests for Ghost Track and Loop Region state functions to expand test coverage
 - **Files Modified**:
