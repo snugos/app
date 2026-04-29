@@ -145,6 +145,8 @@ import {
     addTrackTemplateState,
     updateTrackTemplateState,
     removeTrackTemplateState,
+    // Track Actions
+    addTrackToStateInternal,
     // Project Save/Load/Export
     saveProjectInternal,
     loadProjectInternal,
