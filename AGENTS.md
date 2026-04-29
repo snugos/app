@@ -1,3 +1,35 @@
+#### Day 358: Track Effect Instance Methods Tests (2026-04-29)
+- **Feature**: Added 31 new unit tests for Track Effect instance methods to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 358 section:
+    - Track Effect - addEffect is a function, accepts 1 parameter (effectType), references effectType parameter
+    - Track Effect - addEffect calls _captureUndoState with descriptive label (Add + effectType + name)
+    - Track Effect - addEffect checks effectsRegistryAccess via appServices, calls rebuildEffectChain, updateTrackUI
+    - Track Effect - addEffect calls showNotification on error, handles missing registry
+    - Track Effect - removeEffect is a function, accepts 1 parameter (effectId), references effectId parameter
+    - Track Effect - removeEffect calls _captureUndoState with descriptive label (Remove + effect + name)
+    - Track Effect - removeEffect handles effect not found case, calls rebuildEffectChain, updateTrackUI
+    - Track Effect - removeEffect disposes tone node before removing from activeEffects array
+    - Track Effect - updateEffectParam is a function, accepts 3 parameters (effectId, paramPath, value)
+    - Track Effect - updateEffectParam calls _captureUndoState with descriptive label
+    - Track Effect - updateEffectParam parses paramPath with split('.') for nested parameters
+    - Track Effect - updateEffectParam handles effect not found, has try-catch error handling
+    - Track Effect - reorderEffect is a function, accepts 2 parameters (effectId, newIndex)
+    - Track Effect - reorderEffect calls _captureUndoState with descriptive label
+    - Track Effect - reorderEffect calls rebuildEffectChain for audio chain update
+    - APP_VERSION validation for 2.38.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.38.0
+- **Feature Details**:
+  - Tests validate Track.prototype.addEffect, removeEffect, updateEffectParam, and reorderEffect methods
+  - Tests verify addEffect creates effect instances using effectsRegistryAccess and calls rebuildEffectChain
+  - Tests verify removeEffect disposes Tone.js nodes properly before removing from activeEffects
+  - Tests verify updateEffectParam handles nested parameter paths (e.g., 'envelope.decay') with split parsing
+  - Tests verify all four effect methods call _captureUndoState for undo/redo support
+  - Tests verify descriptive undo labels reference both effect type and track name
+  - Tests verify error handling with showNotification for user feedback
+  - Total tests increased from 521 to 552
+- **Version**: Bumped to 2.38.0
+
 #### Day 357: Window Management State Functions Tests (2026-04-29)
 - **Feature**: Added 30 new unit tests for Window Management state functions to expand test coverage
 - **Files Modified**:

@@ -2747,6 +2747,161 @@ TestRunner.test('Audio Clip Timeline - CLIP_COLORS array has 16 colors', (t) => 
     t.assertTruthy(CLIP_COLORS[0].startsWith('#'), 'Clip colors should be hex format');
 });
 
+// Day 358: Track Effect Instance Methods Tests
+TestRunner.test('Track Effect - addEffect is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.addEffect, 'function', 'addEffect should be a function');
+});
+
+TestRunner.test('Track Effect - addEffect accepts 1 parameter', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addEffect should accept effectType parameter');
+});
+
+TestRunner.test('Track Effect - addEffect references effectType parameter', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addEffect should reference effectType parameter');
+});
+
+TestRunner.test('Track Effect - addEffect calls _captureUndoState with descriptive label', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'addEffect should call _captureUndoState');
+});
+
+TestRunner.test('Track Effect - addEffect uses descriptive undo label with effect type and track name', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('Add') && funcStr.includes('effectType') && funcStr.includes('name'), 'addEffect should use descriptive undo label with effect type and track name');
+});
+
+TestRunner.test('Track Effect - addEffect checks effectsRegistryAccess via appServices', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('appServices'), 'addEffect should check effectsRegistryAccess via appServices');
+});
+
+TestRunner.test('Track Effect - addEffect calls showNotification on error', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'addEffect should call showNotification on error');
+});
+
+TestRunner.test('Track Effect - addEffect calls rebuildEffectChain', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('rebuildEffectChain'), 'addEffect should call rebuildEffectChain');
+});
+
+TestRunner.test('Track Effect - addEffect calls updateTrackUI on appServices', (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI') || funcStr.includes('appServices'), 'addEffect should call updateTrackUI on appServices');
+});
+
+TestRunner.test('Track Effect - removeEffect is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.removeEffect, 'function', 'removeEffect should be a function');
+});
+
+TestRunner.test('Track Effect - removeEffect accepts 1 parameter', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'removeEffect should accept effectId parameter');
+});
+
+TestRunner.test('Track Effect - removeEffect references effectId parameter', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'removeEffect should reference effectId parameter');
+});
+
+TestRunner.test('Track Effect - removeEffect calls _captureUndoState with descriptive label', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'removeEffect should call _captureUndoState');
+});
+
+TestRunner.test('Track Effect - removeEffect uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('Remove') && (funcStr.includes('effect') || funcStr.includes('name')), 'removeEffect should use descriptive undo label');
+});
+
+TestRunner.test('Track Effect - removeEffect handles effect not found', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('not found'), 'removeEffect should handle effect not found case');
+});
+
+TestRunner.test('Track Effect - removeEffect calls rebuildEffectChain', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('rebuildEffectChain'), 'removeEffect should call rebuildEffectChain');
+});
+
+TestRunner.test('Track Effect - removeEffect calls updateTrackUI on appServices', (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI') || funcStr.includes('appServices'), 'removeEffect should call updateTrackUI on appServices');
+});
+
+TestRunner.test('Track Effect - updateEffectParam is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.updateEffectParam, 'function', 'updateEffectParam should be a function');
+});
+
+TestRunner.test('Track Effect - updateEffectParam accepts 3 parameters', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('paramPath') && funcStr.includes('value'), 'updateEffectParam should accept 3 parameters');
+});
+
+TestRunner.test('Track Effect - updateEffectParam references all three parameters', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('paramPath') && funcStr.includes('value'), 'updateEffectParam should reference all parameters');
+});
+
+TestRunner.test('Track Effect - updateEffectParam calls _captureUndoState with descriptive label', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'updateEffectParam should call _captureUndoState');
+});
+
+TestRunner.test('Track Effect - updateEffectParam parses paramPath with split', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('split'), 'updateEffectParam should parse paramPath with split');
+});
+
+TestRunner.test('Track Effect - updateEffectParam handles effect not found', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('find') && (funcStr.includes('not found') || funcStr.includes('return')), 'updateEffectParam should handle effect not found case');
+});
+
+TestRunner.test('Track Effect - updateEffectParam has error handling with try-catch', (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'updateEffectParam should have error handling');
+});
+
+TestRunner.test('Track Effect - reorderEffect is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.reorderEffect, 'function', 'reorderEffect should be a function');
+});
+
+TestRunner.test('Track Effect - reorderEffect accepts 2 parameters', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('newIndex'), 'reorderEffect should accept 2 parameters');
+});
+
+TestRunner.test('Track Effect - reorderEffect references both parameters', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('newIndex'), 'reorderEffect should reference both parameters');
+});
+
+TestRunner.test('Track Effect - reorderEffect calls _captureUndoState with descriptive label', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'reorderEffect should call _captureUndoState');
+});
+
+TestRunner.test('Track Effect - reorderEffect uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('Reorder') || (funcStr.includes('effect') && funcStr.includes('name')), 'reorderEffect should use descriptive undo label');
+});
+
+TestRunner.test('Track Effect - reorderEffect calls rebuildEffectChain', (t) => {
+    const funcStr = Track.prototype.reorderEffect.toString();
+    t.assertTruthy(funcStr.includes('rebuildEffectChain'), 'reorderEffect should call rebuildEffectChain');
+});
+
+TestRunner.test('Track Effect - APP_VERSION validation for Day 358', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 358');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 37, 'Minor version should be >= 37 for Day 358');
+    }
+});
+
 // APP_VERSION validation for Day 353
 TestRunner.test('State - APP_VERSION is 2.32.0 or higher for Day 353', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
