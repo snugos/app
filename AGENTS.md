@@ -1,3 +1,34 @@
+#### Day 348: Performance Monitor State Undo Capture Tests (2026-04-29)
+- **Feature**: Added 27 new unit tests for Performance Monitor state functions undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added 27 new tests in Day 348 section:
+    - setPerformanceMonitorEnabledState: calls captureStateForUndo with descriptive "Set Performance Monitor" label
+    - setPerformanceMonitorEnabledState: uses On/Off in undo label, guards against missing appServices
+    - setAudioContextStateState: calls captureStateForUndo with "Set Audio Context State" label
+    - setCPUUsageState: calls captureStateForUndo with "Set CPU Usage" label
+    - setMemoryPressureState: calls captureStateForUndo with "Set Memory Pressure" label
+    - setActiveVoicesState: calls captureStateForUndo with "Set Active Voices" label
+    - setAudioLatencyState: calls captureStateForUndo with "Set Audio Latency" label
+    - setLastCallbackTimeState: calls captureStateForUndo with "Set Last Callback Time" label
+    - setDroppedCallbacksState: calls captureStateForUndo with "Set Dropped Callbacks" label
+    - All Performance Monitor setters verify appServices.check before calling captureStateForUndo
+    - setCPUUsageState clamps values to 0-100 range with decimal support
+    - setActiveVoicesState clamps values to non-negative integers
+    - setAudioLatencyState clamps values to non-negative decimals
+    - State roundtrip tests for Performance Monitor enabled and Audio Context
+    - incrementDroppedCallbacksState increments correctly by 1 each call
+    - getPerformanceMonitorState returns all 8 properties (enabled, audioContextState, cpuUsage, memoryPressure, activeVoices, audioLatency, lastCallbackTime, droppedCallbacks)
+    - APP_VERSION validation for 2.28.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.28.0
+- **Feature Details**:
+  - Tests validate all 8 Performance Monitor state setter functions call captureStateForUndo
+  - Tests verify descriptive undo labels for all Performance Monitor operations
+  - Tests verify all functions guard against missing appServices.captureStateForUndo
+  - Tests verify value clamping for cpuUsage (0-100), activeVoices (non-negative), audioLatency (non-negative)
+  - Tests verify state roundtrip and property completeness for Performance Monitor state object
+  - Total tests increased from 3168 to 3195
+- **Version**: Bumped to 2.28.0
+
 #### Day 347: Undo/Redo Core Mechanism Tests (2026-04-29)
 - **Feature**: Added 38 new unit tests for Undo/Redo core mechanism functions to expand test coverage
 - **Files Modified**:
