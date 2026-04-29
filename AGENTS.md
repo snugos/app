@@ -93,6 +93,39 @@
   - Total tests increased from 3652 to 3681
 - **Version**: Bumped to 2.39.0
 
+#### Day 361: Scale Mode & Swing State Functions Tests (2026-04-29)
+- **Feature**: Added 42 new unit tests for Scale Mode and Swing state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 42 new tests in Day 361 section:
+    - Scale Mode - setScaleModeState is a function export, accepts 1 parameter, calls captureStateForUndo
+    - Scale Mode - setScaleModeState uses descriptive undo label ("Set Scale Mode Settings"), guards against missing appServices
+    - Scale Mode - setScaleModeState validates state object, merges with DEFAULT_SCALE_MODE
+    - Scale Mode - setScaleModeEnabledState calls captureStateForUndo, uses On/Off in undo label
+    - Scale Mode - setScaleModeEnabledState coerces to boolean
+    - Scale Mode - setScaleModeScaleState calls captureStateForUndo, defaults to Major
+    - Scale Mode - setScaleModeRootState calls captureStateForUndo, uses root in undo label, defaults to C
+    - Scale Mode - setScaleModeLockState calls captureStateForUndo, uses Enable/Disable labels, coerces to boolean
+    - Scale Mode - getScaleModeState returns object, getScaleModeEnabledState returns boolean, getScaleModeScaleState returns string
+    - Swing - setSwingState is a function export, accepts 1 parameter, calls captureStateForUndo with descriptive label
+    - Swing - setSwingState guards against missing appServices
+    - Swing - setSwingEnabledState calls captureStateForUndo, uses Toggle in undo label, coerces to boolean
+    - Swing - setSwingAmountState calls captureStateForUndo, clamps value to 0-100 range, parses integer
+    - Swing - getSwingState returns object, getSwingEnabledState returns boolean, getSwingAmountState returns number
+    - APP_VERSION validation for 2.40.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.40.0
+- **Feature Details**:
+  - Tests validate all Scale Mode state setter functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Scale Mode operations (Set Scale Mode Settings, Toggle Scale Mode On/Off, Set Scale to Major, Set Scale Root to C, Enable/Disable Scale Lock)
+  - Tests validate all Swing state setter functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Swing operations (Set Swing Settings, Toggle Swing On/Off, Set Swing Amount)
+  - Tests verify setScaleModeState validates state is an object and merges with DEFAULT_SCALE_MODE
+  - Tests verify setScaleModeEnabledState coerces to boolean using !! pattern
+  - Tests verify setScaleModeScaleState defaults to 'Major' when scale is falsy
+  - Tests verify setScaleModeRootState defaults to 'C' when root is falsy
+  - Tests verify setSwingAmountState clamps values using Math.max/Math.min to 0-100 range
+  - Total tests increased from 3681 to 3723
+- **Version**: Bumped to 2.40.0
+
 #### Day 357: Window Management State Functions Tests (2026-04-29)
 - **Feature**: Added 30 new unit tests for Window Management state functions to expand test coverage
 - **Files Modified**:

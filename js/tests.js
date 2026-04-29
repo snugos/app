@@ -3974,10 +3974,10 @@ TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
     t.assertEqual(typeof getSwingAmountState, 'function', 'getSwingAmountState should be a function');
 });
 
-TestRunner.test('Scale Mode & Swing - APP_VERSION validation for Day 360', (t) => {
+TestRunner.test('Scale Mode & Swing - APP_VERSION validation for Day 361', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 360');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 361');
     if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 39, 'Minor version should be >= 39 for Day 360');
+        t.assertTruthy(versionParts[1] >= 40, 'Minor version should be >= 40 for Day 361');
     }
 });
