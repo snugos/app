@@ -1,3 +1,35 @@
+#### Day 352: Send Bus Audio Routing Tests (2026-04-29)
+- **Feature**: Added 46 new unit tests for Send Bus Audio Routing functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 46 new tests in Day 352 section:
+    - Send Bus Audio - getSendBusNodes is a function, accepts no parameters, returns object
+    - Send Bus Audio - getTrackSendNodes is a function, accepts no parameters, returns object
+    - Send Bus Audio - connectTrackToSendBus is a function, accepts 2 parameters (trackId, sendId)
+    - Send Bus Audio - connectTrackToSendBus references trackId and sendId parameters
+    - Send Bus Audio - disconnectTrackFromSendBus is a function, accepts 2 parameters
+    - Send Bus Audio - disconnectTrackFromSendBus references trackId and sendId parameters
+    - Send Bus Audio - setTrackSendLevel is a function, accepts 3 parameters (trackId, sendId, level)
+    - Send Bus Audio - setTrackSendLevel references all 3 parameters
+    - Send Bus Audio - createSendBusInAudio is async function, accepts 1 parameter (sendId)
+    - Send Bus Audio - createSendBusInAudio references sendId parameter
+    - Send Bus Audio - deleteSendBusFromAudio accepts 1 parameter (sendId)
+    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
+    - Send Bus Audio - addEffectToSendBus references sendId and effectType parameters
+    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
+    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters (sendId, effectId, newIndex)
+    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
+    - Send Bus Audio - updateSendBusEffectParam references sendId and effectId parameters
+    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level), references both
+    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted), references both
+  - `js/constants.js`: Bumped APP_VERSION to 2.32.0
+- **Feature Details**:
+  - Tests validate all Send Bus Audio routing functions are properly exported from audio.js
+  - Tests verify function parameter counts match expected APIs
+  - Tests verify parameter references in function implementations
+  - Tests verify getSendBusNodes and getTrackSendNodes return object types
+  - Total tests increased from 312 to 358
+- **Version**: Bumped to 2.32.0
+
 #### Day 351: Mixer Master Strip UI Tests (2026-04-29)
 - **Feature**: Added 10 new unit tests for Mixer Master Strip UI function to expand test coverage
 - **Files Modified**:
