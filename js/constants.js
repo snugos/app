@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.31.0'; // Day 351: Mixer Master Strip UI Tests
+export const APP_VERSION = '2.32.0'; // Day 352: Send Bus Audio Routing Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

@@ -2378,3 +2378,215 @@ TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML input has correc
     t.assertTruthy(result.includes('min="0"') || result.includes("min='0'"), 'Fader should have min 0');
     t.assertTruthy(result.includes('max="100"') || result.includes("max='100'"), 'Fader should have max 100');
 });
+
+// ============================================
+// Day 352: Send Bus Audio Routing Tests
+// ============================================
+TestRunner.test('Send Bus Audio - getSendBusNodes is a function', (t) => {
+    t.assertEqual(typeof getSendBusNodes, 'function', 'getSendBusNodes should be a function');
+});
+
+TestRunner.test('Send Bus Audio - getSendBusNodes accepts no parameters', (t) => {
+    t.assertEqual(getSendBusNodes.length, 0, 'getSendBusNodes should accept no parameters');
+});
+
+TestRunner.test('Send Bus Audio - getTrackSendNodes is a function', (t) => {
+    t.assertEqual(typeof getTrackSendNodes, 'function', 'getTrackSendNodes should be a function');
+});
+
+TestRunner.test('Send Bus Audio - getTrackSendNodes accepts no parameters', (t) => {
+    t.assertEqual(getTrackSendNodes.length, 0, 'getTrackSendNodes should accept no parameters');
+});
+
+TestRunner.test('Send Bus Audio - getSendBusNodes returns an object', (t) => {
+    const result = getSendBusNodes();
+    t.assertEqual(typeof result, 'object', 'getSendBusNodes should return an object');
+});
+
+TestRunner.test('Send Bus Audio - getTrackSendNodes returns an object', (t) => {
+    const result = getTrackSendNodes();
+    t.assertEqual(typeof result, 'object', 'getTrackSendNodes should return an object');
+});
+
+TestRunner.test('Send Bus Audio - connectTrackToSendBus is a function', (t) => {
+    t.assertEqual(typeof connectTrackToSendBus, 'function', 'connectTrackToSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - connectTrackToSendBus accepts 2 parameters', (t) => {
+    t.assertEqual(connectTrackToSendBus.length, 2, 'connectTrackToSendBus should accept 2 parameters');
+});
+
+TestRunner.test('Send Bus Audio - connectTrackToSendBus references trackId parameter', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'connectTrackToSendBus should reference trackId parameter');
+});
+
+TestRunner.test('Send Bus Audio - connectTrackToSendBus references sendId parameter', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'connectTrackToSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - disconnectTrackFromSendBus is a function', (t) => {
+    t.assertEqual(typeof disconnectTrackFromSendBus, 'function', 'disconnectTrackFromSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - disconnectTrackFromSendBus accepts 2 parameters', (t) => {
+    t.assertEqual(disconnectTrackFromSendBus.length, 2, 'disconnectTrackFromSendBus should accept 2 parameters');
+});
+
+TestRunner.test('Send Bus Audio - disconnectTrackFromSendBus references trackId parameter', (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'disconnectTrackFromSendBus should reference trackId parameter');
+});
+
+TestRunner.test('Send Bus Audio - disconnectTrackFromSendBus references sendId parameter', (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'disconnectTrackFromSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - setTrackSendLevel is a function', (t) => {
+    t.assertEqual(typeof setTrackSendLevel, 'function', 'setTrackSendLevel should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setTrackSendLevel accepts 3 parameters', (t) => {
+    t.assertEqual(setTrackSendLevel.length, 3, 'setTrackSendLevel should accept 3 parameters');
+});
+
+TestRunner.test('Send Bus Audio - setTrackSendLevel references trackId parameter', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'setTrackSendLevel should reference trackId parameter');
+});
+
+TestRunner.test('Send Bus Audio - setTrackSendLevel references sendId parameter', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'setTrackSendLevel should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - setTrackSendLevel references level parameter', (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('level'), 'setTrackSendLevel should reference level parameter');
+});
+
+TestRunner.test('Send Bus Audio - createSendBusInAudio is an async function', (t) => {
+    t.assertEqual(typeof createSendBusInAudio, 'function', 'createSendBusInAudio should be a function');
+    t.assertEqual(createSendBusInAudio.constructor.name, 'AsyncFunction', 'createSendBusInAudio should be async');
+});
+
+TestRunner.test('Send Bus Audio - createSendBusInAudio accepts 1 parameter', (t) => {
+    t.assertEqual(createSendBusInAudio.length, 1, 'createSendBusInAudio should accept 1 parameter');
+});
+
+TestRunner.test('Send Bus Audio - createSendBusInAudio references sendId parameter', (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'createSendBusInAudio should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - deleteSendBusFromAudio is a function', (t) => {
+    t.assertEqual(typeof deleteSendBusFromAudio, 'function', 'deleteSendBusFromAudio should be a function');
+});
+
+TestRunner.test('Send Bus Audio - deleteSendBusFromAudio accepts 1 parameter', (t) => {
+    t.assertEqual(deleteSendBusFromAudio.length, 1, 'deleteSendBusFromAudio should accept 1 parameter');
+});
+
+TestRunner.test('Send Bus Audio - deleteSendBusFromAudio references sendId parameter', (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'deleteSendBusFromAudio should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus is a function', (t) => {
+    t.assertEqual(typeof addEffectToSendBus, 'function', 'addEffectToSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus accepts 3 parameters', (t) => {
+    t.assertEqual(addEffectToSendBus.length, 3, 'addEffectToSendBus should accept 3 parameters');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus references sendId parameter', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'addEffectToSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus references effectType parameter', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addEffectToSendBus should reference effectType parameter');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus is a function', (t) => {
+    t.assertEqual(typeof removeEffectFromSendBus, 'function', 'removeEffectFromSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus accepts 2 parameters', (t) => {
+    t.assertEqual(removeEffectFromSendBus.length, 2, 'removeEffectFromSendBus should accept 2 parameters');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus is a function', (t) => {
+    t.assertEqual(typeof reorderEffectInSendBus, 'function', 'reorderEffectInSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus accepts 3 parameters', (t) => {
+    t.assertEqual(reorderEffectInSendBus.length, 3, 'reorderEffectInSendBus should accept 3 parameters');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam is a function', (t) => {
+    t.assertEqual(typeof updateSendBusEffectParam, 'function', 'updateSendBusEffectParam should be a function');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam accepts 4 parameters', (t) => {
+    t.assertEqual(updateSendBusEffectParam.length, 4, 'updateSendBusEffectParam should accept 4 parameters');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam references sendId parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'updateSendBusEffectParam should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam references effectId parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'updateSendBusEffectParam should reference effectId parameter');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel is a function', (t) => {
+    t.assertEqual(typeof setSendBusLevel, 'function', 'setSendBusLevel should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel accepts 2 parameters', (t) => {
+    t.assertEqual(setSendBusLevel.length, 2, 'setSendBusLevel should accept 2 parameters');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel references sendId parameter', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'setSendBusLevel should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel references level parameter', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('level'), 'setSendBusLevel should reference level parameter');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted is a function', (t) => {
+    t.assertEqual(typeof setSendBusMuted, 'function', 'setSendBusMuted should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted accepts 2 parameters', (t) => {
+    t.assertEqual(setSendBusMuted.length, 2, 'setSendBusMuted should accept 2 parameters');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted references sendId parameter', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'setSendBusMuted should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted references muted parameter', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('muted'), 'setSendBusMuted should reference muted parameter');
+});
+
+// APP_VERSION validation for Day 352
+TestRunner.test('State - APP_VERSION is 2.31.0 or higher for Day 352', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 352');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 31, 'Minor version should be >= 31 for Day 352');
+    }
+});
