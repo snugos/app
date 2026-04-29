@@ -15574,3 +15574,243 @@ TestRunner.test('State - APP_VERSION is 2.15.0 or higher for Day 335', (t) => {
         t.assertTruthy(versionParts[1] >= 15, 'Minor version should be >= 15 for Day 335');
     }
 });
+
+// Day 336: Metronome Audio & Send Bus Audio Function Tests
+TestRunner.test('Audio Metronome - initializeMetronome function is exported', (t) => {
+    t.assertTruthy(typeof initializeMetronome === 'function', 'initializeMetronome should be a function');
+});
+
+TestRunner.test('Audio Metronome - initializeMetronome accepts 0 parameters', (t) => {
+    const funcStr = initializeMetronome.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertEqual(params, '', 'initializeMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Audio Metronome - startMetronome function is exported', (t) => {
+    t.assertTruthy(typeof startMetronome === 'function', 'startMetronome should be a function');
+});
+
+TestRunner.test('Audio Metronome - startMetronome accepts 0 parameters', (t) => {
+    const funcStr = startMetronome.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertEqual(params, '', 'startMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Audio Metronome - stopMetronome function is exported', (t) => {
+    t.assertTruthy(typeof stopMetronome === 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test('Audio Metronome - stopMetronome accepts 0 parameters', (t) => {
+    const funcStr = stopMetronome.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertEqual(params, '', 'stopMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Audio Metronome - setMetronomeVolume function is exported', (t) => {
+    t.assertTruthy(typeof setMetronomeVolume === 'function', 'setMetronomeVolume should be a function');
+});
+
+TestRunner.test('Audio Metronome - setMetronomeVolume accepts 1 parameter', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('volume'), 'setMetronomeVolume should accept volume parameter');
+});
+
+TestRunner.test('Audio Metronome - setMetronomeVolume clamps value to 0-1 range', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setMetronomeVolume should clamp value');
+});
+
+TestRunner.test('Audio Metronome - initializeMetronome references metronomeInitialized flag', (t) => {
+    const funcStr = initializeMetronome.toString();
+    t.assertTruthy(funcStr.includes('metronomeInitialized'), 'initializeMetronome should check metronomeInitialized');
+});
+
+TestRunner.test('Audio Metronome - startMetronome checks metronomeInitialized', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('metronomeInitialized'), 'startMetronome should check if initialized');
+});
+
+TestRunner.test('Audio Metronome - startMetronome calls initializeMetronome if needed', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('initializeMetronome'), 'startMetronome should call initializeMetronome');
+});
+
+TestRunner.test('Audio Metronome - startMetronome references Tone.Transport', (t) => {
+    const funcStr = startMetronome.toString();
+    t.assertTruthy(funcStr.includes('Transport') || funcStr.includes('transport'), 'startMetronome should reference Transport');
+});
+
+TestRunner.test('Audio Metronome - stopMetronome clears scheduled event', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('clear') || funcStr.includes('stop'), 'stopMetronome should clear/stop metronome');
+});
+
+TestRunner.test('Audio Metronome - setMetronomeVolume references metronomeClickPlayer', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('metronomeClickPlayer'), 'setMetronomeVolume should update click player');
+});
+
+TestRunner.test('Audio Metronome - setMetronomeVolume references metronomeAccentPlayer', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('metronomeAccentPlayer'), 'setMetronomeVolume should update accent player');
+});
+
+TestRunner.test('Audio Metronome - setMetronomeVolume uses Tone.gainToDb', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('gainToDb'), 'setMetronomeVolume should convert gain to dB');
+});
+
+TestRunner.test('Audio Send Bus - setSendBusLevel function is exported', (t) => {
+    t.assertTruthy(typeof setSendBusLevel === 'function', 'setSendBusLevel should be a function');
+});
+
+TestRunner.test('Audio Send Bus - setSendBusLevel accepts 2 parameters', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('sendId') && params.includes('level'), 'setSendBusLevel should accept sendId and level');
+});
+
+TestRunner.test('Audio Send Bus - setSendBusLevel references sendBusNodes', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'setSendBusLevel should reference sendBusNodes');
+});
+
+TestRunner.test('Audio Send Bus - setSendBusLevel handles missing send bus', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('console.warn') || funcStr.includes('return'), 'setSendBusLevel should handle missing bus');
+});
+
+TestRunner.test('Audio Send Bus - setSendBusMuted function is exported', (t) => {
+    t.assertTruthy(typeof setSendBusMuted === 'function', 'setSendBusMuted should be a function');
+});
+
+TestRunner.test('Audio Send Bus - setSendBusMuted accepts 2 parameters', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('sendId') && params.includes('muted'), 'setSendBusMuted should accept sendId and muted');
+});
+
+TestRunner.test('Audio Send Bus - setSendBusMuted references sendBusNodes', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'setSendBusMuted should reference sendBusNodes');
+});
+
+TestRunner.test('Audio Send Bus - setSendBusMuted references outputGain', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('outputGain'), 'setSendBusMuted should update outputGain');
+});
+
+TestRunner.test('Audio Send Bus - setRecordingInputGain function is exported', (t) => {
+    t.assertTruthy(typeof setRecordingInputGain === 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Audio Send Bus - setRecordingInputGain accepts 1 parameter', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('gainValue'), 'setRecordingInputGain should accept gainValue parameter');
+});
+
+TestRunner.test('Audio Send Bus - setRecordingInputGain clamps value', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setRecordingInputGain should clamp value');
+});
+
+TestRunner.test('Audio Send Bus - setRecordingInputGain references recordingInputGainNode', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGainNode'), 'setRecordingInputGain should update recordingInputGainNode');
+});
+
+TestRunner.test('Audio Send Bus - setRecordingInputGain checks if node is disposed', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'setRecordingInputGain should check disposed state');
+});
+
+TestRunner.test('Audio Send Bus - connectTrackToSendBus function is exported', (t) => {
+    t.assertTruthy(typeof connectTrackToSendBus === 'function', 'connectTrackToSendBus should be a function');
+});
+
+TestRunner.test('Audio Send Bus - disconnectTrackFromSendBus function is exported', (t) => {
+    t.assertTruthy(typeof disconnectTrackFromSendBus === 'function', 'disconnectTrackFromSendBus should be a function');
+});
+
+TestRunner.test('Audio Send Bus - connectTrackToSendBus references sendBusNodes', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'connectTrackToSendBus should check sendBusNodes');
+});
+
+TestRunner.test('Audio Send Bus - connectTrackToSendBus references trackSendNodes', (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes'), 'connectTrackToSendBus should manage trackSendNodes');
+});
+
+TestRunner.test('Audio Send Bus - getSendBusNodes function is exported', (t) => {
+    t.assertTruthy(typeof getSendBusNodes === 'function', 'getSendBusNodes should be a function');
+});
+
+TestRunner.test('Audio Send Bus - getTrackSendNodes function is exported', (t) => {
+    t.assertTruthy(typeof getTrackSendNodes === 'function', 'getTrackSendNodes should be a function');
+});
+
+TestRunner.test('State - setMetronomeEnabledState function is exported', (t) => {
+    t.assertTruthy(typeof setMetronomeEnabledState === 'function', 'setMetronomeEnabledState should be a function');
+});
+
+TestRunner.test('State - setMetronomeEnabledState accepts 1 parameter', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('enabled'), 'setMetronomeEnabledState should accept enabled parameter');
+});
+
+TestRunner.test('State - setMetronomeEnabledState coerces to boolean', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setMetronomeEnabledState should coerce to boolean');
+});
+
+TestRunner.test('State - setMetronomeVolumeState function is exported', (t) => {
+    t.assertTruthy(typeof setMetronomeVolumeState === 'function', 'setMetronomeVolumeState should be a function');
+});
+
+TestRunner.test('State - setMetronomeVolumeState accepts 1 parameter', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    const paramMatch = funcStr.match(/function\s*\w*\s*\(([^)]*)\)/);
+    const params = paramMatch && paramMatch[1] ? paramMatch[1].trim() : '';
+    t.assertTruthy(params.includes('volume'), 'setMetronomeVolumeState should accept volume parameter');
+});
+
+TestRunner.test('State - setMetronomeVolumeState clamps value to 0-1 range', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setMetronomeVolumeState should clamp value');
+});
+
+TestRunner.test('State - setMetronomeVolumeState parses float input', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setMetronomeVolumeState should parse float');
+});
+
+TestRunner.test('State - setMetronomeEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Metronome'), 'setMetronomeEnabledState should use descriptive undo label');
+});
+
+TestRunner.test('State - setMetronomeVolumeState uses descriptive undo label', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('Metronome Volume'), 'setMetronomeVolumeState should use descriptive undo label');
+});
+
+// APP_VERSION validation for Day 336
+TestRunner.test('State - APP_VERSION is 2.16.0 or higher for Day 336', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 336');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 16, 'Minor version should be >= 16 for Day 336');
+    }
+});
