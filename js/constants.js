@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.18.0'; // Day 338: Track Group State CRUD Undo Capture Tests
+export const APP_VERSION = '2.19.0'; // Day 339: Track Template & Track Group Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

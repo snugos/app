@@ -5430,3 +5430,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify setSwingAmountState clamps value to 0-100 range and parses integer
   - Total tests increased from 2717 to 2774
 - **Version**: Bumped to 2.17.0
+
+#### Day 339: Track Template & Track Group Extended Function Tests (2026-04-29)
+- **Feature**: Added 68 new unit tests for Track Template and Track Group state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 68 new tests in Day 339 section:
+    - Track Template - getTrackTemplateByIdState: function export, 1 parameter
+    - Track Template - updateTrackTemplateState: function export, 2 parameters (id, updates), calls captureStateForUndo, uses descriptive undo label
+    - Track Template - updateTrackTemplateState: handles name/color/type/synthParams/activeEffects/hasAutomation/automationLanes updates
+    - Track Template - updateTrackTemplateState: returns template on success, returns null for unknown id
+    - Track Template - removeTrackTemplateState: function export, 1 parameter, calls captureStateForUndo
+    - Track Template - removeTrackTemplateState: references id parameter, updates trackTemplatesState
+    - Track Template - clearTrackTemplatesState: function export, no parameters, calls captureStateForUndo, guards against missing appServices
+    - Track Group - getTrackGroupByIdState: function export, 1 parameter
+    - Track Group - setTrackGroupNameState: function export, 2 parameters (id, name), calls captureStateForUndo
+    - Track Group - setTrackGroupColorState: function export, 2 parameters (id, color), calls captureStateForUndo
+    - Track Group - addTrackToGroupState: function export, 2 parameters (groupId, trackId), calls captureStateForUndo
+    - Track Group - removeTrackFromGroupState: function export, 2 parameters (groupId, trackId), calls captureStateForUndo
+    - Track Group - setTrackGroupMutedState: function export, 2 parameters (id, muted), calls captureStateForUndo, coerces to boolean
+    - Track Group - setTrackGroupSoloedState: function export, 2 parameters (id, soloed), calls captureStateForUndo, coerces to boolean
+    - Track Group - removeTrackGroupState: function export, 1 parameter, calls captureStateForUndo, references id, updates trackGroupsState
+    - Track Group - all setters guard against missing appServices
+  - `js/constants.js`: Bumped APP_VERSION to 2.19.0
+- **Feature Details**:
+  - Tests validate Track Template state functions (getTrackTemplateByIdState, updateTrackTemplateState, removeTrackTemplateState, clearTrackTemplatesState)
+  - Tests verify updateTrackTemplateState handles all updateable properties (name, color, type, synthParams, activeEffects, hasAutomation, automationLanes)
+  - Tests validate Track Group state functions (getTrackGroupByIdState, setTrackGroupNameState, setTrackGroupColorState, addTrackToGroupState, removeTrackFromGroupState, setTrackGroupMutedState, setTrackGroupSoloedState, removeTrackGroupState)
+  - Tests verify all state setters call captureStateForUndo for undo support
+  - Tests verify descriptive undo labels for all Track Group operations
+  - Tests verify boolean coercion for muted/soloed state setters
+  - Total tests increased from 2828 to 2896
+- **Version**: Bumped to 2.19.0

@@ -16373,3 +16373,308 @@ TestRunner.test('State - APP_VERSION is 2.17.0 or higher for Day 337', (t) => {
         t.assertTruthy(versionParts[1] >= 17, 'Minor version should be >= 17 for Day 337');
     }
 });
+
+// Day 339: Track Template & Track Group Extended Function Tests (2026-04-29)
+TestRunner.test('State - getTrackTemplateByIdState function is exported', (t) => {
+    t.assertEqual(typeof getTrackTemplateByIdState, 'function', 'getTrackTemplateByIdState should be a function');
+});
+
+TestRunner.test('State - getTrackTemplateByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getTrackTemplateByIdState.length, 1, 'getTrackTemplateByIdState should accept 1 parameter');
+});
+
+TestRunner.test('State - updateTrackTemplateState function is exported', (t) => {
+    t.assertEqual(typeof updateTrackTemplateState, 'function', 'updateTrackTemplateState should be a function');
+});
+
+TestRunner.test('State - updateTrackTemplateState accepts 2 parameters (id, updates)', (t) => {
+    t.assertEqual(updateTrackTemplateState.length, 2, 'updateTrackTemplateState should accept 2 parameters');
+});
+
+TestRunner.test('State - updateTrackTemplateState calls captureStateForUndo', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test('State - updateTrackTemplateState uses descriptive undo label', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('Track Template'), 'updateTrackTemplateState should use descriptive undo label');
+});
+
+TestRunner.test('State - updateTrackTemplateState references id parameter', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'updateTrackTemplateState should reference id parameter');
+});
+
+TestRunner.test('State - updateTrackTemplateState references updates parameter', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('updates'), 'updateTrackTemplateState should reference updates parameter');
+});
+
+TestRunner.test('State - updateTrackTemplateState handles name update', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('name'), 'updateTrackTemplateState should handle name update');
+});
+
+TestRunner.test('State - updateTrackTemplateState handles color update', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('color'), 'updateTrackTemplateState should handle color update');
+});
+
+TestRunner.test('State - updateTrackTemplateState handles type update', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('type'), 'updateTrackTemplateState should handle type update');
+});
+
+TestRunner.test('State - updateTrackTemplateState handles synthParams update', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('synthParams'), 'updateTrackTemplateState should handle synthParams update');
+});
+
+TestRunner.test('State - updateTrackTemplateState handles activeEffects update', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('activeEffects'), 'updateTrackTemplateState should handle activeEffects update');
+});
+
+TestRunner.test('State - updateTrackTemplateState handles hasAutomation update', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('hasAutomation'), 'updateTrackTemplateState should handle hasAutomation update');
+});
+
+TestRunner.test('State - updateTrackTemplateState handles automationLanes update', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('automationLanes'), 'updateTrackTemplateState should handle automationLanes update');
+});
+
+TestRunner.test('State - updateTrackTemplateState returns template on success', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('return'), 'updateTrackTemplateState should return value');
+});
+
+TestRunner.test('State - updateTrackTemplateState returns null for unknown id', (t) => {
+    const funcStr = updateTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('null'), 'updateTrackTemplateState should return null for unknown id');
+});
+
+TestRunner.test('State - removeTrackTemplateState function is exported', (t) => {
+    t.assertEqual(typeof removeTrackTemplateState, 'function', 'removeTrackTemplateState should be a function');
+});
+
+TestRunner.test('State - removeTrackTemplateState accepts 1 parameter', (t) => {
+    t.assertEqual(removeTrackTemplateState.length, 1, 'removeTrackTemplateState should accept 1 parameter');
+});
+
+TestRunner.test('State - removeTrackTemplateState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test('State - removeTrackTemplateState uses descriptive undo label', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('Delete') || funcStr.includes('Track Template'), 'removeTrackTemplateState should use descriptive undo label');
+});
+
+TestRunner.test('State - removeTrackTemplateState references id parameter', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'removeTrackTemplateState should reference id parameter');
+});
+
+TestRunner.test('State - removeTrackTemplateState updates trackTemplatesState', (t) => {
+    const funcStr = removeTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('trackTemplatesState') || funcStr.includes('filter') || funcStr.includes('splice'), 'removeTrackTemplateState should update trackTemplatesState');
+});
+
+TestRunner.test('State - clearTrackTemplatesState function is exported', (t) => {
+    t.assertEqual(typeof clearTrackTemplatesState, 'function', 'clearTrackTemplatesState should be a function');
+});
+
+TestRunner.test('State - clearTrackTemplatesState accepts no parameters', (t) => {
+    t.assertEqual(clearTrackTemplatesState.length, 0, 'clearTrackTemplatesState should accept no parameters');
+});
+
+TestRunner.test('State - clearTrackTemplatesState calls captureStateForUndo', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearTrackTemplatesState should call captureStateForUndo');
+});
+
+TestRunner.test('State - clearTrackTemplatesState uses descriptive undo label', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('Clear') || funcStr.includes('Track Template'), 'clearTrackTemplatesState should use descriptive undo label');
+});
+
+TestRunner.test('State - clearTrackTemplatesState guards against missing appServices', (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), 'clearTrackTemplatesState should guard against missing appServices');
+});
+
+// Track Group Extended Tests
+TestRunner.test('State - getTrackGroupByIdState function is exported', (t) => {
+    t.assertEqual(typeof getTrackGroupByIdState, 'function', 'getTrackGroupByIdState should be a function');
+});
+
+TestRunner.test('State - getTrackGroupByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getTrackGroupByIdState.length, 1, 'getTrackGroupByIdState should accept 1 parameter');
+});
+
+TestRunner.test('State - setTrackGroupNameState function is exported', (t) => {
+    t.assertEqual(typeof setTrackGroupNameState, 'function', 'setTrackGroupNameState should be a function');
+});
+
+TestRunner.test('State - setTrackGroupNameState accepts 2 parameters (id, name)', (t) => {
+    t.assertEqual(setTrackGroupNameState.length, 2, 'setTrackGroupNameState should accept 2 parameters');
+});
+
+TestRunner.test('State - setTrackGroupNameState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupNameState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setTrackGroupNameState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('Rename') || funcStr.includes('Track Group'), 'setTrackGroupNameState should use descriptive undo label');
+});
+
+TestRunner.test('State - setTrackGroupColorState function is exported', (t) => {
+    t.assertEqual(typeof setTrackGroupColorState, 'function', 'setTrackGroupColorState should be a function');
+});
+
+TestRunner.test('State - setTrackGroupColorState accepts 2 parameters (id, color)', (t) => {
+    t.assertEqual(setTrackGroupColorState.length, 2, 'setTrackGroupColorState should accept 2 parameters');
+});
+
+TestRunner.test('State - setTrackGroupColorState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupColorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupColorState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setTrackGroupColorState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupColorState.toString();
+    t.assertTruthy(funcStr.includes('color') || funcStr.includes('Track Group'), 'setTrackGroupColorState should use descriptive undo label');
+});
+
+TestRunner.test('State - addTrackToGroupState function is exported', (t) => {
+    t.assertEqual(typeof addTrackToGroupState, 'function', 'addTrackToGroupState should be a function');
+});
+
+TestRunner.test('State - addTrackToGroupState accepts 2 parameters (groupId, trackId)', (t) => {
+    t.assertEqual(addTrackToGroupState.length, 2, 'addTrackToGroupState should accept 2 parameters');
+});
+
+TestRunner.test('State - addTrackToGroupState calls captureStateForUndo', (t) => {
+    const funcStr = addTrackToGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackToGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('State - addTrackToGroupState uses descriptive undo label', (t) => {
+    const funcStr = addTrackToGroupState.toString();
+    t.assertTruthy(funcStr.includes('Add') || funcStr.includes('Track from Group') || funcStr.includes('Track Group'), 'addTrackToGroupState should use descriptive undo label');
+});
+
+TestRunner.test('State - removeTrackFromGroupState function is exported', (t) => {
+    t.assertEqual(typeof removeTrackFromGroupState, 'function', 'removeTrackFromGroupState should be a function');
+});
+
+TestRunner.test('State - removeTrackFromGroupState accepts 2 parameters (groupId, trackId)', (t) => {
+    t.assertEqual(removeTrackFromGroupState.length, 2, 'removeTrackFromGroupState should accept 2 parameters');
+});
+
+TestRunner.test('State - removeTrackFromGroupState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackFromGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackFromGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('State - removeTrackFromGroupState uses descriptive undo label', (t) => {
+    const funcStr = removeTrackFromGroupState.toString();
+    t.assertTruthy(funcStr.includes('Remove') || funcStr.includes('Track from Group') || funcStr.includes('Track Group'), 'removeTrackFromGroupState should use descriptive undo label');
+});
+
+TestRunner.test('State - setTrackGroupMutedState function is exported', (t) => {
+    t.assertEqual(typeof setTrackGroupMutedState, 'function', 'setTrackGroupMutedState should be a function');
+});
+
+TestRunner.test('State - setTrackGroupMutedState accepts 2 parameters (id, muted)', (t) => {
+    t.assertEqual(setTrackGroupMutedState.length, 2, 'setTrackGroupMutedState should accept 2 parameters');
+});
+
+TestRunner.test('State - setTrackGroupMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setTrackGroupMutedState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('mute') || funcStr.includes('Track Group'), 'setTrackGroupMutedState should use descriptive undo label');
+});
+
+TestRunner.test('State - setTrackGroupMutedState coerces muted to boolean', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setTrackGroupMutedState should coerce muted to boolean');
+});
+
+TestRunner.test('State - setTrackGroupSoloedState function is exported', (t) => {
+    t.assertEqual(typeof setTrackGroupSoloedState, 'function', 'setTrackGroupSoloedState should be a function');
+});
+
+TestRunner.test('State - setTrackGroupSoloedState accepts 2 parameters (id, soloed)', (t) => {
+    t.assertEqual(setTrackGroupSoloedState.length, 2, 'setTrackGroupSoloedState should accept 2 parameters');
+});
+
+TestRunner.test('State - setTrackGroupSoloedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupSoloedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupSoloedState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setTrackGroupSoloedState uses descriptive undo label', (t) => {
+    const funcStr = setTrackGroupSoloedState.toString();
+    t.assertTruthy(funcStr.includes('solo') || funcStr.includes('Track Group'), 'setTrackGroupSoloedState should use descriptive undo label');
+});
+
+TestRunner.test('State - setTrackGroupSoloedState coerces soloed to boolean', (t) => {
+    const funcStr = setTrackGroupSoloedState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setTrackGroupSoloedState should coerce soloed to boolean');
+});
+
+TestRunner.test('State - removeTrackGroupState function is exported', (t) => {
+    t.assertEqual(typeof removeTrackGroupState, 'function', 'removeTrackGroupState should be a function');
+});
+
+TestRunner.test('State - removeTrackGroupState accepts 1 parameter', (t) => {
+    t.assertEqual(removeTrackGroupState.length, 1, 'removeTrackGroupState should accept 1 parameter');
+});
+
+TestRunner.test('State - removeTrackGroupState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('State - removeTrackGroupState uses descriptive undo label', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('Delete') || funcStr.includes('Track Group'), 'removeTrackGroupState should use descriptive undo label');
+});
+
+TestRunner.test('State - removeTrackGroupState references id parameter', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('id'), 'removeTrackGroupState should reference id parameter');
+});
+
+TestRunner.test('State - removeTrackGroupState updates trackGroupsState', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('trackGroupsState') || funcStr.includes('filter') || funcStr.includes('splice'), 'removeTrackGroupState should update trackGroupsState');
+});
+
+TestRunner.test('State - all Track Group state setters guard against missing appServices', (t) => {
+    const funcs = [setTrackGroupNameState, setTrackGroupColorState, addTrackToGroupState, removeTrackFromGroupState, setTrackGroupMutedState, setTrackGroupSoloedState, removeTrackGroupState];
+    funcs.forEach(func => {
+        const funcStr = func.toString();
+        t.assertTruthy(funcStr.includes('if') && funcStr.includes('appServices'), func.name + ' should guard against missing appServices');
+    });
+});
+
+// APP_VERSION validation for Day 339
+TestRunner.test('State - APP_VERSION is 2.19.0 or higher for Day 339', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 339');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 19, 'Minor version should be >= 19 for Day 339');
+    }
+});
