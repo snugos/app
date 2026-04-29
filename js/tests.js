@@ -16678,3 +16678,126 @@ TestRunner.test('State - APP_VERSION is 2.19.0 or higher for Day 339', (t) => {
         t.assertTruthy(versionParts[1] >= 19, 'Minor version should be >= 19 for Day 339');
     }
 });
+
+// ============================================================================
+// Day 340: Project Save/Load State & createWindow Function Tests
+// ============================================================================
+// Tests for saveProjectInternal, loadProjectInternal, and createWindow functions
+
+TestRunner.test('Project - saveProjectInternal function is exported', (t) => {
+    t.assertEqual(typeof saveProjectInternal, 'function', 'saveProjectInternal should be a function');
+});
+
+TestRunner.test('Project - saveProjectInternal accepts no parameters', (t) => {
+    t.assertEqual(saveProjectInternal.length, 0, 'saveProjectInternal should accept 0 parameters');
+});
+
+TestRunner.test('Project - saveProjectInternal is async', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.constructor.name === 'AsyncFunction', 'saveProjectInternal should be async');
+});
+
+TestRunner.test('Project - saveProjectInternal references gatherProjectDataInternal', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('gatherProjectDataInternal'), 'saveProjectInternal should reference gatherProjectDataInternal');
+});
+
+TestRunner.test('Project - saveProjectInternal has try-catch error handling', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'saveProjectInternal should have try-catch error handling');
+});
+
+TestRunner.test('Project - saveProjectInternal references appServices.showNotification', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'saveProjectInternal should call showNotification for user feedback');
+});
+
+TestRunner.test('Project - loadProjectInternal function is exported', (t) => {
+    t.assertEqual(typeof loadProjectInternal, 'function', 'loadProjectInternal should be a function');
+});
+
+TestRunner.test('Project - loadProjectInternal accepts no parameters', (t) => {
+    t.assertEqual(loadProjectInternal.length, 0, 'loadProjectInternal should accept 0 parameters');
+});
+
+TestRunner.test('Project - loadProjectInternal is async', (t) => {
+    const funcStr = loadProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.constructor.name === 'AsyncFunction', 'loadProjectInternal should be async');
+});
+
+TestRunner.test('Project - loadProjectInternal references appServices.loadProjectInput', (t) => {
+    const funcStr = loadProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('loadProjectInput') || funcStr.includes('click'), 'loadProjectInternal should reference loadProjectInput element');
+});
+
+TestRunner.test('Project - loadProjectInternal calls loadProjectInput.click()', (t) => {
+    const funcStr = loadProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('click()'), 'loadProjectInternal should call click() on loadProjectInput');
+});
+
+TestRunner.test('Project - loadProjectInternal has error handling', (t) => {
+    const funcStr = loadProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch') || funcStr.includes('console.error'), 'loadProjectInternal should handle errors');
+});
+
+TestRunner.test('Project - createWindow function is exported', (t) => {
+    t.assertEqual(typeof createWindow, 'function', 'createWindow should be a function');
+});
+
+TestRunner.test('Project - createWindow accepts 4 parameters (id, title, content, options)', (t) => {
+    t.assertEqual(createWindow.length, 4, 'createWindow should accept 4 parameters');
+});
+
+TestRunner.test('Project - createWindow references id parameter', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('id'), 'createWindow should reference id parameter');
+});
+
+TestRunner.test('Project - createWindow references title parameter', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('title'), 'createWindow should reference title parameter');
+});
+
+TestRunner.test('Project - createWindow references content parameter', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('content'), 'createWindow should reference content parameter');
+});
+
+TestRunner.test('Project - createWindow references options parameter', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('options'), 'createWindow should reference options parameter');
+});
+
+TestRunner.test('Project - createWindow creates SnugWindow instance', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('SnugWindow') || funcStr.includes('new '), 'createWindow should create SnugWindow instance');
+});
+
+TestRunner.test('Project - createWindow references appServices', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'createWindow should reference appServices');
+});
+
+TestRunner.test('Project - createWindow calls getHighestZ or incrementHighestZ', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('getHighestZ') || funcStr.includes('incrementHighestZ'), 'createWindow should manage z-index');
+});
+
+TestRunner.test('Project - createWindow adds window to store', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('addWindowToStore') || funcStr.includes('openWindowsMap'), 'createWindow should add window to store');
+});
+
+TestRunner.test('Project - createWindow references desktop or uiElementsCache', (t) => {
+    const funcStr = createWindow.toString();
+    t.assertTruthy(funcStr.includes('desktop') || funcStr.includes('uiElementsCache'), 'createWindow should reference desktop or cache');
+});
+
+// APP_VERSION validation for Day 340
+TestRunner.test('State - APP_VERSION is 2.20.0 or higher for Day 340', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 340');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 20, 'Minor version should be >= 20 for Day 340');
+    }
+});
