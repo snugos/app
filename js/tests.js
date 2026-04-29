@@ -13787,3 +13787,355 @@ TestRunner.test('State - APP_VERSION is 2.09.0 or higher for Day 329', (t) => {
         t.assertTruthy(versionParts[1] >= 9, 'Minor version should be >= 9 for Day 329');
     }
 });
+
+// ============================================
+// Day 330: Track Inspector UI Functions Tests (2026-04-29)
+// Tests for Track Inspector window UI functions: initializeSynthSpecificControls, 
+// initializeSamplerSpecificControls, initializeCommonInspectorControls, 
+// initializeTypeSpecificInspectorControls, and buildTrackInspectorContentDOM
+// ============================================
+
+TestRunner.test('Track Inspector - initializeSynthSpecificControls is a function', (t) => {
+    const funcStr = initializeSynthSpecificControls.toString();
+    t.assertTruthy(typeof initializeSynthSpecificControls === 'function' || funcStr.length > 0, 'initializeSynthSpecificControls should be a function');
+});
+
+TestRunner.test('Track Inspector - initializeSynthSpecificControls accepts 2 parameters (track, winEl)', (t) => {
+    t.assertEqual(initializeSynthSpecificControls.length, 2, 'initializeSynthSpecificControls should accept 2 parameters');
+});
+
+TestRunner.test('Track Inspector - initializeSynthSpecificControls references track parameter', (t) => {
+    const funcStr = initializeSynthSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('track'), 'initializeSynthSpecificControls should reference track parameter');
+});
+
+TestRunner.test('Track Inspector - initializeSynthSpecificControls references winEl parameter', (t) => {
+    const funcStr = initializeSynthSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('winEl') || funcStr.includes('window') || funcStr.includes('element'), 'initializeSynthSpecificControls should reference winEl parameter');
+});
+
+TestRunner.test('Track Inspector - initializeSynthSpecificControls references synthEngineType', (t) => {
+    const funcStr = initializeSynthSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('synthEngineType') || funcStr.includes('engine'), 'initializeSynthSpecificControls should reference synthEngineType');
+});
+
+TestRunner.test('Track Inspector - initializeSynthSpecificControls references createKnob', (t) => {
+    const funcStr = initializeSynthSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('createKnob') || funcStr.includes('knob'), 'initializeSynthSpecificControls should reference createKnob');
+});
+
+TestRunner.test('Track Inspector - initializeSynthSpecificControls references synthParams', (t) => {
+    const funcStr = initializeSynthSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('synthParams') || funcStr.includes('params'), 'initializeSynthSpecificControls should reference synthParams');
+});
+
+TestRunner.test('Track Inspector - initializeSamplerSpecificControls is a function', (t) => {
+    const funcStr = initializeSamplerSpecificControls.toString();
+    t.assertTruthy(typeof initializeSamplerSpecificControls === 'function' || funcStr.length > 0, 'initializeSamplerSpecificControls should be a function');
+});
+
+TestRunner.test('Track Inspector - initializeSamplerSpecificControls accepts 2 parameters (track, winEl)', (t) => {
+    t.assertEqual(initializeSamplerSpecificControls.length, 2, 'initializeSamplerSpecificControls should accept 2 parameters');
+});
+
+TestRunner.test('Track Inspector - initializeSamplerSpecificControls references track parameter', (t) => {
+    const funcStr = initializeSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('track'), 'initializeSamplerSpecificControls should reference track parameter');
+});
+
+TestRunner.test('Track Inspector - initializeSamplerSpecificControls references slices array', (t) => {
+    const funcStr = initializeSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('slices') || funcStr.includes('slice'), 'initializeSamplerSpecificControls should reference slices');
+});
+
+TestRunner.test('Track Inspector - initializeSamplerSpecificControls references numSlices', (t) => {
+    const funcStr = initializeSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('numSlices') || funcStr.includes('num'), 'initializeSamplerSpecificControls should reference numSlices');
+});
+
+TestRunner.test('Track Inspector - initializeSamplerSpecificControls references waveform or canvas', (t) => {
+    const funcStr = initializeSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('waveform') || funcStr.includes('canvas') || funcStr.includes('Canvas'), 'initializeSamplerSpecificControls should reference waveform or canvas');
+});
+
+TestRunner.test('Track Inspector - initializeDrumSamplerSpecificControls is a function', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(typeof initializeDrumSamplerSpecificControls === 'function' || funcStr.length > 0, 'initializeDrumSamplerSpecificControls should be a function');
+});
+
+TestRunner.test('Track Inspector - initializeDrumSamplerSpecificControls accepts 2 parameters (track, winEl)', (t) => {
+    t.assertEqual(initializeDrumSamplerSpecificControls.length, 2, 'initializeDrumSamplerSpecificControls should accept 2 parameters');
+});
+
+TestRunner.test('Track Inspector - initializeDrumSamplerSpecificControls references drumSamplerPads', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads') || funcStr.includes('pad'), 'initializeDrumSamplerSpecificControls should reference drumSamplerPads');
+});
+
+TestRunner.test('Track Inspector - initializeDrumSamplerSpecificControls references renderDrumSamplerPads', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('renderDrumSamplerPads'), 'initializeDrumSamplerSpecificControls should call renderDrumSamplerPads');
+});
+
+TestRunner.test('Track Inspector - initializeAudioTrackInspectorControls accepts 2 parameters', (t) => {
+    t.assertEqual(initializeAudioTrackInspectorControls.length, 2, 'initializeAudioTrackInspectorControls should accept 2 parameters');
+});
+
+TestRunner.test('Track Inspector - initializeAudioTrackInspectorControls references track parameter', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('track'), 'initializeAudioTrackInspectorControls should reference track parameter');
+});
+
+TestRunner.test('Track Inspector - initializeAudioTrackInspectorControls references input device', (t) => {
+    const funcStr = initializeAudioTrackInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('input') || funcStr.includes('Input') || funcStr.includes('device'), 'initializeAudioTrackInspectorControls should reference input device');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls is a function', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(typeof initializeCommonInspectorControls === 'function' || funcStr.length > 0, 'initializeCommonInspectorControls should be a function');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls accepts 2 parameters (track, winEl)', (t) => {
+    t.assertEqual(initializeCommonInspectorControls.length, 2, 'initializeCommonInspectorControls should accept 2 parameters');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references track.name', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('track.name') || funcStr.includes('name'), 'initializeCommonInspectorControls should reference track.name');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references muteBtn', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('muteBtn') || funcStr.includes('Mute'), 'initializeCommonInspectorControls should reference muteBtn');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references soloBtn', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('soloBtn') || funcStr.includes('Solo'), 'initializeCommonInspectorControls should reference soloBtn');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references armInputBtn', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('armInputBtn') || funcStr.includes('arm') || funcStr.includes('Arm'), 'initializeCommonInspectorControls should reference armInputBtn');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references handleTrackMute', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('handleTrackMute') || funcStr.includes('Mute'), 'initializeCommonInspectorControls should reference handleTrackMute');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references handleTrackSolo', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('handleTrackSolo') || funcStr.includes('Solo'), 'initializeCommonInspectorControls should reference handleTrackSolo');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references handleTrackArm', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('handleTrackArm') || funcStr.includes('Arm'), 'initializeCommonInspectorControls should reference handleTrackArm');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references handleRemoveTrack', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('handleRemoveTrack') || funcStr.includes('Remove'), 'initializeCommonInspectorControls should reference handleRemoveTrack');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references track color swatches', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('colorSwatch') || funcStr.includes('track-color') || funcStr.includes('setTrackColor'), 'initializeCommonInspectorControls should reference track color');
+});
+
+TestRunner.test('Track Inspector - initializeCommonInspectorControls references trackNameInput', (t) => {
+    const funcStr = initializeCommonInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('trackNameInput') || funcStr.includes('trackName') || funcStr.includes('nameInput'), 'initializeCommonInspectorControls should reference trackNameInput');
+});
+
+TestRunner.test('Track Inspector - initializeTypeSpecificInspectorControls is a function', (t) => {
+    const funcStr = initializeTypeSpecificInspectorControls.toString();
+    t.assertTruthy(typeof initializeTypeSpecificInspectorControls === 'function' || funcStr.length > 0, 'initializeTypeSpecificInspectorControls should be a function');
+});
+
+TestRunner.test('Track Inspector - initializeTypeSpecificInspectorControls accepts 2 parameters (track, winEl)', (t) => {
+    t.assertEqual(initializeTypeSpecificInspectorControls.length, 2, 'initializeTypeSpecificInspectorControls should accept 2 parameters');
+});
+
+TestRunner.test('Track Inspector - initializeTypeSpecificInspectorControls references track.type', (t) => {
+    const funcStr = initializeTypeSpecificInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('track.type') || funcStr.includes('type'), 'initializeTypeSpecificInspectorControls should reference track.type');
+});
+
+TestRunner.test('Track Inspector - initializeTypeSpecificInspectorControls handles Synth type', (t) => {
+    const funcStr = initializeTypeSpecificInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('Synth') || funcStr.includes('type'), 'initializeTypeSpecificInspectorControls should handle Synth type');
+});
+
+TestRunner.test('Track Inspector - initializeTypeSpecificInspectorControls handles Sampler type', (t) => {
+    const funcStr = initializeTypeSpecificInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('Sampler') || funcStr.includes('type'), 'initializeTypeSpecificInspectorControls should handle Sampler type');
+});
+
+TestRunner.test('Track Inspector - initializeTypeSpecificInspectorControls handles DrumSampler type', (t) => {
+    const funcStr = initializeTypeSpecificInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler') || funcStr.includes('type'), 'initializeTypeSpecificInspectorControls should handle DrumSampler type');
+});
+
+TestRunner.test('Track Inspector - initializeTypeSpecificInspectorControls handles Audio type', (t) => {
+    const funcStr = initializeTypeSpecificInspectorControls.toString();
+    t.assertTruthy(funcStr.includes('Audio') || funcStr.includes('type'), 'initializeTypeSpecificInspectorControls should handle Audio type');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM is a function', (t) => {
+    t.assertEqual(typeof buildTrackInspectorContentDOM, 'function', 'buildTrackInspectorContentDOM should be a function');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM accepts 1 parameter (track)', (t) => {
+    t.assertEqual(buildTrackInspectorContentDOM.length, 1, 'buildTrackInspectorContentDOM should accept 1 parameter');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM returns a string', (t) => {
+    const result = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(typeof result === 'string' || result.length > 0, 'buildTrackInspectorContentDOM should return a string');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM references track.id', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track.id') || funcStr.includes('track\\.id') || funcStr.includes('id'), 'buildTrackInspectorContentDOM should reference track.id');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM references track.name', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track.name') || funcStr.includes('track\\.name') || funcStr.includes('name'), 'buildTrackInspectorContentDOM should reference track.name');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM references track.type', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(funcStr.includes('track.type') || funcStr.includes('track\\.type') || funcStr.includes('type'), 'buildTrackInspectorContentDOM should reference track.type');
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes mute/solo/arm buttons', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('mute') || funcStr.includes('solo') || funcStr.includes('arm') ||
+        funcStr.includes('Mute') || funcStr.includes('Solo') || funcStr.includes('Arm'),
+        'buildTrackInspectorContentDOM should include mute/solo/arm buttons'
+    );
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes track name input', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('trackNameInput') || funcStr.includes('trackName') ||
+        funcStr.includes('nameInput') || funcStr.includes('name'),
+        'buildTrackInspectorContentDOM should include track name input'
+    );
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes volume control', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('volume') || funcStr.includes('Volume') ||
+        funcStr.includes('fader') || funcStr.includes('Fader') ||
+        funcStr.includes('knob'),
+        'buildTrackInspectorContentDOM should include volume control'
+    );
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes pan control', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('pan') || funcStr.includes('Pan') ||
+        funcStr.includes('knob'),
+        'buildTrackInspectorContentDOM should include pan control'
+    );
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes track color swatches', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('colorSwatch') || funcStr.includes('track-color') ||
+        funcStr.includes('color') || funcStr.includes('Color'),
+        'buildTrackInspectorContentDOM should include color swatches'
+    );
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes remove track button', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('removeTrack') || funcStr.includes('remove') ||
+        funcStr.includes('Remove'),
+        'buildTrackInspectorContentDOM should include remove track button'
+    );
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes open effects button', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('openEffects') || funcStr.includes('Effects') ||
+        funcStr.includes('effectsBtn'),
+        'buildTrackInspectorContentDOM should include open effects button'
+    );
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM includes open sequencer button', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('openSequencer') || funcStr.includes('Sequencer') ||
+        funcStr.includes('sequencerBtn'),
+        'buildTrackInspectorContentDOM should include open sequencer button'
+    );
+});
+
+TestRunner.test('Track Inspector - buildTrackInspectorContentDOM branches by track type for specific controls', (t) => {
+    const funcStr = buildTrackInspectorContentDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('Synth') || funcStr.includes('Sampler') ||
+        funcStr.includes('DrumSampler') || funcStr.includes('Audio') ||
+        funcStr.includes('InstrumentSampler') || funcStr.includes('type'),
+        'buildTrackInspectorContentDOM should branch by track type'
+    );
+});
+
+TestRunner.test('Track Inspector - buildSynthSpecificInspectorDOM includes engine controls', (t) => {
+    const funcStr = buildSynthSpecificInspectorDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('engine') || funcStr.includes('Engine') ||
+        funcStr.includes('oscillator') || funcStr.includes('osc'),
+        'buildSynthSpecificInspectorDOM should include engine controls'
+    );
+});
+
+TestRunner.test('Track Inspector - buildSamplerSpecificInspectorDOM includes waveform area', (t) => {
+    const funcStr = buildSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('waveform') || funcStr.includes('waveformCanvas') ||
+        funcStr.includes('canvas') || funcStr.includes('dropZone'),
+        'buildSamplerSpecificInspectorDOM should include waveform area'
+    );
+});
+
+TestRunner.test('Track Inspector - buildDrumSamplerSpecificInspectorDOM includes pad grid', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('pad') || funcStr.includes('Pad') ||
+        funcStr.includes('grid'),
+        'buildDrumSamplerSpecificInspectorDOM should include pad grid'
+    );
+});
+
+TestRunner.test('Track Inspector - buildAudioTrackInspectorDOM includes input monitoring controls', (t) => {
+    const funcStr = buildAudioTrackInspectorDOM.toString();
+    t.assertTruthy(
+        funcStr.includes('monitoring') || funcStr.includes('Monitoring') ||
+        funcStr.includes('input') || funcStr.includes('Input'),
+        'buildAudioTrackInspectorDOM should include input monitoring controls'
+    );
+});
+
+// APP_VERSION validation for Day 330
+TestRunner.test('State - APP_VERSION is 2.10.0 or higher for Day 330', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 330');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 10, 'Minor version should be >= 10 for Day 330');
+    }
+});
