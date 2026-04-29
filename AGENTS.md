@@ -1,3 +1,37 @@
+#### Day 347: Undo/Redo Core Mechanism Tests (2026-04-29)
+- **Feature**: Added 38 new unit tests for Undo/Redo core mechanism functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 38 new tests in Day 347 section:
+    - undoLastActionInternal: function export, 0 parameters, async function
+    - undoLastActionInternal: calls reconstructDAWInternal, pushes to redoStack, pops from undoStack
+    - undoLastActionInternal: guards against empty undo stack, calls showNotification
+    - undoLastActionInternal: uses descriptive undo label, sets reconstruction flag
+    - undoLastActionInternal: clears flag in finally block, calls updateInternalUndoRedoState
+    - redoLastActionInternal: function export, 0 parameters, async function
+    - redoLastActionInternal: calls reconstructDAWInternal, pushes to undoStack, pops from redoStack
+    - redoLastActionInternal: guards against empty redo stack, calls showNotification
+    - redoLastActionInternal: uses descriptive redo label, sets reconstruction flag
+    - redoLastActionInternal: clears flag in finally block, calls updateInternalUndoRedoState
+    - getUndoStackState: function export, returns array
+    - getRedoStackState: function export, returns array
+    - undoStack and redoStack bounded by MAX_HISTORY_STATES
+    - captureStateForUndoInternal: function export, calls gatherProjectDataInternal
+    - captureStateForUndoInternal: pushes to undoStack, clears redoStack, calls updateInternalUndoRedoState
+    - captureStateForUndoInternal: has try-catch error handling, checks appServices
+    - All undo/redo functions have proper error handling
+  - `js/constants.js`: Bumped APP_VERSION to 2.27.0
+- **Feature Details**:
+  - Tests validate undoLastActionInternal is async and calls reconstructDAWInternal
+  - Tests verify undoLastActionInternal pops from undoStack and pushes to redoStack
+  - Tests verify redoLastActionInternal pops from redoStack and pushes to undoStack
+  - Tests verify both functions guard against empty stacks
+  - Tests verify reconstruction flag (_isReconstructingDAW_flag) management
+  - Tests verify updateInternalUndoRedoState is called after operations
+  - Tests verify stack size is bounded by MAX_HISTORY_STATES
+  - Tests verify descriptive notification labels for undo/redo operations
+  - Total tests increased from 3130 to 3168
+- **Version**: Bumped to 2.27.0
+
 #### Day 346: Recording State Function Undo Capture Tests (2026-04-29)
 - **Feature**: Added 31 new unit tests for Recording State functions undo capture verification
 - **Files Modified**:

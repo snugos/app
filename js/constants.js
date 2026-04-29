@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.26.0'; // Day 346: Recording State Function Undo Capture Tests
+export const APP_VERSION = '2.27.0'; // Day 347: Undo/Redo Core Mechanism Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants
