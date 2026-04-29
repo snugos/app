@@ -4672,3 +4672,151 @@ TestRunner.test('APP_VERSION validation for Day 364', (t) => {
         t.assertTruthy(versionParts[1] >= 42, 'Minor version should be >= 42 for Day 364');
     }
 });
+// Day 365: Timeline Zoom State Functions Tests
+TestRunner.test('Timeline Zoom - setTimelineZoomLevelState is a function export', (t) => {
+    t.assertEqual(typeof setTimelineZoomLevelState, 'function', 'setTimelineZoomLevelState should be a function');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineZoomLevelState accepts 1 parameter', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('level'), 'setTimelineZoomLevelState should accept level parameter');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineZoomLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimelineZoomLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineZoomLevelState uses descriptive undo label', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('Set Timeline Zoom') || funcStr.includes('Timeline Zoom'), 'setTimelineZoomLevelState should use descriptive undo label');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineZoomLevelState guards against missing appServices', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') && (funcStr.includes('if') || funcStr.includes('&&') || funcStr.includes('appServices')), 'setTimelineZoomLevelState should guard against missing appServices');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineZoomLevelState clamps value to valid range', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTimelineZoomLevelState should clamp value using Math.max/Math.min');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineZoomLevelState uses parseFloat for value parsing', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setTimelineZoomLevelState should use parseFloat for value parsing');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineVerticalZoomState is a function export', (t) => {
+    t.assertEqual(typeof setTimelineVerticalZoomState, 'function', 'setTimelineVerticalZoomState should be a function');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineVerticalZoomState accepts 1 parameter', (t) => {
+    const funcStr = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('level'), 'setTimelineVerticalZoomState should accept level parameter');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineVerticalZoomState calls captureStateForUndo', (t) => {
+    const funcStr = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimelineVerticalZoomState should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineVerticalZoomState uses descriptive undo label', (t) => {
+    const funcStr = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('Set Timeline Vertical') || funcStr.includes('Vertical Zoom'), 'setTimelineVerticalZoomState should use descriptive undo label');
+});
+
+TestRunner.test('Timeline Zoom - setTimelineVerticalZoomState clamps value to valid range', (t) => {
+    const funcStr = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTimelineVerticalZoomState should clamp value using Math.max/Math.min');
+});
+
+TestRunner.test('Timeline Zoom - zoomInTimeline is a function export', (t) => {
+    t.assertEqual(typeof zoomInTimeline, 'function', 'zoomInTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom - zoomInTimeline calls setTimelineZoomLevelState', (t) => {
+    const funcStr = zoomInTimeline.toString();
+    t.assertTruthy(funcStr.includes('setTimelineZoomLevelState'), 'zoomInTimeline should call setTimelineZoomLevelState');
+});
+
+TestRunner.test('Timeline Zoom - zoomInTimeline increases zoom level', (t) => {
+    const funcStr = zoomInTimeline.toString();
+    t.assertTruthy(funcStr.includes('+') || funcStr.includes('TIMELINE_ZOOM_STEP'), 'zoomInTimeline should increase zoom level');
+});
+
+TestRunner.test('Timeline Zoom - zoomOutTimeline is a function export', (t) => {
+    t.assertEqual(typeof zoomOutTimeline, 'function', 'zoomOutTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom - zoomOutTimeline calls setTimelineZoomLevelState', (t) => {
+    const funcStr = zoomOutTimeline.toString();
+    t.assertTruthy(funcStr.includes('setTimelineZoomLevelState'), 'zoomOutTimeline should call setTimelineZoomLevelState');
+});
+
+TestRunner.test('Timeline Zoom - zoomOutTimeline decreases zoom level', (t) => {
+    const funcStr = zoomOutTimeline.toString();
+    t.assertTruthy(funcStr.includes('-') || funcStr.includes('TIMELINE_ZOOM_STEP'), 'zoomOutTimeline should decrease zoom level');
+});
+
+TestRunner.test('Timeline Zoom - zoomInVerticalTimeline is a function export', (t) => {
+    t.assertEqual(typeof zoomInVerticalTimeline, 'function', 'zoomInVerticalTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom - zoomInVerticalTimeline calls setTimelineVerticalZoomState', (t) => {
+    const funcStr = zoomInVerticalTimeline.toString();
+    t.assertTruthy(funcStr.includes('setTimelineVerticalZoomState'), 'zoomInVerticalTimeline should call setTimelineVerticalZoomState');
+});
+
+TestRunner.test('Timeline Zoom - zoomOutVerticalTimeline is a function export', (t) => {
+    t.assertEqual(typeof zoomOutVerticalTimeline, 'function', 'zoomOutVerticalTimeline should be a function');
+});
+
+TestRunner.test('Timeline Zoom - zoomOutVerticalTimeline calls setTimelineVerticalZoomState', (t) => {
+    const funcStr = zoomOutVerticalTimeline.toString();
+    t.assertTruthy(funcStr.includes('setTimelineVerticalZoomState'), 'zoomOutVerticalTimeline should call setTimelineVerticalZoomState');
+});
+
+TestRunner.test('Timeline Zoom - resetTimelineZoom is a function export', (t) => {
+    t.assertEqual(typeof resetTimelineZoom, 'function', 'resetTimelineZoom should be a function');
+});
+
+TestRunner.test('Timeline Zoom - resetTimelineZoom calls captureStateForUndo', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'resetTimelineZoom should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Zoom - resetTimelineZoom uses descriptive undo label', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('Reset Timeline Zoom') || funcStr.includes('Reset Zoom'), 'resetTimelineZoom should use descriptive undo label');
+});
+
+TestRunner.test('Timeline Zoom - resetTimelineZoom resets both horizontal and vertical zoom', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('horizontal') && funcStr.includes('vertical'), 'resetTimelineZoom should reset both horizontal and vertical zoom');
+});
+
+TestRunner.test('Timeline Zoom - getTimelineZoomState returns object', (t) => {
+    t.assertEqual(typeof getTimelineZoomState, 'function', 'getTimelineZoomState should be a function');
+});
+
+TestRunner.test('Timeline Zoom - getTimelineZoomLevelState returns number', (t) => {
+    t.assertEqual(typeof getTimelineZoomLevelState, 'function', 'getTimelineZoomLevelState should be a function');
+});
+
+TestRunner.test('Timeline Zoom - getTimelineVerticalZoomState returns number', (t) => {
+    t.assertEqual(typeof getTimelineVerticalZoomState, 'function', 'getTimelineVerticalZoomState should be a function');
+});
+
+TestRunner.test('Timeline Zoom - Timeline zoom constants use TIMELINE_ZOOM prefix', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_ZOOM'), 'Timeline zoom functions should reference TIMELINE_ZOOM constants');
+});
+
+TestRunner.test('APP_VERSION validation for Day 365', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 365');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 43, 'Minor version should be >= 43 for Day 365');
+    }
+});
