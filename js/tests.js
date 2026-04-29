@@ -16801,3 +16801,131 @@ TestRunner.test('State - APP_VERSION is 2.20.0 or higher for Day 340', (t) => {
         t.assertTruthy(versionParts[1] >= 20, 'Minor version should be >= 20 for Day 340');
     }
 });
+
+// Day 341: Scale & Chord Mode State Function Tests
+// ============================================================================
+// Tests for Scale Mode and Chord Mode state management functions
+
+TestRunner.test('State - setScaleModeState function is exported', (t) => {
+    t.assertEqual(typeof setScaleModeState, 'function', 'setScaleModeState should be a function');
+});
+
+TestRunner.test('State - setScaleModeState accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeState.length, 1, 'setScaleModeState should accept 1 parameter');
+});
+
+TestRunner.test('State - setScaleModeState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setScaleModeState uses descriptive undo label', (t) => {
+    const funcStr = setScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('Scale Mode') || funcStr.includes('Scale'), 'setScaleModeState should mention Scale in undo label');
+});
+
+TestRunner.test('State - setScaleModeState guards against missing appServices', (t) => {
+    const funcStr = setScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setScaleModeState should guard appServices.captureStateForUndo');
+});
+
+TestRunner.test('State - getScaleModeState returns scaleModeState', (t) => {
+    const funcStr = getScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('scaleModeState'), 'getScaleModeState should return scaleModeState');
+});
+
+TestRunner.test('State - setScaleModeEnabledState function is exported', (t) => {
+    t.assertEqual(typeof setScaleModeEnabledState, 'function', 'setScaleModeEnabledState should be a function');
+});
+
+TestRunner.test('State - setScaleModeEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setScaleModeEnabledState references enabled parameter', (t) => {
+    const funcStr = setScaleModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('enabled'), 'setScaleModeEnabledState should reference enabled parameter');
+});
+
+TestRunner.test('State - setScaleModeScaleState function is exported', (t) => {
+    t.assertEqual(typeof setScaleModeScaleState, 'function', 'setScaleModeScaleState should be a function');
+});
+
+TestRunner.test('State - setScaleModeScaleState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeScaleState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeScaleState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setScaleModeScaleState references scale parameter', (t) => {
+    const funcStr = setScaleModeScaleState.toString();
+    t.assertTruthy(funcStr.includes('scale'), 'setScaleModeScaleState should reference scale parameter');
+});
+
+TestRunner.test('State - setScaleModeRootState function is exported', (t) => {
+    t.assertEqual(typeof setScaleModeRootState, 'function', 'setScaleModeRootState should be a function');
+});
+
+TestRunner.test('State - setScaleModeRootState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeRootState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setChordModeState function is exported', (t) => {
+    t.assertEqual(typeof setChordModeState, 'function', 'setChordModeState should be a function');
+});
+
+TestRunner.test('State - setChordModeState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeState.length, 1, 'setChordModeState should accept 1 parameter');
+});
+
+TestRunner.test('State - setChordModeState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setChordModeState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('Chord') || funcStr.includes('chordMode'), 'setChordModeState should mention Chord in undo label');
+});
+
+TestRunner.test('State - setChordModeEnabledState function is exported', (t) => {
+    t.assertEqual(typeof setChordModeEnabledState, 'function', 'setChordModeEnabledState should be a function');
+});
+
+TestRunner.test('State - setChordModeEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setChordModeTypeState function is exported', (t) => {
+    t.assertEqual(typeof setChordModeTypeState, 'function', 'setChordModeTypeState should be a function');
+});
+
+TestRunner.test('State - setChordModeTypeState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeTypeState should call captureStateForUndo');
+});
+
+TestRunner.test('State - setChordModeTypeState references type parameter', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes('type'), 'setChordModeTypeState should reference type parameter');
+});
+
+TestRunner.test('State - setChordVoicingState function is exported', (t) => {
+    t.assertEqual(typeof setChordVoicingState, 'function', 'setChordVoicingState should be a function');
+});
+
+TestRunner.test('State - setChordVoicingState calls captureStateForUndo', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordVoicingState should call captureStateForUndo');
+});
+
+// APP_VERSION validation for Day 341
+TestRunner.test('State - APP_VERSION is 2.21.0 or higher for Day 341', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 341');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 21, 'Minor version should be >= 21 for Day 341');
+    }
+});

@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.20.0'; // Day 340: Project Save & Track Group Extended Function Tests
+export const APP_VERSION = '2.21.0'; // Day 341: Scale & Chord Mode State Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

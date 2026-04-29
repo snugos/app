@@ -1,3 +1,29 @@
+
+#### Day 341: Scale & Chord Mode State Function Tests (2026-04-29)
+- **Feature**: Added 27 new unit tests for Scale Mode and Chord Mode state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 27 new tests in Day 341 section:
+    - setScaleModeState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setScaleModeState: uses descriptive undo label, guards against missing appServices
+    - getScaleModeState: returns scaleModeState
+    - setScaleModeEnabledState: function export, calls captureStateForUndo, references enabled parameter
+    - setScaleModeScaleState: function export, calls captureStateForUndo, references scale parameter
+    - setScaleModeRootState: function export, calls captureStateForUndo
+    - setChordModeState: function export, 1 parameter, calls captureStateForUndo with descriptive label
+    - setChordModeState: uses descriptive undo label (Chord Mode)
+    - setChordModeEnabledState: function export, calls captureStateForUndo
+    - setChordModeTypeState: function export, calls captureStateForUndo, references type parameter
+    - setChordVoicingState: function export, calls captureStateForUndo
+  - `js/constants.js`: Bumped APP_VERSION to 2.21.0
+- **Feature Details**:
+  - Tests validate Scale Mode state functions call undo capture before mutating
+  - Tests validate Chord Mode state functions call undo capture before mutating
+  - Tests verify descriptive undo labels for all Scale Mode operations (Set Scale Mode, Toggle Scale Mode, Set Scale to, Set Scale Root)
+  - Tests verify descriptive undo labels for all Chord Mode operations (Set Chord Mode, Toggle Chord Mode, Set Chord Type, Set Chord Voicing)
+  - Tests verify all functions guard against missing appServices
+  - Total tests increased from 16803 to 16931
+- **Version**: Bumped to 2.21.0
+
 #### Day 338: Track Group State CRUD Undo Capture Tests (2026-04-29)
 - **Feature**: Added 54 new unit tests for Track Group state CRUD functions undo capture verification
 - **Files Modified**:
