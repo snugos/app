@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.35.0'; // Day 355: Recording Audio Module Extended Function Tests
+export const APP_VERSION = '2.36.0'; // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

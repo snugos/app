@@ -169,10 +169,23 @@ import {
     setLoopRegionStartBarState,
     getLoopRegionEndBarState,
     setLoopRegionEndBarState,
+    // Timeline Zoom state functions
+    getTimelineZoomState,
+    setTimelineZoomLevelState,
+    getTimelineVerticalZoomState,
+    setTimelineVerticalZoomState,
+    zoomInTimeline,
+    zoomOutTimeline,
+    zoomInVerticalTimeline,
+    zoomOutVerticalTimeline,
+    resetTimelineZoom,
     // Swing state functions
     getSwingState,
     setSwingState,
     getSwingEnabledState,
+    setSwingEnabledState,
+    getSwingAmountState,
+    setSwingAmountState,
     // Timeline Markers cleanup functions
     clearTimelineMarkersState,
     // Track Groups state functions
@@ -3181,5 +3194,158 @@ TestRunner.test('Recording Audio - APP_VERSION validation for Day 355', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 355');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 34, 'Minor version should be >= 34 for Day 355');
+    }
+});
+// Day 356: Project Save/Load Functions Tests
+TestRunner.test('Project Save/Load - saveProjectInternal is a function', (t) => {
+    t.assertEqual(typeof saveProjectInternal, 'function', 'saveProjectInternal should be a function');
+});
+
+TestRunner.test('Project Save/Load - loadProjectInternal is a function', (t) => {
+    t.assertEqual(typeof loadProjectInternal, 'function', 'loadProjectInternal should be a function');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal is a function', (t) => {
+    t.assertEqual(typeof handleProjectFileLoadInternal, 'function', 'handleProjectFileLoadInternal should be a function');
+});
+
+TestRunner.test('Project Save/Load - exportToWavInternal is a function', (t) => {
+    t.assertEqual(typeof exportToWavInternal, 'function', 'exportToWavInternal should be a function');
+});
+
+TestRunner.test('Project Save/Load - saveProjectInternal calls gatherProjectDataInternal', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('gatherProjectDataInternal'), 'saveProjectInternal should call gatherProjectDataInternal');
+});
+
+TestRunner.test('Project Save/Load - saveProjectInternal creates Blob and downloads', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('Blob') && funcStr.includes('download'), 'saveProjectInternal should create Blob and trigger download');
+});
+
+TestRunner.test('Project Save/Load - saveProjectInternal uses .snug file extension', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('.snug'), 'saveProjectInternal should use .snug file extension');
+});
+
+TestRunner.test('Project Save/Load - saveProjectInternal has error handling', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'saveProjectInternal should have try-catch error handling');
+});
+
+TestRunner.test('Project Save/Load - saveProjectInternal calls showNotification', (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'saveProjectInternal should call showNotification');
+});
+
+TestRunner.test('Project Save/Load - loadProjectInternal triggers file input click', (t) => {
+    const funcStr = loadProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('click') && funcStr.includes('loadProjectInput'), 'loadProjectInternal should trigger file input click');
+});
+
+TestRunner.test('Project Save/Load - loadProjectInternal has error handling', (t) => {
+    const funcStr = loadProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'loadProjectInternal should have error handling');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal is async', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'handleProjectFileLoadInternal should be async');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal validates .snug extension', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('.snug'), 'handleProjectFileLoadInternal should validate .snug extension');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal uses FileReader', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('FileReader'), 'handleProjectFileLoadInternal should use FileReader');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal parses JSON', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('JSON.parse'), 'handleProjectFileLoadInternal should parse JSON');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal calls reconstructDAWInternal', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('reconstructDAWInternal'), 'handleProjectFileLoadInternal should call reconstructDAWInternal');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal clears undo/redo stacks', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack') && funcStr.includes('redoStack'), 'handleProjectFileLoadInternal should clear undo/redo stacks');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal has error handling', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'handleProjectFileLoadInternal should have try-catch error handling');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal calls showNotification', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'handleProjectFileLoadInternal should call showNotification');
+});
+
+TestRunner.test('Project Save/Load - handleProjectFileLoadInternal handles invalid file type', (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('Invalid file type') || funcStr.includes('invalid'), 'handleProjectFileLoadInternal should handle invalid file types');
+});
+
+TestRunner.test('Project Save/Load - exportToWavInternal is async', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'exportToWavInternal should be async');
+});
+
+TestRunner.test('Project Save/Load - exportToWavInternal validates appServices', (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('getActualMasterGainNode'), 'exportToWavInternal should validate appServices');
+});
+
+TestRunner.test('Project Save/Load - gatherProjectDataInternal is a function', (t) => {
+    t.assertEqual(typeof gatherProjectDataInternal, 'function', 'gatherProjectDataInternal should be a function');
+});
+
+TestRunner.test('Project Save/Load - gatherProjectDataInternal includes version', (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('version') && funcStr.includes('APP_VERSION'), 'gatherProjectDataInternal should include version');
+});
+
+TestRunner.test('Project Save/Load - gatherProjectDataInternal includes globalSettings', (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('globalSettings') && funcStr.includes('tempo'), 'gatherProjectDataInternal should include globalSettings');
+});
+
+TestRunner.test('Project Save/Load - gatherProjectDataInternal includes masterEffects', (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('masterEffects'), 'gatherProjectDataInternal should include masterEffects');
+});
+
+TestRunner.test('Project Save/Load - gatherProjectDataInternal includes sendTracks', (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('sendTracks'), 'gatherProjectDataInternal should include sendTracks');
+});
+
+TestRunner.test('Project Save/Load - gatherProjectDataInternal includes tracks', (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('tracks') && funcStr.includes('getTracksState'), 'gatherProjectDataInternal should include tracks');
+});
+
+TestRunner.test('Project Save/Load - gatherProjectDataInternal handles track type-specific data', (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('Synth') && funcStr.includes('Sampler') && funcStr.includes('DrumSampler'), 'gatherProjectDataInternal should handle track type-specific data');
+});
+
+TestRunner.test('Project Save/Load - gatherProjectDataInternal has error handling', (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'gatherProjectDataInternal should have try-catch error handling');
+});
+
+TestRunner.test('Project Save/Load - APP_VERSION validation for Day 356', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 356');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 35, 'Minor version should be >= 35 for Day 356');
     }
 });
