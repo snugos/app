@@ -1,3 +1,33 @@
+#### Day 349: Timeline Markers & Send Track State Tests (2026-04-29)
+- **Feature**: Added 47 new unit tests for Timeline Markers and Send Track state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 47 new tests in Day 349 section:
+    - Timeline Markers - getTimelineMarkersState returns array
+    - Timeline Markers - getTimelineMarkerByIdState, addTimelineMarkerState, setTimelineMarkerState, removeTimelineMarkerState, clearTimelineMarkersState are function exports
+    - Timeline Markers - all 5 functions call captureStateForUndo with descriptive labels
+    - Timeline Markers - addTimelineMarkerState checks MAX_TIMELINE_MARKERS limit, generates unique ID, sorts by bar position
+    - Timeline Markers - setTimelineMarkerState clamps bar value to MAX_BARS, returns null for unknown id
+    - Timeline Markers - clearTimelineMarkersState returns early if empty, guards against missing appServices
+    - Send Tracks - setSendTrackNameState, setSendTrackLevelState, setSendTrackEffectsState, removeSendTrackState are function exports
+    - Send Tracks - all Send Track functions call captureStateForUndo with descriptive labels
+    - Send Tracks - setSendTrackNameState references sendId parameter, uses descriptive undo label
+    - Send Tracks - setSendTrackLevelState references level parameter
+    - Send Tracks - setSendTrackMutedState references muted parameter
+    - Send Tracks - setTrackSendLevelState and setTrackSendPreFaderState call captureStateForUndo
+    - APP_VERSION validation for 2.28.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.29.0
+- **Feature Details**:
+  - Tests validate Timeline Markers state functions (getTimelineMarkersState, getTimelineMarkerByIdState, addTimelineMarkerState, setTimelineMarkerState, removeTimelineMarkerState, clearTimelineMarkersState)
+  - Tests verify all Timeline Markers functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Timeline Marker operations (Add/Update/Remove/Clear)
+  - Tests verify addTimelineMarkerState checks MAX_TIMELINE_MARKERS (64) limit
+  - Tests verify setTimelineMarkerState clamps bar values to MAX_BARS
+  - Tests validate Send Track state functions (setSendTrackNameState, setSendTrackLevelState, setSendTrackEffectsState, removeSendTrackState)
+  - Tests verify all Send Track functions call captureStateForUndo for undo/redo support
+  - Tests verify setTrackSendLevelState and setTrackSendPreFaderState call captureStateForUndo
+  - Total tests increased from 3176 to 3223
+- **Version**: Bumped to 2.29.0
+
 #### Day 348: Performance Monitor State Undo Capture Tests (2026-04-29)
 - **Feature**: Added 27 new unit tests for Performance Monitor state functions undo capture verification
 - **Files Modified**:
