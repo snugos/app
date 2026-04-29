@@ -29,6 +29,13 @@ import {
     handleTimelineLaneDrop
 } from './eventHandlers.js';
 import {
+    openTrackSequencerWindow, openTrackInspectorWindow, openTrackEffectsRackWindow,
+    openMasterEffectsRackWindow, openSendEffectsWindow, openGlobalControlsWindow,
+    openSoundBrowserWindow, openMixerWindow, openTrackTemplatesWindow,
+    openAudioClipEditorWindow, openTimelineWindow,
+    showKeyboardShortcutsHelpWindow
+} from './ui.js';
+import {
     initializeStateModule, 
     // State Getters
     getTracksState, getTrackByIdState, getOpenWindowsState, getWindowByIdState, getHighestZState,
