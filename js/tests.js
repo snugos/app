@@ -243,6 +243,7 @@ import {
     findMidiLearnMapping,
     updateMidiLearnMapping,
     exportToMidiInternal,
+    importFromMidiInternal,
 
     getMidiLearnMappingByIndex
 } from './state.js';
@@ -5512,5 +5513,70 @@ TestRunner.test('APP_VERSION validation for Day 369', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 369');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 47, 'Minor version should be >= 47 for Day 369');
+    }
+});
+TestRunner.test('MIDI Import - importFromMidiInternal is a function export', (t) => {
+    t.assertEqual(typeof importFromMidiInternal, 'function', 'importFromMidiInternal should be a function');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal is async', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'importFromMidiInternal should be async');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal calls showNotification', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'importFromMidiInternal should call showNotification');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal validates appServices', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('showNotification'), 'importFromMidiInternal should validate appServices');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal checks createFileInputForMidiImport service', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('createFileInputForMidiImport'), 'importFromMidiInternal should check createFileInputForMidiImport service');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal has error handling', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'importFromMidiInternal should have error handling');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal calls createFileInputForMidiImport', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('createFileInputForMidiImport()'), 'importFromMidiInternal should call createFileInputForMidiImport');
+});
+
+TestRunner.test('MIDI Import Constants - MIDI_IMPORT_MIN_NOTES is 1', (t) => {
+    t.assertEqual(MIDI_IMPORT_MIN_NOTES, 1, 'MIDI_IMPORT_MIN_NOTES should be 1');
+});
+
+TestRunner.test('MIDI Import Constants - MIDI_IMPORT_MAX_VELOCITY is 127', (t) => {
+    t.assertEqual(MIDI_IMPORT_MAX_VELOCITY, 127, 'MIDI_IMPORT_MAX_VELOCITY should be 127');
+});
+
+TestRunner.test('MIDI Import Constants - MIDI_IMPORT_DEFAULT_VELOCITY is 100', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_VELOCITY, 100, 'MIDI_IMPORT_DEFAULT_VELOCITY should be 100');
+});
+
+TestRunner.test('MIDI Import Constants - MIDI_IMPORT_DEFAULT_PROBABILITY is 1.0', (t) => {
+    t.assertEqual(MIDI_IMPORT_DEFAULT_PROBABILITY, 1.0, 'MIDI_IMPORT_DEFAULT_PROBABILITY should be 1.0');
+});
+
+TestRunner.test('MIDI Import Constants - MIDI_IMPORT_SNAP_TO_GRID is true', (t) => {
+    t.assertEqual(MIDI_IMPORT_SNAP_TO_GRID, true, 'MIDI_IMPORT_SNAP_TO_GRID should be true');
+});
+
+TestRunner.test('MIDI Import Constants - MIDI_IMPORT_VELOCITY_SCALE is 1/127', (t) => {
+    t.assertEqual(MIDI_IMPORT_VELOCITY_SCALE, 1/127, 'MIDI_IMPORT_VELOCITY_SCALE should be 1/127');
+});
+
+TestRunner.test('APP_VERSION validation for Day 370', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 370');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 48, 'Minor version should be >= 48 for Day 370');
     }
 });

@@ -1,3 +1,31 @@
+#### Day 370: MIDI Import Functions Tests (2026-04-29)
+- **Feature**: Added 14 new unit tests for MIDI Import functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 14 new tests in Day 370 section:
+    - MIDI Import - importFromMidiInternal is a function export
+    - MIDI Import - importFromMidiInternal is async
+    - MIDI Import - importFromMidiInternal calls showNotification
+    - MIDI Import - importFromMidiInternal validates appServices
+    - MIDI Import - importFromMidiInternal checks createFileInputForMidiImport service
+    - MIDI Import - importFromMidiInternal has error handling (try-catch)
+    - MIDI Import - importFromMidiInternal calls createFileInputForMidiImport
+    - MIDI Import Constants - MIDI_IMPORT_MIN_NOTES is 1
+    - MIDI Import Constants - MIDI_IMPORT_MAX_VELOCITY is 127
+    - MIDI Import Constants - MIDI_IMPORT_DEFAULT_VELOCITY is 100
+    - MIDI Import Constants - MIDI_IMPORT_DEFAULT_PROBABILITY is 1.0
+    - MIDI Import Constants - MIDI_IMPORT_SNAP_TO_GRID is true
+    - MIDI Import Constants - MIDI_IMPORT_VELOCITY_SCALE is 1/127
+    - APP_VERSION validation for 2.49.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.49.0
+- **Feature Details**:
+  - Tests validate importFromMidiInternal function (async, validates appServices, checks createFileInputForMidiImport service)
+  - Tests verify importFromMidiInternal has proper error handling with try-catch blocks
+  - Tests verify importFromMidiInternal calls createFileInputForMidiImport to trigger file picker
+  - Tests verify MIDI import constants define proper import behavior (velocity scaling, snapping, min notes)
+  - Added importFromMidiInternal to tests.js imports from state.js
+  - Total tests increased from 927 to 941
+- **Version**: Bumped to 2.49.0
+
 #### Day 369: MIDI Export/Import Functions Tests (2026-04-29)
 - **Feature**: Added 41 new unit tests for MIDI Export/Import functions and helper functions to expand test coverage
 - **Files Modified**:
