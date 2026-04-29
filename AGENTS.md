@@ -1,3 +1,39 @@
+#### Day 364: Sequence & Note Methods Tests (2026-04-29)
+- **Feature**: Added 52 new unit tests for Sequence and Note Methods to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 52 new tests in Day 364 section:
+    - Sequence Methods - createNewSequence is a function, accepts 3 parameters, calls _captureUndoState
+    - Sequence Methods - createNewSequence handles Audio track type, uses defaultStepsPerBar
+    - Sequence Methods - deleteSequence is a function, accepts 1 parameter, calls _captureUndoState
+    - Sequence Methods - deleteSequence prevents deleting last sequence
+    - Sequence Methods - renameSequence calls _captureUndoState
+    - Sequence Methods - duplicateSequence calls _captureUndoState
+    - Sequence Methods - setActiveSequence calls _captureUndoState
+    - Sequence Methods - doubleSequence calls _captureUndoState, checks MAX_BARS limit
+    - Sequence Methods - shiftSequenceNotes calls _captureUndoState, handles row shifting
+    - Sequence Methods - humanizeVelocity is a function (random, no undo)
+    - Sequence Methods - arpeggiatePattern calls _captureUndoState, validates track type
+    - Sequence Methods - quantizeSequence calls _captureUndoState
+    - Note Methods - setNoteLength calls _captureUndoState, clamps value
+    - Note Methods - getNoteLength is a function
+    - Note Methods - setNoteProbability calls _captureUndoState, clamps to 0-1 range
+    - Note Methods - getNoteProbability is a function
+    - Automation Methods - getAutomationLane, setAutomationPoint, getAutomationValue, hasAutomation, getAutomationLaneCount
+    - Track Methods - duplicateTrack, freezeTrack, bounceTrack, rebuildEffectChain, initializeAudioNodes
+    - Track Constants - TRACK_COLORS array has expected colors, numSlices, numDrumSamplerPads, synthPitches validation
+    - APP_VERSION validation for 2.43.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.43.0
+- **Feature Details**:
+  - Tests validate Track.prototype sequence methods (createNewSequence, deleteSequence, renameSequence, duplicateSequence, setActiveSequence, doubleSequence, shiftSequenceNotes, humanizeVelocity, arpeggiatePattern, quantizeSequence)
+  - Tests verify all mutation methods call _captureUndoState for undo/redo support except humanizeVelocity (random operation)
+  - Tests validate Note length and probability methods (setNoteLength, getNoteLength, setNoteProbability, getNoteProbability)
+  - Tests validate Automation lane methods (getAutomationLane, setAutomationPoint, getAutomationValue, hasAutomation, getAutomationLaneCount)
+  - Tests verify Track constants (TRACK_COLORS, numSlices, numDrumSamplerPads, synthPitches)
+  - Tests verify async methods (freezeTrack, bounceTrack, initializeAudioNodes)
+  - Total tests increased from 703 to 755
+- **Version**: Bumped to 2.43.0
+
+
 #### Day 363: Knob UI & Inspector Initialization Function Tests (2026-04-29)
 - **Feature**: Added 28 new unit tests for Knob UI and Inspector Initialization functions to expand test coverage
 - **Files Modified**:

@@ -72,7 +72,11 @@ import {
     DEFAULT_TRACK_TEMPLATE,
     CHORD_VOICINGS,
     DEFAULT_CHORD_VOICING,
-    CHORD_VOICING_SPREAD
+    CHORD_VOICING_SPREAD,
+    TRACK_COLORS,
+    numSlices,
+    numDrumSamplerPads,
+    synthPitches
 } from './constants.js';
 import {
     getUndoStackState,
@@ -4425,5 +4429,246 @@ TestRunner.test('APP_VERSION validation for Day 363', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 363');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 41, 'Minor version should be >= 41 for Day 363');
+    }
+});
+
+// === Day 364: Sequence & Note Methods Tests ===
+
+TestRunner.test('Sequence Methods - Track.createNewSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.createNewSequence, 'function', 'createNewSequence should be a function');
+});
+
+TestRunner.test('Sequence Methods - createNewSequence accepts 3 parameters', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('name') && funcStr.includes('initialLengthSteps') && funcStr.includes('skipUndo'), 'createNewSequence should accept name, initialLengthSteps, and skipUndo parameters');
+});
+
+TestRunner.test('Sequence Methods - createNewSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'createNewSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - createNewSequence handles Audio track type', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('type === \'Audio\'') || funcStr.includes('type === "Audio"'), 'createNewSequence should return early for Audio tracks');
+});
+
+TestRunner.test('Sequence Methods - createNewSequence uses Constants.defaultStepsPerBar', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('defaultStepsPerBar') || funcStr.includes('Constants.defaultStepsPerBar'), 'createNewSequence should use defaultStepsPerBar constant');
+});
+
+TestRunner.test('Sequence Methods - Track.deleteSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.deleteSequence, 'function', 'deleteSequence should be a function');
+});
+
+TestRunner.test('Sequence Methods - deleteSequence accepts 1 parameter', (t) => {
+    const funcStr = Track.prototype.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('sequenceId'), 'deleteSequence should accept sequenceId parameter');
+});
+
+TestRunner.test('Sequence Methods - deleteSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'deleteSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - deleteSequence prevents deleting last sequence', (t) => {
+    const funcStr = Track.prototype.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('Cannot delete the last sequence') || funcStr.includes('sequences.length <= 1'), 'deleteSequence should prevent deleting the last sequence');
+});
+
+TestRunner.test('Sequence Methods - Track.renameSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.renameSequence, 'function', 'renameSequence should be a function');
+});
+
+TestRunner.test('Sequence Methods - renameSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.renameSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'renameSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - Track.duplicateSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.duplicateSequence, 'function', 'duplicateSequence should be a function');
+});
+
+TestRunner.test('Sequence Methods - duplicateSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.duplicateSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'duplicateSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - Track.setActiveSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setActiveSequence, 'function', 'setActiveSequence should be a function');
+});
+
+TestRunner.test('Sequence Methods - setActiveSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setActiveSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setActiveSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - Track.doubleSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.doubleSequence, 'function', 'doubleSequence should be a function');
+});
+
+TestRunner.test('Sequence Methods - doubleSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.doubleSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'doubleSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - doubleSequence checks MAX_BARS limit', (t) => {
+    const funcStr = Track.prototype.doubleSequence.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS') || funcStr.includes('exceed'), 'doubleSequence should check MAX_BARS limit');
+});
+
+TestRunner.test('Sequence Methods - Track.shiftSequenceNotes is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.shiftSequenceNotes, 'function', 'shiftSequenceNotes should be a function');
+});
+
+TestRunner.test('Sequence Methods - shiftSequenceNotes calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.shiftSequenceNotes.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'shiftSequenceNotes should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - shiftSequenceNotes handles Synth/InstrumentSampler row shifting', (t) => {
+    const funcStr = Track.prototype.shiftSequenceNotes.toString();
+    t.assertTruthy(funcStr.includes('synthPitches') || funcStr.includes('rowShift'), 'shiftSequenceNotes should handle row shifting for synth tracks');
+});
+
+TestRunner.test('Sequence Methods - Track.humanizeVelocity is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.humanizeVelocity, 'function', 'humanizeVelocity should be a function');
+});
+
+TestRunner.test('Sequence Methods - Track.arpeggiatePattern is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.arpeggiatePattern, 'function', 'arpeggiatePattern should be a function');
+});
+
+TestRunner.test('Sequence Methods - arpeggiatePattern calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.arpeggiatePattern.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'arpeggiatePattern should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - arpeggiatePattern validates track type', (t) => {
+    const funcStr = Track.prototype.arpeggiatePattern.toString();
+    t.assertTruthy(funcStr.includes('Synth') && funcStr.includes('InstrumentSampler'), 'arpeggiatePattern should work on Synth and InstrumentSampler tracks');
+});
+
+TestRunner.test('Sequence Methods - Track.quantizeSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.quantizeSequence, 'function', 'quantizeSequence should be a function');
+});
+
+TestRunner.test('Sequence Methods - quantizeSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.quantizeSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'quantizeSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Note Methods - Track.setNoteLength is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setNoteLength, 'function', 'setNoteLength should be a function');
+});
+
+TestRunner.test('Note Methods - setNoteLength calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setNoteLength should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Note Methods - setNoteLength clamps value', (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'setNoteLength should clamp note length');
+});
+
+TestRunner.test('Note Methods - Track.getNoteLength is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.getNoteLength, 'function', 'getNoteLength should be a function');
+});
+
+TestRunner.test('Note Methods - Track.setNoteProbability is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setNoteProbability, 'function', 'setNoteProbability should be a function');
+});
+
+TestRunner.test('Note Methods - setNoteProbability calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setNoteProbability.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setNoteProbability should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Note Methods - setNoteProbability clamps to 0-1 range', (t) => {
+    const funcStr = Track.prototype.setNoteProbability.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setNoteProbability should clamp probability to 0-1 range');
+});
+
+TestRunner.test('Note Methods - Track.getNoteProbability is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.getNoteProbability, 'function', 'getNoteProbability should be a function');
+});
+
+TestRunner.test('Automation Methods - Track.getAutomationLane is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.getAutomationLane, 'function', 'getAutomationLane should be a function');
+});
+
+TestRunner.test('Automation Methods - Track.setAutomationPoint is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setAutomationPoint, 'function', 'setAutomationPoint should be a function');
+});
+
+TestRunner.test('Automation Methods - setAutomationPoint calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAutomationPoint.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAutomationPoint should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Automation Methods - Track.getAutomationValue is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.getAutomationValue, 'function', 'getAutomationValue should be a function');
+});
+
+TestRunner.test('Automation Methods - Track.hasAutomation is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.hasAutomation, 'function', 'hasAutomation should be a function');
+});
+
+TestRunner.test('Automation Methods - Track.getAutomationLaneCount is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.getAutomationLaneCount, 'function', 'getAutomationLaneCount should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.duplicateTrack calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.duplicateTrack.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'duplicateTrack should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Track Methods - Track.prototype.freezeTrack is async', (t) => {
+    const funcStr = Track.prototype.freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'freezeTrack should be async');
+});
+
+TestRunner.test('Track Methods - Track.prototype.bounceTrack is async', (t) => {
+    const funcStr = Track.prototype.bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'bounceTrack should be async');
+});
+
+TestRunner.test('Track Constants - TRACK_COLORS array has expected colors', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_COLORS) && TRACK_COLORS.length >= 8, 'TRACK_COLORS should be an array with at least 8 colors');
+});
+
+TestRunner.test('Track Constants - numSlices constant validation', (t) => {
+    t.assertTruthy(typeof numSlices === 'number' && numSlices > 0, 'numSlices should be a positive number');
+});
+
+TestRunner.test('Track Constants - numDrumSamplerPads constant validation', (t) => {
+    t.assertTruthy(typeof numDrumSamplerPads === 'number' && numDrumSamplerPads > 0, 'numDrumSamplerPads should be a positive number');
+});
+
+TestRunner.test('Track Constants - synthPitches array validation', (t) => {
+    t.assertTruthy(Array.isArray(synthPitches) && synthPitches.length > 0, 'synthPitches should be a non-empty array');
+});
+
+TestRunner.test('Track Methods - Track.prototype.rebuildEffectChain is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.rebuildEffectChain, 'function', 'rebuildEffectChain should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.initializeAudioNodes is async', (t) => {
+    const funcStr = Track.prototype.initializeAudioNodes.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'initializeAudioNodes should be async');
+});
+
+TestRunner.test('Track Methods - Track.prototype.createNewSequence returns new sequence object', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('sequences.push') && funcStr.includes('activeSequenceId'), 'createNewSequence should push sequence and set active');
+});
+
+TestRunner.test('APP_VERSION validation for Day 364', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 364');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 42, 'Minor version should be >= 42 for Day 364');
     }
 });
