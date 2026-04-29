@@ -1,3 +1,34 @@
+#### Day 363: Knob UI & Inspector Initialization Function Tests (2026-04-29)
+- **Feature**: Added 28 new unit tests for Knob UI and Inspector Initialization functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 28 new tests in Day 363 section:
+    - Knob UI - createKnob is a function export, accepts 1 parameter, returns object with element/setValue/getValue/type
+    - Knob UI - createKnob supports onValueChange callback, handles min/max bounds, supports displayAsDb option
+    - Knob UI - createKnob references localAppServices.captureStateForUndo for undo support
+    - Track Inspector - initializeUIModule function exists, buildTrackInspectorContentDOM handles track types
+    - Track Inspector - buildTrackInspectorContentDOM includes mute/solo/arm buttons, track name input
+    - Track Inspector - buildSynthSpecificInspectorDOM references synthEngineControlDefinitions and engineType
+    - Track Inspector - buildDrumSamplerSpecificInspectorDOM includes pad grid elements
+    - Track Inspector - buildAudioTrackInspectorDOM includes input monitoring controls
+    - Sound Browser - renderSoundBrowserDirectory function exists, accepts 2 parameters (pathArray, treeNode)
+    - Sound Browser - updateSoundBrowserDisplayForLibrary function exists, accepts libraryName, handles isLoading state
+    - Effects List - renderEffectsList and renderEffectControls functions exist, accept owner/ownerType/effectId parameters
+    - APP_VERSION validation for 2.42.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.42.0
+- **Feature Details**:
+  - Tests validate createKnob function signature and return type (element, setValue, getValue, type: 'knob')
+  - Tests verify createKnob supports onValueChange callback for value changes
+  - Tests verify createKnob handles min/max bounds with Math.min/Math.max
+  - Tests verify createKnob supports displayAsDb option for Ableton-style dB display
+  - Tests verify createKnob calls captureStateForUndo via localAppServices for undo support
+  - Tests validate Track Inspector DOM builders handle all track types (Synth, Sampler, DrumSampler, Audio)
+  - Tests verify Sound Browser rendering functions handle pathArray and treeNode
+  - Tests verify updateSoundBrowserDisplayForLibrary handles isLoading and hasError states
+  - Tests validate Effects List rendering functions accept owner, ownerType, and effectId parameters
+  - Total tests increased from 675 to 703
+- **Version**: Bumped to 2.42.0
+
+
 #### Day 360: Scale Mode & Swing State Functions Tests (2026-04-29)
 - **Feature**: Added 34 new unit tests for Scale Mode and Swing state functions to expand test coverage
 - **Files Modified**:
