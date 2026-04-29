@@ -804,6 +804,17 @@ export function setSendTrackMutedState(sendId, muted) {
     }
     return false;
 }
+export function setSendTrackEffectsState(sendId, effects) {
+    const send = sendTracksState.find(s => s.id === sendId);
+    if (send) {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Send "${send.name}" effects`);
+        }
+        send.effects = Array.isArray(effects) ? effects : [];
+        return true;
+    }
+    return false;
+}
 export function removeSendTrackState(sendId) {
     const send = sendTracksState.find(s => s.id === sendId);
     const sendName = send ? send.name : sendId;
