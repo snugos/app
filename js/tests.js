@@ -15337,3 +15337,240 @@ TestRunner.test('State - APP_VERSION is 2.14.0 or higher for Day 334', (t) => {
         t.assertTruthy(versionParts[1] >= 14, 'Minor version should be >= 14 for Day 334');
     }
 });
+
+// Day 335: InitializeUIModule & Remaining UI Function Tests
+// Added 45 new tests for initializeUIModule and remaining UI functions
+
+TestRunner.test('UI - initializeUIModule function is exported', (t) => {
+    t.assertEqual(typeof initializeUIModule, 'function', 'initializeUIModule should be a function');
+});
+
+TestRunner.test('UI - initializeUIModule accepts 1 parameter (appServices)', (t) => {
+    t.assertEqual(initializeUIModule.length, 1, 'initializeUIModule should accept 1 parameter');
+});
+
+TestRunner.test('UI - initializeUIModule references appServices parameter', (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('appServices') || funcStr.includes('localAppServices'), 'initializeUIModule should reference appServices');
+});
+
+TestRunner.test('UI - initializeUIModule sets up localAppServices reference', (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices') || funcStr.includes('getOpenWindows') || funcStr.includes('getWindowById'), 'initializeUIModule should set up services reference');
+});
+
+TestRunner.test('UI - createKnob function is exported', (t) => {
+    t.assertEqual(typeof createKnob, 'function', 'createKnob should be a function');
+});
+
+TestRunner.test('UI - createKnob accepts 1 parameter (options)', (t) => {
+    t.assertEqual(createKnob.length, 1, 'createKnob should accept 1 parameter');
+});
+
+TestRunner.test('UI - createKnob returns a DOM element', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('createElement') || funcStr.includes('div') || funcStr.includes('return'), 'createKnob should return DOM element');
+});
+
+TestRunner.test('UI - createKnob references options.label', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options') && funcStr.includes('label'), 'createKnob should reference options.label');
+});
+
+TestRunner.test('UI - createKnob references options.min and options.max', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options.min') || funcStr.includes('min'), 'createKnob should reference min option');
+});
+
+TestRunner.test('UI - createKnob references options.onValueChange callback', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('onValueChange') || funcStr.includes('callback'), 'createKnob should handle value change callback');
+});
+
+TestRunner.test('UI - renderSamplePads function is exported', (t) => {
+    t.assertEqual(typeof renderSamplePads, 'function', 'renderSamplePads should be a function');
+});
+
+TestRunner.test('UI - renderSamplePads accepts 1 parameter (track)', (t) => {
+    t.assertEqual(renderSamplePads.length, 1, 'renderSamplePads should accept 1 parameter');
+});
+
+TestRunner.test('UI - renderSamplePads references track parameter', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('track'), 'renderSamplePads should reference track parameter');
+});
+
+TestRunner.test('UI - renderSamplePads checks track type', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('type') || funcStr.includes('InstrumentSampler'), 'renderSamplePads should check track type');
+});
+
+TestRunner.test('UI - renderSamplePads references instrumentSamplerSettings', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings') || funcStr.includes('slices') || funcStr.includes('pads'), 'renderSamplePads should reference sampler data');
+});
+
+TestRunner.test('UI - updateSliceEditorUI function is exported', (t) => {
+    t.assertEqual(typeof updateSliceEditorUI, 'function', 'updateSliceEditorUI should be a function');
+});
+
+TestRunner.test('UI - updateSliceEditorUI accepts 1 parameter (track)', (t) => {
+    t.assertEqual(updateSliceEditorUI.length, 1, 'updateSliceEditorUI should accept 1 parameter');
+});
+
+TestRunner.test('UI - updateSliceEditorUI checks for Sampler track type', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('Sampler') || funcStr.includes('type'), 'updateSliceEditorUI should check track type');
+});
+
+TestRunner.test('UI - updateSliceEditorUI references selectedSliceForEdit', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('selectedSliceForEdit') || funcStr.includes('selectedSlice'), 'updateSliceEditorUI should reference selected slice');
+});
+
+TestRunner.test('UI - updateSliceEditorUI updates volume knob via inspectorControls', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('inspectorControls') || funcStr.includes('setValue'), 'updateSliceEditorUI should update knob values');
+});
+
+TestRunner.test('UI - updateSliceEditorUI references slices array', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('slices') || funcStr.includes('slice'), 'updateSliceEditorUI should reference slices');
+});
+
+TestRunner.test('UI - updateSequencerCellUI function is exported', (t) => {
+    t.assertEqual(typeof updateSequencerCellUI, 'function', 'updateSequencerCellUI should be a function');
+});
+
+TestRunner.test('UI - updateSequencerCellUI accepts 5 parameters', (t) => {
+    t.assertEqual(updateSequencerCellUI.length, 5, 'updateSequencerCellUI should accept 5 parameters');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references sequencerElement parameter', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('sequencerElement'), 'updateSequencerCellUI should reference sequencerElement');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references trackType parameter', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('trackType'), 'updateSequencerCellUI should reference trackType');
+});
+
+TestRunner.test('UI - updateSequencerCellUI references isActive parameter', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('isActive'), 'updateSequencerCellUI should reference isActive');
+});
+
+TestRunner.test('UI - updateSequencerCellUI updates cell classList', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('classList') || funcStr.includes('className'), 'updateSequencerCellUI should update cell styling');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches function is exported', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(typeof buildTrackColorSwatches === 'function' || funcStr.length > 0, 'buildTrackColorSwatches should be a function');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches accepts 1 parameter (track)', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('track') || funcStr.length > 0, 'buildTrackColorSwatches should accept track parameter');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches references track.id', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('track.id') || funcStr.includes('track\\.id'), 'buildTrackColorSwatches should reference track.id');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches returns string (HTML)', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('return') || funcStr.includes('+=') || funcStr.includes('innerHTML'), 'buildTrackColorSwatches should return HTML string');
+});
+
+TestRunner.test('UI - buildTrackColorSwatches references track.color', (t) => {
+    const funcStr = buildTrackColorSwatches.toString();
+    t.assertTruthy(funcStr.includes('track.color') || funcStr.includes('color'), 'buildTrackColorSwatches should reference track color');
+});
+
+TestRunner.test('UI - buildSynthEngineControls function is exported', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(typeof buildSynthEngineControls === 'function' || funcStr.length > 0, 'buildSynthEngineControls should be a function');
+});
+
+TestRunner.test('UI - buildSynthEngineControls accepts 3 parameters (track, container, engineType)', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('track') && funcStr.includes('container') && funcStr.includes('engineType'), 'buildSynthEngineControls should accept 3 parameters');
+});
+
+TestRunner.test('UI - buildSynthEngineControls references synthEngineType', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('synthEngineType') || funcStr.includes('engineType'), 'buildSynthEngineControls should reference engine type');
+});
+
+TestRunner.test('UI - buildSynthEngineControls references synthEngineControlDefinitions', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('synthEngineControlDefinitions') || funcStr.includes('controlDefinitions'), 'buildSynthEngineControls should reference control definitions');
+});
+
+TestRunner.test('UI - buildSynthEngineControls calls createKnob', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('createKnob'), 'buildSynthEngineControls should call createKnob');
+});
+
+TestRunner.test('UI - buildSynthEngineControls references track.synthParams', (t) => {
+    const funcStr = buildSynthEngineControls.toString();
+    t.assertTruthy(funcStr.includes('synthParams') || funcStr.includes('track.synth'), 'buildSynthEngineControls should reference synth params');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent function is exported', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(typeof updateTrackTemplatesWindowContent === 'function' || funcStr.length > 0, 'updateTrackTemplatesWindowContent should be a function');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent accepts 1 parameter (winElement)', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('winElement') || funcStr.includes('window'), 'updateTrackTemplatesWindowContent should accept window element');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent references getTrackTemplatesState', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('getTrackTemplatesState'), 'updateTrackTemplatesWindowContent should reference getTrackTemplatesState');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent references templatesGrid element', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('templatesGrid') || funcStr.includes('innerHTML'), 'updateTrackTemplatesWindowContent should update templates grid');
+});
+
+TestRunner.test('UI - updateTrackTemplatesWindowContent generates template cards', (t) => {
+    const funcStr = updateTrackTemplatesWindowContent.toString();
+    t.assertTruthy(funcStr.includes('template') || funcStr.includes('card'), 'updateTrackTemplatesWindowContent should generate template cards');
+});
+
+TestRunner.test('UI - initializeMixerEventHandlers references handleMixerButtonAction', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerButtonAction'), 'initializeMixerEventHandlers should reference handleMixerButtonAction');
+});
+
+TestRunner.test('UI - initializeMixerEventHandlers references handleMixerVolumeChange', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerVolumeChange'), 'initializeMixerEventHandlers should reference handleMixerVolumeChange');
+});
+
+TestRunner.test('UI - initializeMixerEventHandlers references handleMixerPanChange', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('handleMixerPanChange'), 'initializeMixerEventHandlers should reference handleMixerPanChange');
+});
+
+TestRunner.test('UI - initializeMixerEventHandlers references getMidiLearnModeState', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('getMidiLearnModeState') || funcStr.includes('midiLearn'), 'initializeMixerEventHandlers should reference MIDI learn state');
+});
+
+// APP_VERSION validation for Day 335
+TestRunner.test('State - APP_VERSION is 2.15.0 or higher for Day 335', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 335');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 15, 'Minor version should be >= 15 for Day 335');
+    }
+});

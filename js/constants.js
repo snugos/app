@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.14.0'; // Day 334: Sound Browser Window Content & Template Window Tests
+export const APP_VERSION = '2.15.0'; // Day 335: InitializeUIModule & Remaining UI Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants
