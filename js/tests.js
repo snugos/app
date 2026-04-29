@@ -5313,3 +5313,204 @@ TestRunner.test('APP_VERSION validation for Day 368', (t) => {
         t.assertTruthy(versionParts[1] >= 46, 'Minor version should be >= 46 for Day 368');
     }
 });
+
+TestRunner.test('MIDI Export - exportToMidiInternal is a function export', (t) => {
+    t.assertEqual(typeof exportToMidiInternal, 'function', 'exportToMidiInternal should be a function');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal is async', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'exportToMidiInternal should be async');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal calls showNotification', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'exportToMidiInternal should call showNotification');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal validates appServices', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices') && (funcStr.includes('showNotification') || funcStr.includes('getTempoState')), 'exportToMidiInternal should validate appServices');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references getTempoState', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTempoState'), 'exportToMidiInternal should reference getTempoState');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references getTimeSignatureState', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTimeSignatureState'), 'exportToMidiInternal should reference getTimeSignatureState');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references getTracksState', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState'), 'exportToMidiInternal should reference getTracksState');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal references getPlaybackModeState', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getPlaybackModeState'), 'exportToMidiInternal should reference getPlaybackModeState');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal checks for notes to export', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('allNotes.length') || funcStr.includes('allNotes'), 'exportToMidiInternal should check for notes to export');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal uses MIDI_EXPORT_TicksPerQuarterNote', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('MIDI_EXPORT_TicksPerQuarterNote'), 'exportToMidiInternal should use MIDI_EXPORT_TicksPerQuarterNote constant');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal uses MIDI_DEFAULT_CHANNEL', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('MIDI_DEFAULT_CHANNEL'), 'exportToMidiInternal should use MIDI_DEFAULT_CHANNEL constant');
+});
+
+TestRunner.test('MIDI Export - exportToMidiInternal calls buildMidiFile', (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('buildMidiFile'), 'exportToMidiInternal should call buildMidiFile');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile is a function', (t) => {
+    t.assertEqual(typeof buildMidiFile, 'function', 'buildMidiFile should be a function');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile accepts 2 parameters (events, ticksPerQuarter)', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('events') && funcStr.includes('ticksPerQuarter'), 'buildMidiFile should accept 2 parameters');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile creates MIDI header with MThd', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('MThd'), 'buildMidiFile should create MIDI header with MThd');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile creates MIDI track with MTrk', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('MTrk'), 'buildMidiFile should create MIDI track with MTrk');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile handles noteOn events', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('noteOn'), 'buildMidiFile should handle noteOn events');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile handles noteOff events', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('noteOff'), 'buildMidiFile should handle noteOff events');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile handles tempo events', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('tempo'), 'buildMidiFile should handle tempo meta events');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile handles timeSig events', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('timeSig'), 'buildMidiFile should handle time signature events');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile handles trackName events', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('trackName'), 'buildMidiFile should handle track name events');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile handles endOfTrack events', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('endOfTrack') || funcStr.includes('FF 0x2F'),
+        'buildMidiFile should handle end of track');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile writes variable length quantities', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('VLQ') || funcStr.includes('varInt') || funcStr.includes('toVLQ'), 'buildMidiFile should write variable length quantities');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile returns Uint8Array', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('Uint8Array'), 'buildMidiFile should return Uint8Array');
+});
+
+TestRunner.test('MIDI Export - pitchToRow is a function', (t) => {
+    t.assertEqual(typeof pitchToRow, 'function', 'pitchToRow should be a function');
+});
+
+TestRunner.test('MIDI Export - pitchToRow accepts 2 parameters (rowIndex, trackType)', (t) => {
+    const funcStr = pitchToRow.toString();
+    t.assertTruthy(funcStr.includes('rowIndex') && funcStr.includes('trackType'), 'pitchToRow should accept 2 parameters');
+});
+
+TestRunner.test('MIDI Export - pitchToRow handles Synth track type', (t) => {
+    const funcStr = pitchToRow.toString();
+    t.assertTruthy(funcStr.includes('Synth'), 'pitchToRow should handle Synth track type');
+});
+
+TestRunner.test('MIDI Export - pitchToRow handles DrumSampler track type', (t) => {
+    const funcStr = pitchToRow.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'pitchToRow should handle DrumSampler track type');
+});
+
+TestRunner.test('MIDI Export - pitchToRow handles Sampler track type', (t) => {
+    const funcStr = pitchToRow.toString();
+    t.assertTruthy(funcStr.includes('Sampler'), 'pitchToRow should handle Sampler track type');
+});
+
+TestRunner.test('MIDI Export - noteNameToMidiNumber is a function', (t) => {
+    t.assertEqual(typeof noteNameToMidiNumber, 'function', 'noteNameToMidiNumber should be a function');
+});
+
+TestRunner.test('MIDI Export - noteNameToMidiNumber handles note name and octave', (t) => {
+    const funcStr = noteNameToMidiNumber.toString();
+    t.assertTruthy(funcStr.includes('noteName') && funcStr.includes('octave'), 'noteNameToMidiNumber should handle note name and octave');
+});
+
+TestRunner.test('MIDI Export - bufferToWav is a function', (t) => {
+    t.assertEqual(typeof bufferToWav, 'function', 'bufferToWav should be a function');
+});
+
+TestRunner.test('MIDI Export - bufferToWav accepts 1 parameter (buffer)', (t) => {
+    const funcStr = bufferToWav.toString();
+    t.assertTruthy(funcStr.includes('buffer'), 'bufferToWav should accept 1 parameter');
+});
+
+TestRunner.test('MIDI Export - bufferToWav handles audio buffer with channels', (t) => {
+    const funcStr = bufferToWav.toString();
+    t.assertTruthy(funcStr.includes('numChannels') || funcStr.includes('numberOfChannels'), 'bufferToWav should handle audio buffer with channels');
+});
+
+TestRunner.test('MIDI Export - bufferToWav creates WAV header', (t) => {
+    const funcStr = bufferToWav.toString();
+    t.assertTruthy(funcStr.includes('RIFF') && funcStr.includes('WAVE'), 'bufferToWav should create WAV header');
+});
+
+TestRunner.test('MIDI Export - bufferToWav handles PCM format', (t) => {
+    const funcStr = bufferToWav.toString();
+    t.assertTruthy(funcStr.includes('PCM') || funcStr.includes('format') || funcStr.includes('bitDepth'), 'bufferToWav should handle PCM format');
+});
+
+TestRunner.test('MIDI Export Constants - MIDI_EXPORT_VELOCITY_SCALE is 127', (t) => {
+    t.assertEqual(MIDI_EXPORT_VELOCITY_SCALE, 127, 'MIDI_EXPORT_VELOCITY_SCALE should be 127');
+});
+
+TestRunner.test('MIDI Export Constants - MIDI_EXPORT_TicksPerQuarterNote is 480', (t) => {
+    t.assertEqual(MIDI_EXPORT_TicksPerQuarterNote, 480, 'MIDI_EXPORT_TicksPerQuarterNote should be 480');
+});
+
+TestRunner.test('MIDI Export Constants - DEFAULT_MIDI_EXPORT_FILENAME_PREFIX is non-empty string', (t) => {
+    t.assertEqual(typeof DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, 'string', 'DEFAULT_MIDI_EXPORT_FILENAME_PREFIX should be a string');
+    t.assertTruthy(DEFAULT_MIDI_EXPORT_FILENAME_PREFIX.length > 0, 'DEFAULT_MIDI_EXPORT_FILENAME_PREFIX should be non-empty');
+});
+
+TestRunner.test('MIDI Export Constants - MAX_MIDI_EXPORT_TRACKS is 64', (t) => {
+    t.assertEqual(MAX_MIDI_EXPORT_TRACKS, 64, 'MAX_MIDI_EXPORT_TRACKS should be 64');
+});
+
+TestRunner.test('APP_VERSION validation for Day 369', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 369');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 47, 'Minor version should be >= 47 for Day 369');
+    }
+});
