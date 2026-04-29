@@ -142,6 +142,9 @@ import {
     captureStateForUndoInternal,
 } from './state.js';
 
+// --- Global UI Elements Cache ---
+let uiElementsCache = {};
+
 // --- App Services Object ---
 const appServices = {
     // Event Handler Passthroughs
