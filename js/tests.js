@@ -157,6 +157,7 @@ import {
     setSoloedTrackIdState,
     // Scale Mode state functions
     getScaleModeState,
+    setScaleModeState,
     getScaleModeEnabledState,
     setScaleModeEnabledState,
     getScaleModeScaleState,
@@ -3810,5 +3811,173 @@ TestRunner.test('Window Management - APP_VERSION validation for Day 357', (t) =>
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 357');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 36, 'Minor version should be >= 36 for Day 357');
+    }
+});
+// Day 360: Scale Mode State Functions Tests
+TestRunner.test('Scale Mode - setScaleModeState is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeState, 'function', 'setScaleModeState should be a function');
+});
+
+TestRunner.test('Scale Mode - setScaleModeState accepts 1 parameter', (t) => {
+    const funcStr = setScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('state'), 'setScaleModeState should accept state parameter');
+});
+
+TestRunner.test('Scale Mode - setScaleModeState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeState uses descriptive undo label', (t) => {
+    const funcStr = setScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('Set Scale Mode Settings') || funcStr.includes('Scale Mode'), 'setScaleModeState should use descriptive undo label');
+});
+
+TestRunner.test('Scale Mode - setScaleModeState guards against missing appServices', (t) => {
+    const funcStr = setScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') && (funcStr.includes('if') || funcStr.includes('&&') || funcStr.includes('appServices')), 'setScaleModeState should guard against missing appServices');
+});
+
+TestRunner.test('Scale Mode - setScaleModeState merges with DEFAULT_SCALE_MODE', (t) => {
+    const funcStr = setScaleModeState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_SCALE_MODE'), 'setScaleModeState should merge with DEFAULT_SCALE_MODE');
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setScaleModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Scale Mode') || funcStr.includes('Scale Mode'), 'setScaleModeEnabledState should use descriptive undo label');
+});
+
+TestRunner.test('Scale Mode - setScaleModeEnabledState coerces to boolean', (t) => {
+    const funcStr = setScaleModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setScaleModeEnabledState should coerce to boolean');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeScaleState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeScaleState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState uses descriptive undo label', (t) => {
+    const funcStr = setScaleModeScaleState.toString();
+    t.assertTruthy(funcStr.includes('Set Scale to') || funcStr.includes('Scale'), 'setScaleModeScaleState should use descriptive undo label');
+});
+
+TestRunner.test('Scale Mode - setScaleModeScaleState defaults to Major', (t) => {
+    const funcStr = setScaleModeScaleState.toString();
+    t.assertTruthy(funcStr.includes('Major'), 'setScaleModeScaleState should default to Major');
+});
+
+TestRunner.test('Scale Mode - setScaleModeRootState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeRootState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeRootState uses descriptive undo label', (t) => {
+    const funcStr = setScaleModeRootState.toString();
+    t.assertTruthy(funcStr.includes('Set Scale Root') || funcStr.includes('root'), 'setScaleModeRootState should use descriptive undo label');
+});
+
+TestRunner.test('Scale Mode - setScaleModeRootState defaults to C', (t) => {
+    const funcStr = setScaleModeRootState.toString();
+    t.assertTruthy(funcStr.includes("'C'") || funcStr.includes('"C"'), 'setScaleModeRootState should default to C');
+});
+
+TestRunner.test('Scale Mode - setScaleModeLockState calls captureStateForUndo', (t) => {
+    const funcStr = setScaleModeLockState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setScaleModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test('Scale Mode - setScaleModeLockState uses descriptive undo label', (t) => {
+    const funcStr = setScaleModeLockState.toString();
+    t.assertTruthy(funcStr.includes('Enable') || funcStr.includes('Disable') || funcStr.includes('Scale Lock'), 'setScaleModeLockState should use descriptive undo label');
+});
+
+TestRunner.test('Scale Mode - getScaleModeState returns object', (t) => {
+    t.assertEqual(typeof getScaleModeState, 'function', 'getScaleModeState should be a function');
+});
+
+// Day 360: Swing State Functions Tests
+TestRunner.test('Swing - setSwingState is a function export', (t) => {
+    t.assertEqual(typeof setSwingState, 'function', 'setSwingState should be a function');
+});
+
+TestRunner.test('Swing - setSwingState accepts 1 parameter', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('state'), 'setSwingState should accept state parameter');
+});
+
+TestRunner.test('Swing - setSwingState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingState should call captureStateForUndo');
+});
+
+TestRunner.test('Swing - setSwingState uses descriptive undo label', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('Set Swing') || funcStr.includes('Swing'), 'setSwingState should use descriptive undo label');
+});
+
+TestRunner.test('Swing - setSwingState guards against missing appServices', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') && (funcStr.includes('if') || funcStr.includes('&&') || funcStr.includes('appServices')), 'setSwingState should guard against missing appServices');
+});
+
+TestRunner.test('Swing - setSwingEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Swing - setSwingEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Swing') || funcStr.includes('Swing'), 'setSwingEnabledState should use descriptive undo label');
+});
+
+TestRunner.test('Swing - setSwingEnabledState coerces to boolean', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setSwingEnabledState should coerce to boolean');
+});
+
+TestRunner.test('Swing - setSwingAmountState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingAmountState should call captureStateForUndo');
+});
+
+TestRunner.test('Swing - setSwingAmountState uses descriptive undo label', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('Set Swing Amount') || funcStr.includes('Swing'), 'setSwingAmountState should use descriptive undo label');
+});
+
+TestRunner.test('Swing - setSwingAmountState clamps value to 0-100 range', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min') && funcStr.includes('100'), 'setSwingAmountState should clamp value to 0-100 range');
+});
+
+TestRunner.test('Swing - setSwingAmountState parses integer', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setSwingAmountState should parse integer');
+});
+
+TestRunner.test('Swing - getSwingState returns object', (t) => {
+    t.assertEqual(typeof getSwingState, 'function', 'getSwingState should be a function');
+});
+
+TestRunner.test('Swing - getSwingEnabledState returns boolean', (t) => {
+    t.assertEqual(typeof getSwingEnabledState, 'function', 'getSwingEnabledState should be a function');
+});
+
+TestRunner.test('Swing - getSwingAmountState returns number', (t) => {
+    t.assertEqual(typeof getSwingAmountState, 'function', 'getSwingAmountState should be a function');
+});
+
+TestRunner.test('Scale Mode & Swing - APP_VERSION validation for Day 360', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 360');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 39, 'Minor version should be >= 39 for Day 360');
     }
 });

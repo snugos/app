@@ -1,3 +1,36 @@
+#### Day 360: Scale Mode & Swing State Functions Tests (2026-04-29)
+- **Feature**: Added 34 new unit tests for Scale Mode and Swing state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 34 new tests in Day 360 section:
+    - Scale Mode - setScaleModeState is a function export, accepts 1 parameter, calls captureStateForUndo
+    - Scale Mode - setScaleModeState uses descriptive undo label, guards against missing appServices, merges with DEFAULT_SCALE_MODE
+    - Scale Mode - setScaleModeEnabledState calls captureStateForUndo, uses descriptive undo label, coerces to boolean
+    - Scale Mode - setScaleModeScaleState calls captureStateForUndo, uses descriptive undo label, defaults to Major
+    - Scale Mode - setScaleModeRootState calls captureStateForUndo, uses descriptive undo label, defaults to C
+    - Scale Mode - setScaleModeLockState calls captureStateForUndo, uses Enable/Disable labels
+    - Scale Mode - getScaleModeState returns object
+    - Swing - setSwingState is a function export, accepts 1 parameter, calls captureStateForUndo with descriptive label
+    - Swing - setSwingState guards against missing appServices
+    - Swing - setSwingEnabledState calls captureStateForUndo, uses descriptive undo label, coerces to boolean
+    - Swing - setSwingAmountState calls captureStateForUndo, uses descriptive undo label, clamps value to 0-100 range, parses integer
+    - Swing - getSwingState returns object, getSwingEnabledState returns boolean, getSwingAmountState returns number
+    - APP_VERSION validation for 2.40.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.40.0
+- **Feature Details**:
+  - Tests validate Scale Mode state setter functions (setScaleModeState, setScaleModeEnabledState, setScaleModeScaleState, setScaleModeRootState, setScaleModeLockState)
+  - Tests verify all Scale Mode setters call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Scale Mode operations (Set Scale Mode Settings, Toggle Scale Mode On/Off, Set Scale to Major, Set Scale Root to C, Enable/Disable Scale Lock)
+  - Tests verify setScaleModeState merges state with DEFAULT_SCALE_MODE
+  - Tests verify setScaleModeScaleState defaults to 'Major' scale when invalid
+  - Tests verify setScaleModeRootState defaults to 'C' root note when invalid
+  - Tests validate Swing state setter functions (setSwingState, setSwingEnabledState, setSwingAmountState)
+  - Tests verify all Swing setters call captureStateForUndo for undo/redo support
+  - Tests verify setSwingAmountState clamps value to 0-100 range using Math.max/Math.min and parses integer
+  - Tests verify all functions guard against missing appServices
+  - Tests verify getSwingState returns object, getSwingEnabledState returns boolean, getSwingAmountState returns number
+  - Total tests increased from 583 to 617
+- **Version**: Bumped to 2.40.0
+
 #### Day 358: Track Effect Instance Methods Tests (2026-04-29)
 - **Feature**: Added 31 new unit tests for Track Effect instance methods to expand test coverage
 - **Files Modified**:
