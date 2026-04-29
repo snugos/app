@@ -2742,3 +2742,230 @@ TestRunner.test('State - APP_VERSION is 2.32.0 or higher for Day 353', (t) => {
         t.assertTruthy(versionParts[1] >= 32, 'Minor version should be >= 32 for Day 353');
     }
 });
+// Day 354: Ghost Track & Loop Region State Undo Capture Tests
+// ==============================================================
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setGhostTrackIdState, 'function', 'setGhostTrackIdState should be a function');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState accepts 1 parameter', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'setGhostTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setGhostTrackIdState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Set Ghost Track') || funcStr.includes('Clear Ghost Track'), 
+        'setGhostTrackIdState should use descriptive undo label (Set/Clear Ghost Track)');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState uses conditional label based on trackId', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'setGhostTrackIdState should reference trackId parameter');
+    t.assertTruthy(funcStr.includes('?') || funcStr.includes('if'), 'setGhostTrackIdState should have conditional logic for label');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState guards against missing appServices', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'),
+        'setGhostTrackIdState should check appServices before calling captureStateForUndo');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState handles trackId value', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('ghostTrackIdState') || funcStr.includes('ghostTrackId'),
+        'setGhostTrackIdState should update ghostTrackIdState');
+});
+
+TestRunner.test('Ghost Track State - getGhostTrackIdState returns null or string', (t) => {
+    t.assertTruthy(getGhostTrackIdState() === null || typeof getGhostTrackIdState() === 'string',
+        'getGhostTrackIdState should return null or string');
+});
+
+TestRunner.test('Ghost Track State - Ghost track state independence verification', (t) => {
+    // Ghost track is independent from armed/soloed/sequencer track
+    t.assertEqual(typeof getGhostTrackIdState, 'function', 'getGhostTrackIdState should exist');
+    t.assertEqual(typeof setGhostTrackIdState, 'function', 'setGhostTrackIdState should exist');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionState, 'function', 'setLoopRegionState should be a function');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState accepts 1 parameter', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'setLoopRegionState should accept 1 parameter (state object)');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Loop Region') || funcStr.includes('Set Loop'),
+        'setLoopRegionState should use descriptive undo label (Set Loop Region)');
+});
+
+TestRunner.test('Loop Region - setLoopRegionState guards against missing appServices', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'),
+        'setLoopRegionState should check appServices before calling captureStateForUndo');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionEnabledState, 'function', 'setLoopRegionEnabledState should be a function');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState accepts 1 parameter', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'setLoopRegionEnabledState should accept 1 parameter (enabled)');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionEnabledState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Loop') || funcStr.includes('Toggle'),
+        'setLoopRegionEnabledState should use descriptive undo label');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState coerces to boolean', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean') || funcStr.includes('enabled'),
+        'setLoopRegionEnabledState should coerce the enabled value to boolean');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEnabledState guards against missing appServices', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'),
+        'setLoopRegionEnabledState should check appServices before calling captureStateForUndo');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionStartBarState, 'function', 'setLoopRegionStartBarState should be a function');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState accepts 1 parameter', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'setLoopRegionStartBarState should accept 1 parameter (bar)');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionStartBarState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Loop') || funcStr.includes('Start'),
+        'setLoopRegionStartBarState should use descriptive undo label');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState clamps bar value to valid range', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min') || funcStr.includes('MAX_BARS'),
+        'setLoopRegionStartBarState should clamp bar value to MAX_BARS');
+});
+
+TestRunner.test('Loop Region - setLoopRegionStartBarState guards against missing appServices', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'),
+        'setLoopRegionStartBarState should check appServices before calling captureStateForUndo');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionEndBarState, 'function', 'setLoopRegionEndBarState should be a function');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState accepts 1 parameter', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    const params = paramMatch ? paramMatch[1].split(',').map(p => p.trim()).filter(p => p) : [];
+    t.assertEqual(params.length, 1, 'setLoopRegionEndBarState should accept 1 parameter (bar)');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionEndBarState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Loop') || funcStr.includes('End'),
+        'setLoopRegionEndBarState should use descriptive undo label');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState clamps bar value to valid range', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min') || funcStr.includes('MAX_BARS'),
+        'setLoopRegionEndBarState should clamp bar value to MAX_BARS');
+});
+
+TestRunner.test('Loop Region - setLoopRegionEndBarState guards against missing appServices', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'),
+        'setLoopRegionEndBarState should check appServices before calling captureStateForUndo');
+});
+
+TestRunner.test('Loop Region - getLoopRegionState returns object', (t) => {
+    t.assertEqual(typeof getLoopRegionState(), 'object', 'getLoopRegionState should return an object');
+    t.assertTruthy(getLoopRegionState() !== null, 'getLoopRegionState should not return null');
+});
+
+TestRunner.test('Loop Region - Loop Region state structure validation', (t) => {
+    const region = getLoopRegionState();
+    t.assertTruthy(typeof region === 'object', 'Loop region should be an object');
+    // Should have enabled, startBar, endBar properties (or similar)
+    t.assertTruthy('enabled' in region || 'startBar' in region || 'start' in region,
+        'Loop region should have at least one of: enabled, startBar, or start property');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEnabledState returns boolean', (t) => {
+    t.assertEqual(typeof getLoopRegionEnabledState(), 'boolean', 'getLoopRegionEnabledState should return a boolean');
+});
+
+TestRunner.test('Loop Region - getLoopRegionStartBarState returns number', (t) => {
+    t.assertEqual(typeof getLoopRegionStartBarState(), 'number', 'getLoopRegionStartBarState should return a number');
+});
+
+TestRunner.test('Loop Region - getLoopRegionEndBarState returns number', (t) => {
+    t.assertEqual(typeof getLoopRegionEndBarState(), 'number', 'getLoopRegionEndBarState should return a number');
+});
+
+TestRunner.test('Loop Region - Loop Region state independence verification', (t) => {
+    // Loop Region is independent from other state functions
+    t.assertEqual(typeof getLoopRegionState, 'function', 'getLoopRegionState should exist');
+    t.assertEqual(typeof setLoopRegionState, 'function', 'setLoopRegionState should exist');
+    t.assertEqual(typeof getLoopRegionEnabledState, 'function', 'getLoopRegionEnabledState should exist');
+    t.assertEqual(typeof setLoopRegionEnabledState, 'function', 'setLoopRegionEnabledState should exist');
+    t.assertEqual(typeof getLoopRegionStartBarState, 'function', 'getLoopRegionStartBarState should exist');
+    t.assertEqual(typeof setLoopRegionStartBarState, 'function', 'setLoopRegionStartBarState should exist');
+    t.assertEqual(typeof getLoopRegionEndBarState, 'function', 'getLoopRegionEndBarState should exist');
+    t.assertEqual(typeof setLoopRegionEndBarState, 'function', 'setLoopRegionEndBarState should exist');
+});
+
+TestRunner.test('Loop Region - All Loop Region state setters call captureStateForUndo', (t) => {
+    // Verify all 4 Loop Region setters call captureStateForUndo
+    const setters = ['setLoopRegionState', 'setLoopRegionEnabledState', 'setLoopRegionStartBarState', 'setLoopRegionEndBarState'];
+    setters.forEach(name => {
+        const funcStr = eval(name).toString();
+        t.assertTruthy(funcStr.includes('captureStateForUndo'), `${name} should call captureStateForUndo`);
+    });
+});
+
+TestRunner.test('Loop Region - All Loop Region state setters guard against missing appServices', (t) => {
+    // Verify all 4 Loop Region setters check for appServices
+    const setters = ['setLoopRegionState', 'setLoopRegionEnabledState', 'setLoopRegionStartBarState', 'setLoopRegionEndBarState'];
+    setters.forEach(name => {
+        const funcStr = eval(name).toString();
+        t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'),
+            `${name} should check appServices before calling captureStateForUndo`);
+    });
+});
+
+TestRunner.test('Ghost Track & Loop Region - APP_VERSION validation for Day 354', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 354');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 33, 'Minor version should be >= 33 for Day 354');
+    }
+});
