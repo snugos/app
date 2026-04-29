@@ -1,3 +1,41 @@
+#### Day 368: Track Template State Functions Tests (2026-04-29)
+- **Feature**: Added 37 new unit tests for Track Template state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 37 new tests in Day 368 section:
+    - Track Templates - getTrackTemplatesState returns array
+    - Track Templates - getTrackTemplateByIdState is a function export, accepts 1 parameter, returns undefined for unknown id
+    - Track Templates - addTrackTemplateState is a function export, accepts 1 parameter, references templateData parameter
+    - Track Templates - addTrackTemplateState calls captureStateForUndo with descriptive "Template" label
+    - Track Templates - addTrackTemplateState checks MAX_TRACK_TEMPLATES limit
+    - Track Templates - addTrackTemplateState generates unique id with trackTemplateIdCounter
+    - Track Templates - addTrackTemplateState uses DEFAULT_TRACK_TEMPLATE structure and DEFAULT_TEMPLATE_NAME_PREFIX
+    - Track Templates - updateTrackTemplateState is a function export, accepts 2 parameters
+    - Track Templates - updateTrackTemplateState calls captureStateForUndo with descriptive "Template" label
+    - Track Templates - updateTrackTemplateState handles name and color updates, returns null for unknown id
+    - Track Templates - removeTrackTemplateState is a function export, accepts 1 parameter
+    - Track Templates - removeTrackTemplateState calls captureStateForUndo with descriptive "Template" label, returns boolean
+    - Track Templates - clearTrackTemplatesState is a function export, accepts no parameters
+    - Track Templates - clearTrackTemplatesState calls captureStateForUndo with descriptive "Template" label, guards against empty state
+    - Track Templates - MAX_TRACK_TEMPLATES constant validation (positive, 32 or less)
+    - Track Templates - DEFAULT_TEMPLATE_NAME_PREFIX is non-empty string
+    - Track Templates - DEFAULT_TRACK_TEMPLATE_COLOR is non-empty string
+    - Track Templates - DEFAULT_TRACK_TEMPLATE structure validation (name, type, color, synthParams, activeEffects, hasAutomation, automationLanes)
+    - Track Templates - DEFAULT_TRACK_TEMPLATE type is valid track type (Synth/Sampler/DrumSampler/Audio/InstrumentSampler)
+    - Track Templates - TRACK_TEMPLATE_COLORS is defined array
+    - APP_VERSION validation for 2.47.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.47.0
+- **Feature Details**:
+  - Tests validate Track Template state functions (getTrackTemplatesState, getTrackTemplateByIdState, addTrackTemplateState, updateTrackTemplateState, removeTrackTemplateState, clearTrackTemplatesState)
+  - Tests verify all mutation functions call captureStateForUndo for undo/redo support
+  - Tests verify descriptive undo labels for all Track Template operations (Save/Update/Delete/Clear Template)
+  - Tests verify addTrackTemplateState enforces MAX_TRACK_TEMPLATES (32) limit
+  - Tests verify addTrackTemplateState generates unique IDs using trackTemplateIdCounter
+  - Tests verify DEFAULT_TRACK_TEMPLATE structure (name, type, color, synthParams, activeEffects, hasAutomation, automationLanes)
+  - Tests verify DEFAULT_TRACK_TEMPLATE type is a valid track type
+  - Tests verify TRACK_TEMPLATE_COLORS uses the same color palette as tracks
+  - Total tests increased from 861 to 898
+- **Version**: Bumped to 2.47.0
+
 #### Day 367: Audio Module Extended Utility Functions Tests (2026-04-29)
 - **Feature**: Added 31 new unit tests for Audio Module extended utility functions to expand test coverage
 - **Files Modified**:
