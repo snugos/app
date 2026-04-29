@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.28.0'; // Day 348: Performance Monitor State Undo Capture Tests
+export const APP_VERSION = '2.30.0'; // Day 350: Armed/Soloed/SequencerTrack State Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants

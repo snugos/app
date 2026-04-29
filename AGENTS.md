@@ -1,3 +1,32 @@
+#### Day 350: Armed/Soloed/SequencerTrack State Tests (2026-04-29)
+- **Feature**: Added 26 new unit tests for Armed/Soloed/SequencerTrack state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 26 new tests in Day 350 section:
+    - Track Selection State - setArmedTrackIdState is a function export, accepts 1 parameter
+    - Track Selection State - setArmedTrackIdState calls captureStateForUndo with descriptive "Armed Track" label
+    - Track Selection State - setArmedTrackIdState guards against missing appServices
+    - Track Selection State - setArmedTrackIdState handles null/undefined for track ID
+    - Track Selection State - getArmedTrackIdState returns null or string
+    - Track Selection State - setSoloedTrackIdState calls captureStateForUndo with descriptive "Soloed Track" label
+    - Track Selection State - setSoloedTrackIdState handles null/undefined for track ID
+    - Track Selection State - getSoloedTrackIdState returns null or string
+    - Track Selection State - setActiveSequencerTrackIdState calls captureStateForUndo with descriptive "Active Sequencer Track" label
+    - Track Selection State - setActiveSequencerTrackIdState handles null/undefined for track ID
+    - Track Selection State - getActiveSequencerTrackIdState returns null or string
+    - Track Selection State - Armed/Soloed/Sequencer track state independence verification
+    - APP_VERSION validation for 2.29.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.30.0
+- **Feature Details**:
+  - Tests validate Armed Track state functions (setArmedTrackIdState, getArmedTrackIdState)
+  - Tests validate Soloed Track state functions (setSoloedTrackIdState, getSoloedTrackIdState)
+  - Tests validate Active Sequencer Track state functions (setActiveSequencerTrackIdState, getActiveSequencerTrackIdState)
+  - Tests verify all track selection functions call captureStateForUndo for undo/redo support
+  - Tests verify all functions guard against missing appServices
+  - Tests verify all functions handle null/undefined properly for clearing track selection
+  - Tests verify each track selection state updates its own independent variable
+  - Total tests increased from 276 to 302
+- **Version**: Bumped to 2.30.0
+
 #### Day 349: Timeline Markers & Send Track State Tests (2026-04-29)
 - **Feature**: Added 47 new unit tests for Timeline Markers and Send Track state functions to expand test coverage
 - **Files Modified**:

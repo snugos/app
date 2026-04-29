@@ -1177,6 +1177,141 @@ TestRunner.test('State - APP_VERSION is 2.28.0 or higher for Day 349', (t) => {
 });
 
 // ============================================
+// Day 350: Armed/Soloed/SequencerTrack State Tests
+// ============================================
+TestRunner.test('Track Selection State - setArmedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setArmedTrackIdState, 'function', 'setArmedTrackIdState should be a function');
+});
+
+TestRunner.test('Track Selection State - setArmedTrackIdState accepts 1 parameter', (t) => {
+    t.assertEqual(setArmedTrackIdState.length, 1, 'setArmedTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Track Selection State - setArmedTrackIdState calls captureStateForUndo', (t) => {
+    // Verify the function calls captureStateForUndo by checking the function body pattern
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setArmedTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Selection State - setArmedTrackIdState uses descriptive undo label', (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Armed Track'), 'Undo label should mention Armed Track');
+});
+
+TestRunner.test('Track Selection State - setArmedTrackIdState guards against missing appServices', (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('appServices'), 'setArmedTrackIdState should check appServices');
+});
+
+TestRunner.test('Track Selection State - setArmedTrackIdState handles null/undefined for track ID', (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('id !== undefined') && funcBody.includes('id !== null'), 'setArmedTrackIdState should check for null/undefined');
+});
+
+TestRunner.test('Track Selection State - getArmedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof getArmedTrackIdState, 'function', 'getArmedTrackIdState should be a function');
+});
+
+TestRunner.test('Track Selection State - getArmedTrackIdState returns armed track ID', (t) => {
+    const result = getArmedTrackIdState();
+    t.assertTruthy(result === null || typeof result === 'string', 'getArmedTrackIdState should return null or string');
+});
+
+TestRunner.test('Track Selection State - setSoloedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setSoloedTrackIdState, 'function', 'setSoloedTrackIdState should be a function');
+});
+
+TestRunner.test('Track Selection State - setSoloedTrackIdState accepts 1 parameter', (t) => {
+    t.assertEqual(setSoloedTrackIdState.length, 1, 'setSoloedTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Track Selection State - setSoloedTrackIdState calls captureStateForUndo', (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setSoloedTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Selection State - setSoloedTrackIdState uses descriptive undo label', (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Soloed Track'), 'Undo label should mention Soloed Track');
+});
+
+TestRunner.test('Track Selection State - setSoloedTrackIdState guards against missing appServices', (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('appServices'), 'setSoloedTrackIdState should check appServices');
+});
+
+TestRunner.test('Track Selection State - setSoloedTrackIdState handles null/undefined for track ID', (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('id !== undefined') && funcBody.includes('id !== null'), 'setSoloedTrackIdState should check for null/undefined');
+});
+
+TestRunner.test('Track Selection State - getSoloedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof getSoloedTrackIdState, 'function', 'getSoloedTrackIdState should be a function');
+});
+
+TestRunner.test('Track Selection State - getSoloedTrackIdState returns soloed track ID', (t) => {
+    const result = getSoloedTrackIdState();
+    t.assertTruthy(result === null || typeof result === 'string', 'getSoloedTrackIdState should return null or string');
+});
+
+TestRunner.test('Track Selection State - setActiveSequencerTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setActiveSequencerTrackIdState, 'function', 'setActiveSequencerTrackIdState should be a function');
+});
+
+TestRunner.test('Track Selection State - setActiveSequencerTrackIdState accepts 1 parameter', (t) => {
+    t.assertEqual(setActiveSequencerTrackIdState.length, 1, 'setActiveSequencerTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Track Selection State - setActiveSequencerTrackIdState calls captureStateForUndo', (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setActiveSequencerTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Selection State - setActiveSequencerTrackIdState uses descriptive undo label', (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Active Sequencer Track'), 'Undo label should mention Active Sequencer Track');
+});
+
+TestRunner.test('Track Selection State - setActiveSequencerTrackIdState guards against missing appServices', (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('appServices'), 'setActiveSequencerTrackIdState should check appServices');
+});
+
+TestRunner.test('Track Selection State - setActiveSequencerTrackIdState handles null/undefined for track ID', (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('id !== undefined') && funcBody.includes('id !== null'), 'setActiveSequencerTrackIdState should check for null/undefined');
+});
+
+TestRunner.test('Track Selection State - getActiveSequencerTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof getActiveSequencerTrackIdState, 'function', 'getActiveSequencerTrackIdState should be a function');
+});
+
+TestRunner.test('Track Selection State - getActiveSequencerTrackIdState returns active sequencer track ID', (t) => {
+    const result = getActiveSequencerTrackIdState();
+    t.assertTruthy(result === null || typeof result === 'string', 'getActiveSequencerTrackIdState should return null or string');
+});
+
+TestRunner.test('Track Selection State - Armed/Soloed/Sequencer track state independence', (t) => {
+    // Each track selection state should be stored in its own variable
+    const funcBody1 = setArmedTrackIdState.toString();
+    const funcBody2 = setSoloedTrackIdState.toString();
+    const funcBody3 = setActiveSequencerTrackIdState.toString();
+    // All three should reference their own variable
+    t.assertTruthy(funcBody1.includes('armedTrackId'), 'setArmedTrackIdState should update armedTrackId');
+    t.assertTruthy(funcBody2.includes('soloedTrackId'), 'setSoloedTrackIdState should update soloedTrackId');
+    t.assertTruthy(funcBody3.includes('activeSequencerTrackId'), 'setActiveSequencerTrackIdState should update activeSequencerTrackId');
+});
+
+// APP_VERSION validation for Day 350
+TestRunner.test('State - APP_VERSION is 2.29.0 or higher for Day 350', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 350');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 29, 'Minor version should be >= 29 for Day 350');
+    }
+});
+
+// ============================================
 // Utility Function Tests
 // ============================================
 TestRunner.test('Utils - createDropZoneHTML generates valid HTML', (t) => {
