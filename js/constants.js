@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.15.0'; // Day 335: InitializeUIModule & Remaining UI Function Tests
+export const APP_VERSION = '2.16.0'; // Day 336: Metronome Audio & Send Bus Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
 // Desktop Background Constants
