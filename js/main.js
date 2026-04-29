@@ -5,6 +5,15 @@
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 import { getAudio as bgDbGetAudio, storeAudio as bgDbStoreAudio, deleteAudio as bgDbDeleteAudio } from './db.js';
+import { 
+    startMetronome, stopMetronome, setMetronomeVolume,
+    initAudioContextAndMasterMeter, clearAllMasterEffectNodes, 
+    addMasterEffectToAudio, getActualMasterGainNode,
+    createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus,
+    reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted,
+    connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel,
+    getSendBusNodes, getTrackSendNodes
+} from './audio.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
 import {
