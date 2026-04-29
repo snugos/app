@@ -880,6 +880,37 @@ function applyDesktopBackground(sourceUrl, bgType = 'image') {
     }
 }
 
+function removeCustomDesktopBackground() {
+    const desktop = uiElementsCache?.desktop;
+    const videoBg = document.getElementById('desktopVideoBg');
+    
+    try {
+        // Clear localStorage
+        localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
+        localStorage.removeItem(DESKTOP_BG_TYPE_KEY);
+        
+        // Clear desktop background styles
+        if (desktop) {
+            desktop.style.backgroundImage = '';
+            desktop.style.backgroundColor = Constants.defaultDesktopBg || '#101010';
+        }
+        
+        // Stop and clear video
+        if (videoBg) {
+            videoBg.pause();
+            videoBg.src = '';
+            videoBg.style.display = 'none';
+        }
+        
+        // Remove from db if exists
+        bgDb.delete('desktopVideo').catch(() => {});
+        
+        console.log("[removeCustomDesktopBackground] Custom background removed.");
+    } catch (e) {
+        console.error("Error removing custom desktop background:", e);
+    }
+}
+
 // Restore background on load
 async function restoreDesktopBackground() {
     const bgType = localStorage.getItem(DESKTOP_BG_TYPE_KEY);
