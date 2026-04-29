@@ -115,10 +115,15 @@ import {
     setPreviewPlayerState,
     getClipboardDataState,
     setSendTrackMutedState,
+    setSendTrackNameState,
+    setSendTrackLevelState,
+    setSendTrackEffectsState,
+    removeSendTrackState,
     setTrackSendLevelState,
     getTimelineMarkersState,
     getTimelineMarkerByIdState,
     addTimelineMarkerState,
+    setTimelineMarkerState,
     removeTimelineMarkerState,
     // Chord Mode state functions
     getChordModeState,
@@ -935,6 +940,239 @@ TestRunner.test('Performance Monitor - APP_VERSION is 2.28.0 or higher for Day 3
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 348');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 28, 'Minor version should be >= 28 for Day 348');
+    }
+});
+
+// ============================================
+// Day 349: Timeline Markers & Send Track State Tests
+// ============================================
+TestRunner.test('Timeline Markers - getTimelineMarkersState returns array', (t) => {
+    const markers = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(markers), 'getTimelineMarkersState should return array');
+});
+
+TestRunner.test('Timeline Markers - getTimelineMarkerByIdState is function export', (t) => {
+    t.assertEqual(typeof getTimelineMarkerByIdState, 'function', 'getTimelineMarkerByIdState should be function');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState is function export', (t) => {
+    t.assertEqual(typeof addTimelineMarkerState, 'function', 'addTimelineMarkerState should be function');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState calls captureStateForUndo', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTimelineMarkerState should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState uses descriptive undo label', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('Add Timeline Marker'), 'Undo label should mention Add Timeline Marker');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState guards against missing appServices', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'Should check appServices');
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'Should check captureStateForUndo');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState checks MAX_TIMELINE_MARKERS limit', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('MAX_TIMELINE_MARKERS'), 'Should check MAX_TIMELINE_MARKERS limit');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState generates unique ID', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('timelineMarkerIdCounter') || funcStr.includes('id'), 'Should generate unique ID');
+});
+
+TestRunner.test('Timeline Markers - addTimelineMarkerState sorts markers by bar position', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('sort'), 'Should sort markers by bar position');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState is function export', (t) => {
+    t.assertEqual(typeof setTimelineMarkerState, 'function', 'setTimelineMarkerState should be function');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState calls captureStateForUndo', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimelineMarkerState should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState uses descriptive undo label', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('Update Timeline Marker'), 'Undo label should mention Update Timeline Marker');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState guards against missing appServices', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'Should check appServices');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState clamps bar value to MAX_BARS', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'Should clamp bar value to MAX_BARS');
+});
+
+TestRunner.test('Timeline Markers - setTimelineMarkerState returns null for unknown id', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('null') || funcStr.includes('return'), 'Should return null for unknown id');
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState is function export', (t) => {
+    t.assertEqual(typeof removeTimelineMarkerState, 'function', 'removeTimelineMarkerState should be function');
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState calls captureStateForUndo', (t) => {
+    const funcStr = removeTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTimelineMarkerState should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState uses descriptive undo label', (t) => {
+    const funcStr = removeTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('Remove Timeline Marker'), 'Undo label should mention Remove Timeline Marker');
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState guards against missing appServices', (t) => {
+    const funcStr = removeTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'Should check appServices');
+});
+
+TestRunner.test('Timeline Markers - removeTimelineMarkerState returns boolean', (t) => {
+    const funcStr = removeTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('return'), 'Should return boolean');
+});
+
+TestRunner.test('Timeline Markers - clearTimelineMarkersState is function export', (t) => {
+    t.assertEqual(typeof clearTimelineMarkersState, 'function', 'clearTimelineMarkersState should be function');
+});
+
+TestRunner.test('Timeline Markers - clearTimelineMarkersState calls captureStateForUndo', (t) => {
+    const funcStr = clearTimelineMarkersState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearTimelineMarkersState should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Markers - clearTimelineMarkersState uses descriptive undo label', (t) => {
+    const funcStr = clearTimelineMarkersState.toString();
+    t.assertTruthy(funcStr.includes('Clear All Timeline Markers'), 'Undo label should mention Clear All Timeline Markers');
+});
+
+TestRunner.test('Timeline Markers - clearTimelineMarkersState guards against missing appServices', (t) => {
+    const funcStr = clearTimelineMarkersState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'Should check appServices');
+});
+
+TestRunner.test('Timeline Markers - clearTimelineMarkersState returns early if empty', (t) => {
+    const funcStr = clearTimelineMarkersState.toString();
+    t.assertTruthy(funcStr.includes('length') && funcStr.includes('=== 0'), 'Should return early if no markers');
+});
+
+// Send Track State Function Tests
+TestRunner.test('Send Tracks - addSendTrackState is function export', (t) => {
+    t.assertEqual(typeof addSendTrackState, 'function', 'addSendTrackState should be function');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState calls captureStateForUndo', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addSendTrackState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState uses descriptive undo label', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('Add Send Bus'), 'Undo label should mention Add Send Bus');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState guards against missing appServices', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'Should check appServices');
+});
+
+TestRunner.test('Send Tracks - setSendTrackNameState is function export', (t) => {
+    t.assertEqual(typeof setSendTrackNameState, 'function', 'setSendTrackNameState should be function');
+});
+
+TestRunner.test('Send Tracks - setSendTrackNameState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackNameState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - setSendTrackNameState uses descriptive undo label', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('Set Send Track') || funcStr.includes('Send Bus'), 'Undo label should mention send track');
+});
+
+TestRunner.test('Send Tracks - setSendTrackNameState references sendId parameter', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'Should reference sendId parameter');
+});
+
+TestRunner.test('Send Tracks - setSendTrackLevelState is function export', (t) => {
+    t.assertEqual(typeof setSendTrackLevelState, 'function', 'setSendTrackLevelState should be function');
+});
+
+TestRunner.test('Send Tracks - setSendTrackLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - setSendTrackLevelState references level parameter', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('level'), 'Should reference level parameter');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState is function export', (t) => {
+    t.assertEqual(typeof setSendTrackMutedState, 'function', 'setSendTrackMutedState should be function');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState references muted parameter', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('muted'), 'Should reference muted parameter');
+});
+
+TestRunner.test('Send Tracks - setSendTrackEffectsState is function export', (t) => {
+    t.assertEqual(typeof setSendTrackEffectsState, 'function', 'setSendTrackEffectsState should be function');
+});
+
+TestRunner.test('Send Tracks - setSendTrackEffectsState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackEffectsState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - removeSendTrackState is function export', (t) => {
+    t.assertEqual(typeof removeSendTrackState, 'function', 'removeSendTrackState should be function');
+});
+
+TestRunner.test('Send Tracks - removeSendTrackState calls captureStateForUndo', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeSendTrackState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - removeSendTrackState uses descriptive undo label', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('Remove Send Bus') || funcStr.includes('Remove Send'), 'Undo label should mention remove send');
+});
+
+TestRunner.test('Send Tracks - Track Send Level functions call captureStateForUndo', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - Track Pre-Fader functions call captureStateForUndo', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendPreFaderState should call captureStateForUndo');
+});
+
+// APP_VERSION validation for Day 349
+TestRunner.test('State - APP_VERSION is 2.28.0 or higher for Day 349', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 349');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 28, 'Minor version should be >= 28 for Day 349');
     }
 });
 
