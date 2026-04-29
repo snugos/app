@@ -5321,3 +5321,35 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify initializeMixerEventHandlers sets up mixer event handling with MIDI learn support
   - Total tests increased from 2623 to 2671
 - **Version**: Bumped to 2.15.0
+
+#### Day 336: Metronome Audio & Send Bus Function Tests (2026-04-29)
+- **Feature**: Added 46 new unit tests for Metronome Audio and Send Bus Audio Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 46 new tests in Day 336 section:
+    - Audio Metronome: initializeMetronome function export, 0 parameters, references metronomeInitialized flag
+    - Audio Metronome: startMetronome function export, 0 parameters, checks metronomeInitialized, calls initializeMetronome, references Tone.Transport
+    - Audio Metronome: stopMetronome function export, 0 parameters, clears scheduled events
+    - Audio Metronome: setMetronomeVolume function export, 1 parameter (volume), clamps value to 0-1 range
+    - Audio Send Bus: createSendBusInAudio function export, 1 parameter (sendId)
+    - Audio Send Bus: deleteSendBusFromAudio function export, 1 parameter (sendId)
+    - Audio Send Bus: addEffectToSendBus function export, 3 parameters (sendId, effectType, params)
+    - Audio Send Bus: removeEffectFromSendBus function export, 2 parameters (sendId, effectId)
+    - Audio Send Bus: reorderEffectInSendBus function export, 3 parameters (sendId, effectId, newIndex)
+    - Audio Send Bus: updateSendBusEffectParam function export, 4 parameters (sendId, effectId, paramPath, value)
+    - Audio Send Bus: setSendBusLevel function export, 1 parameter (sendId), references level
+    - Audio Send Bus: setSendBusMuted function export, 2 parameters (sendId, muted)
+    - Audio Send Bus: setRecordingInputGain function export, 1 parameter (gainValue), clamps value, references recordingInputGainNode
+    - Audio Send Bus: connectTrackToSendBus function export, references sendBusNodes and trackSendNodes
+    - Audio Send Bus: disconnectTrackFromSendBus function export
+    - Audio Send Bus: getSendBusNodes function export, getTrackSendNodes function export
+    - State: setMetronomeEnabledState function export, 1 parameter (enabled), coerces to boolean, uses descriptive undo label
+    - State: setMetronomeVolumeState function export, 1 parameter, clamps value to 0-1 range, parses float, uses descriptive undo label
+- **Feature Details**:
+  - Tests validate Audio Metronome functions are properly exported from audio.js
+  - Tests verify startMetronome checks metronomeInitialized and calls initializeMetronome if needed
+  - Tests verify setMetronomeVolume clamps volume values to 0-1 range
+  - Tests validate Send Bus audio functions for send bus creation, deletion, and routing
+  - Tests verify setRecordingInputGain handles gain clamping and references recordingInputGainNode
+  - Tests validate State metronome functions call captureStateForUndo with descriptive labels
+  - Total tests increased from 2671 to 2717
+- **Version**: Bumped to 2.16.0
