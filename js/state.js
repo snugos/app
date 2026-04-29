@@ -297,14 +297,56 @@ export function initializeStateModule(services) {
 export function getTracksState() { return tracks; }
 export function getTrackByIdState(id) { return tracks.find(t => t.id === id); }
 
+// --- Track Removal ---
+export function removeTrackFromStateInternal(trackId) {
+    const index = tracks.findIndex(t => t.id === trackId);
+    if (index !== -1) {
+        const track = tracks[index];
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Remove Track "${track.name}"`);
+        }
+        // Dispose audio resources if available
+        if (track && typeof track.dispose === 'function') {
+            try { track.dispose(); } catch(e) { console.warn(`[State] Error disposing track ${trackId}:`, e); }
+        }
+        tracks.splice(index, 1);
+        return true;
+    }
+    return false;
+}
+
 export function getOpenWindowsState() { return openWindowsMap; }
 export function getWindowByIdState(id) { return openWindowsMap.get(id); }
 export function getHighestZState() { return highestZ; }
 export function getMasterEffectsState() { return masterEffectsChainState; }
+export function setMasterEffectsState(effects) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Master Effects`);
+    }
+    masterEffectsChainState = effects || []; 
+}
 export function getMasterGainValueState() { return masterGainValueState; }
+export function setMasterGainValueState(value) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Master Volume`);
+    }
+    masterGainValueState = Number.isFinite(value) ? value : 1.0; 
+}
 
 export function getMidiAccessState() { return midiAccessGlobal; }
+export function setMidiAccessState(access) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set MIDI Access`);
+    }
+    midiAccessGlobal = access; 
+}
 export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
+export function setActiveMIDIInputState(device) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Active MIDI Input`);
+    }
+    activeMIDIInputGlobal = device; 
+}
 
 // MIDI Learn state functions
 export function getMidiLearnMappingsState() { return [...midiLearnMappings]; }
@@ -379,6 +421,12 @@ export function getMidiLearnMappingByIndex(index) {
 }
 
 export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
+export function setLoadedZipFilesState(files) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Loaded ZIP Files`);
+    }
+    loadedZipFilesGlobal = files || {}; 
+}
 export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
 export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
 export function setCurrentLibraryNameState(libraryName) { 
@@ -418,6 +466,17 @@ export function setPreviewPlayerState(player) {
 }
 
 export function getClipboardDataState() { return clipboardDataGlobal; }
+export function setClipboardDataState(type, data, sourceTrackType, sequenceLength) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Clipboard Data`);
+    }
+    clipboardDataGlobal = { 
+        type: type !== undefined ? type : null, 
+        data: data !== undefined ? data : null, 
+        sourceTrackType: sourceTrackType !== undefined ? sourceTrackType : null, 
+        sequenceLength: sequenceLength !== undefined ? sequenceLength : null 
+    }; 
+}
 
 export function getArmedTrackIdState() { return armedTrackId; }
 export function setArmedTrackIdState(id) { 
@@ -432,6 +491,13 @@ export function setSoloedTrackIdState(id) {
         appServices.captureStateForUndo(`Set Soloed Track`);
     }
     soloedTrackId = id !== undefined && id !== null ? id : null; 
+}
+export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
+export function setActiveSequencerTrackIdState(id) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Active Sequencer Track`);
+    }
+    activeSequencerTrackId = id !== undefined && id !== null ? id : null; 
 }
 export function isTrackRecordingState() { return isRecordingGlobal; }
 export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
@@ -734,6 +800,19 @@ export function setSendTrackMutedState(sendId, muted) {
             appServices.captureStateForUndo(`Set Send "${send.name}" muted ${muted ? 'on' : 'off'}`);
         }
         send.muted = !!muted;
+        return true;
+    }
+    return false;
+}
+export function removeSendTrackState(sendId) {
+    const send = sendTracksState.find(s => s.id === sendId);
+    const sendName = send ? send.name : sendId;
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Remove Send Track "${sendName}"`);
+    }
+    const index = sendTracksState.findIndex(s => s.id === sendId);
+    if (index !== -1) {
+        sendTracksState.splice(index, 1);
         return true;
     }
     return false;
@@ -1783,6 +1862,31 @@ function tempoToTicks(tempo, ticksPerQuarterNote) {
     // We use fixed tempo at the resolution for simplicity
     // MIDI delta time is in ticks, and tempo is embedded
     return ticksPerQuarterNote; // Always ticks per quarter note
+}
+
+// ============================================
+// Import from MIDI - Main Function
+// ============================================
+export async function importFromMidiInternal() {
+    if (!appServices.showNotification) {
+        console.error("[State importFromMidiInternal] Required appServices not available.");
+        alert("Import MIDI feature is currently unavailable due to an internal error.");
+        return;
+    }
+    
+    if (!appServices.createFileInputForMidiImport) {
+        console.error("[State importFromMidiInternal] createFileInputForMidiImport service not available.");
+        appServices.showNotification("Import MIDI feature is not fully configured.", 3000);
+        return;
+    }
+    
+    try {
+        appServices.createFileInputForMidiImport();
+        appServices.showNotification("Select a MIDI file to import...", 2000);
+    } catch (error) {
+        console.error("[State importFromMidiInternal] Error:", error);
+        appServices.showNotification(`Import error: ${error.message}`, 5000);
+    }
 }
 
 // ============================================
