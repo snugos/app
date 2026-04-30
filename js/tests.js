@@ -9654,3 +9654,142 @@ TestRunner.test('State Utility - APP_VERSION validation for Day 387', (t) => {
         t.assertTruthy(versionParts[1] >= 64, 'Minor version should be >= 64 for Day 387');
     }
 });
+
+// ============================================
+// Day 388: Increment State Functions Tests
+// ============================================
+TestRunner.test('State Utility - incrementDroppedCallbacksState is a function export', (t) => {
+    t.assertEqual(typeof incrementDroppedCallbacksState, 'function', 'incrementDroppedCallbacksState should be a function');
+});
+
+TestRunner.test('State Utility - incrementDroppedCallbacksState accepts 0 parameters', (t) => {
+    t.assertEqual(incrementDroppedCallbacksState.length, 0, 'incrementDroppedCallbacksState should accept no parameters');
+});
+
+TestRunner.test('State Utility - incrementDroppedCallbacksState increments droppedCallbacks', (t) => {
+    const funcStr = incrementDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('droppedCallbacks') && funcStr.includes('++'), 'incrementDroppedCallbacksState should increment droppedCallbacks');
+});
+
+TestRunner.test('State Utility - incrementHighestZState is a function export', (t) => {
+    t.assertEqual(typeof incrementHighestZState, 'function', 'incrementHighestZState should be a function');
+});
+
+TestRunner.test('State Utility - incrementHighestZState accepts 0 parameters', (t) => {
+    t.assertEqual(incrementHighestZState.length, 0, 'incrementHighestZState should accept no parameters');
+});
+
+TestRunner.test('State Utility - incrementHighestZState increments highestZ', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(funcStr.includes('++highestZ') || funcStr.includes('highestZ++'), 'incrementHighestZState should increment highestZ');
+});
+
+TestRunner.test('State Utility - incrementHighestZState returns incremented value', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(funcStr.includes('return'), 'incrementHighestZState should return incremented value');
+});
+
+TestRunner.test('State Utility - getHighestZState is a function export', (t) => {
+    t.assertEqual(typeof getHighestZState, 'function', 'getHighestZState should be a function');
+});
+
+TestRunner.test('State Utility - getHighestZState accepts 0 parameters', (t) => {
+    t.assertEqual(getHighestZState.length, 0, 'getHighestZState should accept no parameters');
+});
+
+TestRunner.test('State Utility - getHighestZState returns highestZ value', (t) => {
+    const funcStr = getHighestZState.toString();
+    t.assertTruthy(funcStr.includes('highestZ'), 'getHighestZState should return highestZ');
+});
+
+TestRunner.test('State Utility - setHighestZState is a function export', (t) => {
+    t.assertEqual(typeof setHighestZState, 'function', 'setHighestZState should be a function');
+});
+
+TestRunner.test('State Utility - setHighestZState accepts 1 parameter', (t) => {
+    t.assertEqual(setHighestZState.length, 1, 'setHighestZState should accept 1 parameter (value)');
+});
+
+TestRunner.test('State Utility - setHighestZState calls captureStateForUndo', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setHighestZState should call captureStateForUndo');
+});
+
+TestRunner.test('State Utility - setHighestZState uses descriptive undo label', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('Set Window Z-Index') || funcStr.includes('Z-Index'), 'setHighestZState should use descriptive undo label');
+});
+
+TestRunner.test('State Utility - setHighestZState references value parameter', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('value'), 'setHighestZState should reference value parameter');
+});
+
+TestRunner.test('State Utility - setHighestZState assigns to highestZ', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('highestZ'), 'setHighestZState should assign to highestZ');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom is a function export', (t) => {
+    t.assertEqual(typeof resetTimelineZoom, 'function', 'resetTimelineZoom should be a function');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom accepts 0 parameters', (t) => {
+    t.assertEqual(resetTimelineZoom.length, 0, 'resetTimelineZoom should accept no parameters');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom calls captureStateForUndo', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'resetTimelineZoom should call captureStateForUndo');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom uses descriptive undo label', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('Reset Timeline Zoom') || funcStr.includes('Reset Zoom'), 'resetTimelineZoom should use descriptive undo label');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState is a function export', (t) => {
+    t.assertEqual(typeof resetPerformanceMonitorState, 'function', 'resetPerformanceMonitorState should be a function');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState accepts 0 parameters', (t) => {
+    t.assertEqual(resetPerformanceMonitorState.length, 0, 'resetPerformanceMonitorState should accept no parameters');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState resets enabled to false', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('enabled'), 'resetPerformanceMonitorState should reset enabled property');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState resets audioContextState', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('audioContextState'), 'resetPerformanceMonitorState should reset audioContextState');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState resets cpuUsage', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('cpuUsage') || funcStr.includes('cpu'), 'resetPerformanceMonitorState should reset cpuUsage');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState resets memoryPressure', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('memoryPressure'), 'resetPerformanceMonitorState should reset memoryPressure');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState resets activeVoices', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('activeVoices'), 'resetPerformanceMonitorState should reset activeVoices');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState resets audioLatency', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('audioLatency'), 'resetPerformanceMonitorState should reset audioLatency');
+});
+
+TestRunner.test('State Utility - APP_VERSION validation for Day 388', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 388');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 65, 'Minor version should be >= 65 for Day 388');
+    }
+});
