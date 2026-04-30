@@ -11395,3 +11395,148 @@ TestRunner.test('Track Methods - APP_VERSION validation for Day 395', (t) => {
         t.assertTruthy(versionParts[1] >= 72, 'Minor version should be >= 72 for Day 395');
     }
 });
+
+// === Day 396: Metronome & Playback Mode State Functions Tests ===
+TestRunner.test('Metronome State - getMetronomeEnabledState is a function export', (t) => {
+    t.assertEqual(typeof getMetronomeEnabledState, 'function', 'getMetronomeEnabledState should be a function');
+});
+
+TestRunner.test('Metronome State - getMetronomeEnabledState accepts 0 parameters', (t) => {
+    t.assertEqual(getMetronomeEnabledState.length, 0, 'getMetronomeEnabledState should accept 0 parameters');
+});
+
+TestRunner.test('Metronome State - getMetronomeVolumeState is a function export', (t) => {
+    t.assertEqual(typeof getMetronomeVolumeState, 'function', 'getMetronomeVolumeState should be a function');
+});
+
+TestRunner.test('Metronome State - getMetronomeVolumeState accepts 0 parameters', (t) => {
+    t.assertEqual(getMetronomeVolumeState.length, 0, 'getMetronomeVolumeState should accept 0 parameters');
+});
+
+TestRunner.test('Metronome State - setMetronomeEnabledState is a function export', (t) => {
+    t.assertEqual(typeof setMetronomeEnabledState, 'function', 'setMetronomeEnabledState should be a function');
+});
+
+TestRunner.test('Metronome State - setMetronomeEnabledState accepts 1 parameter', (t) => {
+    t.assertEqual(setMetronomeEnabledState.length, 1, 'setMetronomeEnabledState should accept 1 parameter');
+});
+
+TestRunner.test('Metronome State - setMetronomeEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMetronomeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Metronome State - setMetronomeEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Metronome'), 'setMetronomeEnabledState should use descriptive undo label with Toggle Metronome');
+});
+
+TestRunner.test('Metronome State - setMetronomeEnabledState uses conditional label for on/off', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('On') && funcStr.includes('Off'), 'setMetronomeEnabledState should include On and Off in label');
+});
+
+TestRunner.test('Metronome State - setMetronomeEnabledState coerces to boolean', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setMetronomeEnabledState should coerce enabled to boolean');
+});
+
+TestRunner.test('Metronome State - setMetronomeVolumeState is a function export', (t) => {
+    t.assertEqual(typeof setMetronomeVolumeState, 'function', 'setMetronomeVolumeState should be a function');
+});
+
+TestRunner.test('Metronome State - setMetronomeVolumeState accepts 1 parameter', (t) => {
+    t.assertEqual(setMetronomeVolumeState.length, 1, 'setMetronomeVolumeState should accept 1 parameter');
+});
+
+TestRunner.test('Metronome State - setMetronomeVolumeState calls captureStateForUndo', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMetronomeVolumeState should call captureStateForUndo');
+});
+
+TestRunner.test('Metronome State - setMetronomeVolumeState uses descriptive undo label', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('Metronome Volume'), 'setMetronomeVolumeState should use descriptive undo label');
+});
+
+TestRunner.test('Metronome State - setMetronomeVolumeState clamps value to 0-1 range', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setMetronomeVolumeState should clamp value with Math.max and Math.min');
+});
+
+TestRunner.test('Metronome State - setMetronomeVolumeState uses parseFloat with fallback', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setMetronomeVolumeState should use parseFloat for volume conversion');
+});
+
+TestRunner.test('Metronome State - setMetronomeVolumeState defaults to 0.5', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('0.5'), 'setMetronomeVolumeState should default to 0.5 when invalid');
+});
+
+TestRunner.test('Metronome State - APP_VERSION validation for Day 396', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 396');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 73, 'Minor version should be >= 73 for Day 396');
+    }
+});
+
+TestRunner.test('Playback Mode State - getPlaybackModeState is a function export', (t) => {
+    t.assertEqual(typeof getPlaybackModeState, 'function', 'getPlaybackModeState should be a function');
+});
+
+TestRunner.test('Playback Mode State - getPlaybackModeState accepts 0 parameters', (t) => {
+    t.assertEqual(getPlaybackModeState.length, 0, 'getPlaybackModeState should accept 0 parameters');
+});
+
+TestRunner.test('Playback Mode State - getPlaybackModeState returns string', (t) => {
+    const returnVal = getPlaybackModeState();
+    t.assertTruthy(typeof returnVal === 'string', 'getPlaybackModeState should return a string');
+});
+
+TestRunner.test('Playback Mode State - getPlaybackModeState returns sequencer or timeline', (t) => {
+    const returnVal = getPlaybackModeState();
+    t.assertTruthy(returnVal === 'sequencer' || returnVal === 'timeline', 'getPlaybackModeState should return sequencer or timeline');
+});
+
+TestRunner.test('Playback Mode State - setPlaybackModeState is a function export', (t) => {
+    t.assertEqual(typeof setPlaybackModeState, 'function', 'setPlaybackModeState should be a function');
+});
+
+TestRunner.test('Playback Mode State - setPlaybackModeState accepts 1 parameter', (t) => {
+    t.assertEqual(setPlaybackModeState.length, 1, 'setPlaybackModeState should accept 1 parameter');
+});
+
+TestRunner.test('Playback Mode State - setPlaybackModeState calls captureStateForUndo', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setPlaybackModeState should call captureStateForUndo');
+});
+
+TestRunner.test('Playback Mode State - setPlaybackModeState uses descriptive undo label', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('Set Playback Mode'), 'setPlaybackModeState should use descriptive undo label');
+});
+
+TestRunner.test('Playback Mode State - setPlaybackModeState references mode parameter in label', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('mode'), 'setPlaybackModeState should reference mode parameter in undo label');
+});
+
+TestRunner.test('Playback Mode State - setPlaybackModeState validates mode is sequencer or timeline', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('sequencer') || funcStr.includes('timeline'), 'setPlaybackModeState should validate mode values');
+});
+
+TestRunner.test('Playback Mode State - setPlaybackModeState guards against missing appServices', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('appServices.captureStateForUndo') || funcStr.includes('captureStateForUndo'), 'setPlaybackModeState should guard against missing appServices');
+});
+
+TestRunner.test('Playback Mode State - APP_VERSION validation for Day 396', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 396');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 73, 'Minor version should be >= 73 for Day 396');
+    }
+});

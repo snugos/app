@@ -1,3 +1,51 @@
+#### Day 396: Metronome & Playback Mode State Functions Tests (2026-04-30)
+- **Feature**: Added 30 new unit tests for Metronome and Playback Mode state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 30 new tests in Day 396 section:
+    - Metronome State - getMetronomeEnabledState is a function export
+    - Metronome State - getMetronomeEnabledState accepts 0 parameters
+    - Metronome State - getMetronomeVolumeState is a function export
+    - Metronome State - getMetronomeVolumeState accepts 0 parameters
+    - Metronome State - setMetronomeEnabledState is a function export
+    - Metronome State - setMetronomeEnabledState accepts 1 parameter
+    - Metronome State - setMetronomeEnabledState calls captureStateForUndo
+    - Metronome State - setMetronomeEnabledState uses descriptive undo label
+    - Metronome State - setMetronomeEnabledState uses conditional label for on/off
+    - Metronome State - setMetronomeEnabledState coerces to boolean
+    - Metronome State - setMetronomeVolumeState is a function export
+    - Metronome State - setMetronomeVolumeState accepts 1 parameter
+    - Metronome State - setMetronomeVolumeState calls captureStateForUndo
+    - Metronome State - setMetronomeVolumeState uses descriptive undo label
+    - Metronome State - setMetronomeVolumeState clamps value to 0-1 range
+    - Metronome State - setMetronomeVolumeState uses parseFloat with fallback
+    - Metronome State - setMetronomeVolumeState defaults to 0.5
+    - Metronome State - APP_VERSION validation for Day 396
+    - Playback Mode State - getPlaybackModeState is a function export
+    - Playback Mode State - getPlaybackModeState accepts 0 parameters
+    - Playback Mode State - getPlaybackModeState returns string
+    - Playback Mode State - getPlaybackModeState returns sequencer or timeline
+    - Playback Mode State - setPlaybackModeState is a function export
+    - Playback Mode State - setPlaybackModeState accepts 1 parameter
+    - Playback Mode State - setPlaybackModeState calls captureStateForUndo
+    - Playback Mode State - setPlaybackModeState uses descriptive undo label
+    - Playback Mode State - setPlaybackModeState references mode parameter in label
+    - Playback Mode State - setPlaybackModeState validates mode is sequencer or timeline
+    - Playback Mode State - setPlaybackModeState guards against missing appServices
+    - Playback Mode State - APP_VERSION validation for Day 396
+  - `js/constants.js`: Bumped APP_VERSION to 2.74.0
+- **Feature Details**:
+  - Tests validate getMetronomeEnabledState and getMetronomeVolumeState function exports and parameter handling
+  - Tests validate setMetronomeEnabledState function (1 param, calls captureStateForUndo with Toggle Metronome On/Off label)
+  - Tests validate setMetronomeEnabledState boolean coercion and descriptive undo label
+  - Tests validate setMetronomeVolumeState function (1 param, calls captureStateForUndo with Metronome Volume label)
+  - Tests validate setMetronomeVolumeState clamps value to 0-1 range using Math.max/Math.min
+  - Tests validate setMetronomeVolumeState uses parseFloat with 0.5 default
+  - Tests validate getPlaybackModeState function (returns 'sequencer' or 'timeline' string)
+  - Tests validate setPlaybackModeState function (1 param, calls captureStateForUndo with descriptive label)
+  - Tests validate setPlaybackModeState validates mode is sequencer or timeline
+  - Total tests increased from 2087 to 2117
+- **Version**: Bumped to 2.74.0
+
 #### Day 395: Track.prototype State Methods Tests (2026-04-30)
 - **Feature**: Added 62 new unit tests for Track.prototype state methods that call _captureUndoState to expand test coverage
 - **Files Modified**:
