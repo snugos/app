@@ -1,3 +1,66 @@
+#### Day 383: Audio Panic & Performance Monitor Functions Tests (2026-04-30)
+- **Feature**: Added 46 new unit tests for Audio Panic and Performance Monitor functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 46 new tests in Day 383 section:
+    - Audio Panic - panicAllAudio is a function export
+    - Audio Panic - panicAllAudio accepts 0 parameters
+    - Audio Panic - panicAllAudio stops Tone.Transport
+    - Audio Panic - panicAllAudio cancels scheduled events
+    - Audio Panic - panicAllAudio references getTracks from appServices
+    - Audio Panic - panicAllAudio handles tracks array
+    - Audio Panic - panicAllAudio stops sequence playback
+    - Audio Panic - panicAllAudio stops drum pad players
+    - Audio Panic - panicAllAudio stops slicer mono player
+    - Audio Panic - panicAllAudio releases instrument sampler
+    - Audio Panic - panicAllAudio handles Audio track recording
+    - Audio Panic - panicAllAudio calls stopAudioRecording
+    - Audio Panic - panicAllAudio stops metronome
+    - Audio Panic - panicAllAudio shows notification
+    - Audio Panic - panicAllAudio has try-catch error handling
+    - Performance Monitor Audio - startPerformanceMonitor is a function export
+    - Performance Monitor Audio - startPerformanceMonitor accepts 0 parameters
+    - Performance Monitor Audio - startPerformanceMonitor checks if already running
+    - Performance Monitor Audio - startPerformanceMonitor uses PERFORMANCE_UPDATE_INTERVAL_MS
+    - Performance Monitor Audio - startPerformanceMonitor sets up setInterval
+    - Performance Monitor Audio - startPerformanceMonitor updates audio context state
+    - Performance Monitor Audio - startPerformanceMonitor updates audio latency
+    - Performance Monitor Audio - startPerformanceMonitor counts active voices
+    - Performance Monitor Audio - startPerformanceMonitor handles synth active voices
+    - Performance Monitor Audio - startPerformanceMonitor handles sampler active voices
+    - Performance Monitor Audio - startPerformanceMonitor handles drum pad players
+    - Performance Monitor Audio - startPerformanceMonitor updates CPU usage state
+    - Performance Monitor Audio - startPerformanceMonitor updates memory pressure state
+    - Performance Monitor Audio - startPerformanceMonitor estimates CPU based on voices
+    - Performance Monitor Audio - stopPerformanceMonitor is a function export
+    - Performance Monitor Audio - stopPerformanceMonitor accepts 0 parameters
+    - Performance Monitor Audio - stopPerformanceMonitor clears interval
+    - Performance Monitor Audio - stopPerformanceMonitor checks if running
+    - Performance Monitor Audio - stopPerformanceMonitor sets interval to null
+    - Performance Monitor Audio - getPerformanceMetrics is a function export
+    - Performance Monitor Audio - getPerformanceMetrics accepts 0 parameters
+    - Performance Monitor Audio - getPerformanceMetrics returns an object
+    - Performance Monitor Audio - getPerformanceMetrics includes audioContextState
+    - Performance Monitor Audio - getPerformanceMetrics includes cpuUsage
+    - Performance Monitor Audio - getPerformanceMetrics includes memoryPressure
+    - Performance Monitor Audio - getPerformanceMetrics includes activeVoices
+    - Performance Monitor Audio - getPerformanceMetrics includes audioLatency
+    - Performance Monitor Audio - getPerformanceMetrics includes droppedCallbacks
+    - Performance Monitor Audio - getPerformanceMetrics accesses Tone.context
+    - Performance Monitor Audio - getPerformanceMetrics accesses localAppServices getters
+    - Audio Panic & Performance Monitor - APP_VERSION validation for Day 383
+  - `js/constants.js`: Bumped APP_VERSION to 2.62.0
+- **Feature Details**:
+  - Tests validate panicAllAudio stops all audio including Transport, sequences, drum pads, slicer, sampler, metronome, and any recording in progress
+  - Tests verify panicAllAudio shows notification to user and handles errors gracefully
+  - Tests validate startPerformanceMonitor sets up interval-based monitoring of Tone.context state and voice count
+  - Tests verify startPerformanceMonitor counts active voices across all track types (synth, sampler, drum)
+  - Tests verify startPerformanceMonitor estimates CPU usage based on active voices
+  - Tests validate stopPerformanceMonitor clears interval and resets state
+  - Tests verify getPerformanceMetrics returns comprehensive performance object with all metrics
+  - Tests verify all functions reference appServices getters for state access
+  - Total tests increased from 1487 to 1533
+- **Version**: Bumped to 2.62.0
+
 #### Day 381: DrumSampler Pad Drop Zone Verification Tests (2026-04-30)
 - **Feature**: Added 35 new unit tests for DrumSampler Pad drop zone verification to expand test coverage
 - **Files Modified**:
