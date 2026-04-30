@@ -589,7 +589,6 @@ const appServices = {
         }
     },
 
-    // --- Missing appServices - Added to fix incomplete features ---
     getActiveTrackForInteraction: () => {
         const activeId = getActiveSequencerTrackIdState();
         if (activeId) {
@@ -648,10 +647,6 @@ const appServices = {
         openAudioClipEditorWindow(trackId, clipId, savedState);
     }
 };
-
-// ============================================
-// Missing appServices - Added to fix incomplete features
-// ============================================
 
 // Show notification function - wraps utility function with error handling
 appServices.showNotification = (message, duration = 3000) => {
