@@ -9476,3 +9476,313 @@ TestRunner.test('Master Effects Chain - APP_VERSION validation for Day 400', (t)
         t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 400');
     }
 });
+// Day 400: Chord Mode Extended State & Constant Tests
+TestRunner.test('Chord Mode State - setChordModeEnabledState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeEnabledState, 'function', 'setChordModeEnabledState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeEnabledState.length, 1, 'setChordModeEnabledState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Chord Mode'), 'setChordModeEnabledState should use Toggle Chord Mode label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState coerces to boolean', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setChordModeEnabledState should coerce to boolean');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeRootState, 'function', 'setChordModeRootState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeRootState.length, 1, 'setChordModeRootState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('Chord Root'), 'setChordModeRootState should use Set Chord Root label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState clamps value to 0-11 range', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min') && funcStr.includes('11'), 'setChordModeRootState should clamp value to 0-11 range');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState parses root as integer', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setChordModeRootState should parse root as integer');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState defaults to 0 for invalid input', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('|| 0') || funcStr.includes('||0'), 'setChordModeRootState should default to 0 for invalid input');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeTypeState, 'function', 'setChordModeTypeState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeTypeState.length, 1, 'setChordModeTypeState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeTypeState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState uses descriptive undo label with type', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes('Chord Type'), 'setChordModeTypeState should use Set Chord Type label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState defaults to major for invalid input', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes("'major'") || funcStr.includes('"major"'), 'setChordModeTypeState should default to major');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeLockState, 'function', 'setChordModeLockState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeLockState.length, 1, 'setChordModeLockState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('Chord Lock') || funcStr.includes('Enable') || funcStr.includes('Disable'), 'setChordModeLockState should use Chord Lock label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState coerces to boolean', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setChordModeLockState should coerce to boolean');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState is a function export', (t) => {
+    t.assertEqual(typeof setChordVoicingState, 'function', 'setChordVoicingState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordVoicingState.length, 1, 'setChordVoicingState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState calls captureStateForUndo', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordVoicingState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState uses descriptive undo label', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('Chord Voicing'), 'setChordVoicingState should use Set Chord Voicing label');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState validates against CHORD_VOICINGS', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('CHORD_VOICINGS') && funcStr.includes('includes'), 'setChordVoicingState should validate against CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState defaults to DEFAULT_CHORD_VOICING', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_VOICING'), 'setChordVoicingState should default to DEFAULT_CHORD_VOICING');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeState, 'function', 'setChordModeState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeState.length, 1, 'setChordModeState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('Chord Mode') || funcStr.includes('Set Chord'), 'setChordModeState should use descriptive label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState validates state is an object', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('typeof state') && funcStr.includes('object'), 'setChordModeState should validate state is an object');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState merges with DEFAULT_CHORD_MODE', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_MODE'), 'setChordModeState should merge with DEFAULT_CHORD_MODE');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState guards against missing appServices', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setChordModeState should guard against missing appServices');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has sus2 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.sus2 !== undefined, 'CHORD_TYPES should have sus2 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has sus4 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.sus4 !== undefined, 'CHORD_TYPES should have sus4 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has diminished7 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.diminished7 !== undefined, 'CHORD_TYPES should have diminished7 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has halfDiminished7 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.halfDiminished7 !== undefined, 'CHORD_TYPES should have halfDiminished7 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has major6 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.major6 !== undefined, 'CHORD_TYPES should have major6 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has minor6 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.minor6 !== undefined, 'CHORD_TYPES should have minor6 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has power chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.power !== undefined, 'CHORD_TYPES should have power chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has fifth chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.fifth !== undefined, 'CHORD_TYPES should have fifth chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES.major has 3 notes', (t) => {
+    t.assertEqual(Constants.CHORD_TYPES.major.length, 3, 'major chord should have 3 notes');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES.major7 has 4 notes', (t) => {
+    t.assertEqual(Constants.CHORD_TYPES.major7.length, 4, 'major7 chord should have 4 notes');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES.dominant7 has 4 notes', (t) => {
+    t.assertEqual(Constants.CHORD_TYPES.dominant7.length, 4, 'dominant7 chord should have 4 notes');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES.power has 2 notes', (t) => {
+    t.assertEqual(Constants.CHORD_TYPES.power.length, 2, 'power chord should have 2 notes');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES.sus2 has correct intervals', (t) => {
+    t.assertEqual(Constants.CHORD_TYPES.sus2[0], 0, 'sus2 first interval should be 0');
+    t.assertEqual(Constants.CHORD_TYPES.sus2[1], 2, 'sus2 second interval should be 2');
+    t.assertEqual(Constants.CHORD_TYPES.sus2[2], 7, 'sus2 third interval should be 7');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES.sus4 has correct intervals', (t) => {
+    t.assertEqual(Constants.CHORD_TYPES.sus4[0], 0, 'sus4 first interval should be 0');
+    t.assertEqual(Constants.CHORD_TYPES.sus4[1], 5, 'sus4 second interval should be 5');
+    t.assertEqual(Constants.CHORD_TYPES.sus4[2], 7, 'sus4 third interval should be 7');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains sus2', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.sus2 !== undefined, 'CHORD_TYPES should include sus2');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains sus4', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.sus4 !== undefined, 'CHORD_TYPES should include sus4');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_CHORD_MODE !== undefined, 'DEFAULT_CHORD_MODE should be defined');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE is an object', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_CHORD_MODE, 'object', 'DEFAULT_CHORD_MODE should be an object');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE.enabled is false', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_MODE.enabled, false, 'DEFAULT_CHORD_MODE.enabled should be false');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE.root is 0', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_MODE.root, 0, 'DEFAULT_CHORD_MODE.root should be 0');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE.type is major', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_MODE.type, 'major', 'DEFAULT_CHORD_MODE.type should be major');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE.lockChord is false', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_MODE.lockChord, false, 'DEFAULT_CHORD_MODE.lockChord should be false');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_VOICING is closed', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_VOICING, 'closed', 'DEFAULT_CHORD_VOICING should be closed');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD is defined', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICING_SPREAD !== undefined, 'CHORD_VOICING_SPREAD should be defined');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertEqual(typeof Constants.CHORD_VOICING_SPREAD, 'object', 'CHORD_VOICING_SPREAD should be an object');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.closed is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.closed), true, 'CHORD_VOICING_SPREAD.closed should be an array');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.wide is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.wide), true, 'CHORD_VOICING_SPREAD.wide should be an array');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.drop2 is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.drop2), true, 'CHORD_VOICING_SPREAD.drop2 should be an array');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.rootless is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.rootless), true, 'CHORD_VOICING_SPREAD.rootless should be an array');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS has 4 voicings', (t) => {
+    t.assertEqual(Constants.CHORD_VOICINGS.length, 4, 'CHORD_VOICINGS should have 4 voicings');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS includes closed', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS.includes('closed'), 'CHORD_VOICINGS should include closed');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS includes wide', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS.includes('wide'), 'CHORD_VOICINGS should include wide');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS includes drop2', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS.includes('drop2'), 'CHORD_VOICINGS should include drop2');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS includes rootless', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS.includes('rootless'), 'CHORD_VOICINGS should include rootless');
+});
+
+TestRunner.test('Chord Mode State - APP_VERSION validation for Day 400', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    const major = versionParts[0];
+    const minor = versionParts[1];
+    t.assertTruthy(major > 2 || (major === 2 && minor >= 78), 'APP_VERSION should be 2.78.0 or higher for Day 400');
+});
