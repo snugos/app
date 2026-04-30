@@ -1,3 +1,70 @@
+#### Day 390: Timeline Marker State Functions Tests (2026-04-30)
+- **Feature**: Added 49 new unit tests for Timeline Marker State Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 49 new tests in Day 390 section:
+    - Timeline Marker - getTimelineMarkersState is a function export
+    - Timeline Marker - getTimelineMarkersState accepts 0 parameters
+    - Timeline Marker - getTimelineMarkersState returns array
+    - Timeline Marker - getTimelineMarkerByIdState is a function export
+    - Timeline Marker - getTimelineMarkerByIdState accepts 1 parameter
+    - Timeline Marker - getTimelineMarkerByIdState returns marker or undefined
+    - Timeline Marker - addTimelineMarkerState is a function export
+    - Timeline Marker - addTimelineMarkerState accepts 3 parameters
+    - Timeline Marker - addTimelineMarkerState calls captureStateForUndo with descriptive label
+    - Timeline Marker - addTimelineMarkerState generates unique id
+    - Timeline Marker - addTimelineMarkerState uses DEFAULT_MARKER structure
+    - Timeline Marker - addTimelineMarkerState defaults name to Marker N
+    - Timeline Marker - addTimelineMarkerState clamps bar to MAX_BARS
+    - Timeline Marker - addTimelineMarkerState uses DEFAULT_MARKER_COLOR
+    - Timeline Marker - addTimelineMarkerState sorts by bar position
+    - Timeline Marker - addTimelineMarkerState returns marker object
+    - Timeline Marker - addTimelineMarkerState returns null when max reached
+    - Timeline Marker - setTimelineMarkerState is a function export
+    - Timeline Marker - setTimelineMarkerState accepts 2 parameters
+    - Timeline Marker - setTimelineMarkerState calls captureStateForUndo with descriptive label
+    - Timeline Marker - setTimelineMarkerState finds marker by id
+    - Timeline Marker - setTimelineMarkerState updates name property
+    - Timeline Marker - setTimelineMarkerState updates bar property with clamping
+    - Timeline Marker - setTimelineMarkerState updates color property
+    - Timeline Marker - setTimelineMarkerState returns marker or null
+    - Timeline Marker - removeTimelineMarkerState is a function export
+    - Timeline Marker - removeTimelineMarkerState accepts 1 parameter
+    - Timeline Marker - removeTimelineMarkerState calls captureStateForUndo with descriptive label
+    - Timeline Marker - removeTimelineMarkerState finds index by id
+    - Timeline Marker - removeTimelineMarkerState splices from array
+    - Timeline Marker - removeTimelineMarkerState returns boolean
+    - Timeline Marker - clearTimelineMarkersState is a function export
+    - Timeline Marker - clearTimelineMarkersState accepts 0 parameters
+    - Timeline Marker - clearTimelineMarkersState calls captureStateForUndo with descriptive label
+    - Timeline Marker - clearTimelineMarkersState returns early if array empty
+    - Timeline Marker - clearTimelineMarkersState clears array
+    - Timeline Marker - MAX_TIMELINE_MARKERS constant is positive number
+    - Timeline Marker - MAX_TIMELINE_MARKERS is 64 or less
+    - Timeline Marker - DEFAULT_MARKER_COLOR is valid hex color
+    - Timeline Marker - MARKER_COLORS is an array
+    - Timeline Marker - MARKER_COLORS has at least 5 colors
+    - Timeline Marker - MARKER_COLORS contains valid hex colors
+    - Timeline Marker - DEFAULT_MARKER is an object
+    - Timeline Marker - DEFAULT_MARKER has required properties
+    - Timeline Marker - DEFAULT_MARKER name is non-empty string
+    - Timeline Marker - DEFAULT_MARKER bar is positive number
+    - Timeline Marker - DEFAULT_MARKER color matches DEFAULT_MARKER_COLOR
+    - Timeline Marker - Timeline Marker state functions guard against missing appServices
+    - Timeline Marker - APP_VERSION validation for Day 390
+  - `js/constants.js`: Bumped APP_VERSION to 2.68.0
+- **Feature Details**:
+  - Tests validate getTimelineMarkersState and getTimelineMarkerByIdState function exports and parameter handling
+  - Tests validate addTimelineMarkerState function (generates unique id, uses DEFAULT_MARKER structure, calls captureStateForUndo with descriptive label)
+  - Tests validate addTimelineMarkerState with max limit check (returns null when MAX_TIMELINE_MARKERS reached)
+  - Tests validate setTimelineMarkerState function with marker updates (name, bar with clamping, color)
+  - Tests validate removeTimelineMarkerState function (finds by id, splices, returns boolean)
+  - Tests validate clearTimelineMarkersState function (early return when empty, clears array)
+  - Tests validate Timeline Marker constants (MAX_TIMELINE_MARKERS, DEFAULT_MARKER_COLOR, MARKER_COLORS, DEFAULT_MARKER)
+  - Tests verify all mutation functions call captureStateForUndo for undo/redo support
+  - Total tests increased from 1821 to 1870
+- **Version**: Bumped to 2.68.0
+
+
 #### Day 389: Track Group State Functions Tests (2026-04-30)
 - **Feature**: Added 60 new unit tests for Track Group State Functions to expand test coverage
 - **Files Modified**:

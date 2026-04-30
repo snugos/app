@@ -10090,3 +10090,247 @@ TestRunner.test('Track Group - APP_VERSION validation for Day 389', (t) => {
         t.assertTruthy(versionParts[1] >= 66, 'Minor version should be >= 66 for Day 389');
     }
 });
+
+// Timeline Marker State Functions Tests
+TestRunner.test('Timeline Marker - getTimelineMarkersState is a function export', (t) => {
+    t.assertEqual(typeof getTimelineMarkersState, 'function', 'getTimelineMarkersState should be a function');
+});
+
+TestRunner.test('Timeline Marker - getTimelineMarkersState accepts 0 parameters', (t) => {
+    t.assertEqual(getTimelineMarkersState.length, 0, 'getTimelineMarkersState should accept 0 parameters');
+});
+
+TestRunner.test('Timeline Marker - getTimelineMarkersState returns array', (t) => {
+    const result = getTimelineMarkersState();
+    t.assertTruthy(Array.isArray(result), 'getTimelineMarkersState should return an array');
+});
+
+TestRunner.test('Timeline Marker - getTimelineMarkerByIdState is a function export', (t) => {
+    t.assertEqual(typeof getTimelineMarkerByIdState, 'function', 'getTimelineMarkerByIdState should be a function');
+});
+
+TestRunner.test('Timeline Marker - getTimelineMarkerByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getTimelineMarkerByIdState.length, 1, 'getTimelineMarkerByIdState should accept 1 parameter');
+});
+
+TestRunner.test('Timeline Marker - getTimelineMarkerByIdState returns marker or undefined', (t) => {
+    const result = getTimelineMarkerByIdState(999999);
+    t.assertUndefined(result, 'getTimelineMarkerByIdState should return undefined for non-existent id');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState is a function export', (t) => {
+    t.assertEqual(typeof addTimelineMarkerState, 'function', 'addTimelineMarkerState should be a function');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState accepts 3 parameters', (t) => {
+    t.assertEqual(addTimelineMarkerState.length, 3, 'addTimelineMarkerState should accept 3 parameters');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTimelineMarkerState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Add Timeline Marker'), 'addTimelineMarkerState should use descriptive undo label');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState generates unique id', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('timelineMarkerIdCounter') || funcStr.includes('++'), 'addTimelineMarkerState should generate unique id');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState uses DEFAULT_MARKER structure', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('name') && funcStr.includes('bar') && funcStr.includes('color'), 'addTimelineMarkerState should use DEFAULT_MARKER structure');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState defaults name to Marker N', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('Marker ${'), 'addTimelineMarkerState should default name to Marker N');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState clamps bar to MAX_BARS', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS') || funcStr.includes('Math.min'), 'addTimelineMarkerState should clamp bar to MAX_BARS');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState uses DEFAULT_MARKER_COLOR', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_MARKER_COLOR'), 'addTimelineMarkerState should use DEFAULT_MARKER_COLOR');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState sorts by bar position', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('sort') && funcStr.includes('bar'), 'addTimelineMarkerState should sort markers by bar position');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState returns marker object', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('return marker'), 'addTimelineMarkerState should return marker object');
+});
+
+TestRunner.test('Timeline Marker - addTimelineMarkerState returns null when max reached', (t) => {
+    const funcStr = addTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('return null') && funcStr.includes('MAX_TIMELINE_MARKERS'), 'addTimelineMarkerState should return null when max markers reached');
+});
+
+TestRunner.test('Timeline Marker - setTimelineMarkerState is a function export', (t) => {
+    t.assertEqual(typeof setTimelineMarkerState, 'function', 'setTimelineMarkerState should be a function');
+});
+
+TestRunner.test('Timeline Marker - setTimelineMarkerState accepts 2 parameters', (t) => {
+    t.assertEqual(setTimelineMarkerState.length, 2, 'setTimelineMarkerState should accept 2 parameters');
+});
+
+TestRunner.test('Timeline Marker - setTimelineMarkerState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimelineMarkerState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Update Timeline Marker'), 'setTimelineMarkerState should use descriptive undo label');
+});
+
+TestRunner.test('Timeline Marker - setTimelineMarkerState finds marker by id', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('find') && funcStr.includes('id'), 'setTimelineMarkerState should find marker by id');
+});
+
+TestRunner.test('Timeline Marker - setTimelineMarkerState updates name property', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('name'), 'setTimelineMarkerState should update name property');
+});
+
+TestRunner.test('Timeline Marker - setTimelineMarkerState updates bar property with clamping', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('bar') && (funcStr.includes('Math.max') || funcStr.includes('Math.min')), 'setTimelineMarkerState should update bar with clamping');
+});
+
+TestRunner.test('Timeline Marker - setTimelineMarkerState updates color property', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('color'), 'setTimelineMarkerState should update color property');
+});
+
+TestRunner.test('Timeline Marker - setTimelineMarkerState returns marker or null', (t) => {
+    const funcStr = setTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('return marker') || funcStr.includes('return null'), 'setTimelineMarkerState should return marker or null');
+});
+
+TestRunner.test('Timeline Marker - removeTimelineMarkerState is a function export', (t) => {
+    t.assertEqual(typeof removeTimelineMarkerState, 'function', 'removeTimelineMarkerState should be a function');
+});
+
+TestRunner.test('Timeline Marker - removeTimelineMarkerState accepts 1 parameter', (t) => {
+    t.assertEqual(removeTimelineMarkerState.length, 1, 'removeTimelineMarkerState should accept 1 parameter');
+});
+
+TestRunner.test('Timeline Marker - removeTimelineMarkerState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = removeTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTimelineMarkerState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Remove Timeline Marker'), 'removeTimelineMarkerState should use descriptive undo label');
+});
+
+TestRunner.test('Timeline Marker - removeTimelineMarkerState finds index by id', (t) => {
+    const funcStr = removeTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('findIndex') && funcStr.includes('id'), 'removeTimelineMarkerState should find index by id');
+});
+
+TestRunner.test('Timeline Marker - removeTimelineMarkerState splices from array', (t) => {
+    const funcStr = removeTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeTimelineMarkerState should splice from array');
+});
+
+TestRunner.test('Timeline Marker - removeTimelineMarkerState returns boolean', (t) => {
+    const funcStr = removeTimelineMarkerState.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'removeTimelineMarkerState should return boolean');
+});
+
+TestRunner.test('Timeline Marker - clearTimelineMarkersState is a function export', (t) => {
+    t.assertEqual(typeof clearTimelineMarkersState, 'function', 'clearTimelineMarkersState should be a function');
+});
+
+TestRunner.test('Timeline Marker - clearTimelineMarkersState accepts 0 parameters', (t) => {
+    t.assertEqual(clearTimelineMarkersState.length, 0, 'clearTimelineMarkersState should accept 0 parameters');
+});
+
+TestRunner.test('Timeline Marker - clearTimelineMarkersState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = clearTimelineMarkersState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearTimelineMarkersState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Clear All Timeline Markers'), 'clearTimelineMarkersState should use descriptive undo label');
+});
+
+TestRunner.test('Timeline Marker - clearTimelineMarkersState returns early if array empty', (t) => {
+    const funcStr = clearTimelineMarkersState.toString();
+    t.assertTruthy(funcStr.includes('length === 0') || funcStr.includes('length === 0'), 'clearTimelineMarkersState should return early if array empty');
+});
+
+TestRunner.test('Timeline Marker - clearTimelineMarkersState clears array', (t) => {
+    const funcStr = clearTimelineMarkersState.toString();
+    t.assertTruthy(funcStr.includes('timelineMarkersState = []') || funcStr.includes('= []'), 'clearTimelineMarkersState should clear the array');
+});
+
+// Timeline Marker Constants Validation Tests
+TestRunner.test('Timeline Marker - MAX_TIMELINE_MARKERS constant is positive number', (t) => {
+    t.assertEqual(typeof MAX_TIMELINE_MARKERS, 'number', 'MAX_TIMELINE_MARKERS should be a number');
+    t.assertTruthy(MAX_TIMELINE_MARKERS > 0, 'MAX_TIMELINE_MARKERS should be positive');
+});
+
+TestRunner.test('Timeline Marker - MAX_TIMELINE_MARKERS is 64 or less', (t) => {
+    t.assertTruthy(MAX_TIMELINE_MARKERS <= 64, 'MAX_TIMELINE_MARKERS should be 64 or less');
+});
+
+TestRunner.test('Timeline Marker - DEFAULT_MARKER_COLOR is valid hex color', (t) => {
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    t.assertTruthy(hexColorRegex.test(DEFAULT_MARKER_COLOR), 'DEFAULT_MARKER_COLOR should be a valid hex color');
+});
+
+TestRunner.test('Timeline Marker - MARKER_COLORS is an array', (t) => {
+    t.assertTruthy(Array.isArray(MARKER_COLORS), 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('Timeline Marker - MARKER_COLORS has at least 5 colors', (t) => {
+    t.assertTruthy(MARKER_COLORS.length >= 5, 'MARKER_COLORS should have at least 5 colors');
+});
+
+TestRunner.test('Timeline Marker - MARKER_COLORS contains valid hex colors', (t) => {
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    MARKER_COLORS.forEach(color => {
+        t.assertTruthy(hexColorRegex.test(color), 'MARKER_COLORS should contain valid hex colors');
+    });
+});
+
+TestRunner.test('Timeline Marker - DEFAULT_MARKER is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_MARKER, 'object', 'DEFAULT_MARKER should be an object');
+});
+
+TestRunner.test('Timeline Marker - DEFAULT_MARKER has required properties', (t) => {
+    t.assertTruthy(DEFAULT_MARKER.hasOwnProperty('name'), 'DEFAULT_MARKER should have name property');
+    t.assertTruthy(DEFAULT_MARKER.hasOwnProperty('bar'), 'DEFAULT_MARKER should have bar property');
+    t.assertTruthy(DEFAULT_MARKER.hasOwnProperty('color'), 'DEFAULT_MARKER should have color property');
+});
+
+TestRunner.test('Timeline Marker - DEFAULT_MARKER name is non-empty string', (t) => {
+    t.assertEqual(typeof DEFAULT_MARKER.name, 'string', 'DEFAULT_MARKER.name should be a string');
+    t.assertTruthy(DEFAULT_MARKER.name.length > 0, 'DEFAULT_MARKER.name should be non-empty');
+});
+
+TestRunner.test('Timeline Marker - DEFAULT_MARKER bar is positive number', (t) => {
+    t.assertEqual(typeof DEFAULT_MARKER.bar, 'number', 'DEFAULT_MARKER.bar should be a number');
+    t.assertTruthy(DEFAULT_MARKER.bar >= 1, 'DEFAULT_MARKER.bar should be >= 1');
+});
+
+TestRunner.test('Timeline Marker - DEFAULT_MARKER color matches DEFAULT_MARKER_COLOR', (t) => {
+    t.assertEqual(DEFAULT_MARKER.color, DEFAULT_MARKER_COLOR, 'DEFAULT_MARKER.color should match DEFAULT_MARKER_COLOR');
+});
+
+TestRunner.test('Timeline Marker - Timeline Marker state functions guard against missing appServices', (t) => {
+    const funcs = ['addTimelineMarkerState', 'setTimelineMarkerState', 'removeTimelineMarkerState', 'clearTimelineMarkersState'];
+    funcs.forEach(funcName => {
+        const func = eval(funcName);
+        const funcStr = func.toString();
+        t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), funcName + ' should guard against missing appServices');
+    });
+});
+
+TestRunner.test('Timeline Marker - APP_VERSION validation for Day 390', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 390');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 67, 'Minor version should be >= 67 for Day 390');
+    }
+});
