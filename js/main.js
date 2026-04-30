@@ -154,7 +154,24 @@ import {
 import { initializeUIModule } from './ui.js';
 
 // --- Global UI Elements Cache ---
-let uiElementsCache = {};
+let uiElementsCache = {
+    desktop: null, taskbar: null, startButton: null, startMenu: null,
+    taskbarButtonsContainer: null, taskbarTempoDisplay: null, loadProjectInput: null,
+    customBgInput: null, sampleFileInput: null, notificationArea: null, modalContainer: null,
+    menuAddSynthTrack: null, menuAddSamplerTrack: null, menuAddDrumSamplerTrack: null,
+    menuAddInstrumentSamplerTrack: null, menuAddAudioTrack: null,
+    menuOpenSoundBrowser: null, menuOpenTimeline: null,
+    menuUndo: null, menuRedo: null,
+    menuSaveProject: null, menuLoadProject: null, menuExportWav: null, menuOpenGlobalControls: null,
+    menuOpenMixer: null, menuOpenMasterEffects: null,
+    menuToggleFullScreen: null, menuExportMidi: null, menuImportMidi: null,
+    menuImportAudioFile: null, menuKeyboardShortcuts: null, menuTetris: null,
+    menuSaveTrackAsTemplate: null, menuOpenTrackTemplates: null,
+    playBtnGlobal: null, recordBtnGlobal: null, stopBtnGlobal: null,
+    tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null,
+    masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
+    playbackModeToggleBtnGlobal: null,
+};
 
 // --- App Services Object ---
 const appServices = {
