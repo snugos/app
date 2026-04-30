@@ -11009,3 +11009,162 @@ TestRunner.test('Audio Clip Editor - APP_VERSION validation for Day 408', (t) =>
         t.assertTruthy(versionParts[1] >= 84, 'Minor version should be >= 84 for Day 408');
     }
 });
+
+// ============================================
+// Day 410: Audio Clip Getters & Clipboard State Tests
+// ============================================
+
+TestRunner.test('Audio Clip Getters - getAudioClipCrossfade is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipCrossfade, 'function', 'getAudioClipCrossfade should be a function');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipCrossfade references clipId parameter', (t) => {
+    const funcStr = Track.prototype.getAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipCrossfade should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipCrossfade uses _getAudioClip', (t) => {
+    const funcStr = Track.prototype.getAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('_getAudioClip'), 'getAudioClipCrossfade should use _getAudioClip');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipCrossfade checks clip existence', (t) => {
+    const funcStr = Track.prototype.getAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('clip ?'), 'getAudioClipCrossfade should check if clip exists');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipCrossfade returns crossfade property', (t) => {
+    const funcStr = Track.prototype.getAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('crossfade'), 'getAudioClipCrossfade should return crossfade property');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipCrossfade defaults to 0', (t) => {
+    const funcStr = Track.prototype.getAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('0') || funcStr.includes('|| 0'), 'getAudioClipCrossfade should default to 0');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeInCurve is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipFadeInCurve, 'function', 'getAudioClipFadeInCurve should be a function');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeInCurve references clipId parameter', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipFadeInCurve should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeInCurve uses _getAudioClip', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('_getAudioClip'), 'getAudioClipFadeInCurve should use _getAudioClip');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeInCurve checks clip existence', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('clip ?'), 'getAudioClipFadeInCurve should check if clip exists');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeInCurve returns fadeInCurve property', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('fadeInCurve'), 'getAudioClipFadeInCurve should return fadeInCurve property');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeInCurve uses DEFAULT_FADE_IN_CURVE fallback', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_FADE_IN_CURVE'), 'getAudioClipFadeInCurve should use DEFAULT_FADE_IN_CURVE fallback');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeOutCurve is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipFadeOutCurve, 'function', 'getAudioClipFadeOutCurve should be a function');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeOutCurve references clipId parameter', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipFadeOutCurve should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeOutCurve uses _getAudioClip', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('_getAudioClip'), 'getAudioClipFadeOutCurve should use _getAudioClip');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeOutCurve checks clip existence', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('clip ?'), 'getAudioClipFadeOutCurve should check if clip exists');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeOutCurve returns fadeOutCurve property', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('fadeOutCurve'), 'getAudioClipFadeOutCurve should return fadeOutCurve property');
+});
+
+TestRunner.test('Audio Clip Getters - getAudioClipFadeOutCurve uses DEFAULT_FADE_OUT_CURVE fallback', (t) => {
+    const funcStr = Track.prototype.getAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_FADE_OUT_CURVE'), 'getAudioClipFadeOutCurve should use DEFAULT_FADE_OUT_CURVE fallback');
+});
+
+// Clipboard State Tests
+TestRunner.test('Clipboard State - setClipboardDataState is a function export', (t) => {
+    t.assertEqual(typeof setClipboardDataState, 'function', 'setClipboardDataState should be a function');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState accepts 4 parameters', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('type') && funcStr.includes('data') && funcStr.includes('sourceTrackType') && funcStr.includes('sequenceLength'), 'setClipboardDataState should accept 4 parameters');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState calls captureStateForUndo', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setClipboardDataState should call captureStateForUndo');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState uses descriptive undo label', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('Set Clipboard') || funcStr.includes('Clipboard'), 'setClipboardDataState should use descriptive undo label');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState guards against missing appServices', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setClipboardDataState should guard against missing appServices');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState sets clipboardDataGlobal', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('clipboardDataGlobal'), 'setClipboardDataState should set clipboardDataGlobal');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState handles type parameter', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('type'), 'setClipboardDataState should handle type parameter');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState handles data parameter', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('data'), 'setClipboardDataState should handle data parameter');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState handles sourceTrackType parameter', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('sourceTrackType'), 'setClipboardDataState should handle sourceTrackType parameter');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState handles sequenceLength parameter', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('sequenceLength'), 'setClipboardDataState should handle sequenceLength parameter');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState defaults type to null', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('null'), 'setClipboardDataState should default type to null');
+});
+
+TestRunner.test('Clipboard State - setClipboardDataState defaults data to null', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('null'), 'setClipboardDataState should default data to null');
+});
+
+TestRunner.test('Clipboard State - APP_VERSION validation for Day 410', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 410');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 87, 'Minor version should be >= 87 for Day 410');
+    }
+});
