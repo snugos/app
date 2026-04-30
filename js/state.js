@@ -1941,7 +1941,8 @@ export async function exportToMidiInternal() {
     const { getTempoState, getTimeSignatureState, getTracksState, getPlaybackModeState, getSequencesState } = await import('./state.js');
 
     try {
-        const tempo = getTempoState() || 120;
+        // Get tempo directly from Tone.Transport since state.js doesn't maintain separate tempo state
+        const tempo = (typeof Tone !== 'undefined' && Tone.Transport && Tone.Transport.bpm) ? Tone.Transport.bpm.value : (Constants.DEFAULT_TEMPO || 120);
         const timeSig = getTimeSignatureState() || { numerator: 4, denominator: 4 };
         const tracks = getTracksState() || [];
         const playbackMode = getPlaybackModeState() || 'sequence';

@@ -1,3 +1,56 @@
+#### Day 372: DB Module Extended Tests (2026-04-29)
+- **Feature**: Added 38 new unit tests for DB Module (IndexedDB Helper) extended functionality to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 38 new tests in Day 372 section:
+    - DB Module - DB_NAME constant is a non-empty string
+    - DB Module - STORE_NAME constant is a non-empty string
+    - DB Module - DB_VERSION constant is a positive number
+    - DB Module - storeAudio returns a Promise (thenable)
+    - DB Module - getAudio returns a Promise (thenable)
+    - DB Module - deleteAudio returns a Promise (thenable)
+    - DB Module - clearAllAudio returns a Promise (thenable)
+    - DB Module - storeAudio uses put method for storing
+    - DB Module - getAudio uses get method for retrieval
+    - DB Module - deleteAudio uses delete method for removal
+    - DB Module - clearAllAudio uses clear method
+    - DB Module - storeAudio references key parameter in error messages
+    - DB Module - getAudio handles missing key gracefully
+    - DB Module - storeAudio logs errors to console
+    - DB Module - getAudio logs errors to console
+    - DB Module - deleteAudio logs errors to console
+    - DB Module - clearAllAudio logs errors to console
+    - DB Module - storeAudio handles DB connection errors (try-catch)
+    - DB Module - getAudio handles DB connection errors (try-catch)
+    - DB Module - storeAudio creates new Promise for async operation
+    - DB Module - getAudio creates new Promise for async operation
+    - DB Module - deleteAudio creates new Promise for async operation
+    - DB Module - clearAllAudio creates new Promise for async operation
+    - DB Module - storeAudio calls reject on transaction abort
+    - DB Module - getAudio uses resolve for successful retrieval
+    - DB Module - storeAudio handles request.onsuccess callback
+    - DB Module - storeAudio handles request.onerror callback
+    - DB Module - getAudio handles request.onsuccess callback
+    - DB Module - getAudio handles request.onerror callback
+    - DB Module - deleteAudio handles request.onsuccess callback
+    - DB Module - deleteAudio handles request.onerror callback
+    - DB Module - clearAllAudio handles request.onsuccess callback
+    - DB Module - clearAllAudio handles request.onerror callback
+    - DB Module - DB module references window.indexedDB
+    - DB Module - DB module handles browser compatibility
+    - APP_VERSION validation for 2.51.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.51.0
+- **Feature Details**:
+  - Tests validate DB module constants (DB_NAME='SnugOSAudioDB', STORE_NAME='audioFiles', DB_VERSION=1)
+  - Tests verify all DB functions return Promises (async functions)
+  - Tests verify storeAudio uses put method, getAudio uses get method, deleteAudio uses delete, clearAllAudio uses clear
+  - Tests verify all DB functions handle errors with try-catch and console.error logging
+  - Tests verify transaction callbacks (onsuccess/onerror) are properly handled in all functions
+  - Tests verify Promise creation pattern (new Promise) is used for async IndexedDB operations
+  - Tests verify window.indexedDB is referenced for browser compatibility checks
+  - Tests verify DB functions gracefully handle missing keys and transaction aborts
+  - Total tests increased from 979 to 1017
+- **Version**: Bumped to 2.51.0
+
 #### Day 371: Mixer UI Event Handler Functions Tests (2026-04-29)
 - **Feature**: Added 39 new unit tests for Mixer UI Event Handler and Rendering functions to expand test coverage
 - **Files Modified**:

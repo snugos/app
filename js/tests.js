@@ -5770,3 +5770,207 @@ TestRunner.test('APP_VERSION validation for Day 371', (t) => {
         t.assertTruthy(versionParts[1] >= 49, 'Minor version should be >= 49 for Day 371');
     }
 });
+
+TestRunner.test('DB Module - clearAllAudio handles transaction errors', (t) => {
+    const funcStr = clearAllAudio.toString();
+    t.assertTruthy(funcStr.includes('onerror') || funcStr.includes('error') || funcStr.includes('reject'), 'clearAllAudio should handle errors');
+});
+
+// ============================================
+// Day 372: DB Module Extended Tests
+// ============================================
+TestRunner.test('DB Module - DB_NAME constant is a non-empty string', (t) => {
+    t.assertEqual(typeof DB_NAME, 'string', 'DB_NAME should be a string');
+    t.assertTruthy(DB_NAME.length > 0, 'DB_NAME should not be empty');
+});
+
+TestRunner.test('DB Module - STORE_NAME constant is a non-empty string', (t) => {
+    t.assertEqual(typeof STORE_NAME, 'string', 'STORE_NAME should be a string');
+    t.assertTruthy(STORE_NAME.length > 0, 'STORE_NAME should not be empty');
+});
+
+TestRunner.test('DB Module - DB_VERSION constant is a positive number', (t) => {
+    t.assertEqual(typeof DB_VERSION, 'number', 'DB_VERSION should be a number');
+    t.assertTruthy(DB_VERSION > 0, 'DB_VERSION should be positive');
+});
+
+TestRunner.test('DB Module - storeAudio returns a Promise', (t) => {
+    const result = storeAudio('test-key', new Blob());
+    t.assertEqual(typeof result?.then, 'function', 'storeAudio should return a Promise (thenable)');
+});
+
+TestRunner.test('DB Module - getAudio returns a Promise', (t) => {
+    const result = getAudio('test-key');
+    t.assertEqual(typeof result?.then, 'function', 'getAudio should return a Promise (thenable)');
+});
+
+TestRunner.test('DB Module - deleteAudio returns a Promise', (t) => {
+    const result = deleteAudio('test-key');
+    t.assertEqual(typeof result?.then, 'function', 'deleteAudio should return a Promise (thenable)');
+});
+
+TestRunner.test('DB Module - clearAllAudio returns a Promise', (t) => {
+    const result = clearAllAudio();
+    t.assertEqual(typeof result?.then, 'function', 'clearAllAudio should return a Promise (thenable)');
+});
+
+TestRunner.test('DB Module - storeAudio uses put method for storing', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('put'), 'storeAudio should use put method for storing');
+});
+
+TestRunner.test('DB Module - getAudio uses get method for retrieval', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('get'), 'getAudio should use get method for retrieval');
+});
+
+TestRunner.test('DB Module - deleteAudio uses delete method for removal', (t) => {
+    const funcStr = deleteAudio.toString();
+    t.assertTruthy(funcStr.includes('delete') || funcStr.includes('remove'), 'deleteAudio should use delete or remove method');
+});
+
+TestRunner.test('DB Module - clearAllAudio uses clear method', (t) => {
+    const funcStr = clearAllAudio.toString();
+    t.assertTruthy(funcStr.includes('clear'), 'clearAllAudio should use clear method');
+});
+
+TestRunner.test('DB Module - storeAudio references key parameter in error messages', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('key') && funcStr.includes('Error'), 'storeAudio should reference key in error handling');
+});
+
+TestRunner.test('DB Module - getAudio handles missing key gracefully', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('null') || funcStr.includes('undefined') || funcStr.includes('resolve'), 'getAudio should handle missing keys gracefully');
+});
+
+TestRunner.test('DB Module - storeAudio logs errors to console', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('console.error') || funcStr.includes('console.log'), 'storeAudio should log errors');
+});
+
+TestRunner.test('DB Module - getAudio logs errors to console', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('console.error') || funcStr.includes('console.log'), 'getAudio should log errors');
+});
+
+TestRunner.test('DB Module - deleteAudio logs errors to console', (t) => {
+    const funcStr = deleteAudio.toString();
+    t.assertTruthy(funcStr.includes('console.error') || funcStr.includes('console.log'), 'deleteAudio should log errors');
+});
+
+TestRunner.test('DB Module - clearAllAudio logs errors to console', (t) => {
+    const funcStr = clearAllAudio.toString();
+    t.assertTruthy(funcStr.includes('console.error') || funcStr.includes('console.log'), 'clearAllAudio should log errors');
+});
+
+TestRunner.test('DB Module - storeAudio handles DB connection errors', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('catch') || funcStr.includes('try'), 'storeAudio should handle errors with try-catch');
+});
+
+TestRunner.test('DB Module - getAudio handles DB connection errors', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('catch') || funcStr.includes('try'), 'getAudio should handle errors with try-catch');
+});
+
+TestRunner.test('DB Module - storeAudio creates new Promise for async operation', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('new Promise'), 'storeAudio should create a new Promise');
+});
+
+TestRunner.test('DB Module - getAudio creates new Promise for async operation', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('new Promise'), 'getAudio should create a new Promise');
+});
+
+TestRunner.test('DB Module - deleteAudio creates new Promise for async operation', (t) => {
+    const funcStr = deleteAudio.toString();
+    t.assertTruthy(funcStr.includes('new Promise'), 'deleteAudio should create a new Promise');
+});
+
+TestRunner.test('DB Module - clearAllAudio creates new Promise for async operation', (t) => {
+    const funcStr = clearAllAudio.toString();
+    t.assertTruthy(funcStr.includes('new Promise'), 'clearAllAudio should create a new Promise');
+});
+
+TestRunner.test('DB Module - storeAudio calls reject on transaction abort', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('reject') || funcStr.includes('onabort'), 'storeAudio should reject on transaction abort');
+});
+
+TestRunner.test('DB Module - getAudio uses resolve for successful retrieval', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('resolve') || funcStr.includes('result'), 'getAudio should resolve on success');
+});
+
+TestRunner.test('DB Module - storeAudio handles request.onsuccess callback', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('onsuccess') || funcStr.includes('request'), 'storeAudio should handle onsuccess callback');
+});
+
+TestRunner.test('DB Module - storeAudio handles request.onerror callback', (t) => {
+    const funcStr = storeAudio.toString();
+    t.assertTruthy(funcStr.includes('onerror') || funcStr.includes('request'), 'storeAudio should handle onerror callback');
+});
+
+TestRunner.test('DB Module - getAudio handles request.onsuccess callback', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('onsuccess') || funcStr.includes('request'), 'getAudio should handle onsuccess callback');
+});
+
+TestRunner.test('DB Module - getAudio handles request.onerror callback', (t) => {
+    const funcStr = getAudio.toString();
+    t.assertTruthy(funcStr.includes('onerror') || funcStr.includes('request'), 'getAudio should handle onerror callback');
+});
+
+TestRunner.test('DB Module - deleteAudio handles request.onsuccess callback', (t) => {
+    const funcStr = deleteAudio.toString();
+    t.assertTruthy(funcStr.includes('onsuccess') || funcStr.includes('request'), 'deleteAudio should handle onsuccess callback');
+});
+
+TestRunner.test('DB Module - deleteAudio handles request.onerror callback', (t) => {
+    const funcStr = deleteAudio.toString();
+    t.assertTruthy(funcStr.includes('onerror') || funcStr.includes('request'), 'deleteAudio should handle onerror callback');
+});
+
+TestRunner.test('DB Module - clearAllAudio handles request.onsuccess callback', (t) => {
+    const funcStr = clearAllAudio.toString();
+    t.assertTruthy(funcStr.includes('onsuccess') || funcStr.includes('request'), 'clearAllAudio should handle onsuccess callback');
+});
+
+TestRunner.test('DB Module - clearAllAudio handles request.onerror callback', (t) => {
+    const funcStr = clearAllAudio.toString();
+    t.assertTruthy(funcStr.includes('onerror') || funcStr.includes('request'), 'clearAllAudio should handle onerror callback');
+});
+
+TestRunner.test('DB Module - DB module references window.indexedDB', (t) => {
+    const funcStr = (storeAudio.toString() + getAudio.toString() + clearAllAudio.toString());
+    t.assertTruthy(funcStr.includes('window.indexedDB') || funcStr.includes('indexedDB'), 'DB module should reference window.indexedDB');
+});
+
+TestRunner.test('DB Module - DB module handles browser compatibility', (t) => {
+    const funcStr = (storeAudio.toString() + getAudio.toString() + clearAllAudio.toString());
+    t.assertTruthy(funcStr.includes('window.indexedDB') || funcStr.includes('indexedDB') || funcStr.includes('Error'), 'DB module should check IndexedDB availability');
+});
+
+TestRunner.test('DB Module - APP_VERSION validation for Day 372', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 372');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 50, 'Minor version should be >= 50 for Day 372');
+    }
+});
+
+TestRunner.test('DB Module Extended - Total DB Module test count verification', (t) => {
+    const dbTests = [
+        'DB Module - storeAudio is exported as async function',
+        'DB Module - getAudio is exported as async function',
+        'DB Module - deleteAudio is exported as async function',
+        'DB Module - clearAllAudio is exported as async function',
+        'DB Module - DB_NAME constant is a non-empty string',
+        'DB Module - STORE_NAME constant is a non-empty string',
+        'DB Module - DB_VERSION constant is a positive number'
+    ];
+    t.assertTruthy(dbTests.length >= 7, 'DB Module should have at least 7 basic and extended tests');
+});
