@@ -1,3 +1,80 @@
+#### Day 395: Track.prototype State Methods Tests (2026-04-30)
+- **Feature**: Added 62 new unit tests for Track.prototype state methods that call _captureUndoState to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 62 new tests in Day 395 section:
+    - Track Methods - Track.prototype.setTrackName is a function
+    - Track Methods - Track.prototype.setTrackName accepts 1 parameter
+    - Track Methods - Track.prototype.setTrackName calls _captureUndoState
+    - Track Methods - Track.prototype.setTrackName uses descriptive undo label
+    - Track Methods - Track.prototype.setTrackName validates non-empty name
+    - Track Methods - Track.prototype.setTrackColor is a function
+    - Track Methods - Track.prototype.setTrackColor accepts 1 parameter
+    - Track Methods - Track.prototype.setTrackColor calls _captureUndoState
+    - Track Methods - Track.prototype.setTrackColor uses descriptive undo label
+    - Track Methods - Track.prototype.setVolume is a function
+    - Track Methods - Track.prototype.setVolume accepts 1 parameter
+    - Track Methods - Track.prototype.setVolume calls _captureUndoState
+    - Track Methods - Track.prototype.setVolume uses descriptive undo label
+    - Track Methods - Track.prototype.setVolume clamps value to 0-1.5 range
+    - Track Methods - Track.prototype.setPan is a function
+    - Track Methods - Track.prototype.setPan accepts 1 parameter
+    - Track Methods - Track.prototype.setPan calls _captureUndoState
+    - Track Methods - Track.prototype.setPan uses descriptive undo label
+    - Track Methods - Track.prototype.setPan clamps value to -1 to 1 range
+    - Track Methods - Track.prototype.setSynthParam is a function
+    - Track Methods - Track.prototype.setSynthParam accepts 2 parameters
+    - Track Methods - Track.prototype.setSynthParam calls _captureUndoState
+    - Track Methods - Track.prototype.setSliceVolume is a function
+    - Track Methods - Track.prototype.setSliceVolume accepts 2 parameters
+    - Track Methods - Track.prototype.setSliceVolume calls _captureUndoState
+    - Track Methods - Track.prototype.setSlicePitchShift is a function
+    - Track Methods - Track.prototype.setSlicePitchShift accepts 2 parameters
+    - Track Methods - Track.prototype.setSlicePitchShift calls _captureUndoState
+    - Track Methods - Track.prototype.setSliceLoop is a function
+    - Track Methods - Track.prototype.setSliceLoop accepts 2 parameters
+    - Track Methods - Track.prototype.setSliceLoop calls _captureUndoState
+    - Track Methods - Track.prototype.setSliceReverse is a function
+    - Track Methods - Track.prototype.setSliceReverse accepts 2 parameters
+    - Track Methods - Track.prototype.setSliceReverse calls _captureUndoState
+    - Track Methods - Track.prototype.setSliceEnvelopeParam is a function
+    - Track Methods - Track.prototype.setSliceEnvelopeParam accepts 3 parameters
+    - Track Methods - Track.prototype.setSliceEnvelopeParam calls _captureUndoState
+    - Track Methods - Track.prototype.setDrumSamplerPadVolume is a function
+    - Track Methods - Track.prototype.setDrumSamplerPadVolume accepts 2 parameters
+    - Track Methods - Track.prototype.setDrumSamplerPadVolume calls _captureUndoState
+    - Track Methods - Track.prototype.setDrumSamplerPadPitch is a function
+    - Track Methods - Track.prototype.setDrumSamplerPadPitch accepts 2 parameters
+    - Track Methods - Track.prototype.setDrumSamplerPadPitch calls _captureUndoState
+    - Track Methods - Track.prototype.setDrumSamplerPadEnv is a function
+    - Track Methods - Track.prototype.setDrumSamplerPadEnv accepts 3 parameters
+    - Track Methods - Track.prototype.setDrumSamplerPadEnv calls _captureUndoState
+    - Track Methods - Track.prototype.setInstrumentSamplerRootNote is a function
+    - Track Methods - Track.prototype.setInstrumentSamplerRootNote accepts 1 parameter
+    - Track Methods - Track.prototype.setInstrumentSamplerRootNote calls _captureUndoState
+    - Track Methods - Track.prototype.setInstrumentSamplerLoop is a function
+    - Track Methods - Track.prototype.setInstrumentSamplerLoop accepts 1 parameter
+    - Track Methods - Track.prototype.setInstrumentSamplerLoop calls _captureUndoState
+    - Track Methods - Track.prototype.setInstrumentSamplerLoopStart is a function
+    - Track Methods - Track.prototype.setInstrumentSamplerLoopStart accepts 1 parameter
+    - Track Methods - Track.prototype.setInstrumentSamplerLoopStart calls _captureUndoState
+    - Track Methods - Track.prototype.setInstrumentSamplerLoopEnd is a function
+    - Track Methods - Track.prototype.setInstrumentSamplerLoopEnd accepts 1 parameter
+    - Track Methods - Track.prototype.setInstrumentSamplerLoopEnd calls _captureUndoState
+    - Track Methods - Track.prototype.setInstrumentSamplerEnv is a function
+    - Track Methods - Track.prototype.setInstrumentSamplerEnv accepts 2 parameters
+    - Track Methods - Track.prototype.setInstrumentSamplerEnv calls _captureUndoState
+    - Track Methods - APP_VERSION validation for Day 395
+  - `js/constants.js`: Bumped APP_VERSION to 2.73.0
+- **Feature Details**:
+  - Tests validate Track.prototype state methods that call _captureUndoState for undo/redo support
+  - Tests verify basic functionality (function export, parameter count) for all methods
+  - Tests verify _captureUndoState is called for all mutation methods
+  - Tests verify descriptive undo labels are used (rename, set color, set volume, set pan, etc.)
+  - Tests verify value clamping for setVolume (0-1.5) and setPan (-1 to 1)
+  - Tests verify name validation in setTrackName
+  - Total tests increased from 2025 to 2087
+- **Version**: Bumped to 2.73.0
+
 #### Day 393: Undo/Redo Capture State Functions Tests (2026-04-30)
 - **Feature**: Added 25 new unit tests for state functions missing undo/redo capture verification to expand test coverage
 - **Files Modified**:
