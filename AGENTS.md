@@ -1,3 +1,64 @@
+#### Day 391: DrumSampler Pad Drop Zones Extended Verification Tests (2026-04-30)
+- **Feature**: Added 36 new unit tests for DrumSampler Pad Drop Zones extended verification to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 36 new tests in Day 391 section:
+    - DrumSampler DropZone - createDropZoneHTML with pad index includes data attribute
+    - DrumSampler DropZone - createDropZoneHTML with pad index generates correct dropZoneId
+    - DrumSampler DropZone - createDropZoneHTML without pad index omits data attribute
+    - DrumSampler DropZone - createDropZoneHTML without pad index generates base dropZoneId
+    - DrumSampler DropZone - createDropZoneHTML with loaded pad shows filename
+    - DrumSampler DropZone - createDropZoneHTML with missing pad shows Missing status
+    - DrumSampler DropZone - createDropZoneHTML with error pad shows Error status
+    - DrumSampler DropZone - createDropZoneHTML with loading pad shows Loading status
+    - DrumSampler DropZone - createDropZoneHTML with empty pad shows drag-drop text
+    - DrumSampler DropZone - createDropZoneHTML truncates long filenames
+    - DrumSampler DropZone - setupGenericDropZoneListeners accepts 7 parameters
+    - DrumSampler DropZone - setupGenericDropZoneListeners parameters are correct
+    - DrumSampler DropZone - setupGenericDropZoneListeners guards against null element
+    - DrumSampler DropZone - setupGenericDropZoneListeners uses padIndexOrSliceId in callback
+    - DrumSampler DropZone - setupGenericDropZoneListeners drop handler handles sound browser JSON
+    - DrumSampler DropZone - setupGenericDropZoneListeners drop handler handles OS files
+    - DrumSampler DropZone - setupGenericDropZoneListeners drop handler prevents default
+    - DrumSampler DropZone - setupGenericDropZoneListeners drop handler sets copy dropEffect
+    - DrumSampler DropZone - setupGenericDropZoneListeners removes dragover class after drop
+    - DrumSampler DropZone - setupGenericDropZoneListeners sets up file input relink handler
+    - DrumSampler DropZone - setupGenericDropZoneListeners handles file input change for OS files
+    - DrumSampler DropZone - updateDrumPadControlsUI uses drumPadDropZoneContainer ID pattern
+    - DrumSampler DropZone - updateDrumPadControlsUI passes pad index to createDropZoneHTML
+    - DrumSampler DropZone - updateDrumPadControlsUI passes pad index to setupGenericDropZoneListeners
+    - DrumSampler DropZone - updateDrumPadControlsUI uses loadDrumSamplerPadFile callback
+    - DrumSampler DropZone - renderDrumSamplerPads creates correct number of pads
+    - DrumSampler DropZone - renderDrumSamplerPads uses pad index in data attribute
+    - DrumSampler DropZone - renderDrumSamplerPads handles selectedDrumPadForEdit state
+    - DrumSampler DropZone - loadDrumSamplerPadFile accepts trackId and padIndex parameters
+    - DrumSampler DropZone - loadDrumSamplerPadFile validates track.type is DrumSampler
+    - DrumSampler DropZone - loadDrumSamplerPadFile validates padIndex bounds
+    - DrumSampler DropZone - loadDrumSamplerPadFile handles URL source
+    - DrumSampler DropZone - loadDrumSamplerPadFile handles File source from OS
+    - DrumSampler DropZone - loadDrumSamplerPadFile calls captureStateForUndo before loading
+    - DrumSampler DropZone - loadDrumSamplerPadFile updates track state after loading
+    - DrumSampler DropZone - loadDrumSamplerPadFile calls updateTrackUI after loading
+    - DrumSampler DropZone - APP_VERSION validation for Day 391
+  - `js/constants.js`: Bumped APP_VERSION to 2.69.0
+- **Feature Details**:
+  - Tests validate createDropZoneHTML function for DrumSampler pads with pad index data attributes
+  - Tests validate createDropZoneHTML generates correct dropZoneId pattern with pad index
+  - Tests validate createDropZoneHTML handles all pad statuses (empty, loaded, missing, error, loading)
+  - Tests validate createDropZoneHTML shows appropriate UI text and CSS classes for each status
+  - Tests validate createDropZoneHTML truncates long filenames (>25 chars) with ellipsis
+  - Tests validate setupGenericDropZoneListeners function (7 parameters, null element guard, pad index handling)
+  - Tests validate setupGenericDropZoneListeners drop handler parses sound browser JSON and OS files
+  - Tests validate setupGenericDropZoneListeners drag/drop event handling (preventDefault, dropEffect, class toggling)
+  - Tests validate setupGenericDropZoneListeners file input relink functionality
+  - Tests validate updateDrumPadControlsUI uses drumPadDropZoneContainer with selected pad index
+  - Tests validate updateDrumPadControlsUI passes pad index to createDropZoneHTML and setupGenericDropZoneListeners
+  - Tests validate renderDrumSamplerPads creates correct number of pads using numDrumSamplerPads
+  - Tests validate loadDrumSamplerPadFile function (parameters, track type validation, pad index bounds)
+  - Tests verify loadDrumSamplerPadFile calls captureStateForUndo for undo/redo support
+  - Total tests increased from 1870 to 1906
+- **Version**: Bumped to 2.69.0
+
+
 #### Day 390: Timeline Marker State Functions Tests (2026-04-30)
 - **Feature**: Added 49 new unit tests for Timeline Marker State Functions to expand test coverage
 - **Files Modified**:

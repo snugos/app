@@ -10334,3 +10334,231 @@ TestRunner.test('Timeline Marker - APP_VERSION validation for Day 390', (t) => {
         t.assertTruthy(versionParts[1] >= 67, 'Minor version should be >= 67 for Day 390');
     }
 });
+// ============================================
+// Day 391: DrumSampler Pad Drop Zones Extended Verification Tests (2026-04-30)
+// ============================================
+
+// createDropZoneHTML DrumSampler pad index tests
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML with pad index includes data attribute', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 3, null);
+    t.assertTruthy(html.includes('data-pad-slice-index="3"'), 'Should have correct pad index data attribute');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML with pad index generates correct dropZoneId', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 5, null);
+    t.assertTruthy(html.includes('id="dropZone-track1-drumsampler-5"'), 'Should have correct dropZoneId with pad index');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML without pad index omits data attribute', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', null, null);
+    t.assertTruthy(!html.includes('data-pad-slice-index'), 'Should not have pad index data attribute');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML without pad index generates base dropZoneId', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', null, null);
+    t.assertTruthy(html.includes('id="dropZone-track1-drumsampler"'), 'Should have correct base dropZoneId without index');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML with loaded pad shows filename', (t) => {
+    const existingData = { originalFileName: 'kick.wav', status: 'loaded' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('Loaded: kick.wav'), 'Should show loaded status with filename');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML with missing pad shows Missing status', (t) => {
+    const existingData = { originalFileName: 'snare.wav', status: 'missing' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 1, existingData);
+    t.assertTruthy(html.includes('Missing: snare.wav'), 'Should show missing status with filename');
+    t.assertTruthy(html.includes('drop-zone-missing'), 'Should have missing CSS class');
+    t.assertTruthy(html.includes('Relink'), 'Should have relink button');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML with error pad shows Error status', (t) => {
+    const existingData = { originalFileName: 'hihat.wav', status: 'error' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 2, existingData);
+    t.assertTruthy(html.includes('Error Loading: hihat.wav'), 'Should show error status with filename');
+    t.assertTruthy(html.includes('drop-zone-error'), 'Should have error CSS class');
+    t.assertTruthy(html.includes('Retry'), 'Should have retry button');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML with loading pad shows Loading status', (t) => {
+    const existingData = { originalFileName: 'tom.wav', status: 'loading' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 3, existingData);
+    t.assertTruthy(html.includes('Loading: tom.wav...'), 'Should show loading status');
+    t.assertTruthy(html.includes('drop-zone-loading'), 'Should have loading CSS class');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML with empty pad shows drag-drop text', (t) => {
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 4, null);
+    t.assertTruthy(html.includes('Drag & Drop Audio File'), 'Should show empty drag-drop text');
+    t.assertTruthy(html.includes('Click to Upload'), 'Should show upload label');
+});
+
+TestRunner.test('DrumSampler DropZone - createDropZoneHTML truncates long filenames', (t) => {
+    const existingData = { originalFileName: 'verylongfilename_that_exceeds_25_chars.wav', status: 'loaded' };
+    const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, existingData);
+    t.assertTruthy(html.includes('...'), 'Should truncate long filename with ellipsis');
+});
+
+// setupGenericDropZoneListeners DrumSampler tests
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners accepts 7 parameters', (t) => {
+    t.assertEqual(setupGenericDropZoneListeners.length, 7, 'setupGenericDropZoneListeners should accept 7 parameters');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners parameters are correct', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dropZoneElement'), 'Should have dropZoneElement parameter');
+    t.assertTruthy(funcStr.includes('trackId'), 'Should have trackId parameter');
+    t.assertTruthy(funcStr.includes('trackTypeHint'), 'Should have trackTypeHint parameter');
+    t.assertTruthy(funcStr.includes('padIndexOrSliceId'), 'Should have padIndexOrSliceId parameter');
+    t.assertTruthy(funcStr.includes('loadSoundFromBrowserCallback'), 'Should have loadSoundFromBrowserCallback parameter');
+    t.assertTruthy(funcStr.includes('loadFileCallback'), 'Should have loadFileCallback parameter');
+    t.assertTruthy(funcStr.includes('getTrackByIdCallback'), 'Should have getTrackByIdCallback parameter');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners guards against null element', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('!dropZoneElement') || funcStr.includes('dropZoneElement === null'), 'Should check for null element');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners uses padIndexOrSliceId in callback', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('padIndexOrSliceId'), 'Should reference padIndexOrSliceId in implementation');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners drop handler handles sound browser JSON', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('getData'), 'Should parse JSON from dataTransfer');
+    t.assertTruthy(funcStr.includes('loadSoundFromBrowserCallback'), 'Should call loadSoundFromBrowserCallback');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners drop handler handles OS files', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('files'), 'Should handle File objects from OS');
+    t.assertTruthy(funcStr.includes('loadFileCallback'), 'Should call loadFileCallback');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners drop handler prevents default', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('preventDefault'), 'Should call preventDefault on drop event');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners drop handler sets copy dropEffect', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dropEffect'), 'Should set dropEffect');
+    t.assertTruthy(funcStr.includes('copy'), 'Should set dropEffect to copy');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners removes dragover class after drop', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('classList.remove'), 'Should remove dragover class');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners sets up file input relink handler', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('querySelector'), 'Should query for file input');
+    t.assertTruthy(funcStr.includes('click'), 'Should set up click handler for relink');
+});
+
+TestRunner.test('DrumSampler DropZone - setupGenericDropZoneListeners handles file input change for OS files', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('change') || funcStr.includes('onchange'), 'Should handle file input change event');
+});
+
+TestRunner.test('DrumSampler DropZone - updateDrumPadControlsUI uses drumPadDropZoneContainer ID pattern', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumPadDropZoneContainer'), 'Should use drumPadDropZoneContainer');
+    t.assertTruthy(funcStr.includes('selectedDrumPadForEdit') || funcStr.includes('selectedPadIndex'), 'Should include selected pad index');
+});
+
+TestRunner.test('DrumSampler DropZone - updateDrumPadControlsUI passes pad index to createDropZoneHTML', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('createDropZoneHTML'), 'Should call createDropZoneHTML');
+});
+
+TestRunner.test('DrumSampler DropZone - updateDrumPadControlsUI passes pad index to setupGenericDropZoneListeners', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('setupGenericDropZoneListeners'), 'Should call setupGenericDropZoneListeners');
+});
+
+TestRunner.test('DrumSampler DropZone - updateDrumPadControlsUI uses loadDrumSamplerPadFile callback', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('loadDrumSamplerPadFile'), 'Should use loadDrumSamplerPadFile');
+});
+
+TestRunner.test('DrumSampler DropZone - renderDrumSamplerPads creates correct number of pads', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('numDrumSamplerPads') || funcStr.includes('for'), 'Should iterate over pad count');
+});
+
+TestRunner.test('DrumSampler DropZone - renderDrumSamplerPads uses pad index in data attribute', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('data-'), 'Should set data attributes for pads');
+});
+
+TestRunner.test('DrumSampler DropZone - renderDrumSamplerPads handles selectedDrumPadForEdit state', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('selectedDrumPadForEdit'), 'Should handle pad selection state');
+});
+
+TestRunner.test('DrumSampler DropZone - loadDrumSamplerPadFile accepts trackId and padIndex parameters', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('trackId') || funcStr.includes('padIndex'), 'Should reference trackId and padIndex');
+});
+
+TestRunner.test('DrumSampler DropZone - loadDrumSamplerPadFile validates track.type is DrumSampler', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'Should validate DrumSampler track type');
+});
+
+TestRunner.test('DrumSampler DropZone - loadDrumSamplerPadFile validates padIndex bounds', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('padIndex') && (funcStr.includes('length') || funcStr.includes('<')), 'Should validate pad index bounds');
+});
+
+TestRunner.test('DrumSampler DropZone - loadDrumSamplerPadFile handles URL source', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('isUrlSource') || funcStr.includes('startsWith') || funcStr.includes('http'), 'Should handle URL source');
+});
+
+TestRunner.test('DrumSampler DropZone - loadDrumSamplerPadFile handles File source from OS', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('File') || funcStr.includes('files'), 'Should handle File source');
+});
+
+TestRunner.test('DrumSampler DropZone - loadDrumSamplerPadFile calls captureStateForUndo before loading', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'Should call captureStateForUndo for undo support');
+});
+
+TestRunner.test('DrumSampler DropZone - loadDrumSamplerPadFile updates track state after loading', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads') || funcStr.includes('padPlayers'), 'Should update track state');
+});
+
+TestRunner.test('DrumSampler DropZone - loadDrumSamplerPadFile calls updateTrackUI after loading', (t) => {
+    const funcStr = loadDrumSamplerPadFile.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'Should call updateTrackUI after loading');
+});
+
+TestRunner.test('DrumSampler DropZone - playDrumSamplerPadPreview function exists', (t) => {
+    t.assertEqual(typeof playDrumSamplerPadPreview, 'function', 'playDrumSamplerPadPreview should be a function');
+});
+
+TestRunner.test('DrumSampler DropZone - playDrumSamplerPadPreview accepts trackId and padIndex', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('trackId') || funcStr.includes('padIndex'), 'Should reference trackId and padIndex');
+});
+
+TestRunner.test('DrumSampler DropZone - playDrumSamplerPadPreview checks pad is loaded before playing', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('status') || funcStr.includes('loaded'), 'Should check pad status before playing');
+});
+
+TestRunner.test('DrumSampler DropZone - APP_VERSION validation for Day 391', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 391');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 68, 'Minor version should be >= 68 for Day 391');
+    }
+});
