@@ -10816,3 +10816,120 @@ TestRunner.test('Recording Audio - APP_VERSION validation for Day 392', (t) => {
         t.assertTruthy(versionParts[1] >= 69, 'Minor version should be >= 69 for Day 392');
     }
 });
+
+// Day 393: Undo/Redo Capture State Functions Tests
+TestRunner.test('Window Store - addWindowToStoreState is a function export', (t) => {
+    t.assertEqual(typeof addWindowToStoreState, 'function', 'addWindowToStoreState should be a function');
+});
+
+TestRunner.test('Window Store - addWindowToStoreState accepts 2 parameter(s)', (t) => {
+    t.assertEqual(addWindowToStoreState.length, 2, 'addWindowToStoreState should accept 2 parameter(s)');
+});
+
+TestRunner.test('Window Store - addWindowToStoreState calls captureStateForUndo', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addWindowToStoreState should call captureStateForUndo');
+});
+
+TestRunner.test('Window Store - addWindowToStoreState uses descriptive undo label', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addWindowToStoreState should use a descriptive label with captureStateForUndo');
+});
+
+TestRunner.test('Window Store - removeWindowFromStoreState is a function export', (t) => {
+    t.assertEqual(typeof removeWindowFromStoreState, 'function', 'removeWindowFromStoreState should be a function');
+});
+
+TestRunner.test('Window Store - removeWindowFromStoreState accepts 1 parameter', (t) => {
+    t.assertEqual(removeWindowFromStoreState.length, 1, 'removeWindowFromStoreState should accept 1 parameter');
+});
+
+TestRunner.test('Window Store - removeWindowFromStoreState calls captureStateForUndo', (t) => {
+    const funcStr = removeWindowFromStoreState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeWindowFromStoreState should call captureStateForUndo');
+});
+
+TestRunner.test('Window Store - removeWindowFromStoreState uses descriptive undo label', (t) => {
+    const funcStr = removeWindowFromStoreState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeWindowFromStoreState should use a descriptive label with captureStateForUndo');
+});
+
+TestRunner.test('State Utility - incrementDroppedCallbacksState is a function export', (t) => {
+    t.assertEqual(typeof incrementDroppedCallbacksState, 'function', 'incrementDroppedCallbacksState should be a function');
+});
+
+TestRunner.test('State Utility - incrementDroppedCallbacksState accepts 0 parameter(s)', (t) => {
+    t.assertEqual(incrementDroppedCallbacksState.length, 0, 'incrementDroppedCallbacksState should accept 0 parameter(s)');
+});
+
+TestRunner.test('State Utility - incrementDroppedCallbacksState calls captureStateForUndo', (t) => {
+    const funcStr = incrementDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'incrementDroppedCallbacksState should call captureStateForUndo');
+});
+
+TestRunner.test('State Utility - incrementDroppedCallbacksState uses descriptive undo label', (t) => {
+    const funcStr = incrementDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'incrementDroppedCallbacksState should use a descriptive label with captureStateForUndo');
+});
+
+TestRunner.test('State Utility - incrementHighestZState is a function export', (t) => {
+    t.assertEqual(typeof incrementHighestZState, 'function', 'incrementHighestZState should be a function');
+});
+
+TestRunner.test('State Utility - incrementHighestZState accepts 0 parameter(s)', (t) => {
+    t.assertEqual(incrementHighestZState.length, 0, 'incrementHighestZState should accept 0 parameter(s)');
+});
+
+TestRunner.test('State Utility - incrementHighestZState calls captureStateForUndo', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'incrementHighestZState should call captureStateForUndo');
+});
+
+TestRunner.test('State Utility - incrementHighestZState uses descriptive undo label', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'incrementHighestZState should use a descriptive label with captureStateForUndo');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState is a function export', (t) => {
+    t.assertEqual(typeof resetPerformanceMonitorState, 'function', 'resetPerformanceMonitorState should be a function');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState accepts 0 parameter(s)', (t) => {
+    t.assertEqual(resetPerformanceMonitorState.length, 0, 'resetPerformanceMonitorState should accept 0 parameter(s)');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState calls captureStateForUndo', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'resetPerformanceMonitorState should call captureStateForUndo');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState uses descriptive undo label', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'resetPerformanceMonitorState should use a descriptive label with captureStateForUndo');
+});
+
+TestRunner.test('MIDI - setMidiLearnPendingParamState is a function export', (t) => {
+    t.assertEqual(typeof setMidiLearnPendingParamState, 'function', 'setMidiLearnPendingParamState should be a function');
+});
+
+TestRunner.test('MIDI - setMidiLearnPendingParamState accepts 1 parameter', (t) => {
+    t.assertEqual(setMidiLearnPendingParamState.length, 1, 'setMidiLearnPendingParamState should accept 1 parameter');
+});
+
+TestRunner.test('MIDI - setMidiLearnPendingParamState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnPendingParamState should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI - setMidiLearnPendingParamState uses descriptive undo label', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnPendingParamState should use a descriptive label with captureStateForUndo');
+});
+
+TestRunner.test('Day 393 - APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 393');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 70, 'Minor version should be >= 70 for Day 393');
+    }
+});

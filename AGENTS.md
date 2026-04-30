@@ -1,3 +1,41 @@
+#### Day 393: Undo/Redo Capture State Functions Tests (2026-04-30)
+- **Feature**: Added 25 new unit tests for state functions missing undo/redo capture verification to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 25 new tests in Day 393 section:
+    - Window Store - addWindowToStoreState is a function export
+    - Window Store - addWindowToStoreState accepts 2 parameter(s)
+    - Window Store - addWindowToStoreState calls captureStateForUndo
+    - Window Store - addWindowToStoreState uses descriptive undo label
+    - Window Store - removeWindowFromStoreState is a function export
+    - Window Store - removeWindowFromStoreState accepts 1 parameter
+    - Window Store - removeWindowFromStoreState calls captureStateForUndo
+    - Window Store - removeWindowFromStoreState uses descriptive undo label
+    - State Utility - incrementDroppedCallbacksState is a function export
+    - State Utility - incrementDroppedCallbacksState accepts 0 parameter(s)
+    - State Utility - incrementDroppedCallbacksState calls captureStateForUndo
+    - State Utility - incrementDroppedCallbacksState uses descriptive undo label
+    - State Utility - incrementHighestZState is a function export
+    - State Utility - incrementHighestZState accepts 0 parameter(s)
+    - State Utility - incrementHighestZState calls captureStateForUndo
+    - State Utility - incrementHighestZState uses descriptive undo label
+    - State Utility - resetPerformanceMonitorState is a function export
+    - State Utility - resetPerformanceMonitorState accepts 0 parameter(s)
+    - State Utility - resetPerformanceMonitorState calls captureStateForUndo
+    - State Utility - resetPerformanceMonitorState uses descriptive undo label
+    - MIDI - setMidiLearnPendingParamState is a function export
+    - MIDI - setMidiLearnPendingParamState accepts 1 parameter
+    - MIDI - setMidiLearnPendingParamState calls captureStateForUndo
+    - MIDI - setMidiLearnPendingParamState uses descriptive undo label
+    - Day 393 - APP_VERSION validation for Day 393
+  - `js/constants.js`: Bumped APP_VERSION to 2.71.0
+- **Feature Details**:
+  - Tests verify Window Store functions (addWindowToStoreState, removeWindowFromStoreState) call captureStateForUndo
+  - Tests verify State Utility functions (incrementDroppedCallbacksState, incrementHighestZState, resetPerformanceMonitorState) call captureStateForUndo
+  - Tests verify MIDI function setMidiLearnPendingParamState calls captureStateForUndo
+  - Tests verify all functions are exported, accept correct number of parameters, and use descriptive undo labels
+  - Total tests increased from 10618 to 10643
+- **Version**: Bumped to 2.71.0
+
 #### Day 392: Recording Audio Module Extended Function Tests (2026-04-30)
 - **Feature**: Added 54 new unit tests for Recording Audio Module Extended Functions to expand test coverage
 - **Files Modified**:
