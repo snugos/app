@@ -12,7 +12,7 @@ import {
     createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus,
     reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted,
     connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel,
-    getSendBusNodes, getTrackSendNodes, getMimeTypeFromFilename
+    getSendBusNodes, getTrackSendNodes, getMasterEffectsBusInputNode, getMimeTypeFromFilename
 } from './audio.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
@@ -31,7 +31,7 @@ import {
 import {
     openTrackSequencerWindow, openTrackInspectorWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openSendEffectsWindow, openGlobalControlsWindow,
-    openSoundBrowserWindow, openMixerWindow, openTrackTemplatesWindow,
+    openSoundBrowserWindow, openMixerWindow, updateMixerWindow, openTrackTemplatesWindow,
     openAudioClipEditorWindow, openTimelineWindow,
     showKeyboardShortcutsHelpWindow
 } from './ui.js';
@@ -526,6 +526,9 @@ const appServices = {
     setTrackSendLevel,
     getSendBusNodes,
     getTrackSendNodes,
+    getMasterEffectsBusInputNode,
+    updateMixerWindow,
+    getTempo: () => typeof Tone !== 'undefined' ? Tone.Transport.bpm.value : 120,
     loadSampleFile: async (e, trackId, trackType) => {
         if (!e || !e.target || !e.target.files || e.target.files.length === 0) return;
         const file = e.target.files[0];
