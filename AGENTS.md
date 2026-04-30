@@ -2977,3 +2977,52 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify soundLibraries constant is an object with library names and URLs
   - Total tests increased from 6080 to 6111
 - **Version**: Bumped to 2.53.0
+
+#### Day 379: buildModularEffectsRackDOM Function Tests (2026-04-30)
+- **Feature**: Added 28 new unit tests for buildModularEffectsRackDOM function to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 28 new tests in Day 379 section:
+    - Effects Rack DOM - buildModularEffectsRackDOM is a function
+    - Effects Rack DOM - buildModularEffectsRackDOM accepts 2 parameters
+    - Effects Rack DOM - buildModularEffectsRackDOM returns a string
+    - Effects Rack DOM - buildModularEffectsRackDOM includes effectsRackContent div
+    - Effects Rack DOM - buildModularEffectsRackDOM uses owner ID for track type
+    - Effects Rack DOM - buildModularEffectsRackDOM uses master for master type
+    - Effects Rack DOM - buildModularEffectsRackDOM uses owner ID for send type
+    - Effects Rack DOM - buildModularEffectsRackDOM includes owner name in heading
+    - Effects Rack DOM - buildModularEffectsRackDOM shows Master Bus for master type
+    - Effects Rack DOM - buildModularEffectsRackDOM includes effectsList div
+    - Effects Rack DOM - buildModularEffectsRackDOM includes addEffectBtn button
+    - Effects Rack DOM - buildModularEffectsRackDOM includes effectControlsContainer
+    - Effects Rack DOM - buildModularEffectsRackDOM handles null owner for track type
+    - Effects Rack DOM - buildModularEffectsRackDOM handles null owner for send type
+    - Effects Rack DOM - buildModularEffectsRackDOM default ownerType is track
+    - Effects Rack DOM - buildModularEffectsRackDOM uses correct ID pattern for track effectsList
+    - Effects Rack DOM - buildModularEffectsRackDOM uses correct ID pattern for send effectsList
+    - Effects Rack DOM - buildModularEffectsRackDOM uses correct ID pattern for master effectsList
+    - Effects Rack DOM - buildModularEffectsRackDOM addEffectBtn has correct ID pattern
+    - Effects Rack DOM - buildModularEffectsRackDOM effectControlsContainer has correct ID pattern
+    - Effects Rack DOM - buildModularEffectsRackDOM includes proper CSS classes
+    - Effects Rack DOM - buildModularEffectsRackDOM includes Add Effect text
+    - Effects Rack DOM - buildModularEffectsRackDOM uses dark mode classes
+    - Effects Rack DOM - buildModularEffectsRackDOM heading uses text-sm font-semibold
+    - Effects Rack DOM - buildModularEffectsRackDOM effects list has border and rounded
+    - Effects Rack DOM - buildModularEffectsRackDOM handles owner with missing name property
+    - Effects Rack DOM - buildModularEffectsRackDOM uses p-2 padding on container
+    - Effects Rack DOM - buildModularEffectsRackDOM effects list has min-h-[50px]
+    - Effects Rack DOM - buildModularEffectsRackDOM add effect button is purple colored
+    - Effects Rack DOM - buildModularEffectsRackDOM effect controls container has margin-top
+    - APP_VERSION validation for Day 379
+- **Feature Details**:
+  - Tests validate buildModularEffectsRackDOM function signature (accepts 2 parameters: owner, ownerType)
+  - Tests verify buildModularEffectsRackDOM returns a string containing proper DOM structure
+  - Tests verify effectsRackContent-{ownerId} container ID pattern based on ownerType
+  - Tests verify ownerType handling (track/send/master) with correct ID generation
+  - Tests verify owner name display in heading ('Effects Rack: {ownerName}' or 'Master Bus')
+  - Tests verify all DOM element IDs (effectsList-{id}, addEffectBtn-{id}, effectControlsContainer-{id})
+  - Tests verify CSS classes (space-y-2, overflow-y-auto, border, rounded, dark mode)
+  - Tests verify null owner graceful handling for track and send types
+  - Tests verify default ownerType parameter of 'track'
+  - Tests verify Add Effect button text and purple coloring
+  - Total tests increased from 1355 to 1383
+- **Version**: Bumped to 2.58.0
