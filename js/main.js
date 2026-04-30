@@ -12,7 +12,8 @@ import {
     createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus,
     reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted,
     connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel,
-    getSendBusNodes, getTrackSendNodes
+    getSendBusNodes, getTrackSendNodes,
+    initializeAudioModule
 } from './audio.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
@@ -150,6 +151,7 @@ import {
     redoLastActionInternal,
     captureStateForUndoInternal,
 } from './state.js';
+import { initializeUIModule } from './ui.js';
 
 // --- Global UI Elements Cache ---
 let uiElementsCache = {};
