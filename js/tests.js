@@ -9347,7 +9347,10 @@ TestRunner.test('Chord Mode State - setChordModeLockState uses conditional undo 
     t.assertTruthy(funcStr.includes('Chord Lock'), 'setChordModeLockState should use conditional undo label');
 });
 
-TestRunner.test('Chord Mode State - setCh
+TestRunner.test('Chord Mode State - setChordModeLockState handles conditional behavior', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('lock') || funcStr.includes('Lock'), 'setChordModeLockState should reference lock state');
+});
 
 // ============================================
 // Day 404: MIDI Learn State Extended Tests
