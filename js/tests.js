@@ -8556,3 +8556,150 @@ TestRunner.test('Audio Preview - APP_VERSION validation for Day 397', (t) => {
     const minor = versionParts[1];
     t.assertTruthy(major > 2 || (major === 2 && minor >= 75), 'APP_VERSION should be 2.75.0 or higher for Day 397');
 });
+// === Day 398: Time Signature State Functions Tests (2026-04-30) ===
+
+TestRunner.test('Time Signature State - getTimeSignatureState is a function export', (t) => {
+    t.assertEqual(typeof getTimeSignatureState, 'function', 'getTimeSignatureState should be a function');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureState accepts 0 parameters', (t) => {
+    t.assertEqual(getTimeSignatureState.length, 0, 'getTimeSignatureState should accept 0 parameters');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureState returns an object', (t) => {
+    const result = getTimeSignatureState();
+    t.assertEqual(typeof result, 'object', 'getTimeSignatureState should return an object');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureState returns numerator property', (t) => {
+    const result = getTimeSignatureState();
+    t.assertTruthy(result.numerator !== undefined, 'getTimeSignatureState should return object with numerator');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureState returns denominator property', (t) => {
+    const result = getTimeSignatureState();
+    t.assertTruthy(result.denominator !== undefined, 'getTimeSignatureState should return object with denominator');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureState is a function export', (t) => {
+    t.assertEqual(typeof setTimeSignatureState, 'function', 'setTimeSignatureState should be a function');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureState accepts 2 parameters', (t) => {
+    t.assertEqual(setTimeSignatureState.length, 2, 'setTimeSignatureState should accept 2 parameters');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureState should call captureStateForUndo');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('Set Time Signature') || funcStr.includes('Time Signature'), 'setTimeSignatureState should use descriptive undo label');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureState clamps numerator', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTimeSignatureState should clamp numerator values');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureState clamps denominator', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTimeSignatureState should clamp denominator values');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureNumeratorState is a function export', (t) => {
+    t.assertEqual(typeof getTimeSignatureNumeratorState, 'function', 'getTimeSignatureNumeratorState should be a function');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureNumeratorState accepts 0 parameters', (t) => {
+    t.assertEqual(getTimeSignatureNumeratorState.length, 0, 'getTimeSignatureNumeratorState should accept 0 parameters');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureNumeratorState returns a number', (t) => {
+    const result = getTimeSignatureNumeratorState();
+    t.assertEqual(typeof result, 'number', 'getTimeSignatureNumeratorState should return a number');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureNumeratorState is a function export', (t) => {
+    t.assertEqual(typeof setTimeSignatureNumeratorState, 'function', 'setTimeSignatureNumeratorState should be a function');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureNumeratorState accepts 1 parameter', (t) => {
+    t.assertEqual(setTimeSignatureNumeratorState.length, 1, 'setTimeSignatureNumeratorState should accept 1 parameter');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureNumeratorState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureNumeratorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureNumeratorState should call captureStateForUndo');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureDenominatorState is a function export', (t) => {
+    t.assertEqual(typeof getTimeSignatureDenominatorState, 'function', 'getTimeSignatureDenominatorState should be a function');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureDenominatorState accepts 0 parameters', (t) => {
+    t.assertEqual(getTimeSignatureDenominatorState.length, 0, 'getTimeSignatureDenominatorState should accept 0 parameters');
+});
+
+TestRunner.test('Time Signature State - getTimeSignatureDenominatorState returns a number', (t) => {
+    const result = getTimeSignatureDenominatorState();
+    t.assertEqual(typeof result, 'number', 'getTimeSignatureDenominatorState should return a number');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureDenominatorState is a function export', (t) => {
+    t.assertEqual(typeof setTimeSignatureDenominatorState, 'function', 'setTimeSignatureDenominatorState should be a function');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureDenominatorState accepts 1 parameter', (t) => {
+    t.assertEqual(setTimeSignatureDenominatorState.length, 1, 'setTimeSignatureDenominatorState should accept 1 parameter');
+});
+
+TestRunner.test('Time Signature State - setTimeSignatureDenominatorState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureDenominatorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureDenominatorState should call captureStateForUndo');
+});
+
+TestRunner.test('Time Signature Constants - TIME_SIG_MIN_NUMERATOR is defined', (t) => {
+    t.assertTruthy(Constants.TIME_SIG_MIN_NUMERATOR !== undefined, 'TIME_SIG_MIN_NUMERATOR should be defined');
+});
+
+TestRunner.test('Time Signature Constants - TIME_SIG_MAX_NUMERATOR is defined', (t) => {
+    t.assertTruthy(Constants.TIME_SIG_MAX_NUMERATOR !== undefined, 'TIME_SIG_MAX_NUMERATOR should be defined');
+});
+
+TestRunner.test('Time Signature Constants - TIME_SIG_MIN_DENOMINATOR is defined', (t) => {
+    t.assertTruthy(Constants.TIME_SIG_MIN_DENOMINATOR !== undefined, 'TIME_SIG_MIN_DENOMINATOR should be defined');
+});
+
+TestRunner.test('Time Signature Constants - TIME_SIG_MAX_DENOMINATOR is defined', (t) => {
+    t.assertTruthy(Constants.TIME_SIG_MAX_DENOMINATOR !== undefined, 'TIME_SIG_MAX_DENOMINATOR should be defined');
+});
+
+TestRunner.test('Time Signature Constants - DEFAULT_TIME_SIGNATURE_NUMERATOR is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_TIME_SIGNATURE_NUMERATOR !== undefined, 'DEFAULT_TIME_SIGNATURE_NUMERATOR should be defined');
+});
+
+TestRunner.test('Time Signature Constants - DEFAULT_TIME_SIGNATURE_DENOMINATOR is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_TIME_SIGNATURE_DENOMINATOR !== undefined, 'DEFAULT_TIME_SIGNATURE_DENOMINATOR should be defined');
+});
+
+TestRunner.test('Time Signature Constants - DEFAULT_TIME_SIGNATURE is an object', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_TIME_SIGNATURE, 'object', 'DEFAULT_TIME_SIGNATURE should be an object');
+});
+
+TestRunner.test('Time Signature Constants - DEFAULT_TIME_SIGNATURE has numerator', (t) => {
+    t.assertTruthy(Constants.DEFAULT_TIME_SIGNATURE.numerator !== undefined, 'DEFAULT_TIME_SIGNATURE should have numerator');
+});
+
+TestRunner.test('Time Signature Constants - DEFAULT_TIME_SIGNATURE has denominator', (t) => {
+    t.assertTruthy(Constants.DEFAULT_TIME_SIGNATURE.denominator !== undefined, 'DEFAULT_TIME_SIGNATURE should have denominator');
+});
+
+TestRunner.test('Time Signature State - APP_VERSION validation for Day 398', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    const major = versionParts[0];
+    const minor = versionParts[1];
+    t.assertTruthy(major > 2 || (major === 2 && minor >= 75), 'APP_VERSION should be 2.75.0 or higher for Day 398');
+});
