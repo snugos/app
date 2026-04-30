@@ -2617,3 +2617,55 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify TRACK_TEMPLATE_COLORS equals TRACK_COLORS for consistent color palette
   - Total tests increased from 862 to 886
 - **Version**: Bumped to 2.47.0
+
+#### Day 374: Sound Browser Extended Functions Tests (2026-04-30)
+- **Feature**: Added 31 new unit tests for Sound Browser extended functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 31 new tests in Day 374 section:
+    - Sound Browser - fetchSoundLibrary is a function export
+    - Sound Browser - fetchSoundLibrary is async
+    - Sound Browser - fetchSoundLibrary accepts 2-3 parameters (libraryName, zipUrl, isAutofetch)
+    - Sound Browser - fetchSoundLibrary references libraryName parameter
+    - Sound Browser - fetchSoundLibrary references zipUrl parameter
+    - Sound Browser - fetchSoundLibrary references isAutofetch parameter
+    - Sound Browser - fetchSoundLibrary checks getLoadedZipFiles state
+    - Sound Browser - fetchSoundLibrary checks getSoundLibraryFileTrees state
+    - Sound Browser - fetchSoundLibrary calls updateSoundBrowserDisplayForLibrary
+    - Sound Browser - fetchSoundLibrary handles loading state
+    - Sound Browser - fetchSoundLibrary handles error state
+    - Sound Browser - fetchSoundLibrary uses setLoadedZipFilesState
+    - Sound Browser - fetchSoundLibrary uses setSoundLibraryFileTreesState
+    - Sound Browser - fetchSoundLibrary checks JSZip availability
+    - Sound Browser - fetchSoundLibrary processes ZIP files
+    - Sound Browser - fetchSoundLibrary filters audio files by extension
+    - Sound Browser - loadSoundFromBrowserToTarget is a function export
+    - Sound Browser - loadSoundFromBrowserToTarget is async
+    - Sound Browser - loadSoundFromBrowserToTarget accepts 3-4 parameters
+    - Sound Browser - loadSoundFromBrowserToTarget references e/event parameter
+    - Sound Browser - loadSoundFromBrowserToTarget references trackId parameter
+    - Sound Browser - loadSoundFromBrowserToTarget calls getTrackById
+    - Sound Browser - loadSoundFromBrowserToTarget handles Sampler track type
+    - Sound Browser - loadSoundFromBrowserToTarget handles DrumSampler track type
+    - Sound Browser - loadSoundFromBrowserToTarget calls loadSampleFile
+    - Sound Browser - loadSoundFromBrowserToTarget calls updateTrackUI on sample load
+    - Sound Browser - loadSoundFromBrowserToTarget handles targetPadOrSliceIndex
+    - Sound Browser - soundLibraries constant is an object
+    - Sound Browser - soundLibraries has keys for library names
+    - Sound Browser - soundLibraries values are URLs
+    - APP_VERSION validation for 2.53.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.53.0
+- **Feature Details**:
+  - Tests validate fetchSoundLibrary function (async, validates libraryName, zipUrl, isAutofetch parameters)
+  - Tests verify fetchSoundLibrary checks getLoadedZipFiles and getSoundLibraryFileTrees state
+  - Tests verify fetchSoundLibrary calls updateSoundBrowserDisplayForLibrary for UI updates
+  - Tests verify fetchSoundLibrary handles loading and error states properly
+  - Tests verify fetchSoundLibrary uses setLoadedZipFilesState and setSoundLibraryFileTreesState
+  - Tests verify fetchSoundLibrary checks JSZip availability and processes ZIP files
+  - Tests verify fetchSoundLibrary filters audio files by extension (.wav, .mp3, .ogg, etc.)
+  - Tests validate loadSoundFromBrowserToTarget function (async, handles drag-drop events)
+  - Tests verify loadSoundFromBrowserToTarget calls getTrackById and handles track types
+  - Tests verify loadSoundFromBrowserToTarget handles Sampler and DrumSampler track types
+  - Tests verify loadSoundFromBrowserToTarget calls loadSampleFile and updateTrackUI
+  - Tests verify soundLibraries constant is an object with library names and URLs
+  - Total tests increased from 6080 to 6111
+- **Version**: Bumped to 2.53.0

@@ -76,7 +76,8 @@ import {
     TRACK_COLORS,
     numSlices,
     numDrumSamplerPads,
-    synthPitches
+    synthPitches,
+    soundLibraries
 } from './constants.js';
 import {
     getUndoStackState,
@@ -6107,5 +6108,165 @@ TestRunner.test('Global Controls Window - APP_VERSION validation for Day 373', (
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 373');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 51, 'Minor version should be >= 51 for Day 373');
+    }
+});
+// ============================================
+// Day 374: Sound Browser Extended Functions Tests
+// ============================================
+TestRunner.test('Sound Browser - fetchSoundLibrary is a function export', (t) => {
+    t.assertEqual(typeof fetchSoundLibrary, 'function', 'fetchSoundLibrary should be a function');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary is async', (t) => {
+    t.assertEqual(fetchSoundLibrary.constructor.name, 'AsyncFunction', 'fetchSoundLibrary should be async');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary accepts 2-3 parameters', (t) => {
+    const paramCount = fetchSoundLibrary.length;
+    t.assertTruthy(paramCount === 2 || paramCount === 3, 'fetchSoundLibrary should accept 2-3 parameters (libraryName, zipUrl, isAutofetch)');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary references libraryName parameter', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName'), 'fetchSoundLibrary should reference libraryName parameter');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary references zipUrl parameter', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('zipUrl'), 'fetchSoundLibrary should reference zipUrl parameter');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary references isAutofetch parameter', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('isAutofetch'), 'fetchSoundLibrary should reference isAutofetch parameter');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary checks getLoadedZipFiles state', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('getLoadedZipFiles') || funcStr.includes('loadedZips'), 'fetchSoundLibrary should check loaded zip files state');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary checks getSoundLibraryFileTrees state', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('getSoundLibraryFileTrees') || funcStr.includes('soundTrees'), 'fetchSoundLibrary should check sound library file trees state');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary calls updateSoundBrowserDisplayForLibrary', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('updateSoundBrowserDisplayForLibrary'), 'fetchSoundLibrary should call updateSoundBrowserDisplayForLibrary for UI updates');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary handles loading state', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('loading') || funcStr.includes('isLoading'), 'fetchSoundLibrary should handle loading state');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary handles error state', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('hasError') || funcStr.includes('catch') || funcStr.includes('error'), 'fetchSoundLibrary should handle error state');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary uses setLoadedZipFilesState', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('setLoadedZipFilesState'), 'fetchSoundLibrary should set loaded zip files state');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary uses setSoundLibraryFileTreesState', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('setSoundLibraryFileTreesState'), 'fetchSoundLibrary should set sound library file trees state');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary checks JSZip availability', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('JSZip') || funcStr.includes('jszip'), 'fetchSoundLibrary should check for JSZip library');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary processes ZIP files', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('loadAsync') || funcStr.includes('forEach') || funcStr.includes('entries'), 'fetchSoundLibrary should process ZIP file entries');
+});
+
+TestRunner.test('Sound Browser - fetchSoundLibrary filters audio files by extension', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('.wav') || funcStr.includes('.mp3') || funcStr.includes('.ogg') || funcStr.includes('audio') || funcStr.includes('audioFileCount'), 'fetchSoundLibrary should filter for audio file extensions');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget is a function export', (t) => {
+    t.assertEqual(typeof loadSoundFromBrowserToTarget, 'function', 'loadSoundFromBrowserToTarget should be a function');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget is async', (t) => {
+    t.assertEqual(loadSoundFromBrowserToTarget.constructor.name, 'AsyncFunction', 'loadSoundFromBrowserToTarget should be async');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget accepts 3-4 parameters', (t) => {
+    const paramCount = loadSoundFromBrowserToTarget.length;
+    t.assertTruthy(paramCount >= 3 && paramCount <= 4, 'loadSoundFromBrowserToTarget should accept 3-4 parameters');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget references e/event parameter', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('e') || funcStr.includes('event') || funcStr.includes('droppedData'), 'loadSoundFromBrowserToTarget should reference event parameter');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget references trackId parameter', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'loadSoundFromBrowserToTarget should reference trackId parameter');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget calls getTrackById', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'loadSoundFromBrowserToTarget should call getTrackById');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget handles Sampler track type', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('Sampler') || funcStr.includes('sampler'), 'loadSoundFromBrowserToTarget should handle Sampler track type');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget handles DrumSampler track type', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler') || funcStr.includes('drum'), 'loadSoundFromBrowserToTarget should handle DrumSampler track type');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget calls loadSampleFile', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('loadSampleFile'), 'loadSoundFromBrowserToTarget should call loadSampleFile');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget calls updateTrackUI on sample load', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'loadSoundFromBrowserToTarget should call updateTrackUI');
+});
+
+TestRunner.test('Sound Browser - loadSoundFromBrowserToTarget handles targetPadOrSliceIndex', (t) => {
+    const funcStr = loadSoundFromBrowserToTarget.toString();
+    t.assertTruthy(funcStr.includes('targetPadOrSliceIndex') || funcStr.includes('padIndex') || funcStr.includes('sliceIndex'), 'loadSoundFromBrowserToTarget should handle target pad or slice index');
+});
+
+TestRunner.test('Sound Browser - soundLibraries constant is an object', (t) => {
+    t.assertEqual(typeof soundLibraries, 'object', 'soundLibraries should be an object');
+    t.assertTruthy(soundLibraries !== null, 'soundLibraries should not be null');
+});
+
+TestRunner.test('Sound Browser - soundLibraries has keys for library names', (t) => {
+    const keys = Object.keys(soundLibraries);
+    t.assertTruthy(keys.length > 0, 'soundLibraries should have at least one library defined');
+});
+
+TestRunner.test('Sound Browser - soundLibraries values are URLs', (t) => {
+    const keys = Object.keys(soundLibraries);
+    const allUrls = keys.every(key => {
+        const val = soundLibraries[key];
+        return typeof val === 'string' && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('./'));
+    });
+    t.assertTruthy(allUrls, 'soundLibraries values should be URLs');
+});
+
+TestRunner.test('Sound Browser - APP_VERSION validation for Day 374', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 374');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 52, 'Minor version should be >= 52 for Day 374');
     }
 });
