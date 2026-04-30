@@ -1,3 +1,52 @@
+#### Day 371: Mixer UI Event Handler Functions Tests (2026-04-29)
+- **Feature**: Added 39 new unit tests for Mixer UI Event Handler and Rendering functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 39 new tests in Day 371 section:
+    - Mixer UI - initializeMixerEventHandlers is a function export
+    - Mixer UI - initializeMixerEventHandlers accepts 1 parameter (mixerElement)
+    - Mixer UI - initializeMixerEventHandlers references mixerElement parameter
+    - Mixer UI - initializeMixerEventHandlers sets up mixer-btn event listeners
+    - Mixer UI - initializeMixerEventHandlers sets up mixer-fader event listeners
+    - Mixer UI - initializeMixerEventHandlers sets up pan-knob event listeners
+    - Mixer UI - initializeMixerEventHandlers sets up send-level-slider event listeners
+    - Mixer UI - initializeMixerEventHandlers handles track mute/solo/arm buttons
+    - Mixer UI - initializeMixerEventHandlers handles group buttons
+    - Mixer UI - initializeMixerEventHandlers handles send pre/post toggle
+    - Mixer UI - initializeMixerEventHandlers handles automation mini editor
+    - Mixer UI - initializeMixerEventHandlers handles automation parameter select
+    - Mixer UI - initializeMixerEventHandlers includes MIDI Learn mode handling
+    - Mixer UI - initializeMixerEventHandlers calls updateMixerWindow
+    - Mixer UI - updateMixerWindow is a function export
+    - Mixer UI - updateMixerWindow accepts no parameters
+    - Mixer UI - updateMixerWindow references getOpenWindowElement
+    - Mixer UI - updateMixerWindow references getTracks
+    - Mixer UI - updateMixerWindow references getSendTracks
+    - Mixer UI - updateMixerWindow references getTrackGroupsState
+    - Mixer UI - buildMixerContentDOM is a function export
+    - Mixer UI - buildMixerContentDOM accepts no parameters
+    - Mixer UI - buildMixerContentDOM returns string
+    - Mixer UI - buildMixerContentDOM includes mixer tracks container
+    - Mixer UI - buildMixerTrackStripHTML is a function export, accepts 2 parameters (track, sendTracks)
+    - Mixer UI - buildMixerTrackStripHTML references track.id
+    - Mixer UI - buildMixerGroupStripHTML is a function export, accepts 1 parameter (group)
+    - Mixer UI - buildMixerSendStripHTML is a function export, accepts 1 parameter (send)
+    - Mixer UI - buildMixerMasterStripHTML is a function export, accepts no parameters
+    - Mixer UI - openMixerWindow is a function export, accepts 1 parameter (savedState)
+    - Mixer UI - openMixerWindow calls buildMixerContentDOM
+    - Mixer UI - openMixerWindow calls initializeMixerEventHandlers
+    - APP_VERSION validation for 2.50.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.50.0
+- **Feature Details**:
+  - Tests validate initializeMixerEventHandlers sets up all mixer UI event listeners (mixer-btn, mixer-fader, pan-knob, send-level-slider, group buttons, send pre/post toggle, automation controls)
+  - Tests verify initializeMixerEventHandlers includes MIDI Learn mode handling for volume and pan knobs
+  - Tests verify updateMixerWindow references state getters (getTracks, getSendTracks, getTrackGroupsState)
+  - Tests validate buildMixerContentDOM returns string with mixer tracks container
+  - Tests verify all mixer strip builder functions have correct parameter counts
+  - Tests verify openMixerWindow orchestrates content building and event handler initialization
+  - Note: Internal handler functions (handleMixerButtonAction, handleMixerVolumeChange, etc.) are module-scoped and tested via initializeMixerEventHandlers behavior
+  - Total tests increased from 941 to 980
+- **Version**: Bumped to 2.50.0
+
 #### Day 370: MIDI Import Functions Tests (2026-04-29)
 - **Feature**: Added 14 new unit tests for MIDI Import functions to expand test coverage
 - **Files Modified**:

@@ -5580,3 +5580,193 @@ TestRunner.test('APP_VERSION validation for Day 370', (t) => {
         t.assertTruthy(versionParts[1] >= 48, 'Minor version should be >= 48 for Day 370');
     }
 });
+
+// ============================================
+// Day 371: Mixer UI Event Handler Functions Tests
+// ============================================
+// Note: handleMixerButtonAction, handleMixerVolumeChange, handleMixerPanChange, handleMixerSendLevelChange,
+// handleMixerSendMute, handleMixerSendLevelChangeFader, handleMixerMasterVolumeChange, handleMixerGroupAction,
+// handleAddSendBus, handleAddGroup are internal functions within ui.js module scope and are NOT explicitly exported.
+// These functions are called by initializeMixerEventHandlers which is exported.
+
+// Tests for exported mixer UI functions
+TestRunner.test('Mixer UI - initializeMixerEventHandlers is a function export', (t) => {
+    t.assertEqual(typeof initializeMixerEventHandlers, 'function', 'initializeMixerEventHandlers should be a function');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers accepts 1 parameter', (t) => {
+    t.assertEqual(initializeMixerEventHandlers.length, 1, 'initializeMixerEventHandlers should accept 1 parameter (mixerElement)');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers references mixerElement parameter', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('mixerElement'), 'initializeMixerEventHandlers should reference mixerElement parameter');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers sets up mixer-btn event listeners', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('mixer-btn'), 'initializeMixerEventHandlers should set up mixer-btn event listeners');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers sets up mixer-fader event listeners', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('mixer-fader'), 'initializeMixerEventHandlers should set up mixer-fader event listeners');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers sets up pan-knob event listeners', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('pan-knob'), 'initializeMixerEventHandlers should set up pan-knob event listeners');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers sets up send-level-slider event listeners', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('send-level-slider'), 'initializeMixerEventHandlers should set up send-level-slider event listeners');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers handles track mute/solo/arm buttons', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('mute-btn') || funcStr.includes('solo-btn') || funcStr.includes('arm'),
+        'initializeMixerEventHandlers should handle mute/solo/arm buttons');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers handles group buttons', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('mixer-group-btn'), 'initializeMixerEventHandlers should handle group buttons');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers handles send pre/post toggle', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('send-pre-post-btn'), 'initializeMixerEventHandlers should handle send pre/post toggle');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers handles automation mini editor', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('mixer-automation-mini'), 'initializeMixerEventHandlers should handle automation mini editor');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers handles automation parameter select', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('mixer-auto-param-select'), 'initializeMixerEventHandlers should handle automation parameter select');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers includes MIDI Learn mode handling', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('getMidiLearnModeState') || funcStr.includes('midiLearnMode'),
+        'initializeMixerEventHandlers should include MIDI Learn mode handling');
+});
+
+TestRunner.test('Mixer UI - initializeMixerEventHandlers calls updateMixerWindow', (t) => {
+    const funcStr = initializeMixerEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('updateMixerWindow'), 'initializeMixerEventHandlers should call updateMixerWindow');
+});
+
+TestRunner.test('Mixer UI - updateMixerWindow is a function export', (t) => {
+    t.assertEqual(typeof updateMixerWindow, 'function', 'updateMixerWindow should be a function');
+});
+
+TestRunner.test('Mixer UI - updateMixerWindow accepts no parameters', (t) => {
+    t.assertEqual(updateMixerWindow.length, 0, 'updateMixerWindow should accept no parameters');
+});
+
+TestRunner.test('Mixer UI - updateMixerWindow references getOpenWindowElement', (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindowElement') || funcStr.includes('openWindowElement'),
+        'updateMixerWindow should reference getOpenWindowElement');
+});
+
+TestRunner.test('Mixer UI - updateMixerWindow references getTracks', (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'updateMixerWindow should reference getTracks');
+});
+
+TestRunner.test('Mixer UI - updateMixerWindow references getSendTracks', (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getSendTracks'), 'updateMixerWindow should reference getSendTracks');
+});
+
+TestRunner.test('Mixer UI - updateMixerWindow references getTrackGroupsState', (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackGroupsState'), 'updateMixerWindow should reference getTrackGroupsState');
+});
+
+TestRunner.test('Mixer UI - buildMixerContentDOM is a function export', (t) => {
+    t.assertEqual(typeof buildMixerContentDOM, 'function', 'buildMixerContentDOM should be a function');
+});
+
+TestRunner.test('Mixer UI - buildMixerContentDOM accepts no parameters', (t) => {
+    t.assertEqual(buildMixerContentDOM.length, 0, 'buildMixerContentDOM should accept no parameters');
+});
+
+TestRunner.test('Mixer UI - buildMixerContentDOM returns string', (t) => {
+    const result = buildMixerContentDOM();
+    t.assertEqual(typeof result, 'string', 'buildMixerContentDOM should return a string');
+});
+
+TestRunner.test('Mixer UI - buildMixerContentDOM includes mixer tracks container', (t) => {
+    const result = buildMixerContentDOM();
+    t.assertTruthy(result.includes('mixerTracksContainer') || result.includes('track-strip'),
+        'buildMixerContentDOM should include mixer tracks container');
+});
+
+TestRunner.test('Mixer UI - buildMixerTrackStripHTML is a function export', (t) => {
+    t.assertEqual(typeof buildMixerTrackStripHTML, 'function', 'buildMixerTrackStripHTML should be a function');
+});
+
+TestRunner.test('Mixer UI - buildMixerTrackStripHTML accepts 2 parameters', (t) => {
+    t.assertEqual(buildMixerTrackStripHTML.length, 2, 'buildMixerTrackStripHTML should accept 2 parameters (track, sendTracks)');
+});
+
+TestRunner.test('Mixer UI - buildMixerTrackStripHTML references track.id', (t) => {
+    const funcStr = buildMixerTrackStripHTML.toString();
+    t.assertTruthy(funcStr.includes('track') && funcStr.includes('id'), 'buildMixerTrackStripHTML should reference track.id');
+});
+
+TestRunner.test('Mixer UI - buildMixerGroupStripHTML is a function export', (t) => {
+    t.assertEqual(typeof buildMixerGroupStripHTML, 'function', 'buildMixerGroupStripHTML should be a function');
+});
+
+TestRunner.test('Mixer UI - buildMixerGroupStripHTML accepts 1 parameter', (t) => {
+    t.assertEqual(buildMixerGroupStripHTML.length, 1, 'buildMixerGroupStripHTML should accept 1 parameter (group)');
+});
+
+TestRunner.test('Mixer UI - buildMixerSendStripHTML is a function export', (t) => {
+    t.assertEqual(typeof buildMixerSendStripHTML, 'function', 'buildMixerSendStripHTML should be a function');
+});
+
+TestRunner.test('Mixer UI - buildMixerSendStripHTML accepts 1 parameter', (t) => {
+    t.assertEqual(buildMixerSendStripHTML.length, 1, 'buildMixerSendStripHTML should accept 1 parameter (send)');
+});
+
+TestRunner.test('Mixer UI - buildMixerMasterStripHTML is a function export', (t) => {
+    t.assertEqual(typeof buildMixerMasterStripHTML, 'function', 'buildMixerMasterStripHTML should be a function');
+});
+
+TestRunner.test('Mixer UI - buildMixerMasterStripHTML accepts no parameters', (t) => {
+    t.assertEqual(buildMixerMasterStripHTML.length, 0, 'buildMixerMasterStripHTML should accept no parameters');
+});
+
+TestRunner.test('Mixer UI - openMixerWindow is a function export', (t) => {
+    t.assertEqual(typeof openMixerWindow, 'function', 'openMixerWindow should be a function');
+});
+
+TestRunner.test('Mixer UI - openMixerWindow accepts 1 parameter', (t) => {
+    t.assertEqual(openMixerWindow.length, 1, 'openMixerWindow should accept 1 parameter (savedState)');
+});
+
+TestRunner.test('Mixer UI - openMixerWindow calls buildMixerContentDOM', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('buildMixerContentDOM'), 'openMixerWindow should call buildMixerContentDOM');
+});
+
+TestRunner.test('Mixer UI - openMixerWindow calls initializeMixerEventHandlers', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('initializeMixerEventHandlers'), 'openMixerWindow should call initializeMixerEventHandlers');
+});
+
+TestRunner.test('APP_VERSION validation for Day 371', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 371');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 49, 'Minor version should be >= 49 for Day 371');
+    }
+});
