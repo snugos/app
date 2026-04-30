@@ -1,3 +1,52 @@
+#### Day 386: Master Effects Chain Management Tests (2026-04-30)
+- **Feature**: Added 29 new unit tests for Master Effects Chain state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 29 new tests in Day 386 section:
+    - Master Effects Chain - addMasterEffectToState is a function export
+    - Master Effects Chain - addMasterEffectToState accepts 2 parameters
+    - Master Effects Chain - addMasterEffectToState calls captureStateForUndo
+    - Master Effects Chain - addMasterEffectToState uses descriptive undo label
+    - Master Effects Chain - addMasterEffectToState references effectType in undo label
+    - Master Effects Chain - addMasterEffectToState uses effectsRegistryAccess for default params
+    - Master Effects Chain - addMasterEffectToState generates unique effectId
+    - Master Effects Chain - addMasterEffectToState pushes to masterEffectsChainState
+    - Master Effects Chain - addMasterEffectToState returns effectId
+    - Master Effects Chain - removeMasterEffectFromState is a function export
+    - Master Effects Chain - removeMasterEffectFromState accepts 1 parameter
+    - Master Effects Chain - removeMasterEffectFromState calls captureStateForUndo
+    - Master Effects Chain - removeMasterEffectFromState uses descriptive undo label
+    - Master Effects Chain - removeMasterEffectFromState finds effect by id
+    - Master Effects Chain - removeMasterEffectFromState splices from masterEffectsChainState
+    - Master Effects Chain - updateMasterEffectParamInState is a function export
+    - Master Effects Chain - updateMasterEffectParamInState accepts 3 parameters
+    - Master Effects Chain - updateMasterEffectParamInState calls captureStateForUndo
+    - Master Effects Chain - updateMasterEffectParamInState uses descriptive undo label
+    - Master Effects Chain - updateMasterEffectParamInState parses paramPath with split
+    - Master Effects Chain - updateMasterEffectParamInState navigates nested params
+    - Master Effects Chain - updateMasterEffectParamInState has error handling
+    - Master Effects Chain - reorderMasterEffectInState is a function export
+    - Master Effects Chain - reorderMasterEffectInState accepts 2 parameters
+    - Master Effects Chain - reorderMasterEffectInState validates oldIndex
+    - Master Effects Chain - reorderMasterEffectInState validates newIndex bounds
+    - Master Effects Chain - reorderMasterEffectInState calls captureStateForUndo
+    - Master Effects Chain - reorderMasterEffectInState uses descriptive undo label
+    - Master Effects Chain - reorderMasterEffectInState uses splice to move effect
+    - Master Effects Chain - reorderMasterEffectInState has warning for not found
+    - Master Effects Chain - APP_VERSION validation for Day 386
+  - `js/constants.js`: Bumped APP_VERSION to 2.64.0
+- **Feature Details**:
+  - Tests validate addMasterEffectToState function (2 params, calls captureStateForUndo with descriptive label, references effectType, uses effectsRegistryAccess for default params, generates unique effectId with Date.now/Math.random, pushes to masterEffectsChainState, returns effectId)
+  - Tests verify removeMasterEffectFromState function (1 param, calls captureStateForUndo, finds effect by id using findIndex, splices from masterEffectsChainState)
+  - Tests verify updateMasterEffectParamInState function (3 params: effectId, paramPath, value, calls captureStateForUndo, parses paramPath with split(". "), navigates nested params, has error handling with try-catch/console.warn)
+  - Tests verify reorderMasterEffectInState function (2 params: effectId, newIndex, validates oldIndex with findIndex, validates newIndex bounds with < 0 and >= length, calls captureStateForUndo, uses splice to remove and insert effect, has warning for not found)
+  - Tests verify all Master Effects Chain functions call captureStateForUndo for undo/redo support
+  - Tests verify all Master Effects Chain functions use descriptive undo labels (Add/Remove/Update/Reorder Master Effect)
+  - Tests verify addMasterEffectToState uses appServices.effectsRegistryAccess.getEffectDefaultParams for default params fallback
+  - Tests verify updateMasterEffectParamInState navigates nested param paths (e.g., "envelope.decay") using split and keys iteration
+  - Tests verify reorderMasterEffectInState handles edge cases (not found, same index, out of bounds)
+  - Total tests increased from 1653 to 1682
+- **Version**: Bumped to 2.64.0
+
 #### Day 384: Sound Browser State Functions Tests (2026-04-30)
 - **Feature**: Added 53 new unit tests for Sound Browser state functions to expand test coverage
 - **Files Modified**:
