@@ -8104,3 +8104,179 @@ TestRunner.test('Instrument Sampler UI - APP_VERSION validation for Day 380', (t
         t.assertTruthy(versionParts[1] >= 58, 'Minor version should be >= 58 for Day 380');
     }
 });
+// ============================================
+// Day 381: DrumSampler Pad Drop Zone Verification Tests (2026-04-30)
+// ============================================
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM is a function', (t) => {
+    t.assertEqual(typeof buildDrumSamplerSpecificInspectorDOM, 'function', 'buildDrumSamplerSpecificInspectorDOM should be a function');
+});
+
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM accepts 1 parameter', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('track'), 'Should reference track parameter');
+});
+
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM references track.id', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('track.id'), 'buildDrumSamplerSpecificInspectorDOM should reference track.id');
+});
+
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes drumPadDropZoneContainer', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('drumPadDropZoneContainer'), 'buildDrumSamplerSpecificInspectorDOM should include drumPadDropZoneContainer');
+});
+
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes drum pads grid container', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('drumPadsGridContainer'), 'buildDrumSamplerSpecificInspectorDOM should include drumPadsGridContainer');
+});
+
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes volume knob placeholder', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('drumPadVolumeKnob'), 'buildDrumSamplerSpecificInspectorDOM should include volume knob placeholder');
+});
+
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes pitch knob placeholder', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('drumPadPitchKnob'), 'buildDrumSamplerSpecificInspectorDOM should include pitch knob placeholder');
+});
+
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes envelope knob placeholders', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('drumPadEnvAttack') && funcStr.includes('drumPadEnvDecay') && funcStr.includes('drumPadEnvSustain') && funcStr.includes('drumPadEnvRelease'), 'buildDrumSamplerSpecificInspectorDOM should include all envelope knob placeholders');
+});
+
+TestRunner.test('DrumSampler UI - buildDrumSamplerSpecificInspectorDOM uses dark mode styling', (t) => {
+    const funcStr = buildDrumSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dark:') || funcStr.includes('dark-'), 'buildDrumSamplerSpecificInspectorDOM should use dark mode styling');
+});
+
+TestRunner.test('DrumSampler UI - initializeDrumSamplerSpecificControls is a function', (t) => {
+    t.assertEqual(typeof initializeDrumSamplerSpecificControls, 'function', 'initializeDrumSamplerSpecificControls should be a function');
+});
+
+TestRunner.test('DrumSampler UI - initializeDrumSamplerSpecificControls accepts 2 parameters', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('track,') && funcStr.includes('winEl'), 'initializeDrumSamplerSpecificControls should accept track and winEl parameters');
+});
+
+TestRunner.test('DrumSampler UI - initializeDrumSamplerSpecificControls creates drum pad knobs', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('createAndPlaceKnob') || funcStr.includes('drumPadVolume'), 'initializeDrumSamplerSpecificControls should create drum pad knobs');
+});
+
+TestRunner.test('DrumSampler UI - initializeDrumSamplerSpecificControls calls renderDrumSamplerPads', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('renderDrumSamplerPads'), 'initializeDrumSamplerSpecificControls should call renderDrumSamplerPads');
+});
+
+TestRunner.test('DrumSampler UI - initializeDrumSamplerSpecificControls calls updateDrumPadControlsUI', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('updateDrumPadControlsUI'), 'initializeDrumSamplerSpecificControls should call updateDrumPadControlsUI');
+});
+
+TestRunner.test('DrumSampler UI - initializeDrumSamplerSpecificControls sets up volume knob with onValueChange', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('setDrumSamplerPadVolume') || funcStr.includes('onValueChange'), 'initializeDrumSamplerSpecificControls should set up volume knob with callback');
+});
+
+TestRunner.test('DrumSampler UI - initializeDrumSamplerSpecificControls sets up pitch knob with onValueChange', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('setDrumSamplerPadPitch') || funcStr.includes('onValueChange'), 'initializeDrumSamplerSpecificControls should set up pitch knob with callback');
+});
+
+TestRunner.test('DrumSampler UI - initializeDrumSamplerSpecificControls sets up envelope knobs', (t) => {
+    const funcStr = initializeDrumSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('setDrumSamplerPadEnv'), 'initializeDrumSamplerSpecificControls should set up envelope knobs with callbacks');
+});
+
+TestRunner.test('DrumSampler UI - renderDrumSamplerPads is a function', (t) => {
+    t.assertEqual(typeof renderDrumSamplerPads, 'function', 'renderDrumSamplerPads should be a function');
+});
+
+TestRunner.test('DrumSampler UI - renderDrumSamplerPads validates track type', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'renderDrumSamplerPads should validate track type is DrumSampler');
+});
+
+TestRunner.test('DrumSampler UI - renderDrumSamplerPads creates pad buttons', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('button'), 'renderDrumSamplerPads should create pad buttons');
+});
+
+TestRunner.test('DrumSampler UI - renderDrumSamplerPads uses numDrumSamplerPads constant', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('numDrumSamplerPads'), 'renderDrumSamplerPads should use numDrumSamplerPads constant');
+});
+
+TestRunner.test('DrumSampler UI - renderDrumSamplerPads handles pad selection state', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('selectedDrumPadForEdit'), 'renderDrumSamplerPads should handle pad selection state');
+});
+
+TestRunner.test('DrumSampler UI - renderDrumSamplerPads adds click event listeners to pads', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') && funcStr.includes('click'), 'renderDrumSamplerPads should add click listeners to pads');
+});
+
+TestRunner.test('DrumSampler UI - renderDrumSamplerPads calls updateDrumPadControlsUI on pad click', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('updateDrumPadControlsUI'), 'renderDrumSamplerPads should call updateDrumPadControlsUI on pad click');
+});
+
+TestRunner.test('DrumSampler UI - renderDrumSamplerPads plays preview on pad click', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('playDrumSamplerPadPreview'), 'renderDrumSamplerPads should play preview when clicking loaded pads');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI is a function', (t) => {
+    t.assertEqual(typeof updateDrumPadControlsUI, 'function', 'updateDrumPadControlsUI should be a function');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI validates track type', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'updateDrumPadControlsUI should validate track type');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI updates drop zone container', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('drumPadDropZoneContainer'), 'updateDrumPadControlsUI should update drop zone container');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI calls createDropZoneHTML', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('createDropZoneHTML'), 'updateDrumPadControlsUI should call createDropZoneHTML');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI calls setupGenericDropZoneListeners', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('setupGenericDropZoneListeners'), 'updateDrumPadControlsUI should call setupGenericDropZoneListeners');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI passes correct callbacks', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('loadSoundFromBrowserToTarget') && funcStr.includes('loadDrumSamplerPadFile'), 'updateDrumPadControlsUI should pass correct callbacks');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI sets up file input change handler', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('onchange') || funcStr.includes('fileInput'), 'updateDrumPadControlsUI should set up file input change handler');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI handles fallback for missing container', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('oldDropZoneContainer') || funcStr.includes('Fallback') || funcStr.includes('querySelector'), 'updateDrumPadControlsUI should handle fallback for missing container');
+});
+
+TestRunner.test('DrumSampler UI - updateDrumPadControlsUI handles pad index correctly', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('selectedDrumPadForEdit') || funcStr.includes('selectedPadIndex'), 'updateDrumPadControlsUI should handle pad index');
+});
+
+TestRunner.test('DrumSampler UI - APP_VERSION validation for Day 381', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 381');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 59, 'Minor version should be >= 59 for Day 381');
+    }
+});
