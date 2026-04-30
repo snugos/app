@@ -8280,3 +8280,194 @@ TestRunner.test('DrumSampler UI - APP_VERSION validation for Day 381', (t) => {
         t.assertTruthy(versionParts[1] >= 59, 'Minor version should be >= 59 for Day 381');
     }
 });
+
+// ============================================
+// Day 382: Automation Editor UI Functions Tests
+// ============================================
+TestRunner.test('Automation Editor - buildSequencerContentDOM includes automationEditorToggle', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('automationEditorToggle'), 'buildSequencerContentDOM should include automationEditorToggle checkbox');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM includes automationEditorToggle with correct id pattern', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('automationEditorToggle-${track.id}') || funcStr.includes('automationEditorToggle-'), 'automationEditorToggle should use track.id in id pattern');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM includes automation editor lane div', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('automationEditor-${track.id}') || funcStr.includes('automationEditor-'), 'buildSequencerContentDOM should create automation editor lane div');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM includes automation-editor-grid class', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('automation-editor-grid'), 'buildSequencerContentDOM should create automation editor grid');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM includes automation parameter selector', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('automationParamSelect') || funcStr.includes('AUTOMATION_LANE_PARAMETERS'), 'buildSequencerContentDOM should include automation parameter selector');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM includes clear automation button', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('clearAutomationBtn') || funcStr.includes('Clear Lane'), 'buildSequencerContentDOM should include clear automation button');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM uses AUTOMATION_LANE_DEFAULT constant', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('AUTOMATION_LANE_DEFAULT'), 'buildSequencerContentDOM should reference AUTOMATION_LANE_DEFAULT for default values');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM calls track.getAutomationLane', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('getAutomationLane'), 'buildSequencerContentDOM should call track.getAutomationLane to get automation data');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM creates automation cells for each step', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('automation-cell') || funcStr.includes('automationCell') || funcStr.includes('automation-bar'), 'buildSequencerContentDOM should create automation cells');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM creates automation bars with height based on value', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('barHeight') || funcStr.includes('pointValue'), 'buildSequencerContentDOM should calculate bar height based on automation point value');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow sets up automation editor event handlers', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('automationEditorToggle') || funcStr.includes('automationEditorLane'), 'openTrackSequencerWindow should set up automation editor toggle event handler');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow adds change listener to automationEditorToggle', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("addEventListener('change'"), 'openTrackSequencerWindow should add change listener to automation editor toggle');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow toggles hidden class on automationEditorLane', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("classList.remove('hidden')") && funcStr.includes("classList.add('hidden')"), 'openTrackSequencerWindow should toggle hidden class on automation editor lane');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow sets up automationParamSelect change handler', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("automationParamSelect") && funcStr.includes("addEventListener('change'"), 'openTrackSequencerWindow should handle automation parameter select changes');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow sets up clearAutomationBtn click handler', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("clearAutomationBtn") && funcStr.includes("addEventListener('click'"), 'openTrackSequencerWindow should handle clear automation button clicks');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow uses showConfirmationDialog for clear automation', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('showConfirmationDialog') && funcStr.includes('clearAutomationBtn'), 'openTrackSequencerWindow should use showConfirmationDialog before clearing automation');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow calls track.clearAutomationLane on clear', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('clearAutomationLane'), 'openTrackSequencerWindow should call track.clearAutomationLane when user confirms clear');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow handles automation cell mousedown', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("addEventListener('mousedown'") && funcStr.includes('automationCell'), 'openTrackSequencerWindow should handle mousedown on automation cells');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow handles automation cell contextmenu', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes("addEventListener('contextmenu'") && funcStr.includes('automationCell'), 'openTrackSequencerWindow should handle context menu on automation cells');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow calls track.setAutomationPoint on cell click', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('setAutomationPoint'), 'openTrackSequencerWindow should call track.setAutomationPoint when adding automation point');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow calls track.removeAutomationPoint on context menu', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('removeAutomationPoint'), 'openTrackSequencerWindow should call track.removeAutomationPoint when removing point via context menu');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow captures undo state before adding automation point', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('_captureUndoState'), 'openTrackSequencerWindow should capture undo state before adding automation point');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow updates automation bar UI after adding point', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('bar.style.height'), 'openTrackSequencerWindow should update automation bar height in UI');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow updates automation bar color when point exists', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('bar.style.backgroundColor'), 'openTrackSequencerWindow should update automation bar color in UI');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow handles automation drag for moving points', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('handleAutomationDrag') || funcStr.includes('isDraggingAutomation') || funcStr.includes('dragStartY'), 'openTrackSequencerWindow should handle drag to move automation points');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow implements vertical drag sensitivity', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('sensitivity') || funcStr.includes('deltaY') || funcStr.includes('dragStartValue'), 'openTrackSequencerWindow should implement vertical drag sensitivity for automation value changes');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow clamps automation value during drag', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'openTrackSequencerWindow should clamp automation values during drag');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow updates UI during drag', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('barHeight') && funcStr.includes('bar.style.height'), 'openTrackSequencerWindow should update bar height during drag');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow removes drag listeners on drag end', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('removeEventListener') && funcStr.includes('handleAutomationDragEnd'), 'openTrackSequencerWindow should remove drag listeners when drag ends');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow shows notification on automation point add', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('Automation point'), 'openTrackSequencerWindow should show notification when adding automation point');
+});
+
+TestRunner.test('Automation Editor - openTrackSequencerWindow shows notification on automation point remove', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('Automation point'), 'openTrackSequencerWindow should show notification when removing automation point');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM uses grid-template-columns for automation grid', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('grid-template-columns') && funcStr.includes('automation-editor-grid'), 'buildSequencerContentDOM should use grid-template-columns for automation editor grid');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM uses 50px label column plus step columns', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('50px repeat(${totalSteps}') || funcStr.includes('50px repeat('), 'buildSequencerContentDOM should use 50px for label column plus step columns in automation grid');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM sets automation grid auto-rows to 60px', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('grid-auto-rows') && funcStr.includes('60px'), 'buildSequencerContentDOM should set automation grid auto-rows to 60px');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM uses hasPoint dataset attribute', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('hasPoint') || funcStr.includes('dataset.hasPoint'), 'buildSequencerContentDOM should use hasPoint dataset attribute on automation cells');
+});
+
+TestRunner.test('Automation Editor - buildSequencerContentDOM creates automation point dot indicator', (t) => {
+    const funcStr = buildSequencerContentDOM.toString();
+    t.assertTruthy(funcStr.includes('automation-point-dot') || funcStr.includes('automationPointDot'), 'buildSequencerContentDOM should create automation point dot indicator');
+});
+
+TestRunner.test('Automation Editor - APP_VERSION validation for Day 382', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 382');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 60, 'Minor version should be >= 60 for Day 382');
+    }
+});
