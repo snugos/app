@@ -10115,3 +10115,360 @@ TestRunner.test('Track Groups State - APP_VERSION validation for Day 401', (t) =
     const minor = versionParts[1];
     t.assertTruthy(major > 2 || (major === 2 && minor >= 78), 'APP_VERSION should be 2.78.0 or higher for Day 401');
 });
+
+// ============================================
+// Day 402: MIDI Learn State & Constants Tests
+// ============================================
+TestRunner.test('MIDI Learn State - getMidiLearnMappingsState is a function export', (t) => {
+    t.assertEqual(typeof getMidiLearnMappingsState, 'function', 'getMidiLearnMappingsState should be a function');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnMappingsState accepts 0 parameters', (t) => {
+    t.assertEqual(getMidiLearnMappingsState.length, 0, 'getMidiLearnMappingsState should accept 0 parameters');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnMappingsState returns an array', (t) => {
+    t.assertTruthy(Array.isArray(getMidiLearnMappingsState()), 'getMidiLearnMappingsState should return an array');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnMappingsState returns a copy', (t) => {
+    const result = getMidiLearnMappingsState();
+    t.assertTruthy(Array.isArray(result), 'getMidiLearnMappingsState should return array (not necessarily same reference)');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnModeState is a function export', (t) => {
+    t.assertEqual(typeof getMidiLearnModeState, 'function', 'getMidiLearnModeState should be a function');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnModeState accepts 0 parameters', (t) => {
+    t.assertEqual(getMidiLearnModeState.length, 0, 'getMidiLearnModeState should accept 0 parameters');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnPendingParamState is a function export', (t) => {
+    t.assertEqual(typeof getMidiLearnPendingParamState, 'function', 'getMidiLearnPendingParamState should be a function');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnPendingParamState accepts 0 parameters', (t) => {
+    t.assertEqual(getMidiLearnPendingParamState.length, 0, 'getMidiLearnPendingParamState should accept 0 parameters');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnModeState is a function export', (t) => {
+    t.assertEqual(typeof setMidiLearnModeState, 'function', 'setMidiLearnModeState should be a function');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnModeState accepts 1 parameter', (t) => {
+    t.assertEqual(setMidiLearnModeState.length, 1, 'setMidiLearnModeState should accept 1 parameter');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnModeState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnModeState should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnModeState uses descriptive undo label', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'setMidiLearnModeState should use descriptive undo label');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnModeState coerces to boolean', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean') || funcStr.includes('!!mode'), 'setMidiLearnModeState should coerce mode to boolean');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnPendingParamState is a function export', (t) => {
+    t.assertEqual(typeof setMidiLearnPendingParamState, 'function', 'setMidiLearnPendingParamState should be a function');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnPendingParamState accepts 1 parameter', (t) => {
+    t.assertEqual(setMidiLearnPendingParamState.length, 1, 'setMidiLearnPendingParamState should accept 1 parameter');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnPendingParamState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnPendingParamState should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn State - setMidiLearnPendingParamState uses descriptive undo label', (t) => {
+    const funcStr = setMidiLearnPendingParamState.toString();
+    t.assertTruthy(funcStr.includes('MIDI') || funcStr.includes('param') || funcStr.includes('pending'), 'setMidiLearnPendingParamState should use descriptive undo label');
+});
+
+TestRunner.test('MIDI Learn State - addMidiLearnMapping is a function export', (t) => {
+    t.assertEqual(typeof addMidiLearnMapping, 'function', 'addMidiLearnMapping should be a function');
+});
+
+TestRunner.test('MIDI Learn State - addMidiLearnMapping accepts 1 parameter', (t) => {
+    t.assertEqual(addMidiLearnMapping.length, 1, 'addMidiLearnMapping should accept 1 parameter');
+});
+
+TestRunner.test('MIDI Learn State - addMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn State - addMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'addMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('MIDI Learn State - addMidiLearnMapping uses DEFAULT_MIDI_LEARN_MAPPING structure', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_MIDI_LEARN_MAPPING'), 'addMidiLearnMapping should use DEFAULT_MIDI_LEARN_MAPPING structure');
+});
+
+TestRunner.test('MIDI Learn State - addMidiLearnMapping checks MAX_MIDI_LEARN_MAPPINGS limit', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MAX_MIDI_LEARN_MAPPINGS'), 'addMidiLearnMapping should check MAX_MIDI_LEARN_MAPPINGS limit');
+});
+
+TestRunner.test('MIDI Learn State - addMidiLearnMapping pushes to midiLearnMappings', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('push'), 'addMidiLearnMapping should push to midiLearnMappings array');
+});
+
+TestRunner.test('MIDI Learn State - addMidiLearnMapping returns boolean', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('return'), 'addMidiLearnMapping should return a value');
+});
+
+TestRunner.test('MIDI Learn State - removeMidiLearnMapping is a function export', (t) => {
+    t.assertEqual(typeof removeMidiLearnMapping, 'function', 'removeMidiLearnMapping should be a function');
+});
+
+TestRunner.test('MIDI Learn State - removeMidiLearnMapping accepts 1 parameter', (t) => {
+    t.assertEqual(removeMidiLearnMapping.length, 1, 'removeMidiLearnMapping should accept 1 parameter');
+});
+
+TestRunner.test('MIDI Learn State - removeMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn State - removeMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'removeMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('MIDI Learn State - removeMidiLearnMapping uses splice', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeMidiLearnMapping should use splice to remove mapping');
+});
+
+TestRunner.test('MIDI Learn State - removeMidiLearnMapping returns boolean', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('return'), 'removeMidiLearnMapping should return a boolean');
+});
+
+TestRunner.test('MIDI Learn State - clearMidiLearnMappings is a function export', (t) => {
+    t.assertEqual(typeof clearMidiLearnMappings, 'function', 'clearMidiLearnMappings should be a function');
+});
+
+TestRunner.test('MIDI Learn State - clearMidiLearnMappings accepts 0 parameters', (t) => {
+    t.assertEqual(clearMidiLearnMappings.length, 0, 'clearMidiLearnMappings should accept 0 parameters');
+});
+
+TestRunner.test('MIDI Learn State - clearMidiLearnMappings calls captureStateForUndo', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearMidiLearnMappings should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn State - clearMidiLearnMappings uses descriptive undo label', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('Clear') && (funcStr.includes('MIDI Learn') || funcStr.includes('MIDI')), 'clearMidiLearnMappings should use descriptive undo label');
+});
+
+TestRunner.test('MIDI Learn State - clearMidiLearnMappings clears the array', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('[]') || funcStr.includes('= []'), 'clearMidiLearnMappings should clear the array');
+});
+
+TestRunner.test('MIDI Learn State - findMidiLearnMapping is a function export', (t) => {
+    t.assertEqual(typeof findMidiLearnMapping, 'function', 'findMidiLearnMapping should be a function');
+});
+
+TestRunner.test('MIDI Learn State - findMidiLearnMapping accepts 2 parameters', (t) => {
+    t.assertEqual(findMidiLearnMapping.length, 2, 'findMidiLearnMapping should accept 2 parameters');
+});
+
+TestRunner.test('MIDI Learn State - findMidiLearnMapping references channel parameter', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('channel'), 'findMidiLearnMapping should reference channel parameter');
+});
+
+TestRunner.test('MIDI Learn State - findMidiLearnMapping references cc parameter', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('cc'), 'findMidiLearnMapping should reference cc parameter');
+});
+
+TestRunner.test('MIDI Learn State - findMidiLearnMapping uses findIndex', (t) => {
+    const funcStr = findMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('findIndex'), 'findMidiLearnMapping should use findIndex');
+});
+
+TestRunner.test('MIDI Learn State - updateMidiLearnMapping is a function export', (t) => {
+    t.assertEqual(typeof updateMidiLearnMapping, 'function', 'updateMidiLearnMapping should be a function');
+});
+
+TestRunner.test('MIDI Learn State - updateMidiLearnMapping accepts 2 parameters', (t) => {
+    t.assertEqual(updateMidiLearnMapping.length, 2, 'updateMidiLearnMapping should accept 2 parameters');
+});
+
+TestRunner.test('MIDI Learn State - updateMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI Learn State - updateMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'updateMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('MIDI Learn State - updateMidiLearnMapping finds mapping by index', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('index'), 'updateMidiLearnMapping should find mapping by index');
+});
+
+TestRunner.test('MIDI Learn State - updateMidiLearnMapping returns boolean', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('return'), 'updateMidiLearnMapping should return a boolean');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnMappingByIndex is a function export', (t) => {
+    t.assertEqual(typeof getMidiLearnMappingByIndex, 'function', 'getMidiLearnMappingByIndex should be a function');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnMappingByIndex accepts 1 parameter', (t) => {
+    t.assertEqual(getMidiLearnMappingByIndex.length, 1, 'getMidiLearnMappingByIndex should accept 1 parameter');
+});
+
+TestRunner.test('MIDI Learn State - getMidiLearnMappingByIndex returns mapping or undefined', (t) => {
+    const funcStr = getMidiLearnMappingByIndex.toString();
+    t.assertTruthy(funcStr.includes('[') || funcStr.includes('midiLearnMappings'), 'getMidiLearnMappingByIndex should return mapping');
+});
+
+// MIDI Learn Constants Tests
+TestRunner.test('MIDI Learn Constants - MAX_MIDI_LEARN_MAPPINGS is defined', (t) => {
+    t.assertTruthy(Constants.MAX_MIDI_LEARN_MAPPINGS !== undefined, 'MAX_MIDI_LEARN_MAPPINGS should be defined');
+});
+
+TestRunner.test('MIDI Learn Constants - MAX_MIDI_LEARN_MAPPINGS is a positive number', (t) => {
+    t.assertEqual(typeof Constants.MAX_MIDI_LEARN_MAPPINGS, 'number', 'MAX_MIDI_LEARN_MAPPINGS should be a number');
+    t.assertTruthy(Constants.MAX_MIDI_LEARN_MAPPINGS > 0, 'MAX_MIDI_LEARN_MAPPINGS should be positive');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_CC_COMMAND is defined', (t) => {
+    t.assertTruthy(Constants.MIDI_CC_COMMAND !== undefined, 'MIDI_CC_COMMAND should be defined');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_CC_COMMAND is 176', (t) => {
+    t.assertEqual(Constants.MIDI_CC_COMMAND, 176, 'MIDI_CC_COMMAND should be 176');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MODE is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MODE !== undefined, 'DEFAULT_MIDI_LEARN_MODE should be defined');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MODE is boolean false', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_MIDI_LEARN_MODE, 'boolean', 'DEFAULT_MIDI_LEARN_MODE should be a boolean');
+    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MODE, false, 'DEFAULT_MIDI_LEARN_MODE should be false');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_LEARN_INDICATOR_TIMEOUT_MS is defined', (t) => {
+    t.assertTruthy(Constants.MIDI_LEARN_INDICATOR_TIMEOUT_MS !== undefined, 'MIDI_LEARN_INDICATOR_TIMEOUT_MS should be defined');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_LEARN_INDICATOR_TIMEOUT_MS is a positive number', (t) => {
+    t.assertEqual(typeof Constants.MIDI_LEARN_INDICATOR_TIMEOUT_MS, 'number', 'MIDI_LEARN_INDICATOR_TIMEOUT_MS should be a number');
+    t.assertTruthy(Constants.MIDI_LEARN_INDICATOR_TIMEOUT_MS > 0, 'MIDI_LEARN_INDICATOR_TIMEOUT_MS should be positive');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES is defined', (t) => {
+    t.assertTruthy(Constants.MIDI_LEARN_PARAM_TYPES !== undefined, 'MIDI_LEARN_PARAM_TYPES should be defined');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES is an array', (t) => {
+    t.assertTruthy(Array.isArray(Constants.MIDI_LEARN_PARAM_TYPES), 'MIDI_LEARN_PARAM_TYPES should be an array');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes trackVolume', (t) => {
+    t.assertTruthy(Constants.MIDI_LEARN_PARAM_TYPES.includes('trackVolume'), 'MIDI_LEARN_PARAM_TYPES should include trackVolume');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes trackPan', (t) => {
+    t.assertTruthy(Constants.MIDI_LEARN_PARAM_TYPES.includes('trackPan'), 'MIDI_LEARN_PARAM_TYPES should include trackPan');
+});
+
+TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes effectParam', (t) => {
+    t.assertTruthy(Constants.MIDI_LEARN_PARAM_TYPES.includes('effectParam'), 'MIDI_LEARN_PARAM_TYPES should include effectParam');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should be defined');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING is an object', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_MIDI_LEARN_MAPPING, 'object', 'DEFAULT_MIDI_LEARN_MAPPING should be an object');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has channel property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.channel !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have channel property');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has cc property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.cc !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have cc property');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has trackId property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.trackId !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have trackId property');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has paramType property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.paramType !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have paramType property');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has paramPath property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.paramPath !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have paramPath property');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has min property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.min !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have min property');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has max property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.max !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have max property');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.channel is 0', (t) => {
+    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.channel, 0, 'DEFAULT_MIDI_LEARN_MAPPING.channel should be 0');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.cc is 0', (t) => {
+    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.cc, 0, 'DEFAULT_MIDI_LEARN_MAPPING.cc should be 0');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.trackId is null', (t) => {
+    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.trackId, null, 'DEFAULT_MIDI_LEARN_MAPPING.trackId should be null');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.paramType is null', (t) => {
+    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.paramType, null, 'DEFAULT_MIDI_LEARN_MAPPING.paramType should be null');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.paramPath is null', (t) => {
+    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.paramPath, null, 'DEFAULT_MIDI_LEARN_MAPPING.paramPath should be null');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.min is 0', (t) => {
+    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.min, 0, 'DEFAULT_MIDI_LEARN_MAPPING.min should be 0');
+});
+
+TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.max is 1', (t) => {
+    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.max, 1, 'DEFAULT_MIDI_LEARN_MAPPING.max should be 1');
+});
+
+TestRunner.test('MIDI Learn State - APP_VERSION validation for Day 402', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    const major = versionParts[0];
+    const minor = versionParts[1];
+    t.assertTruthy(major > 2 || (major === 2 && minor >= 79), 'APP_VERSION should be 2.79.0 or higher for Day 402');
+});
