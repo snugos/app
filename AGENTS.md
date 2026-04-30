@@ -1,3 +1,80 @@
+#### Day 399: Effect Presets State Functions Tests (2026-04-30)
+- **Feature**: Added 42 new unit tests for Effect Presets state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 42 new tests in Day 399 section:
+    - Effect Presets State - getEffectPresetsState is a function export
+    - Effect Presets State - getEffectPresetsState accepts 0 parameters
+    - Effect Presets State - getEffectPresetsState returns array
+    - Effect Presets State - getEffectPresetByIdState is a function export
+    - Effect Presets State - getEffectPresetByIdState accepts 1 parameter
+    - Effect Presets State - getEffectPresetByIdState returns preset or undefined
+    - Effect Presets State - getEffectPresetsByTypeState is a function export
+    - Effect Presets State - getEffectPresetsByTypeState accepts 1 parameter
+    - Effect Presets State - getEffectPresetsByTypeState returns array
+    - Effect Presets State - addEffectPresetState is a function export
+    - Effect Presets State - addEffectPresetState accepts 1 parameter
+    - Effect Presets State - addEffectPresetState calls captureStateForUndo
+    - Effect Presets State - addEffectPresetState uses descriptive undo label
+    - Effect Presets State - addEffectPresetState uses DEFAULT_PRESET_NAME_PREFIX
+    - Effect Presets State - addEffectPresetState generates unique id
+    - Effect Presets State - addEffectPresetState uses DEFAULT_EFFECT_PRESET structure
+    - Effect Presets State - addEffectPresetState pushes to array
+    - Effect Presets State - addEffectPresetState checks MAX_EFFECT_PRESETS limit
+    - Effect Presets State - addEffectPresetState returns preset
+    - Effect Presets State - updateEffectPresetState is a function export
+    - Effect Presets State - updateEffectPresetState accepts 2 parameters
+    - Effect Presets State - updateEffectPresetState calls captureStateForUndo
+    - Effect Presets State - updateEffectPresetState uses descriptive undo label
+    - Effect Presets State - updateEffectPresetState finds preset by id
+    - Effect Presets State - updateEffectPresetState updates name property
+    - Effect Presets State - updateEffectPresetState updates effectType property
+    - Effect Presets State - updateEffectPresetState updates params property
+    - Effect Presets State - updateEffectPresetState returns preset or null
+    - Effect Presets State - removeEffectPresetState is a function export
+    - Effect Presets State - removeEffectPresetState accepts 1 parameter
+    - Effect Presets State - removeEffectPresetState calls captureStateForUndo
+    - Effect Presets State - removeEffectPresetState uses descriptive undo label
+    - Effect Presets State - removeEffectPresetState finds index by id
+    - Effect Presets State - removeEffectPresetState splices from array
+    - Effect Presets State - removeEffectPresetState returns boolean
+    - Effect Presets State - clearEffectPresetsState is a function export
+    - Effect Presets State - clearEffectPresetsState accepts 0 parameters
+    - Effect Presets State - clearEffectPresetsState calls captureStateForUndo
+    - Effect Presets State - clearEffectPresetsState uses descriptive undo label
+    - Effect Presets State - clearEffectPresetsState clears array
+    - Effect Presets Constants - MAX_EFFECT_PRESETS is defined
+    - Effect Presets Constants - MAX_EFFECT_PRESETS is a positive number
+    - Effect Presets Constants - DEFAULT_PRESET_NAME_PREFIX is defined
+    - Effect Presets Constants - DEFAULT_PRESET_NAME_PREFIX is a string
+    - Effect Presets Constants - DEFAULT_EFFECT_PRESET is defined
+    - Effect Presets Constants - DEFAULT_EFFECT_PRESET is an object
+    - Effect Presets Constants - DEFAULT_EFFECT_PRESET has name property
+    - Effect Presets Constants - DEFAULT_EFFECT_PRESET has effectType property
+    - Effect Presets Constants - DEFAULT_EFFECT_PRESET has params property
+    - Effect Presets Constants - DEFAULT_EFFECT_PRESET effectType is null
+    - Effect Presets Constants - DEFAULT_EFFECT_PRESET params is object
+    - Effect Presets State - APP_VERSION validation for Day 399
+  - `js/constants.js`: Bumped APP_VERSION to 2.76.0
+- **Feature Details**:
+  - Tests validate getEffectPresetsState function (0 params, returns array)
+  - Tests validate getEffectPresetByIdState function (1 param, returns preset or undefined)
+  - Tests validate getEffectPresetsByTypeState function (1 param, returns filtered array)
+  - Tests validate addEffectPresetState function (1 param, calls captureStateForUndo with Save Effect Preset label)
+  - Tests validate addEffectPresetState uses DEFAULT_PRESET_NAME_PREFIX and DEFAULT_EFFECT_PRESET structure
+  - Tests validate addEffectPresetState checks MAX_EFFECT_PRESETS limit
+  - Tests validate addEffectPresetState generates unique id and pushes to array
+  - Tests validate updateEffectPresetState function (2 params, calls captureStateForUndo with Update Effect Preset label)
+  - Tests validate updateEffectPresetState finds preset by id and updates name/effectType/params
+  - Tests validate updateEffectPresetState returns null when preset not found
+  - Tests validate removeEffectPresetState function (1 param, calls captureStateForUndo with Delete Effect Preset label)
+  - Tests validate removeEffectPresetState finds index by id, splices from array, returns boolean
+  - Tests validate clearEffectPresetsState function (0 params, calls captureStateForUndo with Clear All Effect Presets label)
+  - Tests validate clearEffectPresetsState clears array
+  - Tests validate Effect Presets constants (MAX_EFFECT_PRESETS, DEFAULT_PRESET_NAME_PREFIX, DEFAULT_EFFECT_PRESET)
+  - Tests validate DEFAULT_EFFECT_PRESET structure (name: 'Preset', effectType: null, params: {})
+  - Total tests increased from 8704 to 8946
+- **Version**: Bumped to 2.76.0
+
 #### Day 398: Time Signature State Functions Tests (2026-04-30)
 - **Feature**: Added 33 new unit tests for Time Signature state functions to expand test coverage
 - **Files Modified**:
@@ -4753,7 +4830,7 @@
     - Recording Audio - stopAudioRecording handles null recorder
     - Recording Audio - stopAudioRecording processes recorded blob (addAudioClip)
     - Recording Audio - stopAudioRecording clears recording state (isRecording, trackId, startTime)
-    - Recording Audio - stopAudioRecording disposes audio resources (mic, recorder)
+    - Recording Audio - stopAudioRecording disposes audio resources (mic.close, recorder.dispose)
     - Recording Audio - stopAudioRecording handles empty recording
     - Recording Audio - stopAudioRecording calls showNotification on error
     - Recording Audio - setRecordingInputGain is a function, accepts 1 parameter
