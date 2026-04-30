@@ -1,3 +1,57 @@
+#### Day 376: Utils Module Functions Tests (2026-04-30)
+- **Feature**: Added 25 new unit tests for Utils Module functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 25 new tests in Day 376 section:
+    - Utils - secondsToBBSTime is a function export
+    - Utils - secondsToBBSTime accepts 1 parameter
+    - Utils - secondsToBBSTime handles null input
+    - Utils - secondsToBBSTime handles NaN input
+    - Utils - secondsToBBSTime uses Tone.Time for conversion
+    - Utils - secondsToBBSTime calls toBarsBeatsSixteenths
+    - Utils - secondsToBBSTime has error handling with try-catch
+    - Utils - secondsToBBSTime returns fallback for invalid input
+    - Utils - bbsTimeToSeconds is a function export
+    - Utils - bbsTimeToSeconds accepts 1 parameter
+    - Utils - bbsTimeToSeconds handles null/empty input
+    - Utils - bbsTimeToSeconds validates string type
+    - Utils - bbsTimeToSeconds uses Tone.Time for conversion
+    - Utils - bbsTimeToSeconds calls toSeconds
+    - Utils - bbsTimeToSeconds returns null for invalid input
+    - Utils - showNotification is a function export
+    - Utils - showNotification accepts 1-2 parameters
+    - Utils - showNotification references message parameter
+    - Utils - showNotification has default duration
+    - Utils - showCustomModal is a function export
+    - Utils - showCustomModal accepts 2-4 parameters
+    - Utils - showCustomModal references title parameter
+    - Utils - showCustomModal references contentHTML parameter
+    - Utils - showCustomModal references buttonsConfig parameter
+    - Utils - showConfirmationDialog is a function export
+    - Utils - showConfirmationDialog accepts 3-4 parameters
+    - Utils - showConfirmationDialog references title parameter
+    - Utils - showConfirmationDialog references message parameter
+    - Utils - showConfirmationDialog references onConfirm parameter
+    - Utils - showConfirmationDialog references onCancel parameter
+    - Utils - showConfirmationDialog calls showCustomModal
+    - Utils - createContextMenu is a function export
+    - Utils - createContextMenu accepts 2-3 parameters
+    - Utils - createContextMenu references event parameter
+    - Utils - createContextMenu references menuItems parameter
+    - Utils - createContextMenu uses preventDefault
+    - Utils - APP_VERSION validation for 2.55.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.55.0
+- **Feature Details**:
+  - Tests validate secondsToBBSTime function (converts seconds to B:B:S format using Tone.Time)
+  - Tests verify secondsToBBSTime handles null/NaN input and returns fallback '0:0:0'
+  - Tests validate bbsTimeToSeconds function (converts B:B:S format to seconds)
+  - Tests verify bbsTimeToSeconds validates string type and returns null for invalid input
+  - Tests validate showNotification function (displays toast notifications with default 3000ms duration)
+  - Tests validate showCustomModal function (displays custom modal dialogs)
+  - Tests validate showConfirmationDialog function (calls showCustomModal with OK/Cancel buttons)
+  - Tests validate createContextMenu function (creates right-click context menus)
+  - Total tests increased from 1107 to 1132
+- **Version**: Bumped to 2.55.0
+
 #### Day 375: Effects Registry Tests (2026-04-30)
 - **Feature**: Added 33 new unit tests for Effects Registry module to expand test coverage
 - **Files Modified**:

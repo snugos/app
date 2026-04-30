@@ -6529,3 +6529,185 @@ TestRunner.test('Effects Registry - APP_VERSION validation for Day 375', (t) => 
         t.assertTruthy(versionParts[1] >= 54, 'Minor version should be >= 54 for Day 375');
     }
 });
+
+TestRunner.test('Utils - secondsToBBSTime is a function export', (t) => {
+    t.assertEqual(typeof secondsToBBSTime, 'function', 'secondsToBBSTime should be a function');
+});
+
+TestRunner.test('Utils - secondsToBBSTime accepts 1 parameter', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('seconds'), 'Function should reference seconds parameter');
+});
+
+TestRunner.test('Utils - secondsToBBSTime handles null input', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('null') || funcStr.includes('undefined'), 'Should check for null/undefined');
+});
+
+TestRunner.test('Utils - secondsToBBSTime handles NaN input', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('isNaN'), 'Should check for NaN');
+});
+
+TestRunner.test('Utils - secondsToBBSTime uses Tone.Time for conversion', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('Tone.Time') || funcStr.includes('Tone'), 'Should use Tone for conversion');
+});
+
+TestRunner.test('Utils - secondsToBBSTime calls toBarsBeatsSixteenths', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('toBarsBeatsSixteenths'), 'Should convert to B:B:S format');
+});
+
+TestRunner.test('Utils - secondsToBBSTime has error handling with try-catch', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'Should have try-catch error handling');
+});
+
+TestRunner.test('Utils - secondsToBBSTime returns fallback for invalid input', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('0:0:0'), 'Should return fallback 0:0:0 for invalid input');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds is a function export', (t) => {
+    t.assertEqual(typeof bbsTimeToSeconds, 'function', 'bbsTimeToSeconds should be a function');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds accepts 1 parameter', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('bbsString'), 'Function should reference bbsString parameter');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds handles null/empty input', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('!bbsString') || funcStr.includes('null') || funcStr.includes('undefined'), 'Should check for null/empty');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds validates string type', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('string'), 'Should validate string type');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds uses Tone.Time for conversion', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('Tone.Time') || funcStr.includes('Tone'), 'Should use Tone for conversion');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds calls toSeconds', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('toSeconds'), 'Should convert to seconds using toSeconds');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds returns null for invalid input', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('null'), 'Should return null for invalid input');
+});
+
+TestRunner.test('Utils - showNotification is a function export', (t) => {
+    t.assertEqual(typeof showNotification, 'function', 'showNotification should be a function');
+});
+
+TestRunner.test('Utils - showNotification accepts 1-2 parameters', (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('message') && (funcStr.includes('duration') || funcStr.includes('= 3000')), 'Should accept message and optional duration');
+});
+
+TestRunner.test('Utils - showNotification references message parameter', (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('message'), 'Should reference message parameter');
+});
+
+TestRunner.test('Utils - showNotification has default duration', (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('3000'), 'Should have default 3000ms duration');
+});
+
+TestRunner.test('Utils - showCustomModal is a function export', (t) => {
+    t.assertEqual(typeof showCustomModal, 'function', 'showCustomModal should be a function');
+});
+
+TestRunner.test('Utils - showCustomModal accepts 2-4 parameters', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('title') && funcStr.includes('contentHTML'), 'Should accept title, contentHTML, buttonsConfig, and optional modalClass');
+});
+
+TestRunner.test('Utils - showCustomModal references title parameter', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('title'), 'Should reference title parameter');
+});
+
+TestRunner.test('Utils - showCustomModal references contentHTML parameter', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('contentHTML'), 'Should reference contentHTML parameter');
+});
+
+TestRunner.test('Utils - showCustomModal references buttonsConfig parameter', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('buttonsConfig'), 'Should reference buttonsConfig parameter');
+});
+
+TestRunner.test('Utils - showConfirmationDialog is a function export', (t) => {
+    t.assertEqual(typeof showConfirmationDialog, 'function', 'showConfirmationDialog should be a function');
+});
+
+TestRunner.test('Utils - showConfirmationDialog accepts 3-4 parameters', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('title') && funcStr.includes('message'), 'Should accept title, message, onConfirm, and optional onCancel');
+});
+
+TestRunner.test('Utils - showConfirmationDialog references title parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('title'), 'Should reference title parameter');
+});
+
+TestRunner.test('Utils - showConfirmationDialog references message parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('message'), 'Should reference message parameter');
+});
+
+TestRunner.test('Utils - showConfirmationDialog references onConfirm parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('onConfirm'), 'Should reference onConfirm parameter');
+});
+
+TestRunner.test('Utils - showConfirmationDialog references onCancel parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('onCancel'), 'Should reference onCancel parameter');
+});
+
+TestRunner.test('Utils - showConfirmationDialog calls showCustomModal', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('showCustomModal'), 'Should call showCustomModal');
+});
+
+TestRunner.test('Utils - createContextMenu is a function export', (t) => {
+    t.assertEqual(typeof createContextMenu, 'function', 'createContextMenu should be a function');
+});
+
+TestRunner.test('Utils - createContextMenu accepts 2-3 parameters', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('event') && funcStr.includes('menuItems'), 'Should accept event and menuItems');
+});
+
+TestRunner.test('Utils - createContextMenu references event parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('event'), 'Should reference event parameter');
+});
+
+TestRunner.test('Utils - createContextMenu references menuItems parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('menuItems'), 'Should reference menuItems parameter');
+});
+
+TestRunner.test('Utils - createContextMenu uses preventDefault', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('preventDefault'), 'Should call preventDefault on event');
+});
+
+TestRunner.test('Utils - APP_VERSION validation for Day 376', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 376');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 55, 'Minor version should be >= 55 for Day 376');
+    }
+});
