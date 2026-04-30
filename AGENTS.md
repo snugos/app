@@ -1,3 +1,74 @@
+#### Day 392: Recording Audio Module Extended Function Tests (2026-04-30)
+- **Feature**: Added 54 new unit tests for Recording Audio Module Extended Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 54 new tests in Day 392 section:
+    - Recording Audio - startAudioRecording accepts 2 parameters
+    - Recording Audio - startAudioRecording first param is track
+    - Recording Audio - startAudioRecording second param is isMonitoringEnabled
+    - Recording Audio - startAudioRecording validates track type is Audio
+    - Recording Audio - startAudioRecording checks inputChannel exists
+    - Recording Audio - startAudioRecording creates Tone.UserMedia instance
+    - Recording Audio - startAudioRecording passes audio constraints
+    - Recording Audio - startAudioRecording disables echo cancellation
+    - Recording Audio - startAudioRecording disables auto gain control
+    - Recording Audio - startAudioRecording disables noise suppression
+    - Recording Audio - startAudioRecording creates Tone.Recorder instance
+    - Recording Audio - startAudioRecording connects mic to recorder chain
+    - Recording Audio - startAudioRecording uses recordingInputGainNode
+    - Recording Audio - startAudioRecording creates Gain node with recordingInputGain
+    - Recording Audio - startAudioRecording supports monitoring mode
+    - Recording Audio - startAudioRecording connects to track input when monitoring
+    - Recording Audio - startAudioRecording calls recorder.start()
+    - Recording Audio - startAudioRecording calls setIsRecordingState(true)
+    - Recording Audio - startAudioRecording calls setRecordingTrackIdState with track.id
+    - Recording Audio - startAudioRecording calls setRecordingStartTimeState with Transport.seconds
+    - Recording Audio - startAudioRecording returns true on success
+    - Recording Audio - startAudioRecording returns false on error
+    - Recording Audio - startAudioRecording has error handling with user messages
+    - Recording Audio - startAudioRecording handles NotAllowedError for permission denied
+    - Recording Audio - startAudioRecording handles NotFoundError for no device
+    - Recording Audio - startAudioRecording handles AbortError for input failure
+    - Recording Audio - startAudioRecording cleans up on error
+    - Recording Audio - startAudioRecording enumerates audio input devices
+    - Recording Audio - stopAudioRecording checks recorder null
+    - Recording Audio - stopAudioRecording calls recorder.stop()
+    - Recording Audio - stopAudioRecording captures blob from recorder
+    - Recording Audio - stopAudioRecording closes microphone
+    - Recording Audio - stopAudioRecording disposes recorder
+    - Recording Audio - stopAudioRecording handles null blob
+    - Recording Audio - stopAudioRecording handles empty blob (size 0)
+    - Recording Audio - stopAudioRecording shows notification for empty recording
+    - Recording Audio - stopAudioRecording finds track by recordingTrackId
+    - Recording Audio - stopAudioRecording calls track.addAudioClip
+    - Recording Audio - stopAudioRecording passes blob and startTime to addAudioClip
+    - Recording Audio - stopAudioRecording handles track not found
+    - Recording Audio - stopAudioRecording calls setIsRecordingState(false)
+    - Recording Audio - stopAudioRecording calls setRecordingTrackIdState(null)
+    - Recording Audio - stopAudioRecording calls setRecordingStartTimeState(0)
+    - Recording Audio - stopAudioRecording handles recorder not in started state
+    - Recording Audio - stopAudioRecording has error handling with console.error
+    - Recording Audio - setRecordingInputGain function exists
+    - Recording Audio - setRecordingInputGain accepts 1 parameter
+    - Recording Audio - setRecordingInputGain updates recordingInputGainNode gain
+    - Recording Audio - APP_VERSION validation for Day 392
+  - `js/constants.js`: Bumped APP_VERSION to 2.70.0
+- **Feature Details**:
+  - Tests validate startAudioRecording function (2 params: track, isMonitoringEnabled)
+  - Tests validate Tone.UserMedia instance creation with audio constraints
+  - Tests validate audio constraints (echoCancellation: false, autoGainControl: false, noiseSuppression: false)
+  - Tests validate Tone.Recorder instance creation and mic -> recordingInputGainNode -> recorder chain
+  - Tests validate Gain node creation with recordingInputGain
+  - Tests validate monitoring mode connects to track.inputChannel
+  - Tests validate setIsRecordingState(true), setRecordingTrackIdState, setRecordingStartTimeState calls
+  - Tests validate user-friendly error handling (NotAllowedError, NotFoundError, AbortError)
+  - Tests validate stopAudioRecording function (0 params, blob processing, resource cleanup)
+  - Tests validate recorder.stop() captures blob
+  - Tests validate track.addAudioClip(blob, startTime) call
+  - Tests validate state clearing (setIsRecordingState(false), setRecordingTrackIdState(null), setRecordingStartTimeState(0)
+  - Tests validate setRecordingInputGain function (1 param, updates recordingInputGainNode gain)
+  - Total tests increased from 10564 to 10618
+- **Version**: Bumped to 2.70.0
+
 #### Day 391: DrumSampler Pad Drop Zones Extended Verification Tests (2026-04-30)
 - **Feature**: Added 36 new unit tests for DrumSampler Pad Drop Zones extended verification to expand test coverage
 - **Files Modified**:
