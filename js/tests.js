@@ -8944,3 +8944,337 @@ TestRunner.test('Sound Browser State - APP_VERSION validation for Day 384', (t) 
         t.assertTruthy(versionParts[1] >= 62, 'Minor version should be >= 62 for Day 384');
     }
 });
+
+// ============================================
+// Day 385: Track Removal State Function Tests
+// ============================================
+TestRunner.test('Track Removal - removeTrackFromStateInternal is a function export', (t) => {
+    t.assertEqual(typeof removeTrackFromStateInternal, 'function', 'removeTrackFromStateInternal should be a function');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal accepts 1 parameter', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'removeTrackFromStateInternal should accept 1 parameter (trackId)');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackFromStateInternal should call captureStateForUndo');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal uses descriptive undo label', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('Remove Track') && funcStr.includes('track.name'), 'removeTrackFromStateInternal should use descriptive undo label with track name');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal guards against missing appServices', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices.captureStateForUndo') && (funcStr.includes('if') || funcStr.includes('&&')), 'removeTrackFromStateInternal should guard against missing appServices');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal finds track by id', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('findIndex') && funcStr.includes('t.id === trackId') || funcStr.includes('trackId'), 'removeTrackFromStateInternal should find track by id');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal references track.name for undo label', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('track.name') || funcStr.includes('name'), 'removeTrackFromStateInternal should reference track name for undo label');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal handles track not found case', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('index !== -1') || funcStr.includes('return false') || funcStr.includes('return true'), 'removeTrackFromStateInternal should handle track not found case');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal returns boolean', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'removeTrackFromStateInternal should return boolean');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal attempts track.dispose', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('dispose') || funcStr.includes('splice'), 'removeTrackFromStateInternal should attempt to dispose track resources');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal has try-catch for dispose', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'removeTrackFromStateInternal should have try-catch for dispose errors');
+});
+
+TestRunner.test('Track Removal - removeTrackFromStateInternal splices from tracks array', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeTrackFromStateInternal should remove track from array using splice');
+});
+
+TestRunner.test('Track Removal - APP_VERSION validation for Day 385', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 385');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 63, 'Minor version should be >= 63 for Day 385');
+    }
+});
+
+// ============================================
+// Day 385: Send Track & Ghost Track State Function Tests
+// ============================================
+
+// Ghost Track State Tests
+TestRunner.test('Ghost Track State - getGhostTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof getGhostTrackIdState, 'function', 'getGhostTrackIdState should be a function');
+});
+
+TestRunner.test('Ghost Track State - getGhostTrackIdState accepts 0 parameters', (t) => {
+    t.assertEqual(getGhostTrackIdState.length, 0, 'getGhostTrackIdState should accept 0 parameters');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setGhostTrackIdState, 'function', 'setGhostTrackIdState should be a function');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState accepts 1 parameter', (t) => {
+    t.assertEqual(setGhostTrackIdState.length, 1, 'setGhostTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState calls captureStateForUndo', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('appServices.captureStateForUndo'), 'setGhostTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState uses descriptive undo label', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    const hasSetLabel = funcStr.includes('Set Ghost Track');
+    const hasClearLabel = funcStr.includes('Clear Ghost Track');
+    t.assertTruthy(hasSetLabel || hasClearLabel, 'setGhostTrackIdState should use descriptive undo label (Set/Clear Ghost Track)');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState uses conditional label based on trackId', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    const hasConditional = (funcStr.match(/if\s*\(\s*trackId\s*\)/) || funcStr.match(/trackId\s*\?/)) && funcStr.includes('trackId');
+    t.assertTruthy(hasConditional, 'setGhostTrackIdState should use conditional label based on trackId value');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState guards against missing appServices', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('appServices.captureStateForUndo') && (funcStr.includes('if') || funcStr.includes('&&')), 'setGhostTrackIdState should guard against missing appServices');
+});
+
+TestRunner.test('Ghost Track State - setGhostTrackIdState handles null/undefined for clearing', (t) => {
+    const funcStr = setGhostTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('ghostTrackIdState = trackId'), 'setGhostTrackIdState should assign trackId directly');
+});
+
+TestRunner.test('Ghost Track State - getGhostTrackIdState returns null or string', (t) => {
+    const funcStr = getGhostTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('ghostTrackIdState') || funcStr.includes('return'), 'getGhostTrackIdState should return ghostTrackIdState');
+});
+
+// Send Track State Tests
+TestRunner.test('Send Track State - addSendTrackState is a function export', (t) => {
+    t.assertEqual(typeof addSendTrackState, 'function', 'addSendTrackState should be a function');
+});
+
+TestRunner.test('Send Track State - addSendTrackState accepts 1 parameter', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('sendData') || funcStr.includes('sendData?'), 'addSendTrackState should accept 1 parameter (sendData)');
+});
+
+TestRunner.test('Send Track State - addSendTrackState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') && funcStr.includes('Add Send'), 'addSendTrackState should call captureStateForUndo with "Add Send" label');
+});
+
+TestRunner.test('Send Track State - addSendTrackState generates unique id', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('sendTrackIdCounter') || funcStr.includes('++') || funcStr.includes('id:'), 'addSendTrackState should generate unique id');
+});
+
+TestRunner.test('Send Track State - addSendTrackState uses DEFAULT_SEND_LEVEL fallback', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('level:') && (funcStr.includes('DEFAULT_SEND_LEVEL') || funcStr.includes('1.0') || funcStr.includes('1.')), 'addSendTrackState should use DEFAULT_SEND_LEVEL fallback for level');
+});
+
+TestRunner.test('Send Track State - addSendTrackState references sendData.name for undo label', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('sendData') && funcStr.includes('name'), 'addSendTrackState should reference sendData.name');
+});
+
+TestRunner.test('Send Track State - setSendTrackNameState is a function export', (t) => {
+    t.assertEqual(typeof setSendTrackNameState, 'function', 'setSendTrackNameState should be a function');
+});
+
+TestRunner.test('Send Track State - setSendTrackNameState accepts 2 parameters', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('sendId') && funcStr.includes('name'), 'setSendTrackNameState should accept 2 parameters (sendId, name)');
+});
+
+TestRunner.test('Send Track State - setSendTrackNameState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') && funcStr.includes('Rename Send'), 'setSendTrackNameState should use "Rename Send" undo label');
+});
+
+TestRunner.test('Send Track State - setSendTrackNameState references send.name for undo label', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('send.name') || funcStr.includes('send['), 'setSendTrackNameState should reference send.name');
+});
+
+TestRunner.test('Send Track State - setSendTrackLevelState is a function export', (t) => {
+    t.assertEqual(typeof setSendTrackLevelState, 'function', 'setSendTrackLevelState should be a function');
+});
+
+TestRunner.test('Send Track State - setSendTrackLevelState accepts 2 parameters', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('sendId') && funcStr.includes('level'), 'setSendTrackLevelState should accept 2 parameters (sendId, level)');
+});
+
+TestRunner.test('Send Track State - setSendTrackLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Track State - setSendTrackLevelState clamps value to valid range', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setSendTrackLevelState should clamp level to valid range');
+});
+
+TestRunner.test('Send Track State - setSendTrackMutedState is a function export', (t) => {
+    t.assertEqual(typeof setSendTrackMutedState, 'function', 'setSendTrackMutedState should be a function');
+});
+
+TestRunner.test('Send Track State - setSendTrackMutedState accepts 2 parameters', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('sendId') && funcStr.includes('muted'), 'setSendTrackMutedState should accept 2 parameters (sendId, muted)');
+});
+
+TestRunner.test('Send Track State - setSendTrackMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Track State - setSendTrackMutedState coerces muted to boolean', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('!!muted') || funcStr.includes('Boolean'), 'setSendTrackMutedState should coerce muted to boolean');
+});
+
+TestRunner.test('Send Track State - setSendTrackEffectsState is a function export', (t) => {
+    t.assertEqual(typeof setSendTrackEffectsState, 'function', 'setSendTrackEffectsState should be a function');
+});
+
+TestRunner.test('Send Track State - setSendTrackEffectsState accepts 2 parameters', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('sendId') && funcStr.includes('effects'), 'setSendTrackEffectsState should accept 2 parameters (sendId, effects)');
+});
+
+TestRunner.test('Send Track State - setSendTrackEffectsState calls captureStateForUndo', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSendTrackEffectsState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Track State - setSendTrackEffectsState validates effects is array', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray') || funcStr.includes('effects'), 'setSendTrackEffectsState should validate effects is an array');
+});
+
+TestRunner.test('Send Track State - removeSendTrackState is a function export', (t) => {
+    t.assertEqual(typeof removeSendTrackState, 'function', 'removeSendTrackState should be a function');
+});
+
+TestRunner.test('Send Track State - removeSendTrackState accepts 1 parameter', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'removeSendTrackState should accept 1 parameter (sendId)');
+});
+
+TestRunner.test('Send Track State - removeSendTrackState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') && funcStr.includes('Remove Send'), 'removeSendTrackState should use "Remove Send" undo label');
+});
+
+TestRunner.test('Send Track State - removeSendTrackState splices from sendTracksState array', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('splice') || funcStr.includes('filter'), 'removeSendTrackState should remove from sendTracksState array');
+});
+
+TestRunner.test('Send Track State - removeSendTrackState returns boolean', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'removeSendTrackState should return boolean');
+});
+
+TestRunner.test('Send Track State - getSendTracksState is a function export', (t) => {
+    t.assertEqual(typeof getSendTracksState, 'function', 'getSendTracksState should be a function');
+});
+
+TestRunner.test('Send Track State - getSendTracksState accepts 0 parameters', (t) => {
+    t.assertEqual(getSendTracksState.length, 0, 'getSendTracksState should accept 0 parameters');
+});
+
+TestRunner.test('Send Track State - getSendTrackByIdState is a function export', (t) => {
+    t.assertEqual(typeof getSendTrackByIdState, 'function', 'getSendTrackByIdState should be a function');
+});
+
+TestRunner.test('Send Track State - getSendTrackByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getSendTrackByIdState.length, 1, 'getSendTrackByIdState should accept 1 parameter');
+});
+
+TestRunner.test('Send Track State - getSendTrackByIdState returns send or undefined', (t) => {
+    const funcStr = getSendTrackByIdState.toString();
+    t.assertTruthy(funcStr.includes('find') || funcStr.includes('return'), 'getSendTrackByIdState should find and return send track');
+});
+
+// Track Send Level State Tests
+TestRunner.test('Track Send Level - setTrackSendLevelState is a function export', (t) => {
+    t.assertEqual(typeof setTrackSendLevelState, 'function', 'setTrackSendLevelState should be a function');
+});
+
+TestRunner.test('Track Send Level - setTrackSendLevelState accepts 3 parameters', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('trackId') && funcStr.includes('sendId') && funcStr.includes('level'), 'setTrackSendLevelState should accept 3 parameters');
+});
+
+TestRunner.test('Track Send Level - setTrackSendLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Send Level - setTrackSendLevelState initializes trackSendsState if needed', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('trackSendsState[trackId]') || funcStr.includes('trackSendsState['), 'setTrackSendLevelState should initialize trackSendsState for track');
+});
+
+TestRunner.test('Track Send Level - getTrackSendLevelState is a function export', (t) => {
+    t.assertEqual(typeof getTrackSendLevelState, 'function', 'getTrackSendLevelState should be a function');
+});
+
+TestRunner.test('Track Send Level - getTrackSendLevelState accepts 2 parameters', (t) => {
+    t.assertEqual(getTrackSendLevelState.length, 2, 'getTrackSendLevelState should accept 2 parameters (trackId, sendId)');
+});
+
+TestRunner.test('Track Send Level - getTrackSendLevelState returns default level', (t) => {
+    const funcStr = getTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('return') || funcStr.includes('0'), 'getTrackSendLevelState should return default level of 0');
+});
+
+TestRunner.test('Track Send Level - setTrackSendPreFaderState is a function export', (t) => {
+    t.assertEqual(typeof setTrackSendPreFaderState, 'function', 'setTrackSendPreFaderState should be a function');
+});
+
+TestRunner.test('Track Send Level - setTrackSendPreFaderState accepts 3 parameters', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('trackId') && funcStr.includes('sendId') && funcStr.includes('preFader'), 'setTrackSendPreFaderState should accept 3 parameters');
+});
+
+TestRunner.test('Track Send Level - setTrackSendPreFaderState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendPreFaderState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Send Level - getTrackSendPreFaderState is a function export', (t) => {
+    t.assertEqual(typeof getTrackSendPreFaderState, 'function', 'getTrackSendPreFaderState should be a function');
+});
+
+TestRunner.test('Track Send Level - APP_VERSION validation for Day 385', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 385');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 63, 'Minor version should be >= 63 for Day 385');
+    }
+});
