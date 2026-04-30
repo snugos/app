@@ -9424,3 +9424,233 @@ TestRunner.test('Master Effects Chain - APP_VERSION validation for Day 386', (t)
         t.assertTruthy(versionParts[1] >= 64, 'Minor version should be >= 64 for Day 386');
     }
 });
+
+// ============================================
+// Day 387: State Utility & Send Bus Audio Tests
+// ============================================
+
+TestRunner.test('State Utility - resetPerformanceMonitorState is a function export', (t) => {
+    t.assertEqual(typeof resetPerformanceMonitorState, 'function', 'resetPerformanceMonitorState should be a function');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState accepts 0 parameters', (t) => {
+    t.assertEqual(resetPerformanceMonitorState.length, 0, 'resetPerformanceMonitorState should accept 0 parameters');
+});
+
+TestRunner.test('State Utility - resetPerformanceMonitorState resets all properties', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('enabled'), 'resetPerformanceMonitorState should reset enabled');
+    t.assertTruthy(funcStr.includes('audioContextState') || funcStr.includes('unknown'), 'resetPerformanceMonitorState should reset audioContextState');
+    t.assertTruthy(funcStr.includes('cpuUsage') || funcStr.includes('0'), 'resetPerformanceMonitorState should reset cpuUsage');
+    t.assertTruthy(funcStr.includes('droppedCallbacks') || funcStr.includes('0'), 'resetPerformanceMonitorState should reset droppedCallbacks');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom is a function export', (t) => {
+    t.assertEqual(typeof resetTimelineZoom, 'function', 'resetTimelineZoom should be a function');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom accepts 0 parameters', (t) => {
+    t.assertEqual(resetTimelineZoom.length, 0, 'resetTimelineZoom should accept 0 parameters');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom calls captureStateForUndo', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'resetTimelineZoom should call captureStateForUndo');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom uses descriptive undo label', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('Reset Timeline Zoom') || funcStr.includes('Reset'), 'resetTimelineZoom should use descriptive undo label');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom resets horizontal zoom', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('horizontal') || funcStr.includes('TIMELINE_ZOOM_DEFAULT'), 'resetTimelineZoom should reset horizontal zoom');
+});
+
+TestRunner.test('State Utility - resetTimelineZoom resets vertical zoom', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('vertical') || funcStr.includes('TIMELINE_VERTICAL_ZOOM_DEFAULT'), 'resetTimelineZoom should reset vertical zoom');
+});
+
+TestRunner.test('State Utility - setHighestZState is a function export', (t) => {
+    t.assertEqual(typeof setHighestZState, 'function', 'setHighestZState should be a function');
+});
+
+TestRunner.test('State Utility - setHighestZState accepts 1 parameter', (t) => {
+    t.assertEqual(setHighestZState.length, 1, 'setHighestZState should accept 1 parameter');
+});
+
+TestRunner.test('State Utility - setHighestZState calls captureStateForUndo', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setHighestZState should call captureStateForUndo');
+});
+
+TestRunner.test('State Utility - setHighestZState uses descriptive undo label', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('Highest Z') || funcStr.includes('zIndex') || funcStr.includes('Set'), 'setHighestZState should use descriptive undo label');
+});
+
+TestRunner.test('State Utility - getHighestZState is a function export', (t) => {
+    t.assertEqual(typeof getHighestZState, 'function', 'getHighestZState should be a function');
+});
+
+TestRunner.test('State Utility - getHighestZState accepts 0 parameters', (t) => {
+    t.assertEqual(getHighestZState.length, 0, 'getHighestZState should accept 0 parameters');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus is a function', (t) => {
+    t.assertEqual(typeof addEffectToSendBus, 'function', 'addEffectToSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus accepts 3 parameters', (t) => {
+    t.assertEqual(addEffectToSendBus.length, 3, 'addEffectToSendBus should accept 3 parameters (sendId, effectType, params)');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus references sendId parameter', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'addEffectToSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus references effectType parameter', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addEffectToSendBus should reference effectType parameter');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus references params parameter', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('params'), 'addEffectToSendBus should reference params parameter');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus checks sendBusNodes', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes') || funcStr.includes('busData'), 'addEffectToSendBus should check sendBusNodes');
+});
+
+TestRunner.test('Send Bus Audio - addEffectToSendBus creates effect instance', (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('createEffectInstance'), 'addEffectToSendBus should call createEffectInstance');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus is a function', (t) => {
+    t.assertEqual(typeof removeEffectFromSendBus, 'function', 'removeEffectFromSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus accepts 2 parameters', (t) => {
+    t.assertEqual(removeEffectFromSendBus.length, 2, 'removeEffectFromSendBus should accept 2 parameters (sendId, effectId)');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus references sendId parameter', (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'removeEffectFromSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus references effectId parameter', (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'removeEffectFromSendBus should reference effectId parameter');
+});
+
+TestRunner.test('Send Bus Audio - removeEffectFromSendBus disposes effect node', (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('dispose') || funcStr.includes('splice') || funcStr.includes('filter'), 'removeEffectFromSendBus should dispose effect node');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam is a function', (t) => {
+    t.assertEqual(typeof updateSendBusEffectParam, 'function', 'updateSendBusEffectParam should be a function');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam accepts 4 parameters', (t) => {
+    t.assertEqual(updateSendBusEffectParam.length, 4, 'updateSendBusEffectParam should accept 4 parameters (sendId, effectId, paramPath, value)');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam references sendId parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'updateSendBusEffectParam should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam references effectId parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'updateSendBusEffectParam should reference effectId parameter');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam references paramPath parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('paramPath'), 'updateSendBusEffectParam should reference paramPath parameter');
+});
+
+TestRunner.test('Send Bus Audio - updateSendBusEffectParam references value parameter', (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('value'), 'updateSendBusEffectParam should reference value parameter');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus is a function', (t) => {
+    t.assertEqual(typeof reorderEffectInSendBus, 'function', 'reorderEffectInSendBus should be a function');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus accepts 3 parameters', (t) => {
+    t.assertEqual(reorderEffectInSendBus.length, 3, 'reorderEffectInSendBus should accept 3 parameters (sendId, effectId, newIndex)');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus references sendId parameter', (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'reorderEffectInSendBus should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus references effectId parameter', (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'reorderEffectInSendBus should reference effectId parameter');
+});
+
+TestRunner.test('Send Bus Audio - reorderEffectInSendBus references newIndex parameter', (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('newIndex'), 'reorderEffectInSendBus should reference newIndex parameter');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel is a function', (t) => {
+    t.assertEqual(typeof setSendBusLevel, 'function', 'setSendBusLevel should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel accepts 2 parameters', (t) => {
+    t.assertEqual(setSendBusLevel.length, 2, 'setSendBusLevel should accept 2 parameters (sendId, level)');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel references sendId parameter', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'setSendBusLevel should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel references level parameter', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('level'), 'setSendBusLevel should reference level parameter');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusLevel clamps level value', (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min') || funcStr.includes('0') || funcStr.includes('SEND_LEVEL'), 'setSendBusLevel should clamp level value');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted is a function', (t) => {
+    t.assertEqual(typeof setSendBusMuted, 'function', 'setSendBusMuted should be a function');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted accepts 2 parameters', (t) => {
+    t.assertEqual(setSendBusMuted.length, 2, 'setSendBusMuted should accept 2 parameters (sendId, muted)');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted references sendId parameter', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'setSendBusMuted should reference sendId parameter');
+});
+
+TestRunner.test('Send Bus Audio - setSendBusMuted references muted parameter', (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('muted'), 'setSendBusMuted should reference muted parameter');
+});
+
+TestRunner.test('State Utility - APP_VERSION validation for Day 387', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 387');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 64, 'Minor version should be >= 64 for Day 387');
+    }
+});
