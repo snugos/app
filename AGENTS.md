@@ -1,3 +1,96 @@
+#### Day 397: Preview Audio Functions Tests (2026-04-30)
+- **Feature**: Added 58 new unit tests for Preview Audio Functions (playSlicePreview and playDrumSamplerPadPreview) to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 58 new tests in Day 397 section:
+    - Audio Preview - playSlicePreview is a function export
+    - Audio Preview - playSlicePreview is async
+    - Audio Preview - playSlicePreview accepts 4 parameters
+    - Audio Preview - playSlicePreview references trackId parameter
+    - Audio Preview - playSlicePreview references sliceIndex parameter
+    - Audio Preview - playSlicePreview references velocity parameter
+    - Audio Preview - playSlicePreview references additionalPitchShiftInSemitones parameter
+    - Audio Preview - playSlicePreview calls initAudioContextAndMasterMeter
+    - Audio Preview - playSlicePreview references getTrackById from appServices
+    - Audio Preview - playSlicePreview validates track type is Sampler
+    - Audio Preview - playSlicePreview checks audioBuffer.loaded
+    - Audio Preview - playSlicePreview references slices array
+    - Audio Preview - playSlicePreview uses playbackRate calculation with Math.pow
+    - Audio Preview - playSlicePreview references Tone.now
+    - Audio Preview - playSlicePreview references actualDestination
+    - Audio Preview - playSlicePreview handles slicerIsPolyphonic flag
+    - Audio Preview - playSlicePreview references slicerMonoPlayer
+    - Audio Preview - playSlicePreview references slicerMonoEnvelope
+    - Audio Preview - playSlicePreview references slicerMonoGain
+    - Audio Preview - playSlicePreview calls player.stop
+    - Audio Preview - playSlicePreview calls env.triggerRelease
+    - Audio Preview - playSlicePreview sets player.playbackRate
+    - Audio Preview - playSlicePreview sets player.reverse
+    - Audio Preview - playSlicePreview sets player.loop
+    - Audio Preview - playSlicePreview sets player.loopStart and player.loopEnd
+    - Audio Preview - playSlicePreview has error handling with console.warn
+    - Audio Preview - playSlicePreview has error handling with console.error
+    - Audio Preview - playSlicePreview handles sliceData.pitchShift
+    - Audio Preview - playSlicePreview handles sliceData.volume
+    - Audio Preview - playSlicePreview handles sliceData.envelope
+    - Audio Preview - playSlicePreview handles sliceData.duration
+    - Audio Preview - playSlicePreview handles sliceData.offset
+    - Audio Preview - playSlicePreview uses Tone.dbToGain for gain conversion
+    - Audio Preview - playDrumSamplerPadPreview is a function export
+    - Audio Preview - playDrumSamplerPadPreview is async
+    - Audio Preview - playDrumSamplerPadPreview accepts 4 parameters
+    - Audio Preview - playDrumSamplerPadPreview references trackId parameter
+    - Audio Preview - playDrumSamplerPadPreview references padIndex parameter
+    - Audio Preview - playDrumSamplerPadPreview references velocity parameter
+    - Audio Preview - playDrumSamplerPadPreview calls initAudioContextAndMasterMeter
+    - Audio Preview - playDrumSamplerPadPreview references getTrackById from appServices
+    - Audio Preview - playDrumSamplerPadPreview validates track type is DrumSampler
+    - Audio Preview - playDrumSamplerPadPreview references drumPadPlayers array
+    - Audio Preview - playDrumSamplerPadPreview references drumSamplerPads array
+    - Audio Preview - playDrumSamplerPadPreview checks player.disposed or player.loaded
+    - Audio Preview - playDrumSamplerPadPreview references actualDestination
+    - Audio Preview - playDrumSamplerPadPreview references padData.volume
+    - Audio Preview - playDrumSamplerPadPreview references padData.pitchShift
+    - Audio Preview - playDrumSamplerPadPreview uses Tone.gainToDb for volume conversion
+    - Audio Preview - playDrumSamplerPadPreview uses Math.pow for playbackRate
+    - Audio Preview - playDrumSamplerPadPreview calls player.start with Tone.now
+    - Audio Preview - playDrumSamplerPadPreview has error handling with console.warn
+    - Audio Preview - playDrumSamplerPadPreview has error handling with console.error
+    - Audio Preview - playDrumSamplerPadPreview calls player.disconnect and player.connect
+    - Audio Preview - playDrumSamplerPadPreview sets player.volume.value
+    - Audio Preview - playDrumSamplerPadPreview handles totalPadPitchShift
+    - Audio Preview - playDrumSamplerPadPreview shows notification for unloaded pad
+    - Audio Preview - APP_VERSION validation for Day 397
+  - `js/constants.js`: Bumped APP_VERSION to 2.75.0
+- **Feature Details**:
+  - Tests validate playSlicePreview function (async, 4 params: trackId, sliceIndex, velocity, additionalPitchShiftInSemitones)
+  - Tests validate playSlicePreview calls initAudioContextAndMasterMeter before playback
+  - Tests validate playSlicePreview references getTrackById from appServices
+  - Tests validate playSlicePreview validates track type is Sampler and checks audioBuffer.loaded
+  - Tests validate playSlicePreview references slices array and validates slice data
+  - Tests validate playSlicePreview uses Math.pow(2, totalPitchShift / 12) for playbackRate calculation
+  - Tests validate playSlicePreview references Tone.now for timing
+  - Tests validate playSlicePreview handles slicerIsPolyphonic flag and references slicerMonoPlayer/Envelope/Gain
+  - Tests validate playSlicePreview sets player.playbackRate, player.reverse, player.loop, player.loopStart, player.loopEnd
+  - Tests validate playSlicePreview has error handling with console.warn and console.error
+  - Tests validate playSlicePreview handles sliceData properties (pitchShift, volume, envelope, duration, offset)
+  - Tests validate playSlicePreview uses Tone.dbToGain for gain conversion
+  - Tests validate playDrumSamplerPadPreview function (async, 4 params: trackId, padIndex, velocity, additionalPitchShiftInSemitones)
+  - Tests validate playDrumSamplerPadPreview calls initAudioContextAndMasterMeter before playback
+  - Tests validate playDrumSamplerPadPreview references getTrackById from appServices
+  - Tests validate playDrumSamplerPadPreview validates track type is DrumSampler
+  - Tests validate playDrumSamplerPadPreview references drumPadPlayers and drumSamplerPads arrays
+  - Tests validate playDrumSamplerPadPreview checks player.disposed and player.loaded status
+  - Tests validate playDrumSamplerPadPreview references actualDestination for routing
+  - Tests validate playDrumSamplerPadPreview references padData.volume and padData.pitchShift
+  - Tests validate playDrumSamplerPadPreview uses Tone.gainToDb for volume conversion
+  - Tests validate playDrumSamplerPadPreview uses Math.pow(2, totalPadPitchShift / 12) for playbackRate
+  - Tests validate playDrumSamplerPadPreview calls player.start with Tone.now
+  - Tests validate playDrumSamplerPadPreview calls player.disconnect and player.connect
+  - Tests validate playDrumSamplerPadPreview sets player.volume.value
+  - Tests validate playDrumSamplerPadPreview shows notification for unloaded pad
+  - Total tests increased from 1450 to 1508
+- **Version**: Bumped to 2.75.0
+
 #### Day 396: Metronome & Playback Mode State Functions Tests (2026-04-30)
 - **Feature**: Added 30 new unit tests for Metronome and Playback Mode state functions to expand test coverage
 - **Files Modified**:
