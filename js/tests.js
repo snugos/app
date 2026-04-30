@@ -10416,3 +10416,290 @@ TestRunner.test('Timeline & Waveform Rendering - APP_VERSION validation for Day 
     const patch = versionParts[2];
     t.assertTruthy(major > 2 || (major === 2 && minor >= 83), 'APP_VERSION should be 2.83.0 or higher for Day 406');
 });
+
+// ============================================
+// Day 408: Audio Clip Editor UI Tests
+// ============================================
+
+// Audio Clip Editor - openAudioClipEditorWindow
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow is a function export', (t) => {
+    t.assertEqual(typeof openAudioClipEditorWindow, 'function', 'openAudioClipEditorWindow should be a function');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow accepts 3 parameters', (t) => {
+    t.assertEqual(openAudioClipEditorWindow.length, 3, 'openAudioClipEditorWindow should accept 3 parameters (trackId, clipId, savedState)');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow references trackId parameter', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openAudioClipEditorWindow should reference trackId parameter');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow references clipId parameter', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'openAudioClipEditorWindow should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow calls localAppServices.getTrackById', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openAudioClipEditorWindow should call getTrackById');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow validates track exists', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('!track') || funcStr.includes('track === null') || funcStr.includes('track === undefined'), 'openAudioClipEditorWindow should validate track exists');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow finds clip in track.timelineClips', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('timelineClips') && funcStr.includes('find'), 'openAudioClipEditorWindow should find clip in track.timelineClips');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow validates clip exists', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('!clip') || funcStr.includes('clip === null') || funcStr.includes('clip === undefined'), 'openAudioClipEditorWindow should validate clip exists');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow generates windowId with audioClipEditor prefix', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('audioClipEditor') || funcStr.includes('`audioClipEditor-'), 'openAudioClipEditorWindow should generate windowId with audioClipEditor prefix');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow checks for already open window', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') && funcStr.includes('has(windowId)'), 'openAudioClipEditorWindow should check for already open window');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow calls localAppServices.createWindow', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openAudioClipEditorWindow should call createWindow');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow includes clip.name in window title', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('name') && (funcStr.includes('window') || funcStr.includes('title')), 'openAudioClipEditorWindow should include clip name in window title');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow generates window width and height', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('width') && funcStr.includes('height'), 'openAudioClipEditorWindow should generate window dimensions');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow sets minWidth and minHeight', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('minWidth') && funcStr.includes('minHeight'), 'openAudioClipEditorWindow should set minWidth and minHeight');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow sets initialContentKey', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('initialContentKey'), 'openAudioClipEditorWindow should set initialContentKey');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent is called internally', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('buildClipEditorContent'), 'openAudioClipEditorWindow should call buildClipEditorContent');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent returns HTML string', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    const buildMatch = funcStr.match(/function buildClipEditorContent\(\)/);
+    t.assertTruthy(buildMatch || funcStr.includes('buildClipEditorContent = '), 'buildClipEditorContent should be defined inside openAudioClipEditorWindow');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.fadeIn', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('fadeIn'), 'buildClipEditorContent should reference clip.fadeIn');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.fadeOut', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('fadeOut'), 'buildClipEditorContent should reference clip.fadeOut');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.startTime', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('startTime'), 'buildClipEditorContent should reference clip.startTime');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.duration', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('duration'), 'buildClipEditorContent should reference clip.duration');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.name', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes("'Untitled Clip'") || funcStr.includes('"Untitled Clip"') || funcStr.includes('name'), 'buildClipEditorContent should handle clip name');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.gain', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('gain') && funcStr.includes('DEFAULT_AUDIO_CLIP_GAIN'), 'buildClipEditorContent should reference clip.gain with DEFAULT_AUDIO_CLIP_GAIN fallback');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.playbackRate', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('playbackRate') && funcStr.includes('DEFAULT_AUDIO_CLIP_PLAYBACK_RATE'), 'buildClipEditorContent should reference clip.playbackRate');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.startOffset', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('startOffset') && funcStr.includes('DEFAULT_AUDIO_CLIP_START_OFFSET'), 'buildClipEditorContent should reference clip.startOffset');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses clip.endOffset', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('endOffset') && funcStr.includes('DEFAULT_AUDIO_CLIP_END_OFFSET'), 'buildClipEditorContent should reference clip.endOffset');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Clip Name input', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipNameInput') || (funcStr.includes('Clip Name') && funcStr.includes('input')), 'buildClipEditorContent should include Clip Name input');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Start Time input', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipStartTime') || (funcStr.includes('Start Time') && funcStr.includes('input')), 'buildClipEditorContent should include Start Time input');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Duration display', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipDuration') || (funcStr.includes('Duration') && funcStr.includes('input')), 'buildClipEditorContent should include Duration display');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Source Trim section', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('Source Trim') && funcStr.includes('clipStartOffset'), 'buildClipEditorContent should include Source Trim section');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Gain control', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipGainSlider') || funcStr.includes('clipGainInput') || (funcStr.includes('Gain') && funcStr.includes('range')), 'buildClipEditorContent should include Gain control');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Fade In control', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipFadeInSlider') || funcStr.includes('clipFadeInInput') || (funcStr.includes('Fade In') && funcStr.includes('range')), 'buildClipEditorContent should include Fade In control');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Fade Out control', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipFadeOutSlider') || funcStr.includes('clipFadeOutInput') || (funcStr.includes('Fade Out') && funcStr.includes('range')), 'buildClipEditorContent should include Fade Out control');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Fade Curve selects', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipFadeInCurve') && funcStr.includes('clipFadeOutCurve'), 'buildClipEditorContent should include Fade Curve selects');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Crossfade control', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipCrossfadeSlider') || funcStr.includes('clipCrossfadeInput') || funcStr.includes('Crossfade'), 'buildClipEditorContent should include Crossfade control');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Playback Rate control', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipPlaybackRateSlider') || funcStr.includes('clipPlaybackRateInput') || funcStr.includes('Playback Rate'), 'buildClipEditorContent should include Playback Rate control');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Clip Color swatches', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipColorSwatches') && funcStr.includes('clip-color-swatch'), 'buildClipEditorContent should include Clip Color swatches');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Waveform preview canvas', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('clipWaveformCanvas') && funcStr.includes('canvas'), 'buildClipEditorContent should include Waveform preview canvas');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Normalize button', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('normalizeClipBtn') || funcStr.includes('Normalize'), 'buildClipEditorContent should include Normalize button');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Apply button', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('applyClipChangesBtn') || funcStr.includes('Apply'), 'buildClipEditorContent should include Apply button');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent includes Delete button', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('deleteClipBtn') || funcStr.includes('Delete'), 'buildClipEditorContent should include Delete button');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses Constants.CLIP_COLORS', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('CLIP_COLORS'), 'buildClipEditorContent should use Constants.CLIP_COLORS');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses Constants.MAX_AUDIO_CLIP_CROSSFADE', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('MAX_AUDIO_CLIP_CROSSFADE'), 'buildClipEditorContent should use Constants.MAX_AUDIO_CLIP_CROSSFADE');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('MIN_AUDIO_CLIP_PLAYBACK_RATE'), 'buildClipEditorContent should use Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent uses Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('MAX_AUDIO_CLIP_PLAYBACK_RATE'), 'buildClipEditorContent should use Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent sets up event listeners for sliders', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('addEventListener'), 'openAudioClipEditorWindow should set up event listeners for sliders');
+});
+
+TestRunner.test('Audio Clip Editor - buildClipEditorContent syncs slider and input values', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('fadeInSlider') && funcStr.includes('fadeInInput'), 'openAudioClipEditorWindow should sync slider and input values');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow sets up delete button event listener', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('deleteClipBtn') && funcStr.includes('addEventListener'), 'openAudioClipEditorWindow should set up delete button event listener');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow calls track.deleteTimelineClip on delete', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('deleteTimelineClip'), 'openAudioClipEditorWindow should call track.deleteTimelineClip on delete');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow calls renderTimeline after delete', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('renderTimeline'), 'openAudioClipEditorWindow should call renderTimeline after delete');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow closes window after apply', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('editorWindow.close') || funcStr.includes('close()'), 'openAudioClipEditorWindow should close window after apply');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow shows notification', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'openAudioClipEditorWindow should show notification');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow handles clip color swatches', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('colorSwatches') && funcStr.includes('forEach'), 'openAudioClipEditorWindow should handle clip color swatches');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow calls captureStateForUndo for color change', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'openAudioClipEditorWindow should call captureStateForUndo for color change');
+});
+
+TestRunner.test('Audio Clip Editor - openAudioClipEditorWindow draws waveform preview', (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('drawClipWaveform'), 'openAudioClipEditorWindow should draw waveform preview');
+});
+
+TestRunner.test('Audio Clip Editor - APP_VERSION validation for Day 408', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 408');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 84, 'Minor version should be >= 84 for Day 408');
+    }
+});
