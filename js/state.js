@@ -49,6 +49,23 @@ let recordingStartTime = 0;
 
 let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
 
+// --- Undo/Redo State ---
+let undoStack = [];
+let redoStack = [];
+
+// --- Send Tracks State ---
+let sendTracksState = [];
+let trackSendsState = {};
+let sendTrackIdCounter = 0;
+
+// --- Track Groups State ---
+let trackGroupsState = [];
+let trackGroupIdCounter = 0;
+
+// --- Track Templates State ---
+let trackTemplatesState = [];
+let trackTemplateIdCounter = 0;
+
 // Metronome State
 let metronomeEnabled = false;
 let metronomeVolume = 0.5; // Default volume (0-1 range)

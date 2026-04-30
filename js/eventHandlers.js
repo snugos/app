@@ -302,7 +302,7 @@ export function initializePrimaryEventListeners(appContext) {
                         services.openTrackTemplatesWindow();
                     } else {
                         // Fallback: show template browser in a modal-like window
-                        services.showNotification?.('Opening Track Templates...', 1500);
+                        services.showNotification?.('Opening Track Templates...', 1500); return;
                         const templates = services.getTrackTemplatesState ? services.getTrackTemplatesState() : [];
                         showTrackTemplatesModal(services, templates);
                     }

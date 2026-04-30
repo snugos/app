@@ -1374,33 +1374,149 @@ export class Track {
         
         const totalSteps = activeSeq.length;
         const numRows = activeSeq.data.length;
+        const stepsPerBar = 16;
+        const stepsPerBeat = 4;
+        const stepsPerRate = 16 / rate; // e.g., for rate 16, stepsPerRate = 1 (every 16th note)
         
-        // Find all active notes to build the chord
-        const activeNotes = [];
+        // Find all active notes (chord notes) at each beat position within the first bar
+        const chordNotes = []; // Array of {row, col, velocity, length}
         for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
             const row = activeSeq.data[rowIndex];
             if (!row) continue;
             
-            for (let col = 0; col < totalSteps; col++) {
+            for (let col = 0; col < Math.min(totalSteps, stepsPerBar); col++) {
                 const cell = row[col];
                 if (cell && cell.active) {
-                    // Check if this is the start of a note (not a continuation of a longer note)
-                    // A note starts at column C if there's no active note at column C-1, or if the note at column C-1 has a length that doesn't reach column C
-                    const prevStep = col > 0 ? sequenceDataForTone[rowIndex]?.[col - 1] : null;
-                    const isNoteStart = !prevStep?.active || (prevStep.length !== undefined && prevStep.length <= 1);
+                    // Check if this is the start of a note
+                    const prevStep = col > 0 ? row[col - 1] : null;
+                    const isNoteStart = !prevStep || !prevStep.active || (prevStep.length !== undefined && prevStep.length <= 1);
                     
                     if (isNoteStart) {
-                        // Calculate duration based on note length (in 16th note steps)
-                        const noteLength = step.length || 1;
-                        const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
-                        const noteDuration = noteLength * sixteenthNoteDuration;
-                        
-                        this.instrument.triggerAttackRelease(pitchName, noteDuration, time, step.velocity * Constants.defaultVelocity);
+                        chordNotes.push({
+                            row: rowIndex,
+                            col: col,
+                            velocity: cell.velocity !== undefined ? cell.velocity : 0.8,
+                            length: cell.length !== undefined ? cell.length : 1
+                        });
                     }
-                    notePlayedThisStep = true;
                 }
             }
         }
+        
+        if (chordNotes.length === 0) {
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification('No notes found to arpeggiate.', 2000);
+            }
+            return 0;
+        }
+        
+        // Build arpeggio sequence based on mode
+        const arpeggioPattern = [];
+        const numOctaves = Math.max(1, Math.min(4, parseInt(octaves) || 1));
+        
+        // Sort notes by row (pitch) for 'up' and 'down' modes
+        const sortedNotes = [...chordNotes].sort((a, b) => a.row - b.row);
+        
+        for (let octave = 0; octave < numOctaves; octave++) {
+            const octaveMultiplier = octave;
+            
+            switch (mode) {
+                case 'up':
+                    for (let i = 0; i < sortedNotes.length; i++) {
+                        arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: octaveMultiplier });
+                    }
+                    break;
+                case 'down':
+                    for (let i = sortedNotes.length - 1; i >= 0; i--) {
+                        arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: octaveMultiplier });
+                    }
+                    break;
+                case 'updown':
+                    if (octave === 0) {
+                        for (let i = 0; i < sortedNotes.length; i++) {
+                            arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: 0 });
+                        }
+                    } else {
+                        for (let i = sortedNotes.length - 2; i >= 1; i--) {
+                            arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: octaveMultiplier });
+                        }
+                    }
+                    break;
+                case 'downup':
+                    if (octave === 0) {
+                        for (let i = sortedNotes.length - 1; i >= 0; i--) {
+                            arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: 0 });
+                        }
+                    } else {
+                        for (let i = 1; i < sortedNotes.length - 1; i++) {
+                            arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: octaveMultiplier });
+                        }
+                    }
+                    break;
+                case 'random':
+                    const randomNotes = [...sortedNotes];
+                    for (let i = randomNotes.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [randomNotes[i], randomNotes[j]] = [randomNotes[j], randomNotes[i]];
+                    }
+                    for (let i = 0; i < randomNotes.length; i++) {
+                        arpeggioPattern.push({ ...randomNotes[i], octaveOffset: octaveMultiplier });
+                    }
+                    break;
+                case 'converge':
+                    const midPoint = Math.floor(sortedNotes.length / 2);
+                    for (let i = 0; i < midPoint; i++) {
+                        arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: octaveMultiplier });
+                        arpeggioPattern.push({ ...sortedNotes[sortedNotes.length - 1 - i], octaveOffset: octaveMultiplier });
+                    }
+                    if (sortedNotes.length % 2 === 1) {
+                        arpeggioPattern.push({ ...sortedNotes[midPoint], octaveOffset: octaveMultiplier });
+                    }
+                    break;
+                case 'diverge':
+                    const midPt = Math.floor(sortedNotes.length / 2);
+                    for (let i = midPt - 1; i >= 0; i--) {
+                        arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: octaveMultiplier });
+                        arpeggioPattern.push({ ...sortedNotes[sortedNotes.length - 1 - i], octaveOffset: octaveMultiplier });
+                    }
+                    if (sortedNotes.length % 2 === 1) {
+                        arpeggioPattern.push({ ...sortedNotes[midPt], octaveOffset: octaveMultiplier });
+                    }
+                    break;
+                default: // 'up'
+                    for (let i = 0; i < sortedNotes.length; i++) {
+                        arpeggioPattern.push({ ...sortedNotes[i], octaveOffset: octaveMultiplier });
+                    }
+            }
+        }
+        
+        // Create new sequence data for the arpeggio
+        const newData = activeSeq.data.map(row => Array(totalSteps).fill(null));
+        let arpeggioIndex = 0;
+        const stepIncrement = Math.max(1, Math.floor(stepsPerRate));
+        
+        for (let col = 0; col < totalSteps && arpeggioIndex < arpeggioPattern.length; col += stepIncrement) {
+            const noteInfo = arpeggioPattern[arpeggioIndex % arpeggioPattern.length];
+            const targetRow = noteInfo.row;
+            
+            if (targetRow >= 0 && targetRow < numRows) {
+                const lengthInSteps = Math.min(noteInfo.length, totalSteps - col);
+                newData[targetRow][col] = {
+                    active: true,
+                    velocity: noteInfo.velocity,
+                    length: lengthInSteps
+                };
+            }
+            arpeggioIndex++;
+        }
+        
+        activeSeq.data = newData;
+        
+        if (this.appServices.showNotification) {
+            this.appServices.showNotification(`Created arpeggio: ${arpeggioPattern.length} notes, mode '${mode}', ${numOctaves} octave(s).`, 2500);
+        }
+        
+        return arpeggioPattern.length;
     }
 
     // Set the length (in steps) of a note at a specific row/col

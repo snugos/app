@@ -1679,32 +1679,23 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         }
     }
 
-    // Calculate max velocity per column for velocity editor
+    // Calculate max velocity and probability per column for editors
     const maxVelocityPerColumn = [];
+    const maxProbabilityPerColumn = [];
+    let maxVel = 0;
+    let maxProb = 0;
     for (let col = 0; col < totalSteps; col++) {
-        let maxVel = 0;
+        maxVel = 0;
+        maxProb = 0;
         for (let row = 0; row < rows; row++) {
             const stepData = sequenceData[row]?.[col];
-            if (stepData?.active && stepData.velocity !== undefined) {
-                maxVel = Math.max(maxVel, stepData.velocity);
+            if (stepData?.active) {
+                if (stepData.velocity !== undefined) maxVel = Math.max(maxVel, stepData.velocity);
+                if (stepData.probability !== undefined) maxProb = Math.max(maxProb, stepData.probability);
+                else maxProb = Math.max(maxProb, Constants.DEFAULT_NOTE_PROBABILITY || 1.0);
             }
         }
         maxVelocityPerColumn[col] = maxVel;
-    }
-
-    // Calculate max probability per column for probability editor
-    const maxProbabilityPerColumn = [];
-    for (let col = 0; col < totalSteps; col++) {
-        let maxProb = 0;
-        for (let row = 0; row < rows; row++) {
-            const stepData = sequenceData[row]?.[col];
-            if (stepData?.active && stepData.probability !== undefined) {
-                maxProb = Math.max(maxProb, stepData.probability);
-            } else if (stepData?.active) {
-                // Default probability is 1.0 for active notes without explicit probability
-                maxProb = Math.max(maxProb, Constants.DEFAULT_NOTE_PROBABILITY || 1.0);
-            }
-        }
         maxProbabilityPerColumn[col] = maxProb || (maxVel > 0 ? Constants.DEFAULT_NOTE_PROBABILITY || 1.0 : 0);
     }
 

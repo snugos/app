@@ -40,6 +40,16 @@ export default [
         String: "readonly",
         Boolean: "readonly",
         Tone: "readonly",
+        TextEncoder: "readonly",
+        TextDecoder: "readonly",
+        performance: "readonly",
+        // Browser globals
+        HTMLElement: "readonly",
+        alert: "readonly",
+        prompt: "readonly",
+        confirm: "readonly",
+        require: "readonly",
+        JSZip: "readonly",
         // UI module functions called dynamically after initializeUIModule
         renderEffectsList: "readonly",
         drawWaveform: "readonly",
