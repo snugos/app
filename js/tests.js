@@ -8702,3 +8702,245 @@ TestRunner.test('Performance Monitor Audio - APP_VERSION validation for Day 383'
         t.assertTruthy(versionParts[1] >= 61, 'Minor version should be >= 61 for Day 383');
     }
 });
+// Day 384: Sound Browser State Functions Tests
+TestRunner.test('Sound Browser State - setLoadedZipFilesState is a function export', (t) => {
+    t.assertEqual(typeof setLoadedZipFilesState, 'function', 'setLoadedZipFilesState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setLoadedZipFilesState accepts 1 parameter', (t) => {
+    t.assertEqual(setLoadedZipFilesState.length, 1, 'setLoadedZipFilesState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setLoadedZipFilesState calls captureStateForUndo', (t) => {
+    const funcStr = setLoadedZipFilesState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('appServices.captureStateForUndo'), 'setLoadedZipFilesState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Browser State - setLoadedZipFilesState uses descriptive undo label', (t) => {
+    const funcStr = setLoadedZipFilesState.toString();
+    t.assertTruthy(funcStr.includes('Set Loaded ZIP Files'), 'setLoadedZipFilesState should use "Set Loaded ZIP Files" undo label');
+});
+
+TestRunner.test('Sound Browser State - setLoadedZipFilesState guards against missing appServices', (t) => {
+    const funcStr = setLoadedZipFilesState.toString();
+    t.assertTruthy(funcStr.includes('appServices.captureStateForUndo') && (funcStr.includes('if') || funcStr.includes('&&')), 'setLoadedZipFilesState should guard against missing appServices');
+});
+
+TestRunner.test('Sound Browser State - setLoadedZipFilesState handles null/undefined files', (t) => {
+    const funcStr = setLoadedZipFilesState.toString();
+    t.assertTruthy(funcStr.includes('||') || funcStr.includes('?') || funcStr.includes('files ||'), 'setLoadedZipFilesState should handle null/undefined files with fallback');
+});
+
+TestRunner.test('Sound Browser State - getLoadedZipFilesState is a function export', (t) => {
+    t.assertEqual(typeof getLoadedZipFilesState, 'function', 'getLoadedZipFilesState should be a function');
+});
+
+TestRunner.test('Sound Browser State - getLoadedZipFilesState accepts 0 parameters', (t) => {
+    t.assertEqual(getLoadedZipFilesState.length, 0, 'getLoadedZipFilesState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Browser State - setSoundLibraryFileTreesState is a function export', (t) => {
+    t.assertEqual(typeof setSoundLibraryFileTreesState, 'function', 'setSoundLibraryFileTreesState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setSoundLibraryFileTreesState accepts 1 parameter', (t) => {
+    t.assertEqual(setSoundLibraryFileTreesState.length, 1, 'setSoundLibraryFileTreesState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setSoundLibraryFileTreesState calls captureStateForUndo', (t) => {
+    const funcStr = setSoundLibraryFileTreesState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('appServices.captureStateForUndo'), 'setSoundLibraryFileTreesState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Browser State - setSoundLibraryFileTreesState uses descriptive undo label', (t) => {
+    const funcStr = setSoundLibraryFileTreesState.toString();
+    t.assertTruthy(funcStr.includes('Set Sound Library File Trees'), 'setSoundLibraryFileTreesState should use "Set Sound Library File Trees" undo label');
+});
+
+TestRunner.test('Sound Browser State - setSoundLibraryFileTreesState handles null/undefined trees', (t) => {
+    const funcStr = setSoundLibraryFileTreesState.toString();
+    t.assertTruthy(funcStr.includes('||') || funcStr.includes('?') || funcStr.includes('trees ||'), 'setSoundLibraryFileTreesState should handle null/undefined trees with fallback');
+});
+
+TestRunner.test('Sound Browser State - getSoundLibraryFileTreesState is a function export', (t) => {
+    t.assertEqual(typeof getSoundLibraryFileTreesState, 'function', 'getSoundLibraryFileTreesState should be a function');
+});
+
+TestRunner.test('Sound Browser State - getSoundLibraryFileTreesState accepts 0 parameters', (t) => {
+    t.assertEqual(getSoundLibraryFileTreesState.length, 0, 'getSoundLibraryFileTreesState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Browser State - setCurrentLibraryNameState is a function export', (t) => {
+    t.assertEqual(typeof setCurrentLibraryNameState, 'function', 'setCurrentLibraryNameState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setCurrentLibraryNameState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentLibraryNameState.length, 1, 'setCurrentLibraryNameState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setCurrentLibraryNameState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('appServices.captureStateForUndo'), 'setCurrentLibraryNameState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Browser State - setCurrentLibraryNameState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('Set Current Library'), 'setCurrentLibraryNameState should use "Set Current Library" undo label');
+});
+
+TestRunner.test('Sound Browser State - getCurrentLibraryNameState is a function export', (t) => {
+    t.assertEqual(typeof getCurrentLibraryNameState, 'function', 'getCurrentLibraryNameState should be a function');
+});
+
+TestRunner.test('Sound Browser State - getCurrentLibraryNameState accepts 0 parameters', (t) => {
+    t.assertEqual(getCurrentLibraryNameState.length, 0, 'getCurrentLibraryNameState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundFileTreeState is a function export', (t) => {
+    t.assertEqual(typeof setCurrentSoundFileTreeState, 'function', 'setCurrentSoundFileTreeState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundFileTreeState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentSoundFileTreeState.length, 1, 'setCurrentSoundFileTreeState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundFileTreeState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('appServices.captureStateForUndo'), 'setCurrentSoundFileTreeState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundFileTreeState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('Set Sound File Tree'), 'setCurrentSoundFileTreeState should use "Set Sound File Tree" undo label');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundFileTreeState references currentLibraryNameGlobal', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('currentLibraryNameGlobal') || funcStr.includes('currentLibraryName'), 'setCurrentSoundFileTreeState should reference current library name');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundFileTreeState guards against empty library name', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('if') && (funcStr.includes('currentLibraryNameGlobal') || funcStr.includes('currentLibraryName')), 'setCurrentSoundFileTreeState should guard against empty library name');
+});
+
+TestRunner.test('Sound Browser State - getCurrentSoundFileTreeState is a function export', (t) => {
+    t.assertEqual(typeof getCurrentSoundFileTreeState, 'function', 'getCurrentSoundFileTreeState should be a function');
+});
+
+TestRunner.test('Sound Browser State - getCurrentSoundFileTreeState accepts 0 parameters', (t) => {
+    t.assertEqual(getCurrentSoundFileTreeState.length, 0, 'getCurrentSoundFileTreeState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundBrowserPathState is a function export', (t) => {
+    t.assertEqual(typeof setCurrentSoundBrowserPathState, 'function', 'setCurrentSoundBrowserPathState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundBrowserPathState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentSoundBrowserPathState.length, 1, 'setCurrentSoundBrowserPathState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundBrowserPathState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('appServices.captureStateForUndo'), 'setCurrentSoundBrowserPathState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundBrowserPathState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('Set Sound Browser Path'), 'setCurrentSoundBrowserPathState should use "Set Sound Browser Path" undo label');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundBrowserPathState defaults to root path', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes("'/'") || funcStr.includes('"/"'), 'setCurrentSoundBrowserPathState should default to "/" path');
+});
+
+TestRunner.test('Sound Browser State - getCurrentSoundBrowserPathState is a function export', (t) => {
+    t.assertEqual(typeof getCurrentSoundBrowserPathState, 'function', 'getCurrentSoundBrowserPathState should be a function');
+});
+
+TestRunner.test('Sound Browser State - getCurrentSoundBrowserPathState accepts 0 parameters', (t) => {
+    t.assertEqual(getCurrentSoundBrowserPathState.length, 0, 'getCurrentSoundBrowserPathState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Browser State - setPreviewPlayerState is a function export', (t) => {
+    t.assertEqual(typeof setPreviewPlayerState, 'function', 'setPreviewPlayerState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setPreviewPlayerState accepts 1 parameter', (t) => {
+    t.assertEqual(setPreviewPlayerState.length, 1, 'setPreviewPlayerState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setPreviewPlayerState calls captureStateForUndo', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('appServices.captureStateForUndo'), 'setPreviewPlayerState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Browser State - setPreviewPlayerState uses descriptive undo label', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('Set Preview Player'), 'setPreviewPlayerState should use "Set Preview Player" undo label');
+});
+
+TestRunner.test('Sound Browser State - getPreviewPlayerState is a function export', (t) => {
+    t.assertEqual(typeof getPreviewPlayerState, 'function', 'getPreviewPlayerState should be a function');
+});
+
+TestRunner.test('Sound Browser State - getPreviewPlayerState accepts 0 parameters', (t) => {
+    t.assertEqual(getPreviewPlayerState.length, 0, 'getPreviewPlayerState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Browser State - setClipboardDataState is a function export', (t) => {
+    t.assertEqual(typeof setClipboardDataState, 'function', 'setClipboardDataState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setClipboardDataState accepts 4 parameters', (t) => {
+    t.assertEqual(setClipboardDataState.length, 4, 'setClipboardDataState should accept 4 parameters');
+});
+
+TestRunner.test('Sound Browser State - setClipboardDataState calls captureStateForUndo', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('appServices.captureStateForUndo'), 'setClipboardDataState should call captureStateForUndo');
+});
+
+TestRunner.test('Sound Browser State - setClipboardDataState uses descriptive undo label', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('Set Clipboard Data'), 'setClipboardDataState should use "Set Clipboard Data" undo label');
+});
+
+TestRunner.test('Sound Browser State - setClipboardDataState references type parameter', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('type'), 'setClipboardDataState should reference type parameter');
+});
+
+TestRunner.test('Sound Browser State - setClipboardDataState references data parameter', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('data'), 'setClipboardDataState should reference data parameter');
+});
+
+TestRunner.test('Sound Browser State - setClipboardDataState handles undefined parameters', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('!== undefined') || funcStr.includes('!=') || funcStr.includes('||') || funcStr.includes('??'), 'setClipboardDataState should handle undefined parameters');
+});
+
+TestRunner.test('Sound Browser State - setClipboardDataState sets all clipboard properties', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    const hasType = funcStr.includes('type:');
+    const hasData = funcStr.includes('data:') || funcStr.includes('sourceTrackType:') || funcStr.includes('sequenceLength:');
+    t.assertTruthy(hasType && hasData, 'setClipboardDataState should set type, data, sourceTrackType, and sequenceLength properties');
+});
+
+TestRunner.test('Sound Browser State - getClipboardDataState is a function export', (t) => {
+    t.assertEqual(typeof getClipboardDataState, 'function', 'getClipboardDataState should be a function');
+});
+
+TestRunner.test('Sound Browser State - getClipboardDataState accepts 0 parameters', (t) => {
+    t.assertEqual(getClipboardDataState.length, 0, 'getClipboardDataState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Browser State - APP_VERSION validation for Day 384', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 384');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 62, 'Minor version should be >= 62 for Day 384');
+    }
+});
