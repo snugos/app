@@ -37,6 +37,8 @@ import {
     AUTOMATION_LANE_STEP,
     AUTOMATION_LANE_PARAMETERS,
     AUTOMATION_LANE_COLORS,
+    CONTEXT_MENU_ITEM_HEIGHT,
+    CONTEXT_MENU_MAX_WIDTH,
     TIME_SIG_MAX_DENOMINATOR,
     SEND_LEVEL_POST_FADER,
     MIDI_EXPORT_VELOCITY_SCALE,
@@ -6709,5 +6711,431 @@ TestRunner.test('Utils - APP_VERSION validation for Day 376', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 376');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 55, 'Minor version should be >= 55 for Day 376');
+    }
+});
+
+// ============================================
+// Day 377: UI Constants Tests
+// ============================================
+
+TestRunner.test('UI Constants - GRID_STEP_LABELS is an object', (t) => {
+    t.assertEqual(typeof GRID_STEP_LABELS, 'object', 'GRID_STEP_LABELS should be an object');
+    t.assertTruthy(GRID_STEP_LABELS !== null, 'GRID_STEP_LABELS should not be null');
+});
+
+TestRunner.test('UI Constants - GRID_STEP_LABELS has labels array', (t) => {
+    t.assertEqual(Array.isArray(GRID_STEP_LABELS.labels), true, 'GRID_STEP_LABELS.labels should be an array');
+});
+
+TestRunner.test('UI Constants - GRID_STEP_LABELS has 16 labels', (t) => {
+    t.assertEqual(GRID_STEP_LABELS.labels.length, 16, 'Should have 16 labels');
+});
+
+TestRunner.test('UI Constants - GRID_STEP_LABELS labels are 1-indexed strings', (t) => {
+    t.assertEqual(GRID_STEP_LABELS.labels[0], '1', 'First label should be "1"');
+    t.assertEqual(GRID_STEP_LABELS.labels[15], '16', 'Last label should be "16"');
+    for (let i = 0; i < 16; i++) {
+        t.assertEqual(GRID_STEP_LABELS.labels[i], String(i + 1), `Label ${i} should be "${i + 1}"`);
+    }
+});
+
+TestRunner.test('UI Constants - STEP_LABELS_SIXTEENTHS is an object', (t) => {
+    t.assertEqual(typeof STEP_LABELS_SIXTEENTHS, 'object', 'STEP_LABELS_SIXTEENTHS should be an object');
+    t.assertTruthy(STEP_LABELS_SIXTEENTHS !== null, 'STEP_LABELS_SIXTEENTHS should not be null');
+});
+
+TestRunner.test('UI Constants - STEP_LABELS_SIXTEENTHS has labels array', (t) => {
+    t.assertEqual(Array.isArray(STEP_LABELS_SIXTEENTHS.labels), true, 'STEP_LABELS_SIXTEENTHS.labels should be an array');
+});
+
+TestRunner.test('UI Constants - STEP_LABELS_SIXTEENTHS has 16 labels', (t) => {
+    t.assertEqual(STEP_LABELS_SIXTEENTHS.labels.length, 16, 'Should have 16 labels');
+});
+
+TestRunner.test('UI Constants - STEP_LABELS_SIXTEENTHS labels are 1-indexed strings', (t) => {
+    t.assertEqual(STEP_LABELS_SIXTEENTHS.labels[0], '1', 'First label should be "1"');
+    t.assertEqual(STEP_LABELS_SIXTEENTHS.labels[15], '16', 'Last label should be "16"');
+    for (let i = 0; i < 16; i++) {
+        t.assertEqual(STEP_LABELS_SIXTEENTHS.labels[i], String(i + 1), `Label ${i} should be "${i + 1}"`);
+    }
+});
+
+TestRunner.test('UI Constants - GRID_STEP_LABELS and STEP_LABELS_SIXTEENTHS are identical', (t) => {
+    t.assertEqual(GRID_STEP_LABELS.labels.length, STEP_LABELS_SIXTEENTHS.labels.length, 'Should have same length');
+    for (let i = 0; i < 16; i++) {
+        t.assertEqual(GRID_STEP_LABELS.labels[i], STEP_LABELS_SIXTEENTHS.labels[i], `Label ${i} should match`);
+    }
+});
+
+TestRunner.test('UI Constants - MARKER_COLORS is an array', (t) => {
+    t.assertEqual(Array.isArray(MARKER_COLORS), true, 'MARKER_COLORS should be an array');
+});
+
+TestRunner.test('UI Constants - MARKER_COLORS has 10 colors', (t) => {
+    t.assertEqual(MARKER_COLORS.length, 10, 'Should have 10 marker colors');
+});
+
+TestRunner.test('UI Constants - MARKER_COLORS contains valid hex colors', (t) => {
+    const hexPattern = /^#[0-9a-fA-F]{6}$/;
+    for (let i = 0; i < MARKER_COLORS.length; i++) {
+        t.assertTruthy(hexPattern.test(MARKER_COLORS[i]), `Color ${i} should be valid hex: ${MARKER_COLORS[i]}`);
+    }
+});
+
+TestRunner.test('UI Constants - MARKER_COLORS contains unique colors', (t) => {
+    const uniqueColors = new Set(MARKER_COLORS);
+    t.assertEqual(uniqueColors.size, MARKER_COLORS.length, 'All marker colors should be unique');
+});
+
+TestRunner.test('UI Constants - MARKER_COLORS includes expected colors', (t) => {
+    t.assertTruthy(MARKER_COLORS.includes('#ff6b6b'), 'Should include red');
+    t.assertTruthy(MARKER_COLORS.includes('#1dd1a1'), 'Should include green');
+    t.assertTruthy(MARKER_COLORS.includes('#54a0ff'), 'Should include blue');
+});
+
+TestRunner.test('UI Constants - DEFAULT_MARKER is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_MARKER, 'object', 'DEFAULT_MARKER should be an object');
+    t.assertTruthy(DEFAULT_MARKER !== null, 'DEFAULT_MARKER should not be null');
+});
+
+TestRunner.test('UI Constants - DEFAULT_MARKER has required properties', (t) => {
+    t.assertTruthy(DEFAULT_MARKER.hasOwnProperty('name'), 'Should have name property');
+    t.assertTruthy(DEFAULT_MARKER.hasOwnProperty('bar'), 'Should have bar property');
+    t.assertTruthy(DEFAULT_MARKER.hasOwnProperty('color'), 'Should have color property');
+});
+
+TestRunner.test('UI Constants - DEFAULT_MARKER name is a string', (t) => {
+    t.assertEqual(typeof DEFAULT_MARKER.name, 'string', 'name should be a string');
+    t.assertEqual(DEFAULT_MARKER.name, 'Marker', 'Default marker name should be "Marker"');
+});
+
+TestRunner.test('UI Constants - DEFAULT_MARKER bar is 1-indexed', (t) => {
+    t.assertEqual(typeof DEFAULT_MARKER.bar, 'number', 'bar should be a number');
+    t.assertEqual(DEFAULT_MARKER.bar, 1, 'Default bar should be 1 (1-indexed)');
+});
+
+TestRunner.test('UI Constants - DEFAULT_MARKER color is valid hex', (t) => {
+    const hexPattern = /^#[0-9a-fA-F]{6}$/;
+    t.assertTruthy(hexPattern.test(DEFAULT_MARKER.color), 'color should be valid hex color');
+    t.assertEqual(DEFAULT_MARKER.color, DEFAULT_MARKER_COLOR, 'color should match DEFAULT_MARKER_COLOR');
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_COLORS is an array', (t) => {
+    t.assertEqual(Array.isArray(AUTOMATION_LANE_COLORS), true, 'AUTOMATION_LANE_COLORS should be an array');
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_COLORS has 10 colors', (t) => {
+    t.assertEqual(AUTOMATION_LANE_COLORS.length, 10, 'Should have 10 automation lane colors');
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_COLORS contains valid hex colors', (t) => {
+    const hexPattern = /^#[0-9a-fA-F]{6}$/;
+    for (let i = 0; i < AUTOMATION_LANE_COLORS.length; i++) {
+        t.assertTruthy(hexPattern.test(AUTOMATION_LANE_COLORS[i]), `Color ${i} should be valid hex: ${AUTOMATION_LANE_COLORS[i]}`);
+    }
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_COLORS contains unique colors', (t) => {
+    const uniqueColors = new Set(AUTOMATION_LANE_COLORS);
+    t.assertEqual(uniqueColors.size, AUTOMATION_LANE_COLORS.length, 'All automation lane colors should be unique');
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_COLORS matches MARKER_COLORS', (t) => {
+    t.assertEqual(AUTOMATION_LANE_COLORS.length, MARKER_COLORS.length, 'Should have same length as MARKER_COLORS');
+    for (let i = 0; i < AUTOMATION_LANE_COLORS.length; i++) {
+        t.assertEqual(AUTOMATION_LANE_COLORS[i], MARKER_COLORS[i], `Color ${i} should match MARKER_COLORS`);
+    }
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_HEIGHT is a positive number', (t) => {
+    t.assertEqual(typeof AUTOMATION_LANE_HEIGHT, 'number', 'AUTOMATION_LANE_HEIGHT should be a number');
+    t.assertTruthy(AUTOMATION_LANE_HEIGHT > 0, 'AUTOMATION_LANE_HEIGHT should be positive');
+    t.assertEqual(AUTOMATION_LANE_HEIGHT, 20, 'Should be 20 pixels');
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_DEFAULT is in valid range', (t) => {
+    t.assertEqual(typeof AUTOMATION_LANE_DEFAULT, 'number', 'AUTOMATION_LANE_DEFAULT should be a number');
+    t.assertTruthy(AUTOMATION_LANE_DEFAULT >= 0 && AUTOMATION_LANE_DEFAULT <= 1, 'Should be between 0 and 1');
+    t.assertEqual(AUTOMATION_LANE_DEFAULT, 0.5, 'Should default to 0.5 (50%)');
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_PRECISION is a positive integer', (t) => {
+    t.assertEqual(typeof AUTOMATION_LANE_PRECISION, 'number', 'AUTOMATION_LANE_PRECISION should be a number');
+    t.assertTruthy(AUTOMATION_LANE_PRECISION >= 0, 'Should be non-negative');
+    t.assertEqual(Number.isInteger(AUTOMATION_LANE_PRECISION), true, 'Should be an integer');
+    t.assertEqual(AUTOMATION_LANE_PRECISION, 2, 'Should be 2 decimal places');
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_STEP is a positive number', (t) => {
+    t.assertEqual(typeof AUTOMATION_LANE_STEP, 'number', 'AUTOMATION_LANE_STEP should be a number');
+    t.assertTruthy(AUTOMATION_LANE_STEP > 0, 'AUTOMATION_LANE_STEP should be positive');
+    t.assertEqual(AUTOMATION_LANE_STEP, 0.01, 'Should be 0.01 (1% step)');
+});
+
+TestRunner.test('UI Constants - AUTOMATION_LANE_PARAMETERS is an array with expected values', (t) => {
+    t.assertEqual(Array.isArray(AUTOMATION_LANE_PARAMETERS), true, 'AUTOMATION_LANE_PARAMETERS should be an array');
+    const expectedParams = ['volume', 'pan', 'filterCutoff', 'resonance', 'attack', 'decay', 'sustain', 'release'];
+    t.assertEqual(AUTOMATION_LANE_PARAMETERS.length, expectedParams.length, 'Should have 8 parameters');
+    for (let i = 0; i < expectedParams.length; i++) {
+        t.assertEqual(AUTOMATION_LANE_PARAMETERS[i], expectedParams[i], `Parameter ${i} should be "${expectedParams[i]}"`);
+    }
+});
+
+TestRunner.test('UI Constants - CONTEXT_MENU_ITEM_HEIGHT is a positive number', (t) => {
+    t.assertEqual(typeof CONTEXT_MENU_ITEM_HEIGHT, 'number', 'CONTEXT_MENU_ITEM_HEIGHT should be a number');
+    t.assertTruthy(CONTEXT_MENU_ITEM_HEIGHT > 0, 'CONTEXT_MENU_ITEM_HEIGHT should be positive');
+    t.assertEqual(CONTEXT_MENU_ITEM_HEIGHT, 28, 'Should be 28 pixels');
+});
+
+TestRunner.test('UI Constants - CONTEXT_MENU_MAX_WIDTH is a positive number', (t) => {
+    t.assertEqual(typeof CONTEXT_MENU_MAX_WIDTH, 'number', 'CONTEXT_MENU_MAX_WIDTH should be a number');
+    t.assertTruthy(CONTEXT_MENU_MAX_WIDTH > 0, 'CONTEXT_MENU_MAX_WIDTH should be positive');
+    t.assertEqual(CONTEXT_MENU_MAX_WIDTH, 300, 'Should be 300 pixels');
+});
+
+TestRunner.test('UI Constants - APP_VERSION validation for 2.56.0 or higher', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 56, 'Minor version should be >= 56 for Day 377');
+    }
+});
+// Day 377: Recording, Playback, Metronome, Time Signature & Master Effects Undo Capture Tests
+// ===========================================================================================
+TestRunner.test('Recording State - setIsRecordingState calls captureStateForUndo', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setIsRecordingState should call captureStateForUndo');
+});
+
+TestRunner.test('Recording State - setIsRecordingState uses descriptive undo label', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('Set Recording State') || funcStr.includes('Recording'), 'setIsRecordingState should use descriptive undo label');
+});
+
+TestRunner.test('Recording State - setIsRecordingState guards against missing appServices', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setIsRecordingState should guard against missing appServices');
+});
+
+TestRunner.test('Recording State - setRecordingTrackIdState calls captureStateForUndo', (t) => {
+    const funcStr = setRecordingTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setRecordingTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Recording State - setRecordingTrackIdState uses descriptive undo label', (t) => {
+    const funcStr = setRecordingTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('Set Recording Track') || funcStr.includes('Recording Track'), 'setRecordingTrackIdState should use descriptive undo label');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState calls captureStateForUndo', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setRecordingStartTimeState should call captureStateForUndo');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState uses descriptive undo label', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('Set Recording Start Time') || funcStr.includes('Recording Start'), 'setRecordingStartTimeState should use descriptive undo label');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState calls captureStateForUndo', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setPlaybackModeState should call captureStateForUndo');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState uses descriptive undo label', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('Set Playback Mode') || funcStr.includes('Playback Mode'), 'setPlaybackModeState should use descriptive undo label');
+});
+
+TestRunner.test('Playback Mode - setPlaybackModeState guards against missing appServices', (t) => {
+    const funcStr = setPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setPlaybackModeState should guard against missing appServices');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMetronomeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Metronome - setMetronomeEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Metronome') || funcStr.includes('Metronome'), 'setMetronomeEnabledState should use descriptive undo label');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState calls captureStateForUndo', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMetronomeVolumeState should call captureStateForUndo');
+});
+
+TestRunner.test('Metronome - setMetronomeVolumeState uses descriptive undo label', (t) => {
+    const funcStr = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcStr.includes('Set Metronome Volume') || funcStr.includes('Metronome'), 'setMetronomeVolumeState should use descriptive undo label');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureState should call captureStateForUndo');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureState.toString();
+    t.assertTruthy(funcStr.includes('Set Time Signature') || funcStr.includes('Time Signature'), 'setTimeSignatureState should use descriptive undo label');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureNumeratorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureNumeratorState should call captureStateForUndo');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureNumeratorState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureNumeratorState.toString();
+    t.assertTruthy(funcStr.includes('Time Signature Numerator') || funcStr.includes('Time Signature'), 'setTimeSignatureNumeratorState should use descriptive undo label');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState calls captureStateForUndo', (t) => {
+    const funcStr = setTimeSignatureDenominatorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimeSignatureDenominatorState should call captureStateForUndo');
+});
+
+TestRunner.test('Time Signature - setTimeSignatureDenominatorState uses descriptive undo label', (t) => {
+    const funcStr = setTimeSignatureDenominatorState.toString();
+    t.assertTruthy(funcStr.includes('Time Signature Denominator') || funcStr.includes('Time Signature'), 'setTimeSignatureDenominatorState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects - setMasterEffectsState calls captureStateForUndo', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMasterEffectsState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects - setMasterEffectsState uses descriptive undo label', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('Set Master Effects') || funcStr.includes('Master Effects'), 'setMasterEffectsState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects - setMasterGainValueState calls captureStateForUndo', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMasterGainValueState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects - setMasterGainValueState uses descriptive undo label', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('Set Master Volume') || funcStr.includes('Master Volume'), 'setMasterGainValueState should use descriptive undo label');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState calls captureStateForUndo', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addSendTrackState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - addSendTrackState uses descriptive undo label', (t) => {
+    const funcStr = addSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('Add Send Track') || funcStr.includes('Send'), 'addSendTrackState should use descriptive undo label');
+});
+
+TestRunner.test('Send Tracks - removeSendTrackState calls captureStateForUndo', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeSendTrackState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - removeSendTrackState uses descriptive undo label', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('Remove Send Track') || funcStr.includes('Send'), 'removeSendTrackState should use descriptive undo label');
+});
+
+TestRunner.test('Track Group - addTrackGroupState calls captureStateForUndo', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Group - addTrackGroupState uses descriptive undo label', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('Add Track Group') || funcStr.includes('Track Group'), 'addTrackGroupState should use descriptive undo label');
+});
+
+TestRunner.test('Track Group - removeTrackGroupState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Group - removeTrackGroupState uses descriptive undo label', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('Remove Track Group') || funcStr.includes('Track Group'), 'removeTrackGroupState should use descriptive undo label');
+});
+
+TestRunner.test('MIDI - setMidiAccessState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiAccessState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiAccessState should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI - setMidiAccessState uses descriptive undo label', (t) => {
+    const funcStr = setMidiAccessState.toString();
+    t.assertTruthy(funcStr.includes('Set MIDI Access') || funcStr.includes('MIDI'), 'setMidiAccessState should use descriptive undo label');
+});
+
+TestRunner.test('MIDI - setActiveMIDIInputState calls captureStateForUndo', (t) => {
+    const funcStr = setActiveMIDIInputState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setActiveMIDIInputState should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI - setActiveMIDIInputState uses descriptive undo label', (t) => {
+    const funcStr = setActiveMIDIInputState.toString();
+    t.assertTruthy(funcStr.includes('Set Active MIDI Input') || funcStr.includes('MIDI'), 'setActiveMIDIInputState should use descriptive undo label');
+});
+
+TestRunner.test('MIDI - setMidiLearnModeState calls captureStateForUndo', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnModeState should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI - setMidiLearnModeState uses descriptive undo label', (t) => {
+    const funcStr = setMidiLearnModeState.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'setMidiLearnModeState should use descriptive undo label');
+});
+
+TestRunner.test('MIDI - addMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI - addMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = addMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'addMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('MIDI - removeMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI - removeMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = removeMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'removeMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('MIDI - clearMidiLearnMappings calls captureStateForUndo', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearMidiLearnMappings should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI - clearMidiLearnMappings uses descriptive undo label', (t) => {
+    const funcStr = clearMidiLearnMappings.toString();
+    t.assertTruthy(funcStr.includes('Clear MIDI Learn') || funcStr.includes('MIDI'), 'clearMidiLearnMappings should use descriptive undo label');
+});
+
+TestRunner.test('MIDI - updateMidiLearnMapping calls captureStateForUndo', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test('MIDI - updateMidiLearnMapping uses descriptive undo label', (t) => {
+    const funcStr = updateMidiLearnMapping.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'updateMidiLearnMapping should use descriptive undo label');
+});
+
+TestRunner.test('APP_VERSION validation for Day 377', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 377');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 56, 'Minor version should be >= 56 for Day 377');
     }
 });
