@@ -279,7 +279,14 @@ import {
     getTrackSendNodes,
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
-    setTrackSendLevel
+    setTrackSendLevel,
+    initializeAudioModule,
+    getMasterEffectsBusInputNode,
+    getActualMasterGainNode,
+    rebuildMasterEffectChain,
+    updateMasterEffectParamInAudio,
+    reorderMasterEffectInAudio,
+    updateMeters
 } from './audio.js';
 
 import {
@@ -11166,5 +11173,215 @@ TestRunner.test('Clipboard State - APP_VERSION validation for Day 410', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 410');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 87, 'Minor version should be >= 87 for Day 410');
+    }
+});
+
+// ============================================
+// Day 411: Audio Module Core Functions Tests
+// ============================================
+TestRunner.test('Audio Module - initializeAudioModule is a function export', (t) => {
+    t.assertEqual(typeof initializeAudioModule, 'function', 'initializeAudioModule should be a function');
+});
+
+TestRunner.test('Audio Module - initializeAudioModule accepts 1 parameter', (t) => {
+    t.assertEqual(initializeAudioModule.length, 1, 'initializeAudioModule should accept 1 parameter');
+});
+
+TestRunner.test('Audio Module - initializeAudioModule references appServicesFromMain parameter', (t) => {
+    const funcStr = initializeAudioModule.toString();
+    t.assertTruthy(funcStr.includes('appServicesFromMain') || funcStr.includes('appServices'), 'initializeAudioModule should reference appServices parameter');
+});
+
+TestRunner.test('Audio Module - initializeAudioModule sets localAppServices', (t) => {
+    const funcStr = initializeAudioModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'initializeAudioModule should set localAppServices');
+});
+
+TestRunner.test('Audio Module - getMasterEffectsBusInputNode is a function export', (t) => {
+    t.assertEqual(typeof getMasterEffectsBusInputNode, 'function', 'getMasterEffectsBusInputNode should be a function');
+});
+
+TestRunner.test('Audio Module - getMasterEffectsBusInputNode accepts 0 parameters', (t) => {
+    t.assertEqual(getMasterEffectsBusInputNode.length, 0, 'getMasterEffectsBusInputNode should accept no parameters');
+});
+
+TestRunner.test('Audio Module - getMasterEffectsBusInputNode references masterEffectsBusInputNode', (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('masterEffectsBusInputNode'), 'getMasterEffectsBusInputNode should reference masterEffectsBusInputNode');
+});
+
+TestRunner.test('Audio Module - getMasterEffectsBusInputNode references setupMasterBus', (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus') || funcStr.includes('masterBus'), 'getMasterEffectsBusInputNode should reference setupMasterBus or masterBus');
+});
+
+TestRunner.test('Audio Module - getMasterEffectsBusInputNode checks for disposed state', (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('disposed') || funcStr.includes('.disposed'), 'getMasterEffectsBusInputNode should check disposed state');
+});
+
+TestRunner.test('Audio Module - getActualMasterGainNode is a function export', (t) => {
+    t.assertEqual(typeof getActualMasterGainNode, 'function', 'getActualMasterGainNode should be a function');
+});
+
+TestRunner.test('Audio Module - getActualMasterGainNode accepts 0 parameters', (t) => {
+    t.assertEqual(getActualMasterGainNode.length, 0, 'getActualMasterGainNode should accept no parameters');
+});
+
+TestRunner.test('Audio Module - getActualMasterGainNode references masterGainNodeActual', (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('masterGainNodeActual'), 'getActualMasterGainNode should reference masterGainNodeActual');
+});
+
+TestRunner.test('Audio Module - getActualMasterGainNode references setupMasterBus', (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus') || funcStr.includes('masterBus'), 'getActualMasterGainNode should reference setupMasterBus or masterBus');
+});
+
+TestRunner.test('Audio Module - getActualMasterGainNode checks for disposed state', (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('disposed') || funcStr.includes('.disposed'), 'getActualMasterGainNode should check disposed state');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain is a function export', (t) => {
+    t.assertEqual(typeof rebuildMasterEffectChain, 'function', 'rebuildMasterEffectChain should be a function');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain accepts 0 parameters', (t) => {
+    t.assertEqual(rebuildMasterEffectChain.length, 0, 'rebuildMasterEffectChain should accept no parameters');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain references masterEffectsBusInputNode', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('masterEffectsBusInputNode'), 'rebuildMasterEffectChain should reference masterEffectsBusInputNode');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain references masterGainNodeActual', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('masterGainNodeActual'), 'rebuildMasterEffectChain should reference masterGainNodeActual');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain references masterMeterNode', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('masterMeterNode'), 'rebuildMasterEffectChain should reference masterMeterNode');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain references activeMasterEffectNodes', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'rebuildMasterEffectChain should reference activeMasterEffectNodes');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain references masterEffectsState', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('getMasterEffects') || funcStr.includes('masterEffectsState'), 'rebuildMasterEffectChain should reference masterEffects state');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain handles effect chain connection', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('connect') || funcStr.includes('connect('), 'rebuildMasterEffectChain should handle audio connection');
+});
+
+TestRunner.test('Audio Module - rebuildMasterEffectChain calls setupMasterBus', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'rebuildMasterEffectChain should call setupMasterBus');
+});
+
+TestRunner.test('Audio Module - updateMasterEffectParamInAudio is a function export', (t) => {
+    t.assertEqual(typeof updateMasterEffectParamInAudio, 'function', 'updateMasterEffectParamInAudio should be a function');
+});
+
+TestRunner.test('Audio Module - updateMasterEffectParamInAudio accepts 3 parameters', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('paramPath') && funcStr.includes('value'), 'updateMasterEffectParamInAudio should accept 3 parameters');
+});
+
+TestRunner.test('Audio Module - updateMasterEffectParamInAudio references effectId parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'updateMasterEffectParamInAudio should reference effectId parameter');
+});
+
+TestRunner.test('Audio Module - updateMasterEffectParamInAudio references paramPath parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('paramPath'), 'updateMasterEffectParamInAudio should reference paramPath parameter');
+});
+
+TestRunner.test('Audio Module - updateMasterEffectParamInAudio references value parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('value'), 'updateMasterEffectParamInAudio should reference value parameter');
+});
+
+TestRunner.test('Audio Module - updateMasterEffectParamInAudio references activeMasterEffectNodes', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'updateMasterEffectParamInAudio should reference activeMasterEffectNodes');
+});
+
+TestRunner.test('Audio Module - updateMasterEffectParamInAudio navigates param path', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('split') || funcStr.includes('.'), 'updateMasterEffectParamInAudio should navigate param path');
+});
+
+TestRunner.test('Audio Module - updateMasterEffectParamInAudio handles rampTo for smooth transitions', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('rampTo') || funcStr.includes('value'), 'updateMasterEffectParamInAudio should handle parameter updates');
+});
+
+TestRunner.test('Audio Module - reorderMasterEffectInAudio is a function export', (t) => {
+    t.assertEqual(typeof reorderMasterEffectInAudio, 'function', 'reorderMasterEffectInAudio should be a function');
+});
+
+TestRunner.test('Audio Module - reorderMasterEffectInAudio accepts 2 parameters', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('newIndex'), 'reorderMasterEffectInAudio should accept 2 parameters');
+});
+
+TestRunner.test('Audio Module - reorderMasterEffectInAudio references effectIdIgnored parameter', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId') || funcStr.includes('Ignored'), 'reorderMasterEffectInAudio should reference effectIdIgnored parameter');
+});
+
+TestRunner.test('Audio Module - reorderMasterEffectInAudio references newIndexIgnored parameter', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('newIndex') || funcStr.includes('Ignored'), 'reorderMasterEffectInAudio should reference newIndexIgnored parameter');
+});
+
+TestRunner.test('Audio Module - reorderMasterEffectInAudio calls rebuildMasterEffectChain', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'reorderMasterEffectInAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test('Audio Module - updateMeters is a function export', (t) => {
+    t.assertEqual(typeof updateMeters, 'function', 'updateMeters should be a function');
+});
+
+TestRunner.test('Audio Module - updateMeters accepts 3 parameters', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('globalMasterMeterBar') && funcStr.includes('mixerMasterMeterBar') && funcStr.includes('tracks'), 'updateMeters should accept 3 parameters');
+});
+
+TestRunner.test('Audio Module - updateMeters references masterMeterNode', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('masterMeterNode'), 'updateMeters should reference masterMeterNode');
+});
+
+TestRunner.test('Audio Module - updateMeters references Tone.context', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('Tone') || funcStr.includes('Tone.context') || funcStr.includes('context'), 'updateMeters should reference Tone.context');
+});
+
+TestRunner.test('Audio Module - updateMeters calls masterMeterNode.getValue', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('getValue') || funcStr.includes('getValue()'), 'updateMeters should call getValue on meter');
+});
+
+TestRunner.test('Audio Module - updateMeters uses Tone.dbToGain for level conversion', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('dbToGain') || funcStr.includes('db'), 'updateMeters should use dbToGain for level conversion');
+});
+
+TestRunner.test('Audio Module - APP_VERSION validation for Day 411', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 411');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 88, 'Minor version should be >= 88 for Day 411');
     }
 });

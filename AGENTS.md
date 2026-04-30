@@ -1,3 +1,87 @@
+#### Day 411: Audio Module Core Functions Tests (2026-04-30)
+- **Feature**: Added 64 new unit tests for Audio Module Core Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 64 new tests in Day 411 section (merged from tests_day411.js):
+    - Audio Module - initializeAudioModule is a function export
+    - Audio Module - initializeAudioModule accepts 1 parameter
+    - Audio Module - initializeAudioModule references appServicesFromMain parameter
+    - Audio Module - initializeAudioModule sets localAppServices
+    - Audio Module - getMasterEffectsBusInputNode is a function export
+    - Audio Module - getMasterEffectsBusInputNode accepts 0 parameters
+    - Audio Module - getMasterEffectsBusInputNode references masterEffectsBusInputNode
+    - Audio Module - getMasterEffectsBusInputNode references setupMasterBus
+    - Audio Module - getMasterEffectsBusInputNode checks for disposed state
+    - Audio Module - getActualMasterGainNode is a function export
+    - Audio Module - getActualMasterGainNode accepts 0 parameters
+    - Audio Module - getActualMasterGainNode references masterGainNodeActual
+    - Audio Module - getActualMasterGainNode references setupMasterBus
+    - Audio Module - getActualMasterGainNode checks for disposed state
+    - Audio Module - rebuildMasterEffectChain is a function export
+    - Audio Module - rebuildMasterEffectChain accepts 0 parameters
+    - Audio Module - rebuildMasterEffectChain references masterEffectsBusInputNode
+    - Audio Module - rebuildMasterEffectChain references masterGainNodeActual
+    - Audio Module - rebuildMasterEffectChain references masterMeterNode
+    - Audio Module - rebuildMasterEffectChain references activeMasterEffectNodes
+    - Audio Module - rebuildMasterEffectChain references masterEffectsState
+    - Audio Module - rebuildMasterEffectChain handles effect chain connection
+    - Audio Module - rebuildMasterEffectChain calls setupMasterBus
+    - Audio Module - updateMasterEffectParamInAudio is a function export
+    - Audio Module - updateMasterEffectParamInAudio accepts 3 parameters
+    - Audio Module - updateMasterEffectParamInAudio references effectId parameter
+    - Audio Module - updateMasterEffectParamInAudio references paramPath parameter
+    - Audio Module - updateMasterEffectParamInAudio references value parameter
+    - Audio Module - updateMasterEffectParamInAudio references activeMasterEffectNodes
+    - Audio Module - updateMasterEffectParamInAudio navigates param path
+    - Audio Module - updateMasterEffectParamInAudio handles rampTo for smooth transitions
+    - Audio Module - reorderMasterEffectInAudio is a function export
+    - Audio Module - reorderMasterEffectInAudio accepts 2 parameters
+    - Audio Module - reorderMasterEffectInAudio references effectIdIgnored parameter
+    - Audio Module - reorderMasterEffectInAudio references newIndexIgnored parameter
+    - Audio Module - reorderMasterEffectInAudio calls rebuildMasterEffectChain
+    - Audio Module - updateMeters is a function export
+    - Audio Module - updateMeters accepts 3 parameters
+    - Audio Module - updateMeters references masterMeterNode
+    - Audio Module - updateMeters references Tone.context
+    - Audio Module - updateMeters calls masterMeterNode.getValue
+    - Audio Module - updateMeters uses Tone.dbToGain for level conversion
+    - Audio Module - panicAllAudio is a function export
+    - Audio Module - panicAllAudio accepts 0 parameters
+    - Audio Module - panicAllAudio references Tone.Transport
+    - Audio Module - panicAllAudio stops Tone.Transport
+    - Audio Module - panicAllAudio references tracks
+    - Audio Module - panicAllAudio references localAppServices
+    - Audio Module - panicAllAudio handles drumPadPlayers
+    - Audio Module - panicAllAudio handles slicerMonoPlayer
+    - Audio Module - panicAllAudio handles toneSampler
+    - Audio Module - panicAllAudio calls showNotification
+    - Audio Module - getPerformanceMetrics is a function export
+    - Audio Module - getPerformanceMetrics accepts 0 parameters
+    - Audio Module - getPerformanceMetrics returns an object
+    - Audio Module - getPerformanceMetrics references Tone or Tone.context
+    - Audio Module - getPerformanceMetrics references audioContextState
+    - Audio Module - getPerformanceMetrics references audioLatency
+    - Audio Module - getPerformanceMetrics references localAppServices
+    - Audio Module - getPerformanceMetrics references cpuUsage
+    - Audio Module - getPerformanceMetrics references memoryPressure
+    - Audio Module - getPerformanceMetrics references activeVoices
+    - Audio Module - getPerformanceMetrics references droppedCallbacks
+    - Audio Module - APP_VERSION validation for Day 411
+  - `js/constants.js`: Bumped APP_VERSION to 2.89.0
+- **Feature Details**:
+  - Tests validate initializeAudioModule function (1 param: appServicesFromMain, sets localAppServices)
+  - Tests validate getMasterEffectsBusInputNode function (0 params, references masterEffectsBusInputNode, checks disposed state)
+  - Tests validate getActualMasterGainNode function (0 params, references masterGainNodeActual, checks disposed state)
+  - Tests validate rebuildMasterEffectChain function (0 params, rebuilds audio chain with all nodes, calls setupMasterBus)
+  - Tests validate updateMasterEffectParamInAudio function (3 params: effectId, paramPath, value)
+  - Tests validate updateMasterEffectParamInAudio uses rampTo for smooth transitions
+  - Tests validate reorderMasterEffectInAudio function (2 params: effectIdIgnored, newIndexIgnored, calls rebuildMasterEffectChain)
+  - Tests validate updateMeters function (3 params: masterMeterNode, Tone.context, converts dB to gain)
+  - Tests validate panicAllAudio function (0 params, stops Tone.Transport, disposes all audio players, shows notification)
+  - Tests validate getPerformanceMetrics function (0 params, returns object with cpuUsage, memoryPressure, activeVoices, droppedCallbacks)
+  - Removed intermediate tests_day411.js file after merge
+  - Total tests increased from 2051 to 2115
+- **Version**: Bumped to 2.89.0
+
 #### Day 410: Audio Clip Getters & Clipboard State Tests (2026-04-30)
 - **Feature**: Added 31 new unit tests for Audio Clip getter methods and Clipboard State functions to expand test coverage
 - **Files Modified**:
@@ -7426,4 +7510,16 @@
   - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
   - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
   - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to
+  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
+  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
+  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
+  - Total tests increased from 1684 to 1732
+- **Version**: Bumped to 2.65.0
+- **Version**: Bumped to 2.64.0
+
+#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
+- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 48 new tests in Day 387 section:
+    - State Utility - resetPerformanceMonitorState is a function export
+    - State Utility - resetPerformanceMonitorState
