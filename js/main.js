@@ -1300,7 +1300,7 @@ function removeCustomDesktopBackground() {
         }
         
         // Remove from db if exists
-        bgDb.delete('desktopVideo').catch(() => {});
+        bgDbDeleteAudio('desktopVideo').catch(() => {});
         
         console.log("[removeCustomDesktopBackground] Custom background removed.");
     } catch (e) {
@@ -1314,7 +1314,7 @@ async function restoreDesktopBackground() {
     
     if (bgType === 'video') {
         try {
-            const videoBlob = await bgDb.get('desktopVideo');
+            const videoBlob = await bgDbGetAudio('desktopVideo');
             if (videoBlob) {
                 const objectUrl = URL.createObjectURL(videoBlob);
                 applyDesktopBackground(objectUrl, 'video');
