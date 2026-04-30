@@ -7786,3 +7786,174 @@ TestRunner.test('Audio Clip Editor - normalizeAudioClip returns boolean', (t) =>
     const funcStr = Track.prototype.normalizeAudioClip.toString();
     t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'normalizeAudioClip should return boolean');
 });
+// ============================================
+// Day 379: buildModularEffectsRackDOM Function Tests (2026-04-30)
+// ============================================
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM is a function', (t) => {
+    t.assertEqual(typeof buildModularEffectsRackDOM, 'function', 'buildModularEffectsRackDOM should be a function');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM accepts 2 parameters', (t) => {
+    const paramCount = buildModularEffectsRackDOM.length;
+    t.assertEqual(paramCount, 2, 'buildModularEffectsRackDOM should accept 2 parameters (owner, ownerType)');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM returns a string', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertEqual(typeof result, 'string', 'buildModularEffectsRackDOM should return a string');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM includes effectsRackContent div', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('effectsRackContent-'), 'Should include effectsRackContent div with ID');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM uses owner ID for track type', (t) => {
+    const mockOwner = { id: 'track123', name: 'Test Track' };
+    const result = buildModularEffectsRackDOM(mockOwner, 'track');
+    t.assertTruthy(result.includes('effectsRackContent-track123'), 'Should use owner.id in container ID for track type');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM uses master for master type', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('effectsRackContent-master'), 'Should use master in container ID for master type');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM uses owner ID for send type', (t) => {
+    const mockSend = { id: 'send456', name: 'Test Send' };
+    const result = buildModularEffectsRackDOM(mockSend, 'send');
+    t.assertTruthy(result.includes('effectsRackContent-send456'), 'Should use owner.id in container ID for send type');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM includes owner name in heading', (t) => {
+    const mockOwner = { id: 'track123', name: 'Test Track' };
+    const result = buildModularEffectsRackDOM(mockOwner, 'track');
+    t.assertTruthy(result.includes('Effects Rack: Test Track'), 'Should display owner name in heading for track type');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM shows Master Bus for master type', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('Effects Rack: Master Bus'), 'Should display Master Bus heading for master type');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM includes effectsList div', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('effectsList-'), 'Should include effectsList div');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM includes addEffectBtn button', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('addEffectBtn-'), 'Should include Add Effect button');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM includes effectControlsContainer', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('effectControlsContainer-'), 'Should include effectControlsContainer div');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM handles null owner for track type', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'track');
+    t.assertTruthy(result.includes('effectsRackContent-'), 'Should handle null owner gracefully for track type');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM handles null owner for send type', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'send');
+    t.assertTruthy(result.includes('effectsRackContent-'), 'Should handle null owner gracefully for send type');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM default ownerType is track', (t) => {
+    // Check that calling with only owner uses default 'track'
+    const mockOwner = { id: 'track999', name: 'Default Test' };
+    const funcStr = buildModularEffectsRackDOM.toString();
+    t.assertTruthy(funcStr.includes("ownerType = 'track'") || funcStr.includes('ownerType="track"'), 'Should have default ownerType of track');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM uses correct ID pattern for track effectsList', (t) => {
+    const mockOwner = { id: 'myTrack', name: 'My Track' };
+    const result = buildModularEffectsRackDOM(mockOwner, 'track');
+    t.assertTruthy(result.includes('effectsList-myTrack'), 'Should have effectsList-{ownerId} ID');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM uses correct ID pattern for send effectsList', (t) => {
+    const mockSend = { id: 'mySend', name: 'My Send' };
+    const result = buildModularEffectsRackDOM(mockSend, 'send');
+    t.assertTruthy(result.includes('effectsList-mySend'), 'Should have effectsList-{sendId} ID');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM uses correct ID pattern for master effectsList', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('effectsList-master'), 'Should have effectsList-master ID');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM addEffectBtn has correct ID pattern', (t) => {
+    const mockOwner = { id: 'btnTest', name: 'Btn Test' };
+    const result = buildModularEffectsRackDOM(mockOwner, 'track');
+    t.assertTruthy(result.includes('addEffectBtn-btnTest'), 'Should have addEffectBtn-{ownerId} ID');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM effectControlsContainer has correct ID pattern', (t) => {
+    const mockOwner = { id: 'ctrlTest', name: 'Ctrl Test' };
+    const result = buildModularEffectsRackDOM(mockOwner, 'track');
+    t.assertTruthy(result.includes('effectControlsContainer-ctrlTest'), 'Should have effectControlsContainer-{ownerId} ID');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM includes proper CSS classes', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('space-y-2'), 'Should have space-y-2 class');
+    t.assertTruthy(result.includes('overflow-y-auto'), 'Should have overflow-y-auto class');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM includes Add Effect text', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('Add Effect'), 'Should include Add Effect button text');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM uses dark mode classes', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('dark:text-slate-200') || result.includes('dark:'), 'Should use dark mode text classes');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM heading uses text-sm font-semibold', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('text-sm font-semibold'), 'Should have proper heading styling');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM effects list has border and rounded', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('border rounded'), 'Should have border and rounded classes on effects list');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM handles owner with missing name property', (t) => {
+    const mockOwner = { id: 'noName' };
+    const result = buildModularEffectsRackDOM(mockOwner, 'track');
+    t.assertTruthy(result.includes('effectsRackContent-noName'), 'Should still work with missing name property');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM uses p-2 padding on container', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('class="p-2'), 'Should have p-2 padding class on main container');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM effects list has min-h-[50px]', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('min-h-[50px]'), 'Should have min-h-[50px] on effects list');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM add effect button is purple colored', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('bg-purple-') || result.includes('purple'), 'Add Effect button should be purple colored');
+});
+
+TestRunner.test('Effects Rack DOM - buildModularEffectsRackDOM effect controls container has margin-top', (t) => {
+    const result = buildModularEffectsRackDOM(null, 'master');
+    t.assertTruthy(result.includes('mt-2'), 'Effect controls container should have mt-2 margin');
+});
+
+TestRunner.test('APP_VERSION validation for Day 379', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 379');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 57, 'Minor version should be >= 57 for Day 379');
+    }
+});
