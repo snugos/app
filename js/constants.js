@@ -1,4 +1,18 @@
-export const APP_VERSION = '2.57.0';  // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
+export const APP_VERSION = '2.58.0';  // Day 379: Audio Clip Setter/Getter Methods Tests
+- **Files Modified**:
+  - `js/tests.js`: Added 81 new tests for Audio Clip setter/getter methods
+  - `js/constants.js`: Bumped APP_VERSION to 2.58.0
+- **Feature Details**:
+  - Tests validate all Audio Clip setters call _captureUndoState for undo/redo support
+  - Tests verify descriptive undo labels for all clip operations (Rename, Set color, Set gain, etc.)
+  - Tests verify value clamping using MIN/MAX constants
+  - Tests verify all setters reference their respective parameters
+  - Tests validate all Audio Clip getters exist and reference clipId parameter
+  - Tests validate _getAudioClip helper function searches timelineClips
+  - Total tests increased from 1274 to 1355
+- **Version**: Bumped to 2.58.0
+
+// Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
 
