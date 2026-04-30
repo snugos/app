@@ -1,3 +1,56 @@
+#### Day 381: DrumSampler Pad Drop Zone Verification Tests (2026-04-30)
+- **Feature**: Added 35 new unit tests for DrumSampler Pad drop zone verification to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 35 new tests in Day 381 section:
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM is a function
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM accepts 1 parameter
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM references track.id
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes drumPadDropZoneContainer
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes drum pads grid container
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes volume knob placeholder
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes pitch knob placeholder
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM includes envelope knob placeholders
+    - DrumSampler UI - buildDrumSamplerSpecificInspectorDOM uses dark mode styling
+    - DrumSampler UI - initializeDrumSamplerSpecificControls is a function
+    - DrumSampler UI - initializeDrumSamplerSpecificControls accepts 2 parameters
+    - DrumSampler UI - initializeDrumSamplerSpecificControls creates drum pad knobs
+    - DrumSampler UI - initializeDrumSamplerSpecificControls calls renderDrumSamplerPads
+    - DrumSampler UI - initializeDrumSamplerSpecificControls calls updateDrumPadControlsUI
+    - DrumSampler UI - initializeDrumSamplerSpecificControls sets up volume knob with onValueChange
+    - DrumSampler UI - initializeDrumSamplerSpecificControls sets up pitch knob with onValueChange
+    - DrumSampler UI - initializeDrumSamplerSpecificControls sets up envelope knobs
+    - DrumSampler UI - renderDrumSamplerPads is a function
+    - DrumSampler UI - renderDrumSamplerPads validates track type
+    - DrumSampler UI - renderDrumSamplerPads creates pad buttons
+    - DrumSampler UI - renderDrumSamplerPads uses numDrumSamplerPads constant
+    - DrumSampler UI - renderDrumSamplerPads handles pad selection state
+    - DrumSampler UI - renderDrumSamplerPads adds click event listeners to pads
+    - DrumSampler UI - renderDrumSamplerPads calls updateDrumPadControlsUI on pad click
+    - DrumSampler UI - renderDrumSamplerPads plays preview on pad click
+    - DrumSampler UI - updateDrumPadControlsUI is a function
+    - DrumSampler UI - updateDrumPadControlsUI validates track type
+    - DrumSampler UI - updateDrumPadControlsUI updates drop zone container
+    - DrumSampler UI - updateDrumPadControlsUI calls createDropZoneHTML
+    - DrumSampler UI - updateDrumPadControlsUI calls setupGenericDropZoneListeners
+    - DrumSampler UI - updateDrumPadControlsUI passes correct callbacks
+    - DrumSampler UI - updateDrumPadControlsUI sets up file input change handler
+    - DrumSampler UI - updateDrumPadControlsUI handles fallback for missing container
+    - DrumSampler UI - updateDrumPadControlsUI handles pad index correctly
+  - `js/constants.js`: Bumped APP_VERSION to 2.60.0
+- **Feature Details**:
+  - Tests validate buildDrumSamplerSpecificInspectorDOM creates complete DrumSampler inspector DOM structure
+  - Tests verify drop zone container uses drumPadDropZoneContainer ID pattern with selected pad index
+  - Tests verify drum pads grid container (drumPadsGridContainer) is created for 8 pads
+  - Tests verify knob placeholders for volume, pitch, and envelope ADSR controls exist
+  - Tests verify initializeDrumSamplerSpecificControls creates all 6 knobs with proper callbacks
+  - Tests verify renderDrumSamplerPads creates pad buttons with click handlers for selection and preview
+  - Tests verify updateDrumPadControlsUI calls createDropZoneHTML and setupGenericDropZoneListeners
+  - Tests verify proper callbacks are passed (loadSoundFromBrowserToTarget, loadDrumSamplerPadFile)
+  - Tests verify file input change handler is set up for manual file selection
+  - Tests verify fallback handling for edge case when container with correct ID is missing
+  - Total tests increased from 1415 to 1450
+- **Version**: Bumped to 2.60.0
+
 #### Day 379: Audio Clip Setter/Getter Methods Tests (2026-04-30)
 - **Feature**: Added 81 new unit tests for Audio Clip setter/getter methods on Track.prototype to expand test coverage
 - **Files Modified**:
