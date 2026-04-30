@@ -895,8 +895,8 @@ function removeCustomDesktopBackground() {
     
     try {
         // Clear localStorage
-        localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
-        localStorage.removeItem(DESKTOP_BG_TYPE_KEY);
+        localStorage.removeItem(Constants.DESKTOP_BACKGROUND_KEY);
+        localStorage.removeItem(Constants.DESKTOP_BG_TYPE_KEY);
         
         // Clear desktop background styles
         if (desktop) {
@@ -922,7 +922,7 @@ function removeCustomDesktopBackground() {
 
 // Restore background on load
 async function restoreDesktopBackground() {
-    const bgType = localStorage.getItem(DESKTOP_BG_TYPE_KEY);
+    const bgType = localStorage.getItem(Constants.DESKTOP_BG_TYPE_KEY);
     
     if (bgType === 'video') {
         try {
@@ -935,7 +935,7 @@ async function restoreDesktopBackground() {
             console.warn("Could not restore video background:", e);
         }
     } else if (bgType === 'image' || !bgType) {
-        const imageUrl = localStorage.getItem(DESKTOP_BACKGROUND_KEY);
+        const imageUrl = localStorage.getItem(Constants.DESKTOP_BACKGROUND_KEY);
         if (imageUrl) {
             applyDesktopBackground(imageUrl, 'image');
         }
