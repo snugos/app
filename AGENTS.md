@@ -1,3 +1,13 @@
+#### Day 412: Bug Fix - Missing Module Imports (2026-04-30)
+- **Bug Fix**: Added missing `initializeUIModule` and `initializeAudioModule` imports to `main.js`
+- **Root Cause**: `main.js` was calling `initializeUIModule(appServices)` and `initializeAudioModule(appServices)` without importing these functions from their respective modules
+- **Files Modified**:
+  - `js/main.js`: Added imports:
+    - `initializeAudioModule` from `./audio.js`
+    - `initializeUIModule` from `./ui.js`
+- **Symptom**: "is not a function" errors during initialization, causing cascading failures (missing DOM elements, windows not opening)
+- **Version**: Bumped to 2.90.0
+
 #### Day 411: Audio Module Core Functions Tests (2026-04-30)
 - **Feature**: Added 64 new unit tests for Audio Module Core Functions to expand test coverage
 - **Files Modified**:
@@ -7494,32 +7504,4 @@
     - Send Bus Audio - setSendBusLevel is a function
     - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
     - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState
+   
