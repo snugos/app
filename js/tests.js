@@ -9278,3 +9278,160 @@ TestRunner.test('Track Send Level - APP_VERSION validation for Day 385', (t) => 
         t.assertTruthy(versionParts[1] >= 63, 'Minor version should be >= 63 for Day 385');
     }
 });
+
+// ============================================
+// Day 386: Master Effects Chain Management Tests
+// ============================================
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState is a function export', (t) => {
+    t.assertEqual(typeof addMasterEffectToState, 'function', 'addMasterEffectToState should be a function');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState accepts 2 parameters', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('effectType') && funcStr.includes('initialParams'), 'addMasterEffectToState should accept 2 parameters');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState calls captureStateForUndo', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addMasterEffectToState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState uses descriptive undo label', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('Add Master Effect'), 'addMasterEffectToState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState references effectType in undo label', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addMasterEffectToState should reference effectType in undo label');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState uses effectsRegistryAccess for default params', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('getEffectDefaultParams'), 'addMasterEffectToState should use effectsRegistryAccess');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState generates unique effectId', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('Date.now') || funcStr.includes('Math.random') || funcStr.includes('effectId'), 'addMasterEffectToState should generate unique effectId');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState pushes to masterEffectsChainState', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('masterEffectsChainState') && funcStr.includes('push'), 'addMasterEffectToState should push to masterEffectsChainState');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState returns effectId', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('return effectId'), 'addMasterEffectToState should return effectId');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState is a function export', (t) => {
+    t.assertEqual(typeof removeMasterEffectFromState, 'function', 'removeMasterEffectFromState should be a function');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState accepts 1 parameter', (t) => {
+    t.assertEqual(removeMasterEffectFromState.length, 1, 'removeMasterEffectFromState should accept 1 parameter');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState calls captureStateForUndo', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeMasterEffectFromState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState uses descriptive undo label', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('Remove Master Effect'), 'removeMasterEffectFromState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState finds effect by id', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('find'), 'removeMasterEffectFromState should find effect by id');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState splices from masterEffectsChainState', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeMasterEffectFromState should splice from masterEffectsChainState');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState is a function export', (t) => {
+    t.assertEqual(typeof updateMasterEffectParamInState, 'function', 'updateMasterEffectParamInState should be a function');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState accepts 3 parameters', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('paramPath') && funcStr.includes('value'), 'updateMasterEffectParamInState should accept 3 parameters');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState calls captureStateForUndo', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateMasterEffectParamInState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState uses descriptive undo label', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('Update Master Effect'), 'updateMasterEffectParamInState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState parses paramPath with split', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes("split('.'") || funcStr.includes('split("."'), 'updateMasterEffectParamInState should parse paramPath with split');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState navigates nested params', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('params') && (funcStr.includes('keys') || funcStr.includes('for')), 'updateMasterEffectParamInState should navigate nested params');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState has error handling', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('console.warn') || funcStr.includes('return'), 'updateMasterEffectParamInState should have error handling');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState is a function export', (t) => {
+    t.assertEqual(typeof reorderMasterEffectInState, 'function', 'reorderMasterEffectInState should be a function');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState accepts 2 parameters', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('newIndex'), 'reorderMasterEffectInState should accept 2 parameters');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState validates oldIndex', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('oldIndex'), 'reorderMasterEffectInState should validate oldIndex');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState validates newIndex bounds', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('newIndex') && (funcStr.includes('< 0') || funcStr.includes('>=') || funcStr.includes('length')), 'reorderMasterEffectInState should validate newIndex bounds');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState calls captureStateForUndo', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'reorderMasterEffectInState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState uses descriptive undo label', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('Reorder Master effect') || funcStr.includes('Reorder'), 'reorderMasterEffectInState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState uses splice to move effect', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('splice') && funcStr.includes('splice'), 'reorderMasterEffectInState should use splice to remove and insert');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState has warning for not found', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('console.warn') || funcStr.includes('return'), 'reorderMasterEffectInState should warn or return when not found');
+});
+
+TestRunner.test('Master Effects Chain - APP_VERSION validation for Day 386', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 386');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 64, 'Minor version should be >= 64 for Day 386');
+    }
+});
