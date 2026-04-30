@@ -1,3 +1,49 @@
+#### Day 373: Global Controls Window UI Tests (2026-04-30)
+- **Feature**: Added 25 new unit tests for Global Controls Window UI functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 25 new tests in Day 373 section:
+    - Global Controls Window - openGlobalControlsWindow is a function export
+    - Global Controls Window - openGlobalControlsWindow accepts 1-2 parameters (onReadyCallback, savedState)
+    - Global Controls Window - openGlobalControlsWindow uses globalControls windowId
+    - Global Controls Window - openGlobalControlsWindow calls localAppServices.createWindow
+    - Global Controls Window - openGlobalControlsWindow passes correct window title (Global Controls)
+    - Global Controls Window - openGlobalControlsWindow creates content HTML with play button
+    - Global Controls Window - openGlobalControlsWindow creates content HTML with stop button
+    - Global Controls Window - openGlobalControlsWindow creates content HTML with record button
+    - Global Controls Window - openGlobalControlsWindow creates tempo input field
+    - Global Controls Window - openGlobalControlsWindow creates MIDI input select
+    - Global Controls Window - openGlobalControlsWindow creates master meter elements
+    - Global Controls Window - openGlobalControlsWindow creates MIDI indicator
+    - Global Controls Window - openGlobalControlsWindow creates keyboard indicator
+    - Global Controls Window - openGlobalControlsWindow creates playback mode toggle
+    - Global Controls Window - openGlobalControlsWindow includes MIDI Learn section
+    - Global Controls Window - openGlobalControlsWindow includes MIDI Learn clear button
+    - Global Controls Window - openGlobalControlsWindow sets window options correctly
+    - Global Controls Window - openGlobalControlsWindow handles savedState for window restoration
+    - Global Controls Window - openGlobalControlsWindow checks for already open window
+    - Global Controls Window - openGlobalControlsWindow restores existing window when found
+    - Global Controls Window - openGlobalControlsWindow passes elements to onReadyCallback
+    - Global Controls Window - openGlobalControlsWindow returns window object
+    - Global Controls Window - Tempo input has correct attributes (min/max/step)
+    - Global Controls Window - Tempo input defaults to DEFAULT_TEMPO value
+    - Global Controls Window - openGlobalControlsWindow passes initialContentKey to createWindow
+    - APP_VERSION validation for 2.52.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.52.0
+- **Feature Details**:
+  - Tests validate openGlobalControlsWindow function export and parameter acceptance (1-2 params)
+  - Tests verify windowId (globalControls), createWindow call, and window title (Global Controls)
+  - Tests verify all UI elements are created (play/stop/record buttons, tempo input, MIDI select, master meter, MIDI/keyboard indicators, playback mode toggle, MIDI Learn section)
+  - Tests verify window options (closable, minimizable) are set correctly
+  - Tests verify savedState handling for window position/size restoration
+  - Tests verify existing window checking via openWindows.has/getOpenWindows
+  - Tests verify restore() is called on already open windows
+  - Tests verify onReadyCallback passes all UI elements for event binding
+  - Tests verify return value is the window object (newWindow)
+  - Tests verify tempo input has min/max/step attributes and defaults to 120 BPM
+  - Tests verify initialContentKey is passed for content caching
+  - Total tests increased from 1017 to 1042
+- **Version**: Bumped to 2.52.0
+
 #### Day 372: DB Module Extended Tests (2026-04-29)
 - **Feature**: Added 38 new unit tests for DB Module (IndexedDB Helper) extended functionality to expand test coverage
 - **Files Modified**:
