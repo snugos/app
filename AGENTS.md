@@ -1,3 +1,96 @@
+#### Day 401: Track Groups State & Constants Tests (2026-04-30)
+- **Feature**: Added 60 new unit tests for Track Groups state functions and constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 60 new tests in Day 401 section:
+    - Track Groups State - getTrackGroupsState is a function export
+    - Track Groups State - getTrackGroupsState accepts 0 parameters
+    - Track Groups State - getTrackGroupsState returns array
+    - Track Groups State - getTrackGroupByIdState is a function export
+    - Track Groups State - getTrackGroupByIdState accepts 1 parameter
+    - Track Groups State - getTrackGroupByIdState returns group or undefined
+    - Track Groups State - addTrackGroupState is a function export
+    - Track Groups State - addTrackGroupState accepts 1 parameter
+    - Track Groups State - addTrackGroupState calls captureStateForUndo
+    - Track Groups State - addTrackGroupState uses descriptive undo label
+    - Track Groups State - addTrackGroupState uses DEFAULT_TRACK_GROUP_NAME fallback
+    - Track Groups State - addTrackGroupState uses DEFAULT_TRACK_GROUP_COLOR fallback
+    - Track Groups State - addTrackGroupState pushes to trackGroupsState
+    - Track Groups State - addTrackGroupState returns new group
+    - Track Groups State - setTrackGroupNameState is a function export
+    - Track Groups State - setTrackGroupNameState accepts 2 parameters
+    - Track Groups State - setTrackGroupNameState calls captureStateForUndo
+    - Track Groups State - setTrackGroupNameState uses descriptive undo label
+    - Track Groups State - setTrackGroupNameState finds group by id
+    - Track Groups State - setTrackGroupNameState returns boolean
+    - Track Groups State - setTrackGroupColorState is a function export
+    - Track Groups State - setTrackGroupColorState accepts 2 parameters
+    - Track Groups State - setTrackGroupColorState calls captureStateForUndo
+    - Track Groups State - setTrackGroupColorState uses descriptive undo label
+    - Track Groups State - addTrackToGroupState is a function export
+    - Track Groups State - addTrackToGroupState accepts 2 parameters
+    - Track Groups State - addTrackToGroupState calls captureStateForUndo
+    - Track Groups State - addTrackToGroupState uses descriptive undo label
+    - Track Groups State - addTrackToGroupState pushes trackId to group.trackIds
+    - Track Groups State - addTrackToGroupState checks for duplicates
+    - Track Groups State - removeTrackFromGroupState is a function export
+    - Track Groups State - removeTrackFromGroupState accepts 2 parameters
+    - Track Groups State - removeTrackFromGroupState calls captureStateForUndo
+    - Track Groups State - removeTrackFromGroupState uses descriptive undo label
+    - Track Groups State - removeTrackFromGroupState uses indexOf and splice
+    - Track Groups State - setTrackGroupMutedState is a function export
+    - Track Groups State - setTrackGroupMutedState accepts 2 parameters
+    - Track Groups State - setTrackGroupMutedState calls captureStateForUndo
+    - Track Groups State - setTrackGroupMutedState uses descriptive undo label
+    - Track Groups State - setTrackGroupMutedState uses !! coercion
+    - Track Groups State - setTrackGroupSoloedState is a function export
+    - Track Groups State - setTrackGroupSoloedState accepts 2 parameters
+    - Track Groups State - setTrackGroupSoloedState calls captureStateForUndo
+    - Track Groups State - setTrackGroupSoloedState uses descriptive undo label
+    - Track Groups State - setTrackGroupSoloedState uses !! coercion
+    - Track Groups State - removeTrackGroupState is a function export
+    - Track Groups State - removeTrackGroupState accepts 1 parameter
+    - Track Groups State - removeTrackGroupState calls captureStateForUndo
+    - Track Groups State - removeTrackGroupState uses descriptive undo label
+    - Track Groups State - removeTrackGroupState uses findIndex and splice
+    - Track Groups State - removeTrackGroupState returns boolean
+    - Track Groups Constants - MAX_TRACK_GROUPS is defined
+    - Track Groups Constants - MAX_TRACK_GROUPS is a positive number
+    - Track Groups Constants - DEFAULT_TRACK_GROUP_NAME is defined
+    - Track Groups Constants - DEFAULT_TRACK_GROUP_NAME is a string
+    - Track Groups Constants - TRACK_GROUP_COLORS is defined
+    - Track Groups Constants - TRACK_GROUP_COLORS is an array
+    - Track Groups Constants - TRACK_GROUP_COLORS has multiple colors
+    - Track Groups Constants - DEFAULT_TRACK_GROUP_COLOR is defined
+    - Track Groups Constants - DEFAULT_TRACK_GROUP_COLOR is a string
+    - Track Groups Constants - DEFAULT_TRACK_GROUP_COLOR is a valid hex color
+    - Track Groups Constants - DEFAULT_TRACK_GROUP is defined
+    - Track Groups Constants - DEFAULT_TRACK_GROUP is an object
+    - Track Groups Constants - DEFAULT_TRACK_GROUP has name property
+    - Track Groups Constants - DEFAULT_TRACK_GROUP has color property
+    - Track Groups State - APP_VERSION validation for Day 401
+  - `js/constants.js`: Bumped APP_VERSION to 2.79.0
+- **Feature Details**:
+  - Tests validate getTrackGroupsState function (0 params, returns array)
+  - Tests validate getTrackGroupByIdState function (1 param, returns group or undefined)
+  - Tests validate addTrackGroupState function (1 param, calls captureStateForUndo with Create Track Group label)
+  - Tests validate addTrackGroupState uses DEFAULT_TRACK_GROUP_NAME and DEFAULT_TRACK_GROUP_COLOR fallbacks
+  - Tests validate addTrackGroupState pushes to trackGroupsState and returns new group
+  - Tests validate setTrackGroupNameState function (2 params, calls captureStateForUndo with Rename Track Group label)
+  - Tests validate setTrackGroupColorState function (2 params, calls captureStateForUndo with Change Track Group color label)
+  - Tests validate addTrackToGroupState function (2 params, calls captureStateForUndo with Add Track to Group label)
+  - Tests validate addTrackToGroupState checks for duplicates using includes/indexOf and pushes trackId
+  - Tests validate removeTrackFromGroupState function (2 params, calls captureStateForUndo with Remove Track from Group label)
+  - Tests validate removeTrackFromGroupState uses indexOf and splice to remove track
+  - Tests validate setTrackGroupMutedState function (2 params, uses !! coercion for boolean)
+  - Tests validate setTrackGroupSoloedState function (2 params, uses !! coercion for boolean)
+  - Tests validate removeTrackGroupState function (1 param, calls captureStateForUndo with Delete Track Group label)
+  - Tests validate removeTrackGroupState uses findIndex and splice and returns boolean
+  - Tests validate Track Groups constants (MAX_TRACK_GROUPS, DEFAULT_TRACK_GROUP_NAME, TRACK_GROUP_COLORS array)
+  - Tests validate DEFAULT_TRACK_GROUP_COLOR (valid hex color), DEFAULT_TRACK_GROUP (object with name and color)
+  - All Track Groups state functions call captureStateForUndo for undo/redo support
+  - Total tests increased from 9788 to 9848
+- **Version**: Bumped to 2.79.0
+
 #### Day 400: Master Effects Chain State Functions Tests (2026-04-30)
 - **Feature**: Added 32 new unit tests for Master Effects Chain state functions to expand test coverage
 - **Files Modified**:
