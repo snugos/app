@@ -1088,6 +1088,10 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 }
                 if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') appServices.renderTimeline();
                 break;
+            case 'trackAdded':
+                if (mixerElement && typeof updateMixerWindow === 'function') updateMixerWindow();
+                if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') appServices.renderTimeline();
+                break;
             case 'sampleLoadError':
                 if (inspectorElement) {
                     console.warn(`[Main UI Update] sampleLoadError for track ${trackId}, detail: ${detail}. Inspector UI update for dropzone needed.`);
