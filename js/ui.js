@@ -4882,6 +4882,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
     if (!clip) { console.error(`[UI] Clip ${clipId} not found in track ${trackId}.`); return null; }
 
     const windowId = `audioClipEditor-${clipId}`;
+    const clipName = clip.name || 'Untitled Clip';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) {
         openWindows.get(windowId).restore();
@@ -4893,7 +4894,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         const fadeOut = clip.fadeOut || 0;
         const startTime = clip.startTime || 0;
         const duration = clip.duration || 0;
-        const name = clip.name || 'Untitled Clip';
+        const name = clipName;
         const gain = clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN;
         const gainDb = gain > 0 ? (20 * Math.log10(gain)).toFixed(1) : '-∞';
         const playbackRate = clip.playbackRate !== undefined ? clip.playbackRate : Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE;
@@ -5050,7 +5051,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         </div>`;
     }
 
-    const editorWindow = localAppServices.createWindow(windowId, `Clip: ${name}`, buildClipEditorContent(), {
+    const editorWindow = localAppServices.createWindow(windowId, `Clip: ${clipName}`, buildClipEditorContent(), {
         width: 380, height: 620, minWidth: 320, minHeight: 500, initialContentKey: windowId
     });
 
