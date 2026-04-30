@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.58.0';  // Day 379: Audio Clip Setter/Getter Methods Tests
+export const APP_VERSION = '2.59.0';  // Day 380: Instrument Sampler Inspector UI Functions Tests
 - **Files Modified**:
   - `js/tests.js`: Added 81 new tests for Audio Clip setter/getter methods
   - `js/constants.js`: Bumped APP_VERSION to 2.58.0

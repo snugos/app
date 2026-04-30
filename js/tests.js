@@ -7957,3 +7957,150 @@ TestRunner.test('APP_VERSION validation for Day 379', (t) => {
         t.assertTruthy(versionParts[1] >= 57, 'Minor version should be >= 57 for Day 379');
     }
 });
+
+// Day 380: Instrument Sampler Inspector UI Functions Tests (2026-04-30)
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM is a function', (t) => {
+    t.assertEqual(typeof buildInstrumentSamplerSpecificInspectorDOM, 'function', 'buildInstrumentSamplerSpecificInspectorDOM should be a function');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM accepts 1 parameter', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('track'), 'buildInstrumentSamplerSpecificInspectorDOM should accept track parameter');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM references track.id', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('track.id') || funcStr.includes('track\\.id'), 'buildInstrumentSamplerSpecificInspectorDOM should reference track.id');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM includes drop zone container', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dropZoneContainer') && funcStr.includes('instrumentsampler'), 'buildInstrumentSamplerSpecificInspectorDOM should include dropZoneContainer for instrumentsampler');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM includes waveform canvas', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvas') && funcStr.includes('canvas'), 'buildInstrumentSamplerSpecificInspectorDOM should include instrumentWaveformCanvas');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM includes root note select', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentRootNote') && funcStr.includes('select'), 'buildInstrumentSamplerSpecificInspectorDOM should include instrumentRootNote select');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM includes loop toggle button', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopToggle') && funcStr.includes('button'), 'buildInstrumentSamplerSpecificInspectorDOM should include instrumentLoopToggle button');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM includes loop start input', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopStart'), 'buildInstrumentSamplerSpecificInspectorDOM should include instrumentLoopStart input');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM includes loop end input', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentLoopEnd'), 'buildInstrumentSamplerSpecificInspectorDOM should include instrumentLoopEnd input');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM includes envelope controls', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('Envelope') && funcStr.includes('instrumentEnvAttack') && funcStr.includes('instrumentEnvDecay') && funcStr.includes('instrumentEnvSustain') && funcStr.includes('instrumentEnvRelease'), 'buildInstrumentSamplerSpecificInspectorDOM should include all envelope placeholders');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM includes polyphony toggle', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('instrumentPolyphonyToggle') && funcStr.includes('button'), 'buildInstrumentSamplerSpecificInspectorDOM should include instrumentPolyphonyToggle button');
+});
+
+TestRunner.test('Instrument Sampler UI - buildInstrumentSamplerSpecificInspectorDOM uses dark mode styling', (t) => {
+    const funcStr = buildInstrumentSamplerSpecificInspectorDOM.toString();
+    t.assertTruthy(funcStr.includes('dark:') || funcStr.includes('dark:bg-slate-'), 'buildInstrumentSamplerSpecificInspectorDOM should use dark mode styling');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls is a function', (t) => {
+    t.assertEqual(typeof initializeInstrumentSamplerSpecificControls, 'function', 'initializeInstrumentSamplerSpecificControls should be a function');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls accepts 2 parameters', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('track') && funcStr.includes('winEl'), 'initializeInstrumentSamplerSpecificControls should accept track and winEl parameters');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls sets up drop zone listeners', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('setupGenericDropZoneListeners') || funcStr.includes('drop-zone'), 'initializeInstrumentSamplerSpecificControls should set up drop zone listeners');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls initializes waveform canvas', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('getContext') || funcStr.includes('instrumentWaveformCanvas'), 'initializeInstrumentSamplerSpecificControls should initialize waveform canvas');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls populates root note select', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('synthPitches') && funcStr.includes('rootNote'), 'initializeInstrumentSamplerSpecificControls should populate root note select with synthPitches');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls sets up root note change listener', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') && funcStr.includes('change') && funcStr.includes('setInstrumentSamplerRootNote'), 'initializeInstrumentSamplerSpecificControls should set up root note change listener');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls sets up loop toggle listener', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') && funcStr.includes('click') && funcStr.includes('setInstrumentSamplerLoop'), 'initializeInstrumentSamplerSpecificControls should set up loop toggle click listener');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls sets up loop start change listener', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') && funcStr.includes('instrumentLoopStart') && funcStr.includes('setInstrumentSamplerLoopStart'), 'initializeInstrumentSamplerSpecificControls should set up loop start change listener');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls sets up loop end change listener', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') && funcStr.includes('instrumentLoopEnd') && funcStr.includes('setInstrumentSamplerLoopEnd'), 'initializeInstrumentSamplerSpecificControls should set up loop end change listener');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls creates envelope knobs', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('createAndPlaceKnob') || funcStr.includes('createKnob'), 'initializeInstrumentSamplerSpecificControls should create envelope knobs');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls sets up polyphony toggle listener', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('addEventListener') && funcStr.includes('click') && funcStr.includes('instrumentPolyphonyToggle'), 'initializeInstrumentSamplerSpecificControls should set up polyphony toggle click listener');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls references captureStateForUndo', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'initializeInstrumentSamplerSpecificControls should reference captureStateForUndo');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls references instrumentSamplerSettings', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings'), 'initializeInstrumentSamplerSpecificControls should reference instrumentSamplerSettings');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls references instrumentSamplerIsPolyphonic', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerIsPolyphonic'), 'initializeInstrumentSamplerSpecificControls should reference instrumentSamplerIsPolyphonic');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls creates and places envelope knobs with correct IDs', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('instrumentEnvAttack') && funcStr.includes('instrumentEnvDecay') && funcStr.includes('instrumentEnvSustain') && funcStr.includes('instrumentEnvRelease'), 'initializeInstrumentSamplerSpecificControls should create knobs with correct envelope IDs');
+});
+
+TestRunner.test('Instrument Sampler UI - initializeInstrumentSamplerSpecificControls references setInstrumentSamplerEnv', (t) => {
+    const funcStr = initializeInstrumentSamplerSpecificControls.toString();
+    t.assertTruthy(funcStr.includes('setInstrumentSamplerEnv'), 'initializeInstrumentSamplerSpecificControls should reference setInstrumentSamplerEnv');
+});
+
+TestRunner.test('Instrument Sampler UI - APP_VERSION validation for Day 380', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 380');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 58, 'Minor version should be >= 58 for Day 380');
+    }
+});
