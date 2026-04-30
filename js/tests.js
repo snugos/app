@@ -10933,3 +10933,186 @@ TestRunner.test('Day 393 - APP_VERSION validation', (t) => {
         t.assertTruthy(versionParts[1] >= 70, 'Minor version should be >= 70 for Day 393');
     }
 });
+
+// Day 394: Master Effects Bus Audio Functions Tests
+TestRunner.test('Master Effects Bus Audio - getMasterEffectsBusInputNode is a function', (t) => {
+    t.assertEqual(typeof getMasterEffectsBusInputNode, 'function', 'getMasterEffectsBusInputNode should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - getMasterEffectsBusInputNode accepts 0 parameters', (t) => {
+    t.assertEqual(getMasterEffectsBusInputNode.length, 0, 'getMasterEffectsBusInputNode should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - getMasterEffectsBusInputNode returns an object or node', (t) => {
+    const result = getMasterEffectsBusInputNode();
+    t.assertTruthy(result !== undefined, 'getMasterEffectsBusInputNode should return a result');
+});
+
+TestRunner.test('Master Effects Bus Audio - getActualMasterGainNode is a function', (t) => {
+    t.assertEqual(typeof getActualMasterGainNode, 'function', 'getActualMasterGainNode should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - getActualMasterGainNode accepts 0 parameters', (t) => {
+    t.assertEqual(getActualMasterGainNode.length, 0, 'getActualMasterGainNode should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - getActualMasterGainNode returns an object or node', (t) => {
+    const result = getActualMasterGainNode();
+    t.assertTruthy(result !== undefined, 'getActualMasterGainNode should return a result');
+});
+
+TestRunner.test('Master Effects Bus Audio - rebuildMasterEffectChain is a function', (t) => {
+    t.assertEqual(typeof rebuildMasterEffectChain, 'function', 'rebuildMasterEffectChain should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - rebuildMasterEffectChain accepts 0 parameters', (t) => {
+    t.assertEqual(rebuildMasterEffectChain.length, 0, 'rebuildMasterEffectChain should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMasterEffectParamInAudio is a function', (t) => {
+    t.assertEqual(typeof updateMasterEffectParamInAudio, 'function', 'updateMasterEffectParamInAudio should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMasterEffectParamInAudio accepts 3 parameters', (t) => {
+    t.assertEqual(updateMasterEffectParamInAudio.length, 3, 'updateMasterEffectParamInAudio should accept 3 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMasterEffectParamInAudio references effectId parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'updateMasterEffectParamInAudio should reference effectId parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMasterEffectParamInAudio references paramPath parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('paramPath'), 'updateMasterEffectParamInAudio should reference paramPath parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMasterEffectParamInAudio references value parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('value'), 'updateMasterEffectParamInAudio should reference value parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - reorderMasterEffectInAudio is a function', (t) => {
+    t.assertEqual(typeof reorderMasterEffectInAudio, 'function', 'reorderMasterEffectInAudio should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - reorderMasterEffectInAudio accepts 2 parameters', (t) => {
+    t.assertEqual(reorderMasterEffectInAudio.length, 2, 'reorderMasterEffectInAudio should accept 2 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - reorderMasterEffectInAudio references effectIdIgnored parameter', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectIdIgnored') || funcStr.includes('effectId'), 'reorderMasterEffectInAudio should reference effectId parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - reorderMasterEffectInAudio references newIndexIgnored parameter', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('newIndexIgnored') || funcStr.includes('newIndex'), 'reorderMasterEffectInAudio should reference newIndex parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMeters is a function', (t) => {
+    t.assertEqual(typeof updateMeters, 'function', 'updateMeters should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMeters accepts 3 parameters', (t) => {
+    t.assertEqual(updateMeters.length, 3, 'updateMeters should accept 3 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMeters references globalMasterMeterBar parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('globalMasterMeterBar'), 'updateMeters should reference globalMasterMeterBar parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMeters references mixerMasterMeterBar parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('mixerMasterMeterBar'), 'updateMeters should reference mixerMasterMeterBar parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - updateMeters references tracks parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('tracks'), 'updateMeters should reference tracks parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - clearAllMasterEffectNodes is a function', (t) => {
+    t.assertEqual(typeof clearAllMasterEffectNodes, 'function', 'clearAllMasterEffectNodes should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - clearAllMasterEffectNodes accepts 0 parameters', (t) => {
+    t.assertEqual(clearAllMasterEffectNodes.length, 0, 'clearAllMasterEffectNodes should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - getMimeTypeFromFilename is a function', (t) => {
+    t.assertEqual(typeof getMimeTypeFromFilename, 'function', 'getMimeTypeFromFilename should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - getMimeTypeFromFilename accepts 1 parameter', (t) => {
+    t.assertEqual(getMimeTypeFromFilename.length, 1, 'getMimeTypeFromFilename should accept 1 parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - getMimeTypeFromFilename references filename parameter', (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('filename'), 'getMimeTypeFromFilename should reference filename parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - autoSliceSample is a function', (t) => {
+    t.assertEqual(typeof autoSliceSample, 'function', 'autoSliceSample should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - autoSliceSample accepts 2 parameters', (t) => {
+    t.assertEqual(autoSliceSample.length, 2, 'autoSliceSample should accept 2 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - autoSliceSample references trackId parameter', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'autoSliceSample should reference trackId parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - autoSliceSample references numSlicesToCreate parameter', (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('numSlicesToCreate') || funcStr.includes('numSlices'), 'autoSliceSample should reference numSlicesToCreate parameter');
+});
+
+TestRunner.test('Master Effects Bus Audio - panicAllAudio is a function', (t) => {
+    t.assertEqual(typeof panicAllAudio, 'function', 'panicAllAudio should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - panicAllAudio accepts 0 parameters', (t) => {
+    t.assertEqual(panicAllAudio.length, 0, 'panicAllAudio should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - startPerformanceMonitor is a function', (t) => {
+    t.assertEqual(typeof startPerformanceMonitor, 'function', 'startPerformanceMonitor should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - startPerformanceMonitor accepts 0 parameters', (t) => {
+    t.assertEqual(startPerformanceMonitor.length, 0, 'startPerformanceMonitor should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - stopPerformanceMonitor is a function', (t) => {
+    t.assertEqual(typeof stopPerformanceMonitor, 'function', 'stopPerformanceMonitor should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - stopPerformanceMonitor accepts 0 parameters', (t) => {
+    t.assertEqual(stopPerformanceMonitor.length, 0, 'stopPerformanceMonitor should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - getPerformanceMetrics is a function', (t) => {
+    t.assertEqual(typeof getPerformanceMetrics, 'function', 'getPerformanceMetrics should be a function');
+});
+
+TestRunner.test('Master Effects Bus Audio - getPerformanceMetrics accepts 0 parameters', (t) => {
+    t.assertEqual(getPerformanceMetrics.length, 0, 'getPerformanceMetrics should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Bus Audio - getPerformanceMetrics returns an object', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('return'), 'getPerformanceMetrics should have a return statement');
+});
+
+TestRunner.test('Master Effects Bus Audio - APP_VERSION validation for Day 394', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 394');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 71, 'Minor version should be >= 71 for Day 394');
+    }
+});

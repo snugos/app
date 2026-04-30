@@ -6596,3 +6596,62 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests verify Add Effect button text and purple coloring
   - Total tests increased from 1355 to 1383
 - **Version**: Bumped to 2.58.0
+
+#### Day 394: Master Effects Bus Audio Functions Tests (2026-04-30)
+- **Feature**: Added 41 new unit tests for Master Effects Bus Audio functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 41 new tests in Day 394 section:
+    - Master Effects Bus Audio - getMasterEffectsBusInputNode is a function
+    - Master Effects Bus Audio - getMasterEffectsBusInputNode accepts 0 parameters
+    - Master Effects Bus Audio - getMasterEffectsBusInputNode returns an object or node
+    - Master Effects Bus Audio - getActualMasterGainNode is a function
+    - Master Effects Bus Audio - getActualMasterGainNode accepts 0 parameters
+    - Master Effects Bus Audio - getActualMasterGainNode returns an object or node
+    - Master Effects Bus Audio - rebuildMasterEffectChain is a function
+    - Master Effects Bus Audio - rebuildMasterEffectChain accepts 0 parameters
+    - Master Effects Bus Audio - updateMasterEffectParamInAudio is a function
+    - Master Effects Bus Audio - updateMasterEffectParamInAudio accepts 3 parameters
+    - Master Effects Bus Audio - updateMasterEffectParamInAudio references effectId parameter
+    - Master Effects Bus Audio - updateMasterEffectParamInAudio references paramPath parameter
+    - Master Effects Bus Audio - updateMasterEffectParamInAudio references value parameter
+    - Master Effects Bus Audio - reorderMasterEffectInAudio is a function
+    - Master Effects Bus Audio - reorderMasterEffectInAudio accepts 2 parameters
+    - Master Effects Bus Audio - reorderMasterEffectInAudio references effectIdIgnored parameter
+    - Master Effects Bus Audio - reorderMasterEffectInAudio references newIndexIgnored parameter
+    - Master Effects Bus Audio - updateMeters is a function
+    - Master Effects Bus Audio - updateMeters accepts 3 parameters
+    - Master Effects Bus Audio - updateMeters references globalMasterMeterBar parameter
+    - Master Effects Bus Audio - updateMeters references mixerMasterMeterBar parameter
+    - Master Effects Bus Audio - updateMeters references tracks parameter
+    - Master Effects Bus Audio - clearAllMasterEffectNodes is a function
+    - Master Effects Bus Audio - clearAllMasterEffectNodes accepts 0 parameters
+    - Master Effects Bus Audio - getMimeTypeFromFilename is a function
+    - Master Effects Bus Audio - getMimeTypeFromFilename accepts 1 parameter
+    - Master Effects Bus Audio - getMimeTypeFromFilename references filename parameter
+    - Master Effects Bus Audio - autoSliceSample is a function
+    - Master Effects Bus Audio - autoSliceSample accepts 2 parameters
+    - Master Effects Bus Audio - autoSliceSample references trackId parameter
+    - Master Effects Bus Audio - autoSliceSample references numSlicesToCreate parameter
+    - Master Effects Bus Audio - panicAllAudio is a function
+    - Master Effects Bus Audio - panicAllAudio accepts 0 parameters
+    - Master Effects Bus Audio - startPerformanceMonitor is a function
+    - Master Effects Bus Audio - startPerformanceMonitor accepts 0 parameters
+    - Master Effects Bus Audio - stopPerformanceMonitor is a function
+    - Master Effects Bus Audio - stopPerformanceMonitor accepts 0 parameters
+    - Master Effects Bus Audio - getPerformanceMetrics is a function
+    - Master Effects Bus Audio - getPerformanceMetrics accepts 0 parameters
+    - Master Effects Bus Audio - getPerformanceMetrics returns an object
+    - Master Effects Bus Audio - APP_VERSION validation for Day 394
+  - `js/constants.js`: Bumped APP_VERSION to 2.72.0
+- **Feature Details**:
+  - Tests validate Master Effects Bus functions (getMasterEffectsBusInputNode, getActualMasterGainNode, rebuildMasterEffectChain)
+  - Tests validate updateMasterEffectParamInAudio function (3 params: effectId, paramPath, value)
+  - Tests validate reorderMasterEffectInAudio function (2 params: effectIdIgnored, newIndexIgnored)
+  - Tests validate updateMeters function (3 params: globalMasterMeterBar, mixerMasterMeterBar, tracks)
+  - Tests validate clearAllMasterEffectNodes function (0 params)
+  - Tests validate getMimeTypeFromFilename function (1 param: filename)
+  - Tests validate autoSliceSample function (2 params: trackId, numSlicesToCreate)
+  - Tests validate panicAllAudio function (0 params)
+  - Tests validate Performance Monitor functions (startPerformanceMonitor, stopPerformanceMonitor, getPerformanceMetrics)
+  - Total tests increased from 1984 to 2025
+- **Version**: Bumped to 2.72.0
