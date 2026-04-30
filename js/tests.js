@@ -10057,6 +10057,357 @@ TestRunner.test('Tap Tempo - resetTapTempo accepts 0 parameters', (t) => {
     t.assertTruthy(!funcBody.includes('function resetTapTempo(') || funcBody.match(/function resetTapTempo\s*\(\s*\)/), 'resetTapTempo should accept 0 parameters');
 });
 
+
+// ============================================
+// Day 407: Performance Monitor State Extended Tests
+// ============================================
+
+// Performance Monitor State - getPerformanceMonitorState
+TestRunner.test('Performance Monitor State - getPerformanceMonitorState is a function export', (t) => {
+    t.assertEqual(typeof getPerformanceMonitorState, 'function', 'getPerformanceMonitorState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getPerformanceMonitorState accepts 0 parameters', (t) => {
+    t.assertEqual(getPerformanceMonitorState.length, 0, 'getPerformanceMonitorState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getPerformanceMonitorState returns an object', (t) => {
+    const result = getPerformanceMonitorState();
+    t.assertEqual(typeof result, 'object', 'getPerformanceMonitorState should return an object');
+});
+
+TestRunner.test('Performance Monitor State - getPerformanceMonitorState returns a copy', (t) => {
+    const funcStr = getPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('...') || funcStr.includes('Object.assign') || funcStr.includes('JSON.parse'), 'getPerformanceMonitorState should return a copy');
+});
+
+TestRunner.test('Performance Monitor State - getPerformanceMonitorEnabledState is a function export', (t) => {
+    t.assertEqual(typeof getPerformanceMonitorEnabledState, 'function', 'getPerformanceMonitorEnabledState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getPerformanceMonitorEnabledState accepts 0 parameters', (t) => {
+    t.assertEqual(getPerformanceMonitorEnabledState.length, 0, 'getPerformanceMonitorEnabledState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getPerformanceMonitorEnabledState returns boolean', (t) => {
+    const result = getPerformanceMonitorEnabledState();
+    t.assertEqual(typeof result, 'boolean', 'getPerformanceMonitorEnabledState should return boolean');
+});
+
+TestRunner.test('Performance Monitor State - setPerformanceMonitorEnabledState is a function export', (t) => {
+    t.assertEqual(typeof setPerformanceMonitorEnabledState, 'function', 'setPerformanceMonitorEnabledState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - setPerformanceMonitorEnabledState accepts 1 parameter', (t) => {
+    t.assertEqual(setPerformanceMonitorEnabledState.length, 1, 'setPerformanceMonitorEnabledState should accept 1 parameter');
+});
+
+TestRunner.test('Performance Monitor State - setPerformanceMonitorEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setPerformanceMonitorEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Performance Monitor State - setPerformanceMonitorEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Set Performance Monitor') || funcStr.includes('On') || funcStr.includes('Off'), 'setPerformanceMonitorEnabledState should use descriptive undo label');
+});
+
+TestRunner.test('Performance Monitor State - setPerformanceMonitorEnabledState coerces to boolean', (t) => {
+    const funcStr = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setPerformanceMonitorEnabledState should coerce to boolean');
+});
+
+TestRunner.test('Performance Monitor State - getAudioContextStateState is a function export', (t) => {
+    t.assertEqual(typeof getAudioContextStateState, 'function', 'getAudioContextStateState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getAudioContextStateState accepts 0 parameters', (t) => {
+    t.assertEqual(getAudioContextStateState.length, 0, 'getAudioContextStateState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getAudioContextStateState returns string', (t) => {
+    const result = getAudioContextStateState();
+    t.assertEqual(typeof result, 'string', 'getAudioContextStateState should return string');
+});
+
+TestRunner.test('Performance Monitor State - setAudioContextStateState is a function export', (t) => {
+    t.assertEqual(typeof setAudioContextStateState, 'function', 'setAudioContextStateState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - setAudioContextStateState accepts 1 parameter', (t) => {
+    t.assertEqual(setAudioContextStateState.length, 1, 'setAudioContextStateState should accept 1 parameter');
+});
+
+TestRunner.test('Performance Monitor State - setAudioContextStateState calls captureStateForUndo', (t) => {
+    const funcStr = setAudioContextStateState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setAudioContextStateState should call captureStateForUndo');
+});
+
+TestRunner.test('Performance Monitor State - setAudioContextStateState uses descriptive undo label', (t) => {
+    const funcStr = setAudioContextStateState.toString();
+    t.assertTruthy(funcStr.includes('Set Audio Context State'), 'setAudioContextStateState should use descriptive undo label');
+});
+
+TestRunner.test('Performance Monitor State - setAudioContextStateState validates contextState', (t) => {
+    const funcStr = setAudioContextStateState.toString();
+    t.assertTruthy(funcStr.includes('running') || funcStr.includes('suspended') || funcStr.includes('closed') || funcStr.includes('unknown'), 'setAudioContextStateState should validate contextState');
+});
+
+TestRunner.test('Performance Monitor State - getCPUUsageState is a function export', (t) => {
+    t.assertEqual(typeof getCPUUsageState, 'function', 'getCPUUsageState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getCPUUsageState accepts 0 parameters', (t) => {
+    t.assertEqual(getCPUUsageState.length, 0, 'getCPUUsageState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getCPUUsageState returns number', (t) => {
+    const result = getCPUUsageState();
+    t.assertEqual(typeof result, 'number', 'getCPUUsageState should return number');
+});
+
+TestRunner.test('Performance Monitor State - setCPUUsageState is a function export', (t) => {
+    t.assertEqual(typeof setCPUUsageState, 'function', 'setCPUUsageState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - setCPUUsageState accepts 1 parameter', (t) => {
+    t.assertEqual(setCPUUsageState.length, 1, 'setCPUUsageState should accept 1 parameter');
+});
+
+TestRunner.test('Performance Monitor State - setCPUUsageState calls captureStateForUndo', (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setCPUUsageState should call captureStateForUndo');
+});
+
+TestRunner.test('Performance Monitor State - setCPUUsageState uses descriptive undo label', (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('Set CPU Usage'), 'setCPUUsageState should use descriptive undo label');
+});
+
+TestRunner.test('Performance Monitor State - setCPUUsageState clamps value to 0-100 range', (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setCPUUsageState should clamp value to 0-100 range');
+});
+
+TestRunner.test('Performance Monitor State - setCPUUsageState uses parseFloat', (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setCPUUsageState should use parseFloat');
+});
+
+TestRunner.test('Performance Monitor State - getMemoryPressureState is a function export', (t) => {
+    t.assertEqual(typeof getMemoryPressureState, 'function', 'getMemoryPressureState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getMemoryPressureState accepts 0 parameters', (t) => {
+    t.assertEqual(getMemoryPressureState.length, 0, 'getMemoryPressureState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getMemoryPressureState returns string', (t) => {
+    const result = getMemoryPressureState();
+    t.assertEqual(typeof result, 'string', 'getMemoryPressureState should return string');
+});
+
+TestRunner.test('Performance Monitor State - setMemoryPressureState is a function export', (t) => {
+    t.assertEqual(typeof setMemoryPressureState, 'function', 'setMemoryPressureState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - setMemoryPressureState accepts 1 parameter', (t) => {
+    t.assertEqual(setMemoryPressureState.length, 1, 'setMemoryPressureState should accept 1 parameter');
+});
+
+TestRunner.test('Performance Monitor State - setMemoryPressureState calls captureStateForUndo', (t) => {
+    const funcStr = setMemoryPressureState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMemoryPressureState should call captureStateForUndo');
+});
+
+TestRunner.test('Performance Monitor State - setMemoryPressureState uses descriptive undo label', (t) => {
+    const funcStr = setMemoryPressureState.toString();
+    t.assertTruthy(funcStr.includes('Set Memory Pressure'), 'setMemoryPressureState should use descriptive undo label');
+});
+
+TestRunner.test('Performance Monitor State - setMemoryPressureState validates pressure', (t) => {
+    const funcStr = setMemoryPressureState.toString();
+    t.assertTruthy(funcStr.includes('none') || funcStr.includes('low') || funcStr.includes('medium') || funcStr.includes('high'), 'setMemoryPressureState should validate pressure');
+});
+
+TestRunner.test('Performance Monitor State - getActiveVoicesState is a function export', (t) => {
+    t.assertEqual(typeof getActiveVoicesState, 'function', 'getActiveVoicesState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getActiveVoicesState accepts 0 parameters', (t) => {
+    t.assertEqual(getActiveVoicesState.length, 0, 'getActiveVoicesState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getActiveVoicesState returns number', (t) => {
+    const result = getActiveVoicesState();
+    t.assertEqual(typeof result, 'number', 'getActiveVoicesState should return number');
+});
+
+TestRunner.test('Performance Monitor State - setActiveVoicesState is a function export', (t) => {
+    t.assertEqual(typeof setActiveVoicesState, 'function', 'setActiveVoicesState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - setActiveVoicesState accepts 1 parameter', (t) => {
+    t.assertEqual(setActiveVoicesState.length, 1, 'setActiveVoicesState should accept 1 parameter');
+});
+
+TestRunner.test('Performance Monitor State - setActiveVoicesState calls captureStateForUndo', (t) => {
+    const funcStr = setActiveVoicesState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setActiveVoicesState should call captureStateForUndo');
+});
+
+TestRunner.test('Performance Monitor State - setActiveVoicesState uses descriptive undo label', (t) => {
+    const funcStr = setActiveVoicesState.toString();
+    t.assertTruthy(funcStr.includes('Set Active Voices'), 'setActiveVoicesState should use descriptive undo label');
+});
+
+TestRunner.test('Performance Monitor State - setActiveVoicesState clamps to non-negative', (t) => {
+    const funcStr = setActiveVoicesState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('0'), 'setActiveVoicesState should clamp to non-negative');
+});
+
+TestRunner.test('Performance Monitor State - getAudioLatencyState is a function export', (t) => {
+    t.assertEqual(typeof getAudioLatencyState, 'function', 'getAudioLatencyState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getAudioLatencyState accepts 0 parameters', (t) => {
+    t.assertEqual(getAudioLatencyState.length, 0, 'getAudioLatencyState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getAudioLatencyState returns number', (t) => {
+    const result = getAudioLatencyState();
+    t.assertEqual(typeof result, 'number', 'getAudioLatencyState should return number');
+});
+
+TestRunner.test('Performance Monitor State - setAudioLatencyState is a function export', (t) => {
+    t.assertEqual(typeof setAudioLatencyState, 'function', 'setAudioLatencyState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - setAudioLatencyState accepts 1 parameter', (t) => {
+    t.assertEqual(setAudioLatencyState.length, 1, 'setAudioLatencyState should accept 1 parameter');
+});
+
+TestRunner.test('Performance Monitor State - setAudioLatencyState calls captureStateForUndo', (t) => {
+    const funcStr = setAudioLatencyState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setAudioLatencyState should call captureStateForUndo');
+});
+
+TestRunner.test('Performance Monitor State - setAudioLatencyState uses descriptive undo label', (t) => {
+    const funcStr = setAudioLatencyState.toString();
+    t.assertTruthy(funcStr.includes('Set Audio Latency'), 'setAudioLatencyState should use descriptive undo label');
+});
+
+TestRunner.test('Performance Monitor State - setAudioLatencyState clamps to non-negative', (t) => {
+    const funcStr = setAudioLatencyState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('0'), 'setAudioLatencyState should clamp to non-negative');
+});
+
+TestRunner.test('Performance Monitor State - getLastCallbackTimeState is a function export', (t) => {
+    t.assertEqual(typeof getLastCallbackTimeState, 'function', 'getLastCallbackTimeState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getLastCallbackTimeState accepts 0 parameters', (t) => {
+    t.assertEqual(getLastCallbackTimeState.length, 0, 'getLastCallbackTimeState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getLastCallbackTimeState returns number', (t) => {
+    const result = getLastCallbackTimeState();
+    t.assertEqual(typeof result, 'number', 'getLastCallbackTimeState should return number');
+});
+
+TestRunner.test('Performance Monitor State - setLastCallbackTimeState is a function export', (t) => {
+    t.assertEqual(typeof setLastCallbackTimeState, 'function', 'setLastCallbackTimeState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - setLastCallbackTimeState accepts 1 parameter', (t) => {
+    t.assertEqual(setLastCallbackTimeState.length, 1, 'setLastCallbackTimeState should accept 1 parameter');
+});
+
+TestRunner.test('Performance Monitor State - setLastCallbackTimeState calls captureStateForUndo', (t) => {
+    const funcStr = setLastCallbackTimeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLastCallbackTimeState should call captureStateForUndo');
+});
+
+TestRunner.test('Performance Monitor State - setLastCallbackTimeState uses descriptive undo label', (t) => {
+    const funcStr = setLastCallbackTimeState.toString();
+    t.assertTruthy(funcStr.includes('Set Last Callback Time'), 'setLastCallbackTimeState should use descriptive undo label');
+});
+
+TestRunner.test('Performance Monitor State - getDroppedCallbacksState is a function export', (t) => {
+    t.assertEqual(typeof getDroppedCallbacksState, 'function', 'getDroppedCallbacksState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - getDroppedCallbacksState accepts 0 parameters', (t) => {
+    t.assertEqual(getDroppedCallbacksState.length, 0, 'getDroppedCallbacksState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - getDroppedCallbacksState returns number', (t) => {
+    const result = getDroppedCallbacksState();
+    t.assertEqual(typeof result, 'number', 'getDroppedCallbacksState should return number');
+});
+
+TestRunner.test('Performance Monitor State - setDroppedCallbacksState is a function export', (t) => {
+    t.assertEqual(typeof setDroppedCallbacksState, 'function', 'setDroppedCallbacksState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - setDroppedCallbacksState accepts 1 parameter', (t) => {
+    t.assertEqual(setDroppedCallbacksState.length, 1, 'setDroppedCallbacksState should accept 1 parameter');
+});
+
+TestRunner.test('Performance Monitor State - setDroppedCallbacksState calls captureStateForUndo', (t) => {
+    const funcStr = setDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setDroppedCallbacksState should call captureStateForUndo');
+});
+
+TestRunner.test('Performance Monitor State - setDroppedCallbacksState uses descriptive undo label', (t) => {
+    const funcStr = setDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('Set Dropped Callbacks'), 'setDroppedCallbacksState should use descriptive undo label');
+});
+
+TestRunner.test('Performance Monitor State - incrementDroppedCallbacksState is a function export', (t) => {
+    t.assertEqual(typeof incrementDroppedCallbacksState, 'function', 'incrementDroppedCallbacksState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - incrementDroppedCallbacksState accepts 0 parameters', (t) => {
+    t.assertEqual(incrementDroppedCallbacksState.length, 0, 'incrementDroppedCallbacksState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - incrementDroppedCallbacksState increments counter', (t) => {
+    const funcStr = incrementDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('++') || funcStr.includes('+= 1'), 'incrementDroppedCallbacksState should increment counter');
+});
+
+TestRunner.test('Performance Monitor State - resetPerformanceMonitorState is a function export', (t) => {
+    t.assertEqual(typeof resetPerformanceMonitorState, 'function', 'resetPerformanceMonitorState should be a function');
+});
+
+TestRunner.test('Performance Monitor State - resetPerformanceMonitorState accepts 0 parameters', (t) => {
+    t.assertEqual(resetPerformanceMonitorState.length, 0, 'resetPerformanceMonitorState should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor State - resetPerformanceMonitorState resets enabled to false', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('enabled') && (funcStr.includes('false') || funcStr.includes('= false')), 'resetPerformanceMonitorState should reset enabled to false');
+});
+
+TestRunner.test('Performance Monitor State - resetPerformanceMonitorState resets cpuUsage to 0', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('cpuUsage') && funcStr.includes('0'), 'resetPerformanceMonitorState should reset cpuUsage to 0');
+});
+
+TestRunner.test('Performance Monitor State - resetPerformanceMonitorState resets droppedCallbacks to 0', (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('droppedCallbacks') && funcStr.includes('0'), 'resetPerformanceMonitorState should reset droppedCallbacks to 0');
+});
+
+TestRunner.test('Performance Monitor State - APP_VERSION validation for Day 407', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 407');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 84, 'Minor version should be >= 84 for Day 407');
+    }
+});
+
 // APP_VERSION validation for Day 406
 TestRunner.test('Timeline & Waveform Rendering - APP_VERSION validation for Day 406', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);

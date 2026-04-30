@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.84.0'; // Day 406: Timeline & Waveform Rendering UI Functions Tests
+export const APP_VERSION = '2.85.0'; // Day 407: Performance Monitor State Extended Tests
 
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
@@ -28,6 +28,13 @@ export const MAX_BARS = 512; // Maximum number of bars a sequence can have
 export const MIN_TEMPO = 0; // Minimum tempo in BPM
 export const MAX_TEMPO = 999; // Maximum tempo in BPM
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
+
+// Transport State Constants
+export const TRANSPORT_STATE_STOPPED = 'stopped';
+export const TRANSPORT_STATE_PAUSED = 'paused';
+export const TRANSPORT_STATE_PLAYING = 'started';
+export const DEFAULT_TRANSPORT_STATE = TRANSPORT_STATE_STOPPED;
+export const TRANSPORT_STATES = [TRANSPORT_STATE_STOPPED, TRANSPORT_STATE_PAUSED, TRANSPORT_STATE_PLAYING];
 
 // Metronome Constants
 export const DEFAULT_METRONOME_ENABLED = false; // Metronome off by default

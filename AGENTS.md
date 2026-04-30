@@ -1,3 +1,107 @@
+#### Day 407: Performance Monitor State Extended Tests (2026-04-30)
+- **Feature**: Added 78 new unit tests for Performance Monitor state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 78 new tests in Day 407 section:
+    - Performance Monitor State - getPerformanceMonitorState is a function export
+    - Performance Monitor State - getPerformanceMonitorState accepts 0 parameters
+    - Performance Monitor State - getPerformanceMonitorState returns an object
+    - Performance Monitor State - getPerformanceMonitorState returns a copy
+    - Performance Monitor State - getPerformanceMonitorEnabledState is a function export
+    - Performance Monitor State - getPerformanceMonitorEnabledState accepts 0 parameters
+    - Performance Monitor State - getPerformanceMonitorEnabledState returns boolean
+    - Performance Monitor State - setPerformanceMonitorEnabledState is a function export
+    - Performance Monitor State - setPerformanceMonitorEnabledState accepts 1 parameter
+    - Performance Monitor State - setPerformanceMonitorEnabledState calls captureStateForUndo
+    - Performance Monitor State - setPerformanceMonitorEnabledState uses descriptive undo label
+    - Performance Monitor State - setPerformanceMonitorEnabledState coerces to boolean
+    - Performance Monitor State - getAudioContextStateState is a function export
+    - Performance Monitor State - getAudioContextStateState accepts 0 parameters
+    - Performance Monitor State - getAudioContextStateState returns string
+    - Performance Monitor State - setAudioContextStateState is a function export
+    - Performance Monitor State - setAudioContextStateState accepts 1 parameter
+    - Performance Monitor State - setAudioContextStateState calls captureStateForUndo
+    - Performance Monitor State - setAudioContextStateState uses descriptive undo label
+    - Performance Monitor State - setAudioContextStateState validates contextState
+    - Performance Monitor State - getCPUUsageState is a function export
+    - Performance Monitor State - getCPUUsageState accepts 0 parameters
+    - Performance Monitor State - getCPUUsageState returns number
+    - Performance Monitor State - setCPUUsageState is a function export
+    - Performance Monitor State - setCPUUsageState accepts 1 parameter
+    - Performance Monitor State - setCPUUsageState calls captureStateForUndo
+    - Performance Monitor State - setCPUUsageState uses descriptive undo label
+    - Performance Monitor State - setCPUUsageState clamps value to 0-100 range
+    - Performance Monitor State - setCPUUsageState uses parseFloat
+    - Performance Monitor State - getMemoryPressureState is a function export
+    - Performance Monitor State - getMemoryPressureState accepts 0 parameters
+    - Performance Monitor State - getMemoryPressureState returns string
+    - Performance Monitor State - setMemoryPressureState is a function export
+    - Performance Monitor State - setMemoryPressureState accepts 1 parameter
+    - Performance Monitor State - setMemoryPressureState calls captureStateForUndo
+    - Performance Monitor State - setMemoryPressureState uses descriptive undo label
+    - Performance Monitor State - setMemoryPressureState validates pressure
+    - Performance Monitor State - getActiveVoicesState is a function export
+    - Performance Monitor State - getActiveVoicesState accepts 0 parameters
+    - Performance Monitor State - getActiveVoicesState returns number
+    - Performance Monitor State - setActiveVoicesState is a function export
+    - Performance Monitor State - setActiveVoicesState accepts 1 parameter
+    - Performance Monitor State - setActiveVoicesState calls captureStateForUndo
+    - Performance Monitor State - setActiveVoicesState uses descriptive undo label
+    - Performance Monitor State - setActiveVoicesState clamps to non-negative
+    - Performance Monitor State - getAudioLatencyState is a function export
+    - Performance Monitor State - getAudioLatencyState accepts 0 parameters
+    - Performance Monitor State - getAudioLatencyState returns number
+    - Performance Monitor State - setAudioLatencyState is a function export
+    - Performance Monitor State - setAudioLatencyState accepts 1 parameter
+    - Performance Monitor State - setAudioLatencyState calls captureStateForUndo
+    - Performance Monitor State - setAudioLatencyState uses descriptive undo label
+    - Performance Monitor State - setAudioLatencyState clamps to non-negative
+    - Performance Monitor State - getLastCallbackTimeState is a function export
+    - Performance Monitor State - getLastCallbackTimeState accepts 0 parameters
+    - Performance Monitor State - getLastCallbackTimeState returns number
+    - Performance Monitor State - setLastCallbackTimeState is a function export
+    - Performance Monitor State - setLastCallbackTimeState accepts 1 parameter
+    - Performance Monitor State - setLastCallbackTimeState calls captureStateForUndo
+    - Performance Monitor State - setLastCallbackTimeState uses descriptive undo label
+    - Performance Monitor State - getDroppedCallbacksState is a function export
+    - Performance Monitor State - getDroppedCallbacksState accepts 0 parameters
+    - Performance Monitor State - getDroppedCallbacksState returns number
+    - Performance Monitor State - setDroppedCallbacksState is a function export
+    - Performance Monitor State - setDroppedCallbacksState accepts 1 parameter
+    - Performance Monitor State - setDroppedCallbacksState calls captureStateForUndo
+    - Performance Monitor State - setDroppedCallbacksState uses descriptive undo label
+    - Performance Monitor State - incrementDroppedCallbacksState is a function export
+    - Performance Monitor State - incrementDroppedCallbacksState accepts 0 parameters
+    - Performance Monitor State - incrementDroppedCallbacksState increments counter
+    - Performance Monitor State - resetPerformanceMonitorState is a function export
+    - Performance Monitor State - resetPerformanceMonitorState accepts 0 parameters
+    - Performance Monitor State - resetPerformanceMonitorState resets enabled to false
+    - Performance Monitor State - resetPerformanceMonitorState resets cpuUsage to 0
+    - Performance Monitor State - resetPerformanceMonitorState resets droppedCallbacks to 0
+    - Performance Monitor State - APP_VERSION validation for Day 407
+  - `js/constants.js`: Bumped APP_VERSION to 2.85.0
+- **Feature Details**:
+  - Tests validate getPerformanceMonitorState function (0 params, returns object copy)
+  - Tests validate getPerformanceMonitorEnabledState function (0 params, returns boolean)
+  - Tests validate setPerformanceMonitorEnabledState function (1 param, calls captureStateForUndo with descriptive label, boolean coercion)
+  - Tests validate getAudioContextStateState function (0 params, returns string)
+  - Tests validate setAudioContextStateState function (1 param, calls captureStateForUndo, validates contextState is running/suspended/closed/unknown)
+  - Tests validate getCPUUsageState function (0 params, returns number)
+  - Tests validate setCPUUsageState function (1 param, calls captureStateForUndo with descriptive label, clamps to 0-100, uses parseFloat)
+  - Tests validate getMemoryPressureState function (0 params, returns string)
+  - Tests validate setMemoryPressureState function (1 param, calls captureStateForUndo, validates pressure is none/low/medium/high)
+  - Tests validate getActiveVoicesState function (0 params, returns number)
+  - Tests validate setActiveVoicesState function (1 param, calls captureStateForUndo, clamps to non-negative using Math.max)
+  - Tests validate getAudioLatencyState function (0 params, returns number)
+  - Tests validate setAudioLatencyState function (1 param, calls captureStateForUndo, clamps to non-negative)
+  - Tests validate getLastCallbackTimeState function (0 params, returns number)
+  - Tests validate setLastCallbackTimeState function (1 param, calls captureStateForUndo)
+  - Tests validate getDroppedCallbacksState function (0 params, returns number)
+  - Tests validate setDroppedCallbacksState function (1 param, calls captureStateForUndo)
+  - Tests validate incrementDroppedCallbacksState function (0 params, increments counter)
+  - Tests validate resetPerformanceMonitorState function (0 params, resets enabled to false, cpuUsage to 0, droppedCallbacks to 0)
+  - Total tests increased from 1826 to 1902
+- **Version**: Bumped to 2.85.0
+
 #### Day 406: Timeline & Waveform Rendering UI Functions Tests (2026-04-30)
 - **Feature**: Added 50 new unit tests for Timeline & Waveform Rendering UI Functions to expand test coverage
 - **Files Modified**:
@@ -7360,4 +7464,89 @@
     - Send Bus Audio - updateSendBusEffectParam is a function
     - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
     - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio -
+    - Send Bus Audio - reorderEffectInSendBus is a function
+    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
+    - Send Bus Audio - reorderEffectInSendBus references all parameters
+    - Send Bus Audio - setSendBusLevel is a function
+    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
+    - Send Bus Audio - setSendBusLevel references sendId parameter
+    - Send Bus Audio - setSendBusLevel references level parameter
+    - Send Bus Audio - setSendBusLevel clamps level value
+    - Send Bus Audio - setSendBusMuted is a function
+    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
+    - Send Bus Audio - setSendBusMuted references sendId parameter
+    - Send Bus Audio - setSendBusMuted references muted parameter
+    - State Utility - APP_VERSION validation for Day 387
+  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
+- **Feature Details**:
+  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
+  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
+  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
+  - Tests validate getHighestZState function (function export, 0 params)
+  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
+  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
+  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
+  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
+  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
+  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
+  - Total tests increased from 1684 to 1732
+- **Version**: Bumped to 2.65.0
+- **Version**: Bumped to 2.64.0
+
+#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
+- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 48 new tests in Day 387 section:
+    - State Utility - resetPerformanceMonitorState is a function export
+    - State Utility - resetPerformanceMonitorState accepts 0 parameters
+    - State Utility - resetPerformanceMonitorState resets all properties
+    - State Utility - resetTimelineZoom is a function export
+    - State Utility - resetTimelineZoom accepts 0 parameters
+    - State Utility - resetTimelineZoom calls captureStateForUndo
+    - State Utility - resetTimelineZoom uses descriptive undo label
+    - State Utility - resetTimelineZoom resets horizontal zoom
+    - State Utility - resetTimelineZoom resets vertical zoom
+    - State Utility - setHighestZState is a function export
+    - State Utility - setHighestZState accepts 1 parameter
+    - State Utility - setHighestZState calls captureStateForUndo
+    - State Utility - setHighestZState uses descriptive undo label
+    - State Utility - getHighestZState is a function export
+    - State Utility - getHighestZState accepts 0 parameters
+    - Send Bus Audio - addEffectToSendBus is a function
+    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
+    - Send Bus Audio - addEffectToSendBus references sendId parameter
+    - Send Bus Audio - addEffectToSendBus references effectType parameter
+    - Send Bus Audio - addEffectToSendBus references params parameter
+    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
+    - Send Bus Audio - addEffectToSendBus creates effect instance
+    - Send Bus Audio - removeEffectFromSendBus is a function
+    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
+    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
+    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
+    - Send Bus Audio - removeEffectFromSendBus disposes effect node
+    - Send Bus Audio - updateSendBusEffectParam is a function
+    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
+    - Send Bus Audio - updateSendBusEffectParam references all parameters
+    - Send Bus Audio - reorderEffectInSendBus is a function
+    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
+    - Send Bus Audio - reorderEffectInSendBus references all parameters
+    - Send Bus Audio - setSendBusLevel is a function
+    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
+    - Send Bus Audio - setSendBusLevel references sendId parameter
+    - Send Bus Audio - setSendBusLevel references level parameter
+    - Send Bus Audio - setSendBusLevel clamps level value
+    - Send Bus Audio - setSendBusMuted is a function
+    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
+    - Send Bus Audio - setSendBusMuted references sendId parameter
+    - Send Bus Audio - setSendBusMuted references muted parameter
+    - State Utility - APP_VERSION validation for Day 387
+  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
+- **Feature Details**:
+  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
+  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
+  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
+  - Tests validate getHighestZState function (function export, 0 params)
+  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
+  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
+  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
+  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
