@@ -1,3 +1,79 @@
+#### Day 389: Track Group State Functions Tests (2026-04-30)
+- **Feature**: Added 60 new unit tests for Track Group State Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 60 new tests in Day 389 section:
+    - Track Group - getTrackGroupsState is a function export
+    - Track Group - getTrackGroupsState accepts 0 parameters
+    - Track Group - getTrackGroupsState returns array
+    - Track Group - getTrackGroupByIdState is a function export
+    - Track Group - getTrackGroupByIdState accepts 1 parameter
+    - Track Group - getTrackGroupByIdState returns group or undefined
+    - Track Group - addTrackGroupState is a function export
+    - Track Group - addTrackGroupState accepts 1 parameter
+    - Track Group - addTrackGroupState calls captureStateForUndo with descriptive label
+    - Track Group - addTrackGroupState references groupData.name for undo label
+    - Track Group - addTrackGroupState generates unique id
+    - Track Group - addTrackGroupState uses DEFAULT_TRACK_GROUP structure
+    - Track Group - addTrackGroupState pushes to trackGroupsState
+    - Track Group - setTrackGroupNameState is a function export
+    - Track Group - setTrackGroupNameState accepts 2 parameters
+    - Track Group - setTrackGroupNameState calls captureStateForUndo with descriptive label
+    - Track Group - setTrackGroupNameState finds group by id
+    - Track Group - setTrackGroupNameState references id and name parameters
+    - Track Group - setTrackGroupColorState is a function export
+    - Track Group - setTrackGroupColorState calls captureStateForUndo
+    - Track Group - setTrackGroupColorState references color parameter
+    - Track Group - addTrackToGroupState is a function export
+    - Track Group - addTrackToGroupState accepts 2 parameters
+    - Track Group - addTrackToGroupState calls captureStateForUndo
+    - Track Group - addTrackToGroupState checks track not already in group
+    - Track Group - addTrackToGroupState pushes trackId to trackIds
+    - Track Group - addTrackToGroupState returns boolean
+    - Track Group - removeTrackFromGroupState is a function export
+    - Track Group - removeTrackFromGroupState accepts 2 parameters
+    - Track Group - removeTrackFromGroupState calls captureStateForUndo
+    - Track Group - removeTrackFromGroupState finds track index
+    - Track Group - removeTrackFromGroupState splices from trackIds
+    - Track Group - setTrackGroupMutedState is a function export
+    - Track Group - setTrackGroupMutedState accepts 2 parameters
+    - Track Group - setTrackGroupMutedState calls captureStateForUndo
+    - Track Group - setTrackGroupMutedState coerces muted to boolean
+    - Track Group - setTrackGroupSoloedState is a function export
+    - Track Group - setTrackGroupSoloedState accepts 2 parameters
+    - Track Group - setTrackGroupSoloedState calls captureStateForUndo
+    - Track Group - removeTrackGroupState is a function export
+    - Track Group - removeTrackGroupState accepts 1 parameter
+    - Track Group - removeTrackGroupState calls captureStateForUndo with descriptive label
+    - Track Group - removeTrackGroupState finds index and splices
+    - Track Group - removeTrackGroupState returns boolean
+    - Track Group - MAX_TRACK_GROUPS constant is positive number
+    - Track Group - MAX_TRACK_GROUPS is 16 or less
+    - Track Group - DEFAULT_TRACK_GROUP_NAME is non-empty string
+    - Track Group - TRACK_GROUP_COLORS is an array
+    - Track Group - TRACK_GROUP_COLORS has at least 5 colors
+    - Track Group - TRACK_GROUP_COLORS contains valid hex colors
+    - Track Group - DEFAULT_TRACK_GROUP_COLOR is valid hex color
+    - Track Group - DEFAULT_TRACK_GROUP is an object
+    - Track Group - DEFAULT_TRACK_GROUP has required properties
+    - Track Group - DEFAULT_TRACK_GROUP trackIds is empty array
+    - Track Group - DEFAULT_TRACK_GROUP muted is boolean false
+    - Track Group - DEFAULT_TRACK_GROUP soloed is boolean false
+    - Track Group - Track Group state functions guard against missing appServices
+    - Track Group - APP_VERSION validation for Day 389
+  - `js/constants.js`: Bumped APP_VERSION to 2.67.0
+- **Feature Details**:
+  - Tests validate getTrackGroupsState and getTrackGroupByIdState function exports and parameter handling
+  - Tests validate addTrackGroupState function (generates unique id, uses DEFAULT_TRACK_GROUP structure, calls captureStateForUndo with descriptive label)
+  - Tests validate setTrackGroupNameState, setTrackGroupColorState functions with undo support
+  - Tests validate addTrackToGroupState (checks duplicate tracks, pushes to trackIds array)
+  - Tests validate removeTrackFromGroupState (finds index, splices from array, returns boolean)
+  - Tests validate setTrackGroupMutedState and setTrackGroupSoloedState with boolean coercion
+  - Tests validate removeTrackGroupState function (finds index, splices, descriptive undo label)
+  - Tests validate Track Group constants (MAX_TRACK_GROUPS, DEFAULT_TRACK_GROUP_NAME, TRACK_GROUP_COLORS, DEFAULT_TRACK_GROUP)
+  - Tests verify all mutation functions call captureStateForUndo for undo/redo support
+  - Total tests increased from 1761 to 1821
+- **Version**: Bumped to 2.67.0
+
 #### Day 388: Increment State Functions Tests (2026-04-30)
 - **Feature**: Added 29 new unit tests for Increment State Functions to expand test coverage
 - **Files Modified**:

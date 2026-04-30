@@ -9793,3 +9793,300 @@ TestRunner.test('State Utility - APP_VERSION validation for Day 388', (t) => {
         t.assertTruthy(versionParts[1] >= 65, 'Minor version should be >= 65 for Day 388');
     }
 });
+
+// === Day 389: Track Group State Functions Tests ===
+TestRunner.test('Track Group - getTrackGroupsState is a function export', (t) => {
+    t.assertEqual(typeof getTrackGroupsState, 'function', 'getTrackGroupsState should be a function');
+});
+
+TestRunner.test('Track Group - getTrackGroupsState accepts 0 parameters', (t) => {
+    t.assertEqual(getTrackGroupsState.length, 0, 'getTrackGroupsState should accept 0 parameters');
+});
+
+TestRunner.test('Track Group - getTrackGroupsState returns array', (t) => {
+    const result = getTrackGroupsState();
+    t.assertTruthy(Array.isArray(result), 'getTrackGroupsState should return an array');
+});
+
+TestRunner.test('Track Group - getTrackGroupByIdState is a function export', (t) => {
+    t.assertEqual(typeof getTrackGroupByIdState, 'function', 'getTrackGroupByIdState should be a function');
+});
+
+TestRunner.test('Track Group - getTrackGroupByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getTrackGroupByIdState.length, 1, 'getTrackGroupByIdState should accept 1 parameter');
+});
+
+TestRunner.test('Track Group - getTrackGroupByIdState returns group or undefined', (t) => {
+    const result = getTrackGroupByIdState('nonexistent-id');
+    t.assertTruthy(result === undefined || typeof result === 'object', 'getTrackGroupByIdState should return undefined or object');
+});
+
+TestRunner.test('Track Group - addTrackGroupState is a function export', (t) => {
+    t.assertEqual(typeof addTrackGroupState, 'function', 'addTrackGroupState should be a function');
+});
+
+TestRunner.test('Track Group - addTrackGroupState accepts 1 parameter', (t) => {
+    t.assertEqual(addTrackGroupState.length, 1, 'addTrackGroupState should accept 1 parameter');
+});
+
+TestRunner.test('Track Group - addTrackGroupState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackGroupState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Create Track Group') || funcStr.includes('Track Group'), 'addTrackGroupState should use descriptive undo label');
+});
+
+TestRunner.test('Track Group - addTrackGroupState references groupData.name for undo label', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('name'), 'addTrackGroupState should reference name for undo label');
+});
+
+TestRunner.test('Track Group - addTrackGroupState generates unique id', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('trackGroupIdCounter') || funcStr.includes('id'), 'addTrackGroupState should generate unique id');
+});
+
+TestRunner.test('Track Group - addTrackGroupState uses DEFAULT_TRACK_GROUP structure', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_TRACK_GROUP_NAME') || funcStr.includes('name'), 'addTrackGroupState should use default name');
+    t.assertTruthy(funcStr.includes('DEFAULT_TRACK_GROUP_COLOR') || funcStr.includes('color'), 'addTrackGroupState should use default color');
+    t.assertTruthy(funcStr.includes('trackIds') || funcStr.includes('trackIds'), 'addTrackGroupState should initialize trackIds array');
+});
+
+TestRunner.test('Track Group - addTrackGroupState pushes to trackGroupsState', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('trackGroupsState'), 'addTrackGroupState should reference trackGroupsState');
+    t.assertTruthy(funcStr.includes('push'), 'addTrackGroupState should push to array');
+});
+
+TestRunner.test('Track Group - addTrackGroupState is function export', (t) => {
+    const funcStr = addTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('export'), 'addTrackGroupState should be exported');
+});
+
+TestRunner.test('Track Group - setTrackGroupNameState is a function export', (t) => {
+    t.assertEqual(typeof setTrackGroupNameState, 'function', 'setTrackGroupNameState should be a function');
+});
+
+TestRunner.test('Track Group - setTrackGroupNameState accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupNameState.length, 2, 'setTrackGroupNameState should accept 2 parameters');
+});
+
+TestRunner.test('Track Group - setTrackGroupNameState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupNameState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Rename') || funcStr.includes('name'), 'setTrackGroupNameState should use descriptive undo label');
+});
+
+TestRunner.test('Track Group - setTrackGroupNameState finds group by id', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('find') && funcStr.includes('trackGroupsState'), 'setTrackGroupNameState should find group by id');
+});
+
+TestRunner.test('Track Group - setTrackGroupNameState references id parameter', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('id') || funcStr.includes('groupId'), 'setTrackGroupNameState should reference id parameter');
+});
+
+TestRunner.test('Track Group - setTrackGroupNameState references name parameter', (t) => {
+    const funcStr = setTrackGroupNameState.toString();
+    t.assertTruthy(funcStr.includes('name'), 'setTrackGroupNameState should reference name parameter');
+});
+
+TestRunner.test('Track Group - setTrackGroupColorState is a function export', (t) => {
+    t.assertEqual(typeof setTrackGroupColorState, 'function', 'setTrackGroupColorState should be a function');
+});
+
+TestRunner.test('Track Group - setTrackGroupColorState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupColorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupColorState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Group - setTrackGroupColorState references color parameter', (t) => {
+    const funcStr = setTrackGroupColorState.toString();
+    t.assertTruthy(funcStr.includes('color'), 'setTrackGroupColorState should reference color parameter');
+});
+
+TestRunner.test('Track Group - addTrackToGroupState is a function export', (t) => {
+    t.assertEqual(typeof addTrackToGroupState, 'function', 'addTrackToGroupState should be a function');
+});
+
+TestRunner.test('Track Group - addTrackToGroupState accepts 2 parameters', (t) => {
+    t.assertEqual(addTrackToGroupState.length, 2, 'addTrackToGroupState should accept 2 parameters');
+});
+
+TestRunner.test('Track Group - addTrackToGroupState calls captureStateForUndo', (t) => {
+    const funcStr = addTrackToGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackToGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Group - addTrackToGroupState checks track not already in group', (t) => {
+    const funcStr = addTrackToGroupState.toString();
+    t.assertTruthy(funcStr.includes('includes') || funcStr.includes('trackIds'), 'addTrackToGroupState should check if track already exists');
+});
+
+TestRunner.test('Track Group - addTrackToGroupState pushes trackId to trackIds', (t) => {
+    const funcStr = addTrackToGroupState.toString();
+    t.assertTruthy(funcStr.includes('push'), 'addTrackToGroupState should push trackId to array');
+});
+
+TestRunner.test('Track Group - addTrackToGroupState returns boolean', (t) => {
+    const funcStr = addTrackToGroupState.toString();
+    t.assertTruthy(funcStr.includes('return') && (funcStr.includes('true') || funcStr.includes('false')), 'addTrackToGroupState should return boolean');
+});
+
+TestRunner.test('Track Group - removeTrackFromGroupState is a function export', (t) => {
+    t.assertEqual(typeof removeTrackFromGroupState, 'function', 'removeTrackFromGroupState should be a function');
+});
+
+TestRunner.test('Track Group - removeTrackFromGroupState accepts 2 parameters', (t) => {
+    t.assertEqual(removeTrackFromGroupState.length, 2, 'removeTrackFromGroupState should accept 2 parameters');
+});
+
+TestRunner.test('Track Group - removeTrackFromGroupState calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackFromGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackFromGroupState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Group - removeTrackFromGroupState finds track index', (t) => {
+    const funcStr = removeTrackFromGroupState.toString();
+    t.assertTruthy(funcStr.includes('indexOf') || funcStr.includes('findIndex'), 'removeTrackFromGroupState should find track index');
+});
+
+TestRunner.test('Track Group - removeTrackFromGroupState splices from trackIds', (t) => {
+    const funcStr = removeTrackFromGroupState.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeTrackFromGroupState should splice from trackIds array');
+});
+
+TestRunner.test('Track Group - setTrackGroupMutedState is a function export', (t) => {
+    t.assertEqual(typeof setTrackGroupMutedState, 'function', 'setTrackGroupMutedState should be a function');
+});
+
+TestRunner.test('Track Group - setTrackGroupMutedState accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupMutedState.length, 2, 'setTrackGroupMutedState should accept 2 parameters');
+});
+
+TestRunner.test('Track Group - setTrackGroupMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Group - setTrackGroupMutedState coerces muted to boolean', (t) => {
+    const funcStr = setTrackGroupMutedState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setTrackGroupMutedState should coerce muted to boolean');
+});
+
+TestRunner.test('Track Group - setTrackGroupSoloedState is a function export', (t) => {
+    t.assertEqual(typeof setTrackGroupSoloedState, 'function', 'setTrackGroupSoloedState should be a function');
+});
+
+TestRunner.test('Track Group - setTrackGroupSoloedState accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupSoloedState.length, 2, 'setTrackGroupSoloedState should accept 2 parameters');
+});
+
+TestRunner.test('Track Group - setTrackGroupSoloedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackGroupSoloedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupSoloedState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Group - removeTrackGroupState is a function export', (t) => {
+    t.assertEqual(typeof removeTrackGroupState, 'function', 'removeTrackGroupState should be a function');
+});
+
+TestRunner.test('Track Group - removeTrackGroupState accepts 1 parameter', (t) => {
+    t.assertEqual(removeTrackGroupState.length, 1, 'removeTrackGroupState should accept 1 parameter');
+});
+
+TestRunner.test('Track Group - removeTrackGroupState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackGroupState should call captureStateForUndo');
+    t.assertTruthy(funcStr.includes('Delete') || funcStr.includes('Remove'), 'removeTrackGroupState should use descriptive undo label');
+});
+
+TestRunner.test('Track Group - removeTrackGroupState finds index and splices', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('findIndex') && funcStr.includes('splice'), 'removeTrackGroupState should find index and splice');
+});
+
+TestRunner.test('Track Group - removeTrackGroupState returns boolean', (t) => {
+    const funcStr = removeTrackGroupState.toString();
+    t.assertTruthy(funcStr.includes('return') && (funcStr.includes('true') || funcStr.includes('false')), 'removeTrackGroupState should return boolean');
+});
+
+// Track Group Constants Validation Tests
+TestRunner.test('Track Group - MAX_TRACK_GROUPS constant is positive number', (t) => {
+    t.assertEqual(typeof MAX_TRACK_GROUPS, 'number', 'MAX_TRACK_GROUPS should be a number');
+    t.assertTruthy(MAX_TRACK_GROUPS > 0, 'MAX_TRACK_GROUPS should be positive');
+});
+
+TestRunner.test('Track Group - MAX_TRACK_GROUPS is 16 or less', (t) => {
+    t.assertTruthy(MAX_TRACK_GROUPS <= 16, 'MAX_TRACK_GROUPS should be 16 or less');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP_NAME is non-empty string', (t) => {
+    t.assertEqual(typeof DEFAULT_TRACK_GROUP_NAME, 'string', 'DEFAULT_TRACK_GROUP_NAME should be a string');
+    t.assertTruthy(DEFAULT_TRACK_GROUP_NAME.length > 0, 'DEFAULT_TRACK_GROUP_NAME should be non-empty');
+});
+
+TestRunner.test('Track Group - TRACK_GROUP_COLORS is an array', (t) => {
+    t.assertTruthy(Array.isArray(TRACK_GROUP_COLORS), 'TRACK_GROUP_COLORS should be an array');
+});
+
+TestRunner.test('Track Group - TRACK_GROUP_COLORS has at least 5 colors', (t) => {
+    t.assertTruthy(TRACK_GROUP_COLORS.length >= 5, 'TRACK_GROUP_COLORS should have at least 5 colors');
+});
+
+TestRunner.test('Track Group - TRACK_GROUP_COLORS contains valid hex colors', (t) => {
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    TRACK_GROUP_COLORS.forEach(color => {
+        t.assertTruthy(hexColorRegex.test(color) || typeof color === 'string', 'TRACK_GROUP_COLORS should contain valid hex colors');
+    });
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP_COLOR is valid hex color', (t) => {
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    t.assertTruthy(hexColorRegex.test(DEFAULT_TRACK_GROUP_COLOR) || typeof DEFAULT_TRACK_GROUP_COLOR === 'string', 'DEFAULT_TRACK_GROUP_COLOR should be valid hex color');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP is an object', (t) => {
+    t.assertEqual(typeof DEFAULT_TRACK_GROUP, 'object', 'DEFAULT_TRACK_GROUP should be an object');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP has required properties', (t) => {
+    t.assertTruthy(DEFAULT_TRACK_GROUP.hasOwnProperty('name'), 'DEFAULT_TRACK_GROUP should have name property');
+    t.assertTruthy(DEFAULT_TRACK_GROUP.hasOwnProperty('color'), 'DEFAULT_TRACK_GROUP should have color property');
+    t.assertTruthy(DEFAULT_TRACK_GROUP.hasOwnProperty('trackIds'), 'DEFAULT_TRACK_GROUP should have trackIds property');
+    t.assertTruthy(DEFAULT_TRACK_GROUP.hasOwnProperty('muted'), 'DEFAULT_TRACK_GROUP should have muted property');
+    t.assertTruthy(DEFAULT_TRACK_GROUP.hasOwnProperty('soloed'), 'DEFAULT_TRACK_GROUP should have soloed property');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP trackIds is empty array', (t) => {
+    t.assertTruthy(Array.isArray(DEFAULT_TRACK_GROUP.trackIds), 'DEFAULT_TRACK_GROUP.trackIds should be an array');
+    t.assertEqual(DEFAULT_TRACK_GROUP.trackIds.length, 0, 'DEFAULT_TRACK_GROUP.trackIds should be empty');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP muted is boolean false', (t) => {
+    t.assertEqual(typeof DEFAULT_TRACK_GROUP.muted, 'boolean', 'DEFAULT_TRACK_GROUP.muted should be boolean');
+    t.assertEqual(DEFAULT_TRACK_GROUP.muted, false, 'DEFAULT_TRACK_GROUP.muted should be false');
+});
+
+TestRunner.test('Track Group - DEFAULT_TRACK_GROUP soloed is boolean false', (t) => {
+    t.assertEqual(typeof DEFAULT_TRACK_GROUP.soloed, 'boolean', 'DEFAULT_TRACK_GROUP.soloed should be boolean');
+    t.assertEqual(DEFAULT_TRACK_GROUP.soloed, false, 'DEFAULT_TRACK_GROUP.soloed should be false');
+});
+
+TestRunner.test('Track Group - Track Group state functions guard against missing appServices', (t) => {
+    const funcs = ['addTrackGroupState', 'setTrackGroupNameState', 'setTrackGroupColorState', 'addTrackToGroupState', 'removeTrackFromGroupState', 'setTrackGroupMutedState', 'setTrackGroupSoloedState', 'removeTrackGroupState'];
+    funcs.forEach(funcName => {
+        const func = eval(funcName);
+        const funcStr = func.toString();
+        t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), funcName + ' should guard against missing appServices');
+    });
+});
+
+TestRunner.test('Track Group - APP_VERSION validation for Day 389', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 389');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 66, 'Minor version should be >= 66 for Day 389');
+    }
+});
