@@ -39,7 +39,23 @@ export default [
         Number: "readonly",
         String: "readonly",
         Boolean: "readonly",
-        Tone: "readonly"
+        Tone: "readonly",
+        // UI module functions called dynamically after initializeUIModule
+        renderEffectsList: "readonly",
+        drawWaveform: "readonly",
+        renderSamplePads: "readonly",
+        updateSliceEditorUI: "readonly",
+        drawInstrumentWaveform: "readonly",
+        updateDrumPadControlsUI: "readonly",
+        renderDrumSamplerPads: "readonly",
+        // Audio module functions called after initializeAudioModule
+        updateMeters: "readonly",
+        updatePlayheadPosition: "readonly",
+        // State module functions called after initializeStateModule
+        initializeUIModule: "readonly",
+        initializeAudioModule: "readonly",
+        initializeEventHandlersModule: "readonly",
+        fetchSoundLibrary: "readonly"
       }
     },
     rules: {

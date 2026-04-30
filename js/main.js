@@ -4,6 +4,7 @@
 // --- Module Imports ---
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
+import { DESKTOP_BACKGROUND_KEY, DESKTOP_BG_TYPE_KEY } from './constants.js';
 import { getAudio as bgDbGetAudio, storeAudio as bgDbStoreAudio, deleteAudio as bgDbDeleteAudio } from './db.js';
 import { 
     startMetronome, stopMetronome, setMetronomeVolume,
@@ -128,6 +129,14 @@ import {
     addSendTrackState as addSendTrack,
     setSendTrackMutedState as setSendTrackMuted,
     setSendTrackLevelState as setSendTrackLevel,
+    // Master Effects state actions
+    addMasterEffectToState,
+    removeMasterEffectFromState,
+    updateMasterEffectParamInState,
+    reorderMasterEffectInState,
+    removeMasterEffectFromAudio,
+    updateMasterEffectParamInAudio,
+    reorderMasterEffectInAudio,
     // Track Groups
     getTrackGroupsState,
     getTrackGroupByIdState,
@@ -1043,7 +1052,9 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                  if (effectsRackElement && typeof renderEffectsList === 'function') {
                     const listDiv = effectsRackElement.querySelector(`#effectsList-${track.id}`);
                     const controlsContainer = effectsRackElement.querySelector(`#effectControlsContainer-${track.id}`);
-                    if (listDiv && controlsContainer) renderEffectsList(track, 'track', listDiv, controlsContainer);
+                    if (listDiv && controlsContainer) {
+                        if (typeof renderEffectsList === 'function') renderEffectsList(track, 'track', listDiv, controlsContainer);
+                    }
                  }
                 break;
             case 'samplerLoaded':
@@ -1309,6 +1320,47 @@ function removeCustomDesktopBackground() {
     } catch (e) {
         console.error("Error removing custom desktop background:", e);
     }
+}
+
+// Handle custom background upload from file input
+async function handleCustomBackgroundUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+        const isVideo = file.type.startsWith('video/');
+        
+        if (isVideo) {
+            // Store video blob for persistence
+            await bgDbStoreAudio('desktopVideo', file);
+            localStorage.setItem(DESKTOP_BG_TYPE_KEY, 'video');
+            const objectUrl = URL.createObjectURL(file);
+            applyDesktopBackground(objectUrl, 'video');
+            appServices.showNotification('Video background applied.', 2000);
+        } else {
+            // Handle image - read as data URL for localStorage persistence
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const imageUrl = event.target?.result;
+                if (imageUrl) {
+                    localStorage.setItem(DESKTOP_BACKGROUND_KEY, imageUrl);
+                    localStorage.setItem(DESKTOP_BG_TYPE_KEY, 'image');
+                    applyDesktopBackground(imageUrl, 'image');
+                    appServices.showNotification('Image background applied.', 2000);
+                }
+            };
+            reader.onerror = () => {
+                appServices.showNotification('Failed to read image file.', 3000);
+            };
+            reader.readAsDataURL(file);
+        }
+    } catch (err) {
+        console.error("[Main handleCustomBackgroundUpload] Error:", err);
+        appServices.showNotification('Failed to apply background.', 3000);
+    }
+    
+    // Reset input so same file can be selected again
+    e.target.value = '';
 }
 
 // Restore background on load
