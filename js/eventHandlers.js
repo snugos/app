@@ -301,10 +301,7 @@ export function initializePrimaryEventListeners(appContext) {
                     if (services.openTrackTemplatesWindow) {
                         services.openTrackTemplatesWindow();
                     } else {
-                        // Fallback: show template browser in a modal-like window
-                        services.showNotification?.('Opening Track Templates...', 1500); return;
-                        const templates = services.getTrackTemplatesState ? services.getTrackTemplatesState() : [];
-                        showTrackTemplatesModal(services, templates);
+                        services.showNotification?.('Track Templates not available.', 3000);
                     }
                 } catch(e) { console.error('[Menu] Open Track Templates error:', e); }
             }
