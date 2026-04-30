@@ -7139,3 +7139,257 @@ TestRunner.test('APP_VERSION validation for Day 377', (t) => {
         t.assertTruthy(versionParts[1] >= 56, 'Minor version should be >= 56 for Day 377');
     }
 });
+// Day 378: Additional Window UI Functions Tests
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow is a function export', (t) => {
+    t.assertEqual(typeof openMasterEffectsRackWindow, 'function', 'openMasterEffectsRackWindow should be a function');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow accepts 1 parameter', (t) => {
+    const paramCount = openMasterEffectsRackWindow.length;
+    t.assertEqual(paramCount, 1, 'openMasterEffectsRackWindow should accept 1 parameter (savedState)');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow uses masterEffectsRack windowId', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes("'masterEffectsRack'") || funcStr.includes('"masterEffectsRack"'), 'openMasterEffectsRackWindow should use masterEffectsRack windowId');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow calls localAppServices.createWindow', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMasterEffectsRackWindow should call createWindow');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow passes correct window title', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes("'Master Effects Rack'") || funcStr.includes('"Master Effects Rack"'), 'openMasterEffectsRackWindow should set title to Master Effects Rack');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow uses buildModularEffectsRackDOM', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('buildModularEffectsRackDOM'), 'openMasterEffectsRackWindow should use buildModularEffectsRackDOM');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow passes master as ownerType', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes("'master'") || funcStr.includes('"master"'), 'openMasterEffectsRackWindow should pass master as ownerType to buildModularEffectsRackDOM');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow sets window options', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('width') && funcStr.includes('height') && funcStr.includes('minWidth') && funcStr.includes('minHeight'), 'openMasterEffectsRackWindow should set window dimensions and min constraints');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow handles savedState', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openMasterEffectsRackWindow should handle savedState for window restoration');
+});
+
+TestRunner.test('Master Effects Rack Window - openMasterEffectsRackWindow checks for already open window', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMasterEffectsRackWindow should check for already open window');
+});
+
+TestRunner.test('Send Effects Window - openSendEffectsWindow is a function export', (t) => {
+    t.assertEqual(typeof openSendEffectsWindow, 'function', 'openSendEffectsWindow should be a function');
+});
+
+TestRunner.test('Send Effects Window - openSendEffectsWindow accepts 2 parameters', (t) => {
+    const paramCount = openSendEffectsWindow.length;
+    t.assertEqual(paramCount, 2, 'openSendEffectsWindow should accept 2 parameters (sendId, savedState)');
+});
+
+TestRunner.test('Send Effects Window - openSendEffectsWindow uses sendEffectsRack- windowId prefix', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes("`sendEffectsRack-") || funcStr.includes("'sendEffectsRack-"), 'openSendEffectsWindow should use sendEffectsRack- prefix for windowId');
+});
+
+TestRunner.test('Send Effects Window - openSendEffectsWindow calls localAppServices.createWindow', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openSendEffectsWindow should call createWindow');
+});
+
+TestRunner.test('Send Effects Window - openSendEffectsWindow uses buildModularEffectsRackDOM', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('buildModularEffectsRackDOM'), 'openSendEffectsWindow should use buildModularEffectsRackDOM');
+});
+
+TestRunner.test('Send Effects Window - openSendEffectsWindow passes send as ownerType', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes("'send'") || funcStr.includes('"send"'), 'openSendEffectsWindow should pass send as ownerType to buildModularEffectsRackDOM');
+});
+
+TestRunner.test('Send Effects Window - openSendEffectsWindow checks for already open window', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openSendEffectsWindow should check for already open window');
+});
+
+TestRunner.test('Track Templates Window - openTrackTemplatesWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackTemplatesWindow, 'function', 'openTrackTemplatesWindow should be a function');
+});
+
+TestRunner.test('Track Templates Window - openTrackTemplatesWindow accepts 1 parameter', (t) => {
+    const paramCount = openTrackTemplatesWindow.length;
+    t.assertEqual(paramCount, 1, 'openTrackTemplatesWindow should accept 1 parameter (savedState)');
+});
+
+TestRunner.test('Track Templates Window - openTrackTemplatesWindow uses trackTemplates windowId', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes("'trackTemplates'") || funcStr.includes('"trackTemplates"'), 'openTrackTemplatesWindow should use trackTemplates windowId');
+});
+
+TestRunner.test('Track Templates Window - openTrackTemplatesWindow calls localAppServices.createWindow', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackTemplatesWindow should call createWindow');
+});
+
+TestRunner.test('Track Templates Window - openTrackTemplatesWindow passes correct window title', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes("'Track Templates'") || funcStr.includes('"Track Templates"'), 'openTrackTemplatesWindow should set title to Track Templates');
+});
+
+TestRunner.test('Track Templates Window - openTrackTemplatesWindow creates content HTML with template grid', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('templatesGrid') || funcStr.includes('template-card'), 'Track Templates should include template grid UI');
+});
+
+TestRunner.test('Track Templates Window - openTrackTemplatesWindow checks for already open window', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackTemplatesWindow should check for already open window');
+});
+
+TestRunner.test('Track Templates Window - openTrackTemplatesWindow handles savedState', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openTrackTemplatesWindow should handle savedState for window restoration');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow is a function export', (t) => {
+    t.assertEqual(typeof showKeyboardShortcutsHelpWindow, 'function', 'showKeyboardShortcutsHelpWindow should be a function');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow accepts 0 parameters', (t) => {
+    const paramCount = showKeyboardShortcutsHelpWindow.length;
+    t.assertEqual(paramCount, 0, 'showKeyboardShortcutsHelpWindow should accept 0 parameters');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow uses keyboardShortcutsHelp windowId', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes("'keyboardShortcutsHelp'") || funcStr.includes('"keyboardShortcutsHelp"'), 'showKeyboardShortcutsHelpWindow should use keyboardShortcutsHelp windowId');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow calls localAppServices.createWindow', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'showKeyboardShortcutsHelpWindow should call createWindow');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_TITLE constant', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_TITLE'), 'showKeyboardShortcutsHelpWindow should use KEYBOARD_SHORTCUTS_HELP_TITLE constant');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_WIDTH and HEIGHT constants', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_WIDTH') && funcStr.includes('KEYBOARD_SHORTCUTS_HELP_HEIGHT'), 'showKeyboardShortcutsHelpWindow should use width and height constants');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow checks for already open window', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'showKeyboardShortcutsHelpWindow should check for already open window');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes keyboard shortcut keys', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Space') || funcStr.includes('Ctrl'), 'Keyboard Shortcuts Help should include keyboard shortcut display');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes playback controls section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Play') || funcStr.includes('Pause'), 'Keyboard Shortcuts Help should include playback controls');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes edit operations section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Undo') || funcStr.includes('Redo'), 'Keyboard Shortcuts Help should include edit operations');
+});
+
+TestRunner.test('Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes track controls section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Mute') || funcStr.includes('Solo'), 'Keyboard Shortcuts Help should include track controls');
+});
+
+TestRunner.test('APP_VERSION validation for Day 378', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 378');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 57, 'Minor version should be >= 57 for Day 378');
+    }
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip function reference check', (t) => {
+    // Check if the normalizeAudioClip function exists on Track prototype
+    t.assertEqual(typeof Track.prototype.normalizeAudioClip, 'function', 'normalizeAudioClip should be a function on Track.prototype');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip is async', (t) => {
+    t.assertEqual(Track.prototype.normalizeAudioClip.constructor.name, 'AsyncFunction', 'normalizeAudioClip should be async');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip accepts clipId parameter', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'normalizeAudioClip should accept clipId parameter');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'normalizeAudioClip should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('Normalize'), 'normalizeAudioClip undo label should reference Normalize');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip calls getAudio', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('getAudio') || funcStr.includes('sourceId'), 'normalizeAudioClip should reference audio source');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip references clip.name', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clip.name'), 'normalizeAudioClip should reference clip.name in undo label');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip handles audio type check', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clip.type') && funcStr.includes('audio'), 'normalizeAudioClip should check for audio clip type');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip clamps gain to valid range', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('MAX_AUDIO_CLIP_GAIN') || funcStr.includes('MIN_AUDIO_CLIP_GAIN'), 'normalizeAudioClip should clamp gain to valid range');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip updates clip.gain', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clip.gain'), 'normalizeAudioClip should update clip.gain property');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip calculates peak amplitude', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('peakAmplitude') || funcStr.includes('abs'), 'normalizeAudioClip should calculate peak amplitude');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip handles silent audio case', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('silent') || funcStr.includes('peakAmplitude'), 'normalizeAudioClip should handle silent audio edge case');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip shows notification on success', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('Normalized'), 'normalizeAudioClip should show notification on success');
+});
+
+TestRunner.test('Audio Clip Editor - normalizeAudioClip returns boolean', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'normalizeAudioClip should return boolean');
+});

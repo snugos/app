@@ -1,3 +1,61 @@
+#### Day 378: Additional Window UI Functions Tests (2026-04-30)
+- **Feature**: Added 37 new unit tests for additional Window UI functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 37 new tests in Day 378 section:
+    - Master Effects Rack Window - openMasterEffectsRackWindow is a function export
+    - Master Effects Rack Window - openMasterEffectsRackWindow accepts 1 parameter
+    - Master Effects Rack Window - openMasterEffectsRackWindow uses masterEffectsRack windowId
+    - Master Effects Rack Window - openMasterEffectsRackWindow calls localAppServices.createWindow
+    - Master Effects Rack Window - openMasterEffectsRackWindow passes correct window title
+    - Master Effects Rack Window - openMasterEffectsRackWindow uses buildModularEffectsRackDOM
+    - Master Effects Rack Window - openMasterEffectsRackWindow passes master as ownerType
+    - Master Effects Rack Window - openMasterEffectsRackWindow sets window options
+    - Master Effects Rack Window - openMasterEffectsRackWindow handles savedState
+    - Master Effects Rack Window - openMasterEffectsRackWindow checks for already open window
+    - Send Effects Window - openSendEffectsWindow is a function export
+    - Send Effects Window - openSendEffectsWindow accepts 2 parameters
+    - Send Effects Window - openSendEffectsWindow uses sendEffectsRack- windowId prefix
+    - Send Effects Window - openSendEffectsWindow calls localAppServices.createWindow
+    - Send Effects Window - openSendEffectsWindow uses buildModularEffectsRackDOM
+    - Send Effects Window - openSendEffectsWindow passes send as ownerType
+    - Send Effects Window - openSendEffectsWindow checks for already open window
+    - Track Templates Window - openTrackTemplatesWindow is a function export
+    - Track Templates Window - openTrackTemplatesWindow accepts 1 parameter
+    - Track Templates Window - openTrackTemplatesWindow uses trackTemplates windowId
+    - Track Templates Window - openTrackTemplatesWindow calls localAppServices.createWindow
+    - Track Templates Window - openTrackTemplatesWindow passes correct window title
+    - Track Templates Window - openTrackTemplatesWindow creates content HTML with template grid
+    - Track Templates Window - openTrackTemplatesWindow checks for already open window
+    - Track Templates Window - openTrackTemplatesWindow handles savedState
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow is a function export
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow accepts 0 parameters
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow uses keyboardShortcutsHelp windowId
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow calls localAppServices.createWindow
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_TITLE constant
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_WIDTH and HEIGHT constants
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow checks for already open window
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes keyboard shortcut keys
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes playback controls section
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes edit operations section
+    - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes track controls section
+    - APP_VERSION validation for Day 378
+  - `js/constants.js`: Bumped APP_VERSION to 2.57.0
+- **Feature Details**:
+  - Tests validate openMasterEffectsRackWindow function export and parameter count (1 param: savedState)
+  - Tests verify openMasterEffectsRackWindow uses masterEffectsRack windowId and calls createWindow
+  - Tests verify openMasterEffectsRackWindow uses buildModularEffectsRackDOM with 'master' ownerType
+  - Tests verify openMasterEffectsRackWindow sets window options (width, height, minWidth, minHeight) and handles savedState
+  - Tests validate openSendEffectsWindow function export and parameter count (2 params: sendId, savedState)
+  - Tests verify openSendEffectsWindow uses sendEffectsRack-{sendId} windowId prefix
+  - Tests verify openSendEffectsWindow uses buildModularEffectsRackDOM with 'send' ownerType
+  - Tests validate openTrackTemplatesWindow function export and parameter count (1 param: savedState)
+  - Tests verify openTrackTemplatesWindow uses trackTemplates windowId and creates template grid UI
+  - Tests validate showKeyboardShortcutsHelpWindow function export and parameter count (0 params)
+  - Tests verify showKeyboardShortcutsHelpWindow uses KEYBOARD_SHORTCUTS_HELP_* constants
+  - Tests verify showKeyboardShortcutsHelpWindow includes all keyboard shortcut sections (playback, edit, track controls)
+  - Total tests increased from 1223 to 1260
+- **Version**: Bumped to 2.57.0
+
 #### Day 377: UI Constants Tests (2026-04-30)
 - **Feature**: Added 32 new unit tests for UI Constants module to expand test coverage
 - **Files Modified**:

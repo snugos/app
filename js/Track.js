@@ -1753,6 +1753,72 @@ export class Track {
         const clip = this._getAudioClip(clipId);
         return clip ? clip.duration : 0;
     }
+
+    // Normalize audio clip to peak amplitude of 1.0 (0dB)
+    async normalizeAudioClip(clipId) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip || clip.type !== 'audio') return false;
+
+        try {
+            // Load audio buffer from IndexedDB
+            const audioBlob = await getAudio(clip.sourceId);
+            if (!audioBlob) {
+                console.warn(`[Track ${this.id} normalizeAudioClip] Audio blob not found for clip ${clipId}`);
+                return false;
+            }
+
+            // Decode audio data to get amplitude information
+            const audioContext = Tone.context;
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+            // Find peak amplitude across all channels
+            let peakAmplitude = 0;
+            const numberOfChannels = audioBuffer.numberOfChannels;
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                const channelData = audioBuffer.getChannelData(channel);
+                for (let i = 0; i < channelData.length; i++) {
+                    const absValue = Math.abs(channelData[i]);
+                    if (absValue > peakAmplitude) {
+                        peakAmplitude = absValue;
+                    }
+                }
+            }
+
+            if (peakAmplitude === 0) {
+                console.warn(`[Track ${this.id} normalizeAudioClip] Clip ${clipId} has silent audio, cannot normalize`);
+                return false;
+            }
+
+            // Calculate gain to normalize to 1.0 (0dB)
+            const gainMultiplier = 1.0 / peakAmplitude;
+            const newGain = Math.min(Constants.MAX_AUDIO_CLIP_GAIN, Math.max(Constants.MIN_AUDIO_CLIP_GAIN, gainMultiplier));
+
+            // Check if gain change is significant enough to warrant undo capture
+            if (Math.abs(clip.gain - newGain) < 0.001) {
+                return true; // No significant change needed
+            }
+
+            this._captureUndoState(`Normalize clip "${clip.name}"`);
+
+            // Apply the new gain
+            clip.gain = newGain;
+
+            // Show notification if appServices is available
+            if (this.appServices.showNotification) {
+                const gainDb = newGain === 1.0 ? '0.0' : (newGain > 1.0 ? `+${(20 * Math.log10(newGain)).toFixed(1)}` : (20 * Math.log10(newGain)).toFixed(1));
+                this.appServices.showNotification(`Normalized clip "${clip.name}" (${gainDb} dB)`, 2000);
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`[Track ${this.id} normalizeAudioClip] Error normalizing clip ${clipId}:`, error);
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification(`Failed to normalize clip "${clip.name}"`, 2000);
+            }
+            return false;
+        }
+    }
     // Delete a timeline clip with undo capture
     deleteTimelineClip(clipId) {
         const clip = this._getAudioClip(clipId);
