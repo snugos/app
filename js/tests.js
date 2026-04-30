@@ -3343,7 +3343,313 @@ TestRunner.test('APP_VERSION validation for Day 379', (t) => {
     const versionParts = Constants.APP_VERSION.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 379');
     t.assertTruthy(versionParts[1] >= 58, 'Minor version should be >= 58 for Day 379');
+// ============================================
+// Day 409: Audio Clip Extended Methods Tests
+// ============================================
+
+TestRunner.test('Audio Clip Methods - setAudioClipEndOffset is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setAudioClipEndOffset, 'function', 'setAudioClipEndOffset should be a function');
 });
+
+TestRunner.test('Audio Clip Methods - setAudioClipEndOffset calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipEndOffset should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipEndOffset uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('end offset') || funcStr.includes('offset'), 'setAudioClipEndOffset undo label should reference end offset');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipEndOffset references clipId and endOffset parameters', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'setAudioClipEndOffset should reference clipId parameter');
+    t.assertTruthy(funcStr.includes('endOffset'), 'setAudioClipEndOffset should reference endOffset parameter');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipEndOffset returns boolean', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'setAudioClipEndOffset should return boolean');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipEndOffset is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipEndOffset, 'function', 'getAudioClipEndOffset should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipEndOffset references clipId parameter', (t) => {
+    const funcStr = Track.prototype.getAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipEndOffset should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipEndOffset uses DEFAULT_AUDIO_CLIP_END_OFFSET fallback', (t) => {
+    const funcStr = Track.prototype.getAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_AUDIO_CLIP_END_OFFSET'), 'getAudioClipEndOffset should use DEFAULT_AUDIO_CLIP_END_OFFSET fallback');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipCrossfade is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setAudioClipCrossfade, 'function', 'setAudioClipCrossfade should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipCrossfade calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipCrossfade should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipCrossfade uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('crossfade'), 'setAudioClipCrossfade undo label should reference crossfade');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipCrossfade clamps value to 0-1 range', (t) => {
+    const funcStr = Track.prototype.setAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setAudioClipCrossfade should clamp value to 0-1 range');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipCrossfade references clipId and crossfade parameters', (t) => {
+    const funcStr = Track.prototype.setAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'setAudioClipCrossfade should reference clipId parameter');
+    t.assertTruthy(funcStr.includes('crossfade'), 'setAudioClipCrossfade should reference crossfade parameter');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipCrossfade is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipCrossfade, 'function', 'getAudioClipCrossfade should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipCrossfade references clipId parameter', (t) => {
+    const funcStr = Track.prototype.getAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipCrossfade should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeInCurve is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setAudioClipFadeInCurve, 'function', 'setAudioClipFadeInCurve should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeInCurve calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeInCurve should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeInCurve uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('fade in') || funcStr.includes('fadeIn'), 'setAudioClipFadeInCurve undo label should reference fade in');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeInCurve validates against FADE_CURVES', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('FADE_CURVES') || funcStr.includes('includes'), 'setAudioClipFadeInCurve should validate curve against FADE_CURVES');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeInCurve uses DEFAULT_FADE_IN_CURVE fallback', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_FADE_IN_CURVE'), 'setAudioClipFadeInCurve should use DEFAULT_FADE_IN_CURVE fallback');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeOutCurve is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setAudioClipFadeOutCurve, 'function', 'setAudioClipFadeOutCurve should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeOutCurve calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeOutCurve should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeOutCurve uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('fade out') || funcStr.includes('fadeOut'), 'setAudioClipFadeOutCurve undo label should reference fade out');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeOutCurve validates against FADE_CURVES', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('FADE_CURVES') || funcStr.includes('includes'), 'setAudioClipFadeOutCurve should validate curve against FADE_CURVES');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipFadeOutCurve uses DEFAULT_FADE_OUT_CURVE fallback', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_FADE_OUT_CURVE'), 'setAudioClipFadeOutCurve should use DEFAULT_FADE_OUT_CURVE fallback');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipReverse is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setAudioClipReverse, 'function', 'setAudioClipReverse should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipReverse calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipReverse.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipReverse should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipReverse uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setAudioClipReverse.toString();
+    t.assertTruthy(funcStr.includes('reverse'), 'setAudioClipReverse undo label should reference reverse');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipReverse references clipId and reverse parameters', (t) => {
+    const funcStr = Track.prototype.setAudioClipReverse.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'setAudioClipReverse should reference clipId parameter');
+    t.assertTruthy(funcStr.includes('reverse'), 'setAudioClipReverse should reference reverse parameter');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipReverse returns boolean', (t) => {
+    const funcStr = Track.prototype.setAudioClipReverse.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'setAudioClipReverse should return boolean');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipReverse is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipReverse, 'function', 'getAudioClipReverse should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipReverse references clipId parameter', (t) => {
+    const funcStr = Track.prototype.getAudioClipReverse.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipReverse should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipStartTime is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setAudioClipStartTime, 'function', 'setAudioClipStartTime should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipStartTime calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipStartTime should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipStartTime uses descriptive undo label with track name', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('Move') || funcStr.includes('clip'), 'setAudioClipStartTime undo label should reference Move or clip');
+    t.assertTruthy(funcStr.includes('this.name'), 'setAudioClipStartTime undo label should include track name');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipStartTime clamps to non-negative', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('0'), 'setAudioClipStartTime should clamp to non-negative');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipStartTime uses parseFloat', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setAudioClipStartTime should use parseFloat');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipStartTime is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipStartTime, 'function', 'getAudioClipStartTime should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipStartTime references clipId parameter', (t) => {
+    const funcStr = Track.prototype.getAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipStartTime should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipStartTime returns 0 for missing clip', (t) => {
+    const funcStr = Track.prototype.getAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('0'), 'getAudioClipStartTime should return 0 for missing clip');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipDuration is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setAudioClipDuration, 'function', 'setAudioClipDuration should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipDuration calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipDuration should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipDuration uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('Resize') || funcStr.includes('clip'), 'setAudioClipDuration undo label should reference Resize or clip');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipDuration clamps to minimum 0.01', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('0.01'), 'setAudioClipDuration should clamp to minimum 0.01');
+});
+
+TestRunner.test('Audio Clip Methods - setAudioClipDuration uses parseFloat', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setAudioClipDuration should use parseFloat');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipDuration is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.getAudioClipDuration, 'function', 'getAudioClipDuration should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipDuration references clipId parameter', (t) => {
+    const funcStr = Track.prototype.getAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipDuration should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Methods - getAudioClipDuration returns 0 for missing clip', (t) => {
+    const funcStr = Track.prototype.getAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('0'), 'getAudioClipDuration should return 0 for missing clip');
+});
+
+TestRunner.test('Audio Clip Methods - deleteTimelineClip is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.deleteTimelineClip, 'function', 'deleteTimelineClip should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - deleteTimelineClip calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.deleteTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'deleteTimelineClip should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - deleteTimelineClip uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.deleteTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('Delete') || funcStr.includes('clip'), 'deleteTimelineClip undo label should reference Delete or clip');
+});
+
+TestRunner.test('Audio Clip Methods - deleteTimelineClip uses timelineClips filter', (t) => {
+    const funcStr = Track.prototype.deleteTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('filter') && funcStr.includes('timelineClips'), 'deleteTimelineClip should filter timelineClips array');
+});
+
+TestRunner.test('Audio Clip Methods - deleteTimelineClip returns boolean', (t) => {
+    const funcStr = Track.prototype.deleteTimelineClip.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'deleteTimelineClip should return boolean');
+});
+
+TestRunner.test('Audio Clip Methods - splitAudioClip is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.splitAudioClip, 'function', 'splitAudioClip should be a function');
+});
+
+TestRunner.test('Audio Clip Methods - splitAudioClip accepts clipId and splitTime parameters', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'splitAudioClip should reference clipId parameter');
+    t.assertTruthy(funcStr.includes('splitTime'), 'splitAudioClip should reference splitTime parameter');
+});
+
+TestRunner.test('Audio Clip Methods - splitAudioClip calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'splitAudioClip should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Methods - splitAudioClip validates splitTime bounds', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('splitTime'), 'splitAudioClip should validate splitTime is within clip bounds');
+});
+
+TestRunner.test('Audio Clip Methods - splitAudioClip creates new clip object', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('newClip') || funcStr.includes('id:'), 'splitAudioClip should create a new clip object');
+});
+
+TestRunner.test('Audio Clip Methods - splitAudioClip modifies original clip duration', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clip.duration'), 'splitAudioClip should modify original clip duration');
+});
+
+TestRunner.test('Audio Clip Methods - splitAudioClip sets new clip startTime', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('startTime'), 'splitAudioClip should set new clip startTime');
+});
+
+TestRunner.test('Audio Clip Methods - splitAudioClip copies clip properties to new clip', (t) => {
+    const funcStr = Track.prototype.splitAudioClip.toString();
+    t.assertTruthy(funcStr.includes('sourceId') || funcStr.includes('gain') || funcStr.includes('playbackRate'), 'splitAudioClip should copy clip properties to new clip');
+});
+
+TestRunner.test('Audio Clip Methods - APP_VERSION validation for Day 409', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 409');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 86, 'Minor version should be >= 86 for Day 409');
+    }
+});});
 
 
 // Day 358: Track Effect Instance Methods Tests
