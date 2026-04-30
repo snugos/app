@@ -1,3 +1,99 @@
+#### Day 379: Audio Clip Setter/Getter Methods Tests (2026-04-30)
+- **Feature**: Added 81 new unit tests for Audio Clip setter/getter methods on Track.prototype to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 81 new tests in Day 379 section:
+    - Audio Clip Setters - setAudioClipName is a function export
+    - Audio Clip Setters - setAudioClipName calls _captureUndoState
+    - Audio Clip Setters - setAudioClipName uses descriptive undo label
+    - Audio Clip Setters - setAudioClipName references clipId and name parameters
+    - Audio Clip Setters - setAudioClipName returns boolean
+    - Audio Clip Getters - getAudioClipName is a function export
+    - Audio Clip Getters - getAudioClipName references clipId parameter
+    - Audio Clip Setters - setAudioClipColor is a function export
+    - Audio Clip Setters - setAudioClipColor calls _captureUndoState
+    - Audio Clip Setters - setAudioClipColor uses descriptive undo label
+    - Audio Clip Setters - setAudioClipColor references clipId and color parameters
+    - Audio Clip Setters - setAudioClipColor returns boolean
+    - Audio Clip Getters - getAudioClipColor is a function export
+    - Audio Clip Getters - getAudioClipColor references clipId parameter
+    - Audio Clip Setters - setAudioClipGain is a function export
+    - Audio Clip Setters - setAudioClipGain calls _captureUndoState
+    - Audio Clip Setters - setAudioClipGain uses descriptive undo label
+    - Audio Clip Setters - setAudioClipGain clamps value to valid range
+    - Audio Clip Setters - setAudioClipGain references clipId and gain parameters
+    - Audio Clip Getters - getAudioClipGain is a function export
+    - Audio Clip Getters - getAudioClipGain references clipId parameter
+    - Audio Clip Setters - setAudioClipPlaybackRate is a function export
+    - Audio Clip Setters - setAudioClipPlaybackRate calls _captureUndoState
+    - Audio Clip Setters - setAudioClipPlaybackRate uses descriptive undo label
+    - Audio Clip Setters - setAudioClipPlaybackRate clamps value to valid range
+    - Audio Clip Setters - setAudioClipPlaybackRate references clipId and rate parameters
+    - Audio Clip Getters - getAudioClipPlaybackRate is a function export
+    - Audio Clip Getters - getAudioClipPlaybackRate references clipId parameter
+    - Audio Clip Setters - setAudioClipStartOffset is a function export
+    - Audio Clip Setters - setAudioClipStartOffset calls _captureUndoState
+    - Audio Clip Setters - setAudioClipStartOffset uses descriptive undo label
+    - Audio Clip Setters - setAudioClipStartOffset clamps value
+    - Audio Clip Setters - setAudioClipStartOffset references clipId and startOffset parameters
+    - Audio Clip Getters - getAudioClipStartOffset is a function export
+    - Audio Clip Getters - getAudioClipStartOffset references clipId parameter
+    - Audio Clip Setters - setAudioClipEndOffset is a function export
+    - Audio Clip Setters - setAudioClipEndOffset calls _captureUndoState
+    - Audio Clip Setters - setAudioClipEndOffset uses descriptive undo label
+    - Audio Clip Setters - setAudioClipEndOffset references clipId and endOffset parameters
+    - Audio Clip Getters - getAudioClipEndOffset is a function export
+    - Audio Clip Getters - getAudioClipEndOffset references clipId parameter
+    - Audio Clip Setters - setAudioClipCrossfade is a function export
+    - Audio Clip Setters - setAudioClipCrossfade calls _captureUndoState
+    - Audio Clip Setters - setAudioClipCrossfade uses descriptive undo label
+    - Audio Clip Setters - setAudioClipCrossfade clamps value to 0-1 range
+    - Audio Clip Getters - getAudioClipCrossfade is a function export
+    - Audio Clip Getters - getAudioClipCrossfade references clipId parameter
+    - Audio Clip Setters - setAudioClipFadeIn is a function export
+    - Audio Clip Setters - setAudioClipFadeIn calls _captureUndoState
+    - Audio Clip Setters - setAudioClipFadeIn uses descriptive undo label
+    - Audio Clip Setters - setAudioClipFadeIn clamps value
+    - Audio Clip Getters - getAudioClipFadeIn is a function export
+    - Audio Clip Getters - getAudioClipFadeIn references clipId parameter
+    - Audio Clip Setters - setAudioClipFadeOut is a function export
+    - Audio Clip Setters - setAudioClipFadeOut calls _captureUndoState
+    - Audio Clip Setters - setAudioClipFadeOut uses descriptive undo label
+    - Audio Clip Setters - setAudioClipFadeOut clamps value
+    - Audio Clip Getters - getAudioClipFadeOut is a function export
+    - Audio Clip Getters - getAudioClipFadeOut references clipId parameter
+    - Audio Clip Setters - setAudioClipReverse is a function export
+    - Audio Clip Setters - setAudioClipReverse calls _captureUndoState
+    - Audio Clip Setters - setAudioClipReverse uses descriptive undo label
+    - Audio Clip Setters - setAudioClipReverse references clipId and reverse parameters
+    - Audio Clip Getters - getAudioClipReverse is a function export
+    - Audio Clip Getters - getAudioClipReverse references clipId parameter
+    - Audio Clip Setters - setAudioClipStartTime is a function export
+    - Audio Clip Setters - setAudioClipStartTime calls _captureUndoState
+    - Audio Clip Setters - setAudioClipStartTime uses descriptive undo label
+    - Audio Clip Setters - setAudioClipStartTime references clipId and startTime parameters
+    - Audio Clip Getters - getAudioClipStartTime is a function export
+    - Audio Clip Getters - getAudioClipStartTime references clipId parameter
+    - Audio Clip Setters - setAudioClipDuration is a function export
+    - Audio Clip Setters - setAudioClipDuration calls _captureUndoState
+    - Audio Clip Setters - setAudioClipDuration uses descriptive undo label
+    - Audio Clip Setters - setAudioClipDuration references clipId and duration parameters
+    - Audio Clip Getters - getAudioClipDuration is a function export
+    - Audio Clip Getters - getAudioClipDuration references clipId parameter
+    - Audio Clip Setters - _getAudioClip is a function export
+    - Audio Clip Setters - _getAudioClip references clipId parameter
+    - Audio Clip Setters - _getAudioClip returns clip or undefined
+    - APP_VERSION validation for Day 379
+  - `js/constants.js`: Bumped APP_VERSION to 2.58.0
+- **Feature Details**:
+  - Tests validate all Audio Clip setters call _captureUndoState for undo/redo support
+  - Tests verify descriptive undo labels for all clip operations (Rename, Set color, Set gain, Set playback rate, etc.)
+  - Tests verify value clamping using MIN/MAX constants for gain, playback rate, start offset, fade, crossfade
+  - Tests verify all setters reference their respective parameters (clipId plus operation-specific param)
+  - Tests validate all Audio Clip getters exist and reference clipId parameter
+  - Tests validate _getAudioClip helper function searches timelineClips
+  - Total tests increased from 1274 to 1355
+- **Version**: Bumped to 2.58.0
+
 #### Day 378: Additional Window UI Functions Tests (2026-04-30)
 - **Feature**: Added 37 new unit tests for additional Window UI functions to expand test coverage
 - **Files Modified**:
