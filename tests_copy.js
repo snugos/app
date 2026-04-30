@@ -9793,275 +9793,181 @@ TestRunner.test('Sound Library State - setSoundLibraryFileTreesState calls captu
 TestRunner.test('Sound Library State - setSoundLibraryFileTreesState uses descriptive undo label', (t) => {
     const funcStr = setSoundLibraryFileTreesState.toString();
     t.assertTruthy(funcStr.includes('Set Sound Library File Trees'), 'setSoundLibraryFileTreesState should use descriptive undo label');
-
-// ============================================
-// Day 406: Timeline & Waveform Rendering UI Functions Tests
-// ============================================
-
-// Timeline Rendering - renderTimeline
-TestRunner.test('Timeline Rendering - renderTimeline is a function export', (t) => {
-    t.assertTruthy(typeof renderTimeline === 'function', 'renderTimeline should be a function');
 });
 
-TestRunner.test('Timeline Rendering - renderTimeline accepts 0 parameters', (t) => {
-    const funcBody = renderTimeline.toString();
-    t.assertTruthy(!funcBody.includes('function renderTimeline(') || funcBody.match(/function renderTimeline\s*\(\s*\)/), 'renderTimeline should accept 0 parameters');
+TestRunner.test('Sound Library State - setSoundLibraryFileTreesState defaults to empty object', (t) => {
+    const funcStr = setSoundLibraryFileTreesState.toString();
+    t.assertTruthy(funcStr.includes('{}') || funcStr.includes('trees || {}'), 'setSoundLibraryFileTreesState should default to empty object');
 });
 
-TestRunner.test('Timeline Rendering - renderTimeline references localAppServices.getWindowById', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('getWindowById'), 'renderTimeline should reference getWindowById');
+// Sound Library State - Current Library Name
+TestRunner.test('Sound Library State - getCurrentLibraryNameState is a function export', (t) => {
+    t.assertTruthy(typeof getCurrentLibraryNameState === 'function', 'getCurrentLibraryNameState should be a function');
 });
 
-TestRunner.test('Timeline Rendering - renderTimeline references localAppServices.getTracks', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('getTracks'), 'renderTimeline should reference getTracks');
+TestRunner.test('Sound Library State - getCurrentLibraryNameState accepts 0 parameters', (t) => {
+    const funcBody = getCurrentLibraryNameState.toString();
+    t.assertTruthy(!funcBody.includes('libraryName'), 'getCurrentLibraryNameState should accept 0 parameters');
 });
 
-TestRunner.test('Timeline Rendering - renderTimeline references localAppServices.getTimelineZoomState', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('getTimelineZoomState'), 'renderTimeline should reference getTimelineZoomState');
+TestRunner.test('Sound Library State - getCurrentLibraryNameState returns current library name', (t) => {
+    const result = getCurrentLibraryNameState();
+    t.assertTruthy(typeof result === 'string' || result === null || result === undefined, 'getCurrentLibraryNameState should return string or null');
 });
 
-TestRunner.test('Timeline Rendering - renderTimeline uses Constants.TIMELINE_ZOOM_DEFAULT', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('TIMELINE_ZOOM_DEFAULT'), 'renderTimeline should use TIMELINE_ZOOM_DEFAULT');
+TestRunner.test('Sound Library State - setCurrentLibraryNameState is a function export', (t) => {
+    t.assertTruthy(typeof setCurrentLibraryNameState === 'function', 'setCurrentLibraryNameState should be a function');
 });
 
-TestRunner.test('Timeline Rendering - renderTimeline uses Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('TIMELINE_VERTICAL_ZOOM_DEFAULT'), 'renderTimeline should use TIMELINE_VERTICAL_ZOOM_DEFAULT');
-});
-
-TestRunner.test('Timeline Rendering - renderTimeline uses Constants.TIMELINE_BEAT_WIDTH', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('TIMELINE_BEAT_WIDTH'), 'renderTimeline should use TIMELINE_BEAT_WIDTH');
-});
-
-TestRunner.test('Timeline Rendering - renderTimeline uses Constants.TIMELINE_TRACK_HEIGHT', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('TIMELINE_TRACK_HEIGHT'), 'renderTimeline should use TIMELINE_TRACK_HEIGHT');
-});
-
-TestRunner.test('Timeline Rendering - renderTimeline uses Constants.TIMELINE_HEADER_HEIGHT', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('TIMELINE_HEADER_HEIGHT'), 'renderTimeline should use TIMELINE_HEADER_HEIGHT');
-});
-
-TestRunner.test('Timeline Rendering - renderTimeline references Tone.Transport.bpm.value', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('Tone.Transport.bpm.value') || funcStr.includes("Tone.Transport.bpm"), 'renderTimeline should reference Tone.Transport.bpm');
-});
-
-TestRunner.test('Timeline Rendering - renderTimeline uses Constants.MAX_BARS', (t) => {
-    const funcStr = renderTimeline.toString();
-    t.assertTruthy(funcStr.includes('MAX_BARS'), 'renderTimeline should use MAX_BARS');
-});
-
-TestRunner.test('Timeline Rendering - updatePlayheadPosition is a function export', (t) => {
-    t.assertTruthy(typeof updatePlayheadPosition === 'function', 'updatePlayheadPosition should be a function');
-});
-
-TestRunner.test('Timeline Rendering - updatePlayheadPosition accepts 0 parameters', (t) => {
-    const funcBody = updatePlayheadPosition.toString();
-    t.assertTruthy(!funcBody.includes('function updatePlayheadPosition(') || funcBody.match(/function updatePlayheadPosition\s*\(\s*\)/), 'updatePlayheadPosition should accept 0 parameters');
-});
-
-TestRunner.test('Timeline Rendering - updatePlayheadPosition references localAppServices.getWindowById', (t) => {
-    const funcStr = updatePlayheadPosition.toString();
-    t.assertTruthy(funcStr.includes('getWindowById'), 'updatePlayheadPosition should reference getWindowById');
-});
-
-TestRunner.test('Timeline Rendering - updatePlayheadPosition references localAppServices.getPlaybackMode', (t) => {
-    const funcStr = updatePlayheadPosition.toString();
-    t.assertTruthy(funcStr.includes('getPlaybackMode'), 'updatePlayheadPosition should reference getPlaybackMode');
-});
-
-TestRunner.test('Timeline Rendering - updatePlayheadPosition references Tone.Transport.seconds', (t) => {
-    const funcStr = updatePlayheadPosition.toString();
-    t.assertTruthy(funcStr.includes('Tone.Transport.seconds') || funcStr.includes('Tone.Transport'), 'updatePlayheadPosition should reference Tone.Transport');
-});
-
-// Waveform Rendering - drawWaveform
-TestRunner.test('Waveform Rendering - drawWaveform is a function export', (t) => {
-    t.assertTruthy(typeof drawWaveform === 'function', 'drawWaveform should be a function');
-});
-
-TestRunner.test('Waveform Rendering - drawWaveform accepts 1 parameter', (t) => {
-    const funcBody = drawWaveform.toString();
+TestRunner.test('Sound Library State - setCurrentLibraryNameState accepts 1 parameter', (t) => {
+    const funcBody = setCurrentLibraryNameState.toString();
     const paramsMatch = funcBody.match(/function\s*\(([^)]*)\)/);
     const params = paramsMatch ? paramsMatch[1].trim() : '';
     const paramCount = params.split(',').filter(p => p.trim()).length;
-    t.assertEqual(paramCount, 1, 'drawWaveform should accept 1 parameter');
+    t.assertEqual(paramCount, 1, 'setCurrentLibraryNameState should accept 1 parameter');
 });
 
-TestRunner.test('Waveform Rendering - drawWaveform references track parameter', (t) => {
-    const funcStr = drawWaveform.toString();
-    t.assertTruthy(funcStr.includes('track'), 'drawWaveform should reference track parameter');
+TestRunner.test('Sound Library State - setCurrentLibraryNameState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setCurrentLibraryNameState should call captureStateForUndo');
 });
 
-TestRunner.test('Waveform Rendering - drawClipWaveform is a function export', (t) => {
-    t.assertTruthy(typeof drawClipWaveform === 'function', 'drawClipWaveform should be a function');
+TestRunner.test('Sound Library State - setCurrentLibraryNameState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('Set Current Library'), 'setCurrentLibraryNameState should use descriptive undo label');
 });
 
-TestRunner.test('Waveform Rendering - drawClipWaveform accepts 2 parameters', (t) => {
-    const funcBody = drawClipWaveform.toString();
+// Sound Library State - Current Sound File Tree
+TestRunner.test('Sound Library State - getCurrentSoundFileTreeState is a function export', (t) => {
+    t.assertTruthy(typeof getCurrentSoundFileTreeState === 'function', 'getCurrentSoundFileTreeState should be a function');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundFileTreeState accepts 0 parameters', (t) => {
+    const funcBody = getCurrentSoundFileTreeState.toString();
+    t.assertTruthy(!funcBody.includes('fileTree'), 'getCurrentSoundFileTreeState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundFileTreeState returns tree or null', (t) => {
+    const result = getCurrentSoundFileTreeState();
+    t.assertTruthy(result === null || typeof result === 'object', 'getCurrentSoundFileTreeState should return object or null');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundFileTreeState is a function export', (t) => {
+    t.assertTruthy(typeof setCurrentSoundFileTreeState === 'function', 'setCurrentSoundFileTreeState should be a function');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundFileTreeState accepts 1 parameter', (t) => {
+    const funcBody = setCurrentSoundFileTreeState.toString();
     const paramsMatch = funcBody.match(/function\s*\(([^)]*)\)/);
     const params = paramsMatch ? paramsMatch[1].trim() : '';
     const paramCount = params.split(',').filter(p => p.trim()).length;
-    t.assertEqual(paramCount, 2, 'drawClipWaveform should accept 2 parameters');
+    t.assertEqual(paramCount, 1, 'setCurrentSoundFileTreeState should accept 1 parameter');
 });
 
-TestRunner.test('Waveform Rendering - drawClipWaveform references clipId parameter', (t) => {
-    const funcStr = drawClipWaveform.toString();
-    t.assertTruthy(funcStr.includes('clipId'), 'drawClipWaveform should reference clipId parameter');
+TestRunner.test('Sound Library State - setCurrentSoundFileTreeState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setCurrentSoundFileTreeState should call captureStateForUndo');
 });
 
-TestRunner.test('Waveform Rendering - drawClipWaveform references audioBuffer parameter', (t) => {
-    const funcStr = drawClipWaveform.toString();
-    t.assertTruthy(funcStr.includes('audioBuffer'), 'drawClipWaveform should reference audioBuffer parameter');
+TestRunner.test('Sound Library State - setCurrentSoundFileTreeState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('Set Sound File Tree'), 'setCurrentSoundFileTreeState should use descriptive undo label');
 });
 
-TestRunner.test('Waveform Rendering - drawInstrumentWaveform is a function export', (t) => {
-    t.assertTruthy(typeof drawInstrumentWaveform === 'function', 'drawInstrumentWaveform should be a function');
+TestRunner.test('Sound Library State - setCurrentSoundFileTreeState updates correct library', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('currentLibraryNameGlobal'), 'setCurrentSoundFileTreeState should use currentLibraryNameGlobal to update correct library');
 });
 
-TestRunner.test('Waveform Rendering - drawInstrumentWaveform accepts 1 parameter', (t) => {
-    const funcBody = drawInstrumentWaveform.toString();
+// Sound Library State - Current Sound Browser Path
+TestRunner.test('Sound Library State - getCurrentSoundBrowserPathState is a function export', (t) => {
+    t.assertTruthy(typeof getCurrentSoundBrowserPathState === 'function', 'getCurrentSoundBrowserPathState should be a function');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundBrowserPathState accepts 0 parameters', (t) => {
+    const funcBody = getCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(!funcBody.includes('path'), 'getCurrentSoundBrowserPathState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundBrowserPathState returns string', (t) => {
+    const result = getCurrentSoundBrowserPathState();
+    t.assertEqual(typeof result, 'string', 'getCurrentSoundBrowserPathState should return a string');
+});
+
+TestRunner.test('Sound Library State - getCurrentSoundBrowserPathState defaults to forward slash', (t) => {
+    const result = getCurrentSoundBrowserPathState();
+    t.assertEqual(result, '/', 'getCurrentSoundBrowserPathState should default to /');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState is a function export', (t) => {
+    t.assertTruthy(typeof setCurrentSoundBrowserPathState === 'function', 'setCurrentSoundBrowserPathState should be a function');
+});
+
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState accepts 1 parameter', (t) => {
+    const funcBody = setCurrentSoundBrowserPathState.toString();
     const paramsMatch = funcBody.match(/function\s*\(([^)]*)\)/);
     const params = paramsMatch ? paramsMatch[1].trim() : '';
     const paramCount = params.split(',').filter(p => p.trim()).length;
-    t.assertEqual(paramCount, 1, 'drawInstrumentWaveform should accept 1 parameter');
+    t.assertEqual(paramCount, 1, 'setCurrentSoundBrowserPathState should accept 1 parameter');
 });
 
-TestRunner.test('Waveform Rendering - drawInstrumentWaveform references track parameter', (t) => {
-    const funcStr = drawInstrumentWaveform.toString();
-    t.assertTruthy(funcStr.includes('track'), 'drawInstrumentWaveform should reference track parameter');
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState calls captureStateForUndo', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setCurrentSoundBrowserPathState should call captureStateForUndo');
 });
 
-// Sequencer UI - highlightPlayingStep
-TestRunner.test('Sequencer UI - highlightPlayingStep is a function export', (t) => {
-    t.assertTruthy(typeof highlightPlayingStep === 'function', 'highlightPlayingStep should be a function');
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('Set Sound Browser Path'), 'setCurrentSoundBrowserPathState should use descriptive undo label');
 });
 
-TestRunner.test('Sequencer UI - highlightPlayingStep accepts 3 parameters', (t) => {
-    const funcBody = highlightPlayingStep.toString();
+TestRunner.test('Sound Library State - setCurrentSoundBrowserPathState defaults to forward slash', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes("'/'") || funcStr.includes('"/"') || funcStr.includes('path ||'), 'setCurrentSoundBrowserPathState should default to /');
+});
+
+// Sound Library State - Preview Player
+TestRunner.test('Sound Library State - getPreviewPlayerState is a function export', (t) => {
+    t.assertTruthy(typeof getPreviewPlayerState === 'function', 'getPreviewPlayerState should be a function');
+});
+
+TestRunner.test('Sound Library State - getPreviewPlayerState accepts 0 parameters', (t) => {
+    const funcBody = getPreviewPlayerState.toString();
+    t.assertTruthy(!funcBody.includes('player'), 'getPreviewPlayerState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Library State - getPreviewPlayerState returns player or null', (t) => {
+    const result = getPreviewPlayerState();
+    t.assertTruthy(result === null || typeof result === 'object', 'getPreviewPlayerState should return object or null');
+});
+
+TestRunner.test('Sound Library State - setPreviewPlayerState is a function export', (t) => {
+    t.assertTruthy(typeof setPreviewPlayerState === 'function', 'setPreviewPlayerState should be a function');
+});
+
+TestRunner.test('Sound Library State - setPreviewPlayerState accepts 1 parameter', (t) => {
+    const funcBody = setPreviewPlayerState.toString();
     const paramsMatch = funcBody.match(/function\s*\(([^)]*)\)/);
     const params = paramsMatch ? paramsMatch[1].trim() : '';
     const paramCount = params.split(',').filter(p => p.trim()).length;
-    t.assertEqual(paramCount, 3, 'highlightPlayingStep should accept 3 parameters');
+    t.assertEqual(paramCount, 1, 'setPreviewPlayerState should accept 1 parameter');
 });
 
-TestRunner.test('Sequencer UI - highlightPlayingStep references trackId parameter', (t) => {
-    const funcStr = highlightPlayingStep.toString();
-    t.assertTruthy(funcStr.includes('trackId'), 'highlightPlayingStep should reference trackId parameter');
+TestRunner.test('Sound Library State - setPreviewPlayerState calls captureStateForUndo', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setPreviewPlayerState should call captureStateForUndo');
 });
 
-TestRunner.test('Sequencer UI - highlightPlayingStep references stepIndex parameter', (t) => {
-    const funcStr = highlightPlayingStep.toString();
-    t.assertTruthy(funcStr.includes('stepIndex'), 'highlightPlayingStep should reference stepIndex parameter');
+TestRunner.test('Sound Library State - setPreviewPlayerState uses descriptive undo label', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('Set Preview Player'), 'setPreviewPlayerState should use descriptive undo label');
 });
 
-TestRunner.test('Sequencer UI - highlightPlayingStep references isPlaying parameter', (t) => {
-    const funcStr = highlightPlayingStep.toString();
-    t.assertTruthy(funcStr.includes('isPlaying'), 'highlightPlayingStep should reference isPlaying parameter');
-});
-
-// Sequencer UI - updateSequencerCellUI
-TestRunner.test('Sequencer UI - updateSequencerCellUI is a function export', (t) => {
-    t.assertTruthy(typeof updateSequencerCellUI === 'function', 'updateSequencerCellUI should be a function');
-});
-
-TestRunner.test('Sequencer UI - updateSequencerCellUI accepts 5 parameters', (t) => {
-    const funcBody = updateSequencerCellUI.toString();
-    const paramsMatch = funcBody.match(/function\s*\(([^)]*)\)/);
-    const params = paramsMatch ? paramsMatch[1].trim() : '';
-    const paramCount = params.split(',').filter(p => p.trim()).length;
-    t.assertEqual(paramCount, 5, 'updateSequencerCellUI should accept 5 parameters');
-});
-
-TestRunner.test('Sequencer UI - updateSequencerCellUI references sequencerElement parameter', (t) => {
-    const funcStr = updateSequencerCellUI.toString();
-    t.assertTruthy(funcStr.includes('sequencerElement'), 'updateSequencerCellUI should reference sequencerElement parameter');
-});
-
-TestRunner.test('Sequencer UI - updateSequencerCellUI references trackType parameter', (t) => {
-    const funcStr = updateSequencerCellUI.toString();
-    t.assertTruthy(funcStr.includes('trackType'), 'updateSequencerCellUI should reference trackType parameter');
-});
-
-TestRunner.test('Sequencer UI - updateSequencerCellUI references row parameter', (t) => {
-    const funcStr = updateSequencerCellUI.toString();
-    t.assertTruthy(funcStr.includes('row'), 'updateSequencerCellUI should reference row parameter');
-});
-
-TestRunner.test('Sequencer UI - updateSequencerCellUI references col parameter', (t) => {
-    const funcStr = updateSequencerCellUI.toString();
-    t.assertTruthy(funcStr.includes('col'), 'updateSequencerCellUI should reference col parameter');
-});
-
-TestRunner.test('Sequencer UI - updateSequencerCellUI references isActive parameter', (t) => {
-    const funcStr = updateSequencerCellUI.toString();
-    t.assertTruthy(funcStr.includes('isActive'), 'updateSequencerCellUI should reference isActive parameter');
-});
-
-// Sample Pads - renderSamplePads
-TestRunner.test('Sample Pads - renderSamplePads is a function export', (t) => {
-    t.assertTruthy(typeof renderSamplePads === 'function', 'renderSamplePads should be a function');
-});
-
-TestRunner.test('Sample Pads - renderSamplePads accepts 1 parameter', (t) => {
-    const funcBody = renderSamplePads.toString();
-    const paramsMatch = funcBody.match(/function\s*\(([^)]*)\)/);
-    const params = paramsMatch ? paramsMatch[1].trim() : '';
-    const paramCount = params.split(',').filter(p => p.trim()).length;
-    t.assertEqual(paramCount, 1, 'renderSamplePads should accept 1 parameter');
-});
-
-TestRunner.test('Sample Pads - renderSamplePads references track parameter', (t) => {
-    const funcStr = renderSamplePads.toString();
-    t.assertTruthy(funcStr.includes('track'), 'renderSamplePads should reference track parameter');
-});
-
-// Tap Tempo - handleTapTempo
-TestRunner.test('Tap Tempo - handleTapTempo is a function export', (t) => {
-    t.assertTruthy(typeof handleTapTempo === 'function', 'handleTapTempo should be a function');
-});
-
-TestRunner.test('Tap Tempo - handleTapTempo accepts 0 parameters', (t) => {
-    const funcBody = handleTapTempo.toString();
-    t.assertTruthy(!funcBody.includes('function handleTapTempo(') || funcBody.match(/function handleTapTempo\s*\(\s*\)/), 'handleTapTempo should accept 0 parameters');
-});
-
-TestRunner.test('Tap Tempo - handleTapTempo references localAppServices or Constants', (t) => {
-    const funcStr = handleTapTempo.toString();
-    t.assertTruthy(funcStr.includes('localAppServices') || funcStr.includes('Constants'), 'handleTapTempo should reference localAppServices or Constants');
-});
-
-TestRunner.test('Tap Tempo - handleTapTempo references Tone.Transport or uses tapTimes', (t) => {
-    const funcStr = handleTapTempo.toString();
-    t.assertTruthy(funcStr.includes('Tone') || funcStr.includes('tapTimes'), 'handleTapTempo should reference Tone or use tapTimes array');
-});
-
-TestRunner.test('Tap Tempo - handleTapTempo references setTempoState or showNotification', (t) => {
-    const funcStr = handleTapTempo.toString();
-    t.assertTruthy(funcStr.includes('setTempo') || funcStr.includes('showNotification') || funcStr.includes('tapTimes'), 'handleTapTempo should reference setTempo or showNotification or tapTimes');
-});
-
-TestRunner.test('Tap Tempo - resetTapTempo is a function export', (t) => {
-    t.assertTruthy(typeof resetTapTempo === 'function', 'resetTapTempo should be a function');
-});
-
-TestRunner.test('Tap Tempo - resetTapTempo accepts 0 parameters', (t) => {
-    const funcBody = resetTapTempo.toString();
-    t.assertTruthy(!funcBody.includes('function resetTapTempo(') || funcBody.match(/function resetTapTempo\s*\(\s*\)/), 'resetTapTempo should accept 0 parameters');
-});
-
-// APP_VERSION validation for Day 406
-TestRunner.test('Timeline & Waveform Rendering - APP_VERSION validation for Day 406', (t) => {
+// APP_VERSION validation for Day 404
+TestRunner.test('Sound Library State - APP_VERSION validation for Day 404', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
     const major = versionParts[0];
     const minor = versionParts[1];
     const patch = versionParts[2];
-    t.assertTruthy(major > 2 || (major === 2 && minor >= 83), 'APP_VERSION should be 2.83.0 or higher for Day 406');
+    t.assertTruthy(major > 2 || (major === 2 && minor >= 81), 'APP_VERSION should be 2.81.0 or higher for Day 404');
 });
