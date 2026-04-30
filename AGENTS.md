@@ -1,3 +1,53 @@
+#### Day 398: Time Signature State Functions Tests (2026-04-30)
+- **Feature**: Added 33 new unit tests for Time Signature state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 33 new tests in Day 398 section:
+    - Time Signature State - getTimeSignatureState is a function export
+    - Time Signature State - getTimeSignatureState accepts 0 parameters
+    - Time Signature State - getTimeSignatureState returns an object
+    - Time Signature State - getTimeSignatureState returns numerator property
+    - Time Signature State - getTimeSignatureState returns denominator property
+    - Time Signature State - setTimeSignatureState is a function export
+    - Time Signature State - setTimeSignatureState accepts 2 parameters
+    - Time Signature State - setTimeSignatureState calls captureStateForUndo
+    - Time Signature State - setTimeSignatureState uses descriptive undo label
+    - Time Signature State - setTimeSignatureState clamps numerator
+    - Time Signature State - setTimeSignatureState clamps denominator
+    - Time Signature State - getTimeSignatureNumeratorState is a function export
+    - Time Signature State - getTimeSignatureNumeratorState accepts 0 parameters
+    - Time Signature State - getTimeSignatureNumeratorState returns a number
+    - Time Signature State - setTimeSignatureNumeratorState is a function export
+    - Time Signature State - setTimeSignatureNumeratorState accepts 1 parameter
+    - Time Signature State - setTimeSignatureNumeratorState calls captureStateForUndo
+    - Time Signature State - getTimeSignatureDenominatorState is a function export
+    - Time Signature State - getTimeSignatureDenominatorState accepts 0 parameters
+    - Time Signature State - getTimeSignatureDenominatorState returns a number
+    - Time Signature State - setTimeSignatureDenominatorState is a function export
+    - Time Signature State - setTimeSignatureDenominatorState accepts 1 parameter
+    - Time Signature State - setTimeSignatureDenominatorState calls captureStateForUndo
+    - Time Signature Constants - TIME_SIG_MIN_NUMERATOR is defined
+    - Time Signature Constants - TIME_SIG_MAX_NUMERATOR is defined
+    - Time Signature Constants - TIME_SIG_MIN_DENOMINATOR is defined
+    - Time Signature Constants - TIME_SIG_MAX_DENOMINATOR is defined
+    - Time Signature Constants - DEFAULT_TIME_SIGNATURE_NUMERATOR is defined
+    - Time Signature Constants - DEFAULT_TIME_SIGNATURE_DENOMINATOR is defined
+    - Time Signature Constants - DEFAULT_TIME_SIGNATURE is an object
+    - Time Signature Constants - DEFAULT_TIME_SIGNATURE has numerator
+    - Time Signature Constants - DEFAULT_TIME_SIGNATURE has denominator
+    - Time Signature State - APP_VERSION validation for Day 398
+  - `js/constants.js`: Bumped APP_VERSION to 2.75.0
+- **Feature Details**:
+  - Tests validate getTimeSignatureState function (0 params, returns object with numerator and denominator)
+  - Tests validate setTimeSignatureState function (2 params, calls captureStateForUndo with descriptive label)
+  - Tests validate setTimeSignatureState clamps numerator and denominator using Math.max/Math.min
+  - Tests validate getTimeSignatureNumeratorState function (0 params, returns number)
+  - Tests validate setTimeSignatureNumeratorState function (1 param, calls captureStateForUndo)
+  - Tests validate getTimeSignatureDenominatorState function (0 params, returns number)
+  - Tests validate setTimeSignatureDenominatorState function (1 param, calls captureStateForUndo)
+  - Tests validate Time Signature constants (TIME_SIG_MIN/MAX_NUMERATOR, TIME_SIG_MIN/MAX_DENOMINATOR, DEFAULT_TIME_SIGNATURE)
+  - Total tests increased from 1508 to 1541
+- **Version**: Bumped to 2.75.0
+
 #### Day 397: Preview Audio Functions Tests (2026-04-30)
 - **Feature**: Added 58 new unit tests for Preview Audio Functions (playSlicePreview and playDrumSamplerPadPreview) to expand test coverage
 - **Files Modified**:
