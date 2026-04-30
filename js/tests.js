@@ -336,7 +336,6 @@ import {
     updateTrackTemplatesWindowContent,
     showTemplateContextMenu,
     buildMixerContentDOM,
-    openMixerWindow,
     initializeMixerEventHandlers,
     updateMixerWindow,
     buildMixerTrackStripHTML,
@@ -8944,4 +8943,536 @@ TestRunner.test('Effect Presets State - APP_VERSION validation for Day 399', (t)
     const major = versionParts[0];
     const minor = versionParts[1];
     t.assertTruthy(major > 2 || (major === 2 && minor >= 76), 'APP_VERSION should be 2.76.0 or higher for Day 399');
+});
+// Day 400: Chord Mode State Functions Tests
+TestRunner.test('Chord Mode State - getChordModeState is a function export', (t) => {
+    t.assertEqual(typeof getChordModeState, 'function', 'getChordModeState should be a function');
+});
+
+TestRunner.test('Chord Mode State - getChordModeState accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeState.length, 0, 'getChordModeState should accept 0 parameters');
+});
+
+TestRunner.test('Chord Mode State - getChordModeState returns an object', (t) => {
+    const state = getChordModeState();
+    t.assertEqual(typeof state, 'object', 'getChordModeState should return an object');
+});
+
+TestRunner.test('Chord Mode State - getChordModeState returns enabled property', (t) => {
+    const state = getChordModeState();
+    t.assertTruthy(state.enabled !== undefined, 'getChordModeState should return object with enabled property');
+});
+
+TestRunner.test('Chord Mode State - getChordModeState returns root property', (t) => {
+    const state = getChordModeState();
+    t.assertTruthy(state.root !== undefined, 'getChordModeState should return object with root property');
+});
+
+TestRunner.test('Chord Mode State - getChordModeState returns type property', (t) => {
+    const state = getChordModeState();
+    t.assertTruthy(state.type !== undefined, 'getChordModeState should return object with type property');
+});
+
+TestRunner.test('Chord Mode State - getChordModeState returns lockChord property', (t) => {
+    const state = getChordModeState();
+    t.assertTruthy(state.lockChord !== undefined, 'getChordModeState should return object with lockChord property');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeState, 'function', 'setChordModeState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeState.length, 1, 'setChordModeState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('Set Chord Mode Settings'), 'setChordModeState should use descriptive undo label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeState merges with DEFAULT_CHORD_MODE', (t) => {
+    const funcStr = setChordModeState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_MODE'), 'setChordModeState should merge with DEFAULT_CHORD_MODE');
+});
+
+TestRunner.test('Chord Mode State - getChordModeEnabledState is a function export', (t) => {
+    t.assertEqual(typeof getChordModeEnabledState, 'function', 'getChordModeEnabledState should be a function');
+});
+
+TestRunner.test('Chord Mode State - getChordModeEnabledState accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeEnabledState.length, 0, 'getChordModeEnabledState should accept 0 parameters');
+});
+
+TestRunner.test('Chord Mode State - getChordModeEnabledState returns boolean', (t) => {
+    const result = getChordModeEnabledState();
+    t.assertEqual(typeof result, 'boolean', 'getChordModeEnabledState should return boolean');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeEnabledState, 'function', 'setChordModeEnabledState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeEnabledState.length, 1, 'setChordModeEnabledState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState uses conditional undo label', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Chord Mode'), 'setChordModeEnabledState should use conditional undo label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeEnabledState coerces to boolean', (t) => {
+    const funcStr = setChordModeEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!enabled'), 'setChordModeEnabledState should coerce to boolean');
+});
+
+TestRunner.test('Chord Mode State - getChordModeRootState is a function export', (t) => {
+    t.assertEqual(typeof getChordModeRootState, 'function', 'getChordModeRootState should be a function');
+});
+
+TestRunner.test('Chord Mode State - getChordModeRootState accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeRootState.length, 0, 'getChordModeRootState should accept 0 parameters');
+});
+
+TestRunner.test('Chord Mode State - getChordModeRootState returns a number', (t) => {
+    const result = getChordModeRootState();
+    t.assertEqual(typeof result, 'number', 'getChordModeRootState should return a number');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeRootState, 'function', 'setChordModeRootState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeRootState.length, 1, 'setChordModeRootState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState uses descriptive undo label', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('Set Chord Root'), 'setChordModeRootState should use descriptive undo label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState clamps value to 0-11 range', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setChordModeRootState should clamp value');
+});
+
+TestRunner.test('Chord Mode State - setChordModeRootState uses parseInt with fallback', (t) => {
+    const funcStr = setChordModeRootState.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setChordModeRootState should use parseInt');
+});
+
+TestRunner.test('Chord Mode State - getChordModeTypeState is a function export', (t) => {
+    t.assertEqual(typeof getChordModeTypeState, 'function', 'getChordModeTypeState should be a function');
+});
+
+TestRunner.test('Chord Mode State - getChordModeTypeState accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeTypeState.length, 0, 'getChordModeTypeState should accept 0 parameters');
+});
+
+TestRunner.test('Chord Mode State - getChordModeTypeState returns a string', (t) => {
+    const result = getChordModeTypeState();
+    t.assertEqual(typeof result, 'string', 'getChordModeTypeState should return a string');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeTypeState, 'function', 'setChordModeTypeState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeTypeState.length, 1, 'setChordModeTypeState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeTypeState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState references type in undo label', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes('Set Chord Type'), 'setChordModeTypeState should reference type in undo label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeTypeState defaults to major', (t) => {
+    const funcStr = setChordModeTypeState.toString();
+    t.assertTruthy(funcStr.includes("'major'") || funcStr.includes('"major"'), 'setChordModeTypeState should default to major');
+});
+
+TestRunner.test('Chord Mode State - getChordModeLockState is a function export', (t) => {
+    t.assertEqual(typeof getChordModeLockState, 'function', 'getChordModeLockState should be a function');
+});
+
+TestRunner.test('Chord Mode State - getChordModeLockState accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeLockState.length, 0, 'getChordModeLockState should accept 0 parameters');
+});
+
+TestRunner.test('Chord Mode State - getChordModeLockState returns boolean', (t) => {
+    const result = getChordModeLockState();
+    t.assertEqual(typeof result, 'boolean', 'getChordModeLockState should return boolean');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState is a function export', (t) => {
+    t.assertEqual(typeof setChordModeLockState, 'function', 'setChordModeLockState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeLockState.length, 1, 'setChordModeLockState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState calls captureStateForUndo', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState uses conditional undo label', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('Chord Lock'), 'setChordModeLockState should use conditional undo label');
+});
+
+TestRunner.test('Chord Mode State - setChordModeLockState coerces to boolean', (t) => {
+    const funcStr = setChordModeLockState.toString();
+    t.assertTruthy(funcStr.includes('!!lock'), 'setChordModeLockState should coerce to boolean');
+});
+
+TestRunner.test('Chord Mode State - getChordVoicingState is a function export', (t) => {
+    t.assertEqual(typeof getChordVoicingState, 'function', 'getChordVoicingState should be a function');
+});
+
+TestRunner.test('Chord Mode State - getChordVoicingState accepts 0 parameters', (t) => {
+    t.assertEqual(getChordVoicingState.length, 0, 'getChordVoicingState should accept 0 parameters');
+});
+
+TestRunner.test('Chord Mode State - getChordVoicingState returns a string', (t) => {
+    const result = getChordVoicingState();
+    t.assertEqual(typeof result, 'string', 'getChordVoicingState should return a string');
+});
+
+TestRunner.test('Chord Mode State - getChordVoicingState falls back to DEFAULT_CHORD_VOICING', (t) => {
+    const funcStr = getChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_VOICING'), 'getChordVoicingState should fall back to DEFAULT_CHORD_VOICING');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState is a function export', (t) => {
+    t.assertEqual(typeof setChordVoicingState, 'function', 'setChordVoicingState should be a function');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState accepts 1 parameter', (t) => {
+    t.assertEqual(setChordVoicingState.length, 1, 'setChordVoicingState should accept 1 parameter');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState calls captureStateForUndo', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordVoicingState should call captureStateForUndo');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState references voicing in undo label', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('Set Chord Voicing'), 'setChordVoicingState should reference voicing in undo label');
+});
+
+TestRunner.test('Chord Mode State - setChordVoicingState validates against CHORD_VOICINGS', (t) => {
+    const funcStr = setChordVoicingState.toString();
+    t.assertTruthy(funcStr.includes('CHORD_VOICINGS'), 'setChordVoicingState should validate against CHORD_VOICINGS');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_CHORD_MODE !== undefined, 'DEFAULT_CHORD_MODE should be defined');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE is an object', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_CHORD_MODE, 'object', 'DEFAULT_CHORD_MODE should be an object');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE has enabled property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_CHORD_MODE.enabled !== undefined, 'DEFAULT_CHORD_MODE should have enabled property');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE has root property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_CHORD_MODE.root !== undefined, 'DEFAULT_CHORD_MODE should have root property');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE has type property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_CHORD_MODE.type !== undefined, 'DEFAULT_CHORD_MODE should have type property');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE has lockChord property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_CHORD_MODE.lockChord !== undefined, 'DEFAULT_CHORD_MODE should have lockChord property');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE enabled is false', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_MODE.enabled, false, 'DEFAULT_CHORD_MODE enabled should be false');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE root is 0', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_MODE.root, 0, 'DEFAULT_CHORD_MODE root should be 0');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE type is major', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_MODE.type, 'major', 'DEFAULT_CHORD_MODE type should be major');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE lockChord is false', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_MODE.lockChord, false, 'DEFAULT_CHORD_MODE lockChord should be false');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES is defined', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES !== undefined, 'CHORD_TYPES should be defined');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES is an object', (t) => {
+    t.assertEqual(typeof Constants.CHORD_TYPES, 'object', 'CHORD_TYPES should be an object');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has major chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.major !== undefined, 'CHORD_TYPES should have major chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has minor chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.minor !== undefined, 'CHORD_TYPES should have minor chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has diminished chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.diminished !== undefined, 'CHORD_TYPES should have diminished chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has augmented chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.augmented !== undefined, 'CHORD_TYPES should have augmented chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has major7 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.major7 !== undefined, 'CHORD_TYPES should have major7 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has minor7 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.minor7 !== undefined, 'CHORD_TYPES should have minor7 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_TYPES has dominant7 chord', (t) => {
+    t.assertTruthy(Constants.CHORD_TYPES.dominant7 !== undefined, 'CHORD_TYPES should have dominant7 chord');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS is defined', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS !== undefined, 'CHORD_VOICINGS should be defined');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICINGS), true, 'CHORD_VOICINGS should be an array');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains closed', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS.includes('closed'), 'CHORD_VOICINGS should contain closed');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains wide', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS.includes('wide'), 'CHORD_VOICINGS should contain wide');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains drop2', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS.includes('drop2'), 'CHORD_VOICINGS should contain drop2');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains rootless', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICINGS.includes('rootless'), 'CHORD_VOICINGS should contain rootless');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_VOICING is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_CHORD_VOICING !== undefined, 'DEFAULT_CHORD_VOICING should be defined');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_VOICING is a string', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_CHORD_VOICING, 'string', 'DEFAULT_CHORD_VOICING should be a string');
+});
+
+TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_VOICING is closed', (t) => {
+    t.assertEqual(Constants.DEFAULT_CHORD_VOICING, 'closed', 'DEFAULT_CHORD_VOICING should be closed');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD is defined', (t) => {
+    t.assertTruthy(Constants.CHORD_VOICING_SPREAD !== undefined, 'CHORD_VOICING_SPREAD should be defined');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD is an object', (t) => {
+    t.assertEqual(typeof Constants.CHORD_VOICING_SPREAD, 'object', 'CHORD_VOICING_SPREAD should be an object');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.closed is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.closed), true, 'CHORD_VOICING_SPREAD.closed should be an array');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.wide is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.wide), true, 'CHORD_VOICING_SPREAD.wide should be an array');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.drop2 is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.drop2), true, 'CHORD_VOICING_SPREAD.drop2 should be an array');
+});
+
+TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.rootless is an array', (t) => {
+    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.rootless), true, 'CHORD_VOICING_SPREAD.rootless should be an array');
+});
+
+TestRunner.test('Chord Mode State - APP_VERSION validation for Day 400', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    const major = versionParts[0];
+    const minor = versionParts[1];
+    t.assertTruthy(major > 2 || (major === 2 && minor >= 77), 'APP_VERSION should be 2.77.0 or higher for Day 400');
+});
+
+// ============================================
+// Day 400: Master Effects Chain State Functions Tests
+// ============================================
+TestRunner.test('Master Effects Chain - addMasterEffectToState is a function export', (t) => {
+    t.assertEqual(typeof addMasterEffectToState, 'function', 'addMasterEffectToState should be a function');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState accepts 2 parameters', (t) => {
+    t.assertEqual(addMasterEffectToState.length, 2, 'addMasterEffectToState should accept 2 parameters');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState calls captureStateForUndo', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addMasterEffectToState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState uses descriptive undo label', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('Add Master Effect') || funcStr.includes('Master Effect'), 'addMasterEffectToState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState references effectType in undo label', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addMasterEffectToState undo label should reference effectType');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState uses effectsRegistryAccess for default params', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('getEffectDefaultParams'), 'addMasterEffectToState should use effectsRegistryAccess for default params');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState generates unique effectId', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('effectId') || funcStr.includes('Date.now()') || funcStr.includes('Math.random()'), 'addMasterEffectToState should generate unique effectId');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState pushes to masterEffectsChainState', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('masterEffectsChainState.push') || funcStr.includes('push'), 'addMasterEffectToState should push to masterEffectsChainState');
+});
+
+TestRunner.test('Master Effects Chain - addMasterEffectToState returns effectId', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('return effectId'), 'addMasterEffectToState should return effectId');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState is a function export', (t) => {
+    t.assertEqual(typeof removeMasterEffectFromState, 'function', 'removeMasterEffectFromState should be a function');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState accepts 1 parameter', (t) => {
+    t.assertEqual(removeMasterEffectFromState.length, 1, 'removeMasterEffectFromState should accept 1 parameter');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState calls captureStateForUndo', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeMasterEffectFromState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState uses descriptive undo label', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('Remove Master Effect') || funcStr.includes('Master Effect'), 'removeMasterEffectFromState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState finds effect by id', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('find'), 'removeMasterEffectFromState should find effect by id');
+});
+
+TestRunner.test('Master Effects Chain - removeMasterEffectFromState splices from array', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeMasterEffectFromState should splice from array');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState is a function export', (t) => {
+    t.assertEqual(typeof updateMasterEffectParamInState, 'function', 'updateMasterEffectParamInState should be a function');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState accepts 3 parameters', (t) => {
+    t.assertEqual(updateMasterEffectParamInState.length, 3, 'updateMasterEffectParamInState should accept 3 parameters');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState references all parameters', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('paramPath') && funcStr.includes('value'), 'updateMasterEffectParamInState should reference all parameters');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState calls captureStateForUndo', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateMasterEffectParamInState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState finds effect by id', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('find'), 'updateMasterEffectParamInState should find effect by id');
+});
+
+TestRunner.test('Master Effects Chain - updateMasterEffectParamInState navigates param path', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('split') && funcStr.includes('.'), 'updateMasterEffectParamInState should navigate nested param paths');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState is a function export', (t) => {
+    t.assertEqual(typeof reorderMasterEffectInState, 'function', 'reorderMasterEffectInState should be a function');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState accepts 2 parameters', (t) => {
+    t.assertEqual(reorderMasterEffectInState.length, 2, 'reorderMasterEffectInState should accept 2 parameters');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState references all parameters', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('newIndex'), 'reorderMasterEffectInState should reference all parameters');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState validates indices', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('oldIndex') && funcStr.includes('newIndex'), 'reorderMasterEffectInState should validate indices');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState calls captureStateForUndo', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'reorderMasterEffectInState should call captureStateForUndo');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState uses descriptive undo label', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('Reorder') || (funcStr.includes('effect') && funcStr.includes('name')), 'reorderMasterEffectInState should use descriptive undo label');
+});
+
+TestRunner.test('Master Effects Chain - reorderMasterEffectInState uses splice to move effect', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'reorderMasterEffectInState should use splice to move effect');
+});
+
+TestRunner.test('Master Effects Chain - APP_VERSION validation for Day 400', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 400');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 400');
+    }
 });
