@@ -1,4 +1,106 @@
-#### Day 401: Track Groups State & Constants Tests (2026-04-30)
+#### Day 402: MIDI Learn State & Constants Tests (2026-04-30)
+- **Feature**: Added 80 new unit tests for MIDI Learn state functions and constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 80 new tests in Day 402 section:
+    - MIDI Learn State - getMidiLearnMappingsState is a function export
+    - MIDI Learn State - getMidiLearnMappingsState accepts 0 parameters
+    - MIDI Learn State - getMidiLearnMappingsState returns an array
+    - MIDI Learn State - getMidiLearnMappingsState returns a copy
+    - MIDI Learn State - getMidiLearnModeState is a function export
+    - MIDI Learn State - getMidiLearnModeState accepts 0 parameters
+    - MIDI Learn State - getMidiLearnPendingParamState is a function export
+    - MIDI Learn State - getMidiLearnPendingParamState accepts 0 parameters
+    - MIDI Learn State - setMidiLearnModeState is a function export
+    - MIDI Learn State - setMidiLearnModeState accepts 1 parameter
+    - MIDI Learn State - setMidiLearnModeState calls captureStateForUndo
+    - MIDI Learn State - setMidiLearnModeState uses descriptive undo label
+    - MIDI Learn State - setMidiLearnModeState coerces to boolean
+    - MIDI Learn State - setMidiLearnPendingParamState is a function export
+    - MIDI Learn State - setMidiLearnPendingParamState accepts 1 parameter
+    - MIDI Learn State - setMidiLearnPendingParamState calls captureStateForUndo
+    - MIDI Learn State - setMidiLearnPendingParamState uses descriptive undo label
+    - MIDI Learn State - addMidiLearnMapping is a function export
+    - MIDI Learn State - addMidiLearnMapping accepts 1 parameter
+    - MIDI Learn State - addMidiLearnMapping calls captureStateForUndo
+    - MIDI Learn State - addMidiLearnMapping uses descriptive undo label
+    - MIDI Learn State - addMidiLearnMapping uses DEFAULT_MIDI_LEARN_MAPPING structure
+    - MIDI Learn State - addMidiLearnMapping checks MAX_MIDI_LEARN_MAPPINGS limit
+    - MIDI Learn State - addMidiLearnMapping pushes to midiLearnMappings
+    - MIDI Learn State - addMidiLearnMapping returns boolean
+    - MIDI Learn State - removeMidiLearnMapping is a function export
+    - MIDI Learn State - removeMidiLearnMapping accepts 1 parameter
+    - MIDI Learn State - removeMidiLearnMapping calls captureStateForUndo
+    - MIDI Learn State - removeMidiLearnMapping uses descriptive undo label
+    - MIDI Learn State - removeMidiLearnMapping uses splice
+    - MIDI Learn State - removeMidiLearnMapping returns boolean
+    - MIDI Learn State - clearMidiLearnMappings is a function export
+    - MIDI Learn State - clearMidiLearnMappings accepts 0 parameters
+    - MIDI Learn State - clearMidiLearnMappings calls captureStateForUndo
+    - MIDI Learn State - clearMidiLearnMappings uses descriptive undo label
+    - MIDI Learn State - clearMidiLearnMappings clears the array
+    - MIDI Learn State - findMidiLearnMapping is a function export
+    - MIDI Learn State - findMidiLearnMapping accepts 2 parameters
+    - MIDI Learn State - findMidiLearnMapping references channel parameter
+    - MIDI Learn State - findMidiLearnMapping references cc parameter
+    - MIDI Learn State - findMidiLearnMapping uses findIndex
+    - MIDI Learn State - updateMidiLearnMapping is a function export
+    - MIDI Learn State - updateMidiLearnMapping accepts 2 parameters
+    - MIDI Learn State - updateMidiLearnMapping calls captureStateForUndo
+    - MIDI Learn State - updateMidiLearnMapping uses descriptive undo label
+    - MIDI Learn State - updateMidiLearnMapping finds mapping by index
+    - MIDI Learn State - updateMidiLearnMapping returns boolean
+    - MIDI Learn State - getMidiLearnMappingByIndex is a function export
+    - MIDI Learn State - getMidiLearnMappingByIndex accepts 1 parameter
+    - MIDI Learn State - getMidiLearnMappingByIndex returns mapping or undefined
+    - MIDI Learn Constants - MAX_MIDI_LEARN_MAPPINGS is defined
+    - MIDI Learn Constants - MAX_MIDI_LEARN_MAPPINGS is a positive number
+    - MIDI Learn Constants - MIDI_CC_COMMAND is defined
+    - MIDI Learn Constants - MIDI_CC_COMMAND is 176
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MODE is defined
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MODE is boolean false
+    - MIDI Learn Constants - MIDI_LEARN_INDICATOR_TIMEOUT_MS is defined
+    - MIDI Learn Constants - MIDI_LEARN_INDICATOR_TIMEOUT_MS is a positive number
+    - MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES is defined
+    - MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES is an array
+    - MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes trackVolume
+    - MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes trackPan
+    - MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes effectParam
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING is defined
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING is an object
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has channel property
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has cc property
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has trackId property
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has paramType property
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has paramPath property
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has min property
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has max property
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.channel is 0
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.cc is 0
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.trackId is null
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.paramType is null
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.paramPath is null
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.min is 0
+    - MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.max is 1
+    - MIDI Learn State - APP_VERSION validation for Day 402
+  - `js/constants.js`: Bumped APP_VERSION to 2.80.0
+- **Feature Details**:
+  - Tests validate getMidiLearnMappingsState function (0 params, returns array copy)
+  - Tests validate getMidiLearnModeState function (0 params)
+  - Tests validate getMidiLearnPendingParamState function (0 params)
+  - Tests validate setMidiLearnModeState function (1 param, calls captureStateForUndo with Toggle MIDI Learn label, boolean coercion)
+  - Tests validate setMidiLearnPendingParamState function (1 param, calls captureStateForUndo with descriptive label)
+  - Tests validate addMidiLearnMapping function (1 param, calls captureStateForUndo with Add MIDI Learn Mapping label)
+  - Tests validate addMidiLearnMapping uses DEFAULT_MIDI_LEARN_MAPPING structure and checks MAX_MIDI_LEARN_MAPPINGS limit
+  - Tests validate removeMidiLearnMapping function (1 param, calls captureStateForUndo, uses splice)
+  - Tests validate clearMidiLearnMappings function (0 params, calls captureStateForUndo, clears array)
+  - Tests validate findMidiLearnMapping function (2 params: channel, cc, uses findIndex)
+  - Tests validate updateMidiLearnMapping function (2 params: index, updates, calls captureStateForUndo)
+  - Tests validate getMidiLearnMappingByIndex function (1 param: index, returns mapping or undefined)
+  - Tests validate MIDI Learn constants: MAX_MIDI_LEARN_MAPPINGS (64), MIDI_CC_COMMAND (176), DEFAULT_MIDI_LEARN_MODE (false), MIDI_LEARN_INDICATOR_TIMEOUT_MS, MIDI_LEARN_PARAM_TYPES array, DEFAULT_MIDI_LEARN_MAPPING structure
+  - All MIDI Learn state mutation functions call captureStateForUndo for undo/redo support
+  - Total tests increased from 1847 to 1927
+- **Version**: Bumped to 2.80.0
+
 - **Feature**: Added 60 new unit tests for Track Groups state functions and constants to expand test coverage
 - **Files Modified**:
   - `js/tests.js`: Added 60 new tests in Day 401 section:
