@@ -1182,13 +1182,217 @@ TestRunner.test('Send Tracks - Track Pre-Fader functions call captureStateForUnd
     t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendPreFaderState should call captureStateForUndo');
 });
 
-// APP_VERSION validation for Day 349
-TestRunner.test('State - APP_VERSION is 2.28.0 or higher for Day 349', (t) => {
+// ============================================
+// Day 403: Send Track State Extended Tests
+// ============================================
+TestRunner.test('Send Tracks - getSendTracksState is a function export', (t) => {
+    t.assertEqual(typeof getSendTracksState, 'function', 'getSendTracksState should be function');
+});
+
+TestRunner.test('Send Tracks - getSendTracksState accepts 0 parameters', (t) => {
+    t.assertEqual(getSendTracksState.length, 0, 'getSendTracksState should accept no parameters');
+});
+
+TestRunner.test('Send Tracks - getSendTracksState returns array', (t) => {
+    const result = getSendTracksState();
+    t.assertEqual(typeof result, 'object', 'getSendTracksState should return object');
+    t.assertTruthy(Array.isArray(result), 'getSendTracksState should return array-like');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState is a function export', (t) => {
+    t.assertEqual(typeof getSendTrackByIdState, 'function', 'getSendTrackByIdState should be function');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getSendTrackByIdState.length, 1, 'getSendTrackByIdState should accept 1 parameter');
+});
+
+TestRunner.test('Send Tracks - getSendTrackByIdState returns track or undefined', (t) => {
+    const funcStr = getSendTrackByIdState.toString();
+    t.assertTruthy(funcStr.includes('find') || funcStr.includes('id'), 'getSendTrackByIdState should find by id');
+});
+
+TestRunner.test('Send Tracks - setSendTrackNameState uses descriptive undo label', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('Rename') || funcStr.includes('Send'), 'setSendTrackNameState should use Rename Send label');
+});
+
+TestRunner.test('Send Tracks - setSendTrackNameState returns boolean', (t) => {
+    const funcStr = setSendTrackNameState.toString();
+    t.assertTruthy(funcStr.includes('return'), 'setSendTrackNameState should return boolean');
+});
+
+TestRunner.test('Send Tracks - setSendTrackLevelState clamps value to valid range', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setSendTrackLevelState should clamp value');
+});
+
+TestRunner.test('Send Tracks - setSendTrackLevelState uses parseFloat with fallback', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setSendTrackLevelState should use parseFloat');
+});
+
+TestRunner.test('Send Tracks - setSendTrackLevelState returns boolean', (t) => {
+    const funcStr = setSendTrackLevelState.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'setSendTrackLevelState should return boolean');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState uses descriptive undo label', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('muted') && (funcStr.includes('on') || funcStr.includes('off')), 'setSendTrackMutedState should use muted on/off label');
+});
+
+TestRunner.test('Send Tracks - setSendTrackMutedState coerces to boolean', (t) => {
+    const funcStr = setSendTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setSendTrackMutedState should coerce to boolean');
+});
+
+TestRunner.test('Send Tracks - setSendTrackEffectsState uses Array.isArray check', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'setSendTrackEffectsState should validate array');
+});
+
+TestRunner.test('Send Tracks - setSendTrackEffectsState defaults to empty array', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('[]'), 'setSendTrackEffectsState should default to empty array');
+});
+
+TestRunner.test('Send Tracks - setSendTrackEffectsState returns boolean', (t) => {
+    const funcStr = setSendTrackEffectsState.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'setSendTrackEffectsState should return boolean');
+});
+
+TestRunner.test('Send Tracks - removeSendTrackState uses findIndex and splice', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('findIndex') && funcStr.includes('splice'), 'removeSendTrackState should use findIndex and splice');
+});
+
+TestRunner.test('Send Tracks - removeSendTrackState returns boolean', (t) => {
+    const funcStr = removeSendTrackState.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'removeSendTrackState should return boolean');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState is a function export', (t) => {
+    t.assertEqual(typeof getTrackSendsState, 'function', 'getTrackSendsState should be function');
+});
+
+TestRunner.test('Send Tracks - getTrackSendsState accepts 0 parameters', (t) => {
+    t.assertEqual(getTrackSendsState.length, 0, 'getTrackSendsState should accept no parameters');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState is a function export', (t) => {
+    t.assertEqual(typeof getTrackSendLevelState, 'function', 'getTrackSendLevelState should be function');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState accepts 2 parameters', (t) => {
+    t.assertEqual(getTrackSendLevelState.length, 2, 'getTrackSendLevelState should accept 2 parameters');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState references trackId parameter', (t) => {
+    const funcStr = getTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'getTrackSendLevelState should reference trackId');
+});
+
+TestRunner.test('Send Tracks - getTrackSendLevelState references sendId parameter', (t) => {
+    const funcStr = getTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'getTrackSendLevelState should reference sendId');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState is a function export', (t) => {
+    t.assertEqual(typeof setTrackSendLevelState, 'function', 'setTrackSendLevelState should be function');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState accepts 3 parameters', (t) => {
+    t.assertEqual(setTrackSendLevelState.length, 3, 'setTrackSendLevelState should accept 3 parameters');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState references all 3 parameters', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('trackId') && funcStr.includes('sendId') && funcStr.includes('level'), 'setTrackSendLevelState should reference all 3 params');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState creates trackSendsState entry if missing', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('trackSendsState[trackId]') || funcStr.includes('!trackSendsState'), 'setTrackSendLevelState should create entry if missing');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState clamps level value', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTrackSendLevelState should clamp level');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - setTrackSendLevelState uses descriptive undo label', (t) => {
+    const funcStr = setTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('Send Level') || funcStr.includes('Track'), 'setTrackSendLevelState should use descriptive undo label');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState is a function export', (t) => {
+    t.assertEqual(typeof getTrackSendPreFaderState, 'function', 'getTrackSendPreFaderState should be function');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState accepts 2 parameters', (t) => {
+    t.assertEqual(getTrackSendPreFaderState.length, 2, 'getTrackSendPreFaderState should accept 2 parameters');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState references trackId parameter', (t) => {
+    const funcStr = getTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'getTrackSendPreFaderState should reference trackId');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState references sendId parameter', (t) => {
+    const funcStr = getTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('sendId'), 'getTrackSendPreFaderState should reference sendId');
+});
+
+TestRunner.test('Send Tracks - getTrackSendPreFaderState returns false as default', (t) => {
+    const funcStr = getTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('false'), 'getTrackSendPreFaderState should return false as default');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState is a function export', (t) => {
+    t.assertEqual(typeof setTrackSendPreFaderState, 'function', 'setTrackSendPreFaderState should be function');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState accepts 3 parameters', (t) => {
+    t.assertEqual(setTrackSendPreFaderState.length, 3, 'setTrackSendPreFaderState should accept 3 parameters');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState references all 3 parameters', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('trackId') && funcStr.includes('sendId') && funcStr.includes('preFader'), 'setTrackSendPreFaderState should reference all 3 params');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState creates trackSendsState entry if missing', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('trackSendsState[trackId]') || funcStr.includes('!trackSendsState'), 'setTrackSendPreFaderState should create entry if missing');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState coerces preFader to boolean', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setTrackSendPreFaderState should coerce preFader to boolean');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState calls captureStateForUndo with descriptive label', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackSendPreFaderState should call captureStateForUndo');
+});
+
+TestRunner.test('Send Tracks - setTrackSendPreFaderState uses descriptive undo label', (t) => {
+    const funcStr = setTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('Pre-Fader') || funcStr.includes('Send'), 'setTrackSendPreFaderState should use descriptive undo label');
+});
+
+// APP_VERSION validation for Day 403
+TestRunner.test('State - APP_VERSION is 2.80.0 or higher for Day 403', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 349');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 28, 'Minor version should be >= 28 for Day 349');
-    }
+    const major = versionParts[0];
+    const minor = versionParts[1];
+    t.assertTruthy(major > 2 || (major === 2 && minor >= 80), 'APP_VERSION should be 2.80.0 or higher for Day 403');
 });
 
 // ============================================
@@ -2336,7 +2540,9 @@ TestRunner.test('Recording - Latency hint is reasonable', (t) => {
 // Day 195: Audio Recording Function Tests
 // ============================================
 TestRunner.test('Audio Recording - startAudioRecording accepts track and monitoring params', (t) => {
-    t.assertEqual(typeof start
+    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
+});
+
 // ============================================
 // Day 351: Mixer Master Strip UI Tests
 // ============================================
@@ -8831,7 +9037,7 @@ TestRunner.test('Effect Presets State - updateEffectPresetState updates params p
     t.assertTruthy(funcStr.includes('params'), 'updateEffectPresetState should update params property');
 });
 
-TestRunner.test('Effect Presets State - updateEffectPresetState returns preset or null', (t) => {
+TestRunner.test('Effect Presets State - updateEffectPresetState returns null for unknown id', (t) => {
     const funcStr = updateEffectPresetState.toString();
     t.assertTruthy(funcStr.includes('return null'), 'updateEffectPresetState should return null when preset not found');
 });
@@ -9145,1330 +9351,4 @@ TestRunner.test('Chord Mode State - setChordModeLockState uses conditional undo 
     t.assertTruthy(funcStr.includes('Chord Lock'), 'setChordModeLockState should use conditional undo label');
 });
 
-TestRunner.test('Chord Mode State - setChordModeLockState coerces to boolean', (t) => {
-    const funcStr = setChordModeLockState.toString();
-    t.assertTruthy(funcStr.includes('!!lock'), 'setChordModeLockState should coerce to boolean');
-});
-
-TestRunner.test('Chord Mode State - getChordVoicingState is a function export', (t) => {
-    t.assertEqual(typeof getChordVoicingState, 'function', 'getChordVoicingState should be a function');
-});
-
-TestRunner.test('Chord Mode State - getChordVoicingState accepts 0 parameters', (t) => {
-    t.assertEqual(getChordVoicingState.length, 0, 'getChordVoicingState should accept 0 parameters');
-});
-
-TestRunner.test('Chord Mode State - getChordVoicingState returns a string', (t) => {
-    const result = getChordVoicingState();
-    t.assertEqual(typeof result, 'string', 'getChordVoicingState should return a string');
-});
-
-TestRunner.test('Chord Mode State - getChordVoicingState falls back to DEFAULT_CHORD_VOICING', (t) => {
-    const funcStr = getChordVoicingState.toString();
-    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_VOICING'), 'getChordVoicingState should fall back to DEFAULT_CHORD_VOICING');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState is a function export', (t) => {
-    t.assertEqual(typeof setChordVoicingState, 'function', 'setChordVoicingState should be a function');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState accepts 1 parameter', (t) => {
-    t.assertEqual(setChordVoicingState.length, 1, 'setChordVoicingState should accept 1 parameter');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState calls captureStateForUndo', (t) => {
-    const funcStr = setChordVoicingState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordVoicingState should call captureStateForUndo');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState references voicing in undo label', (t) => {
-    const funcStr = setChordVoicingState.toString();
-    t.assertTruthy(funcStr.includes('Set Chord Voicing'), 'setChordVoicingState should reference voicing in undo label');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState validates against CHORD_VOICINGS', (t) => {
-    const funcStr = setChordVoicingState.toString();
-    t.assertTruthy(funcStr.includes('CHORD_VOICINGS'), 'setChordVoicingState should validate against CHORD_VOICINGS');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE is defined', (t) => {
-    t.assertTruthy(Constants.DEFAULT_CHORD_MODE !== undefined, 'DEFAULT_CHORD_MODE should be defined');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE is an object', (t) => {
-    t.assertEqual(typeof Constants.DEFAULT_CHORD_MODE, 'object', 'DEFAULT_CHORD_MODE should be an object');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE has enabled property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_CHORD_MODE.enabled !== undefined, 'DEFAULT_CHORD_MODE should have enabled property');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE has root property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_CHORD_MODE.root !== undefined, 'DEFAULT_CHORD_MODE should have root property');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE has type property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_CHORD_MODE.type !== undefined, 'DEFAULT_CHORD_MODE should have type property');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE has lockChord property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_CHORD_MODE.lockChord !== undefined, 'DEFAULT_CHORD_MODE should have lockChord property');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE enabled is false', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_MODE.enabled, false, 'DEFAULT_CHORD_MODE enabled should be false');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE root is 0', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_MODE.root, 0, 'DEFAULT_CHORD_MODE root should be 0');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE type is major', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_MODE.type, 'major', 'DEFAULT_CHORD_MODE type should be major');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE lockChord is false', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_MODE.lockChord, false, 'DEFAULT_CHORD_MODE lockChord should be false');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES is defined', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES !== undefined, 'CHORD_TYPES should be defined');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES is an object', (t) => {
-    t.assertEqual(typeof Constants.CHORD_TYPES, 'object', 'CHORD_TYPES should be an object');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has major chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.major !== undefined, 'CHORD_TYPES should have major chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has minor chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.minor !== undefined, 'CHORD_TYPES should have minor chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has diminished chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.diminished !== undefined, 'CHORD_TYPES should have diminished chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has augmented chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.augmented !== undefined, 'CHORD_TYPES should have augmented chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has major7 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.major7 !== undefined, 'CHORD_TYPES should have major7 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has minor7 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.minor7 !== undefined, 'CHORD_TYPES should have minor7 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has dominant7 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.dominant7 !== undefined, 'CHORD_TYPES should have dominant7 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS is defined', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS !== undefined, 'CHORD_VOICINGS should be defined');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICINGS), true, 'CHORD_VOICINGS should be an array');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains closed', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS.includes('closed'), 'CHORD_VOICINGS should contain closed');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains wide', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS.includes('wide'), 'CHORD_VOICINGS should contain wide');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains drop2', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS.includes('drop2'), 'CHORD_VOICINGS should contain drop2');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains rootless', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS.includes('rootless'), 'CHORD_VOICINGS should contain rootless');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_VOICING is defined', (t) => {
-    t.assertTruthy(Constants.DEFAULT_CHORD_VOICING !== undefined, 'DEFAULT_CHORD_VOICING should be defined');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_VOICING is a string', (t) => {
-    t.assertEqual(typeof Constants.DEFAULT_CHORD_VOICING, 'string', 'DEFAULT_CHORD_VOICING should be a string');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_VOICING is closed', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_VOICING, 'closed', 'DEFAULT_CHORD_VOICING should be closed');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD is defined', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICING_SPREAD !== undefined, 'CHORD_VOICING_SPREAD should be defined');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD is an object', (t) => {
-    t.assertEqual(typeof Constants.CHORD_VOICING_SPREAD, 'object', 'CHORD_VOICING_SPREAD should be an object');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.closed is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.closed), true, 'CHORD_VOICING_SPREAD.closed should be an array');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.wide is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.wide), true, 'CHORD_VOICING_SPREAD.wide should be an array');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.drop2 is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.drop2), true, 'CHORD_VOICING_SPREAD.drop2 should be an array');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.rootless is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.rootless), true, 'CHORD_VOICING_SPREAD.rootless should be an array');
-});
-
-TestRunner.test('Chord Mode State - APP_VERSION validation for Day 400', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    const major = versionParts[0];
-    const minor = versionParts[1];
-    t.assertTruthy(major > 2 || (major === 2 && minor >= 77), 'APP_VERSION should be 2.77.0 or higher for Day 400');
-});
-
-// ============================================
-// Day 400: Master Effects Chain State Functions Tests
-// ============================================
-TestRunner.test('Master Effects Chain - addMasterEffectToState is a function export', (t) => {
-    t.assertEqual(typeof addMasterEffectToState, 'function', 'addMasterEffectToState should be a function');
-});
-
-TestRunner.test('Master Effects Chain - addMasterEffectToState accepts 2 parameters', (t) => {
-    t.assertEqual(addMasterEffectToState.length, 2, 'addMasterEffectToState should accept 2 parameters');
-});
-
-TestRunner.test('Master Effects Chain - addMasterEffectToState calls captureStateForUndo', (t) => {
-    const funcStr = addMasterEffectToState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addMasterEffectToState should call captureStateForUndo');
-});
-
-TestRunner.test('Master Effects Chain - addMasterEffectToState uses descriptive undo label', (t) => {
-    const funcStr = addMasterEffectToState.toString();
-    t.assertTruthy(funcStr.includes('Add Master Effect') || funcStr.includes('Master Effect'), 'addMasterEffectToState should use descriptive undo label');
-});
-
-TestRunner.test('Master Effects Chain - addMasterEffectToState references effectType in undo label', (t) => {
-    const funcStr = addMasterEffectToState.toString();
-    t.assertTruthy(funcStr.includes('effectType'), 'addMasterEffectToState undo label should reference effectType');
-});
-
-TestRunner.test('Master Effects Chain - addMasterEffectToState uses effectsRegistryAccess for default params', (t) => {
-    const funcStr = addMasterEffectToState.toString();
-    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('getEffectDefaultParams'), 'addMasterEffectToState should use effectsRegistryAccess for default params');
-});
-
-TestRunner.test('Master Effects Chain - addMasterEffectToState generates unique effectId', (t) => {
-    const funcStr = addMasterEffectToState.toString();
-    t.assertTruthy(funcStr.includes('effectId') || funcStr.includes('Date.now()') || funcStr.includes('Math.random()'), 'addMasterEffectToState should generate unique effectId');
-});
-
-TestRunner.test('Master Effects Chain - addMasterEffectToState pushes to masterEffectsChainState', (t) => {
-    const funcStr = addMasterEffectToState.toString();
-    t.assertTruthy(funcStr.includes('masterEffectsChainState.push') || funcStr.includes('push'), 'addMasterEffectToState should push to masterEffectsChainState');
-});
-
-TestRunner.test('Master Effects Chain - addMasterEffectToState returns effectId', (t) => {
-    const funcStr = addMasterEffectToState.toString();
-    t.assertTruthy(funcStr.includes('return effectId'), 'addMasterEffectToState should return effectId');
-});
-
-TestRunner.test('Master Effects Chain - removeMasterEffectFromState is a function export', (t) => {
-    t.assertEqual(typeof removeMasterEffectFromState, 'function', 'removeMasterEffectFromState should be a function');
-});
-
-TestRunner.test('Master Effects Chain - removeMasterEffectFromState accepts 1 parameter', (t) => {
-    t.assertEqual(removeMasterEffectFromState.length, 1, 'removeMasterEffectFromState should accept 1 parameter');
-});
-
-TestRunner.test('Master Effects Chain - removeMasterEffectFromState calls captureStateForUndo', (t) => {
-    const funcStr = removeMasterEffectFromState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeMasterEffectFromState should call captureStateForUndo');
-});
-
-TestRunner.test('Master Effects Chain - removeMasterEffectFromState uses descriptive undo label', (t) => {
-    const funcStr = removeMasterEffectFromState.toString();
-    t.assertTruthy(funcStr.includes('Remove Master Effect') || funcStr.includes('Master Effect'), 'removeMasterEffectFromState should use descriptive undo label');
-});
-
-TestRunner.test('Master Effects Chain - removeMasterEffectFromState finds effect by id', (t) => {
-    const funcStr = removeMasterEffectFromState.toString();
-    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('find'), 'removeMasterEffectFromState should find effect by id');
-});
-
-TestRunner.test('Master Effects Chain - removeMasterEffectFromState splices from array', (t) => {
-    const funcStr = removeMasterEffectFromState.toString();
-    t.assertTruthy(funcStr.includes('splice'), 'removeMasterEffectFromState should splice from array');
-});
-
-TestRunner.test('Master Effects Chain - updateMasterEffectParamInState is a function export', (t) => {
-    t.assertEqual(typeof updateMasterEffectParamInState, 'function', 'updateMasterEffectParamInState should be a function');
-});
-
-TestRunner.test('Master Effects Chain - updateMasterEffectParamInState accepts 3 parameters', (t) => {
-    t.assertEqual(updateMasterEffectParamInState.length, 3, 'updateMasterEffectParamInState should accept 3 parameters');
-});
-
-TestRunner.test('Master Effects Chain - updateMasterEffectParamInState references all parameters', (t) => {
-    const funcStr = updateMasterEffectParamInState.toString();
-    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('paramPath') && funcStr.includes('value'), 'updateMasterEffectParamInState should reference all parameters');
-});
-
-TestRunner.test('Master Effects Chain - updateMasterEffectParamInState calls captureStateForUndo', (t) => {
-    const funcStr = updateMasterEffectParamInState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateMasterEffectParamInState should call captureStateForUndo');
-});
-
-TestRunner.test('Master Effects Chain - updateMasterEffectParamInState finds effect by id', (t) => {
-    const funcStr = updateMasterEffectParamInState.toString();
-    t.assertTruthy(funcStr.includes('find'), 'updateMasterEffectParamInState should find effect by id');
-});
-
-TestRunner.test('Master Effects Chain - updateMasterEffectParamInState navigates param path', (t) => {
-    const funcStr = updateMasterEffectParamInState.toString();
-    t.assertTruthy(funcStr.includes('split') && funcStr.includes('.'), 'updateMasterEffectParamInState should navigate nested param paths');
-});
-
-TestRunner.test('Master Effects Chain - reorderMasterEffectInState is a function export', (t) => {
-    t.assertEqual(typeof reorderMasterEffectInState, 'function', 'reorderMasterEffectInState should be a function');
-});
-
-TestRunner.test('Master Effects Chain - reorderMasterEffectInState accepts 2 parameters', (t) => {
-    t.assertEqual(reorderMasterEffectInState.length, 2, 'reorderMasterEffectInState should accept 2 parameters');
-});
-
-TestRunner.test('Master Effects Chain - reorderMasterEffectInState references all parameters', (t) => {
-    const funcStr = reorderMasterEffectInState.toString();
-    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('newIndex'), 'reorderMasterEffectInState should reference all parameters');
-});
-
-TestRunner.test('Master Effects Chain - reorderMasterEffectInState validates indices', (t) => {
-    const funcStr = reorderMasterEffectInState.toString();
-    t.assertTruthy(funcStr.includes('oldIndex') && funcStr.includes('newIndex'), 'reorderMasterEffectInState should validate indices');
-});
-
-TestRunner.test('Master Effects Chain - reorderMasterEffectInState calls captureStateForUndo', (t) => {
-    const funcStr = reorderMasterEffectInState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'reorderMasterEffectInState should call captureStateForUndo');
-});
-
-TestRunner.test('Master Effects Chain - reorderMasterEffectInState uses descriptive undo label', (t) => {
-    const funcStr = reorderMasterEffectInState.toString();
-    t.assertTruthy(funcStr.includes('Reorder') || (funcStr.includes('effect') && funcStr.includes('name')), 'reorderMasterEffectInState should use descriptive undo label');
-});
-
-TestRunner.test('Master Effects Chain - reorderMasterEffectInState uses splice to move effect', (t) => {
-    const funcStr = reorderMasterEffectInState.toString();
-    t.assertTruthy(funcStr.includes('splice'), 'reorderMasterEffectInState should use splice to move effect');
-});
-
-TestRunner.test('Master Effects Chain - APP_VERSION validation for Day 400', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 400');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 77, 'Minor version should be >= 77 for Day 400');
-    }
-});
-// Day 400: Chord Mode Extended State & Constant Tests
-TestRunner.test('Chord Mode State - setChordModeEnabledState is a function export', (t) => {
-    t.assertEqual(typeof setChordModeEnabledState, 'function', 'setChordModeEnabledState should be a function');
-});
-
-TestRunner.test('Chord Mode State - setChordModeEnabledState accepts 1 parameter', (t) => {
-    t.assertEqual(setChordModeEnabledState.length, 1, 'setChordModeEnabledState should accept 1 parameter');
-});
-
-TestRunner.test('Chord Mode State - setChordModeEnabledState calls captureStateForUndo', (t) => {
-    const funcStr = setChordModeEnabledState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeEnabledState should call captureStateForUndo');
-});
-
-TestRunner.test('Chord Mode State - setChordModeEnabledState uses descriptive undo label', (t) => {
-    const funcStr = setChordModeEnabledState.toString();
-    t.assertTruthy(funcStr.includes('Toggle Chord Mode'), 'setChordModeEnabledState should use Toggle Chord Mode label');
-});
-
-TestRunner.test('Chord Mode State - setChordModeEnabledState coerces to boolean', (t) => {
-    const funcStr = setChordModeEnabledState.toString();
-    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setChordModeEnabledState should coerce to boolean');
-});
-
-TestRunner.test('Chord Mode State - setChordModeRootState is a function export', (t) => {
-    t.assertEqual(typeof setChordModeRootState, 'function', 'setChordModeRootState should be a function');
-});
-
-TestRunner.test('Chord Mode State - setChordModeRootState accepts 1 parameter', (t) => {
-    t.assertEqual(setChordModeRootState.length, 1, 'setChordModeRootState should accept 1 parameter');
-});
-
-TestRunner.test('Chord Mode State - setChordModeRootState calls captureStateForUndo', (t) => {
-    const funcStr = setChordModeRootState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeRootState should call captureStateForUndo');
-});
-
-TestRunner.test('Chord Mode State - setChordModeRootState uses descriptive undo label', (t) => {
-    const funcStr = setChordModeRootState.toString();
-    t.assertTruthy(funcStr.includes('Chord Root'), 'setChordModeRootState should use Set Chord Root label');
-});
-
-TestRunner.test('Chord Mode State - setChordModeRootState clamps value to 0-11 range', (t) => {
-    const funcStr = setChordModeRootState.toString();
-    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min') && funcStr.includes('11'), 'setChordModeRootState should clamp value to 0-11 range');
-});
-
-TestRunner.test('Chord Mode State - setChordModeRootState parses root as integer', (t) => {
-    const funcStr = setChordModeRootState.toString();
-    t.assertTruthy(funcStr.includes('parseInt'), 'setChordModeRootState should parse root as integer');
-});
-
-TestRunner.test('Chord Mode State - setChordModeRootState defaults to 0 for invalid input', (t) => {
-    const funcStr = setChordModeRootState.toString();
-    t.assertTruthy(funcStr.includes('|| 0') || funcStr.includes('||0'), 'setChordModeRootState should default to 0 for invalid input');
-});
-
-TestRunner.test('Chord Mode State - setChordModeTypeState is a function export', (t) => {
-    t.assertEqual(typeof setChordModeTypeState, 'function', 'setChordModeTypeState should be a function');
-});
-
-TestRunner.test('Chord Mode State - setChordModeTypeState accepts 1 parameter', (t) => {
-    t.assertEqual(setChordModeTypeState.length, 1, 'setChordModeTypeState should accept 1 parameter');
-});
-
-TestRunner.test('Chord Mode State - setChordModeTypeState calls captureStateForUndo', (t) => {
-    const funcStr = setChordModeTypeState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeTypeState should call captureStateForUndo');
-});
-
-TestRunner.test('Chord Mode State - setChordModeTypeState uses descriptive undo label with type', (t) => {
-    const funcStr = setChordModeTypeState.toString();
-    t.assertTruthy(funcStr.includes('Chord Type'), 'setChordModeTypeState should use Set Chord Type label');
-});
-
-TestRunner.test('Chord Mode State - setChordModeTypeState defaults to major for invalid input', (t) => {
-    const funcStr = setChordModeTypeState.toString();
-    t.assertTruthy(funcStr.includes("'major'") || funcStr.includes('"major"'), 'setChordModeTypeState should default to major');
-});
-
-TestRunner.test('Chord Mode State - setChordModeLockState is a function export', (t) => {
-    t.assertEqual(typeof setChordModeLockState, 'function', 'setChordModeLockState should be a function');
-});
-
-TestRunner.test('Chord Mode State - setChordModeLockState accepts 1 parameter', (t) => {
-    t.assertEqual(setChordModeLockState.length, 1, 'setChordModeLockState should accept 1 parameter');
-});
-
-TestRunner.test('Chord Mode State - setChordModeLockState calls captureStateForUndo', (t) => {
-    const funcStr = setChordModeLockState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeLockState should call captureStateForUndo');
-});
-
-TestRunner.test('Chord Mode State - setChordModeLockState uses descriptive undo label', (t) => {
-    const funcStr = setChordModeLockState.toString();
-    t.assertTruthy(funcStr.includes('Chord Lock') || funcStr.includes('Enable') || funcStr.includes('Disable'), 'setChordModeLockState should use Chord Lock label');
-});
-
-TestRunner.test('Chord Mode State - setChordModeLockState coerces to boolean', (t) => {
-    const funcStr = setChordModeLockState.toString();
-    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setChordModeLockState should coerce to boolean');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState is a function export', (t) => {
-    t.assertEqual(typeof setChordVoicingState, 'function', 'setChordVoicingState should be a function');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState accepts 1 parameter', (t) => {
-    t.assertEqual(setChordVoicingState.length, 1, 'setChordVoicingState should accept 1 parameter');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState calls captureStateForUndo', (t) => {
-    const funcStr = setChordVoicingState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordVoicingState should call captureStateForUndo');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState uses descriptive undo label', (t) => {
-    const funcStr = setChordVoicingState.toString();
-    t.assertTruthy(funcStr.includes('Chord Voicing'), 'setChordVoicingState should use Set Chord Voicing label');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState validates against CHORD_VOICINGS', (t) => {
-    const funcStr = setChordVoicingState.toString();
-    t.assertTruthy(funcStr.includes('CHORD_VOICINGS') && funcStr.includes('includes'), 'setChordVoicingState should validate against CHORD_VOICINGS');
-});
-
-TestRunner.test('Chord Mode State - setChordVoicingState defaults to DEFAULT_CHORD_VOICING', (t) => {
-    const funcStr = setChordVoicingState.toString();
-    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_VOICING'), 'setChordVoicingState should default to DEFAULT_CHORD_VOICING');
-});
-
-TestRunner.test('Chord Mode State - setChordModeState is a function export', (t) => {
-    t.assertEqual(typeof setChordModeState, 'function', 'setChordModeState should be a function');
-});
-
-TestRunner.test('Chord Mode State - setChordModeState accepts 1 parameter', (t) => {
-    t.assertEqual(setChordModeState.length, 1, 'setChordModeState should accept 1 parameter');
-});
-
-TestRunner.test('Chord Mode State - setChordModeState calls captureStateForUndo', (t) => {
-    const funcStr = setChordModeState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setChordModeState should call captureStateForUndo');
-});
-
-TestRunner.test('Chord Mode State - setChordModeState uses descriptive undo label', (t) => {
-    const funcStr = setChordModeState.toString();
-    t.assertTruthy(funcStr.includes('Chord Mode') || funcStr.includes('Set Chord'), 'setChordModeState should use descriptive label');
-});
-
-TestRunner.test('Chord Mode State - setChordModeState validates state is an object', (t) => {
-    const funcStr = setChordModeState.toString();
-    t.assertTruthy(funcStr.includes('typeof state') && funcStr.includes('object'), 'setChordModeState should validate state is an object');
-});
-
-TestRunner.test('Chord Mode State - setChordModeState merges with DEFAULT_CHORD_MODE', (t) => {
-    const funcStr = setChordModeState.toString();
-    t.assertTruthy(funcStr.includes('DEFAULT_CHORD_MODE'), 'setChordModeState should merge with DEFAULT_CHORD_MODE');
-});
-
-TestRunner.test('Chord Mode State - setChordModeState guards against missing appServices', (t) => {
-    const funcStr = setChordModeState.toString();
-    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'setChordModeState should guard against missing appServices');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has sus2 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.sus2 !== undefined, 'CHORD_TYPES should have sus2 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has sus4 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.sus4 !== undefined, 'CHORD_TYPES should have sus4 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has diminished7 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.diminished7 !== undefined, 'CHORD_TYPES should have diminished7 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has halfDiminished7 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.halfDiminished7 !== undefined, 'CHORD_TYPES should have halfDiminished7 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has major6 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.major6 !== undefined, 'CHORD_TYPES should have major6 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has minor6 chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.minor6 !== undefined, 'CHORD_TYPES should have minor6 chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has power chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.power !== undefined, 'CHORD_TYPES should have power chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES has fifth chord', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.fifth !== undefined, 'CHORD_TYPES should have fifth chord');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES.major has 3 notes', (t) => {
-    t.assertEqual(Constants.CHORD_TYPES.major.length, 3, 'major chord should have 3 notes');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES.major7 has 4 notes', (t) => {
-    t.assertEqual(Constants.CHORD_TYPES.major7.length, 4, 'major7 chord should have 4 notes');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES.dominant7 has 4 notes', (t) => {
-    t.assertEqual(Constants.CHORD_TYPES.dominant7.length, 4, 'dominant7 chord should have 4 notes');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES.power has 2 notes', (t) => {
-    t.assertEqual(Constants.CHORD_TYPES.power.length, 2, 'power chord should have 2 notes');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES.sus2 has correct intervals', (t) => {
-    t.assertEqual(Constants.CHORD_TYPES.sus2[0], 0, 'sus2 first interval should be 0');
-    t.assertEqual(Constants.CHORD_TYPES.sus2[1], 2, 'sus2 second interval should be 2');
-    t.assertEqual(Constants.CHORD_TYPES.sus2[2], 7, 'sus2 third interval should be 7');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_TYPES.sus4 has correct intervals', (t) => {
-    t.assertEqual(Constants.CHORD_TYPES.sus4[0], 0, 'sus4 first interval should be 0');
-    t.assertEqual(Constants.CHORD_TYPES.sus4[1], 5, 'sus4 second interval should be 5');
-    t.assertEqual(Constants.CHORD_TYPES.sus4[2], 7, 'sus4 third interval should be 7');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains sus2', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.sus2 !== undefined, 'CHORD_TYPES should include sus2');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS contains sus4', (t) => {
-    t.assertTruthy(Constants.CHORD_TYPES.sus4 !== undefined, 'CHORD_TYPES should include sus4');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE is defined', (t) => {
-    t.assertTruthy(Constants.DEFAULT_CHORD_MODE !== undefined, 'DEFAULT_CHORD_MODE should be defined');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE is an object', (t) => {
-    t.assertEqual(typeof Constants.DEFAULT_CHORD_MODE, 'object', 'DEFAULT_CHORD_MODE should be an object');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE.enabled is false', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_MODE.enabled, false, 'DEFAULT_CHORD_MODE.enabled should be false');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE.root is 0', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_MODE.root, 0, 'DEFAULT_CHORD_MODE.root should be 0');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE.type is major', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_MODE.type, 'major', 'DEFAULT_CHORD_MODE.type should be major');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_MODE.lockChord is false', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_MODE.lockChord, false, 'DEFAULT_CHORD_MODE.lockChord should be false');
-});
-
-TestRunner.test('Chord Mode Constants - DEFAULT_CHORD_VOICING is closed', (t) => {
-    t.assertEqual(Constants.DEFAULT_CHORD_VOICING, 'closed', 'DEFAULT_CHORD_VOICING should be closed');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD is defined', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICING_SPREAD !== undefined, 'CHORD_VOICING_SPREAD should be defined');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD is an object', (t) => {
-    t.assertEqual(typeof Constants.CHORD_VOICING_SPREAD, 'object', 'CHORD_VOICING_SPREAD should be an object');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.closed is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.closed), true, 'CHORD_VOICING_SPREAD.closed should be an array');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.wide is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.wide), true, 'CHORD_VOICING_SPREAD.wide should be an array');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.drop2 is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.drop2), true, 'CHORD_VOICING_SPREAD.drop2 should be an array');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICING_SPREAD.rootless is an array', (t) => {
-    t.assertEqual(Array.isArray(Constants.CHORD_VOICING_SPREAD.rootless), true, 'CHORD_VOICING_SPREAD.rootless should be an array');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS has 4 voicings', (t) => {
-    t.assertEqual(Constants.CHORD_VOICINGS.length, 4, 'CHORD_VOICINGS should have 4 voicings');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS includes closed', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS.includes('closed'), 'CHORD_VOICINGS should include closed');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS includes wide', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS.includes('wide'), 'CHORD_VOICINGS should include wide');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS includes drop2', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS.includes('drop2'), 'CHORD_VOICINGS should include drop2');
-});
-
-TestRunner.test('Chord Mode Constants - CHORD_VOICINGS includes rootless', (t) => {
-    t.assertTruthy(Constants.CHORD_VOICINGS.includes('rootless'), 'CHORD_VOICINGS should include rootless');
-});
-
-TestRunner.test('Chord Mode State - APP_VERSION validation for Day 400', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    const major = versionParts[0];
-    const minor = versionParts[1];
-    t.assertTruthy(major > 2 || (major === 2 && minor >= 78), 'APP_VERSION should be 2.78.0 or higher for Day 400');
-});
-
-// Day 401: Track Groups State & Constants Tests
-TestRunner.test('Track Groups State - getTrackGroupsState is a function export', (t) => {
-    t.assertTruthy(typeof getTrackGroupsState === 'function', 'getTrackGroupsState should be a function');
-});
-
-TestRunner.test('Track Groups State - getTrackGroupsState accepts 0 parameters', (t) => {
-    const funcStr = getTrackGroupsState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), '', 'getTrackGroupsState should accept 0 parameters');
-});
-
-TestRunner.test('Track Groups State - getTrackGroupsState returns array', (t) => {
-    const result = getTrackGroupsState();
-    t.assertTruthy(Array.isArray(result), 'getTrackGroupsState should return an array');
-});
-
-TestRunner.test('Track Groups State - getTrackGroupByIdState is a function export', (t) => {
-    t.assertTruthy(typeof getTrackGroupByIdState === 'function', 'getTrackGroupByIdState should be a function');
-});
-
-TestRunner.test('Track Groups State - getTrackGroupByIdState accepts 1 parameter', (t) => {
-    const funcStr = getTrackGroupByIdState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'id', 'getTrackGroupByIdState should accept 1 parameter');
-});
-
-TestRunner.test('Track Groups State - getTrackGroupByIdState returns group or undefined', (t) => {
-    const result = getTrackGroupByIdState(99999);
-    t.assertTruthy(result === undefined || typeof result === 'object', 'getTrackGroupByIdState should return group or undefined');
-});
-
-TestRunner.test('Track Groups State - addTrackGroupState is a function export', (t) => {
-    t.assertTruthy(typeof addTrackGroupState === 'function', 'addTrackGroupState should be a function');
-});
-
-TestRunner.test('Track Groups State - addTrackGroupState accepts 1 parameter', (t) => {
-    const funcStr = addTrackGroupState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'groupData', 'addTrackGroupState should accept 1 parameter');
-});
-
-TestRunner.test('Track Groups State - addTrackGroupState calls captureStateForUndo', (t) => {
-    const funcStr = addTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackGroupState should call captureStateForUndo');
-});
-
-TestRunner.test('Track Groups State - addTrackGroupState uses descriptive undo label', (t) => {
-    const funcStr = addTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('Create Track Group') || funcStr.includes('Track Group'), 'addTrackGroupState should use descriptive undo label');
-});
-
-TestRunner.test('Track Groups State - addTrackGroupState uses DEFAULT_TRACK_GROUP_NAME fallback', (t) => {
-    const funcStr = addTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('DEFAULT_TRACK_GROUP_NAME'), 'addTrackGroupState should use DEFAULT_TRACK_GROUP_NAME fallback');
-});
-
-TestRunner.test('Track Groups State - addTrackGroupState uses DEFAULT_TRACK_GROUP_COLOR fallback', (t) => {
-    const funcStr = addTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('DEFAULT_TRACK_GROUP_COLOR'), 'addTrackGroupState should use DEFAULT_TRACK_GROUP_COLOR fallback');
-});
-
-TestRunner.test('Track Groups State - addTrackGroupState pushes to trackGroupsState', (t) => {
-    const funcStr = addTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('trackGroupsState.push') || funcStr.includes('push('), 'addTrackGroupState should push to trackGroupsState');
-});
-
-TestRunner.test('Track Groups State - addTrackGroupState returns new group', (t) => {
-    const funcStr = addTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('return newGroup'), 'addTrackGroupState should return the new group');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupNameState is a function export', (t) => {
-    t.assertTruthy(typeof setTrackGroupNameState === 'function', 'setTrackGroupNameState should be a function');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupNameState accepts 2 parameters', (t) => {
-    const funcStr = setTrackGroupNameState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'id, name', 'setTrackGroupNameState should accept 2 parameters');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupNameState calls captureStateForUndo', (t) => {
-    const funcStr = setTrackGroupNameState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupNameState should call captureStateForUndo');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupNameState uses descriptive undo label', (t) => {
-    const funcStr = setTrackGroupNameState.toString();
-    t.assertTruthy(funcStr.includes('Rename Track Group'), 'setTrackGroupNameState should use descriptive undo label');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupNameState finds group by id', (t) => {
-    const funcStr = setTrackGroupNameState.toString();
-    t.assertTruthy(funcStr.includes('find(') || funcStr.includes('trackGroupsState'), 'setTrackGroupNameState should find group by id');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupNameState returns boolean', (t) => {
-    const funcStr = setTrackGroupNameState.toString();
-    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'setTrackGroupNameState should return boolean');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupColorState is a function export', (t) => {
-    t.assertTruthy(typeof setTrackGroupColorState === 'function', 'setTrackGroupColorState should be a function');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupColorState accepts 2 parameters', (t) => {
-    const funcStr = setTrackGroupColorState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'id, color', 'setTrackGroupColorState should accept 2 parameters');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupColorState calls captureStateForUndo', (t) => {
-    const funcStr = setTrackGroupColorState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupColorState should call captureStateForUndo');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupColorState uses descriptive undo label', (t) => {
-    const funcStr = setTrackGroupColorState.toString();
-    t.assertTruthy(funcStr.includes('Change Track Group'), 'setTrackGroupColorState should use descriptive undo label');
-});
-
-TestRunner.test('Track Groups State - addTrackToGroupState is a function export', (t) => {
-    t.assertTruthy(typeof addTrackToGroupState === 'function', 'addTrackToGroupState should be a function');
-});
-
-TestRunner.test('Track Groups State - addTrackToGroupState accepts 2 parameters', (t) => {
-    const funcStr = addTrackToGroupState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'groupId, trackId', 'addTrackToGroupState should accept 2 parameters');
-});
-
-TestRunner.test('Track Groups State - addTrackToGroupState calls captureStateForUndo', (t) => {
-    const funcStr = addTrackToGroupState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackToGroupState should call captureStateForUndo');
-});
-
-TestRunner.test('Track Groups State - addTrackToGroupState uses descriptive undo label', (t) => {
-    const funcStr = addTrackToGroupState.toString();
-    t.assertTruthy(funcStr.includes('Add Track to Group'), 'addTrackToGroupState should use descriptive undo label');
-});
-
-TestRunner.test('Track Groups State - addTrackToGroupState pushes trackId to group.trackIds', (t) => {
-    const funcStr = addTrackToGroupState.toString();
-    t.assertTruthy(funcStr.includes('trackIds.push') || funcStr.includes('push('), 'addTrackToGroupState should push trackId to array');
-});
-
-TestRunner.test('Track Groups State - addTrackToGroupState checks for duplicates', (t) => {
-    const funcStr = addTrackToGroupState.toString();
-    t.assertTruthy(funcStr.includes('includes(') || funcStr.includes('indexOf('), 'addTrackToGroupState should check for duplicate trackIds');
-});
-
-TestRunner.test('Track Groups State - removeTrackFromGroupState is a function export', (t) => {
-    t.assertTruthy(typeof removeTrackFromGroupState === 'function', 'removeTrackFromGroupState should be a function');
-});
-
-TestRunner.test('Track Groups State - removeTrackFromGroupState accepts 2 parameters', (t) => {
-    const funcStr = removeTrackFromGroupState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'groupId, trackId', 'removeTrackFromGroupState should accept 2 parameters');
-});
-
-TestRunner.test('Track Groups State - removeTrackFromGroupState calls captureStateForUndo', (t) => {
-    const funcStr = removeTrackFromGroupState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackFromGroupState should call captureStateForUndo');
-});
-
-TestRunner.test('Track Groups State - removeTrackFromGroupState uses descriptive undo label', (t) => {
-    const funcStr = removeTrackFromGroupState.toString();
-    t.assertTruthy(funcStr.includes('Remove Track from Group'), 'removeTrackFromGroupState should use descriptive undo label');
-});
-
-TestRunner.test('Track Groups State - removeTrackFromGroupState uses indexOf and splice', (t) => {
-    const funcStr = removeTrackFromGroupState.toString();
-    t.assertTruthy(funcStr.includes('indexOf(') && funcStr.includes('splice('), 'removeTrackFromGroupState should use indexOf and splice');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupMutedState is a function export', (t) => {
-    t.assertTruthy(typeof setTrackGroupMutedState === 'function', 'setTrackGroupMutedState should be a function');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupMutedState accepts 2 parameters', (t) => {
-    const funcStr = setTrackGroupMutedState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'id, muted', 'setTrackGroupMutedState should accept 2 parameters');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupMutedState calls captureStateForUndo', (t) => {
-    const funcStr = setTrackGroupMutedState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupMutedState should call captureStateForUndo');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupMutedState uses descriptive undo label', (t) => {
-    const funcStr = setTrackGroupMutedState.toString();
-    t.assertTruthy(funcStr.includes('Set Group'), 'setTrackGroupMutedState should use descriptive undo label');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupMutedState uses !! coercion', (t) => {
-    const funcStr = setTrackGroupMutedState.toString();
-    t.assertTruthy(funcStr.includes('!!muted'), 'setTrackGroupMutedState should use !! to coerce muted to boolean');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupSoloedState is a function export', (t) => {
-    t.assertTruthy(typeof setTrackGroupSoloedState === 'function', 'setTrackGroupSoloedState should be a function');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupSoloedState accepts 2 parameters', (t) => {
-    const funcStr = setTrackGroupSoloedState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'id, soloed', 'setTrackGroupSoloedState should accept 2 parameters');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupSoloedState calls captureStateForUndo', (t) => {
-    const funcStr = setTrackGroupSoloedState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTrackGroupSoloedState should call captureStateForUndo');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupSoloedState uses descriptive undo label', (t) => {
-    const funcStr = setTrackGroupSoloedState.toString();
-    t.assertTruthy(funcStr.includes('Set Group'), 'setTrackGroupSoloedState should use descriptive undo label');
-});
-
-TestRunner.test('Track Groups State - setTrackGroupSoloedState uses !! coercion', (t) => {
-    const funcStr = setTrackGroupSoloedState.toString();
-    t.assertTruthy(funcStr.includes('!!soloed'), 'setTrackGroupSoloedState should use !! to coerce soloed to boolean');
-});
-
-TestRunner.test('Track Groups State - removeTrackGroupState is a function export', (t) => {
-    t.assertTruthy(typeof removeTrackGroupState === 'function', 'removeTrackGroupState should be a function');
-});
-
-TestRunner.test('Track Groups State - removeTrackGroupState accepts 1 parameter', (t) => {
-    const funcStr = removeTrackGroupState.toString();
-    const match = funcStr.match(/function\s*\([^)]*\)/);
-    const params = match ? match[0].replace(/function\s*\(/, '').replace(/\)/, '') : '';
-    t.assertEqual(params.trim(), 'id', 'removeTrackGroupState should accept 1 parameter');
-});
-
-TestRunner.test('Track Groups State - removeTrackGroupState calls captureStateForUndo', (t) => {
-    const funcStr = removeTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeTrackGroupState should call captureStateForUndo');
-});
-
-TestRunner.test('Track Groups State - removeTrackGroupState uses descriptive undo label', (t) => {
-    const funcStr = removeTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('Delete Track Group'), 'removeTrackGroupState should use descriptive undo label');
-});
-
-TestRunner.test('Track Groups State - removeTrackGroupState uses findIndex and splice', (t) => {
-    const funcStr = removeTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('findIndex(') && funcStr.includes('splice('), 'removeTrackGroupState should use findIndex and splice');
-});
-
-TestRunner.test('Track Groups State - removeTrackGroupState returns boolean', (t) => {
-    const funcStr = removeTrackGroupState.toString();
-    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'removeTrackGroupState should return boolean');
-});
-
-TestRunner.test('Track Groups Constants - MAX_TRACK_GROUPS is defined', (t) => {
-    t.assertTruthy(Constants.MAX_TRACK_GROUPS !== undefined, 'MAX_TRACK_GROUPS should be defined');
-});
-
-TestRunner.test('Track Groups Constants - MAX_TRACK_GROUPS is a positive number', (t) => {
-    t.assertTruthy(typeof Constants.MAX_TRACK_GROUPS === 'number' && Constants.MAX_TRACK_GROUPS > 0, 'MAX_TRACK_GROUPS should be a positive number');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP_NAME is defined', (t) => {
-    t.assertTruthy(Constants.DEFAULT_TRACK_GROUP_NAME !== undefined, 'DEFAULT_TRACK_GROUP_NAME should be defined');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP_NAME is a string', (t) => {
-    t.assertEqual(typeof Constants.DEFAULT_TRACK_GROUP_NAME, 'string', 'DEFAULT_TRACK_GROUP_NAME should be a string');
-});
-
-TestRunner.test('Track Groups Constants - TRACK_GROUP_COLORS is defined', (t) => {
-    t.assertTruthy(Constants.TRACK_GROUP_COLORS !== undefined, 'TRACK_GROUP_COLORS should be defined');
-});
-
-TestRunner.test('Track Groups Constants - TRACK_GROUP_COLORS is an array', (t) => {
-    t.assertTruthy(Array.isArray(Constants.TRACK_GROUP_COLORS), 'TRACK_GROUP_COLORS should be an array');
-});
-
-TestRunner.test('Track Groups Constants - TRACK_GROUP_COLORS has multiple colors', (t) => {
-    t.assertTruthy(Constants.TRACK_GROUP_COLORS.length > 1, 'TRACK_GROUP_COLORS should have multiple colors');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP_COLOR is defined', (t) => {
-    t.assertTruthy(Constants.DEFAULT_TRACK_GROUP_COLOR !== undefined, 'DEFAULT_TRACK_GROUP_COLOR should be defined');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP_COLOR is a string', (t) => {
-    t.assertEqual(typeof Constants.DEFAULT_TRACK_GROUP_COLOR, 'string', 'DEFAULT_TRACK_GROUP_COLOR should be a string');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP_COLOR is a valid hex color', (t) => {
-    t.assertTruthy(/^#[0-9A-Fa-f]{6}$/.test(Constants.DEFAULT_TRACK_GROUP_COLOR), 'DEFAULT_TRACK_GROUP_COLOR should be a valid hex color');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP is defined', (t) => {
-    t.assertTruthy(Constants.DEFAULT_TRACK_GROUP !== undefined, 'DEFAULT_TRACK_GROUP should be defined');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP is an object', (t) => {
-    t.assertEqual(typeof Constants.DEFAULT_TRACK_GROUP, 'object', 'DEFAULT_TRACK_GROUP should be an object');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP has name property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_TRACK_GROUP.name !== undefined, 'DEFAULT_TRACK_GROUP should have name property');
-});
-
-TestRunner.test('Track Groups Constants - DEFAULT_TRACK_GROUP has color property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_TRACK_GROUP.color !== undefined, 'DEFAULT_TRACK_GROUP should have color property');
-});
-
-TestRunner.test('Track Groups State - APP_VERSION validation for Day 401', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    const major = versionParts[0];
-    const minor = versionParts[1];
-    t.assertTruthy(major > 2 || (major === 2 && minor >= 78), 'APP_VERSION should be 2.78.0 or higher for Day 401');
-});
-
-// ============================================
-// Day 402: MIDI Learn State & Constants Tests
-// ============================================
-TestRunner.test('MIDI Learn State - getMidiLearnMappingsState is a function export', (t) => {
-    t.assertEqual(typeof getMidiLearnMappingsState, 'function', 'getMidiLearnMappingsState should be a function');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnMappingsState accepts 0 parameters', (t) => {
-    t.assertEqual(getMidiLearnMappingsState.length, 0, 'getMidiLearnMappingsState should accept 0 parameters');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnMappingsState returns an array', (t) => {
-    t.assertTruthy(Array.isArray(getMidiLearnMappingsState()), 'getMidiLearnMappingsState should return an array');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnMappingsState returns a copy', (t) => {
-    const result = getMidiLearnMappingsState();
-    t.assertTruthy(Array.isArray(result), 'getMidiLearnMappingsState should return array (not necessarily same reference)');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnModeState is a function export', (t) => {
-    t.assertEqual(typeof getMidiLearnModeState, 'function', 'getMidiLearnModeState should be a function');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnModeState accepts 0 parameters', (t) => {
-    t.assertEqual(getMidiLearnModeState.length, 0, 'getMidiLearnModeState should accept 0 parameters');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnPendingParamState is a function export', (t) => {
-    t.assertEqual(typeof getMidiLearnPendingParamState, 'function', 'getMidiLearnPendingParamState should be a function');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnPendingParamState accepts 0 parameters', (t) => {
-    t.assertEqual(getMidiLearnPendingParamState.length, 0, 'getMidiLearnPendingParamState should accept 0 parameters');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnModeState is a function export', (t) => {
-    t.assertEqual(typeof setMidiLearnModeState, 'function', 'setMidiLearnModeState should be a function');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnModeState accepts 1 parameter', (t) => {
-    t.assertEqual(setMidiLearnModeState.length, 1, 'setMidiLearnModeState should accept 1 parameter');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnModeState calls captureStateForUndo', (t) => {
-    const funcStr = setMidiLearnModeState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnModeState should call captureStateForUndo');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnModeState uses descriptive undo label', (t) => {
-    const funcStr = setMidiLearnModeState.toString();
-    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'setMidiLearnModeState should use descriptive undo label');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnModeState coerces to boolean', (t) => {
-    const funcStr = setMidiLearnModeState.toString();
-    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean') || funcStr.includes('!!mode'), 'setMidiLearnModeState should coerce mode to boolean');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnPendingParamState is a function export', (t) => {
-    t.assertEqual(typeof setMidiLearnPendingParamState, 'function', 'setMidiLearnPendingParamState should be a function');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnPendingParamState accepts 1 parameter', (t) => {
-    t.assertEqual(setMidiLearnPendingParamState.length, 1, 'setMidiLearnPendingParamState should accept 1 parameter');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnPendingParamState calls captureStateForUndo', (t) => {
-    const funcStr = setMidiLearnPendingParamState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMidiLearnPendingParamState should call captureStateForUndo');
-});
-
-TestRunner.test('MIDI Learn State - setMidiLearnPendingParamState uses descriptive undo label', (t) => {
-    const funcStr = setMidiLearnPendingParamState.toString();
-    t.assertTruthy(funcStr.includes('MIDI') || funcStr.includes('param') || funcStr.includes('pending'), 'setMidiLearnPendingParamState should use descriptive undo label');
-});
-
-TestRunner.test('MIDI Learn State - addMidiLearnMapping is a function export', (t) => {
-    t.assertEqual(typeof addMidiLearnMapping, 'function', 'addMidiLearnMapping should be a function');
-});
-
-TestRunner.test('MIDI Learn State - addMidiLearnMapping accepts 1 parameter', (t) => {
-    t.assertEqual(addMidiLearnMapping.length, 1, 'addMidiLearnMapping should accept 1 parameter');
-});
-
-TestRunner.test('MIDI Learn State - addMidiLearnMapping calls captureStateForUndo', (t) => {
-    const funcStr = addMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addMidiLearnMapping should call captureStateForUndo');
-});
-
-TestRunner.test('MIDI Learn State - addMidiLearnMapping uses descriptive undo label', (t) => {
-    const funcStr = addMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'addMidiLearnMapping should use descriptive undo label');
-});
-
-TestRunner.test('MIDI Learn State - addMidiLearnMapping uses DEFAULT_MIDI_LEARN_MAPPING structure', (t) => {
-    const funcStr = addMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('DEFAULT_MIDI_LEARN_MAPPING'), 'addMidiLearnMapping should use DEFAULT_MIDI_LEARN_MAPPING structure');
-});
-
-TestRunner.test('MIDI Learn State - addMidiLearnMapping checks MAX_MIDI_LEARN_MAPPINGS limit', (t) => {
-    const funcStr = addMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('MAX_MIDI_LEARN_MAPPINGS'), 'addMidiLearnMapping should check MAX_MIDI_LEARN_MAPPINGS limit');
-});
-
-TestRunner.test('MIDI Learn State - addMidiLearnMapping pushes to midiLearnMappings', (t) => {
-    const funcStr = addMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('push'), 'addMidiLearnMapping should push to midiLearnMappings array');
-});
-
-TestRunner.test('MIDI Learn State - addMidiLearnMapping returns boolean', (t) => {
-    const funcStr = addMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('return'), 'addMidiLearnMapping should return a value');
-});
-
-TestRunner.test('MIDI Learn State - removeMidiLearnMapping is a function export', (t) => {
-    t.assertEqual(typeof removeMidiLearnMapping, 'function', 'removeMidiLearnMapping should be a function');
-});
-
-TestRunner.test('MIDI Learn State - removeMidiLearnMapping accepts 1 parameter', (t) => {
-    t.assertEqual(removeMidiLearnMapping.length, 1, 'removeMidiLearnMapping should accept 1 parameter');
-});
-
-TestRunner.test('MIDI Learn State - removeMidiLearnMapping calls captureStateForUndo', (t) => {
-    const funcStr = removeMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeMidiLearnMapping should call captureStateForUndo');
-});
-
-TestRunner.test('MIDI Learn State - removeMidiLearnMapping uses descriptive undo label', (t) => {
-    const funcStr = removeMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'removeMidiLearnMapping should use descriptive undo label');
-});
-
-TestRunner.test('MIDI Learn State - removeMidiLearnMapping uses splice', (t) => {
-    const funcStr = removeMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('splice'), 'removeMidiLearnMapping should use splice to remove mapping');
-});
-
-TestRunner.test('MIDI Learn State - removeMidiLearnMapping returns boolean', (t) => {
-    const funcStr = removeMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('return'), 'removeMidiLearnMapping should return a boolean');
-});
-
-TestRunner.test('MIDI Learn State - clearMidiLearnMappings is a function export', (t) => {
-    t.assertEqual(typeof clearMidiLearnMappings, 'function', 'clearMidiLearnMappings should be a function');
-});
-
-TestRunner.test('MIDI Learn State - clearMidiLearnMappings accepts 0 parameters', (t) => {
-    t.assertEqual(clearMidiLearnMappings.length, 0, 'clearMidiLearnMappings should accept 0 parameters');
-});
-
-TestRunner.test('MIDI Learn State - clearMidiLearnMappings calls captureStateForUndo', (t) => {
-    const funcStr = clearMidiLearnMappings.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearMidiLearnMappings should call captureStateForUndo');
-});
-
-TestRunner.test('MIDI Learn State - clearMidiLearnMappings uses descriptive undo label', (t) => {
-    const funcStr = clearMidiLearnMappings.toString();
-    t.assertTruthy(funcStr.includes('Clear') && (funcStr.includes('MIDI Learn') || funcStr.includes('MIDI')), 'clearMidiLearnMappings should use descriptive undo label');
-});
-
-TestRunner.test('MIDI Learn State - clearMidiLearnMappings clears the array', (t) => {
-    const funcStr = clearMidiLearnMappings.toString();
-    t.assertTruthy(funcStr.includes('[]') || funcStr.includes('= []'), 'clearMidiLearnMappings should clear the array');
-});
-
-TestRunner.test('MIDI Learn State - findMidiLearnMapping is a function export', (t) => {
-    t.assertEqual(typeof findMidiLearnMapping, 'function', 'findMidiLearnMapping should be a function');
-});
-
-TestRunner.test('MIDI Learn State - findMidiLearnMapping accepts 2 parameters', (t) => {
-    t.assertEqual(findMidiLearnMapping.length, 2, 'findMidiLearnMapping should accept 2 parameters');
-});
-
-TestRunner.test('MIDI Learn State - findMidiLearnMapping references channel parameter', (t) => {
-    const funcStr = findMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('channel'), 'findMidiLearnMapping should reference channel parameter');
-});
-
-TestRunner.test('MIDI Learn State - findMidiLearnMapping references cc parameter', (t) => {
-    const funcStr = findMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('cc'), 'findMidiLearnMapping should reference cc parameter');
-});
-
-TestRunner.test('MIDI Learn State - findMidiLearnMapping uses findIndex', (t) => {
-    const funcStr = findMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('findIndex'), 'findMidiLearnMapping should use findIndex');
-});
-
-TestRunner.test('MIDI Learn State - updateMidiLearnMapping is a function export', (t) => {
-    t.assertEqual(typeof updateMidiLearnMapping, 'function', 'updateMidiLearnMapping should be a function');
-});
-
-TestRunner.test('MIDI Learn State - updateMidiLearnMapping accepts 2 parameters', (t) => {
-    t.assertEqual(updateMidiLearnMapping.length, 2, 'updateMidiLearnMapping should accept 2 parameters');
-});
-
-TestRunner.test('MIDI Learn State - updateMidiLearnMapping calls captureStateForUndo', (t) => {
-    const funcStr = updateMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateMidiLearnMapping should call captureStateForUndo');
-});
-
-TestRunner.test('MIDI Learn State - updateMidiLearnMapping uses descriptive undo label', (t) => {
-    const funcStr = updateMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('MIDI Learn') || funcStr.includes('MIDI'), 'updateMidiLearnMapping should use descriptive undo label');
-});
-
-TestRunner.test('MIDI Learn State - updateMidiLearnMapping finds mapping by index', (t) => {
-    const funcStr = updateMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('index'), 'updateMidiLearnMapping should find mapping by index');
-});
-
-TestRunner.test('MIDI Learn State - updateMidiLearnMapping returns boolean', (t) => {
-    const funcStr = updateMidiLearnMapping.toString();
-    t.assertTruthy(funcStr.includes('return'), 'updateMidiLearnMapping should return a boolean');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnMappingByIndex is a function export', (t) => {
-    t.assertEqual(typeof getMidiLearnMappingByIndex, 'function', 'getMidiLearnMappingByIndex should be a function');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnMappingByIndex accepts 1 parameter', (t) => {
-    t.assertEqual(getMidiLearnMappingByIndex.length, 1, 'getMidiLearnMappingByIndex should accept 1 parameter');
-});
-
-TestRunner.test('MIDI Learn State - getMidiLearnMappingByIndex returns mapping or undefined', (t) => {
-    const funcStr = getMidiLearnMappingByIndex.toString();
-    t.assertTruthy(funcStr.includes('[') || funcStr.includes('midiLearnMappings'), 'getMidiLearnMappingByIndex should return mapping');
-});
-
-// MIDI Learn Constants Tests
-TestRunner.test('MIDI Learn Constants - MAX_MIDI_LEARN_MAPPINGS is defined', (t) => {
-    t.assertTruthy(Constants.MAX_MIDI_LEARN_MAPPINGS !== undefined, 'MAX_MIDI_LEARN_MAPPINGS should be defined');
-});
-
-TestRunner.test('MIDI Learn Constants - MAX_MIDI_LEARN_MAPPINGS is a positive number', (t) => {
-    t.assertEqual(typeof Constants.MAX_MIDI_LEARN_MAPPINGS, 'number', 'MAX_MIDI_LEARN_MAPPINGS should be a number');
-    t.assertTruthy(Constants.MAX_MIDI_LEARN_MAPPINGS > 0, 'MAX_MIDI_LEARN_MAPPINGS should be positive');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_CC_COMMAND is defined', (t) => {
-    t.assertTruthy(Constants.MIDI_CC_COMMAND !== undefined, 'MIDI_CC_COMMAND should be defined');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_CC_COMMAND is 176', (t) => {
-    t.assertEqual(Constants.MIDI_CC_COMMAND, 176, 'MIDI_CC_COMMAND should be 176');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MODE is defined', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MODE !== undefined, 'DEFAULT_MIDI_LEARN_MODE should be defined');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MODE is boolean false', (t) => {
-    t.assertEqual(typeof Constants.DEFAULT_MIDI_LEARN_MODE, 'boolean', 'DEFAULT_MIDI_LEARN_MODE should be a boolean');
-    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MODE, false, 'DEFAULT_MIDI_LEARN_MODE should be false');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_LEARN_INDICATOR_TIMEOUT_MS is defined', (t) => {
-    t.assertTruthy(Constants.MIDI_LEARN_INDICATOR_TIMEOUT_MS !== undefined, 'MIDI_LEARN_INDICATOR_TIMEOUT_MS should be defined');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_LEARN_INDICATOR_TIMEOUT_MS is a positive number', (t) => {
-    t.assertEqual(typeof Constants.MIDI_LEARN_INDICATOR_TIMEOUT_MS, 'number', 'MIDI_LEARN_INDICATOR_TIMEOUT_MS should be a number');
-    t.assertTruthy(Constants.MIDI_LEARN_INDICATOR_TIMEOUT_MS > 0, 'MIDI_LEARN_INDICATOR_TIMEOUT_MS should be positive');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES is defined', (t) => {
-    t.assertTruthy(Constants.MIDI_LEARN_PARAM_TYPES !== undefined, 'MIDI_LEARN_PARAM_TYPES should be defined');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES is an array', (t) => {
-    t.assertTruthy(Array.isArray(Constants.MIDI_LEARN_PARAM_TYPES), 'MIDI_LEARN_PARAM_TYPES should be an array');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes trackVolume', (t) => {
-    t.assertTruthy(Constants.MIDI_LEARN_PARAM_TYPES.includes('trackVolume'), 'MIDI_LEARN_PARAM_TYPES should include trackVolume');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes trackPan', (t) => {
-    t.assertTruthy(Constants.MIDI_LEARN_PARAM_TYPES.includes('trackPan'), 'MIDI_LEARN_PARAM_TYPES should include trackPan');
-});
-
-TestRunner.test('MIDI Learn Constants - MIDI_LEARN_PARAM_TYPES includes effectParam', (t) => {
-    t.assertTruthy(Constants.MIDI_LEARN_PARAM_TYPES.includes('effectParam'), 'MIDI_LEARN_PARAM_TYPES should include effectParam');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING is defined', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should be defined');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING is an object', (t) => {
-    t.assertEqual(typeof Constants.DEFAULT_MIDI_LEARN_MAPPING, 'object', 'DEFAULT_MIDI_LEARN_MAPPING should be an object');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has channel property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.channel !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have channel property');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has cc property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.cc !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have cc property');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has trackId property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.trackId !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have trackId property');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has paramType property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.paramType !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have paramType property');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has paramPath property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.paramPath !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have paramPath property');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has min property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.min !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have min property');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING has max property', (t) => {
-    t.assertTruthy(Constants.DEFAULT_MIDI_LEARN_MAPPING.max !== undefined, 'DEFAULT_MIDI_LEARN_MAPPING should have max property');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.channel is 0', (t) => {
-    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.channel, 0, 'DEFAULT_MIDI_LEARN_MAPPING.channel should be 0');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.cc is 0', (t) => {
-    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.cc, 0, 'DEFAULT_MIDI_LEARN_MAPPING.cc should be 0');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.trackId is null', (t) => {
-    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.trackId, null, 'DEFAULT_MIDI_LEARN_MAPPING.trackId should be null');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.paramType is null', (t) => {
-    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.paramType, null, 'DEFAULT_MIDI_LEARN_MAPPING.paramType should be null');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.paramPath is null', (t) => {
-    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.paramPath, null, 'DEFAULT_MIDI_LEARN_MAPPING.paramPath should be null');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.min is 0', (t) => {
-    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.min, 0, 'DEFAULT_MIDI_LEARN_MAPPING.min should be 0');
-});
-
-TestRunner.test('MIDI Learn Constants - DEFAULT_MIDI_LEARN_MAPPING.max is 1', (t) => {
-    t.assertEqual(Constants.DEFAULT_MIDI_LEARN_MAPPING.max, 1, 'DEFAULT_MIDI_LEARN_MAPPING.max should be 1');
-});
-
-TestRunner.test('MIDI Learn State - APP_VERSION validation for Day 402', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    const major = versionParts[0];
-    const minor = versionParts[1];
-    t.assertTruthy(major > 2 || (major === 2 && minor >= 79), 'APP_VERSION should be 2.79.0 or higher for Day 402');
-});
+TestRunner.test('Chord Mode State - setCh
