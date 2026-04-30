@@ -1,3 +1,53 @@
+#### Day 375: Effects Registry Tests (2026-04-30)
+- **Feature**: Added 33 new unit tests for Effects Registry module to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 33 new tests in Day 375 section:
+    - Effects Registry - AVAILABLE_EFFECTS is an object
+    - Effects Registry - AVAILABLE_EFFECTS has at least one effect
+    - Effects Registry - AVAILABLE_EFFECTS effect has displayName
+    - Effects Registry - AVAILABLE_EFFECTS effect has toneClass
+    - Effects Registry - AVAILABLE_EFFECTS effect has params array
+    - Effects Registry - AVAILABLE_EFFECTS param has key
+    - Effects Registry - AVAILABLE_EFFECTS param has label
+    - Effects Registry - AVAILABLE_EFFECTS param has type
+    - Effects Registry - AVAILABLE_EFFECTS param has numeric min/max
+    - Effects Registry - AVAILABLE_EFFECTS param has defaultValue
+    - Effects Registry - synthEngineControlDefinitions is an object
+    - Effects Registry - synthEngineControlDefinitions has at least one engine
+    - Effects Registry - synthEngineControlDefinitions engine is an array
+    - Effects Registry - synthEngineControlDefinitions control has idPrefix
+    - Effects Registry - synthEngineControlDefinitions control has label
+    - Effects Registry - synthEngineControlDefinitions control has type
+    - Effects Registry - synthEngineControlDefinitions control has path
+    - Effects Registry - createEffectInstance is a function export
+    - Effects Registry - createEffectInstance accepts 1-2 parameters
+    - Effects Registry - createEffectInstance references effectType parameter
+    - Effects Registry - createEffectInstance checks AVAILABLE_EFFECTS
+    - Effects Registry - getEffectDefaultParams is a function export
+    - Effects Registry - getEffectDefaultParams accepts 1 parameter
+    - Effects Registry - getEffectDefaultParams references effectType parameter
+    - Effects Registry - getEffectParamDefinitions is a function export
+    - Effects Registry - getEffectParamDefinitions accepts 1 parameter
+    - Effects Registry - getEffectParamDefinitions references effectType parameter
+    - Effects Registry - createEffectInstance handles unknown effect type
+    - Effects Registry - getEffectDefaultParams handles unknown effect type
+    - Effects Registry - getEffectParamDefinitions handles unknown effect type
+    - Effects Registry - synthEngineControlDefinitions control handles knob type
+    - Effects Registry - synthEngineControlDefinitions control handles select type
+    - APP_VERSION validation for 2.54.0 or higher
+  - `js/constants.js`: Bumped APP_VERSION to 2.54.0
+- **Feature Details**:
+  - Tests validate AVAILABLE_EFFECTS structure (displayName, toneClass, params array)
+  - Tests verify AVAILABLE_EFFECTS param structure (key, label, type, min/max, defaultValue)
+  - Tests verify synthEngineControlDefinitions structure (idPrefix, label, type, path)
+  - Tests verify synthEngineControlDefinitions control types (knob, select)
+  - Tests verify createEffectInstance function export and parameter handling
+  - Tests verify getEffectDefaultParams function export and parameter handling
+  - Tests verify getEffectParamDefinitions function export and parameter handling
+  - Tests verify error handling for unknown effect types
+  - Total tests increased from 1074 to 1107
+- **Version**: Bumped to 2.54.0
+
 #### Day 373: Global Controls Window UI Tests (2026-04-30)
 - **Feature**: Added 25 new unit tests for Global Controls Window UI functions to expand test coverage
 - **Files Modified**:
