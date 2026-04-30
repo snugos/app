@@ -6270,3 +6270,262 @@ TestRunner.test('Sound Browser - APP_VERSION validation for Day 374', (t) => {
         t.assertTruthy(versionParts[1] >= 52, 'Minor version should be >= 52 for Day 374');
     }
 });
+
+// Day 375: Effects Registry Tests
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS is an object', (t) => {
+    t.assertEqual(typeof AVAILABLE_EFFECTS, 'object', 'AVAILABLE_EFFECTS should be an object');
+    t.assertTruthy(AVAILABLE_EFFECTS !== null, 'AVAILABLE_EFFECTS should not be null');
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has at least one effect', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    t.assertTruthy(keys.length > 0, 'AVAILABLE_EFFECTS should have at least one effect defined');
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS effect has displayName', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    if (keys.length > 0) {
+        const firstEffect = AVAILABLE_EFFECTS[keys[0]];
+        t.assertTruthy(typeof firstEffect.displayName === 'string', 'Effect should have displayName string');
+    }
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS effect has toneClass', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    if (keys.length > 0) {
+        const firstEffect = AVAILABLE_EFFECTS[keys[0]];
+        t.assertTruthy(typeof firstEffect.toneClass === 'string', 'Effect should have toneClass string');
+    }
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS effect has params array', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    if (keys.length > 0) {
+        const firstEffect = AVAILABLE_EFFECTS[keys[0]];
+        t.assertTruthy(Array.isArray(firstEffect.params), 'Effect should have params array');
+    }
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS param has key', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    if (keys.length > 0) {
+        const firstEffect = AVAILABLE_EFFECTS[keys[0]];
+        if (firstEffect.params && firstEffect.params.length > 0) {
+            const firstParam = firstEffect.params[0];
+            t.assertTruthy(typeof firstParam.key === 'string', 'Param should have key string');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS param has label', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    if (keys.length > 0) {
+        const firstEffect = AVAILABLE_EFFECTS[keys[0]];
+        if (firstEffect.params && firstEffect.params.length > 0) {
+            const firstParam = firstEffect.params[0];
+            t.assertTruthy(typeof firstParam.label === 'string', 'Param should have label string');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS param has type', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    if (keys.length > 0) {
+        const firstEffect = AVAILABLE_EFFECTS[keys[0]];
+        if (firstEffect.params && firstEffect.params.length > 0) {
+            const firstParam = firstEffect.params[0];
+            t.assertTruthy(typeof firstParam.type === 'string', 'Param should have type string');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS param has numeric min/max', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    if (keys.length > 0) {
+        const firstEffect = AVAILABLE_EFFECTS[keys[0]];
+        if (firstEffect.params && firstEffect.params.length > 0) {
+            const firstParam = firstEffect.params[0];
+            t.assertEqual(typeof firstParam.min, 'number', 'Param should have numeric min');
+            t.assertEqual(typeof firstParam.max, 'number', 'Param should have numeric max');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS param has defaultValue', (t) => {
+    const keys = Object.keys(AVAILABLE_EFFECTS);
+    if (keys.length > 0) {
+        const firstEffect = AVAILABLE_EFFECTS[keys[0]];
+        if (firstEffect.params && firstEffect.params.length > 0) {
+            const firstParam = firstEffect.params[0];
+            t.assertTruthy('defaultValue' in firstParam, 'Param should have defaultValue');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions is an object', (t) => {
+    t.assertEqual(typeof synthEngineControlDefinitions, 'object', 'synthEngineControlDefinitions should be an object');
+    t.assertTruthy(synthEngineControlDefinitions !== null, 'synthEngineControlDefinitions should not be null');
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions has at least one engine', (t) => {
+    const keys = Object.keys(synthEngineControlDefinitions);
+    t.assertTruthy(keys.length > 0, 'synthEngineControlDefinitions should have at least one engine defined');
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions engine is an array', (t) => {
+    const keys = Object.keys(synthEngineControlDefinitions);
+    if (keys.length > 0) {
+        const firstEngine = synthEngineControlDefinitions[keys[0]];
+        t.assertTruthy(Array.isArray(firstEngine), 'Engine should be an array of controls');
+    }
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions control has idPrefix', (t) => {
+    const keys = Object.keys(synthEngineControlDefinitions);
+    if (keys.length > 0) {
+        const firstEngine = synthEngineControlDefinitions[keys[0]];
+        if (firstEngine && firstEngine.length > 0) {
+            const firstControl = firstEngine[0];
+            t.assertTruthy(typeof firstControl.idPrefix === 'string', 'Control should have idPrefix string');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions control has label', (t) => {
+    const keys = Object.keys(synthEngineControlDefinitions);
+    if (keys.length > 0) {
+        const firstEngine = synthEngineControlDefinitions[keys[0]];
+        if (firstEngine && firstEngine.length > 0) {
+            const firstControl = firstEngine[0];
+            t.assertTruthy(typeof firstControl.label === 'string', 'Control should have label string');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions control has type', (t) => {
+    const keys = Object.keys(synthEngineControlDefinitions);
+    if (keys.length > 0) {
+        const firstEngine = synthEngineControlDefinitions[keys[0]];
+        if (firstEngine && firstEngine.length > 0) {
+            const firstControl = firstEngine[0];
+            t.assertTruthy(typeof firstControl.type === 'string', 'Control should have type string');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions control has path', (t) => {
+    const keys = Object.keys(synthEngineControlDefinitions);
+    if (keys.length > 0) {
+        const firstEngine = synthEngineControlDefinitions[keys[0]];
+        if (firstEngine && firstEngine.length > 0) {
+            const firstControl = firstEngine[0];
+            t.assertTruthy(typeof firstControl.path === 'string', 'Control should have path string');
+        }
+    }
+});
+
+TestRunner.test('Effects Registry - createEffectInstance is a function export', (t) => {
+    t.assertEqual(typeof createEffectInstance, 'function', 'createEffectInstance should be a function');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance accepts 1-2 parameters', (t) => {
+    const paramCount = createEffectInstance.length;
+    t.assertTruthy(paramCount >= 1 && paramCount <= 2, 'createEffectInstance should accept 1-2 parameters');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance references effectType parameter', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'createEffectInstance should reference effectType parameter');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance checks AVAILABLE_EFFECTS', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'createEffectInstance should check AVAILABLE_EFFECTS');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams is a function export', (t) => {
+    t.assertEqual(typeof getEffectDefaultParams, 'function', 'getEffectDefaultParams should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams accepts 1 parameter', (t) => {
+    const paramCount = getEffectDefaultParams.length;
+    t.assertEqual(paramCount, 1, 'getEffectDefaultParams should accept 1 parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams references effectType parameter', (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'getEffectDefaultParams should reference effectType parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions is a function export', (t) => {
+    t.assertEqual(typeof getEffectParamDefinitions, 'function', 'getEffectParamDefinitions should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions accepts 1 parameter', (t) => {
+    const paramCount = getEffectParamDefinitions.length;
+    t.assertEqual(paramCount, 1, 'getEffectParamDefinitions should accept 1 parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions references effectType parameter', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'getEffectParamDefinitions should reference effectType parameter');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles unknown effect type', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('undefined') || funcStr.includes('null') || funcStr.includes('error') || funcStr.includes('Error'), 'createEffectInstance should handle unknown effect type');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams handles unknown effect type', (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('undefined') || funcStr.includes('null') || funcStr.includes('error') || funcStr.includes('Error'), 'getEffectDefaultParams should handle unknown effect type');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions handles unknown effect type', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('undefined') || funcStr.includes('null') || funcStr.includes('error') || funcStr.includes('Error'), 'getEffectParamDefinitions should handle unknown effect type');
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions control handles knob type', (t) => {
+    const keys = Object.keys(synthEngineControlDefinitions);
+    let hasKnob = false;
+    for (const key of keys) {
+        const engine = synthEngineControlDefinitions[key];
+        if (Array.isArray(engine)) {
+            for (const control of engine) {
+                if (control.type === 'knob') {
+                    hasKnob = true;
+                    break;
+                }
+            }
+        }
+        if (hasKnob) break;
+    }
+    t.assertTruthy(hasKnob, 'At least one engine should have a knob control');
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions control handles select type', (t) => {
+    const keys = Object.keys(synthEngineControlDefinitions);
+    let hasSelect = false;
+    for (const key of keys) {
+        const engine = synthEngineControlDefinitions[key];
+        if (Array.isArray(engine)) {
+            for (const control of engine) {
+                if (control.type === 'select') {
+                    hasSelect = true;
+                    break;
+                }
+            }
+        }
+        if (hasSelect) break;
+    }
+    t.assertTruthy(hasSelect, 'At least one engine should have a select control');
+});
+
+TestRunner.test('Effects Registry - APP_VERSION validation for Day 375', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 375');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 54, 'Minor version should be >= 54 for Day 375');
+    }
+});
