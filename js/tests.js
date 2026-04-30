@@ -5974,3 +5974,138 @@ TestRunner.test('DB Module Extended - Total DB Module test count verification', 
     ];
     t.assertTruthy(dbTests.length >= 7, 'DB Module should have at least 7 basic and extended tests');
 });
+
+// ============================================
+// Day 373: Global Controls Window UI Tests
+// ============================================
+TestRunner.test('Global Controls Window - openGlobalControlsWindow is a function export', (t) => {
+    t.assertEqual(typeof openGlobalControlsWindow, 'function', 'openGlobalControlsWindow should be a function');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow accepts 1-2 parameters', (t) => {
+    const paramCount = openGlobalControlsWindow.length;
+    t.assertTruthy(paramCount === 1 || paramCount === 2, 'openGlobalControlsWindow should accept 1-2 parameters (onReadyCallback, savedState)');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow uses globalControls windowId', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes("'globalControls'") || funcStr.includes('"globalControls"'), 'openGlobalControlsWindow should use globalControls windowId');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow calls localAppServices.createWindow', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openGlobalControlsWindow should call createWindow');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow passes correct window title', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes("'Global Controls'") || funcStr.includes('"Global Controls"'), 'openGlobalControlsWindow should set title to Global Controls');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates content HTML with play button', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('playBtnGlobal') || funcStr.includes('#playBtnGlobal'), 'Global Controls should include playBtnGlobal element');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates content HTML with stop button', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('stopBtnGlobal') || funcStr.includes('#stopBtnGlobal'), 'Global Controls should include stopBtnGlobal element');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates content HTML with record button', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('recordBtnGlobal') || funcStr.includes('#recordBtnGlobal'), 'Global Controls should include recordBtnGlobal element');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates tempo input field', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('tempoGlobalInput') || funcStr.includes('#tempoGlobalInput'), 'Global Controls should include tempoGlobalInput');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates MIDI input select', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('midiInputSelectGlobal') || funcStr.includes('#midiInputSelectGlobal'), 'Global Controls should include midiInputSelectGlobal');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates master meter elements', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('masterMeterContainerGlobal') || funcStr.includes('masterMeterBarGlobal'), 'Global Controls should include master meter elements');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates MIDI indicator', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('midiIndicatorGlobal') || funcStr.includes('#midiIndicatorGlobal'), 'Global Controls should include midiIndicatorGlobal');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates keyboard indicator', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('keyboardIndicatorGlobal') || funcStr.includes('#keyboardIndicatorGlobal'), 'Global Controls should include keyboardIndicatorGlobal');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow creates playback mode toggle', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('playbackModeToggleBtnGlobal') || funcStr.includes('#playbackModeToggleBtnGlobal'), 'Global Controls should include playbackModeToggleBtnGlobal');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow includes MIDI Learn section', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('midiLearnBtnGlobal') || funcStr.includes('midiLearnMappingsList'), 'Global Controls should include MIDI Learn section');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow includes MIDI Learn clear button', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('midiLearnClearBtnGlobal') || funcStr.includes('midiLearnStatusGlobal'), 'Global Controls should include MIDI Learn clear/status elements');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow sets window options correctly', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('closable: true') || funcStr.includes('minimizable: true'), 'Global Controls window should have closable/minimizable options');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow handles savedState for window restoration', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') && funcStr.includes('parseInt'), 'openGlobalControlsWindow should handle savedState for window position/size restoration');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow checks for already open window', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('openWindows.has') || funcStr.includes('getOpenWindows'), 'openGlobalControlsWindow should check if window is already open');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow restores existing window when found', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('.restore()'), 'openGlobalControlsWindow should call restore() on existing window');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow passes elements to onReadyCallback', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('onReadyCallback') && funcStr.includes('querySelector'), 'openGlobalControlsWindow should pass elements to onReadyCallback');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow returns window object', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('return') && funcStr.includes('newWindow'), 'openGlobalControlsWindow should return the window object');
+});
+
+TestRunner.test('Global Controls Window - Tempo input has correct attributes (min/max/step)', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('min=') && funcStr.includes('max=') && funcStr.includes('step='), 'Tempo input should have min/max/step attributes');
+});
+
+TestRunner.test('Global Controls Window - Tempo input defaults to DEFAULT_TEMPO value', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('value="120"') || funcStr.includes('value={DEFAULT_TEMPO}') || funcStr.includes('defaultValue'), 'Tempo input should default to 120 BPM');
+});
+
+TestRunner.test('Global Controls Window - openGlobalControlsWindow passes initialContentKey to createWindow', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('initialContentKey'), 'openGlobalControlsWindow should pass initialContentKey for content caching');
+});
+
+TestRunner.test('Global Controls Window - APP_VERSION validation for Day 373', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 373');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 51, 'Minor version should be >= 51 for Day 373');
+    }
+});
