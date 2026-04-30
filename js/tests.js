@@ -11116,3 +11116,282 @@ TestRunner.test('Master Effects Bus Audio - APP_VERSION validation for Day 394',
         t.assertTruthy(versionParts[1] >= 71, 'Minor version should be >= 71 for Day 394');
     }
 });
+
+// === Day 395: Track.prototype State Methods Tests ===
+
+TestRunner.test('Track Methods - Track.prototype.setTrackName is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setTrackName, 'function', 'setTrackName should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setTrackName accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setTrackName.length, 1, 'setTrackName should accept 1 parameter');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setTrackName calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setTrackName.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setTrackName should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setTrackName uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setTrackName.toString();
+    t.assertTruthy(funcStr.includes('Rename track') || funcStr.includes('track to'), 'Undo label should mention rename');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setTrackName validates non-empty name', (t) => {
+    const funcStr = Track.prototype.setTrackName.toString();
+    t.assertTruthy(funcStr.includes('empty') || funcStr.includes('trim()'), 'setTrackName should validate non-empty name');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setTrackColor is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setTrackColor, 'function', 'setTrackColor should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setTrackColor accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setTrackColor.length, 1, 'setTrackColor should accept 1 parameter');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setTrackColor calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setTrackColor should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setTrackColor uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('color') || funcStr.includes('Set color'), 'Undo label should mention color');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setVolume is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setVolume, 'function', 'setVolume should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setVolume accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setVolume.length, 1, 'setVolume should accept 1 parameter');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setVolume calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setVolume.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setVolume should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setVolume uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setVolume.toString();
+    t.assertTruthy(funcStr.includes('volume') || funcStr.includes('Set volume'), 'Undo label should mention volume');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setVolume clamps value to 0-1.5 range', (t) => {
+    const funcStr = Track.prototype.setVolume.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setVolume should clamp value');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setPan is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setPan, 'function', 'setPan should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setPan accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setPan.length, 1, 'setPan should accept 1 parameter');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setPan calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setPan.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setPan should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setPan uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setPan.toString();
+    t.assertTruthy(funcStr.includes('pan') || funcStr.includes('Set pan'), 'Undo label should mention pan');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setPan clamps value to -1 to 1 range', (t) => {
+    const funcStr = Track.prototype.setPan.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setPan should clamp value');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSynthParam is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setSynthParam, 'function', 'setSynthParam should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSynthParam accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSynthParam.length, 2, 'setSynthParam should accept 2 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSynthParam calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSynthParam.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSynthParam should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceVolume is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceVolume, 'function', 'setSliceVolume should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceVolume accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSliceVolume.length, 2, 'setSliceVolume should accept 2 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceVolume calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceVolume should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSlicePitchShift is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setSlicePitchShift, 'function', 'setSlicePitchShift should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSlicePitchShift accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSlicePitchShift.length, 2, 'setSlicePitchShift should accept 2 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSlicePitchShift calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSlicePitchShift should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceLoop is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceLoop, 'function', 'setSliceLoop should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceLoop accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSliceLoop.length, 2, 'setSliceLoop should accept 2 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceLoop calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSliceLoop.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceLoop should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceReverse is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceReverse, 'function', 'setSliceReverse should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceReverse accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSliceReverse.length, 2, 'setSliceReverse should accept 2 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceReverse calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSliceReverse.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceReverse should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceEnvelopeParam is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceEnvelopeParam, 'function', 'setSliceEnvelopeParam should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceEnvelopeParam accepts 3 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSliceEnvelopeParam.length, 3, 'setSliceEnvelopeParam should accept 3 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setSliceEnvelopeParam calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceEnvelopeParam should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadVolume is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadVolume, 'function', 'setDrumSamplerPadVolume should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadVolume accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setDrumSamplerPadVolume.length, 2, 'setDrumSamplerPadVolume should accept 2 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadVolume calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadVolume should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadPitch is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadPitch, 'function', 'setDrumSamplerPadPitch should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadPitch accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setDrumSamplerPadPitch.length, 2, 'setDrumSamplerPadPitch should accept 2 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadPitch calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadPitch should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadEnv is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadEnv, 'function', 'setDrumSamplerPadEnv should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadEnv accepts 3 parameters', (t) => {
+    t.assertEqual(Track.prototype.setDrumSamplerPadEnv.length, 3, 'setDrumSamplerPadEnv should accept 3 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setDrumSamplerPadEnv calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadEnv should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerRootNote is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerRootNote, 'function', 'setInstrumentSamplerRootNote should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerRootNote accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerRootNote.length, 1, 'setInstrumentSamplerRootNote should accept 1 parameter');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerRootNote calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerRootNote.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerRootNote should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoop is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerLoop, 'function', 'setInstrumentSamplerLoop should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoop accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerLoop.length, 1, 'setInstrumentSamplerLoop should accept 1 parameter');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoop calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoop.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerLoop should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoopStart is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerLoopStart, 'function', 'setInstrumentSamplerLoopStart should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoopStart accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerLoopStart.length, 1, 'setInstrumentSamplerLoopStart should accept 1 parameter');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoopStart calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoopStart.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerLoopStart should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoopEnd is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerLoopEnd, 'function', 'setInstrumentSamplerLoopEnd should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoopEnd accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerLoopEnd.length, 1, 'setInstrumentSamplerLoopEnd should accept 1 parameter');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerLoopEnd calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoopEnd.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerLoopEnd should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerEnv is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerEnv, 'function', 'setInstrumentSamplerEnv should be a function');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerEnv accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerEnv.length, 2, 'setInstrumentSamplerEnv should accept 2 parameters');
+});
+
+TestRunner.test('Track Methods - Track.prototype.setInstrumentSamplerEnv calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerEnv should call _captureUndoState');
+});
+
+TestRunner.test('Track Methods - APP_VERSION validation for Day 395', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 395');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 72, 'Minor version should be >= 72 for Day 395');
+    }
+});
