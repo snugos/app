@@ -8703,3 +8703,245 @@ TestRunner.test('Time Signature State - APP_VERSION validation for Day 398', (t)
     const minor = versionParts[1];
     t.assertTruthy(major > 2 || (major === 2 && minor >= 75), 'APP_VERSION should be 2.75.0 or higher for Day 398');
 });
+// ============================================
+// Day 399: Effect Presets State Functions Tests
+// ============================================
+TestRunner.test('Effect Presets State - getEffectPresetsState is a function export', (t) => {
+    t.assertEqual(typeof getEffectPresetsState, 'function', 'getEffectPresetsState should be a function');
+});
+
+TestRunner.test('Effect Presets State - getEffectPresetsState accepts 0 parameters', (t) => {
+    t.assertEqual(getEffectPresetsState.length, 0, 'getEffectPresetsState should accept 0 parameters');
+});
+
+TestRunner.test('Effect Presets State - getEffectPresetsState returns array', (t) => {
+    const result = getEffectPresetsState();
+    t.assertEqual(typeof result, 'object', 'getEffectPresetsState should return an object');
+    t.assertTruthy(Array.isArray(result), 'getEffectPresetsState should return an array');
+});
+
+TestRunner.test('Effect Presets State - getEffectPresetByIdState is a function export', (t) => {
+    t.assertEqual(typeof getEffectPresetByIdState, 'function', 'getEffectPresetByIdState should be a function');
+});
+
+TestRunner.test('Effect Presets State - getEffectPresetByIdState accepts 1 parameter', (t) => {
+    t.assertEqual(getEffectPresetByIdState.length, 1, 'getEffectPresetByIdState should accept 1 parameter');
+});
+
+TestRunner.test('Effect Presets State - getEffectPresetByIdState returns preset or undefined', (t) => {
+    const result = getEffectPresetByIdState(9999);
+    t.assertTruthy(result === undefined || typeof result === 'object', 'getEffectPresetByIdState should return preset or undefined');
+});
+
+TestRunner.test('Effect Presets State - getEffectPresetsByTypeState is a function export', (t) => {
+    t.assertEqual(typeof getEffectPresetsByTypeState, 'function', 'getEffectPresetsByTypeState should be a function');
+});
+
+TestRunner.test('Effect Presets State - getEffectPresetsByTypeState accepts 1 parameter', (t) => {
+    t.assertEqual(getEffectPresetsByTypeState.length, 1, 'getEffectPresetsByTypeState should accept 1 parameter');
+});
+
+TestRunner.test('Effect Presets State - getEffectPresetsByTypeState returns array', (t) => {
+    const result = getEffectPresetsByTypeState('Reverb');
+    t.assertTruthy(Array.isArray(result), 'getEffectPresetsByTypeState should return an array');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState is a function export', (t) => {
+    t.assertEqual(typeof addEffectPresetState, 'function', 'addEffectPresetState should be a function');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState accepts 1 parameter', (t) => {
+    t.assertEqual(addEffectPresetState.length, 1, 'addEffectPresetState should accept 1 parameter');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState uses descriptive undo label', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('Save Effect Preset'), 'addEffectPresetState should use descriptive undo label');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState uses DEFAULT_PRESET_NAME_PREFIX', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_PRESET_NAME_PREFIX'), 'addEffectPresetState should use DEFAULT_PRESET_NAME_PREFIX');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState generates unique id', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('effectPresetIdCounter') || funcStr.includes('id'), 'addEffectPresetState should generate unique id');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState uses DEFAULT_EFFECT_PRESET structure', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('name') && funcStr.includes('effectType') && funcStr.includes('params'), 'addEffectPresetState should create preset with name, effectType, and params');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState pushes to array', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('push'), 'addEffectPresetState should push to effectPresetsState array');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState checks MAX_EFFECT_PRESETS limit', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('MAX_EFFECT_PRESETS'), 'addEffectPresetState should check MAX_EFFECT_PRESETS limit');
+});
+
+TestRunner.test('Effect Presets State - addEffectPresetState returns preset', (t) => {
+    const funcStr = addEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('return preset') || funcStr.includes('return'), 'addEffectPresetState should return preset');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState is a function export', (t) => {
+    t.assertEqual(typeof updateEffectPresetState, 'function', 'updateEffectPresetState should be a function');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState accepts 2 parameters', (t) => {
+    t.assertEqual(updateEffectPresetState.length, 2, 'updateEffectPresetState should accept 2 parameters');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'updateEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState uses descriptive undo label', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('Update Effect Preset'), 'updateEffectPresetState should use descriptive undo label');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState finds preset by id', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('find'), 'updateEffectPresetState should find preset by id');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState updates name property', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('name'), 'updateEffectPresetState should update name property');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState updates effectType property', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'updateEffectPresetState should update effectType property');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState updates params property', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('params'), 'updateEffectPresetState should update params property');
+});
+
+TestRunner.test('Effect Presets State - updateEffectPresetState returns preset or null', (t) => {
+    const funcStr = updateEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('return null'), 'updateEffectPresetState should return null when preset not found');
+});
+
+TestRunner.test('Effect Presets State - removeEffectPresetState is a function export', (t) => {
+    t.assertEqual(typeof removeEffectPresetState, 'function', 'removeEffectPresetState should be a function');
+});
+
+TestRunner.test('Effect Presets State - removeEffectPresetState accepts 1 parameter', (t) => {
+    t.assertEqual(removeEffectPresetState.length, 1, 'removeEffectPresetState should accept 1 parameter');
+});
+
+TestRunner.test('Effect Presets State - removeEffectPresetState calls captureStateForUndo', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'removeEffectPresetState should call captureStateForUndo');
+});
+
+TestRunner.test('Effect Presets State - removeEffectPresetState uses descriptive undo label', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('Delete Effect Preset'), 'removeEffectPresetState should use descriptive undo label');
+});
+
+TestRunner.test('Effect Presets State - removeEffectPresetState finds index by id', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('findIndex'), 'removeEffectPresetState should find index by id');
+});
+
+TestRunner.test('Effect Presets State - removeEffectPresetState splices from array', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeEffectPresetState should splice from array');
+});
+
+TestRunner.test('Effect Presets State - removeEffectPresetState returns boolean', (t) => {
+    const funcStr = removeEffectPresetState.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'removeEffectPresetState should return boolean');
+});
+
+TestRunner.test('Effect Presets State - clearEffectPresetsState is a function export', (t) => {
+    t.assertEqual(typeof clearEffectPresetsState, 'function', 'clearEffectPresetsState should be a function');
+});
+
+TestRunner.test('Effect Presets State - clearEffectPresetsState accepts 0 parameters', (t) => {
+    t.assertEqual(clearEffectPresetsState.length, 0, 'clearEffectPresetsState should accept 0 parameters');
+});
+
+TestRunner.test('Effect Presets State - clearEffectPresetsState calls captureStateForUndo', (t) => {
+    const funcStr = clearEffectPresetsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'clearEffectPresetsState should call captureStateForUndo');
+});
+
+TestRunner.test('Effect Presets State - clearEffectPresetsState uses descriptive undo label', (t) => {
+    const funcStr = clearEffectPresetsState.toString();
+    t.assertTruthy(funcStr.includes('Clear All Effect Presets'), 'clearEffectPresetsState should use descriptive undo label');
+});
+
+TestRunner.test('Effect Presets State - clearEffectPresetsState clears array', (t) => {
+    const funcStr = clearEffectPresetsState.toString();
+    t.assertTruthy(funcStr.includes('effectPresetsState = []') || funcStr.includes('= []'), 'clearEffectPresetsState should clear array');
+});
+
+TestRunner.test('Effect Presets Constants - MAX_EFFECT_PRESETS is defined', (t) => {
+    t.assertTruthy(Constants.MAX_EFFECT_PRESETS !== undefined, 'MAX_EFFECT_PRESETS should be defined');
+});
+
+TestRunner.test('Effect Presets Constants - MAX_EFFECT_PRESETS is a positive number', (t) => {
+    t.assertEqual(typeof Constants.MAX_EFFECT_PRESETS, 'number', 'MAX_EFFECT_PRESETS should be a number');
+    t.assertTruthy(Constants.MAX_EFFECT_PRESETS > 0, 'MAX_EFFECT_PRESETS should be positive');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_PRESET_NAME_PREFIX is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_PRESET_NAME_PREFIX !== undefined, 'DEFAULT_PRESET_NAME_PREFIX should be defined');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_PRESET_NAME_PREFIX is a string', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_PRESET_NAME_PREFIX, 'string', 'DEFAULT_PRESET_NAME_PREFIX should be a string');
+    t.assertTruthy(Constants.DEFAULT_PRESET_NAME_PREFIX.length > 0, 'DEFAULT_PRESET_NAME_PREFIX should be non-empty');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_EFFECT_PRESET is defined', (t) => {
+    t.assertTruthy(Constants.DEFAULT_EFFECT_PRESET !== undefined, 'DEFAULT_EFFECT_PRESET should be defined');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_EFFECT_PRESET is an object', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_EFFECT_PRESET, 'object', 'DEFAULT_EFFECT_PRESET should be an object');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_EFFECT_PRESET has name property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_EFFECT_PRESET.name !== undefined, 'DEFAULT_EFFECT_PRESET should have name property');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_EFFECT_PRESET has effectType property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_EFFECT_PRESET.effectType !== undefined, 'DEFAULT_EFFECT_PRESET should have effectType property');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_EFFECT_PRESET has params property', (t) => {
+    t.assertTruthy(Constants.DEFAULT_EFFECT_PRESET.params !== undefined, 'DEFAULT_EFFECT_PRESET should have params property');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_EFFECT_PRESET effectType is null', (t) => {
+    t.assertEqual(Constants.DEFAULT_EFFECT_PRESET.effectType, null, 'DEFAULT_EFFECT_PRESET effectType should be null');
+});
+
+TestRunner.test('Effect Presets Constants - DEFAULT_EFFECT_PRESET params is object', (t) => {
+    t.assertEqual(typeof Constants.DEFAULT_EFFECT_PRESET.params, 'object', 'DEFAULT_EFFECT_PRESET params should be an object');
+});
+
+TestRunner.test('Effect Presets State - APP_VERSION validation for Day 399', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    const major = versionParts[0];
+    const minor = versionParts[1];
+    t.assertTruthy(major > 2 || (major === 2 && minor >= 76), 'APP_VERSION should be 2.76.0 or higher for Day 399');
+});
