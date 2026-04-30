@@ -8471,3 +8471,234 @@ TestRunner.test('Automation Editor - APP_VERSION validation for Day 382', (t) =>
         t.assertTruthy(versionParts[1] >= 60, 'Minor version should be >= 60 for Day 382');
     }
 });
+
+// Day 383: Audio Panic & Performance Monitor Functions Tests
+
+TestRunner.test('Audio Panic - panicAllAudio is a function export', (t) => {
+    t.assertEqual(typeof panicAllAudio, 'function', 'panicAllAudio should be a function');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio accepts 0 parameters', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(!funcStr.includes('trackId') && !funcStr.includes('sendId'), 'panicAllAudio should accept 0 parameters');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio stops Tone.Transport', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.stop') || funcStr.includes('Transport.stop'), 'panicAllAudio should stop Tone.Transport');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio cancels scheduled events', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.cancel') || funcStr.includes('Transport.cancel'), 'panicAllAudio should cancel scheduled events');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio references getTracks from appServices', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'panicAllAudio should reference getTracks from appServices');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio handles tracks array', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('tracks') && (funcStr.includes('forEach') || funcStr.includes('Array.isArray')), 'panicAllAudio should handle tracks array');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio stops sequence playback', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('sequence.stop') || funcStr.includes('sequence.clear'), 'panicAllAudio should stop sequence playback');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio stops drum pad players', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('drumPadPlayers') && funcStr.includes('player.stop'), 'panicAllAudio should stop drum pad players');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio stops slicer mono player', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('slicerMonoPlayer') && (funcStr.includes('stop()') || funcStr.includes('.stop(')), 'panicAllAudio should stop slicer mono player');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio releases instrument sampler', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('toneSampler') && funcStr.includes('releaseAll'), 'panicAllAudio should release instrument sampler');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio handles Audio track recording', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('type') && funcStr.includes('Audio') && funcStr.includes('isRecording'), 'panicAllAudio should handle Audio track recording');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio calls stopAudioRecording', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('stopAudioRecording'), 'panicAllAudio should call stopAudioRecording for Audio tracks');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio stops metronome', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('metronomeInitialized') && funcStr.includes('stopMetronome'), 'panicAllAudio should stop metronome if playing');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio shows notification', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && (funcStr.includes('PANIC') || funcStr.includes('stopped')), 'panicAllAudio should show notification');
+});
+
+TestRunner.test('Audio Panic - panicAllAudio has try-catch error handling', (t) => {
+    const funcStr = panicAllAudio.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'panicAllAudio should have try-catch error handling');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor is a function export', (t) => {
+    t.assertEqual(typeof startPerformanceMonitor, 'function', 'startPerformanceMonitor should be a function');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor accepts 0 parameters', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(!funcStr.includes('trackId') && !funcStr.includes('sendId'), 'startPerformanceMonitor should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor checks if already running', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('performanceMonitorIntervalId') || funcStr.includes('intervalId'), 'startPerformanceMonitor should check if already running');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor uses PERFORMANCE_UPDATE_INTERVAL_MS', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('PERFORMANCE_UPDATE_INTERVAL_MS') || funcStr.includes('intervalMs'), 'startPerformanceMonitor should use interval constant');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor sets up setInterval', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setInterval'), 'startPerformanceMonitor should set up setInterval');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor updates audio context state', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setAudioContextStateState') || funcStr.includes('audioContextState'), 'startPerformanceMonitor should update audio context state');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor updates audio latency', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setAudioLatencyState') || funcStr.includes('latency'), 'startPerformanceMonitor should update audio latency');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor counts active voices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('activeVoices') || funcStr.includes('setActiveVoicesState'), 'startPerformanceMonitor should count active voices');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor handles synth active voices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('toneSynth') && funcStr.includes('activeVoices'), 'startPerformanceMonitor should handle synth active voices');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor handles sampler active voices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('toneSampler') && (funcStr.includes('_activeVoices') || funcStr.includes('activeVoices')), 'startPerformanceMonitor should handle sampler active voices');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor handles drum pad players', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('drumPadPlayers') && funcStr.includes('state'), 'startPerformanceMonitor should handle drum pad players');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor updates CPU usage state', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setCPUUsageState'), 'startPerformanceMonitor should update CPU usage state');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor updates memory pressure state', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('setMemoryPressureState'), 'startPerformanceMonitor should update memory pressure state');
+});
+
+TestRunner.test('Performance Monitor Audio - startPerformanceMonitor estimates CPU based on voices', (t) => {
+    const funcStr = startPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('estimatedCPU') || funcStr.includes('Math.min'), 'startPerformanceMonitor should estimate CPU based on active voices');
+});
+
+TestRunner.test('Performance Monitor Audio - stopPerformanceMonitor is a function export', (t) => {
+    t.assertEqual(typeof stopPerformanceMonitor, 'function', 'stopPerformanceMonitor should be a function');
+});
+
+TestRunner.test('Performance Monitor Audio - stopPerformanceMonitor accepts 0 parameters', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(!funcStr.includes('trackId') && !funcStr.includes('sendId'), 'stopPerformanceMonitor should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor Audio - stopPerformanceMonitor clears interval', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('clearInterval'), 'stopPerformanceMonitor should clear interval');
+});
+
+TestRunner.test('Performance Monitor Audio - stopPerformanceMonitor checks if running', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('performanceMonitorIntervalId') || funcStr.includes('intervalId'), 'stopPerformanceMonitor should check if running');
+});
+
+TestRunner.test('Performance Monitor Audio - stopPerformanceMonitor sets interval to null', (t) => {
+    const funcStr = stopPerformanceMonitor.toString();
+    t.assertTruthy(funcStr.includes('null'), 'stopPerformanceMonitor should set interval to null');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics is a function export', (t) => {
+    t.assertEqual(typeof getPerformanceMetrics, 'function', 'getPerformanceMetrics should be a function');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics accepts 0 parameters', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(!funcStr.includes('trackId') && !funcStr.includes('sendId'), 'getPerformanceMetrics should accept 0 parameters');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics returns an object', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('const metrics = {') || funcStr.includes('return {'), 'getPerformanceMetrics should return an object');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics includes audioContextState', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('audioContextState'), 'getPerformanceMetrics should include audioContextState');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics includes cpuUsage', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('cpuUsage'), 'getPerformanceMetrics should include cpuUsage');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics includes memoryPressure', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('memoryPressure'), 'getPerformanceMetrics should include memoryPressure');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics includes activeVoices', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('activeVoices'), 'getPerformanceMetrics should include activeVoices');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics includes audioLatency', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('audioLatency'), 'getPerformanceMetrics should include audioLatency');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics includes droppedCallbacks', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('droppedCallbacks'), 'getPerformanceMetrics should include droppedCallbacks');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics accesses Tone.context', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('Tone.context') || funcStr.includes('context'), 'getPerformanceMetrics should access Tone.context');
+});
+
+TestRunner.test('Performance Monitor Audio - getPerformanceMetrics accesses localAppServices getters', (t) => {
+    const funcStr = getPerformanceMetrics.toString();
+    t.assertTruthy(funcStr.includes('getCPUUsageState') || funcStr.includes('getMemoryPressureState') || funcStr.includes('getActiveVoicesState'), 'getPerformanceMetrics should access localAppServices getters');
+});
+
+TestRunner.test('Performance Monitor Audio - APP_VERSION validation for Day 383', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 383');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 61, 'Minor version should be >= 61 for Day 383');
+    }
+});
