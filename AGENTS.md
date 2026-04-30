@@ -7051,3 +7051,91 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate Performance Monitor functions (startPerformanceMonitor, stopPerformanceMonitor, getPerformanceMetrics)
   - Total tests increased from 1984 to 2025
 - **Version**: Bumped to 2.72.0
+
+#### Day 400: Chord Mode Extended State & Constant Tests (2026-04-30)
+- **Feature**: Added 71 new unit tests for Chord Mode Extended State and Constant functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 71 new tests in Day 400 section:
+    - Chord Mode State - setChordModeEnabledState is a function export
+    - Chord Mode State - setChordModeEnabledState accepts 1 parameter
+    - Chord Mode State - setChordModeEnabledState calls captureStateForUndo
+    - Chord Mode State - setChordModeEnabledState uses descriptive undo label
+    - Chord Mode State - setChordModeEnabledState coerces to boolean
+    - Chord Mode State - setChordModeRootState is a function export
+    - Chord Mode State - setChordModeRootState accepts 1 parameter
+    - Chord Mode State - setChordModeRootState calls captureStateForUndo
+    - Chord Mode State - setChordModeRootState uses descriptive undo label
+    - Chord Mode State - setChordModeRootState clamps value to 0-11 range
+    - Chord Mode State - setChordModeRootState parses root as integer
+    - Chord Mode State - setChordModeRootState defaults to 0 for invalid input
+    - Chord Mode State - setChordModeTypeState is a function export
+    - Chord Mode State - setChordModeTypeState accepts 1 parameter
+    - Chord Mode State - setChordModeTypeState calls captureStateForUndo
+    - Chord Mode State - setChordModeTypeState uses descriptive undo label with type
+    - Chord Mode State - setChordModeTypeState defaults to major for invalid input
+    - Chord Mode State - setChordModeLockState is a function export
+    - Chord Mode State - setChordModeLockState accepts 1 parameter
+    - Chord Mode State - setChordModeLockState calls captureStateForUndo
+    - Chord Mode State - setChordModeLockState uses descriptive undo label
+    - Chord Mode State - setChordModeLockState coerces to boolean
+    - Chord Mode State - setChordVoicingState is a function export
+    - Chord Mode State - setChordVoicingState accepts 1 parameter
+    - Chord Mode State - setChordVoicingState calls captureStateForUndo
+    - Chord Mode State - setChordVoicingState uses descriptive undo label
+    - Chord Mode State - setChordVoicingState validates against CHORD_VOICINGS
+    - Chord Mode State - setChordVoicingState defaults to DEFAULT_CHORD_VOICING
+    - Chord Mode State - setChordModeState is a function export
+    - Chord Mode State - setChordModeState accepts 1 parameter
+    - Chord Mode State - setChordModeState calls captureStateForUndo
+    - Chord Mode State - setChordModeState uses descriptive undo label
+    - Chord Mode State - setChordModeState validates state is an object
+    - Chord Mode State - setChordModeState merges with DEFAULT_CHORD_MODE
+    - Chord Mode State - setChordModeState guards against missing appServices
+    - Chord Mode Constants - CHORD_TYPES has sus2 chord
+    - Chord Mode Constants - CHORD_TYPES has sus4 chord
+    - Chord Mode Constants - CHORD_TYPES has diminished7 chord
+    - Chord Mode Constants - CHORD_TYPES has halfDiminished7 chord
+    - Chord Mode Constants - CHORD_TYPES has major6 chord
+    - Chord Mode Constants - CHORD_TYPES has minor6 chord
+    - Chord Mode Constants - CHORD_TYPES has power chord
+    - Chord Mode Constants - CHORD_TYPES has fifth chord
+    - Chord Mode Constants - CHORD_TYPES.major has 3 notes
+    - Chord Mode Constants - CHORD_TYPES.major7 has 4 notes
+    - Chord Mode Constants - CHORD_TYPES.dominant7 has 4 notes
+    - Chord Mode Constants - CHORD_TYPES.power has 2 notes
+    - Chord Mode Constants - CHORD_TYPES.sus2 has correct intervals
+    - Chord Mode Constants - CHORD_TYPES.sus4 has correct intervals
+    - Chord Mode Constants - DEFAULT_CHORD_MODE is defined
+    - Chord Mode Constants - DEFAULT_CHORD_MODE is an object
+    - Chord Mode Constants - DEFAULT_CHORD_MODE.enabled is false
+    - Chord Mode Constants - DEFAULT_CHORD_MODE.root is 0
+    - Chord Mode Constants - DEFAULT_CHORD_MODE.type is major
+    - Chord Mode Constants - DEFAULT_CHORD_MODE.lockChord is false
+    - Chord Mode Constants - DEFAULT_CHORD_VOICING is closed
+    - Chord Mode Constants - CHORD_VOICING_SPREAD is defined
+    - Chord Mode Constants - CHORD_VOICING_SPREAD is an object
+    - Chord Mode Constants - CHORD_VOICING_SPREAD.closed is an array
+    - Chord Mode Constants - CHORD_VOICING_SPREAD.wide is an array
+    - Chord Mode Constants - CHORD_VOICING_SPREAD.drop2 is an array
+    - Chord Mode Constants - CHORD_VOICING_SPREAD.rootless is an array
+    - Chord Mode Constants - CHORD_VOICINGS has 4 voicings
+    - Chord Mode Constants - CHORD_VOICINGS includes closed
+    - Chord Mode Constants - CHORD_VOICINGS includes wide
+    - Chord Mode Constants - CHORD_VOICINGS includes drop2
+    - Chord Mode Constants - CHORD_VOICINGS includes rootless
+    - Chord Mode State - APP_VERSION validation for Day 400
+  - `js/constants.js`: Bumped APP_VERSION to 2.78.0
+- **Feature Details**:
+  - Tests validate setChordModeEnabledState function (1 param, calls captureStateForUndo with Toggle Chord Mode label, boolean coercion)
+  - Tests validate setChordModeRootState function (1 param, clamps to 0-11 range, uses parseInt with 0 default)
+  - Tests validate setChordModeTypeState function (1 param, uses Set Chord Type label, defaults to 'major')
+  - Tests validate setChordModeLockState function (1 param, uses Chord Lock label, boolean coercion)
+  - Tests validate setChordVoicingState function (1 param, validates against CHORD_VOICINGS, defaults to DEFAULT_CHORD_VOICING)
+  - Tests validate setChordModeState function (1 param, validates state is object, merges with DEFAULT_CHORD_MODE)
+  - Tests validate all CHORD_TYPES chord types (sus2, sus4, diminished7, halfDiminished7, major6, minor6, power, fifth)
+  - Tests validate CHORD_TYPES intervals for sus2 and sus4 chords
+  - Tests validate DEFAULT_CHORD_MODE structure (enabled: false, root: 0, type: 'major', lockChord: false)
+  - Tests validate CHORD_VOICING_SPREAD structure (closed, wide, drop2, rootless arrays)
+  - Tests validate CHORD_VOICINGS has exactly 4 voicings
+  - Total tests increased from 8946 to 9017
+- **Version**: Bumped to 2.78.0
