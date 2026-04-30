@@ -1,3 +1,54 @@
+#### Day 400: Master Effects Chain State Functions Tests (2026-04-30)
+- **Feature**: Added 32 new unit tests for Master Effects Chain state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 32 new tests in Day 400 section:
+    - Master Effects Chain - addMasterEffectToState is a function export
+    - Master Effects Chain - addMasterEffectToState accepts 2 parameters
+    - Master Effects Chain - addMasterEffectToState calls captureStateForUndo
+    - Master Effects Chain - addMasterEffectToState uses descriptive undo label
+    - Master Effects Chain - addMasterEffectToState references effectType in undo label
+    - Master Effects Chain - addMasterEffectToState uses effectsRegistryAccess for default params
+    - Master Effects Chain - addMasterEffectToState generates unique effectId
+    - Master Effects Chain - addMasterEffectToState pushes to masterEffectsChainState
+    - Master Effects Chain - addMasterEffectToState returns effectId
+    - Master Effects Chain - removeMasterEffectFromState is a function export
+    - Master Effects Chain - removeMasterEffectFromState accepts 1 parameter
+    - Master Effects Chain - removeMasterEffectFromState calls captureStateForUndo
+    - Master Effects Chain - removeMasterEffectFromState uses descriptive undo label
+    - Master Effects Chain - removeMasterEffectFromState finds effect by id
+    - Master Effects Chain - removeMasterEffectFromState splices from array
+    - Master Effects Chain - updateMasterEffectParamInState is a function export
+    - Master Effects Chain - updateMasterEffectParamInState accepts 3 parameters
+    - Master Effects Chain - updateMasterEffectParamInState references all parameters
+    - Master Effects Chain - updateMasterEffectParamInState calls captureStateForUndo
+    - Master Effects Chain - updateMasterEffectParamInState finds effect by id
+    - Master Effects Chain - updateMasterEffectParamInState navigates param path
+    - Master Effects Chain - reorderMasterEffectInState is a function export
+    - Master Effects Chain - reorderMasterEffectInState accepts 2 parameters
+    - Master Effects Chain - reorderMasterEffectInState references all parameters
+    - Master Effects Chain - reorderMasterEffectInState validates indices
+    - Master Effects Chain - reorderMasterEffectInState calls captureStateForUndo
+    - Master Effects Chain - reorderMasterEffectInState uses descriptive undo label
+    - Master Effects Chain - reorderMasterEffectInState uses splice to move effect
+    - Master Effects Chain - APP_VERSION validation for Day 400
+  - `js/constants.js`: Bumped APP_VERSION to 2.78.0
+- **Feature Details**:
+  - Tests validate addMasterEffectToState function (2 params: effectType, initialParams)
+  - Tests validate addMasterEffectToState uses effectsRegistryAccess.getEffectDefaultParams for default params fallback
+  - Tests validate addMasterEffectToState generates unique effectId using Date.now() and Math.random()
+  - Tests validate addMasterEffectToState pushes to masterEffectsChainState array and returns effectId
+  - Tests validate removeMasterEffectFromState function (1 param: effectId, finds by id with findIndex, splices from array)
+  - Tests validate removeMasterEffectFromState calls captureStateForUndo with descriptive label
+  - Tests validate updateMasterEffectParamInState function (3 params: effectId, paramPath, value)
+  - Tests validate updateMasterEffectParamInState finds effect by id and navigates nested param paths using split('.')
+  - Tests validate updateMasterEffectParamInState calls captureStateForUndo with descriptive label
+  - Tests validate reorderMasterEffectInState function (2 params: effectId, newIndex)
+  - Tests validate reorderMasterEffectInState validates oldIndex and newIndex and uses splice to move effect
+  - Tests validate reorderMasterEffectInState calls captureStateForUndo with descriptive label
+  - All Master Effects Chain functions call captureStateForUndo for undo/redo support
+  - Total tests increased from 9315 to 9347
+- **Version**: Bumped to 2.78.0
+
 #### Day 399: Effect Presets State Functions Tests (2026-04-30)
 - **Feature**: Added 42 new unit tests for Effect Presets state functions to expand test coverage
 - **Files Modified**:
