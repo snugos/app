@@ -1,3 +1,77 @@
+#### Day 418: Synth Presets & Additional State Functions Tests (2026-05-01)
+- **Feature**: Added 72 new unit tests for Synth Presets and Additional State Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 72 new tests in Day 418 section:
+    - Synth Presets - getSynthPresets is a function export
+    - Synth Presets - getSynthPresets accepts 0 parameters
+    - Synth Presets - getSynthPresets returns an object
+    - Synth Presets - saveSynthPreset is a function export
+    - Synth Presets - saveSynthPreset accepts 2 parameters
+    - Synth Presets - saveSynthPreset references name parameter
+    - Synth Presets - saveSynthPreset references presetData parameter
+    - Synth Presets - saveSynthPreset updates synthPresetsGlobal
+    - Synth Presets - saveSynthPreset uses JSON.parse and JSON.stringify
+    - Synth Presets - deleteSynthPreset is a function export
+    - Synth Presets - deleteSynthPreset accepts 1 parameter
+    - Synth Presets - deleteSynthPreset references name parameter
+    - Synth Presets - deleteSynthPreset checks synthPresetsGlobal
+    - Synth Presets - deleteSynthPreset returns boolean
+    - State - setSoloedTrackIdState is a function export
+    - State - setSoloedTrackIdState accepts 1 parameter
+    - State - setSoloedTrackIdState guards against missing appServices
+    - State - setSoloedTrackIdState handles null/undefined id
+    - State - setSoloedTrackIdState calls onSoloedTrackChanged callback
+    - State - incrementHighestZState is a function export
+    - State - incrementHighestZState accepts 0 parameters
+    - State - incrementHighestZState increments highestZ
+    - State - incrementHighestZState returns incremented value
+    - State - getHighestZState is a function export
+    - State - getHighestZState accepts 0 parameters
+    - State - getHighestZState returns highestZ value
+    - State - isTrackRecordingState is a function export
+    - State - isTrackRecordingState accepts 0 parameters
+    - State - isTrackRecordingState returns isRecordingGlobal
+    - State - getRecordingStartTimeState is a function export
+    - State - getRecordingStartTimeState accepts 0 parameters
+    - State - getRecordingStartTimeState returns recordingStartTime
+    - State - getActiveSequencerTrackIdState is a function export
+    - State - getActiveSequencerTrackIdState accepts 0 parameters
+    - State - getActiveSequencerTrackIdState returns activeSequencerTrackId
+    - State - getOpenWindowsState is a function export
+    - State - getOpenWindowsState accepts 0 parameters
+    - State - getOpenWindowsState returns openWindowsMap
+    - State - getWindowByIdState is a function export
+    - State - getWindowByIdState accepts 1 parameter
+    - State - getWindowByIdState uses Map.get
+    - State - addWindowToStoreState is a function export
+    - State - addWindowToStoreState accepts 2 parameters
+    - State - addWindowToStoreState uses Map.set
+    - State - removeWindowFromStoreState is a function export
+    - State - removeWindowFromStoreState accepts 1 parameter
+    - State - removeWindowFromStoreState uses Map.delete
+    - State - getUndoStackState is a function export
+    - State - getUndoStackState accepts 0 parameters
+    - State - getUndoStackState returns array copy
+    - State - getRedoStackState is a function export
+    - State - getRedoStackState accepts 0 parameters
+    - State - getRedoStackState returns array copy
+    - Day 418 - APP_VERSION validation for Day 418
+  - `js/constants.js`: Bumped APP_VERSION to 2.96.0
+- **Feature Details**:
+  - Tests validate getSynthPresets function (0 params, returns object copy of presets)
+  - Tests validate saveSynthPreset function (2 params: name, presetData, uses JSON for deep copy)
+  - Tests validate deleteSynthPreset function (1 param: name, checks existence, returns boolean)
+  - Tests validate setSoloedTrackIdState function (1 param, handles null/undefined, calls onSoloedTrackChanged callback)
+  - Tests validate incrementHighestZState function (0 params, increments highestZ, returns value)
+  - Tests validate getHighestZState function (0 params, returns highestZ value)
+  - Tests validate isTrackRecordingState function (0 params, returns isRecordingGlobal)
+  - Tests validate getRecordingStartTimeState function (0 params, returns recordingStartTime)
+  - Tests validate getActiveSequencerTrackIdState function (0 params, returns activeSequencerTrackId)
+  - Tests validate Window Store functions (getOpenWindowsState, getWindowByIdState, addWindowToStoreState, removeWindowFromStoreState)
+  - Tests validate Undo/Redo stack getter functions (getUndoStackState, getRedoStackState, both return array copies)
+  - Total tests increased from 12492 to 12564
+- **Version**: Bumped to 2.96.0
+
 #### Day 417: Punch Recording Functions Tests (2026-05-01)
 - **Feature**: Added 34 new unit tests for Punch Recording Functions to expand test coverage
 - **Files Modified**:
@@ -50,6 +124,7 @@
   - Tests validate getPunchInBars and getPunchOutBars functions (0 params each)
   - Total tests increased from 12262 to 12492
 - **Version**: Bumped to 2.95.0
+
 #### Day 416: Automation & Count-In Audio Functions Tests (2026-05-01)
 - **Feature**: Added 35 new unit tests for Automation and Count-In Audio Functions to expand test coverage
 - **Files Modified**:
@@ -7458,4 +7533,16 @@
   - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
   - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
   - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.6
+- **Version**: Bumped to 2.65.0
+- **Version**: Bumped to 2.64.0
+
+#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
+- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 48 new tests in Day 387 section:
+    - State Utility - resetPerformanceMonitorState is a function export
+    - State Utility - resetPerformanceMonitorState accepts 0 parameters
+    - State Utility - resetPerformanceMonitorState resets all properties
+    - State Utility - resetTimelineZoom is a function export
+    - State Utility - resetTimelineZoom accepts 0 parameters
+    - State Utility

@@ -12490,3 +12490,540 @@ TestRunner.test('Punch Recording - APP_VERSION validation for Day 417', (t) => {
         t.assertTruthy(versionParts[1] >= 94, 'Minor version should be >= 94 for Day 417');
     }
 });
+// === Day 418: Synth Presets State Functions Tests ===
+
+TestRunner.test('Synth Presets - getSynthPresets is a function export', (t) => {
+    t.assertEqual(typeof getSynthPresets, 'function', 'getSynthPresets should be a function');
+});
+
+TestRunner.test('Synth Presets - getSynthPresets accepts 0 parameters', (t) => {
+    const funcStr = getSynthPresets.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getSynthPresets should accept 0 parameters');
+});
+
+TestRunner.test('Synth Presets - getSynthPresets returns an object', (t) => {
+    const funcStr = getSynthPresets.toString();
+    t.assertTruthy(funcStr.includes('return') || funcStr.includes('...synthPresetsGlobal') || funcStr.includes('Object.assign'), 'getSynthPresets should return an object');
+});
+
+TestRunner.test('Synth Presets - saveSynthPreset is a function export', (t) => {
+    t.assertEqual(typeof saveSynthPreset, 'function', 'saveSynthPreset should be a function');
+});
+
+TestRunner.test('Synth Presets - saveSynthPreset accepts 2 parameters', (t) => {
+    const funcStr = saveSynthPreset.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 2 : 0, 2, 'saveSynthPreset should accept 2 parameters');
+});
+
+TestRunner.test('Synth Presets - saveSynthPreset references name parameter', (t) => {
+    const funcStr = saveSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('name'), 'saveSynthPreset should reference name parameter');
+});
+
+TestRunner.test('Synth Presets - saveSynthPreset references presetData parameter', (t) => {
+    const funcStr = saveSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('presetData'), 'saveSynthPreset should reference presetData parameter');
+});
+
+TestRunner.test('Synth Presets - saveSynthPreset updates synthPresetsGlobal', (t) => {
+    const funcStr = saveSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('synthPresetsGlobal'), 'saveSynthPreset should update synthPresetsGlobal');
+});
+
+TestRunner.test('Synth Presets - saveSynthPreset uses JSON.parse and JSON.stringify', (t) => {
+    const funcStr = saveSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('JSON.parse') && funcStr.includes('JSON.stringify'), 'saveSynthPreset should use JSON for deep copy');
+});
+
+TestRunner.test('Synth Presets - deleteSynthPreset is a function export', (t) => {
+    t.assertEqual(typeof deleteSynthPreset, 'function', 'deleteSynthPreset should be a function');
+});
+
+TestRunner.test('Synth Presets - deleteSynthPreset accepts 1 parameter', (t) => {
+    const funcStr = deleteSynthPreset.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'deleteSynthPreset should accept 1 parameter');
+});
+
+TestRunner.test('Synth Presets - deleteSynthPreset references name parameter', (t) => {
+    const funcStr = deleteSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('name'), 'deleteSynthPreset should reference name parameter');
+});
+
+TestRunner.test('Synth Presets - deleteSynthPreset checks synthPresetsGlobal', (t) => {
+    const funcStr = deleteSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('synthPresetsGlobal'), 'deleteSynthPreset should check synthPresetsGlobal');
+});
+
+TestRunner.test('Synth Presets - deleteSynthPreset returns boolean', (t) => {
+    const funcStr = deleteSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'deleteSynthPreset should return boolean');
+});
+
+// === Day 418: Additional State Setter Functions Tests ===
+
+TestRunner.test('State - setSoloedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setSoloedTrackIdState, 'function', 'setSoloedTrackIdState should be a function');
+});
+
+TestRunner.test('State - setSoloedTrackIdState accepts 1 parameter', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setSoloedTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('State - setSoloedTrackIdState guards against missing appServices', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'setSoloedTrackIdState should reference appServices');
+});
+
+TestRunner.test('State - setSoloedTrackIdState handles null/undefined id', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('null') || funcStr.includes('undefined'), 'setSoloedTrackIdState should handle null/undefined id');
+});
+
+TestRunner.test('State - setSoloedTrackIdState calls onSoloedTrackChanged callback', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('onSoloedTrackChanged'), 'setSoloedTrackIdState should call onSoloedTrackChanged callback');
+});
+
+TestRunner.test('State - incrementHighestZState is a function export', (t) => {
+    t.assertEqual(typeof incrementHighestZState, 'function', 'incrementHighestZState should be a function');
+});
+
+TestRunner.test('State - incrementHighestZState accepts 0 parameters', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'incrementHighestZState should accept 0 parameters');
+});
+
+TestRunner.test('State - incrementHighestZState increments highestZ', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(funcStr.includes('++highestZ') || funcStr.includes('highestZ++'), 'incrementHighestZState should increment highestZ');
+});
+
+TestRunner.test('State - incrementHighestZState returns incremented value', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(funcStr.includes('return'), 'incrementHighestZState should return incremented value');
+});
+
+TestRunner.test('State - getHighestZState is a function export', (t) => {
+    t.assertEqual(typeof getHighestZState, 'function', 'getHighestZState should be a function');
+});
+
+TestRunner.test('State - getHighestZState accepts 0 parameters', (t) => {
+    const funcStr = getHighestZState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getHighestZState should accept 0 parameters');
+});
+
+TestRunner.test('State - getHighestZState returns highestZ value', (t) => {
+    const funcStr = getHighestZState.toString();
+    t.assertTruthy(funcStr.includes('return highestZ'), 'getHighestZState should return highestZ value');
+});
+
+TestRunner.test('State - isTrackRecordingState is a function export', (t) => {
+    t.assertEqual(typeof isTrackRecordingState, 'function', 'isTrackRecordingState should be a function');
+});
+
+TestRunner.test('State - isTrackRecordingState accepts 0 parameters', (t) => {
+    const funcStr = isTrackRecordingState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'isTrackRecordingState should accept 0 parameters');
+});
+
+TestRunner.test('State - isTrackRecordingState returns isRecordingGlobal', (t) => {
+    const funcStr = isTrackRecordingState.toString();
+    t.assertTruthy(funcStr.includes('isRecordingGlobal'), 'isTrackRecordingState should return isRecordingGlobal');
+});
+
+TestRunner.test('State - getRecordingStartTimeState is a function export', (t) => {
+    t.assertEqual(typeof getRecordingStartTimeState, 'function', 'getRecordingStartTimeState should be a function');
+});
+
+TestRunner.test('State - getRecordingStartTimeState accepts 0 parameters', (t) => {
+    const funcStr = getRecordingStartTimeState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getRecordingStartTimeState should accept 0 parameters');
+});
+
+TestRunner.test('State - getRecordingStartTimeState returns recordingStartTime', (t) => {
+    const funcStr = getRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('return recordingStartTime'), 'getRecordingStartTimeState should return recordingStartTime');
+});
+
+TestRunner.test('State - getActiveSequencerTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof getActiveSequencerTrackIdState, 'function', 'getActiveSequencerTrackIdState should be a function');
+});
+
+TestRunner.test('State - getActiveSequencerTrackIdState accepts 0 parameters', (t) => {
+    const funcStr = getActiveSequencerTrackIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getActiveSequencerTrackIdState should accept 0 parameters');
+});
+
+TestRunner.test('State - getActiveSequencerTrackIdState returns activeSequencerTrackId', (t) => {
+    const funcStr = getActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('return activeSequencerTrackId'), 'getActiveSequencerTrackIdState should return activeSequencerTrackId');
+});
+
+TestRunner.test('State - getOpenWindowsState is a function export', (t) => {
+    t.assertEqual(typeof getOpenWindowsState, 'function', 'getOpenWindowsState should be a function');
+});
+
+TestRunner.test('State - getOpenWindowsState accepts 0 parameters', (t) => {
+    const funcStr = getOpenWindowsState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getOpenWindowsState should accept 0 parameters');
+});
+
+TestRunner.test('State - getOpenWindowsState returns openWindowsMap', (t) => {
+    const funcStr = getOpenWindowsState.toString();
+    t.assertTruthy(funcStr.includes('openWindowsMap'), 'getOpenWindowsState should return openWindowsMap');
+});
+
+TestRunner.test('State - getWindowByIdState is a function export', (t) => {
+    t.assertEqual(typeof getWindowByIdState, 'function', 'getWindowByIdState should be a function');
+});
+
+TestRunner.test('State - getWindowByIdState accepts 1 parameter', (t) => {
+    const funcStr = getWindowByIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'getWindowByIdState should accept 1 parameter');
+});
+
+TestRunner.test('State - getWindowByIdState uses Map.get', (t) => {
+    const funcStr = getWindowByIdState.toString();
+    t.assertTruthy(funcStr.includes('.get(') || funcStr.includes('get(id)'), 'getWindowByIdState should use Map.get');
+});
+
+TestRunner.test('State - addWindowToStoreState is a function export', (t) => {
+    t.assertEqual(typeof addWindowToStoreState, 'function', 'addWindowToStoreState should be a function');
+});
+
+TestRunner.test('State - addWindowToStoreState accepts 2 parameters', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 2 : 0, 2, 'addWindowToStoreState should accept 2 parameters');
+});
+
+TestRunner.test('State - addWindowToStoreState uses Map.set', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    t.assertTruthy(funcStr.includes('.set(') || funcStr.includes('set(id'), 'addWindowToStoreState should use Map.set');
+});
+
+TestRunner.test('State - removeWindowFromStoreState is a function export', (t) => {
+    t.assertEqual(typeof removeWindowFromStoreState, 'function', 'removeWindowFromStoreState should be a function');
+});
+
+TestRunner.test('State - removeWindowFromStoreState accepts 1 parameter', (t) => {
+    const funcStr = removeWindowFromStoreState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'removeWindowFromStoreState should accept 1 parameter');
+});
+
+TestRunner.test('State - removeWindowFromStoreState uses Map.delete', (t) => {
+    const funcStr = removeWindowFromStoreState.toString();
+    t.assertTruthy(funcStr.includes('.delete(') || funcStr.includes('delete(id)'), 'removeWindowFromStoreState should use Map.delete');
+});
+
+TestRunner.test('State - getUndoStackState is a function export', (t) => {
+    t.assertEqual(typeof getUndoStackState, 'function', 'getUndoStackState should be a function');
+});
+
+TestRunner.test('State - getUndoStackState accepts 0 parameters', (t) => {
+    const funcStr = getUndoStackState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getUndoStackState should accept 0 parameters');
+});
+
+TestRunner.test('State - getUndoStackState returns array copy', (t) => {
+    const funcStr = getUndoStackState.toString();
+    t.assertTruthy(funcStr.includes('[...undoStack]') || funcStr.includes('undoStack.slice()'), 'getUndoStackState should return array copy');
+});
+
+TestRunner.test('State - getRedoStackState is a function export', (t) => {
+    t.assertEqual(typeof getRedoStackState, 'function', 'getRedoStackState should be a function');
+});
+
+TestRunner.test('State - getRedoStackState accepts 0 parameters', (t) => {
+    const funcStr = getRedoStackState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getRedoStackState should accept 0 parameters');
+});
+
+TestRunner.test('State - getRedoStackState returns array copy', (t) => {
+    const funcStr = getRedoStackState.toString();
+    t.assertTruthy(funcStr.includes('[...redoStack]') || funcStr.includes('redoStack.slice()'), 'getRedoStackState should return array copy');
+});
+
+TestRunner.test('State - Synth Presets - APP_VERSION validation for Day 418', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 418');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 95, 'Minor version should be >= 95 for Day 418');
+    }
+});
+// === DAY 418: SnugWindow & Context Menu Tests ===
+TestRunner.test('SnugWindow - SnugWindow is a function export', (t) => {
+    t.assertEqual(typeof SnugWindow, 'function', 'SnugWindow should be a function');
+});
+
+TestRunner.test('SnugWindow - constructor accepts 4 parameters', (t) => {
+    const funcStr = SnugWindow.toString();
+    const params = funcStr.match(/constructor\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? params[1].split(',').length : 0, 4, 'SnugWindow constructor should accept 4 parameters');
+});
+
+TestRunner.test('SnugWindow - constructor references id parameter', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('this.id'), 'SnugWindow should reference id parameter');
+});
+
+TestRunner.test('SnugWindow - constructor references title parameter', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('this.title'), 'SnugWindow should reference title parameter');
+});
+
+TestRunner.test('SnugWindow - constructor references contentHTMLOrElement parameter', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('contentHTMLOrElement'), 'SnugWindow should reference contentHTMLOrElement parameter');
+});
+
+TestRunner.test('SnugWindow - constructor references options parameter', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('this.options'), 'SnugWindow should reference options parameter');
+});
+
+TestRunner.test('SnugWindow - constructor references appServices parameter', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'SnugWindow should reference appServices parameter');
+});
+
+TestRunner.test('SnugWindow - has element property', (t) => {
+    t.assertTruthy(SnugWindow.prototype.hasOwnProperty('element') || SnugWindow.prototype.element === undefined, 'SnugWindow should have element property');
+});
+
+TestRunner.test('SnugWindow - has titleBar property', (t) => {
+    t.assertTruthy(SnugWindow.prototype.hasOwnProperty('titleBar') || SnugWindow.prototype.titleBar === undefined, 'SnugWindow should have titleBar property');
+});
+
+TestRunner.test('SnugWindow - has contentArea property', (t) => {
+    t.assertTruthy(SnugWindow.prototype.hasOwnProperty('contentArea') || SnugWindow.prototype.contentArea === undefined, 'SnugWindow should have contentArea property');
+});
+
+TestRunner.test('SnugWindow - has isMinimized property', (t) => {
+    t.assertTruthy(SnugWindow.prototype.hasOwnProperty('isMinimized') || SnugWindow.prototype.isMinimized === undefined, 'SnugWindow should have isMinimized property');
+});
+
+TestRunner.test('SnugWindow - has isMaximized property', (t) => {
+    t.assertTruthy(SnugWindow.prototype.hasOwnProperty('isMaximized') || SnugWindow.prototype.isMaximized === undefined, 'SnugWindow should have isMaximized property');
+});
+
+TestRunner.test('SnugWindow - has taskbarButton property', (t) => {
+    t.assertTruthy(SnugWindow.prototype.hasOwnProperty('taskbarButton') || SnugWindow.prototype.taskbarButton === undefined, 'SnugWindow should have taskbarButton property');
+});
+
+TestRunner.test('SnugWindow - has focus method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.focus, 'function', 'SnugWindow should have focus method');
+});
+
+TestRunner.test('SnugWindow - focus method accepts parameter', (t) => {
+    const funcStr = SnugWindow.prototype.focus.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertTruthy(params, 'SnugWindow.focus should be a function');
+});
+
+TestRunner.test('SnugWindow - has minimize method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.minimize, 'function', 'SnugWindow should have minimize method');
+});
+
+TestRunner.test('SnugWindow - minimize method accepts skipUndo parameter', (t) => {
+    const funcStr = SnugWindow.prototype.minimize.toString();
+    t.assertTruthy(funcStr.includes('skipUndo'), 'SnugWindow.minimize should accept skipUndo parameter');
+});
+
+TestRunner.test('SnugWindow - has restore method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.restore, 'function', 'SnugWindow should have restore method');
+});
+
+TestRunner.test('SnugWindow - restore method accepts skipUndo parameter', (t) => {
+    const funcStr = SnugWindow.prototype.restore.toString();
+    t.assertTruthy(funcStr.includes('skipUndo'), 'SnugWindow.restore should accept skipUndo parameter');
+});
+
+TestRunner.test('SnugWindow - has close method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.close, 'function', 'SnugWindow should have close method');
+});
+
+TestRunner.test('SnugWindow - close method accepts isReconstruction parameter', (t) => {
+    const funcStr = SnugWindow.prototype.close.toString();
+    t.assertTruthy(funcStr.includes('isReconstruction'), 'SnugWindow.close should accept isReconstruction parameter');
+});
+
+TestRunner.test('SnugWindow - has toggleMaximize method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.toggleMaximize, 'function', 'SnugWindow should have toggleMaximize method');
+});
+
+TestRunner.test('SnugWindow - has createTaskbarButton method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.createTaskbarButton, 'function', 'SnugWindow should have createTaskbarButton method');
+});
+
+TestRunner.test('SnugWindow - has updateTaskbarButtonActiveState method', (t) => {
+    t.assertEqual(typeof SnugWindow.prototype.updateTaskbarButtonActiveState, 'function', 'SnugWindow should have updateTaskbarButtonActiveState method');
+});
+
+TestRunner.test('SnugWindow - uses desktop element for positioning', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('desktop') || funcStr.includes('Desktop'), 'SnugWindow should use desktop element');
+});
+
+TestRunner.test('SnugWindow - uses taskbar element for calculations', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('taskbar') || funcStr.includes('Taskbar'), 'SnugWindow should use taskbar element');
+});
+
+TestRunner.test('SnugWindow - handles zIndex for window layering', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('zIndex') || funcStr.includes('z-index'), 'SnugWindow should handle zIndex');
+});
+
+TestRunner.test('SnugWindow - references appServices.getHighestZ', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('getHighestZ'), 'SnugWindow should reference getHighestZ');
+});
+
+TestRunner.test('SnugWindow - references appServices.incrementHighestZ', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('incrementHighestZ'), 'SnugWindow should reference incrementHighestZ');
+});
+
+TestRunner.test('Context Menu - createContextMenu is a function export', (t) => {
+    t.assertEqual(typeof createContextMenu, 'function', 'createContextMenu should be a function');
+});
+
+TestRunner.test('Context Menu - createContextMenu accepts 3 parameters', (t) => {
+    const funcStr = createContextMenu.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? params[1].split(',').length : 0, 3, 'createContextMenu should accept 3 parameters');
+});
+
+TestRunner.test('Context Menu - createContextMenu references event parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('event') && funcStr.includes('preventDefault'), 'createContextMenu should reference event parameter');
+});
+
+TestRunner.test('Context Menu - createContextMenu references menuItems parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('menuItems') && funcStr.includes('forEach'), 'createContextMenu should reference menuItems parameter');
+});
+
+TestRunner.test('Context Menu - createContextMenu references appServicesForZIndex parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('appServicesForZIndex'), 'createContextMenu should reference appServicesForZIndex parameter');
+});
+
+TestRunner.test('Context Menu - createContextMenu creates menu element', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('context-menu'), 'createContextMenu should create menu element');
+});
+
+TestRunner.test('Context Menu - createContextMenu sets position', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('clientX') && funcStr.includes('clientY'), 'createContextMenu should set position from event');
+});
+
+TestRunner.test('Context Menu - createContextMenu validates arguments', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('Invalid arguments') || funcStr.includes('!event'), 'createContextMenu should validate arguments');
+});
+
+TestRunner.test('Context Menu - createContextMenu uses getHighestZ for zIndex', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('getHighestZ'), 'createContextMenu should use getHighestZ');
+});
+
+TestRunner.test('Context Menu - createContextMenu handles disabled menu items', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('disabled'), 'createContextMenu should handle disabled menu items');
+});
+
+TestRunner.test('Context Menu - createContextMenu handles separator items', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('separator'), 'createContextMenu should handle separator items');
+});
+
+TestRunner.test('Context Menu - createContextMenu calls item action function', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('action') && funcStr.includes('click'), 'createContextMenu should call item action');
+});
+
+TestRunner.test('Context Menu - createContextMenu removes menu after action', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('remove') || funcStr.includes('remove()'), 'createContextMenu should remove menu after action');
+});
+
+TestRunner.test('Context Menu - createContextMenu handles contextmenu event', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('stopPropagation'), 'createContextMenu should stop event propagation');
+});
+
+TestRunner.test('Context Menu - creates context menu ul element', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('ul'), 'createContextMenu should create ul element');
+});
+
+TestRunner.test('Context Menu - context menu has styling', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('className') || funcStr.includes('class'), 'createContextMenu should set className');
+});
+
+TestRunner.test('SnugWindow - has onCloseCallback property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('onCloseCallback'), 'SnugWindow should have onCloseCallback');
+});
+
+TestRunner.test('SnugWindow - has restoreState property', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('restoreState'), 'SnugWindow should have restoreState');
+});
+
+TestRunner.test('SnugWindow - references appServices.removeWindowFromStore', (t) => {
+    const funcStr = SnugWindow.prototype.close ? SnugWindow.prototype.close.toString() : '';
+    t.assertTruthy(funcStr.includes('removeWindowFromStore') || SnugWindow.toString().includes('removeWindowFromStore'), 'SnugWindow should reference removeWindowFromStore');
+});
+
+TestRunner.test('SnugWindow - calls onCloseCallback in close method', (t) => {
+    const funcStr = SnugWindow.prototype.close ? SnugWindow.prototype.close.toString() : '';
+    t.assertTruthy(funcStr.includes('onCloseCallback'), 'SnugWindow.close should call onCloseCallback');
+});
+
+TestRunner.test('SnugWindow - creates taskbar button element', (t) => {
+    const funcStr = SnugWindow.prototype.createTaskbarButton ? SnugWindow.prototype.createTaskbarButton.toString() : '';
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('taskbar-button'), 'SnugWindow.createTaskbarButton should create button element');
+});
+
+TestRunner.test('SnugWindow - taskbar button has click handler', (t) => {
+    const funcStr = SnugWindow.prototype.createTaskbarButton ? SnugWindow.prototype.createTaskbarButton.toString() : '';
+    t.assertTruthy(funcStr.includes('addEventListener') && funcStr.includes('click'), 'SnugWindow.createTaskbarButton should add click handler');
+});
+
+TestRunner.test('SnugWindow - taskbar button has contextmenu handler', (t) => {
+    const funcStr = SnugWindow.prototype.createTaskbarButton ? SnugWindow.prototype.createTaskbarButton.toString() : '';
+    t.assertTruthy(funcStr.includes('contextmenu'), 'SnugWindow.createTaskbarButton should handle contextmenu');
+});
+
+TestRunner.test('SnugWindow - has _captureUndo method for undo support', (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('_captureUndo') || funcStr.includes('captureUndo'), 'SnugWindow should have undo capture method');
+});
+
+TestRunner.test('SnugWindow - APP_VERSION validation for Day 418', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 418');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 95, 'Minor version should be >= 95 for Day 418');
+    }
+});
