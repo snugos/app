@@ -29,6 +29,9 @@ let recorder = null;
 let recordingScheduledId = null; // For punch-in/out enforcement callback
 let recordingScheduledTrackId = null; // Track ID for the scheduled recording callback
 
+// Send Bus Audio Routing
+let sendBusNodes = new Map(); // sendId -> { inputGain, effects[], outputGain, muted }
+let trackSendNodes = new Map(); // trackId -> Map<sendId, { sendGainNode, sendLevel }>
 
 export function initializeAudioModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;

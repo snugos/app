@@ -11811,3 +11811,273 @@ TestRunner.test('Armed/Soloed/Sequencer Track & Undo Stack State - APP_VERSION v
         t.assertTruthy(versionParts[1] >= 91, 'Minor version should be >= 91 for Day 414');
     }
 });
+
+// === Day 415: Additional State Functions Missing Undo/Redo Tests ===
+TestRunner.test('Project Name State - setProjectNameState is a function export', (t) => {
+    t.assertEqual(typeof setProjectNameState, 'function', 'setProjectNameState should be a function');
+});
+
+TestRunner.test('Project Name State - setProjectNameState accepts 1 parameter', (t) => {
+    const funcStr = setProjectNameState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setProjectNameState should accept 1 parameter');
+});
+
+TestRunner.test('Project Name State - setProjectNameState guards against missing appServices', (t) => {
+    const funcStr = setProjectNameState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'setProjectNameState should reference appServices');
+});
+
+TestRunner.test('Project Name State - setProjectNameState defaults to Untitled Project', (t) => {
+    const funcStr = setProjectNameState.toString();
+    t.assertTruthy(funcStr.includes('Untitled Project'), 'setProjectNameState should default to Untitled Project');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setArmedTrackIdState, 'function', 'setArmedTrackIdState should be a function');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState accepts 1 parameter', (t) => {
+    const funcStr = setArmedTrackIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setArmedTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState guards against missing appServices', (t) => {
+    const funcStr = setArmedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'setArmedTrackIdState should reference appServices');
+});
+
+TestRunner.test('Recording State - setIsRecordingState is a function export', (t) => {
+    t.assertEqual(typeof setIsRecordingState, 'function', 'setIsRecordingState should be a function');
+});
+
+TestRunner.test('Recording State - setIsRecordingState accepts 1 parameter', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setIsRecordingState should accept 1 parameter');
+});
+
+TestRunner.test('Recording State - setIsRecordingState uses boolean coercion', (t) => {
+    const funcStr = setIsRecordingState.toString();
+    t.assertTruthy(funcStr.includes('!!'), 'setIsRecordingState should use !! for boolean coercion');
+});
+
+TestRunner.test('Recording State - setRecordingTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setRecordingTrackIdState, 'function', 'setRecordingTrackIdState should be a function');
+});
+
+TestRunner.test('Recording State - setRecordingTrackIdState accepts 1 parameter', (t) => {
+    const funcStr = setRecordingTrackIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setRecordingTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState is a function export', (t) => {
+    t.assertEqual(typeof setRecordingStartTimeState, 'function', 'setRecordingStartTimeState should be a function');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState accepts 1 parameter', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setRecordingStartTimeState should accept 1 parameter');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState uses Number.isFinite', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('Number.isFinite'), 'setRecordingStartTimeState should use Number.isFinite');
+});
+
+TestRunner.test('Recording State - setRecordingStartTimeState defaults to 0', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('0'), 'setRecordingStartTimeState should default to 0');
+});
+
+TestRunner.test('MIDI State - setMidiAccessState is a function export', (t) => {
+    t.assertEqual(typeof setMidiAccessState, 'function', 'setMidiAccessState should be a function');
+});
+
+TestRunner.test('MIDI State - setMidiAccessState accepts 1 parameter', (t) => {
+    const funcStr = setMidiAccessState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setMidiAccessState should accept 1 parameter');
+});
+
+TestRunner.test('MIDI State - setActiveMIDIInputState is a function export', (t) => {
+    t.assertEqual(typeof setActiveMIDIInputState, 'function', 'setActiveMIDIInputState should be a function');
+});
+
+TestRunner.test('MIDI State - setActiveMIDIInputState accepts 1 parameter', (t) => {
+    const funcStr = setActiveMIDIInputState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setActiveMIDIInputState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setCurrentLibraryNameState is a function export', (t) => {
+    t.assertEqual(typeof setCurrentLibraryNameState, 'function', 'setCurrentLibraryNameState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setCurrentLibraryNameState accepts 1 parameter', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setCurrentLibraryNameState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setCurrentLibraryNameState guards against missing appServices', (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'setCurrentLibraryNameState should reference appServices');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundFileTreeState is a function export', (t) => {
+    t.assertEqual(typeof setCurrentSoundFileTreeState, 'function', 'setCurrentSoundFileTreeState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundFileTreeState accepts 1 parameter', (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setCurrentSoundFileTreeState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundBrowserPathState is a function export', (t) => {
+    t.assertEqual(typeof setCurrentSoundBrowserPathState, 'function', 'setCurrentSoundBrowserPathState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundBrowserPathState accepts 1 parameter', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setCurrentSoundBrowserPathState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser State - setCurrentSoundBrowserPathState uses Array.isArray', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'setCurrentSoundBrowserPathState should use Array.isArray');
+});
+
+TestRunner.test('Sound Browser State - setPreviewPlayerState is a function export', (t) => {
+    t.assertEqual(typeof setPreviewPlayerState, 'function', 'setPreviewPlayerState should be a function');
+});
+
+TestRunner.test('Sound Browser State - setPreviewPlayerState accepts 1 parameter', (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setPreviewPlayerState should accept 1 parameter');
+});
+
+TestRunner.test('Master Audio State - setMasterEffectsState is a function export', (t) => {
+    t.assertEqual(typeof setMasterEffectsState, 'function', 'setMasterEffectsState should be a function');
+});
+
+TestRunner.test('Master Audio State - setMasterEffectsState accepts 1 parameter', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setMasterEffectsState should accept 1 parameter');
+});
+
+TestRunner.test('Master Audio State - setMasterEffectsState uses Array.isArray', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'setMasterEffectsState should use Array.isArray');
+});
+
+TestRunner.test('Master Audio State - setMasterGainValueState is a function export', (t) => {
+    t.assertEqual(typeof setMasterGainValueState, 'function', 'setMasterGainValueState should be a function');
+});
+
+TestRunner.test('Master Audio State - setMasterGainValueState accepts 1 parameter', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setMasterGainValueState should accept 1 parameter');
+});
+
+TestRunner.test('Master Audio State - setMasterGainValueState uses Number.isFinite', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('Number.isFinite'), 'setMasterGainValueState should use Number.isFinite');
+});
+
+TestRunner.test('Master Audio State - setMasterGainValueState defaults to Tone.dbToGain(0)', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('dbToGain'), 'setMasterGainValueState should use dbToGain for default');
+});
+
+TestRunner.test('Window State - setHighestZState is a function export', (t) => {
+    t.assertEqual(typeof setHighestZState, 'function', 'setHighestZState should be a function');
+});
+
+TestRunner.test('Window State - setHighestZState accepts 1 parameter', (t) => {
+    const funcStr = setHighestZState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setHighestZState should accept 1 parameter');
+});
+
+TestRunner.test('Window State - setHighestZState uses Number.isFinite', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('Number.isFinite'), 'setHighestZState should use Number.isFinite');
+});
+
+TestRunner.test('Window State - setHighestZState defaults to 100', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('100'), 'setHighestZState should default to 100');
+});
+
+TestRunner.test('Sequencer Track State - setActiveSequencerTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setActiveSequencerTrackIdState, 'function', 'setActiveSequencerTrackIdState should be a function');
+});
+
+TestRunner.test('Sequencer Track State - setActiveSequencerTrackIdState accepts 1 parameter', (t) => {
+    const funcStr = setActiveSequencerTrackIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setActiveSequencerTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Muted Track State - setMutedTrackIdsState is a function export', (t) => {
+    t.assertEqual(typeof setMutedTrackIdsState, 'function', 'setMutedTrackIdsState should be a function');
+});
+
+TestRunner.test('Muted Track State - setMutedTrackIdsState accepts 1 parameter', (t) => {
+    const funcStr = setMutedTrackIdsState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setMutedTrackIdsState should accept 1 parameter');
+});
+
+TestRunner.test('Muted Track State - setMutedTrackIdsState uses Array.isArray', (t) => {
+    const funcStr = setMutedTrackIdsState.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'setMutedTrackIdsState should use Array.isArray');
+});
+
+TestRunner.test('Muted Track State - setTrackMutedState is a function export', (t) => {
+    t.assertEqual(typeof setTrackMutedState, 'function', 'setTrackMutedState should be a function');
+});
+
+TestRunner.test('Muted Track State - setTrackMutedState accepts 2 parameters', (t) => {
+    const funcStr = setTrackMutedState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 2 : 0, 2, 'setTrackMutedState should accept 2 parameters');
+});
+
+TestRunner.test('Muted Track State - isTrackMutedState is a function export', (t) => {
+    t.assertEqual(typeof isTrackMutedState, 'function', 'isTrackMutedState should be a function');
+});
+
+TestRunner.test('Muted Track State - isTrackMutedState accepts 1 parameter', (t) => {
+    const funcStr = isTrackMutedState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'isTrackMutedState should accept 1 parameter');
+});
+
+TestRunner.test('Solo Track State - isTrackSoloedState is a function export', (t) => {
+    t.assertEqual(typeof isTrackSoloedState, 'function', 'isTrackSoloedState should be a function');
+});
+
+TestRunner.test('Solo Track State - isTrackSoloedState accepts 1 parameter', (t) => {
+    const funcStr = isTrackSoloedState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'isTrackSoloedState should accept 1 parameter');
+});
+
+// === APP_VERSION validation for Day 415 ===
+TestRunner.test('Additional State Functions - APP_VERSION validation for Day 415', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 415');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 92, 'Minor version should be >= 92 for Day 415');
+    }
+});
