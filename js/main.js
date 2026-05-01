@@ -736,15 +736,8 @@ async function initializeSnugOS() {
         Object.assign(uiElementsCache, globalElements);
         console.log('[Main] uiElementsCache populated. Keys:', Object.keys(uiElementsCache).filter(k => uiElementsCache[k]));
         
-        const startBtn = document.getElementById('startButton');
-        const startMenu = document.getElementById('startMenu');
-        if (startBtn && startMenu) {
-            startBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                startMenu.classList.toggle('hidden');
-            });
-        }
-        
+        // Start button click handler is in eventHandlers.js via initializePrimaryEventListeners
+         
 
         try {
             const effectsRegistry = await import('./effectsRegistry.js');
