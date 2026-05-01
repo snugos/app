@@ -465,6 +465,17 @@ const appServices = {
 
     renameTrackInState,
 
+    // Track management
+    addTrack: addTrackToStateInternal,
+    removeTrack: removeTrackFromStateInternal,
+
+    // Window openers (delegated to ui.js)
+    openSoundBrowserWindow,
+    openTimelineWindow,
+    openMixerWindow,
+    openMasterEffectsRackWindow,
+    openGlobalControlsWindow,
+
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,
     cancelScheduledRecording,
