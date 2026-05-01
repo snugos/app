@@ -54,10 +54,10 @@ export class Track {
                 loop: false, reverse: false,
                 envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
             }));
-        this.selectedSliceForEdit = ((initialData) && (initialData).selectedSliceForEdit) || 0;
-        this.waveformZoom = ((initialData) && (initialData).waveformZoom) || 1;
-        this.waveformScrollOffset = ((initialData) && (initialData).waveformScrollOffset) || 0;
-        this.slicerIsPolyphonic = ((initialData) && (initialData).slicerIsPolyphonic) !== undefined ? initialData.slicerIsPolyphonic : true;
+        this.selectedSliceForEdit = initialData?.selectedSliceForEdit ?? 0;
+        this.waveformZoom = initialData?.waveformZoom ?? 1;
+        this.waveformScrollOffset = initialData?.waveformScrollOffset ?? 0;
+        this.slicerIsPolyphonic = initialData?.slicerIsPolyphonic ?? true;
         this.slicerMonoPlayer = null;
         this.slicerMonoEnvelope = null;
         this.slicerMonoGain = null;
