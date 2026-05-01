@@ -12081,3 +12081,182 @@ TestRunner.test('Additional State Functions - APP_VERSION validation for Day 415
         t.assertTruthy(versionParts[1] >= 92, 'Minor version should be >= 92 for Day 415');
     }
 });
+
+// === Day 416: Automation & Count-In Audio Functions Tests ===
+TestRunner.test('Automation Audio - startAutomation is a function export', (t) => {
+    t.assertEqual(typeof startAutomation, 'function', 'startAutomation should be a function');
+});
+
+TestRunner.test('Automation Audio - startAutomation accepts 0 parameters', (t) => {
+    const funcStr = startAutomation.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'startAutomation should accept 0 parameters');
+});
+
+TestRunner.test('Automation Audio - stopAutomation is a function export', (t) => {
+    t.assertEqual(typeof stopAutomation, 'function', 'stopAutomation should be a function');
+});
+
+TestRunner.test('Automation Audio - stopAutomation accepts 0 parameters', (t) => {
+    const funcStr = stopAutomation.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'stopAutomation should accept 0 parameters');
+});
+
+TestRunner.test('Automation Audio - cleanupAutomation is a function export', (t) => {
+    t.assertEqual(typeof cleanupAutomation, 'function', 'cleanupAutomation should be a function');
+});
+
+TestRunner.test('Automation Audio - cleanupAutomation accepts 0 parameters', (t) => {
+    const funcStr = cleanupAutomation.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'cleanupAutomation should accept 0 parameters');
+});
+
+TestRunner.test('Automation Audio - writeMasterVolumeAutomation is a function export', (t) => {
+    t.assertEqual(typeof writeMasterVolumeAutomation, 'function', 'writeMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test('Automation Audio - writeMasterVolumeAutomation accepts 2 parameters', (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 2 : 0, 2, 'writeMasterVolumeAutomation should accept 2 parameters');
+});
+
+TestRunner.test('Automation Audio - writeMasterVolumeAutomation references time parameter', (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('time') || funcStr.includes('Time'), 'writeMasterVolumeAutomation should reference time parameter');
+});
+
+TestRunner.test('Automation Audio - writeMasterVolumeAutomation references value parameter', (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('value') || funcStr.includes('Value'), 'writeMasterVolumeAutomation should reference value parameter');
+});
+
+TestRunner.test('Automation Audio - applyMasterVolumeAutomationAtTime is a function export', (t) => {
+    t.assertEqual(typeof applyMasterVolumeAutomationAtTime, 'function', 'applyMasterVolumeAutomationAtTime should be a function');
+});
+
+TestRunner.test('Automation Audio - applyMasterVolumeAutomationAtTime accepts 1 parameter', (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'applyMasterVolumeAutomationAtTime should accept 1 parameter');
+});
+
+TestRunner.test('Automation Audio - getMasterVolumeAutomation is a function export', (t) => {
+    t.assertEqual(typeof getMasterVolumeAutomation, 'function', 'getMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test('Automation Audio - getMasterVolumeAutomation accepts 0 parameters', (t) => {
+    const funcStr = getMasterVolumeAutomation.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getMasterVolumeAutomation should accept 0 parameters');
+});
+
+TestRunner.test('Automation Audio - setMasterVolumeAutomation is a function export', (t) => {
+    t.assertEqual(typeof setMasterVolumeAutomation, 'function', 'setMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test('Automation Audio - setMasterVolumeAutomation accepts 1 parameter', (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setMasterVolumeAutomation should accept 1 parameter');
+});
+
+TestRunner.test('Automation Audio - onTransportStart is a function export', (t) => {
+    t.assertEqual(typeof onTransportStart, 'function', 'onTransportStart should be a function');
+});
+
+TestRunner.test('Automation Audio - onTransportStart accepts 0 parameters', (t) => {
+    const funcStr = onTransportStart.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'onTransportStart should accept 0 parameters');
+});
+
+TestRunner.test('Automation Audio - onTransportStop is a function export', (t) => {
+    t.assertEqual(typeof onTransportStop, 'function', 'onTransportStop should be a function');
+});
+
+TestRunner.test('Automation Audio - onTransportStop accepts 0 parameters', (t) => {
+    const funcStr = onTransportStop.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'onTransportStop should accept 0 parameters');
+});
+
+TestRunner.test('Count-In Audio - setCountInBars is a function export', (t) => {
+    t.assertEqual(typeof setCountInBars, 'function', 'setCountInBars should be a function');
+});
+
+TestRunner.test('Count-In Audio - setCountInBars accepts 1 parameter', (t) => {
+    const funcStr = setCountInBars.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setCountInBars should accept 1 parameter');
+});
+
+TestRunner.test('Count-In Audio - setCountInBars clamps value', (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setCountInBars should clamp value with Math.max and Math.min');
+});
+
+TestRunner.test('Count-In Audio - setCountInBars uses Math.floor', (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Math.floor'), 'setCountInBars should use Math.floor');
+});
+
+TestRunner.test('Count-In Audio - getCountInBars is a function export', (t) => {
+    t.assertEqual(typeof getCountInBars, 'function', 'getCountInBars should be a function');
+});
+
+TestRunner.test('Count-In Audio - getCountInBars accepts 0 parameters', (t) => {
+    const funcStr = getCountInBars.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'getCountInBars should accept 0 parameters');
+});
+
+TestRunner.test('Count-In Audio - isCountInActive is a function export', (t) => {
+    t.assertEqual(typeof isCountInActive, 'function', 'isCountInActive should be a function');
+});
+
+TestRunner.test('Count-In Audio - isCountInActive accepts 0 parameters', (t) => {
+    const funcStr = isCountInActive.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'isCountInActive should accept 0 parameters');
+});
+
+TestRunner.test('Count-In Audio - startCountIn is a function export', (t) => {
+    t.assertEqual(typeof startCountIn, 'function', 'startCountIn should be a function');
+});
+
+TestRunner.test('Count-In Audio - startCountIn accepts 2 parameters', (t) => {
+    const funcStr = startCountIn.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 2 : 0, 2, 'startCountIn should accept 2 parameters');
+});
+
+TestRunner.test('Count-In Audio - startCountIn references onCountInComplete parameter', (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('onCountInComplete'), 'startCountIn should reference onCountInComplete parameter');
+});
+
+TestRunner.test('Count-In Audio - startCountIn references startPosition parameter', (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('startPosition'), 'startCountIn should reference startPosition parameter');
+});
+
+TestRunner.test('Count-In Audio - cleanupCountIn is a function export', (t) => {
+    t.assertEqual(typeof cleanupCountIn, 'function', 'cleanupCountIn should be a function');
+});
+
+TestRunner.test('Count-In Audio - cleanupCountIn accepts 0 parameters', (t) => {
+    const funcStr = cleanupCountIn.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 0 : 0, 0, 'cleanupCountIn should accept 0 parameters');
+});
+
+TestRunner.test('Automation & Count-In Audio - APP_VERSION validation for Day 416', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 416');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 93, 'Minor version should be >= 93 for Day 416');
+    }
+});
