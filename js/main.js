@@ -673,11 +673,20 @@ async function initializeSnugOS() {
             menuLoadProject: document.getElementById('menuLoadProject'),
             loadProjectInput: document.getElementById('loadProjectInput'),
             menuExportWav: document.getElementById('menuExportWav'),
-            menuToggleFullScreen: document.getElementById('menuToggleFullScreen')
+            menuToggleFullScreen: document.getElementById('menuToggleFullScreen'),
+            // Additional menu items that eventHandlers.js expects
+            menuAddAudioTrack: document.getElementById('menuAddAudioTrack'),
+            menuImportAudioFile: document.getElementById('menuImportAudioFile'),
+            menuExportMidi: document.getElementById('menuExportMidi'),
+            menuImportMidi: document.getElementById('menuImportMidi'),
+            menuKeyboardShortcuts: document.getElementById('menuKeyboardShortcuts'),
+            menuSaveTrackAsTemplate: document.getElementById('menuSaveTrackAsTemplate'),
+            menuOpenTrackTemplates: document.getElementById('menuOpenTrackTemplates')
         };
         
         // Add to cache
         Object.assign(uiElementsCache, globalElements);
+        console.log('[Main] uiElementsCache populated. Keys:', Object.keys(uiElementsCache).filter(k => uiElementsCache[k]));
         
         const startBtn = document.getElementById('startButton');
         const startMenu = document.getElementById('startMenu');
@@ -1027,6 +1036,9 @@ async function initializeSnugOS() {
         if (typeof initializeAudioModule === 'function') initializeAudioModule(appServices); else console.error("initializeAudioModule is not a function");
         // Start context suspension monitoring for auto-recovery after browser tab inactivity
         if (typeof startContextSuspensionMonitoring === 'function') startContextSuspensionMonitoring(3000);
+
+        // Initialize event handlers module FIRST so localAppServices is set up
+        if (typeof initializeEventHandlersModule === 'function') initializeEventHandlersModule(appServices); else console.error("initializeEventHandlersModule is not a function");
 
         if (typeof initializePrimaryEventListeners === 'function') {
              console.log('[Main] Calling initializePrimaryEventListeners. uiElementsCache keys:', Object.keys(appServices.uiElementsCache || {}));
