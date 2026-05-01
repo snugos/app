@@ -2381,7 +2381,7 @@ export function openTimelineWindow(savedState = null) {
         const existingWin = getWindowByIdState('timeline');
         if (existingWin) {
             existingWin.restore();
-            existingWin.bringToFront();
+            existingWin.focus();
             return;
         }
     }
