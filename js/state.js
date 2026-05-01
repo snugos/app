@@ -1886,7 +1886,7 @@ export async function importFromMidiInternal() {
         for (const evt of events) {
             if (evt.type === 'noteOn') {
                 pendingNoteOns.push({ ...evt, time: evt.time });
-            } else if (evt.type === ' 'noteOff') {
+            } else if (evt.type === 'noteOff') {
                 // Match with a pending note on
                 const matchingOn = pendingNoteOns.find(p => p.data[0] === evt.data[0] && !p.matched);
                 if (matchingOn) {
