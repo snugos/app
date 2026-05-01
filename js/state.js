@@ -653,19 +653,6 @@ export function gatherProjectDataInternal() {
                 }
                 // Remove deprecated/runtime-only properties if they accidentally get included
                 delete trackData.sequenceData; delete trackData.sequenceLength;
-                // Restore track color, automation armed, pan, waveform zoom
-                if (typeof trackData.trackColor === 'string') {
-                    newTrack.trackColor = trackData.trackColor;
-                }
-                if (typeof trackData.automationArmed === 'boolean') {
-                    newTrack.automationArmed = trackData.automationArmed;
-                }
-                if (typeof trackData.panValue === 'number') {
-                    newTrack.panValue = trackData.panValue;
-                }
-                if (typeof trackData.waveformZoom === 'number') {
-                    newTrack.waveformZoom = trackData.waveformZoom;
-                }
                 return trackData;
             }).filter(td => td !== null), // Filter out any skipped invalid tracks
             windowStates: Array.from(getOpenWindowsState().values())

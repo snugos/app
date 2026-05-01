@@ -335,6 +335,7 @@ const appServices = {
             return null;
         }
     },
+    getMasterEffectsBusInputNode: getMasterEffectsBusInputNode,
     effectsRegistryAccess: {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
