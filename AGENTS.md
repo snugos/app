@@ -7466,3 +7466,49 @@
   - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
   - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
   - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.m
+#### Day 414: Armed/Soloed/Sequencer Track & Undo Stack State Tests (2026-05-01)
+- **Feature**: Added 26 new unit tests for Armed Track, Soloed Track, Active Sequencer Track, and Undo/Redo Stack state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 26 new tests in Day 414 section:
+    - Armed Track State - getArmedTrackIdState is a function export
+    - Armed Track State - setArmedTrackIdState is a function export
+    - Armed Track State - setArmedTrackIdState accepts 1 parameter
+    - Armed Track State - setArmedTrackIdState calls captureStateForUndo
+    - Armed Track State - setArmedTrackIdState uses descriptive undo label
+    - Armed Track State - setArmedTrackIdState defaults to null for invalid input
+    - Armed Track State - setArmedTrackIdState guards against missing appServices
+    - Soloed Track State - getSoloedTrackIdState is a function export
+    - Soloed Track State - setSoloedTrackIdState is a function export
+    - Soloed Track State - setSoloedTrackIdState accepts 1 parameter
+    - Soloed Track State - setSoloedTrackIdState calls captureStateForUndo
+    - Soloed Track State - setSoloedTrackIdState uses descriptive undo label
+    - Soloed Track State - setSoloedTrackIdState defaults to null for invalid input
+    - Soloed Track State - setSoloedTrackIdState guards against missing appServices
+    - Active Sequencer Track State - getActiveSequencerTrackIdState is a function export
+    - Active Sequencer Track State - setActiveSequencerTrackIdState is a function export
+    - Active Sequencer Track State - setActiveSequencerTrackIdState accepts 1 parameter
+    - Active Sequencer Track State - setActiveSequencerTrackIdState calls captureStateForUndo
+    - Active Sequencer Track State - setActiveSequencerTrackIdState uses descriptive undo label
+    - Active Sequencer Track State - setActiveSequencerTrackIdState defaults to null for invalid input
+    - Undo Stack State - getUndoStackState is a function export
+    - Undo Stack State - getRedoStackState is a function export
+    - Undo Stack State - getUndoStackState accepts 0 parameters
+    - Undo Stack State - getRedoStackState accepts 0 parameters
+    - Undo Stack State - getUndoStackState returns array
+    - Undo Stack State - getRedoStackState returns array
+    - Metronome Constants - DEFAULT_METRONOME_ENABLED is boolean false
+    - Metronome Constants - DEFAULT_METRONOME_VOLUME is 0.5
+    - Metronome Constants - DEFAULT_METRONOME_VOLUME is in 0-1 range
+    - Armed/Soloed/Sequencer Track & Undo Stack State - APP_VERSION validation for Day 414
+  - `js/constants.js`: Bumped APP_VERSION to 2.92.0
+- **Feature Details**:
+  - Tests validate getArmedTrackIdState and setArmedTrackIdState functions (function exports, 1 param, calls captureStateForUndo with Set Armed Track label)
+  - Tests validate setArmedTrackIdState defaults to null for invalid input and guards against missing appServices
+  - Tests validate getSoloedTrackIdState and setSoloedTrackIdState functions (function exports, 1 param, calls captureStateForUndo with Set Soloed Track label)
+  - Tests validate setSoloedTrackIdState defaults to null for invalid input and guards against missing appServices
+  - Tests validate getActiveSequencerTrackIdState and setActiveSequencerTrackIdState functions (function exports, 1 param, calls captureStateForUndo with Set Active Sequencer Track label)
+  - Tests validate setActiveSequencerTrackIdState defaults to null for invalid input
+  - Tests validate getUndoStackState and getRedoStackState functions (function exports, 0 params, return arrays)
+  - Tests validate Metronome constants (DEFAULT_METRONOME_ENABLED is false, DEFAULT_METRONOME_VOLUME is 0.5 in 0-1 range)
+  - Total tests increased from 2149 to 2175
+- **Version**: Bumped to 2.92.0

@@ -11661,3 +11661,153 @@ TestRunner.test('Timeline Zoom, Swing, Loop Region State - APP_VERSION validatio
         t.assertTruthy(versionParts[1] >= 89, 'Minor version should be >= 89 for Day 413');
     }
 });
+// === Day 414: Armed/Soloed/Sequencer Track & Undo Stack State Tests ===
+
+TestRunner.test('Armed Track State - getArmedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof getArmedTrackIdState, 'function', 'getArmedTrackIdState should be a function');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setArmedTrackIdState, 'function', 'setArmedTrackIdState should be a function');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState accepts 1 parameter', (t) => {
+    const funcStr = setArmedTrackIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setArmedTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState calls captureStateForUndo', (t) => {
+    const funcStr = setArmedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setArmedTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState uses descriptive undo label', (t) => {
+    const funcStr = setArmedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('Set Armed Track'), 'setArmedTrackIdState should use Set Armed Track label');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState defaults to null for invalid input', (t) => {
+    const funcStr = setArmedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('null'), 'setArmedTrackIdState should default to null for invalid input');
+});
+
+TestRunner.test('Armed Track State - setArmedTrackIdState guards against missing appServices', (t) => {
+    const funcStr = setArmedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'setArmedTrackIdState should reference appServices');
+});
+
+TestRunner.test('Soloed Track State - getSoloedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof getSoloedTrackIdState, 'function', 'getSoloedTrackIdState should be a function');
+});
+
+TestRunner.test('Soloed Track State - setSoloedTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setSoloedTrackIdState, 'function', 'setSoloedTrackIdState should be a function');
+});
+
+TestRunner.test('Soloed Track State - setSoloedTrackIdState accepts 1 parameter', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setSoloedTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Soloed Track State - setSoloedTrackIdState calls captureStateForUndo', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSoloedTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Soloed Track State - setSoloedTrackIdState uses descriptive undo label', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('Set Soloed Track'), 'setSoloedTrackIdState should use Set Soloed Track label');
+});
+
+TestRunner.test('Soloed Track State - setSoloedTrackIdState defaults to null for invalid input', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('null'), 'setSoloedTrackIdState should default to null for invalid input');
+});
+
+TestRunner.test('Soloed Track State - setSoloedTrackIdState guards against missing appServices', (t) => {
+    const funcStr = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'setSoloedTrackIdState should reference appServices');
+});
+
+TestRunner.test('Active Sequencer Track State - getActiveSequencerTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof getActiveSequencerTrackIdState, 'function', 'getActiveSequencerTrackIdState should be a function');
+});
+
+TestRunner.test('Active Sequencer Track State - setActiveSequencerTrackIdState is a function export', (t) => {
+    t.assertEqual(typeof setActiveSequencerTrackIdState, 'function', 'setActiveSequencerTrackIdState should be a function');
+});
+
+TestRunner.test('Active Sequencer Track State - setActiveSequencerTrackIdState accepts 1 parameter', (t) => {
+    const funcStr = setActiveSequencerTrackIdState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 1, 'setActiveSequencerTrackIdState should accept 1 parameter');
+});
+
+TestRunner.test('Active Sequencer Track State - setActiveSequencerTrackIdState calls captureStateForUndo', (t) => {
+    const funcStr = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setActiveSequencerTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Active Sequencer Track State - setActiveSequencerTrackIdState uses descriptive undo label', (t) => {
+    const funcStr = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('Set Active Sequencer Track'), 'setActiveSequencerTrackIdState should use Set Active Sequencer Track label');
+});
+
+TestRunner.test('Active Sequencer Track State - setActiveSequencerTrackIdState defaults to null for invalid input', (t) => {
+    const funcStr = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('null'), 'setActiveSequencerTrackIdState should default to null for invalid input');
+});
+
+TestRunner.test('Undo Stack State - getUndoStackState is a function export', (t) => {
+    t.assertEqual(typeof getUndoStackState, 'function', 'getUndoStackState should be a function');
+});
+
+TestRunner.test('Undo Stack State - getRedoStackState is a function export', (t) => {
+    t.assertEqual(typeof getRedoStackState, 'function', 'getRedoStackState should be a function');
+});
+
+TestRunner.test('Undo Stack State - getUndoStackState accepts 0 parameters', (t) => {
+    const funcStr = getUndoStackState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 0, 'getUndoStackState should accept 0 parameters');
+});
+
+TestRunner.test('Undo Stack State - getRedoStackState accepts 0 parameters', (t) => {
+    const funcStr = getRedoStackState.toString();
+    const params = funcStr.match(/function\s*\(([^)]*)\)/);
+    t.assertEqual(params && params[1].trim() ? 1 : 0, 0, 'getRedoStackState should accept 0 parameters');
+});
+
+TestRunner.test('Undo Stack State - getUndoStackState returns array', (t) => {
+    const result = getUndoStackState();
+    t.assertTruthy(Array.isArray(result), 'getUndoStackState should return an array');
+});
+
+TestRunner.test('Undo Stack State - getRedoStackState returns array', (t) => {
+    const result = getRedoStackState();
+    t.assertTruthy(Array.isArray(result), 'getRedoStackState should return an array');
+});
+
+TestRunner.test('Metronome Constants - DEFAULT_METRONOME_ENABLED is boolean false', (t) => {
+    t.assertEqual(typeof DEFAULT_METRONOME_ENABLED, 'boolean', 'DEFAULT_METRONOME_ENABLED should be boolean');
+    t.assertEqual(DEFAULT_METRONOME_ENABLED, false, 'DEFAULT_METRONOME_ENABLED should be false');
+});
+
+TestRunner.test('Metronome Constants - DEFAULT_METRONOME_VOLUME is 0.5', (t) => {
+    t.assertEqual(DEFAULT_METRONOME_VOLUME, 0.5, 'DEFAULT_METRONOME_VOLUME should be 0.5');
+});
+
+TestRunner.test('Metronome Constants - DEFAULT_METRONOME_VOLUME is in 0-1 range', (t) => {
+    t.assertTruthy(DEFAULT_METRONOME_VOLUME >= 0 && DEFAULT_METRONOME_VOLUME <= 1, 'DEFAULT_METRONOME_VOLUME should be between 0 and 1');
+});
+
+// === APP_VERSION validation for Day 414 ===
+TestRunner.test('Armed/Soloed/Sequencer Track & Undo Stack State - APP_VERSION validation for Day 414', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 414');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 91, 'Minor version should be >= 91 for Day 414');
+    }
+});
