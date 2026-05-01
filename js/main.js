@@ -498,10 +498,10 @@ const appServices = {
     },
 
     handleOpenSequencer: (trackId) => {
-        if (typeof openTrackSequencerWindow === 'function') openTrackSequencerWindow(trackId);
+        if (appServices.openTrackSequencerWindow) appServices.openTrackSequencerWindow(trackId);
     },
-
     handleTimelineLaneDrop,
+    initAudioContextAndMasterMeter,
 
     renameTrackInState,
 
