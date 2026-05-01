@@ -496,8 +496,6 @@ const appServices = {
 
     handleOpenSequencer: (trackId) => {
         if (typeof openTrackSequencerWindow === 'function') openTrackSequencerWindow(trackId);
-    }
-        if (typeof openTrackSequencerWindow === 'function') openTrackSequencerWindow(trackId);
     },
 
     handleTimelineLaneDrop,
