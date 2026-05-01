@@ -463,6 +463,7 @@ button.active { /* Generic active state for other toggles if needed */
 }
 
 .sequencer-grid-layout {
+    display: grid !important;
     background-color: #121212; 
 }
 
