@@ -76,6 +76,9 @@ import {
     getSynthPresets, saveSynthPreset, deleteSynthPreset,
     // Muted Track Ids
     getMutedTrackIdsState, setMutedTrackIdsState,
+    // MIDI Export
+    exportToMidiInternal,
+    importFromMidiInternal,
 } from './state.js';
 import { DESKTOP_BACKGROUND_KEY, DESKTOP_BG_TYPE_KEY } from './constants.js';
 import { getAudio as bgDbGet, storeAudio as bgDbStore, deleteAudio as bgDbDelete } from './db.js';
@@ -533,6 +536,7 @@ const appServices = {
     cleanupRecordingScheduling,
     exportToWav: exportToWavInternal,
     exportToMidi: exportToMidiInternal,
+    importFromMidiInternal,
     importFromMidi: importFromMidiInternal,
 
     saveProject: saveProjectInternal,
