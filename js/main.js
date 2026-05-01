@@ -1,4 +1,5 @@
 // js/main.js - Main Application Logic Orchestrator
+// Version: 2.17.1 - Cache bust
 
 // --- Module Imports ---
 import { SnugWindow } from './SnugWindow.js';
