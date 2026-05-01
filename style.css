@@ -264,7 +264,7 @@ body {
 
 /* --- Start Menu Styling (Unified Dark Theme) --- */
 #startMenu {
-    position: absolute;
+    position: fixed;
     bottom: 32px; /* Adjusted for slightly taller taskbar */
     left: 0;
     background: #1e1e1e; 
