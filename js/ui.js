@@ -3059,3 +3059,93 @@ function updateTimelineRegionMarkers() {
 
 // Export so main.js can call it when global controls change
 export { updateTimelineRegionMarkers };
+// --- Keyboard Shortcuts Help Window ---
+export function showKeyboardShortcutsHelpWindow() {
+    const windowId = 'keyboardShortcutsHelp';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId)) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const shortcutsHTML = `
+        <div style="padding: 15px; max-height: 400px; overflow-y: auto; font-family: sans-serif; font-size: 13px; color: #e0e0e0;">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">🎹 Keyboard Shortcuts</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">▶️ Playback Controls</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Space</kbd></td><td>Play / Pause</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Enter</kbd></td><td>Stop</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">R</kbd></td><td>Toggle Record Arm</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+S</kbd></td><td>Save Project</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">✂️ Edit Operations</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Z</kbd></td><td>Undo</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Y</kbd></td><td>Redo</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+C</kbd></td><td>Copy Sequencer Selection</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+V</kbd></td><td>Paste</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+A</kbd></td><td>Select All Notes</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Delete</kbd></td><td>Delete Selection</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">🎵 Track Controls</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">M</kbd></td><td>Mute Track</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">S</kbd></td><td>Solo Track</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">1-8</kbd></td><td>Select Track 1-8</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Tab</kbd></td><td>Cycle to Next Track</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Shift+Tab</kbd></td><td>Cycle to Previous Track</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">🎹 Piano Keys</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">A-L</kbd></td><td>Play C4-B4 (white keys)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">W-U</kbd></td><td>Play C#4-A#4 (black keys)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Z</kbd></td><td>Octave Down</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">X</kbd></td><td>Octave Up</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Q</kbd></td><td>Reset Octave</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">🔧 Snap & Quantize</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">S</kbd></td><td>Cycle Snap (Off / 1/4 / 1/8 / 1/16)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Q</kbd></td><td>Quantize Selection</td></tr>
+                </table>
+            </div>
+
+            <div>
+                <h4 style="color: #a0a0ff; margin: 5px 0;">📖 Other</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">?</kbd></td><td>Show This Help</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Esc</kbd></td><td>Close Window / Cancel</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">F11</kbd></td><td>Toggle Full Screen</td></tr>
+                </table>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: Constants.KEYBOARD_SHORTCUTS_HELP_WIDTH || 600,
+        height: Constants.KEYBOARD_SHORTCUTS_HELP_HEIGHT || 500,
+        minWidth: 400,
+        minHeight: 300,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, Constants.KEYBOARD_SHORTCUTS_HELP_TITLE || 'Keyboard Shortcuts', shortcutsHTML, options);
+    return win;
+}

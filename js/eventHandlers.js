@@ -1,6 +1,7 @@
 // js/eventHandlers.js - Global Event Listeners and Input Handling Module
 import * as Constants from './constants.js';
 import { showNotification, showConfirmationDialog, createContextMenu, showCustomModal } from './utils.js';
+import { showKeyboardShortcutsHelpWindow } from './ui.js';
 import {
     getTracksState as getTracks,
     getTrackByIdState as getTrackById,
@@ -218,7 +219,7 @@ export function attachGlobalControlEvents(elements) {
     // Shortcuts button
     if (shortcutsBtnGlobal) {
         shortcutsBtnGlobal.addEventListener('click', () => {
-            showKeyboardShortcutsModal();
+            showKeyboardShortcutsHelpWindow();
         });
     } else {
         console.warn("[EventHandlers] shortcutsBtnGlobal not found in provided elements.");
@@ -899,7 +900,7 @@ document.addEventListener('keydown', (event) => {
 
         // ? - show keyboard shortcuts
         if (key === '?') {
-            showKeyboardShortcutsModal();
+            showKeyboardShortcutsHelpWindow();
             return;
         }
 
