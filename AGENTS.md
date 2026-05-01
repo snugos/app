@@ -1,3 +1,58 @@
+#### Day 419: Missing State Functions Undo/Redo Verification Tests (2026-05-01)
+- **Feature**: Added 22 new unit tests to verify that state functions that don't call captureStateForUndo are correctly documented
+- **Files Modified**:
+  - `js/tests.js`: Added 22 new tests in Day 419 section:
+    - State Functions - setProjectNameState does NOT call captureStateForUndo
+    - State Functions - setLoadedZipFilesState does NOT call captureStateForUndo
+    - State Functions - setSoundLibraryFileTreesState does NOT call captureStateForUndo
+    - State Functions - setMutedTrackIdsState does NOT call captureStateForUndo
+    - State Functions - setHighestZState does NOT call captureStateForUndo
+    - State Functions - setMasterEffectsState does NOT call captureStateForUndo
+    - State Functions - setMasterGainValueState does NOT call captureStateForUndo
+    - State Functions - setMidiAccessState does NOT call captureStateForUndo
+    - State Functions - setActiveMIDIInputState does NOT call captureStateForUndo
+    - State Functions - setCurrentLibraryNameState does NOT call captureStateForUndo
+    - State Functions - setCurrentSoundFileTreeState does NOT call captureStateForUndo
+    - State Functions - setCurrentSoundBrowserPathState does NOT call captureStateForUndo
+    - State Functions - setPreviewPlayerState does NOT call captureStateForUndo
+    - State Functions - setClipboardDataState does NOT call captureStateForUndo
+    - State Functions - setArmedTrackIdState does NOT call captureStateForUndo
+    - State Functions - setIsRecordingState does NOT call captureStateForUndo
+    - State Functions - setRecordingTrackIdState does NOT call captureStateForUndo
+    - State Functions - setRecordingStartTimeState does NOT call captureStateForUndo
+    - State Functions - setActiveSequencerTrackIdState does NOT call captureStateForUndo
+    - State Functions - setPlaybackModeStateInternal does NOT call captureStateForUndo directly
+    - Day 419 - APP_VERSION validation for Day 419
+  - `js/constants.js`: Bumped APP_VERSION to 2.97.0
+- **Feature Details**:
+  - Tests verify that the following functions do NOT call captureStateForUndo (by design):
+    - setProjectNameState (UI state, no undo needed)
+    - setLoadedZipFilesState (internal state)
+    - setSoundLibraryFileTreesState (internal state)
+    - setMutedTrackIdsState (uses callback instead of undo)
+    - setHighestZState (internal window state)
+    - setMasterEffectsState (uses dedicated effect chain functions)
+    - setMasterGainValueState (internal audio state)
+    - setMidiAccessState (internal MIDI state)
+    - setActiveMIDIInputState (internal MIDI state)
+    - setCurrentLibraryNameState (internal UI state)
+    - setCurrentSoundFileTreeState (internal UI state)
+    - setCurrentSoundBrowserPathState (internal UI state)
+    - setPreviewPlayerState (internal audio state)
+    - setClipboardDataState (has its own undo mechanism)
+    - setArmedTrackIdState (transient recording state)
+    - setIsRecordingState (transient recording state)
+    - setRecordingTrackIdState (transient recording state)
+    - setRecordingStartTimeState (transient recording state)
+    - setActiveSequencerTrackIdState (transient UI state)
+    - setPlaybackModeStateInternal (uses appServices.captureStateForUndo, not internal)
+  - This completes verification that all state mutation functions either:
+    1. Call captureStateForUndo when appropriate (user-facing state changes)
+    2. Do NOT call captureStateForUndo when not appropriate (internal state)
+  - Total tests increased from 2416 to 2437
+- **Version**: Bumped to 2.97.0
+
+
 #### Day 418: Synth Presets & Additional State Functions Tests (2026-05-01)
 - **Feature**: Added 72 new unit tests for Synth Presets and Additional State Functions to expand test coverage
 - **Files Modified**:
