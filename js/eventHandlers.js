@@ -178,6 +178,12 @@ export function initializePrimaryEventListeners(appContext) {
             menuExportWav: () => { if(services.exportToWav) services.exportToWav(); },
             menuToggleFullScreen: toggleFullScreen,
             menuTetris: () => window.open("https://snugos.github.io/app/tetris.html", "_blank"),
+            menuImportAudioFile: () => { if(services.showNotification) services.showNotification("Import Audio: Click on an Audio track timeline to import.", 3000); },
+            menuExportMidi: () => { if(services.exportToMidi) services.exportToMidi(); else if(services.showNotification) services.showNotification("MIDI export not yet implemented.", 3000); },
+            menuImportMidi: () => { if(services.showNotification) services.showNotification("MIDI import not yet implemented.", 3000); },
+            menuKeyboardShortcuts: () => { if(services.showKeyboardShortcutsHelpWindow) services.showKeyboardShortcutsHelpWindow(); },
+            menuSaveTrackAsTemplate: () => { if(services.showNotification) services.showNotification("Save Track as Template: Right-click a track header.", 3000); },
+            menuOpenTrackTemplates: () => { if(services.openTrackTemplatesWindow) services.openTrackTemplatesWindow(); },
         };
 
         for (const menuItemId in menuActions) {

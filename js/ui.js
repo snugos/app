@@ -3149,3 +3149,65 @@ export function showKeyboardShortcutsHelpWindow() {
     const win = localAppServices.createWindow(windowId, Constants.KEYBOARD_SHORTCUTS_HELP_TITLE || 'Keyboard Shortcuts', shortcutsHTML, options);
     return win;
 }
+
+// --- Track Templates Window ---
+export function openTrackTemplatesWindow(savedState = null) {
+    const windowId = 'trackTemplates';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0;">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">📋 Track Templates</h3>
+            <p style="color: #888;">No saved templates yet. Use "Save Track as Template" from the track menu to save your first template.</p>
+        </div>
+    `;
+
+    const options = {
+        width: 400,
+        height: 300,
+        minWidth: 300,
+        minHeight: 200,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, 'Track Templates', contentHTML, options);
+    return win;
+}
+
+// --- Send Effects Window ---
+export function openSendEffectsWindow(sendId, savedState = null) {
+    const windowId = `sendEffectsRack-${sendId}`;
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0;">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">📨 Send Effects: ${sendId}</h3>
+            <p style="color: #888;">Send effect chain goes here.</p>
+        </div>
+    `;
+
+    const options = {
+        width: 350,
+        height: 400,
+        minWidth: 300,
+        minHeight: 250,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, `Send Effects: ${sendId}`, contentHTML, options);
+    return win;
+}
