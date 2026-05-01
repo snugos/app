@@ -868,6 +868,49 @@ function updateMetersLoop() {
     requestAnimationFrame(updateMetersLoop);
 }
 
+// Handle custom background upload from file input
+async function handleCustomBackgroundUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    
+    if (validImageTypes.includes(file.type)) {
+        // Handle image background
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataURL = e.target.result;
+            localStorage.setItem(Constants.DESKTOP_BACKGROUND_KEY, dataURL);
+            localStorage.setItem(Constants.DESKTOP_BG_TYPE_KEY, 'image');
+            applyDesktopBackground(dataURL, 'image');
+            showSafeNotification('Desktop background updated!', 2000);
+        };
+        reader.onerror = () => {
+            showSafeNotification('Failed to read image file.', 3000);
+        };
+        reader.readAsDataURL(file);
+    } else if (validVideoTypes.includes(file.type)) {
+        // Handle video background - store in IndexedDB
+        try {
+            await bgDbStoreAudio('desktopVideo', file);
+            localStorage.setItem(Constants.DESKTOP_BG_TYPE_KEY, 'video');
+            localStorage.removeItem(Constants.DESKTOP_BACKGROUND_KEY);
+            const objectUrl = URL.createObjectURL(file);
+            applyDesktopBackground(objectUrl, 'video');
+            showSafeNotification('Video background set!', 2000);
+        } catch (e) {
+            console.error('Failed to store video background:', e);
+            showSafeNotification('Failed to set video background.', 3000);
+        }
+    } else {
+        showSafeNotification('Unsupported file type. Use images (jpg, png, gif, webp) or videos (mp4, webm).', 4000);
+    }
+    
+    // Reset input so same file can be selected again
+    event.target.value = '';
+}
+
 function applyDesktopBackground(sourceUrl, bgType = 'image') {
     const desktop = uiElementsCache.desktop;
     const videoBg = document.getElementById('desktopVideoBg');
