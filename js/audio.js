@@ -4,7 +4,7 @@ import * as Constants from './constants.js';
 // import { showNotification } from './utils.js'; // Not directly imported, accessed via appServices
 import { createEffectInstance } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
-import { getRecordingStartTimeState, setIsRecordingState, setRecordingTrackIdState, setRecordingStartTimeState } from './state.js';
+import { getRecordingStartTimeState, getLoadedZipFilesState, getTracksState, getPlaybackModeState } from './state.js';
 
 
 let masterEffectsBusInputNode = null;
@@ -13,22 +13,21 @@ let masterMeterNode = null;
 let activeMasterEffectNodes = new Map();
 
 let audioContextInitialized = false;
+let contextSuspendedCount = 0; // Track suspension events for monitoring/recovery
+let resumeAttemptScheduled = false;
 
 let localAppServices = {};
 
-// Metronome
-let metronomeClickPlayer = null;
-let metronomeAccentPlayer = null;
-let metronomeInitialized = false;
+// Variables for sidechain compression
+let sidechainBus = null; // Tone.Gain node that receives mic input for sidechain
+let micForSidechain = null; // Reference to the mic when used for sidechain
+let sidechainTrackAssignments = new Map(); // effectId -> { trackId, trackName } for track-in mode
 
 // Variables for audio recording
 let mic = null;
 let recorder = null;
-let recordingInputGainNode = null; // Gain node for recording input level control
-
-// Send Bus Audio Nodes
-let sendBusNodes = new Map(); // Map: sendId -> { inputGain, effectsChain, outputGain }
-let trackSendNodes = new Map(); // Map: trackId -> { sendId: sendGainNode }
+let recordingScheduledId = null; // For punch-in/out enforcement callback
+let recordingScheduledTrackId = null; // Track ID for the scheduled recording callback
 
 
 export function initializeAudioModule(appServicesFromMain) {
@@ -37,6 +36,7 @@ export function initializeAudioModule(appServicesFromMain) {
 
 export function getMasterEffectsBusInputNode() {
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed) {
+        console.log("[Audio getMasterEffectsBusInputNode] Master bus input node not ready or disposed, attempting setup.");
         setupMasterBus();
     }
     return masterEffectsBusInputNode;
@@ -44,6 +44,7 @@ export function getMasterEffectsBusInputNode() {
 
 export function getActualMasterGainNode() {
     if (!masterGainNodeActual || masterGainNodeActual.disposed) {
+        console.log("[Audio getActualMasterGainNode] Actual master gain node not ready or disposed, attempting setup.");
         setupMasterBus();
     }
     return masterGainNodeActual;
@@ -66,6 +67,7 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
 
         if (Tone.context && Tone.context.state === 'running') {
             if (!audioContextInitialized) {
+                console.log('[Audio initAudioContextAndMasterMeter] First time setup for master bus after context became running.');
                 setupMasterBus();
             } else if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed ||
                        !masterGainNodeActual || masterGainNodeActual.disposed ||
@@ -74,9 +76,9 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
                 setupMasterBus();
             }
             audioContextInitialized = true;
+            console.log('[Audio initAudioContextAndMasterMeter] Audio context initialized and running.');
             return true;
         } else {
-            console.warn('[Audio initAudioContextAndMasterMeter] Audio context NOT running after Tone.start(). State:', Tone.context?.state);
             const message = "AudioContext could not be started. Please click again or refresh the page.";
             if (localAppServices.showNotification) {
                 localAppServices.showNotification(message, 5000);
@@ -87,7 +89,6 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
             return false;
         }
     } catch (error) {
-        console.error("[Audio initAudioContextAndMasterMeter] Error during Tone.start() or master bus setup:", error);
         const message = `Error initializing audio: ${error.message || 'Please check console.'}. Try interacting with the page or refreshing.`;
         if (localAppServices.showNotification) {
             localAppServices.showNotification(message, 5000);
@@ -100,6 +101,7 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
 }
 
 function setupMasterBus() {
+    console.log('[Audio setupMasterBus] Setting up master bus...');
     if (!Tone.context || Tone.context.state !== 'running') {
         console.warn('[Audio setupMasterBus] Audio context not running. Aborting master bus setup.');
         return;
@@ -128,6 +130,7 @@ function setupMasterBus() {
         masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
     }
     rebuildMasterEffectChain(); // This will handle connections
+    console.log('[Audio setupMasterBus] Master bus setup process complete.');
 }
 
 export function rebuildMasterEffectChain() {
@@ -164,14 +167,17 @@ export function rebuildMasterEffectChain() {
             effectNode = createEffectInstance(effectState.type, effectState.params);
             if (effectNode) {
                 activeMasterEffectNodes.set(effectState.id, effectNode);
+
             } else {
-                console.error(`[Audio rebuildMasterEffectChain] CRITICAL: Failed to recreate master effect node for ${effectState.type} (ID: ${effectState.id}). Chain will be broken here.`);
-                return; // Skip connecting this effect if it failed to create
+                console.error(`[Audio rebuildMasterEffectChain] Failed to recreate master effect node for ${effectState.type} (ID: ${effectState.id}). Skipping but continuing to next effect.`);
+                // Don't return — continue so subsequent effects still get connected through the chain
+                currentAudioPathEnd = null; // Mark chain as needing bypass
             }
         }
 
         if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
             try {
+
                 currentAudioPathEnd.connect(effectNode);
                 currentAudioPathEnd = effectNode;
             } catch (e) {
@@ -187,12 +193,13 @@ export function rebuildMasterEffectChain() {
     // Connect the end of the effect chain to masterGainNodeActual
     if (currentAudioPathEnd && !currentAudioPathEnd.disposed && masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
+
             currentAudioPathEnd.connect(masterGainNodeActual);
         } catch (e) {
             console.error(`[Audio rebuildMasterEffectChain] Error connecting master chain output to masterGainNodeActual:`, e);
         }
     } else {
-        console.warn('[Audio rebuildMasterEffectChain] Could not connect master chain output to masterGainNodeActual. Current end:', currentAudioPathEnd?.toString(), 'Master Gain:', masterGainNodeActual?.toString());
+        console.warn('[Audio rebuildMasterEffectChain] Could not connect master chain output to masterGainNodeActual. Current end:', ((currentAudioPathEnd) && (currentAudioPathEnd).toString)(), 'Master Gain:', ((masterGainNodeActual) && (masterGainNodeActual).toString)());
          if (!masterEffectsBusInputNode.numberOfOutputs && masterGainNodeActual && !masterGainNodeActual.disposed) { // If no effects, connect input directly
             try {
                 masterEffectsBusInputNode.connect(masterGainNodeActual);
@@ -215,6 +222,7 @@ export function rebuildMasterEffectChain() {
     } else {
          console.warn('[Audio rebuildMasterEffectChain] masterGainNodeActual not available for final connection.');
     }
+    console.log('[Audio rebuildMasterEffectChain] Master effect chain rebuild complete.');
 }
 
 
@@ -276,9 +284,46 @@ export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
         } else {
             console.warn(`[Audio updateMasterEffectParamInAudio] Parameter ${finalParamKey} not found on target object for effect ID ${effectId}. Target:`, targetObject);
         }
+
+        // Handle sidechain param changes for Compressor
+        if (paramPath === 'sidechain' && effectNode.toneName === 'Compressor') {
+            handleSidechainParamChangeForEffect(effectId, effectNode, value);
+        }
     } catch (err) {
         console.error(`[Audio updateMasterEffectParamInAudio] Error updating param "${paramPath}" for master effect ID ${effectId}:`, err);
     }
+}
+
+export function handleSidechainParamChangeForEffect(effectId, effectNode, sidechainValue) {
+
+    if (sidechainValue === 'off') {
+        disableSidechainFromMic();
+        sidechainTrackAssignments.delete(effectId);
+    } else if (sidechainValue === 'mic') {
+        enableSidechainFromMic(effectNode);
+    } else if (sidechainValue === 'track-in') {
+        const assignment = sidechainTrackAssignments.get(effectId);
+        if (assignment && assignment.trackId) {
+            enableSidechainFromTrackIn(assignment.trackId, effectNode);
+        } else {
+
+        }
+    }
+}
+
+export function enableSidechainFromTrackForEffect(effectId, trackId) {
+    const compressorNode = activeMasterEffectNodes.get(effectId);
+    if (!compressorNode || compressorNode.disposed) {
+        console.warn(`[Audio enableSidechainFromTrackForEffect] Compressor for effect ${effectId} not found or disposed.`);
+        return false;
+    }
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) {
+        console.warn(`[Audio enableSidechainFromTrackForEffect] Track ${trackId} not found.`);
+        return false;
+    }
+    sidechainTrackAssignments.set(effectId, { trackId, trackName: track.name });
+    return enableSidechainFromTrackIn(trackId, compressorNode);
 }
 
 export function reorderMasterEffectInAudio(effectIdIgnored, newIndexIgnored) {
@@ -449,7 +494,7 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
 
     if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || track.drumPadPlayers[padIndex].disposed || !track.drumPadPlayers[padIndex].loaded) {
-        console.warn(`[Audio playDrumSamplerPadPreview] Conditions not met for playing drum pad preview for track ${trackId}, pad ${padIndex}. Player loaded: ${track?.drumPadPlayers[padIndex]?.loaded}`);
+        console.warn(`[Audio playDrumSamplerPadPreview] Conditions not met for playing drum pad preview for track ${trackId}, pad ${padIndex}. Player loaded: ${((track) && (track).drumPadPlayers)[padIndex]?.loaded}`);
         if (localAppServices.showNotification && track && track.type === 'DrumSampler' && (!track.drumPadPlayers[padIndex] || !track.drumPadPlayers[padIndex].loaded) ) {
             localAppServices.showNotification(`Sample for Pad ${padIndex + 1} not loaded or player error.`, 2000);
         }
@@ -532,7 +577,7 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
             track.disposeSlicerMonoNodes(); // Important to call before setting new buffer related properties
             track.audioBuffer = newAudioBuffer;
             track.samplerAudioData = { fileName: sourceName, /* audioBufferDataURL: base64DataURL, */ dbKey: dbKey, status: 'loaded' };
-            if (!track.slicerIsPolyphonic && track.audioBuffer?.loaded) track.setupSlicerMonoNodes();
+            if (!track.slicerIsPolyphonic && ((track.audioBuffer) && (track.audioBuffer).loaded)) track.setupSlicerMonoNodes();
             if (localAppServices.autoSliceSample && track.audioBuffer.loaded && (!track.slices || track.slices.every(s => s.duration === 0))) {
                 localAppServices.autoSliceSample(track.id, Constants.numSlices);
             }
@@ -570,7 +615,7 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
                 padData.dbKey = dbKey;
                 padData.status = 'loaded';
                 track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer); // Create new player
-                // Connection will be handled by rebuildEffectChain or play preview
+                // Connection will be handled by rebuildMasterEffectChain or play preview
             } else {
                 console.error(`[Audio commonLoadSampleLogic] Pad data not found for index ${padIndex} on track ${track.id}`);
                 throw new Error(`Pad data not found for index ${padIndex}.`);
@@ -757,6 +802,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     }
 
     if (localAppServices.showNotification) localAppServices.showNotification(`Loading "${fileName}" to ${track.name}...`, 2000);
+    console.log(`[Audio loadSoundFromBrowserToTarget] Attempting to load: ${fileName} from lib: ${libraryName} (Path: ${fullPath}) to Track ID: ${track.id} (${track.type}), Pad/Slice Index: ${targetPadOrSliceIndex}`);
 
     try {
         const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
@@ -774,7 +820,6 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         const finalMimeType = fileBlobFromZip.type && fileBlobFromZip.type !== "application/octet-stream" ? fileBlobFromZip.type : inferredMimeType;
         const blobToLoad = new File([fileBlobFromZip], fileName, { type: finalMimeType });
 
-
         if (track.type === 'DrumSampler') {
             let actualPadIndex = targetPadOrSliceIndex;
             // If targetPadOrSliceIndex is not valid, try to find an empty pad or use selected
@@ -782,6 +827,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
                 actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey && !p.originalFileName); // Find first truly empty
                 if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; // Fallback to selected
                 if (typeof actualPadIndex !== 'number' || actualPadIndex < 0) actualPadIndex = 0; // Final fallback
+
             }
             await commonLoadSampleLogic(blobToLoad, fileName, track, 'DrumSampler', actualPadIndex);
         } else { // Sampler or InstrumentSampler
@@ -796,14 +842,23 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     }
 }
 
-export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true) {
-    const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
+export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false) {
+
     const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
-    
+    if (loadedZips && typeof loadedZips === 'object') { // Ensure loadedZips is an object before keying
+
+    } else {
+    }
+    if (soundTrees && typeof soundTrees === 'object') {
+
+    } else {
+    }
+
+
     if (loadedZips && loadedZips[libraryName] && loadedZips[libraryName] !== "loading") {
         if (!isAutofetch && localAppServices.updateSoundBrowserDisplayForLibrary) {
-            localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false);
+            localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false); // isLoading = false, hasError = false
         }
         return; // Already loaded
     }
@@ -817,68 +872,32 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
     }
 
     try {
-        const newLoadedZips = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
+        const newLoadedZips = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {}; // Ensure we start with a fresh copy if getLoadedZipFiles is available
         newLoadedZips[libraryName] = "loading";
         if (localAppServices.setLoadedZipFilesState) localAppServices.setLoadedZipFilesState(newLoadedZips);
+
 
         const response = await fetch(zipUrl);
         if (!response.ok) {
             throw new Error(`HTTP error ${response.status} fetching ZIP for ${libraryName} from ${zipUrl}`);
         }
         const zipData = await response.arrayBuffer();
+        const loadedZipInstance = await new JSZip().loadAsync(zipData);
 
-        if (typeof JSZip === 'undefined') {
-            console.error("[Audio fetchSoundLibrary JSZIP_ERROR] JSZip library not found. Cannot process library.");
-            throw new Error("JSZip library not available for processing sound libraries.");
-        }
-
-        const jszip = new JSZip();
-        const loadedZipInstance = await jszip.loadAsync(zipData);
-
-        // Get the latest state again before updating
-        const latestLoadedZipsAfterLoad = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
-        latestLoadedZipsAfterLoad[libraryName] = loadedZipInstance; // Store the JSZip instance
-
-        if (localAppServices.setLoadedZipFilesState) {
-            localAppServices.setLoadedZipFilesState(latestLoadedZipsAfterLoad);
-        } else {
-            console.error(`[Audio Fetch ERROR] localAppServices.setLoadedZipFilesState is UNDEFINED for ${libraryName} (loadedZips)`);
-        }
-
-        const fileTree = {};
-        let audioFileCount = 0;
-        loadedZipInstance.forEach((relativePath, zipEntry) => {
-            if (zipEntry.dir || relativePath.startsWith("__MACOSX") || relativePath.includes("/.") || relativePath.startsWith(".")) {
-                return; // Skip directories and hidden/system files
-            }
-            const pathParts = relativePath.split('/').filter(p => p); // Filter out empty parts
-            if (pathParts.length === 0) return;
-
-            let currentLevel = fileTree;
-            for (let i = 0; i < pathParts.length; i++) {
-                const part = pathParts[i];
-                if (i === pathParts.length - 1) { // File
-                    if (part.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) { // Check for audio extensions
-                        currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
-                        audioFileCount++;
-                    }
-                } else { // Directory
-                    if (!currentLevel[part] || currentLevel[part].type !== 'folder') {
-                        currentLevel[part] = { type: 'folder', children: {} };
-                    }
-                    currentLevel = currentLevel[part].children;
-                }
-            }
-        });
-
-        const latestSoundTrees = localAppServices.getSoundLibraryFileTrees ? { ...(localAppServices.getSoundLibraryFileTrees()) } : {};
+        const latestSoundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
         latestSoundTrees[libraryName] = fileTree;
 
         if (localAppServices.setSoundLibraryFileTreesState) {
             localAppServices.setSoundLibraryFileTreesState(latestSoundTrees);
         } else {
-            console.error(`[Audio Fetch ERROR] localAppServices.setSoundLibraryFileTreesState is UNDEFINED for ${libraryName} (soundTrees)`);
         }
+
+        const checkZipsAfterSet = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
+        const checkTreesAfterSet = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
+        if (checkTreesAfterSet[libraryName]) {
+
+        }
+
 
         if (localAppServices.updateSoundBrowserDisplayForLibrary) {
             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false); // isLoading = false, hasError = false
@@ -886,11 +905,12 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
 
     } catch (error) {
         console.error(`[Audio fetchSoundLibrary CATCH_ERROR] Error fetching/processing library ${libraryName} from ${zipUrl}:`, error);
-        const errorLoadedZips = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
+
+        const errorLoadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
         delete errorLoadedZips[libraryName];
         if (localAppServices.setLoadedZipFilesState) localAppServices.setLoadedZipFilesState(errorLoadedZips);
 
-        const errorSoundTrees = localAppServices.getSoundLibraryFileTrees ? { ...(localAppServices.getSoundLibraryFileTrees()) } : {};
+        const errorSoundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
         delete errorSoundTrees[libraryName];
         if (localAppServices.setSoundLibraryFileTreesState) localAppServices.setSoundLibraryFileTreesState(errorSoundTrees);
 
@@ -953,829 +973,763 @@ export function clearAllMasterEffectNodes() {
         }
     });
     activeMasterEffectNodes.clear();
+    console.log("[Audio clearAllMasterEffectNodes] All active master effect nodes cleared and disposed.");
     rebuildMasterEffectChain(); // Rebuild with an empty chain (input -> gain -> destination)
 }
 
 
-// --- Audio Recording Functions ---
-export async function startAudioRecording(track, isMonitoringEnabled) {
+// ============================================================
+// METRONOME MODULE
+// ============================================================
+let metronomeEnabled = false;
+let metronomeSynth = null;
+let metronomeScheduledId = null;
+let _metronomeVolume = 0.25; // -12dB roughly
+let countInActive = false;
+let countInScheduledId = null;
+let countInBars = 1; // Default 1 bar count-in
 
-    // Ensure previous instances are robustly closed and disposed
-    if (mic) {
-        if (mic.state === "started") {
-            try { mic.close(); } catch(e) { console.warn("[Audio startAudioRecording] Error closing existing mic:", e.message); }
-        }
-        // Tone.UserMedia objects don't have a standard dispose method in the same way other Tone nodes do
-        mic = null;
-    }
+export function isMetronomeEnabled() { return metronomeEnabled; }
 
-    if (recordingInputGainNode) {
-        if (!recordingInputGainNode.disposed) {
-            try { recordingInputGainNode.dispose(); } catch(e) { console.warn("[Audio startAudioRecording] Error disposing recordingInputGainNode:", e.message); }
-        }
-        recordingInputGainNode = null;
-    }
+export function getCountInBars() { return countInBars; }
+export function setCountInBars(bars) { countInBars = Math.max(0, Math.min(4, Math.floor(bars))); }
+export function isCountInActive() { return countInActive; }
 
-    if (recorder) {
-        if (recorder.state === "started") {
-            try { recorder.stop(); } catch(e) { console.warn("[Audio startAudioRecording] Error stopping existing recorder:", e.message); }
-        }
-        if (!recorder.disposed) {
-            try { recorder.dispose(); } catch(e) { console.warn("[Audio startAudioRecording] Error disposing existing recorder:", e.message); }
-        }
-        recorder = null;
-    }
-
-    // Create new instances for a fresh start.
-    mic = new Tone.UserMedia({
-        audio: { // Ideal constraints
-            echoCancellation: false, autoGainControl: false, noiseSuppression: false, latency: 0.01 // small latency hint
-        }
-    });
-    recorder = new Tone.Recorder();
-
-    if (!track || track.type !== 'Audio' || !track.inputChannel || track.inputChannel.disposed) {
-        const errorMsg = `Recording failed: Track (ID: ${track?.id}) is not a valid audio track or its input channel is missing/disposed. Type: ${track?.type}. Input channel valid: ${!!(track?.inputChannel && !track.inputChannel.disposed)}`;
-        console.error(`[Audio startAudioRecording] ${errorMsg}`);
-        if (localAppServices.showNotification) localAppServices.showNotification(errorMsg, 4000);
-        return false;
-    }
-
-    try {
-        if (Tone.UserMedia.enumerateDevices && typeof Tone.UserMedia.enumerateDevices === 'function') {
-            try {
-                const devices = await Tone.UserMedia.enumerateDevices();
-                const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
-                if (audioInputDevices.length === 0) console.warn("[Audio startAudioRecording] No audio input devices found by enumerateDevices.");
-            } catch (enumError) {
-                console.error("[Audio startAudioRecording] Error enumerating devices:", enumError);
-            }
-        } else {
-            console.warn("[Audio startAudioRecording] Tone.UserMedia.enumerateDevices is not available or not a function.");
-        }
-
-        await mic.open();
-
-        // Disconnect mic from everything first to be safe
-        try { mic.disconnect(); } catch(e) { /* ignore if not connected */ }
-
-        // Create recording input gain node with track's gain setting (default 1.0, range 0-2)
-        if (!recordingInputGainNode || recordingInputGainNode.disposed) {
-            recordingInputGainNode = new Tone.Gain(track.recordingInputGain !== undefined ? track.recordingInputGain : Constants.DEFAULT_RECORDING_INPUT_GAIN);
-        } else {
-            recordingInputGainNode.gain.value = track.recordingInputGain !== undefined ? track.recordingInputGain : Constants.DEFAULT_RECORDING_INPUT_GAIN;
-        }
-
-        // Connect mic -> recordingInputGainNode -> recorder
-        mic.connect(recordingInputGainNode);
-        recordingInputGainNode.connect(recorder);
-
-        // If monitoring is enabled, also connect to track's input channel for hear-back
-        if (isMonitoringEnabled) {
-            recordingInputGainNode.connect(track.inputChannel);
-        }
-
-        await recorder.start();
-
-        // Update recording state
-        setIsRecordingState(true);
-        setRecordingTrackIdState(track.id);
-        setRecordingStartTimeState(Tone.Transport.seconds);
-
-        return true;
-
-    } catch (error) {
-        console.error("[Audio startAudioRecording] Error starting microphone/recorder:", error);
-        let userMessage = "Could not start recording. Check microphone permissions and ensure a microphone is connected.";
-        if (error.name === "NotAllowedError" || error.message.toLowerCase().includes("permission denied")) {
-            userMessage = "Microphone permission denied. Please allow microphone access in browser/system settings.";
-        } else if (error.name === "NotFoundError" || error.message.toLowerCase().includes("no device") || error.message.toLowerCase().includes("device not found")) {
-            userMessage = "No microphone found. Please connect a microphone and ensure it's selected by the browser/OS.";
-        } else if (error.name === "AbortError" || error.message.toLowerCase().includes("starting audio input failed")) {
-            userMessage = "Failed to start audio input. The microphone might be in use by another application or a hardware issue.";
-        }
-        if (localAppServices.showNotification) localAppServices.showNotification(userMessage, 6000);
-
-        // Cleanup on error
-        if (mic && mic.state === "started") {
-            try { mic.close(); } catch(e) { console.warn("[Audio stopAudioRecording] Error closing mic (recorder null):", e.message); }
-        }
-        mic = null;
-        return false;
-    }
-}
-
-export async function stopAudioRecording() {
-    let blob = null;
-
-    if (!recorder) {
-        console.warn("[Audio stopAudioRecording] Recorder not initialized. Cannot stop recording.");
-        if (mic && mic.state === "started") {
-            try { mic.close(); } catch(e) { console.warn("[Audio stopAudioRecording] Error closing mic (recorder null):", e.message); }
-        }
-        mic = null;
-        return; // Nothing to process if recorder wasn't there
-    }
-
-    if (recorder.state === "started") {
-        try {
-            blob = await recorder.stop(); // This resolves with the Blob
-        } catch (e) {
-            console.error("[Audio stopAudioRecording] Error stopping recorder:", e);
-            if (localAppServices.showNotification) localAppServices.showNotification("Error stopping recorder. Recording may be lost.", 3000);
-            // Attempt to clean up even if stop fails
-        }
+export function setMetronomeEnabled(enabled) {
+    if (enabled === metronomeEnabled) return;
+    metronomeEnabled = enabled;
+    if (metronomeEnabled) {
+        scheduleMetronome();
     } else {
-        console.warn("[Audio stopAudioRecording] Recorder was not in 'started' state. Current state:", recorder.state);
-    }
-
-    // Cleanup mic
-    if (mic) {
-        if (mic.state === "started") {
-            try {
-                mic.disconnect(recordingInputGainNode); // Disconnect from recorder first
-                if (localAppServices.getRecordingTrackId) { // Disconnect from track input if monitoring was on
-                    const recTrack = localAppServices.getTrackById(localAppServices.getRecordingTrackId());
-                    if (recTrack && recTrack.inputChannel && !recTrack.inputChannel.disposed) {
-                       try { mic.disconnect(recTrack.inputChannel); } catch(e) { /* ignore */ }
-                    }
-                }
-                mic.close();
-            } catch (e) {
-                console.warn("[Audio stopAudioRecording] Error closing/disconnecting mic:", e.message);
-            }
-        }
-        mic = null; // Nullify the global reference
-    }
-
-    // Cleanup recorder
-    if (recorder && !recorder.disposed) {
-        try {
-            recorder.dispose();
-        } catch(e) {
-            console.warn("[Audio stopAudioRecording] Error disposing recorder:", e.message);
-        }
-    }
-    recorder = null;
-
-    // Process the recorded blob
-    if (blob && blob.size > 0) {
-        const recordingTrackId = localAppServices.getRecordingTrackId ? localAppServices.getRecordingTrackId() : null;
-        const startTime = getRecordingStartTimeState();
-        const track = recordingTrackId !== null && localAppServices.getTrackById ? localAppServices.getTrackById(recordingTrackId) : null;
-
-        if (track) {
-            if (typeof track.addAudioClip === 'function') {
-                await track.addAudioClip(blob, startTime);
-            } else {
-                console.error("[Audio stopAudioRecording] Track object does not have addAudioClip method.");
-                if (localAppServices.showNotification) localAppServices.showNotification("Error: Could not process recorded audio (internal error).", 3000);
-            }
-        } else {
-            console.error(`[Audio stopAudioRecording] Recorded track (ID: ${recordingTrackId}) not found after stopping recorder.`);
-            if (localAppServices.showNotification) localAppServices.showNotification("Error: Recorded track not found. Audio might be lost.", 3000);
-        }
-    } else if (blob && blob.size === 0) {
-        console.warn("[Audio stopAudioRecording] Recording was empty.");
-        if (localAppServices.showNotification) localAppServices.showNotification("Recording was empty. No clip created.", 2000);
-    } else if (!blob && recorder?.state === "started") { // Should be caught by try/catch around recorder.stop()
-        console.warn("[Audio stopAudioRecording] Recorder was in 'started' state but stop() did not yield a blob.");
-    }
-
-    // Clear recording state
-    setIsRecordingState(false);
-    setRecordingTrackIdState(null);
-    setRecordingStartTimeState(0);
-}
-
-// --- Metronome Functions ---
-export function initializeMetronome() {
-    if (metronomeInitialized) return;
-    
-    // Create synthetic click sounds using oscillators
-    // A "click" player that can be triggered rapidly
-    const clickFreq = 1000; // 1kHz click
-    const accentFreq = 1500; // Higher pitch for accent
-    
-    try {
-        // Create buffers for click sounds programmatically
-        const clickDuration = 0.015; // 15ms click
-        const sampleRate = 44100;
-        const clickSamples = Math.floor(clickDuration * sampleRate);
-        
-        // Generate click buffer - short burst of sine wave with fast decay
-        const clickBuffer = new Tone.Buffer(true); // empty buffer, will fill manually
-        const clickArray = new Float32Array(clickSamples);
-        for (let i = 0; i < clickSamples; i++) {
-            const t = i / sampleRate;
-            const envelope = Math.exp(-t * 150); // Fast decay
-            clickArray[i] = Math.sin(2 * Math.PI * clickFreq * t) * envelope;
-        }
-        clickBuffer.set(clickArray, 0);
-        
-        // Generate accent buffer - slightly different pitch and longer
-        const accentDuration = 0.025; // 25ms accent
-        const accentSamples = Math.floor(accentDuration * sampleRate);
-        const accentArray = new Float32Array(accentSamples);
-        for (let i = 0; i < accentSamples; i++) {
-            const t = i / sampleRate;
-            const envelope = Math.exp(-t * 100); // Slower decay
-            accentArray[i] = Math.sin(2 * Math.PI * accentFreq * t) * envelope;
-        }
-        const accentBuffer = new Tone.Buffer(true);
-        accentBuffer.set(accentArray, 0);
-        
-        metronomeClickPlayer = new Tone.Player(clickBuffer);
-        metronomeAccentPlayer = new Tone.Player(accentBuffer);
-        metronomeClickPlayer.volume.value = Tone.gainToDb(Constants.DEFAULT_METRONOME_VOLUME);
-        metronomeAccentPlayer.volume.value = Tone.gainToDb(Constants.DEFAULT_METRONOME_VOLUME);
-        
-        // Connect to master bus
-        metronomeClickPlayer.connect(getMasterEffectsBusInputNode());
-        metronomeAccentPlayer.connect(getMasterEffectsBusInputNode());
-        
-        metronomeInitialized = true;
-    } catch (e) {
-        console.error("[Audio initializeMetronome] Error initializing metronome:", e);
+        cancelMetronome();
     }
 }
 
-let metronomeScheduledEventId = null;
-
-export function startMetronome() {
-    if (!metronomeInitialized || !Tone.getTransport().running) {
-        if (!metronomeInitialized) initializeMetronome();
-        if (!Tone.getTransport().running) {
-            console.warn("[Audio startMetronome] Transport not running, cannot start metronome.");
-            return;
-        }
+export function setMetronomeVolume(vol) {
+    _metronomeVolume = Math.max(0, Math.min(1, vol));
+    if (metronomeSynth && !metronomeSynth.disposed) {
+        metronomeSynth.volume.value = Tone.gainToDb(_metronomeVolume);
     }
-    
-    const transport = Tone.getTransport();
-    const bpm = transport.bpm.value;
-    const beatDuration = 60 / bpm; // seconds per beat
-    
-    // Schedule metronome clicks using Tone.Transport
-    let currentBeat = 0;
-    metronomeScheduledEventId = transport.scheduleRepeat((time) => {
-        const isAccent = currentBeat % 4 === 0;
-        const player = isAccent ? metronomeAccentPlayer : metronomeClickPlayer;
-        
-        if (player && !player.disposed) {
-            player.start(time);
-        }
-        
-        currentBeat++;
-        if (currentBeat >= 16) currentBeat = 0; // Reset every 16 beats (1 bar)
-    }, "16n"); // Repeat every 16th note for precision
-    
-    transport.start();
+}
+
+export function getMetronomeVolume() { return _metronomeVolume; }
+
+function ensureMetronomeSynth() {
+    if (metronomeSynth && !metronomeSynth.disposed) return;
+    if (!Tone.context || Tone.context.state !== 'running') return;
+    if (metronomeSynth) { try { metronomeSynth.dispose(); } catch(e){} }
+    metronomeSynth = new Tone.Synth({
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 }
+    });
+    // Connect directly to destination — bypasses master bus so it's always heard
+    metronomeSynth.toDestination();
+    metronomeSynth.volume.value = Tone.gainToDb(_metronomeVolume);
+}
+
+function tickMetronome(time) {
+    if (!metronomeSynth || metronomeSynth.disposed) return;
+    const transportPos = Tone.Transport.position;
+    const [bars, beats, sixteenths] = transportPos.split(':').map(Number);
+    if (isNaN(bars) || isNaN(beats) || isNaN(sixteenths)) return;
+
+    if (beats === 0 && sixteenths === 0) {
+        // Bar 1 beat 1 — accent
+        metronomeSynth.triggerAttackRelease('C6', '32n', time);
+    } else if (sixteenths === 0) {
+        // Beat 1 — normal click
+        metronomeSynth.triggerAttackRelease('C5', '32n', time);
+    }
+}
+
+function scheduleMetronome() {
+    if (!Tone.context || Tone.context.state !== 'running') {
+        console.warn('[Metronome] Cannot schedule: audio context not running.');
+        return;
+    }
+    cancelMetronome();
+    ensureMetronomeSynth();
+    if (!metronomeSynth || metronomeSynth.disposed) return;
+    metronomeScheduledId = Tone.Transport.scheduleRepeat((time) => {
+        tickMetronome(time);
+    }, '16n', 0);
+    console.log('[Metronome] Scheduled, ID:', metronomeScheduledId);
+}
+
+function cancelMetronome() {
+    if (metronomeScheduledId !== null) {
+        try { Tone.Transport.clear(metronomeScheduledId); } catch(e){}
+        metronomeScheduledId = null;
+    }
 }
 
 export function stopMetronome() {
-    const transport = Tone.getTransport();
-    
-    if (metronomeScheduledEventId !== null) {
-        transport.clear(metronomeScheduledEventId);
-        metronomeScheduledEventId = null;
-    }
-    
-    if (metronomeClickPlayer && !metronomeClickPlayer.disposed) {
-        metronomeClickPlayer.stop();
-    }
-    if (metronomeAccentPlayer && !metronomeAccentPlayer.disposed) {
-        metronomeAccentPlayer.stop();
-    }
-    
+    metronomeEnabled = false;
+    cancelMetronome();
 }
 
-export function setMetronomeVolume(volume) {
-    const vol = Math.max(0, Math.min(1, volume));
-    if (metronomeClickPlayer && !metronomeClickPlayer.disposed) {
-        metronomeClickPlayer.volume.value = Tone.gainToDb(vol);
-    }
-    if (metronomeAccentPlayer && !metronomeAccentPlayer.disposed) {
-        metronomeAccentPlayer.volume.value = Tone.gainToDb(vol);
+export function cleanupMetronome() {
+    stopMetronome();
+    if (metronomeSynth) {
+        try { metronomeSynth.dispose(); } catch(e){}
+        metronomeSynth = null;
     }
 }
 
-// --- Send Bus Management ---
+export function cleanupCountIn() {
+    if (countInScheduledId !== null) {
+        try { Tone.Transport.clear(countInScheduledId); } catch(e){}
+        countInScheduledId = null;
+    }
+    countInActive = false;
+}
 
-export function createSendBusInAudio(sendId) {
+export function startCountIn(onCountInComplete, startPosition = 0) {
+    if (countInBars <= 0) {
+        if (onCountInComplete) onCountInComplete();
+        return;
+    }
     if (!Tone.context || Tone.context.state !== 'running') {
-        console.warn('[Audio createSendBusInAudio] Audio context not running. Aborting send bus creation.');
-        return null;
+        console.warn('[CountIn] Cannot start: audio context not running.');
+        if (onCountInComplete) {
+            Tone.getTransport().schedule((t) => { onCountInComplete(); }, startPosition);
+        }
+        return;
     }
-    if (sendBusNodes.has(sendId)) {
-        console.warn(`[Audio createSendBusInAudio] Send bus ${sendId} already exists.`);
-        return sendBusNodes.get(sendId);
+
+    cleanupCountIn();
+    countInActive = true;
+    const barsPerBeat = 4;
+    const totalSixteenths = countInBars * barsPerBeat * 4;
+
+    countInScheduledId = Tone.Transport.schedule((time) => {
+        countInActive = false;
+        countInScheduledId = null;
+        if (onCountInComplete) {
+            Tone.getTransport().schedule((t) => { onCountInComplete(); }, time);
+        }
+    }, `+0:${totalSixteenths}:0`);
+
+    console.log(`[CountIn] Started ${countInBars} bar count-in, scheduled to complete at ${totalSixteenths} sixteenths. ID:`, countInScheduledId);
+}
+
+// ============================================================
+// AUTOMATION SCHEDULING MODULE
+// ============================================================
+
+let automationScheduledId = null;
+
+function tickAutomation(time) {
+    const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+    for (const track of tracks) {
+        if (track && typeof track.applyAutomationAtTime === 'function') {
+            try {
+                track.applyAutomationAtTime(time);
+            } catch (e) { console.warn(`[Audio tickAutomation] Error applying automation for track ${track.id}:`, e.message); }
+        }
     }
-
-    const inputGain = new Tone.Gain(0); // Will be controlled by track send levels
-    const outputGain = new Tone.Gain(1);
-    const effectsChain = [];
-
-    sendBusNodes.set(sendId, {
-        id: sendId,
-        inputGain: inputGain,
-        effectsChain: effectsChain,
-        outputGain: outputGain,
-        activeEffectNodes: new Map()
-    });
-
-    // Connect: input -> effects -> output -> master bus (wet signal only)
+    // Apply master volume automation
     try {
-        inputGain.connect(outputGain);
-        outputGain.connect(masterEffectsBusInputNode);
-    } catch (e) {
-        console.warn(`[Audio createSendBusInAudio] Error connecting send bus ${sendId} to master:`, e.message);
-    }
-
-    return sendBusNodes.get(sendId);
+        applyMasterVolumeAutomationAtTime(time);
+    } catch (e) { console.warn(`[Audio tickAutomation] Error applying master volume automation:`, e.message); }
 }
 
-export function deleteSendBusFromAudio(sendId) {
-    const busData = sendBusNodes.get(sendId);
-    if (!busData) {
-        console.warn(`[Audio deleteSendBusFromAudio] Send bus ${sendId} not found.`);
+function scheduleAutomation() {
+    if (!Tone.context || Tone.context.state !== 'running') {
+        console.warn('[Automation] Cannot schedule: audio context not running.');
         return;
     }
-
-    // Dispose all effect nodes
-    busData.activeEffectNodes.forEach((node, effectId) => {
-        if (node && !node.disposed) {
-            try { node.dispose(); } catch (e) { console.warn(`[Audio deleteSendBusFromAudio] Error disposing effect ${effectId}:`, e.message); }
-        }
-    });
-
-    // Dispose gain nodes
-    if (busData.inputGain && !busData.inputGain.disposed) {
-        try { busData.inputGain.dispose(); } catch (e) { console.warn(`[Audio deleteSendBusFromAudio] Error disposing inputGain:`, e.message); }
-    }
-    if (busData.outputGain && !busData.outputGain.disposed) {
-        try { busData.outputGain.dispose(); } catch (e) { console.warn(`[Audio deleteSendBusFromAudio] Error disposing outputGain:`, e.message); }
-    }
-
-    sendBusNodes.delete(sendId);
-
-    // Remove track connections to this send
-    trackSendNodes.forEach((sendsMap, trackId) => {
-        if (sendsMap.has(sendId)) {
-            const sendGainNode = sendsMap.get(sendId);
-            if (sendGainNode && !sendGainNode.disposed) {
-                try { sendGainNode.dispose(); } catch (e) { console.warn(`[Audio deleteSendBusFromAudio] Error disposing track send gain for track ${trackId}:`, e.message); }
-            }
-            sendsMap.delete(sendId);
-        }
-    });
+    cancelAutomation();
+    automationScheduledId = Tone.Transport.scheduleRepeat((time) => {
+        tickAutomation(time);
+    }, '16n', 0);
+    console.log('[Automation] Scheduled, ID:', automationScheduledId);
 }
 
-export function addEffectToSendBus(sendId, effectType, params) {
-    const busData = sendBusNodes.get(sendId);
-    if (!busData) {
-        console.warn(`[Audio addEffectToSendBus] Send bus ${sendId} not found.`);
-        return null;
+function cancelAutomation() {
+    if (automationScheduledId !== null) {
+        try { Tone.Transport.clear(automationScheduledId); } catch(e){}
+        automationScheduledId = null;
     }
-
-    const toneNode = createEffectInstance(effectType, params || {});
-    if (!toneNode) {
-        console.warn(`[Audio addEffectToSendBus] Failed to create Tone.js instance for effect ${effectType}.`);
-        return null;
-    }
-
-    const effectId = `send_${sendId}_effect_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-    busData.effectsChain.push({ id: effectId, type: effectType, params: params || {} });
-    busData.activeEffectNodes.set(effectId, toneNode);
-
-    rebuildSendBusChain(sendId);
-    return effectId;
 }
 
-export function removeEffectFromSendBus(sendId, effectId) {
-    const busData = sendBusNodes.get(sendId);
-    if (!busData) {
-        console.warn(`[Audio removeEffectFromSendBus] Send bus ${sendId} not found.`);
-        return;
-    }
-
-    const nodeToRemove = busData.activeEffectNodes.get(effectId);
-    if (nodeToRemove) {
-        if (!nodeToRemove.disposed) {
-            try { nodeToRemove.dispose(); } catch (e) { console.warn(`[Audio removeEffectFromSendBus] Error disposing effect ${effectId}:`, e.message); }
-        }
-        busData.activeEffectNodes.delete(effectId);
-    }
-
-    const effectIndex = busData.effectsChain.findIndex(e => e.id === effectId);
-    if (effectIndex > -1) {
-        busData.effectsChain.splice(effectIndex, 1);
-    }
-
-    rebuildSendBusChain(sendId);
+export function startAutomation() {
+    scheduleAutomation();
 }
 
-export function reorderEffectInSendBus(sendId, effectId, newIndex) {
-    const busData = sendBusNodes.get(sendId);
-    if (!busData) {
-        console.warn(`[Audio reorderEffectInSendBus] Send bus ${sendId} not found.`);
-        return;
-    }
-
-    const effectIndex = busData.effectsChain.findIndex(e => e.id === effectId);
-    if (effectIndex === -1) {
-        console.warn(`[Audio reorderEffectInSendBus] Effect ${effectId} not found in send bus ${sendId}.`);
-        return;
-    }
-
-    // Clamp newIndex to valid range
-    const clampedIndex = Math.max(0, Math.min(newIndex, busData.effectsChain.length - 1));
-    
-    // Remove from current position and insert at new position
-    const [effect] = busData.effectsChain.splice(effectIndex, 1);
-    busData.effectsChain.splice(clampedIndex, 0, effect);
-
-    rebuildSendBusChain(sendId);
+export function stopAutomation() {
+    cancelAutomation();
 }
 
-export function updateSendBusEffectParam(sendId, effectId, paramPath, value) {
-    const busData = sendBusNodes.get(sendId);
-    if (!busData) {
-        console.warn(`[Audio updateSendBusEffectParam] Send bus ${sendId} not found.`);
-        return;
-    }
+export function cleanupAutomation() {
+    stopAutomation();
+}
 
-    const effectNode = busData.activeEffectNodes.get(effectId);
-    if (!effectNode || effectNode.disposed) {
-        console.warn(`[Audio updateSendBusEffectParam] Effect node ${effectId} not found or disposed.`);
-        return;
-    }
+// Called when transport starts
+export function onTransportStart() {
+    scheduleAutomation();
+}
 
-    try {
-        const keys = paramPath.split('.');
-        let targetObject = effectNode;
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (targetObject && typeof targetObject[keys[i]] !== 'undefined') {
-                targetObject = targetObject[keys[i]];
-            } else {
-                throw new Error(`Path ${keys.slice(0, i + 1).join('.')} not found on Tone node.`);
-            }
-        }
-        const finalParamKey = keys[keys.length - 1];
-        const paramInstance = targetObject[finalParamKey];
+// Called when transport stops
+export function onTransportStop() {
+    cancelAutomation();
+}
 
-        if (paramInstance && typeof paramInstance.value !== 'undefined' && typeof paramInstance.rampTo === 'function') {
-            paramInstance.rampTo(value, 0.02);
-        } else if (paramInstance && typeof paramInstance.value !== 'undefined') {
-            paramInstance.value = value;
+// ============================================================
+// MASTER VOLUME AUTOMATION MODULE
+// ============================================================
+let masterVolumeAutomation = []; // Array of {time, value} events
+
+export function writeMasterVolumeAutomation(time, value) {
+    const event = { time: parseFloat(time), value: Math.max(0, Math.min(parseFloat(value) || 0, 1.5)) };
+    masterVolumeAutomation.push(event);
+    if (masterVolumeAutomation.length > 10000) masterVolumeAutomation.splice(0, 1000);
+    masterVolumeAutomation.sort((a, b) => a.time - b.time);
+    return event;
+}
+
+export function applyMasterVolumeAutomationAtTime(time) {
+    if (!masterVolumeAutomation || masterVolumeAutomation.length === 0) return;
+    // Find the most recent event at or before this time
+    let eventToApply = null;
+    for (const event of masterVolumeAutomation) {
+        if (event.time <= time) {
+            eventToApply = event;
         } else {
-            targetObject[finalParamKey] = value;
+            break; // events are sorted by time
         }
-    } catch (err) {
-        console.error(`[Audio updateSendBusEffectParam] Error updating param "${paramPath}" for send effect ${effectId}:`, err);
+    }
+    if (eventToApply !== null && masterGainNodeActual && !masterGainNodeActual.disposed) {
+        try {
+            masterGainNodeActual.gain.setValueAtTime(eventToApply.value, Tone.now());
+            // Also sync the state so UI is consistent
+            if (localAppServices.setMasterGainValueState) {
+                localAppServices.setMasterGainValueState(eventToApply.value);
+            }
+        } catch (e) { console.warn('[Audio applyMasterVolumeAutomationAtTime] Error:', e.message); }
     }
 }
 
-export function setSendBusLevel(sendId, level) {
-    const busData = sendBusNodes.get(sendId);
-    if (!busData) {
-        console.warn(`[Audio setSendBusLevel] Send bus ${sendId} not found.`);
-        return;
+export function getMasterVolumeAutomation() {
+    return masterVolumeAutomation;
+}
+
+export function setMasterVolumeAutomation(automationData) {
+    masterVolumeAutomation = Array.isArray(automationData) ? JSON.parse(JSON.stringify(automationData)) : [];
+}
+
+// ============================================================
+// TAP TEMPO MODULE
+// ============================================================
+let tapTempoTaps = []; // Array of timestamps (ms) for each tap
+const TAP_TEMPO_TIMEOUT_MS = 2000; // Reset if no tap within 2 seconds
+const TAP_TEMPO_MIN_TAPS = 2; // Minimum taps needed to calculate tempo
+const TAP_TEMPO_MAX_TAPS = 8; // Use last N taps for averaging
+
+export function resetTapTempo() {
+    tapTempoTaps = [];
+}
+
+export function tapTempo() {
+    const now = performance.now();
+    // Reset if gap is too large (user started a new phrase)
+    if (tapTempoTaps.length > 0 && (now - tapTempoTaps[tapTempoTaps.length - 1]) > TAP_TEMPO_TIMEOUT_MS) {
+        tapTempoTaps = [];
     }
-    if (busData.outputGain && !busData.outputGain.disposed) {
-        busData.outputGain.gain.value = Math.max(0, Math.min(Constants.SEND_LEVEL_MAX, level));
+    tapTempoTaps.push(now);
+    // Keep only the last N taps
+    if (tapTempoTaps.length > TAP_TEMPO_MAX_TAPS) {
+        tapTempoTaps.shift();
     }
 }
 
-export function setSendBusMuted(sendId, muted) {
-    const busData = sendBusNodes.get(sendId);
-    if (!busData) {
-        console.warn(`[Audio setSendBusMuted] Send bus ${sendId} not found.`);
-        return;
+export function getTapTempoBpm() {
+    if (tapTempoTaps.length < TAP_TEMPO_MIN_TAPS) return null;
+    const intervals = [];
+    for (let i = 1; i < tapTempoTaps.length; i++) {
+        intervals.push(tapTempoTaps[i] - tapTempoTaps[i - 1]);
     }
-    if (busData.outputGain && !busData.outputGain.disposed) {
-        busData.outputGain.gain.value = muted ? 0 : 1;
-    }
+    const avgIntervalMs = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+    const bpm = Math.round((60000 / avgIntervalMs) * 10) / 10; // One decimal place
+    return Math.max(Constants.MIN_TEMPO, Math.min(Constants.MAX_TEMPO, bpm));
 }
 
-export function setRecordingInputGain(gainValue) {
-    const clampedGain = Math.max(Constants.MIN_RECORDING_INPUT_GAIN, Math.min(Constants.MAX_RECORDING_INPUT_GAIN, gainValue));
-    if (recordingInputGainNode && !recordingInputGainNode.disposed) {
-        recordingInputGainNode.gain.value = clampedGain;
-    }
-    return clampedGain;
+export function isTapTempoReady() {
+    return tapTempoTaps.length >= TAP_TEMPO_MIN_TAPS;
 }
 
-function rebuildSendBusChain(sendId) {
-    const busData = sendBusNodes.get(sendId);
-    if (!busData) {
-        console.warn(`[Audio rebuildSendBusChain] Send bus ${sendId} not found.`);
-        return;
-    }
+// ============================================================
+// LOOP REGION MODULE
+// ============================================================
+let loopRegion = { start: 0, end: 16, enabled: false }; // Loop region in bars
 
-    // Disconnect everything
-    try { busData.inputGain.disconnect(); } catch (e) { /* ignore */ }
-    busData.activeEffectNodes.forEach((node) => {
-        if (node && !node.disposed) {
-            try { node.disconnect(); } catch (e) { /* ignore */ }
+export function getLoopRegion() {
+    return { ...loopRegion };
+}
+
+export function setLoopRegion(startBars, endBars) {
+    if (startBars < 0 || endBars <= startBars || endBars > Constants.MAX_BARS) {
+        console.warn('[LoopRegion] Invalid region:', startBars, endBars);
+        return false;
+    }
+    loopRegion.start = startBars;
+    loopRegion.end = endBars;
+    // Sync Tone.Transport.loop region if enabled
+    Tone.Transport.loop = loopRegion.enabled;
+    if (loopRegion.enabled) {
+        Tone.Transport.loopStart = `${loopRegion.start}:0:0`;
+        Tone.Transport.loopEnd = `${loopRegion.end}:0:0`;
+    }
+    console.log(`[LoopRegion] Set to ${loopRegion.start} - ${loopRegion.end} bars`);
+    return true;
+}
+
+export function setLoopRegionEnabled(enabled) {
+    loopRegion.enabled = !!enabled;
+    Tone.Transport.loop = loopRegion.enabled;
+    if (loopRegion.enabled) {
+        Tone.Transport.loopStart = `${loopRegion.start}:0:0`;
+        Tone.Transport.loopEnd = `${loopRegion.end}:0:0`;
+    }
+    console.log(`[LoopRegion] ${loopRegion.enabled ? 'Enabled' : 'Disabled'}`);
+    return loopRegion.enabled;
+}
+
+export function isLoopRegionEnabled() {
+    return loopRegion.enabled;
+}
+
+export function getLoopStartBars() { return loopRegion.start; }
+export function getLoopEndBars() { return loopRegion.end; }
+
+// ============================================================
+// PUNCH IN/OUT MODULE
+// ============================================================
+let punchRegion = { in: 0, out: 16, enabled: false }; // Punch in/out in bars
+
+export function getPunchRegion() {
+    return { ...punchRegion };
+}
+
+export function setPunchRegion(inBars, outBars) {
+    if (inBars < 0 || outBars <= inBars || outBars > Constants.MAX_BARS) {
+        console.warn('[Punch] Invalid region:', inBars, outBars);
+        return false;
+    }
+    punchRegion.in = inBars;
+    punchRegion.out = outBars;
+    console.log(`[Punch] Set to ${punchRegion.in} - ${punchRegion.out} bars`);
+    return true;
+}
+
+export function setPunchRegionEnabled(enabled) {
+    punchRegion.enabled = !!enabled;
+    console.log(`[Punch] ${punchRegion.enabled ? 'Enabled' : 'Disabled'}`);
+    return punchRegion.enabled;
+}
+
+export function isPunchRegionEnabled() {
+    return punchRegion.enabled;
+}
+
+export function getPunchInBars() { return punchRegion.in; }
+export function getPunchOutBars() { return punchRegion.out; }
+
+export function isPositionInPunchRegion(positionString) {
+    if (!punchRegion.enabled) return false;
+    const posParts = positionString.split(':').map(Number);
+    if (posParts.length < 3 || posParts.some(isNaN)) return false;
+    const [bars, beats, sixteenths] = posParts;
+    const totalSixteenths = bars * 16 + beats * 4 + sixteenths;
+    const punchInSixteenths = punchRegion.in * 16;
+    const punchOutSixteenths = punchRegion.out * 16;
+    return totalSixteenths >= punchInSixteenths && totalSixteenths < punchOutSixteenths;
+}
+
+// ============================================================
+// PUNCH-IN/OUT RECORDING ENFORCEMENT
+// ============================================================
+// When punch-in is enabled, we need to schedule a callback that starts/stops the
+// actual Tone.Recorder at the correct transport positions (punch in/out points).
+// The Tone.Recorder is an offline recorder — we need to manage its start/stop
+// based on transport position to implement punch-in/out correctly.
+
+export function scheduleRecordingForPunch(trackId, onPunchOutTriggered) {
+    // Clear any previous scheduling
+    if (recordingScheduledId !== null) {
+        try { Tone.Transport.clear(recordingScheduledId); } catch(e) {}
+        recordingScheduledId = null;
+    }
+    recordingScheduledTrackId = trackId;
+
+    // Schedule the punch-out trigger
+    const punchOutPosition = `+0:${punchRegion.out * 16}:0`;
+    recordingScheduledId = Tone.Transport.schedule((time) => {
+        console.log(`[Punch Recording] Punch-out point reached at ${punchOutPosition}. Stopping recorder.`);
+        if (recorder && recorder.state === 'started') {
+            recorder.stop().then(() => {
+                console.log('[Punch Recording] Recorder stopped at punch-out.');
+                if (onPunchOutTriggered) onPunchOutTriggered();
+            }).catch(e => console.error('[Punch Recording] Error stopping at punch-out:', e));
         }
-    });
-    try { busData.outputGain.disconnect(); } catch (e) { /* ignore */ }
-
-    // Rebuild chain: input -> effects -> output -> master bus
-    let currentNode = busData.inputGain;
-    busData.effectsChain.forEach(effect => {
-        const toneNode = busData.activeEffectNodes.get(effect.id);
-        if (toneNode && !toneNode.disposed && currentNode) {
-            try { currentNode.connect(toneNode); } catch (e) { console.warn(`[Audio rebuildSendBusChain] Error connecting to ${effect.type}:`, e.message); }
-            currentNode = toneNode;
-        }
-    });
-
-    if (currentNode && !currentNode.disposed && busData.outputGain && !busData.outputGain.disposed) {
-        try { currentNode.connect(busData.outputGain); } catch (e) { console.warn(`[Audio rebuildSendBusChain] Error connecting to outputGain:`, e.message); }
-    }
-
-    if (busData.outputGain && !busData.outputGain.disposed && masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) {
-        try { busData.outputGain.connect(masterEffectsBusInputNode); } catch (e) { console.warn(`[Audio rebuildSendBusChain] Error connecting outputGain to master:`, e.message); }
-    }
+    }, punchOutPosition);
+    console.log(`[Punch Recording] Scheduled punch-out at ${punchOutPosition}, ID:`, recordingScheduledId);
 }
 
-export function connectTrackToSendBus(trackId, sendId) {
-    if (!sendBusNodes.has(sendId)) {
-        console.warn(`[Audio connectTrackToSendBus] Send bus ${sendId} does not exist.`);
-        return null;
+export function cancelScheduledRecording() {
+    if (recordingScheduledId !== null) {
+        try { Tone.Transport.clear(recordingScheduledId); } catch(e) {}
+        recordingScheduledId = null;
     }
-
-    let trackSends = trackSendNodes.get(trackId);
-    if (!trackSends) {
-        trackSends = new Map();
-        trackSendNodes.set(trackId, trackSends);
-    }
-
-    if (trackSends.has(sendId)) {
-        return trackSends.get(sendId); // Already connected
-    }
-
-    const busData = sendBusNodes.get(sendId);
-    const sendGainNode = new Tone.Gain(0); // Start at zero, controlled by setTrackSendLevel
-
-    trackSends.set(sendId, sendGainNode);
-
-    // Connect track output to send gain to input gain
-    // The actual connection to track output is done in Track.js via rebuildEffectChain
-    if (busData.inputGain && !busData.inputGain.disposed) {
-        try { sendGainNode.connect(busData.inputGain); } catch (e) { console.warn(`[Audio connectTrackToSendBus] Error connecting send gain to bus input:`, e.message); }
-    }
-
-    return sendGainNode;
+    recordingScheduledTrackId = null;
+    console.log('[Punch Recording] Cancelled scheduled recording.');
 }
 
-export function disconnectTrackFromSendBus(trackId, sendId) {
-    const trackSends = trackSendNodes.get(trackId);
-    if (!trackSends || !trackSends.has(sendId)) {
-        return;
-    }
-
-    const sendGainNode = trackSends.get(sendId);
-    if (sendGainNode && !sendGainNode.disposed) {
-        try { sendGainNode.disconnect(); } catch (e) { /* ignore */ }
-        try { sendGainNode.dispose(); } catch (e) { console.warn(`[Audio disconnectTrackFromSendBus] Error disposing send gain:`, e.message); }
-    }
-    trackSends.delete(sendId);
+export function getRecordingScheduledTrackId() {
+    return recordingScheduledTrackId;
 }
 
-export function setTrackSendLevel(trackId, sendId, level) {
-    const trackSends = trackSendNodes.get(trackId);
-    if (!trackSends || !trackSends.has(sendId)) {
-        // Try to connect if not already connected
-        if (sendBusNodes.has(sendId)) {
-            connectTrackToSendBus(trackId, sendId);
-        } else {
+// Cleanup function to be called when recording stops
+export function cleanupRecordingScheduling() {
+    cancelScheduledRecording();
+}
+
+// ============================================================
+// CONTEXT SUSPENSION MONITORING & RECOVERY
+// ============================================================
+
+// Monitor the Tone.context.state and attempt to recover from suspension.
+// This handles the case where browsers auto-suspend AudioContext after
+// a period of inactivity (especially on mobile/low-power modes).
+export function startContextSuspensionMonitoring(intervalMs = 3000) {
+    if (resumeAttemptScheduled) return; // Already monitoring
+    resumeAttemptScheduled = true;
+
+    const checkInterval = setInterval(() => {
+        if (!Tone.context) {
+            resumeAttemptScheduled = false;
+            clearInterval(checkInterval);
             return;
         }
-    }
 
-    const sendGainNode = trackSends.get(sendId);
-    if (sendGainNode && !sendGainNode.disposed) {
-        sendGainNode.gain.value = Math.max(Constants.SEND_LEVEL_MIN, Math.min(Constants.SEND_LEVEL_MAX, level));
-    }
-}
-
-export function getSendBusNodes() {
-    return sendBusNodes;
-}
-
-export function getTrackSendNodes() {
-    return trackSendNodes;
-}
-
-/**
- * Panic - Stop all audio immediately
- * This function is an emergency stop that:
- * 1. Stops Tone.Transport
- * 2. Cancels all scheduled events
- * 3. Stops all playing sounds on all tracks
- * 4. Shows notification
- */
-export function panicAllAudio() {
-    console.log('[Audio] PANIC - Stopping all audio immediately');
-    
-    // Stop Tone.Transport
-    try {
-        Tone.Transport.stop();
-        Tone.Transport.cancel(); // Cancel all scheduled events
-    } catch (e) {
-        console.warn('[Audio panicAllAudio] Error stopping Transport:', e.message);
-    }
-    
-    // Stop all tracks' audio
-    const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
-    if (tracks && Array.isArray(tracks)) {
-        tracks.forEach(track => {
-            if (!track) return;
-            
-            // Stop any sequence playback
-            if (track.sequence && typeof track.sequence.stop === 'function') {
-                try {
-                    track.sequence.stop();
-                    track.sequence.clear();
-                } catch (e) { /* ignore */ }
-            }
-            
-            // Stop drum pad players
-            if (track.drumPadPlayers && Array.isArray(track.drumPadPlayers)) {
-                track.drumPadPlayers.forEach(player => {
-                    if (player && !player.disposed && typeof player.stop === 'function') {
-                        try { player.stop(); } catch (e) { /* ignore */ }
+        const currentState = Tone.context.state;
+        if (currentState === 'suspended') {
+            contextSuspendedCount++;
+            console.warn(`[Audio ContextMonitor] Context suspended (count: ${contextSuspendedCount}). Attempting auto-resume...`);
+            Tone.context.resume().then(() => {
+                if (Tone.context.state === 'running') {
+                    // Re-initialize master bus components if they were disposed
+                    if (masterEffectsBusInputNode?.disposed || masterGainNodeActual?.disposed || masterMeterNode?.disposed) {
+                        setupMasterBus();
                     }
-                });
-            }
-            
-            // Stop slicer mono player
-            if (track.slicerMonoPlayer && !track.slicerMonoPlayer.disposed) {
-                try {
-                    if (track.slicerMonoPlayer.state === 'started') {
-                        track.slicerMonoPlayer.stop();
+                    // Emit a notification if this was a significant suspension
+                    if (contextSuspendedCount > 0 && localAppServices.showNotification) {
+                        localAppServices.showNotification('Audio context resumed.', 2000);
                     }
-                } catch (e) { /* ignore */ }
-            }
-            
-            // Stop instrument sampler
-            if (track.toneSampler && !track.toneSampler.disposed) {
-                try {
-                    track.toneSampler.releaseAll();
-                } catch (e) { /* ignore */ }
-            }
-            
-            // Stop any recording in progress
-            if (track.type === 'Audio' && track.isRecording) {
-                try {
-                    if (localAppServices.stopAudioRecording) {
-                        localAppServices.stopAudioRecording(track.id);
+                } else {
+                    console.warn('[Audio ContextMonitor] Resume attempted but context still not running. State:', Tone.context.state);
+                    if (contextSuspendedCount >= 3 && localAppServices.showNotification) {
+                        localAppServices.showNotification('Audio suspended. Tap/click to reactivate.', 4000);
                     }
-                } catch (e) { /* ignore */ }
+                }
+            }).catch(err => {
+                console.error('[Audio ContextMonitor] Error during context resume:', err.message);
+            });
+        } else if (currentState === 'running') {
+            // Context is running — reset the suspension counter if we were previously suspended
+            if (contextSuspendedCount > 0) {
+                contextSuspendedCount = 0;
             }
-        });
-    }
-    
-    // Stop metronome if playing
-    try {
-        if (metronomeInitialized) {
-            stopMetronome();
-        }
-    } catch (e) { /* ignore */ }
-    
-    // Show notification
-    if (localAppServices.showNotification) {
-        localAppServices.showNotification('⚠ PANIC - All audio stopped', 2000);
-    }
-}
-
-// ============================================
-// Performance Monitor Functions
-// ============================================
-
-let performanceMonitorIntervalId = null;
-
-/**
- * Starts the performance monitoring loop
- * Updates Tone.context state and estimates audio performance metrics
- */
-export function startPerformanceMonitor() {
-    if (performanceMonitorIntervalId !== null) {
-        return; // Already running
-    }
-
-    const intervalMs = Constants.PERFORMANCE_UPDATE_INTERVAL_MS || 500;
-
-    performanceMonitorIntervalId = setInterval(() => {
-        if (!localAppServices || !localAppServices.setAudioContextStateState) return;
-
-        // Update audio context state
-        if (Tone && Tone.context) {
-            const contextState = Tone.context.state || 'unknown';
-            localAppServices.setAudioContextStateState(contextState);
-
-            // Update audio latency if available
-            if (Tone.context.latency !== undefined) {
-                localAppServices.setAudioLatencyState(Tone.context.latency);
-            }
-
-            // Estimate CPU usage based on context state and active voices
-            // Note: Web Audio API doesn't expose direct CPU usage, but we can estimate
-            // based on number of active nodes and callback timing
-            let estimatedCPU = 0;
-
-            // Count active voices across all tracks
-            let activeVoices = 0;
-            const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
-            if (tracks && Array.isArray(tracks)) {
-                tracks.forEach(track => {
-                    if (!track) return;
-                    // Synth tracks
-                    if (track.toneSynth && track.toneSynth.activeVoices) {
-                        activeVoices += track.toneSynth.activeVoices;
-                    }
-                    // Sampler tracks
-                    if (track.toneSampler && !track.toneSampler.disposed) {
-                        // Count active notes
-                        if (track.toneSampler._activeVoices) {
-                            activeVoices += Object.keys(track.toneSampler._activeVoices).length;
-                        }
-                    }
-                    // Drum sampler tracks
-                    if (track.drumPadPlayers && Array.isArray(track.drumPadPlayers)) {
-                        track.drumPadPlayers.forEach(player => {
-                            if (player && !player.disposed && player.state === 'started') {
-                                activeVoices++;
-                            }
-                        });
-                    }
-                });
-            }
-            localAppServices.setActiveVoicesState(activeVoices);
-
-            // Estimate CPU based on active voices and context state
-            // This is a rough estimate - real CPU depends on sample rate, buffer size, etc.
-            if (contextState === 'running') {
-                estimatedCPU = Math.min(100, (activeVoices * 5) + (activeVoices > 10 ? 20 : 0));
-                // Add some baseline for the transport and effect chain
-                estimatedCPU = Math.min(100, estimatedCPU + 5);
-            }
-            localAppServices.setCPUUsageState(estimatedCPU);
-
-            // Determine memory pressure (simplified heuristic)
-            let memoryPressure = 'none';
-            const numTracks = tracks ? tracks.length : 0;
-            if (numTracks > 20 || activeVoices > 50) {
-                memoryPressure = 'high';
-            } else if (numTracks > 10 || activeVoices > 20) {
-                memoryPressure = 'medium';
-            } else if (numTracks > 5 || activeVoices > 5) {
-                memoryPressure = 'low';
-            }
-            localAppServices.setMemoryPressureState(memoryPressure);
         }
     }, intervalMs);
+
+    console.log('[Audio ContextMonitor] Started context suspension monitoring, interval:', intervalMs, 'ms');
 }
 
-/**
- * Stops the performance monitoring loop
- */
-export function stopPerformanceMonitor() {
-    if (performanceMonitorIntervalId !== null) {
-        clearInterval(performanceMonitorIntervalId);
-        performanceMonitorIntervalId = null;
+export function stopContextSuspensionMonitoring() {
+    resumeAttemptScheduled = false;
+    contextSuspendedCount = 0;
+    console.log('[Audio ContextMonitor] Stopped context suspension monitoring.');
+}
+
+export function getContextSuspensionCount() {
+    return contextSuspendedCount;
+}
+
+export function getContextState() {
+    return Tone.context ? Tone.context.state : 'unavailable';
+}
+
+export async function exportMixdownToWav(durationSeconds) {
+    console.log('[Audio exportMixdownToWav] Starting export, duration:', durationSeconds, 's');
+    const maxDuration = 600; // 10 minutes max
+    const safeDuration = Math.min(Math.max(durationSeconds, 1), maxDuration);
+
+    // Pause transport if running to avoid double audio
+    const wasPlaying = Tone.Transport.state === 'started';
+    if (wasPlaying) {
+        Tone.Transport.pause();
     }
-}
 
-/**
- * Gets the current performance metrics
- * Returns an object with context state, CPU estimate, memory pressure, etc.
- */
-export function getPerformanceMetrics() {
-    const metrics = {
-        audioContextState: 'unknown',
-        cpuUsage: 0,
-        memoryPressure: 'none',
-        activeVoices: 0,
-        audioLatency: 0,
-        droppedCallbacks: 0
-    };
+    try {
+        // Use Tone.Recorder to capture output via live transport playback
+        // This approach is more reliable than Tone.Offline which requires a
+        // reconstructTransportSchedule() function that doesn't exist
+        const recorder = new Tone.Recorder();
+        const masterGain = getActualMasterGainNode();
 
-    if (Tone && Tone.context) {
-        metrics.audioContextState = Tone.context.state || 'unknown';
-        if (Tone.context.latency !== undefined) {
-            metrics.audioLatency = Tone.context.latency;
+        if (!masterGain || masterGain.disposed) {
+            throw new Error('Master output not available.');
+        }
+
+        // Connect master gain to recorder
+        masterGain.connect(recorder);
+
+        // Reset transport state
+        Tone.Transport.position = 0;
+        Tone.Transport.loop = false;
+
+        // Stop any existing playback on tracks
+        const tracks = getTracksState();
+        tracks.forEach(t => {
+            if (t && typeof t.stopPlayback === 'function') t.stopPlayback();
+        });
+        await new Promise(r => setTimeout(r, 100));
+
+        // Schedule all tracks for playback
+        for (const track of tracks) {
+            if (track && typeof track.schedulePlayback === 'function') {
+                await track.schedulePlayback(0, safeDuration);
+            }
+        }
+
+        // Start recording and transport
+        await recorder.start();
+
+        Tone.Transport.start();
+
+        // Wait for full duration
+        await new Promise(resolve => setTimeout(resolve, safeDuration * 1000 + 500));
+
+        // Stop recording
+        const recording = await recorder.stop();
+
+        // Stop transport and cleanup
+        Tone.Transport.stop();
+        Tone.Transport.cancel(0);
+        tracks.forEach(t => {
+            if (t && typeof t.stopPlayback === 'function') t.stopPlayback();
+        });
+
+        try { masterGain.disconnect(recorder); } catch (e) {}
+        recorder.dispose();
+
+        if (!recording || recording.size < 1000) {
+            throw new Error('No audio recorded. Add some notes or audio first.');
+        }
+
+        console.log('[Audio exportMixdownToWav] Export complete.');
+        return recording;
+    } catch (err) {
+        console.error('[Audio exportMixdownToWav] Error during export:', err);
+        throw err;
+    } finally {
+        // Restore transport state
+        if (wasPlaying) {
+            Tone.Transport.start();
         }
     }
+}
 
-    if (localAppServices) {
-        metrics.cpuUsage = localAppServices.getCPUUsageState ? localAppServices.getCPUUsageState() : 0;
-        metrics.memoryPressure = localAppServices.getMemoryPressureState ? localAppServices.getMemoryPressureState() : 'none';
-        metrics.activeVoices = localAppServices.getActiveVoicesState ? localAppServices.getActiveVoicesState() : 0;
-        metrics.droppedCallbacks = localAppServices.getDroppedCallbacksState ? localAppServices.getDroppedCallbacksState() : 0;
+// ============================================================
+// EXPORT MIXDOWN TO WAV
+// ============================================================
+
+// export async function exportMixdownToWav(durationSeconds) {
+//     console.log('[Audio exportMixdownToWav] Starting export, duration:', durationSeconds, 's');
+//     const maxDuration = 600; // 10 minutes max
+//     const safeDuration = Math.min(Math.max(durationSeconds, 1), maxDuration);
+
+//     // Pause transport if running to avoid double audio
+//     const wasPlaying = Tone.Transport.state === 'started';
+//     if (wasPlaying) {
+//         Tone.Transport.pause();
+//     }
+
+//     try {
+//         // Tone.Offline renders all audio through the transport/scheduler
+//         const buffer = await Tone.Offline(async () => {
+//             // Reconstruct the transport schedule so offline context plays all scheduled events
+//             if (typeof reconstructTransportSchedule === 'function') {
+//                 await reconstructTransportSchedule();
+//             }
+//             // Schedule the transport to play for the full duration
+//             Tone.Transport.start(0, 0);
+//             // Let it run for the requested duration
+//             await new Promise(resolve => setTimeout(resolve, (safeDuration + 0.5) * 1000));
+//         }, safeDuration + 0.5);
+
+//         console.log('[Audio exportMixdownToWav] Offline buffer created. Channels:', buffer.numberOfChannels, 'Duration:', buffer.duration, 's');
+
+//         // Convert ToneAudioBuffer to AudioBuffer
+//         const audioBuffer = buffer.get ? buffer.get() : buffer;
+
+//         // Encode as WAV using a simple PCM encoder
+//         const wavBlob = audioBufferToWav(audioBuffer);
+//         console.log('[Audio exportMixdownToWav] WAV blob created. Size:', wavBlob.size, 'bytes');
+
+//         return wavBlob;
+//     } catch (err) {
+//         console.error('[Audio exportMixdownToWav] Error during offline rendering:', err);
+//         throw err;
+//     } finally {
+//         // Restore transport state
+//         if (wasPlaying) {
+//             Tone.Transport.start();
+//         }
+//     }
+// }
+
+// function audioBufferToWav(audioBuffer) {
+//     const numChannels = audioBuffer.numberOfChannels;
+//     const sampleRate = audioBuffer.sampleRate;
+//     const format = 1; // PCM
+//     const bitDepth = 16;
+
+//     const bytesPerSample = bitDepth / 8;
+//     const blockAlign = numChannels * bytesPerSample;
+
+//     // Interleave channels
+//     const length = audioBuffer.length;
+//     const samples = new Int16Array(length * numChannels);
+//     for (let i = 0; i < length; i++) {
+//         for (let ch = 0; ch < numChannels; ch++) {
+//             const val = audioBuffer.getChannelData(ch)[i];
+//             // Clamp to Int16 range and convert float [-1,1] to Int16
+//             const int16 = Math.max(-32768, Math.min(32767, Math.round(val * 32768)));
+//             samples[i * numChannels + ch] = int16;
+//         }
+//     }
+
+//     const dataSize = samples.length * bytesPerSample;
+//     const buffer = new ArrayBuffer(44 + dataSize);
+//     const view = new DataView(buffer);
+
+//     // RIFF header
+//     writeString(view, 0, 'RIFF');
+//     view.setUint32(4, 36 + dataSize, true);
+//     writeString(view, 8, 'WAVE');
+
+//     // fmt chunk
+//     writeString(view, 12, 'fmt ');
+//     view.setUint32(16, 16, true); // chunk size
+//     view.setUint16(20, format, true); // PCM format
+//     view.setUint16(22, numChannels, true);
+//     view.setUint32(24, sampleRate, true);
+//     view.setUint32(28, sampleRate * blockAlign, true); // byte rate
+//     view.setUint16(32, blockAlign, true);
+//     view.setUint16(34, bitDepth, true);
+
+//     // data chunk
+//     writeString(view, 36, 'data');
+//     view.setUint32(40, dataSize, true);
+//     new Int16Array(buffer, 44).set(samples);
+
+//     return new Blob([buffer], { type: 'audio/wav' });
+// }
+
+// function writeString(view, offset, string) {
+//     for (let i = 0; i < string.length; i++) {
+//         view.setUint8(offset + i, string.charCodeAt(i));
+//     }
+// }
+
+// ============================================================
+// SIDECHAIN COMPRESSION
+// ============================================================
+
+export function getSidechainBusInput() {
+    if (!sidechainBus || sidechainBus.disposed) {
+        if (sidechainBus && !sidechainBus.disposed) {
+            try { sidechainBus.dispose(); } catch(e) {}
+        }
+        sidechainBus = new Tone.Gain(1);
     }
+    return sidechainBus;
+}
 
-    return metrics;
+export async function enableSidechainFromMic(compressorNode) {
+    if (!compressorNode || compressorNode.disposed) {
+        console.warn('[Audio enableSidechainFromMic] Invalid compressor node provided.');
+        return false;
+    }
+    if (micForSidechain && micForSidechain.state === 'started') {
+        const bus = getSidechainBusInput();
+        try { micForSidechain.connect(bus); } catch(e) {}
+        try { bus.connect(compressorNode); } catch(e) {}
+        return true;
+    }
+    try {
+        await Tone.start();
+        micForSidechain = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const micStream = new Tone.UserMedia();
+        await micStream.open();
+        micForSidechain = micStream;
+        const bus = getSidechainBusInput();
+        try { micStream.connect(bus); } catch(e) {}
+        try { bus.connect(compressorNode); } catch(e) {}
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification('Sidechain: Mic connected to compressor.', 2000);
+        }
+        return true;
+    } catch (e) {
+        console.error('[Audio enableSidechainFromMic] Failed to open mic for sidechain:', e);
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification('Sidechain: Could not access microphone.', 3000);
+        }
+        return false;
+    }
+}
+
+export function disableSidechainFromMic() {
+    if (micForSidechain) {
+        try { micForSidechain.disconnect(); } catch(e) {}
+        try { micForSidechain.close(); } catch(e) {}
+        micForSidechain = null;
+    }
+    if (sidechainBus) {
+        try { sidechainBus.disconnect(); } catch(e) {}
+    }
+}
+
+export async function enableSidechainFromTrackIn(trackId, compressorNode) {
+    if (!compressorNode || compressorNode.disposed) {
+        console.warn('[Audio enableSidechainFromTrackIn] Invalid compressor node provided.');
+        return false;
+    }
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) {
+        console.warn('[Audio enableSidechainFromTrackIn] Track not found:', trackId);
+        return false;
+    }
+    if (!track.inputChannel || track.inputChannel.disposed) {
+        console.warn('[Audio enableSidechainFromTrackIn] Track inputChannel not available.');
+        return false;
+    }
+    const bus = getSidechainBusInput();
+    try { track.inputChannel.connect(bus); } catch(e) {}
+    try { bus.connect(compressorNode); } catch(e) {}
+    return true;
+}
+
+export function disableSidechainBus() {
+    disableSidechainFromMic();
+    if (sidechainBus) {
+        try { sidechainBus.dispose(); } catch(e) {}
+        sidechainBus = null;
+    }
+}
+
+export function isMicOpenForSidechain() {
+    return micForSidechain && micForSidechain.state === 'started';
 }

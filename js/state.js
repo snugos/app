@@ -9,6 +9,11 @@ import {
 } from './audio.js';
 // import { getAudio, storeAudio } from './db.js'; // Not directly used in this file after refactor to Track class
 
+// --- Project Metadata ---
+let projectNameState = 'Untitled Project';
+export function getProjectNameState() { return projectNameState; }
+export function setProjectNameState(name) { projectNameState = typeof name === 'string' ? name : 'Untitled Project'; }
+
 // --- Centralized State Variables ---
 let tracks = [];
 let trackIdCounter = 0;
@@ -19,22 +24,27 @@ let highestZ = 100;
 
 // Master Audio Chain
 let masterEffectsChainState = []; // Array of {id, type, params, toneNode (managed by audio.js)}
-// Use numeric fallback until Tone.js is available (Tone.dbToGain(0) = 1.0 linear)
-let masterGainValueState = (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0; // Linear gain value
+let masterGainValueState = Tone.dbToGain(0); // Linear gain value
 
 // MIDI State
 let midiAccessGlobal = null;
 let activeMIDIInputGlobal = null;
 
-// MIDI Learn State
-let midiLearnMappings = []; // Array of MIDI Learn mapping objects
-let midiLearnMode = false; // When true, next CC message creates a new mapping
-let midiLearnPendingParam = null; // Parameter info waiting to be mapped to incoming CC
-
 // Sound Browser State
 let loadedZipFilesGlobal = {};
 let soundLibraryFileTreesGlobal = {};
 let currentLibraryNameGlobal = null;
+let currentSoundFileTreeGlobal = null;
+let currentSoundBrowserPathGlobal = [];
+let previewPlayerGlobal = null;
+
+// Getters for Sound Browser State
+export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
+export function setLoadedZipFilesState(val) {
+    loadedZipFilesGlobal = Array.isArray(val) ? val : {};
+}
+export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
+export function setSoundLibraryFileTreesState(val) { soundLibraryFileTreesGlobal = val; }
 
 // Clipboard
 let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
@@ -42,238 +52,67 @@ let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, seque
 // Transport/Sequencing State
 let activeSequencerTrackId = null;
 let soloedTrackId = null;
+let mutedTrackIds = []; // Array of muted track IDs for multi-mute support
 let armedTrackId = null;
 let isRecordingGlobal = false;
+export function isTrackRecordingState() { return isRecordingGlobal; }
+export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
 let recordingTrackIdGlobal = null;
 let recordingStartTime = 0;
 
 let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
 
-// Metronome State
-let metronomeEnabled = false;
-let metronomeVolume = 0.5; // Default volume (0-1 range)
+// Undo/Redo
+let undoStack = [];
+let redoStack = [];
 
-// Performance Monitor State
-let performanceMonitorState = {
-    enabled: false,
-    audioContextState: 'unknown', // 'running', 'suspended', 'closed', 'unknown'
-    cpuUsage: 0, // Percentage 0-100 (estimated from Tone.context)
-    memoryPressure: 'none', // 'none', 'low', 'medium', 'high'
-    activeVoices: 0, // Count of active voices/notes
-    audioLatency: 0, // Current audio latency in seconds
-    lastCallbackTime: 0, // Last audio callback duration in ms
-    droppedCallbacks: 0 // Number of dropped/late audio callbacks
-};
+// --- Synth Presets Storage ---
+let synthPresetsGlobal = {};
 
-export function getPerformanceMonitorState() {
-    return { ...performanceMonitorState };
-}
-
-export function getPerformanceMonitorEnabledState() {
-    return performanceMonitorState.enabled;
-}
-
-export function setPerformanceMonitorEnabledState(enabled) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Performance Monitor ${enabled ? 'On' : 'Off'}`);
-    }
-    performanceMonitorState.enabled = !!enabled;
-}
-
-export function getAudioContextStateState() {
-    return performanceMonitorState.audioContextState;
-}
-
-export function setAudioContextStateState(contextState) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Audio Context State`);
-    }
-    if (['running', 'suspended', 'closed', 'unknown'].includes(contextState)) {
-        performanceMonitorState.audioContextState = contextState;
+function loadSynthPresetsFromStorage() {
+    try {
+        const stored = localStorage.getItem('snugosSynthPresets');
+        if (stored) {
+            synthPresetsGlobal = JSON.parse(stored);
+        } else {
+            synthPresetsGlobal = {
+                "Init Saw": { synthEngineType: 'MonoSynth', synthParams: { portamento: 0.01, oscillator: { type: 'sawtooth' }, envelope: { attack: 0.005, decay: 0.5, sustain: 0.4, release: 0.5 }, filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 2000 }, filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7, exponent: 2 }} },
+                "Init Square": { synthEngineType: 'MonoSynth', synthParams: { portamento: 0.01, oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.3, sustain: 0.3, release: 0.3 }, filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 1500 }, filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7, exponent: 2 }} },
+                "Init Sine": { synthEngineType: 'MonoSynth', synthParams: { portamento: 0.01, oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 2, sustain: 0, release: 1 }, filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 1000 }, filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7, exponent: 2 }} },
+                "Init Triangle": { synthEngineType: 'MonoSynth', synthParams: { portamento: 0.01, oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.8, sustain: 0.2, release: 0.8 }, filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 2500 }, filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7, exponent: 2 }} }
+            };
+        }
+    } catch (e) {
+        synthPresetsGlobal = {};
     }
 }
 
-export function getCPUUsageState() {
-    return performanceMonitorState.cpuUsage;
-}
-
-export function setCPUUsageState(cpuUsage) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set CPU Usage`);
-    }
-    performanceMonitorState.cpuUsage = Math.max(0, Math.min(100, parseFloat(cpuUsage) || 0));
-}
-
-export function getMemoryPressureState() {
-    return performanceMonitorState.memoryPressure;
-}
-
-export function setMemoryPressureState(pressure) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Memory Pressure`);
-    }
-    if (['none', 'low', 'medium', 'high'].includes(pressure)) {
-        performanceMonitorState.memoryPressure = pressure;
+function saveSynthPresetsToStorage() {
+    try {
+        localStorage.setItem('snugosSynthPresets', JSON.stringify(synthPresetsGlobal));
+    } catch (e) {
+        console.warn("[State] Error saving synth presets:", e);
     }
 }
 
-export function getActiveVoicesState() {
-    return performanceMonitorState.activeVoices;
+loadSynthPresetsFromStorage();
+
+export function getSynthPresets() {
+    return { ...synthPresetsGlobal };
 }
 
-export function setActiveVoicesState(voices) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Active Voices`);
+export function saveSynthPreset(name, presetData) {
+    synthPresetsGlobal[name] = JSON.parse(JSON.stringify(presetData));
+    saveSynthPresetsToStorage();
+}
+
+export function deleteSynthPreset(name) {
+    if (synthPresetsGlobal[name]) {
+        delete synthPresetsGlobal[name];
+        saveSynthPresetsToStorage();
+        return true;
     }
-    performanceMonitorState.activeVoices = Math.max(0, parseInt(voices) || 0);
-}
-
-export function getAudioLatencyState() {
-    return performanceMonitorState.audioLatency;
-}
-
-export function setAudioLatencyState(latency) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Audio Latency`);
-    }
-    performanceMonitorState.audioLatency = Math.max(0, parseFloat(latency) || 0);
-}
-
-export function getLastCallbackTimeState() {
-    return performanceMonitorState.lastCallbackTime;
-}
-
-export function setLastCallbackTimeState(timeMs) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Last Callback Time`);
-    }
-    performanceMonitorState.lastCallbackTime = Math.max(0, parseFloat(timeMs) || 0);
-}
-
-export function getDroppedCallbacksState() {
-    return performanceMonitorState.droppedCallbacks;
-}
-
-export function setDroppedCallbacksState(count) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Dropped Callbacks`);
-    }
-    performanceMonitorState.droppedCallbacks = Math.max(0, parseInt(count) || 0);
-}
-
-export function incrementDroppedCallbacksState() {
-    performanceMonitorState.droppedCallbacks++;
-}
-
-export function resetPerformanceMonitorState() {
-    performanceMonitorState = {
-        enabled: false,
-        audioContextState: 'unknown',
-        cpuUsage: 0,
-        memoryPressure: 'none',
-        activeVoices: 0,
-        audioLatency: 0,
-        lastCallbackTime: 0,
-        droppedCallbacks: 0
-    };
-}
-
-// Loop Region State
-let loopRegionState = { ...Constants.DEFAULT_LOOP_REGION };
-
-export function getLoopRegionState() { return { ...loopRegionState }; }
-export function setLoopRegionState(state) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Loop Region`);
-    }
-    loopRegionState = { ...state }; 
-}
-export function getLoopRegionEnabledState() { return loopRegionState.enabled; }
-export function setLoopRegionEnabledState(enabled) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Toggle Loop Region ${enabled ? 'On' : 'Off'}`);
-    }
-    loopRegionState.enabled = !!enabled; 
-}
-export function getLoopRegionStartBarState() { return loopRegionState.startBar; }
-export function setLoopRegionStartBarState(bar) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Loop Region Start Bar`);
-    }
-    loopRegionState.startBar = Math.max(1, parseInt(bar) || 1); 
-}
-export function getLoopRegionEndBarState() { return loopRegionState.endBar; }
-export function setLoopRegionEndBarState(bar) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Loop Region End Bar`);
-    }
-    loopRegionState.endBar = Math.max(loopRegionState.startBar, parseInt(bar) || 4); 
-}
-
-// Timeline Zoom State
-let timelineZoomState = {
-    horizontal: Constants.TIMELINE_ZOOM_DEFAULT,
-    vertical: Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT
-};
-
-export function getTimelineZoomState() { return { ...timelineZoomState }; }
-export function getTimelineZoomLevelState() { return timelineZoomState.horizontal; }
-export function setTimelineZoomLevelState(level) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Timeline Zoom Level`);
-    }
-    timelineZoomState.horizontal = Math.max(Constants.TIMELINE_ZOOM_MIN, Math.min(Constants.TIMELINE_ZOOM_MAX, parseFloat(level) || Constants.TIMELINE_ZOOM_DEFAULT)); 
-}
-export function getTimelineVerticalZoomState() { return timelineZoomState.vertical; }
-export function setTimelineVerticalZoomState(level) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Timeline Vertical Zoom`);
-    }
-    timelineZoomState.vertical = Math.max(Constants.TIMELINE_VERTICAL_ZOOM_MIN, Math.min(Constants.TIMELINE_VERTICAL_ZOOM_MAX, parseFloat(level) || Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT)); 
-}
-export function zoomInTimeline() {
-    setTimelineZoomLevelState(timelineZoomState.horizontal + Constants.TIMELINE_ZOOM_STEP);
-}
-export function zoomOutTimeline() {
-    setTimelineZoomLevelState(timelineZoomState.horizontal - Constants.TIMELINE_ZOOM_STEP);
-}
-export function zoomInVerticalTimeline() {
-    setTimelineVerticalZoomState(timelineZoomState.vertical + Constants.TIMELINE_VERTICAL_ZOOM_STEP);
-}
-export function zoomOutVerticalTimeline() {
-    setTimelineVerticalZoomState(timelineZoomState.vertical - Constants.TIMELINE_VERTICAL_ZOOM_STEP);
-}
-export function resetTimelineZoom() {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Reset Timeline Zoom`);
-    }
-    timelineZoomState.horizontal = Constants.TIMELINE_ZOOM_DEFAULT;
-    timelineZoomState.vertical = Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT;
-}
-
-// Swing/Groove State
-let swingState = { ...Constants.DEFAULT_SWING };
-
-export function getSwingState() { return { ...swingState }; }
-export function setSwingState(state) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Swing`);
-    }
-    swingState = { ...state }; 
-}
-export function getSwingEnabledState() { return swingState.enabled; }
-export function setSwingEnabledState(enabled) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Toggle Swing ${enabled ? 'On' : 'Off'}`);
-    }
-    swingState.enabled = !!enabled; 
-}
-export function getSwingAmountState() { return swingState.amount; }
-export function setSwingAmountState(amount) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Swing Amount`);
-    }
-    swingState.amount = Math.max(0, Math.min(100, parseInt(amount) || 0)); 
+    return false;
 }
 
 // --- AppServices Placeholder (will be populated by main.js) ---
@@ -289,882 +128,309 @@ export function initializeStateModule(services) {
         appServices.getPlaybackMode = getPlaybackModeState;
     }
     if (appServices && typeof appServices.setPlaybackMode !== 'function') {
-        appServices.setPlaybackMode = setPlaybackModeState;
+        appServices.setPlaybackMode = setPlaybackModeStateInternal;
     }
+    console.log("[State] State module initialized. AppServices keys:", Object.keys(appServices));
 }
 
 // --- Getters for Centralized State ---
 export function getTracksState() { return tracks; }
 export function getTrackByIdState(id) { return tracks.find(t => t.id === id); }
 
-// --- Track Removal ---
-export function removeTrackFromStateInternal(trackId) {
-    const index = tracks.findIndex(t => t.id === trackId);
-    if (index !== -1) {
-        const track = tracks[index];
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Remove Track "${track.name}"`);
-        }
-        // Dispose audio resources if available
-        if (track && typeof track.dispose === 'function') {
-            try { track.dispose(); } catch(e) { console.warn(`[State] Error disposing track ${trackId}:`, e); }
-        }
-        tracks.splice(index, 1);
-        return true;
-    }
-    return false;
-}
-
 export function getOpenWindowsState() { return openWindowsMap; }
 export function getWindowByIdState(id) { return openWindowsMap.get(id); }
 export function getHighestZState() { return highestZ; }
 export function getMasterEffectsState() { return masterEffectsChainState; }
-export function setMasterEffectsState(effects) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Master Effects`);
-    }
-    masterEffectsChainState = effects || []; 
-}
 export function getMasterGainValueState() { return masterGainValueState; }
-export function setMasterGainValueState(value) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Master Volume`);
-    }
-    masterGainValueState = Number.isFinite(value) ? value : 1.0; 
-}
+export function getPlaybackModeState() { return globalPlaybackMode; }
 
 export function getMidiAccessState() { return midiAccessGlobal; }
-export function setMidiAccessState(access) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set MIDI Access`);
-    }
-    midiAccessGlobal = access; 
-}
 export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
-export function setActiveMIDIInputState(device) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Active MIDI Input`);
-    }
-    activeMIDIInputGlobal = device; 
-}
 
-// MIDI Learn state functions
-export function getMidiLearnMappingsState() { return [...midiLearnMappings]; }
-export function getMidiLearnModeState() { return midiLearnMode; }
-export function setMidiLearnModeState(mode) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set MIDI Learn Mode ${mode ? 'On' : 'Off'}`);
-    }
-    midiLearnMode = !!mode; 
-}
-
-export function getMidiLearnPendingParamState() { return midiLearnPendingParam; }
-
-export function setMidiLearnPendingParamState(param) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set MIDI Learn Pending Param`);
-    }
-    midiLearnPendingParam = param; 
-}
-
-export function addMidiLearnMapping(mapping) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Add MIDI Learn Mapping`);
-    }
-    if (midiLearnMappings.length >= Constants.MAX_MIDI_LEARN_MAPPINGS) {
-        console.warn("[State] Max MIDI Learn mappings reached");
-        return false;
-    }
-    const newMapping = { ...Constants.DEFAULT_MIDI_LEARN_MAPPING, ...mapping };
-    midiLearnMappings.push(newMapping);
-    return true;
-}
-
-export function removeMidiLearnMapping(index) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Remove MIDI Learn Mapping`);
-    }
-    if (index >= 0 && index < midiLearnMappings.length) {
-        midiLearnMappings.splice(index, 1);
-        return true;
-    }
-    return false;
-}
-
-export function clearMidiLearnMappings() {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Clear All MIDI Learn Mappings`);
-    }
-    midiLearnMappings = [];
-}
-
-export function findMidiLearnMapping(channel, cc) {
-    return midiLearnMappings.findIndex(m => m.channel === channel && m.cc === cc);
-}
-
-export function updateMidiLearnMapping(index, updates) {
-    if (index >= 0 && index < midiLearnMappings.length) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Update MIDI Learn Mapping`);
-        }
-        midiLearnMappings[index] = { ...midiLearnMappings[index], ...updates };
-        return true;
-    }
-    return false;
-}
-
-export function getMidiLearnMappingByIndex(index) {
-    if (index >= 0 && index < midiLearnMappings.length) {
-        return { ...midiLearnMappings[index] };
-    }
-    return null;
-}
-
-export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
-export function setLoadedZipFilesState(files) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Loaded ZIP Files`);
-    }
-    loadedZipFilesGlobal = files || {}; 
-}
-export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
-export function setSoundLibraryFileTreesState(trees) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Sound Library File Trees`);
-    }
-    soundLibraryFileTreesGlobal = trees || {};
-}
 export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
-export function setCurrentLibraryNameState(libraryName) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Current Library`);
-    }
-    currentLibraryNameGlobal = libraryName;
-}
-
-export function getCurrentSoundFileTreeState() { return soundLibraryFileTreesGlobal[currentLibraryNameGlobal] || null; }
-export function setCurrentSoundFileTreeState(fileTree) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Sound File Tree`);
-    }
-    if (currentLibraryNameGlobal) {
-        soundLibraryFileTreesGlobal[currentLibraryNameGlobal] = fileTree;
-    }
-}
-
-export function getCurrentSoundBrowserPathState() { return currentSoundBrowserPathGlobal || '/'; }
-export function setCurrentSoundBrowserPathState(path) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Sound Browser Path`);
-    }
-    currentSoundBrowserPathGlobal = path || '/'; 
-}
-
-let currentSoundBrowserPathGlobal = '/'; // Default path
-let previewPlayerState = null; // Preview player state
-
-export function getPreviewPlayerState() { return previewPlayerState; }
-export function setPreviewPlayerState(player) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Preview Player`);
-    }
-    previewPlayerState = player;
-}
+export function getCurrentSoundFileTreeState() { return currentSoundFileTreeGlobal; }
+export function getCurrentSoundBrowserPathState() { return currentSoundBrowserPathGlobal; }
+export function getPreviewPlayerState() { return previewPlayerGlobal; }
 
 export function getClipboardDataState() { return clipboardDataGlobal; }
-export function setClipboardDataState(type, data, sourceTrackType, sequenceLength) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Clipboard Data`);
-    }
-    clipboardDataGlobal = { 
-        type: type !== undefined ? type : null, 
-        data: data !== undefined ? data : null, 
-        sourceTrackType: sourceTrackType !== undefined ? sourceTrackType : null, 
-        sequenceLength: sequenceLength !== undefined ? sequenceLength : null 
-    }; 
-}
 
 export function getArmedTrackIdState() { return armedTrackId; }
-export function setArmedTrackIdState(id) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Armed Track`);
-    }
-    armedTrackId = id !== undefined && id !== null ? id : null; 
-}
 export function getSoloedTrackIdState() { return soloedTrackId; }
-export function setSoloedTrackIdState(id) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Soloed Track`);
-    }
-    soloedTrackId = id !== undefined && id !== null ? id : null; 
-}
-export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
-export function setActiveSequencerTrackIdState(id) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Active Sequencer Track`);
-    }
-    activeSequencerTrackId = id !== undefined && id !== null ? id : null; 
-}
-export function isTrackRecordingState() { return isRecordingGlobal; }
-export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
-export function getRecordingStartTimeState() { return recordingStartTime; }
-export function setIsRecordingState(val) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Recording State`);
-    }
-    isRecordingGlobal = !!val; 
-}
-export function setRecordingTrackIdState(id) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Recording Track`);
-    }
-    recordingTrackIdGlobal = id; 
-}
-export function setRecordingStartTimeState(t) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Recording Start Time`);
-    }
-    recordingStartTime = t; 
-}
-
-export function getUndoStackState() { return undoStack; }
-export function getRedoStackState() { return redoStack; }
-export function getPlaybackModeState() { return globalPlaybackMode; }
-export function setPlaybackModeState(mode) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Playback Mode to ${mode}`);
-    }
-    if (mode === 'sequencer' || mode === 'timeline') {
-        globalPlaybackMode = mode;
+export function setSoloedTrackIdState(id) {
+    const previousId = soloedTrackId;
+    soloedTrackId = (id === undefined || id === null) ? null : id;
+    if (appServices && typeof appServices.onSoloedTrackChanged === 'function') {
+        appServices.onSoloedTrackChanged(soloedTrackId, previousId);
     }
 }
-
-// Metronome Getters/Setters
-export function getMetronomeEnabledState() { return metronomeEnabled; }
-export function getMetronomeVolumeState() { return metronomeVolume; }
-export function setMetronomeEnabledState(enabled) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Toggle Metronome ${enabled ? 'On' : 'Off'}`);
-    }
-    metronomeEnabled = !!enabled; 
-}
-export function setMetronomeVolumeState(volume) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Metronome Volume`);
-    }
-    metronomeVolume = Math.max(0, Math.min(1, parseFloat(volume) || 0.5)); 
-}
-
-// Scale Mode State
-let scaleModeState = { ...Constants.DEFAULT_SCALE_MODE };
-
-export function getScaleModeState() { return scaleModeState; }
-
-export function setScaleModeState(state) {
-    if (state && typeof state === 'object') {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Set Scale Mode Settings`);
-        }
-        scaleModeState = { ...Constants.DEFAULT_SCALE_MODE, ...state };
+export function getMutedTrackIdsState() { return [...mutedTrackIds]; }
+export function setMutedTrackIdsState(ids) {
+    mutedTrackIds = Array.isArray(ids) ? [...ids] : [];
+    if (appServices && typeof appServices.onMutedTracksChanged === 'function') {
+        appServices.onMutedTracksChanged(mutedTrackIds);
     }
 }
-
-export function getScaleModeEnabledState() { return scaleModeState.enabled; }
-export function setScaleModeEnabledState(enabled) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Toggle Scale Mode ${enabled ? 'On' : 'Off'}`);
-    }
-    scaleModeState.enabled = !!enabled; 
+export function isTrackMutedState(trackId) {
+    return mutedTrackIds.includes(trackId);
 }
-
-export function getScaleModeScaleState() { return scaleModeState.scale; }
-export function setScaleModeScaleState(scale) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Scale to ${scale || 'Major'}`);
+export function setTrackMutedState(trackId, muted) {
+    if (muted) {
+        if (!mutedTrackIds.includes(trackId)) mutedTrackIds.push(trackId);
+    } else {
+        mutedTrackIds = mutedTrackIds.filter(id => id !== trackId);
     }
-    scaleModeState.scale = scale || 'Major'; 
-}
-
-export function getScaleModeRootState() { return scaleModeState.root; }
-export function setScaleModeRootState(root) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Scale Root to ${root || 'C'}`);
-    }
-    scaleModeState.root = root || 'C'; 
-}
-
-export function getScaleModeLockState() { return scaleModeState.lock; }
-export function setScaleModeLockState(lock) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`${lock ? 'Enable' : 'Disable'} Scale Lock`);
-    }
-    scaleModeState.lock = !!lock; 
-}
-
-// Chord Mode State (for constraining notes to chord tones)
-let chordModeState = { ...Constants.DEFAULT_CHORD_MODE };
-
-export function getChordModeState() { return chordModeState; }
-
-export function setChordModeState(state) {
-    if (state && typeof state === 'object') {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Set Chord Mode Settings`);
-        }
-        chordModeState = { ...Constants.DEFAULT_CHORD_MODE, ...state };
+    if (appServices && typeof appServices.onMutedTracksChanged === 'function') {
+        appServices.onMutedTracksChanged(mutedTrackIds);
     }
 }
-
-export function getChordModeEnabledState() { return chordModeState.enabled; }
-export function setChordModeEnabledState(enabled) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Toggle Chord Mode ${enabled ? 'On' : 'Off'}`);
-    }
-    chordModeState.enabled = !!enabled; 
-}
-
-export function getChordModeRootState() { return chordModeState.root; }
-export function setChordModeRootState(root) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Chord Root`);
-    }
-    chordModeState.root = Math.max(0, Math.min(11, parseInt(root) || 0)); 
-}
-
-export function getChordModeTypeState() { return chordModeState.type; }
-export function setChordModeTypeState(type) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Chord Type to ${type || 'major'}`);
-    }
-    chordModeState.type = type || 'major'; 
-}
-
-export function getChordModeLockState() { return chordModeState.lockChord; }
-export function setChordModeLockState(lock) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`${lock ? 'Enable' : 'Disable'} Chord Lock`);
-    }
-    chordModeState.lockChord = !!lock; 
-}
-
-export function getChordVoicingState() {
-    return chordModeState.voicing || Constants.DEFAULT_CHORD_VOICING;
-}
-export function setChordVoicingState(voicing) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Chord Voicing to ${voicing || 'closed'}`);
-    }
-    chordModeState.voicing = (voicing && Constants.CHORD_VOICINGS.includes(voicing)) ? voicing : Constants.DEFAULT_CHORD_VOICING; 
-}
-
-// Time Signature State
-let timeSignatureState = { ...Constants.DEFAULT_TIME_SIGNATURE };
-
-export function getTimeSignatureState() { return { ...timeSignatureState }; }
-
-export function setTimeSignatureState(numerator, denominator) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Time Signature to ${numerator || 4}/${denominator || 4}`);
-    }
-    const num = Math.max(Constants.TIME_SIG_MIN_NUMERATOR, Math.min(Constants.TIME_SIG_MAX_NUMERATOR, parseInt(numerator) || 4));
-    const denom = Math.max(Constants.TIME_SIG_MIN_DENOMINATOR, Math.min(Constants.TIME_SIG_MAX_DENOMINATOR, parseInt(denominator) || 4));
-    timeSignatureState = { numerator: num, denominator: denom };
-    // Apply to Tone.Transport
-    if (typeof Tone !== 'undefined' && Tone.Transport) {
-        Tone.Transport.timeSignature = [num, denom];
-    }
-}
-
-export function getTimeSignatureNumeratorState() { return timeSignatureState.numerator; }
-export function setTimeSignatureNumeratorState(numerator) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Time Signature Numerator`);
-    }
-    const num = Math.max(Constants.TIME_SIG_MIN_NUMERATOR, Math.min(Constants.TIME_SIG_MAX_NUMERATOR, parseInt(numerator) || 4));
-    timeSignatureState.numerator = num;
-    if (typeof Tone !== 'undefined' && Tone.Transport) {
-        Tone.Transport.timeSignature = [num, timeSignatureState.denominator];
-    }
-}
-
-export function getTimeSignatureDenominatorState() { return timeSignatureState.denominator; }
-export function setTimeSignatureDenominatorState(denominator) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Time Signature Denominator`);
-    }
-    const denom = Math.max(Constants.TIME_SIG_MIN_DENOMINATOR, Math.min(Constants.TIME_SIG_MAX_DENOMINATOR, parseInt(denominator) || 4));
-    timeSignatureState.denominator = denom;
-    if (typeof Tone !== 'undefined' && Tone.Transport) {
-        Tone.Transport.timeSignature = [timeSignatureState.numerator, denom];
-    }
-}
-
-// Ghost Track State (for showing notes from other tracks in sequencer)
-let ghostTrackIdState = null; // null = no ghost track, or track ID
-
-export function getGhostTrackIdState() { return ghostTrackIdState; }
-export function setGhostTrackIdState(trackId) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(trackId ? `Set Ghost Track` : `Clear Ghost Track`);
-    }
-    ghostTrackIdState = trackId; 
-}
-
-// Timeline Markers State
-let timelineMarkersState = []; // Array of { id, name, bar, color }
-let timelineMarkerIdCounter = 0;
-
-export function getTimelineMarkersState() { return timelineMarkersState; }
-
-export function getTimelineMarkerByIdState(id) {
-    return timelineMarkersState.find(m => m.id === id);
-}
-
-export function addTimelineMarkerState(name, bar, color = null) {
-    if (timelineMarkersState.length >= Constants.MAX_TIMELINE_MARKERS) {
-        return null; // Max markers reached
-    }
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Add Timeline Marker "${name || `Marker ${timelineMarkersState.length + 1}`}"`);
-    }
-    const id = timelineMarkerIdCounter++;
-    const marker = {
-        id,
-        name: name || `Marker ${timelineMarkersState.length + 1}`,
-        bar: Math.max(1, Math.min(parseInt(bar) || 1, Constants.MAX_BARS)),
-        color: color || Constants.DEFAULT_MARKER_COLOR
-    };
-    timelineMarkersState.push(marker);
-    // Sort by bar position
-    timelineMarkersState.sort((a, b) => a.bar - b.bar);
-    return marker;
-}
-
-export function setTimelineMarkerState(id, updates) {
-    const marker = timelineMarkersState.find(m => m.id === id);
-    if (marker) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Update Timeline Marker "${marker.name}"`);
-        }
-        if (updates.name !== undefined) marker.name = updates.name;
-        if (updates.bar !== undefined) marker.bar = Math.max(1, Math.min(parseInt(updates.bar) || 1, Constants.MAX_BARS));
-        if (updates.color !== undefined) marker.color = updates.color;
-        timelineMarkersState.sort((a, b) => a.bar - b.bar);
-        return marker;
-    }
-    return null;
-}
-
-export function removeTimelineMarkerState(id) {
-    const marker = timelineMarkersState.find(m => m.id === id);
-    const markerName = marker ? marker.name : id;
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Remove Timeline Marker "${markerName}"`);
-    }
-    const index = timelineMarkersState.findIndex(m => m.id === id);
-    if (index !== -1) {
-        timelineMarkersState.splice(index, 1);
-        return true;
-    }
-    return false;
-}
-
-export function clearTimelineMarkersState() {
-    if (timelineMarkersState.length === 0) return;
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Clear All Timeline Markers`);
-    }
-    timelineMarkersState = [];
+export function isTrackSoloedState(trackId) {
+    return soloedTrackId === trackId;
 }
 
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
 export function removeWindowFromStoreState(id) { openWindowsMap.delete(id); }
+export function setHighestZState(value) { highestZ = Number.isFinite(value) ? value : 100; }
+export function incrementHighestZState() { return ++highestZ; }
 
-// --- Send Tracks State Getters and Setters ---
-export function getSendTracksState() { return sendTracksState; }
-export function getSendTrackByIdState(id) { return sendTracksState.find(s => s.id === id); }
-export function addSendTrackState(sendData) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Add Send Bus "${sendData?.name || 'new send'}"`);
-    }
-    const id = sendData && sendData.id !== undefined ? sendData.id : sendTrackIdCounter++;
-    const sendTrack = {
-        id,
-        name: (sendData && sendData.name) || `Send ${id}`,
-        effects: (sendData && sendData.effects) || [],
-        level: (sendData && sendData.level !== undefined) ? sendData.level : 1.0,
-        muted: !!(sendData && sendData.muted)
-    };
-    sendTracksState.push(sendTrack);
-    return sendTrack;
-}
-export function setSendTrackNameState(sendId, name) {
-    const send = sendTracksState.find(s => s.id === sendId);
-    if (send) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Rename Send "${send.name}" to "${name}"`);
-        }
-        send.name = name || `Send ${sendId}`;
-        return true;
-    }
-    return false;
-}
-export function setSendTrackLevelState(sendId, level) {
-    const send = sendTracksState.find(s => s.id === sendId);
-    if (send) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Set Send "${send.name}" level`);
-        }
-        send.level = Math.max(0, Math.min(1.5, parseFloat(level) || 0));
-        return true;
-    }
-    return false;
-}
-export function setSendTrackMutedState(sendId, muted) {
-    const send = sendTracksState.find(s => s.id === sendId);
-    if (send) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Set Send "${send.name}" muted ${muted ? 'on' : 'off'}`);
-        }
-        send.muted = !!muted;
-        return true;
-    }
-    return false;
-}
-export function setSendTrackEffectsState(sendId, effects) {
-    const send = sendTracksState.find(s => s.id === sendId);
-    if (send) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Set Send "${send.name}" effects`);
-        }
-        send.effects = Array.isArray(effects) ? effects : [];
-        return true;
-    }
-    return false;
-}
-export function removeSendTrackState(sendId) {
-    const send = sendTracksState.find(s => s.id === sendId);
-    const sendName = send ? send.name : sendId;
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Remove Send Track "${sendName}"`);
-    }
-    const index = sendTracksState.findIndex(s => s.id === sendId);
-    if (index !== -1) {
-        sendTracksState.splice(index, 1);
-        return true;
-    }
-    return false;
-}
-export function getTrackSendsState() { return trackSendsState; }
-export function getTrackSendLevelState(trackId, sendId) {
-    if (trackSendsState[trackId]) {
-        return trackSendsState[trackId][sendId] !== undefined ? trackSendsState[trackId][sendId] : 0;
-    }
-    return 0;
-}
-export function setTrackSendLevelState(trackId, sendId, level) {
-    if (!trackSendsState[trackId]) {
-        trackSendsState[trackId] = {};
-    }
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Send Level for Track ${trackId}`);
-    }
-    trackSendsState[trackId][sendId] = Math.max(0, Math.min(1.2, parseFloat(level) || 0));
-}
-export function getTrackSendPreFaderState(trackId, sendId) {
-    if (trackSendsState[trackId] && trackSendsState[trackId][sendId] !== undefined) {
-        return trackSendsState[trackId][sendId].preFader || false;
-    }
-    return false; // Default to post-fader
-}
-export function setTrackSendPreFaderState(trackId, sendId, preFader) {
-    if (!trackSendsState[trackId]) {
-        trackSendsState[trackId] = {};
-    }
-    if (!trackSendsState[trackId][sendId]) {
-        trackSendsState[trackId][sendId] = { level: 0, preFader: false };
-    }
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Send Pre-Fader for Track ${trackId}`);
-    }
-    trackSendsState[trackId][sendId].preFader = !!preFader;
-}
+export function setMasterEffectsState(newChain) { masterEffectsChainState = Array.isArray(newChain) ? newChain : []; }
+export function setMasterGainValueState(value) { masterGainValueState = Number.isFinite(value) ? value : Tone.dbToGain(0); }
 
-// --- Track Groups State Management ---
-export function getTrackGroupsState() { return trackGroupsState; }
-export function getTrackGroupByIdState(id) { return trackGroupsState.find(g => g.id === id); }
-export function addTrackGroupState(groupData) {
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Create Track Group "${groupData?.name || 'New Group'}"`);
-    }
-    const id = groupData.id !== undefined ? groupData.id : trackGroupIdCounter++;
-    const newGroup = {
-        id,
-        name: groupData.name || `${Constants.DEFAULT_TRACK_GROUP_NAME} ${id}`,
-        color: groupData.color || Constants.DEFAULT_TRACK_GROUP_COLOR,
-        trackIds: groupData.trackIds || [],
-        muted: groupData.muted || false,
-        soloed: groupData.soloed || false
-    };
-    trackGroupsState.push(newGroup);
-    return newGroup;
-}
-export function setTrackGroupNameState(id, name) {
-    const group = trackGroupsState.find(g => g.id === id);
-    if (group) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Rename Track Group to "${name || `Group ${id}`}"`);
-        }
-        group.name = name || `Group ${id}`;
-        return true;
-    }
-    return false;
-}
-export function setTrackGroupColorState(id, color) {
-    const group = trackGroupsState.find(g => g.id === id);
-    if (group) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Change Track Group "${group.name}" color`);
-        }
-        group.color = color || Constants.DEFAULT_TRACK_GROUP_COLOR;
-        return true;
-    }
-    return false;
-}
-export function addTrackToGroupState(groupId, trackId) {
-    const group = trackGroupsState.find(g => g.id === groupId);
-    if (group && !group.trackIds.includes(trackId)) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Add Track to Group "${group.name}"`);
-        }
-        group.trackIds.push(trackId);
-        return true;
-    }
-    return false;
-}
-export function removeTrackFromGroupState(groupId, trackId) {
-    const group = trackGroupsState.find(g => g.id === groupId);
-    if (group) {
-        const idx = group.trackIds.indexOf(trackId);
-        if (idx !== -1) {
+export function setMidiAccessState(access) { midiAccessGlobal = access; }
+export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
+
+
+export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; }
+export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal = tree; }
+export function setCurrentSoundBrowserPathState(path) { currentSoundBrowserPathGlobal = Array.isArray(path) ? path : []; }
+export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
+
+export function setClipboardDataState(data) { clipboardDataGlobal = typeof data === 'object' && data !== null ? data : { type: null, data: null }; }
+
+export function setArmedTrackIdState(id) { armedTrackId = id; }
+export function setIsRecordingState(status) { isRecordingGlobal = !!status; }
+export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
+export function setRecordingStartTimeState(time) { recordingStartTime = Number.isFinite(time) ? time : 0; }
+export function getRecordingStartTimeState() { return recordingStartTime; }
+export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
+export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
+
+export function getUndoStackState() { return [...undoStack]; }
+export function getRedoStackState() { return [...redoStack]; }
+
+export function setPlaybackModeStateInternal(mode) {
+    const displayMode = typeof mode === 'string' ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Unknown';
+    console.log(`[State setPlaybackModeStateInternal] Attempting to set mode to: ${mode} (Display: ${displayMode}). Current mode: ${globalPlaybackMode}`);
+
+    if (mode === 'sequencer' || mode === 'timeline') {
+        if (globalPlaybackMode !== mode) {
             if (appServices.captureStateForUndo) {
-                appServices.captureStateForUndo(`Remove Track from Group "${group.name}"`);
+                appServices.captureStateForUndo(`Set Playback Mode to ${displayMode}`);
+            } else {
+                captureStateForUndoInternal(`Set Playback Mode to ${displayMode}`); // Fallback
             }
-            group.trackIds.splice(idx, 1);
-            return true;
-        }
-    }
-    return false;
-}
-export function setTrackGroupMutedState(id, muted) {
-    const group = trackGroupsState.find(g => g.id === id);
-    if (group) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Set Group "${group.name}" muted ${muted ? 'on' : 'off'}`);
-        }
-        group.muted = !!muted;
-        return true;
-    }
-    return false;
-}
-export function setTrackGroupSoloedState(id, soloed) {
-    const group = trackGroupsState.find(g => g.id === id);
-    if (group) {
-        if (appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Set Group "${group.name}" soloed ${soloed ? 'on' : 'off'}`);
-        }
-        group.soloed = !!soloed;
-        return true;
-    }
-    return false;
-}
-export function removeTrackGroupState(id) {
-    const group = trackGroupsState.find(g => g.id === id);
-    const groupName = group ? group.name : id;
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Delete Track Group "${groupName}"`);
-    }
-    const idx = trackGroupsState.findIndex(g => g.id === id);
-    if (idx !== -1) {
-        trackGroupsState.splice(idx, 1);
-        return true;
-    }
-    return false;
-}
+            globalPlaybackMode = mode;
+            console.log(`[State setPlaybackModeStateInternal] Playback mode changed to: ${globalPlaybackMode}`);
 
-// --- Track Templates State Management ---
-export function getTrackTemplatesState() { return trackTemplatesState; }
+            if (Tone.Transport.state === 'started') {
+                console.log("[State setPlaybackModeStateInternal] Transport was started, stopping it.");
+                Tone.Transport.stop();
+            }
+            Tone.Transport.cancel(0); // Cancel all scheduled events
+            console.log("[State setPlaybackModeStateInternal] Tone.Transport events cancelled.");
 
-export function getTrackTemplateByIdState(id) { 
-    return trackTemplatesState.find(t => t.id === id); 
-}
+            if (((appServices.uiElementsCache) && (appServices.uiElementsCache).playBtnGlobal)) {
+                appServices.uiElementsCache.playBtnGlobal.textContent = 'Play';
+                console.log("[State setPlaybackModeStateInternal] Play button text reset.");
+            } else {
+                console.warn("[State setPlaybackModeStateInternal] Play button UI element not found in cache.");
+            }
+            document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
 
-export function addTrackTemplateState(templateData) {
-    if (trackTemplatesState.length >= Constants.MAX_TRACK_TEMPLATES) {
-        return null; // Max templates reached
-    }
-    // Capture undo state before modifying template
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Save Track Template "${templateData?.name || 'Untitled'}"`);
-    }
-    const id = templateData && templateData.id !== undefined ? templateData.id : trackTemplateIdCounter++;
-    const template = {
-        id,
-        name: templateData?.name || `${Constants.DEFAULT_TEMPLATE_NAME_PREFIX} ${trackTemplatesState.length + 1}`,
-        color: templateData?.color || Constants.DEFAULT_TRACK_TEMPLATE_COLOR,
-        type: templateData?.type || 'Synth',
-        synthParams: templateData?.synthParams || {},
-        instrumentSamplerSettings: templateData?.instrumentSamplerSettings || null,
-        drumSamplerPads: templateData?.drumSamplerPads || null,
-        activeEffects: templateData?.activeEffects || [],
-        hasAutomation: templateData?.hasAutomation || false,
-        automationLanes: templateData?.automationLanes || []
-    };
-    trackTemplatesState.push(template);
-    return template;
-}
+            const currentTracks = getTracksState();
+            console.log(`[State setPlaybackModeStateInternal] Re-initializing sequences/playback for ${currentTracks.length} tracks for new mode: ${globalPlaybackMode}.`);
+            try {
+                currentTracks.forEach(track => {
+                    if (track && track.type !== 'Audio' && typeof track.recreateToneSequence === 'function') {
+                        track.recreateToneSequence(true); // true to force restart
+                    }
+                    // If switching to sequencer mode, stop any timeline-based audio clip playback
+                    if (globalPlaybackMode === 'sequencer' && track && track.type === 'Audio' && typeof track.stopPlayback === 'function') {
+                        track.stopPlayback();
+                    }
+                });
+            } catch (error) {
+                console.error("[State setPlaybackModeStateInternal] Error during track sequence/playback re-initialization:", error);
+                if(appServices.showNotification) appServices.showNotification("Error updating track playback for new mode.", 3000);
+            }
 
-export function updateTrackTemplateState(id, updates) {
-    // Capture undo state before modifying template
-    if (appServices.captureStateForUndo) {
-        const template = trackTemplatesState.find(t => t.id === id);
-        if (template) {
-            appServices.captureStateForUndo(`Update Track Template "${template.name}"`);
+
+            if (appServices.onPlaybackModeChange && typeof appServices.onPlaybackModeChange === 'function') {
+                appServices.onPlaybackModeChange(globalPlaybackMode);
+            }
+             if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') {
+                appServices.renderTimeline();
+            }
+        } else {
+            console.log(`[State setPlaybackModeStateInternal] Mode is already ${mode}. No change.`);
         }
+    } else {
+        console.warn(`[State setPlaybackModeStateInternal] Invalid playback mode attempted: ${mode}. Expected 'sequencer' or 'timeline'.`);
     }
-    const template = trackTemplatesState.find(t => t.id === id);
-    if (template) {
-        if (updates.name !== undefined) template.name = updates.name;
-        if (updates.color !== undefined) template.color = updates.color;
-        if (updates.type !== undefined) template.type = updates.type;
-        if (updates.synthParams !== undefined) template.synthParams = updates.synthParams;
-        if (updates.instrumentSamplerSettings !== undefined) template.instrumentSamplerSettings = updates.instrumentSamplerSettings;
-        if (updates.drumSamplerPads !== undefined) template.drumSamplerPads = updates.drumSamplerPads;
-        if (updates.activeEffects !== undefined) template.activeEffects = updates.activeEffects;
-        if (updates.hasAutomation !== undefined) template.hasAutomation = updates.hasAutomation;
-        if (updates.automationLanes !== undefined) template.automationLanes = updates.automationLanes;
-        return template;
-    }
-    return null;
 }
+export { setPlaybackModeStateInternal as setPlaybackModeState }; // Export with the name expected by other modules
 
-export function removeTrackTemplateState(id) {
-    // Capture undo state before removing template
-    if (appServices.captureStateForUndo) {
-        const template = trackTemplatesState.find(t => t.id === id);
-        if (template) {
-            appServices.captureStateForUndo(`Delete Track Template "${template.name}"`);
-        }
+// --- Track Renaming ---
+export function renameTrackInState(trackId, newName) {
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) {
+        console.warn(`[State renameTrackInState] Track not found: ${trackId}`);
+        return false;
     }
-    trackTemplatesState = trackTemplatesState.filter(t => t.id !== id);
+    if (!newName || typeof newName !== 'string' || newName.trim() === '') {
+        console.warn(`[State renameTrackInState] Invalid name provided`);
+        return false;
+    }
+    const oldName = track.name;
+    if (oldName === newName.trim()) return true;
+    
+    captureStateForUndoInternal(`Rename track from '${oldName}' to '${newName.trim()}'`);
+    track.name = newName.trim();
+    
+    // Notify UI to update
+    if (appServices && typeof appServices.onTrackNameChange === 'function') {
+        appServices.onTrackNameChange(trackId, newName.trim());
+    }
+    
     return true;
 }
 
-export function clearTrackTemplatesState() {
-    if (appServices.captureStateForUndo && trackTemplatesState.length > 0) {
-        appServices.captureStateForUndo(`Clear All Track Templates`);
+// --- Track Management ---
+export async function addTrackToStateInternal(type, initialData = null, isUserAction = true) {
+    // _isUserActionPlaceholder is used by UI event handlers to signify a brand new track from user action,
+    // vs. a track being added during project load/undo/redo.
+    const isBrandNewUserTrack = isUserAction && (!initialData || initialData._isUserActionPlaceholder);
+    console.log(`[State addTrackToStateInternal] Adding ${type} track. User Action: ${isUserAction}, Brand New: ${isBrandNewUserTrack}`);
+
+    if (isBrandNewUserTrack) {
+        captureStateForUndoInternal(`Add ${type} Track`);
+        if (initialData && initialData._isUserActionPlaceholder) initialData = null; // Clear placeholder
     }
-    trackTemplatesState = [];
-}
 
-// --- Effect Presets State Management ---
-let effectPresetsState = []; // Array of effect presets: { id, name, effectType, params }
-let effectPresetIdCounter = 0;
+    let newTrack;
+    try {
+        let newTrackId;
+        if (initialData && initialData.id != null && Number.isFinite(initialData.id)) {
+            newTrackId = initialData.id;
+            if (newTrackId >= trackIdCounter) trackIdCounter = newTrackId + 1;
+        } else {
+            newTrackId = trackIdCounter++;
+        }
 
-export function getEffectPresetsState() { return effectPresetsState; }
+        const trackAppServices = { // Pass necessary services to the Track instance
+            getSoloedTrackId: getSoloedTrackIdState,
+            setSoloedTrackId: setSoloedTrackIdState,
+            getMutedTrackIds: getMutedTrackIdsState,
+            setMutedTrackIds: setMutedTrackIdsState,
+            captureStateForUndo: captureStateForUndoInternal,
+            updateTrackUI: appServices.updateTrackUI, // These come from main.js
+            highlightPlayingStep: appServices.highlightPlayingStep,
+            autoSliceSample: appServices.autoSliceSample,
+            closeAllTrackWindows: appServices.closeAllTrackWindows,
+            getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode,
+            showNotification: appServices.showNotification,
+            effectsRegistryAccess: appServices.effectsRegistryAccess,
+            renderTimeline: appServices.renderTimeline,
+            getPlaybackMode: getPlaybackModeState,
+            getTrackById: getTrackByIdState, // Track might need to interact with other tracks (e.g. sidechaining in future)
+            getTracks: getTracksState
+        };
 
-export function getEffectPresetByIdState(id) {
-    return effectPresetsState.find(p => p.id === id);
-}
+        newTrack = new Track(newTrackId, type, initialData, trackAppServices);
+        tracks.push(newTrack);
 
-export function getEffectPresetsByTypeState(effectType) {
-    return effectPresetsState.filter(p => p.effectType === effectType);
-}
+        if (typeof newTrack.initializeAudioNodes === 'function') {
+            await newTrack.initializeAudioNodes();
+        }
+        // fullyInitializeAudioResources handles loading samples from DB/URL etc.
+        await newTrack.fullyInitializeAudioResources();
 
-export function addEffectPresetState(presetData) {
-    if (effectPresetsState.length >= Constants.MAX_EFFECT_PRESETS) {
+        if (isBrandNewUserTrack && appServices.showNotification) {
+            appServices.showNotification(`${newTrack.name} added successfully.`, 2000);
+        }
+        if (isBrandNewUserTrack && appServices.openTrackInspectorWindow) {
+             // Delay opening inspector slightly to ensure track is fully set up
+            setTimeout(() => appServices.openTrackInspectorWindow(newTrack.id), 50);
+            
+            // Also open sequencer for applicable track types
+            if (newTrack.type !== 'Audio' && appServices.openTrackSequencerWindow) {
+                setTimeout(() => appServices.openTrackSequencerWindow(newTrack.id, true), 150);
+            }
+        }
+
+        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
+        if (appServices.renderTimeline) appServices.renderTimeline();
+
+    } catch (error) {
+        console.error(`[State addTrackToStateInternal] Error adding ${type} track:`, error);
         if (appServices.showNotification) {
-            appServices.showNotification(`Maximum effect presets (${Constants.MAX_EFFECT_PRESETS}) reached.`, 3000);
+            appServices.showNotification(`Failed to add ${type} track: ${error.message}`, 4000);
         }
-        return null;
-    }
-    // Capture undo state before adding preset
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Save Effect Preset "${presetData?.name || 'Untitled'}"`);
-    }
-    const id = presetData && presetData.id !== undefined ? presetData.id : effectPresetIdCounter++;
-    const preset = {
-        id,
-        name: presetData?.name || `${Constants.DEFAULT_PRESET_NAME_PREFIX} ${effectPresetsState.length + 1}`,
-        effectType: presetData?.effectType || null,
-        params: presetData?.params || {}
-    };
-    effectPresetsState.push(preset);
-    return preset;
-}
-
-export function updateEffectPresetState(id, updates) {
-    // Capture undo state before modifying preset
-    if (appServices.captureStateForUndo) {
-        const preset = effectPresetsState.find(p => p.id === id);
-        if (preset) {
-            appServices.captureStateForUndo(`Update Effect Preset "${preset.name}"`);
+        // If track creation failed, ensure it's not in the tracks array if partially added
+        if (newTrack && tracks.includes(newTrack)) {
+            tracks = tracks.filter(t => t.id !== newTrack.id);
         }
+        return null; // Indicate failure
     }
-    const preset = effectPresetsState.find(p => p.id === id);
-    if (preset) {
-        if (updates.name !== undefined) preset.name = updates.name;
-        if (updates.effectType !== undefined) preset.effectType = updates.effectType;
-        if (updates.params !== undefined) preset.params = updates.params;
-        return preset;
-    }
-    return null;
+    return newTrack;
 }
 
-export function removeEffectPresetState(id) {
-    // Capture undo state before removing preset
-    if (appServices.captureStateForUndo) {
-        const preset = effectPresetsState.find(p => p.id === id);
-        if (preset) {
-            appServices.captureStateForUndo(`Delete Effect Preset "${preset.name}"`);
+export function removeTrackFromStateInternal(trackId) {
+    try {
+        const trackIndex = tracks.findIndex(t => t.id === trackId);
+        if (trackIndex === -1) {
+            console.warn(`[State removeTrackFromStateInternal] Track ID ${trackId} not found for removal.`);
+            return;
         }
+
+        const track = tracks[trackIndex];
+        captureStateForUndoInternal(`Remove Track "${track.name}"`);
+
+        if (typeof track.dispose === 'function') {
+            track.dispose();
+        }
+        tracks.splice(trackIndex, 1);
+
+        if (armedTrackId === trackId) setArmedTrackIdState(null);
+        if (soloedTrackId === trackId) {
+            setSoloedTrackIdState(null);
+            // Re-evaluate solo states for all other tracks
+            tracks.forEach(t => {
+                if (t) {
+                    t.isSoloed = false; // Explicitly set, then applySoloState will use global state
+                    if (typeof t.applySoloState === 'function') t.applySoloState();
+                    if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged');
+                }
+            });
+        }
+        if (activeSequencerTrackId === trackId) setActiveSequencerTrackIdState(null);
+
+        if (appServices.showNotification) appServices.showNotification(`Track "${track.name}" removed.`, 2000);
+        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
+        if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
+        if (appServices.renderTimeline) appServices.renderTimeline();
+
+    } catch (error) {
+        console.error(`[State removeTrackFromStateInternal] Error removing track ${trackId}:`, error);
+        if (appServices.showNotification) appServices.showNotification(`Error removing track: ${error.message}`, 3000);
     }
-    const index = effectPresetsState.findIndex(p => p.id === id);
-    if (index !== -1) {
-        effectPresetsState.splice(index, 1);
-        return true;
-    }
-    return false;
 }
 
-export function clearEffectPresetsState() {
-    if (appServices.captureStateForUndo && effectPresetsState.length > 0) {
-        appServices.captureStateForUndo(`Clear All Effect Presets`);
-    }
-    effectPresetsState = [];
-}
-
-// --- Window Management ---
-// Note: getOpenWindowsState and getWindowByIdState are already declared above (lines 89-90)
-// to avoid circular dependency issues with window management
-
-export function setHighestZState(value) { 
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Window Z-Index`);
-    }
-    highestZ = Number.isFinite(value) ? value : 100; 
-}
-export function incrementHighestZState() { return ++highestZ; }
 
 // --- Master Effects Chain Management ---
 export function addMasterEffectToState(effectType, initialParams) {
-    // Capture undo state before adding effect
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Add Master Effect "${effectType}"`);
-    }
     const effectId = `mastereffect_${effectType}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-    const defaultParams = appServices.effectsRegistryAccess?.getEffectDefaultParams
+    const defaultParams = ((appServices.effectsRegistryAccess) && (appServices.effectsRegistryAccess).getEffectDefaultParams)
         ? appServices.effectsRegistryAccess.getEffectDefaultParams(effectType)
         : getEffectDefaultParamsFromRegistry(effectType); // Fallback
 
@@ -1177,13 +443,6 @@ export function addMasterEffectToState(effectType, initialParams) {
 }
 
 export function removeMasterEffectFromState(effectId) {
-    // Capture undo state before removing effect
-    if (appServices.captureStateForUndo) {
-        const effect = masterEffectsChainState.find(e => e.id === effectId);
-        if (effect) {
-            appServices.captureStateForUndo(`Remove Master Effect "${effect.type}"`);
-        }
-    }
     const effectIndex = masterEffectsChainState.findIndex(e => e.id === effectId);
     if (effectIndex > -1) {
         masterEffectsChainState.splice(effectIndex, 1);
@@ -1191,14 +450,6 @@ export function removeMasterEffectFromState(effectId) {
 }
 
 export function updateMasterEffectParamInState(effectId, paramPath, value) {
-    // Capture undo state before modifying effect param
-    if (appServices.captureStateForUndo) {
-        const effect = masterEffectsChainState.find(e => e.id === effectId);
-        if (effect) {
-            const paramName = paramPath.split('.').pop();
-            appServices.captureStateForUndo(`Update Master Effect "${effect.type}" ${paramName}`);
-        }
-    }
     const effectWrapper = masterEffectsChainState.find(e => e.id === effectId);
     if (!effectWrapper || !effectWrapper.params) {
         console.warn(`[State updateMasterEffectParamInState] Effect wrapper or params not found for ID: ${effectId}`);
@@ -1222,10 +473,6 @@ export function reorderMasterEffectInState(effectId, newIndex) {
     if (oldIndex === -1 || oldIndex === newIndex || newIndex < 0 || newIndex >= masterEffectsChainState.length) {
         if (oldIndex === -1) console.warn(`[State reorderMasterEffectInState] Effect ID ${effectId} not found.`);
         return;
-    }
-    if (appServices.captureStateForUndo) {
-        const effect = masterEffectsChainState[oldIndex];
-        appServices.captureStateForUndo(`Reorder Master effect "${effect?.type || effectId}"`);
     }
     const [effectToMove] = masterEffectsChainState.splice(oldIndex, 1);
     masterEffectsChainState.splice(newIndex, 0, effectToMove);
@@ -1323,40 +570,26 @@ export async function redoLastActionInternal() {
 
 // --- Project Data Handling ---
 export function gatherProjectDataInternal() {
+    console.log("[State gatherProjectDataInternal] Starting to gather project data...");
     try {
         const projectData = {
             version: Constants.APP_VERSION || "5.9.1", // Use a constant for app version
+            projectName: getProjectNameState(),
             globalSettings: {
                 tempo: Tone.Transport.bpm.value,
-                timeSignature: getTimeSignatureState(),
                 masterVolume: getMasterGainValueState(),
                 activeMIDIInputId: getActiveMIDIInputState() ? getActiveMIDIInputState().id : null,
                 soloedTrackId: getSoloedTrackIdState(),
+                mutedTrackIds: getMutedTrackIdsState(),
                 armedTrackId: getArmedTrackIdState(),
                 highestZIndex: getHighestZState(),
                 playbackMode: getPlaybackModeState(),
-                metronomeEnabled: getMetronomeEnabledState(),
-                metronomeVolume: getMetronomeVolumeState(),
-                scaleMode: getScaleModeState(),
-                chordMode: getChordModeState(),
-                loopRegion: getLoopRegionState(),
-                swing: getSwingState(),
-                timelineMarkers: JSON.parse(JSON.stringify(getTimelineMarkersState())),
-                midiLearnMappings: JSON.parse(JSON.stringify(getMidiLearnMappingsState())),
             },
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,
                 type: effect.type,
                 params: effect.params ? JSON.parse(JSON.stringify(effect.params)) : {} // Ensure params exist
             })),
-            sendTracks: getSendTracksState().map(send => ({
-                id: send.id,
-                name: send.name,
-                effects: send.effects ? JSON.parse(JSON.stringify(send.effects)) : [],
-                level: send.level,
-                muted: send.muted
-            })),
-            trackSends: getTrackSendsState(),
             tracks: getTracksState().map(track => {
                 if (!track || typeof track.id === 'undefined') {
                     console.warn("[State gatherProjectDataInternal] Invalid track object found, skipping:", track);
@@ -1365,9 +598,7 @@ export function gatherProjectDataInternal() {
                 const trackData = { // Base data
                     id: track.id, type: track.type, name: track.name,
                     isMuted: track.isMuted,
-                    color: track.color, // Track color for visual identification
                     volume: track.previousVolumeBeforeMute, // Store the actual volume, not the muted one
-                    pan: track.pan !== undefined ? track.pan : 0,
                     activeEffects: (track.activeEffects || []).map(effect => ({
                         id: effect.id, type: effect.type,
                         params: effect.params ? JSON.parse(JSON.stringify(effect.params)) : {}
@@ -1377,6 +608,10 @@ export function gatherProjectDataInternal() {
                     sequences: track.type !== 'Audio' && track.sequences ? JSON.parse(JSON.stringify(track.sequences)) : [],
                     activeSequenceId: track.type !== 'Audio' ? track.activeSequenceId : null,
                     timelineClips: track.timelineClips ? JSON.parse(JSON.stringify(track.timelineClips)) : [],
+                    trackColor: track.trackColor,
+                    automationArmed: track.automationArmed || false,
+                    panValue: track.panValue || 0,
+                    waveformZoom: track.waveformZoom || 1
                 };
                 // Type-specific parameters
                 if (track.type === 'Synth') {
@@ -1384,10 +619,10 @@ export function gatherProjectDataInternal() {
                     trackData.synthParams = track.synthParams ? JSON.parse(JSON.stringify(track.synthParams)) : {};
                 } else if (track.type === 'Sampler') {
                     trackData.samplerAudioData = {
-                        fileName: track.samplerAudioData?.fileName,
-                        dbKey: track.samplerAudioData?.dbKey,
+                        fileName: ((track.samplerAudioData) && (track.samplerAudioData).fileName),
+                        dbKey: ((track.samplerAudioData) && (track.samplerAudioData).dbKey),
                         // status is runtime, not strictly needed for save, but useful for rehydration hint
-                        status: track.samplerAudioData?.dbKey ? 'persisted' : (track.samplerAudioData?.fileName ? 'volatile' : 'empty')
+                        status: ((track.samplerAudioData) && (track.samplerAudioData).dbKey) ? 'persisted' : (((track.samplerAudioData) && (track.samplerAudioData).fileName) ? 'volatile' : 'empty')
                     };
                     trackData.slices = track.slices ? JSON.parse(JSON.stringify(track.slices)) : [];
                     trackData.selectedSliceForEdit = track.selectedSliceForEdit;
@@ -1402,22 +637,35 @@ export function gatherProjectDataInternal() {
                     trackData.selectedDrumPadForEdit = track.selectedDrumPadForEdit;
                 } else if (track.type === 'InstrumentSampler') {
                     trackData.instrumentSamplerSettings = {
-                        originalFileName: track.instrumentSamplerSettings?.originalFileName,
-                        dbKey: track.instrumentSamplerSettings?.dbKey,
-                        rootNote: track.instrumentSamplerSettings?.rootNote,
-                        loop: track.instrumentSamplerSettings?.loop,
-                        loopStart: track.instrumentSamplerSettings?.loopStart,
-                        loopEnd: track.instrumentSamplerSettings?.loopEnd,
-                        envelope: track.instrumentSamplerSettings?.envelope ? JSON.parse(JSON.stringify(track.instrumentSamplerSettings.envelope)) : {},
-                        status: track.instrumentSamplerSettings?.dbKey ? 'persisted' : (track.instrumentSamplerSettings?.originalFileName ? 'volatile' : 'empty')
+                        originalFileName: ((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).originalFileName),
+                        dbKey: ((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).dbKey),
+                        rootNote: ((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).rootNote),
+                        loop: ((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).loop),
+                        loopStart: ((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).loopStart),
+                        loopEnd: ((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).loopEnd),
+                        envelope: ((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).envelope) ? JSON.parse(JSON.stringify(track.instrumentSamplerSettings.envelope)) : {},
+                        status: ((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).dbKey) ? 'persisted' : (((track.instrumentSamplerSettings) && (track.instrumentSamplerSettings).originalFileName) ? 'volatile' : 'empty')
                     };
                     trackData.instrumentSamplerIsPolyphonic = track.instrumentSamplerIsPolyphonic;
                 }
                  if (track.type === 'Audio') { // Audio track specific settings
-                    trackData.isMonitoringEnabled = track.isMonitoringEnabled;
+                    trackData.isMonitoringEnabled = track.isMonitoringEnabled || false;
                 }
                 // Remove deprecated/runtime-only properties if they accidentally get included
                 delete trackData.sequenceData; delete trackData.sequenceLength;
+                // Restore track color, automation armed, pan, waveform zoom
+                if (typeof trackData.trackColor === 'string') {
+                    newTrack.trackColor = trackData.trackColor;
+                }
+                if (typeof trackData.automationArmed === 'boolean') {
+                    newTrack.automationArmed = trackData.automationArmed;
+                }
+                if (typeof trackData.panValue === 'number') {
+                    newTrack.panValue = trackData.panValue;
+                }
+                if (typeof trackData.waveformZoom === 'number') {
+                    newTrack.waveformZoom = trackData.waveformZoom;
+                }
                 return trackData;
             }).filter(td => td !== null), // Filter out any skipped invalid tracks
             windowStates: Array.from(getOpenWindowsState().values())
@@ -1435,6 +683,7 @@ export function gatherProjectDataInternal() {
                     };
                 }).filter(ws => ws !== null)
         };
+        console.log("[State gatherProjectDataInternal] Project data gathered successfully.");
         return projectData;
     } catch (error) {
         console.error("[State gatherProjectDataInternal] Error gathering project data:", error);
@@ -1451,24 +700,25 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         return;
     }
     
+    console.log(`[State reconstructDAWInternal] Starting reconstruction. isUndoRedo: ${isUndoRedo}`);
     if (appServices) appServices._isReconstructingDAW_flag = true;
 
     // --- Global Reset Phase ---
     try {
         Tone.Transport.stop();
         Tone.Transport.cancel(0);
-        if (appServices && appServices.initAudioContextAndMasterMeter) await appServices.initAudioContextAndMasterMeter(true); // Ensure audio context is running, true for user initiated context
+        if (appServices.initAudioContextAndMasterMeter) await appServices.initAudioContextAndMasterMeter(true); // Ensure audio context is running, true for user initiated context
         (getTracksState() || []).forEach(track => { if (track && typeof track.dispose === 'function') track.dispose(); });
         tracks = [];
         trackIdCounter = 0;
-        if (appServices && appServices.clearAllMasterEffectNodes) appServices.clearAllMasterEffectNodes(); else console.warn("clearAllMasterEffectNodes service missing");
+        if (appServices.clearAllMasterEffectNodes) appServices.clearAllMasterEffectNodes(); else console.warn("clearAllMasterEffectNodes service missing");
         masterEffectsChainState = [];
-        if (appServices && appServices.closeAllWindows) appServices.closeAllWindows(true); else console.warn("closeAllWindows service missing");
-        if (appServices && appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); else console.warn("clearOpenWindowsMap service missing");
+        if (appServices.closeAllWindows) appServices.closeAllWindows(true); else console.warn("closeAllWindows service missing");
+        if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); else console.warn("clearOpenWindowsMap service missing");
         highestZ = 100;
         setArmedTrackIdState(null); setSoloedTrackIdState(null); setActiveSequencerTrackIdState(null);
         setIsRecordingState(false); setRecordingTrackIdState(null);
-        if (appServices && appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(false);
+        if (appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(false);
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error during global reset phase:", error);
         if (appServices.showNotification) appServices.showNotification("Critical error during project reset.", 5000);
@@ -1478,28 +728,17 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
 
     try { // --- Global Settings ---
         const gs = projectData.globalSettings || {};
+        // Restore project name if saved
+        if (projectData.projectName) {
+            setProjectNameState(projectData.projectName);
+            if (appServices.updateProjectNameDisplay) appServices.updateProjectNameDisplay(projectData.projectName);
+        }
         Tone.Transport.bpm.value = Number.isFinite(gs.tempo) ? gs.tempo : 120;
-        // Restore time signature
-        if (gs.timeSignature && typeof gs.timeSignature === 'object') {
-            const ts = gs.timeSignature;
-            setTimeSignatureState(ts.numerator || 4, ts.denominator || 4);
-        } else {
-            setTimeSignatureState(4, 4); // Default to 4/4
-        }
-        setMasterGainValueState(Number.isFinite(gs.masterVolume) ? gs.masterVolume : (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0);
-        if (appServices && appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
-        setPlaybackModeState(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');
-        if (appServices && appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
+        setMasterGainValueState(Number.isFinite(gs.masterVolume) ? gs.masterVolume : Tone.dbToGain(0));
+        if (appServices && typeof appServices.setActualMasterVolume === 'function') appServices.setActualMasterVolume(getMasterGainValueState());
+        setPlaybackModeStateInternal(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');
+        if (appServices && typeof appServices.updateTaskbarTempoDisplay === 'function') appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
         setHighestZState(Number.isFinite(gs.highestZIndex) ? gs.highestZIndex : 100);
-
-        // MIDI Learn mappings restoration
-        if (gs.midiLearnMappings && Array.isArray(gs.midiLearnMappings)) {
-            midiLearnMappings = gs.midiLearnMappings.map(m => ({ ...Constants.DEFAULT_MIDI_LEARN_MAPPING, ...m }));
-            if (appServices && appServices.updateMidiLearnMappingsUI) {
-                appServices.updateMidiLearnMappingsUI();
-            }
-        }
-
         // Armed and Soloed will be set after tracks are created
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error applying global settings:", error);
@@ -1522,34 +761,6 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         if (appServices.showNotification) appServices.showNotification("Error loading master effects.", 3000);
     }
 
-    // --- Send Tracks ---
-    try {
-        if (projectData.sendTracks && Array.isArray(projectData.sendTracks)) {
-            sendTracksState = []; // Reset
-            sendTrackIdCounter = 0;
-            for (const sendData of projectData.sendTracks) {
-                if (sendData && sendData.id) {
-                    const sendTrack = {
-                        id: sendData.id,
-                        name: sendData.name || `Send ${sendData.id}`,
-                        effects: sendData.effects || [],
-                        level: sendData.level !== undefined ? sendData.level : 1.0,
-                        muted: sendData.muted || false
-                    };
-                    sendTracksState.push(sendTrack);
-                    sendTrackIdCounter = Math.max(sendTrackIdCounter, sendData.id);
-                }
-            }
-            console.log(`[State reconstructDAWInternal] Restored ${sendTracksState.length} send tracks.`);
-        }
-        if (projectData.trackSends && typeof projectData.trackSends === 'object') {
-            trackSendsState = JSON.parse(JSON.stringify(projectData.trackSends));
-            console.log("[State reconstructDAWInternal] Restored track send levels.");
-        }
-    } catch (error) {
-        console.error("[State reconstructDAWInternal] Error restoring send tracks:", error);
-    }
-
     try { // --- Tracks ---
         if (projectData.tracks && Array.isArray(projectData.tracks)) {
             const trackPromises = projectData.tracks.map(trackData => {
@@ -1559,6 +770,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             });
             await Promise.all(trackPromises);
             // After all tracks and their audio resources are initialized:
+            console.log(`[State reconstructDAWInternal] All track instances created. Now setting armed/soloed states.`);
             const globalSettings = projectData.globalSettings || {};
             if (globalSettings.armedTrackId !== null && typeof globalSettings.armedTrackId !== 'undefined') {
                 setArmedTrackIdState(globalSettings.armedTrackId);
@@ -1573,31 +785,16 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
                     }
                 });
             }
-            // Restore metronome state
-            if (globalSettings.metronomeEnabled !== undefined) {
-                setMetronomeEnabledState(globalSettings.metronomeEnabled);
-            }
-            if (globalSettings.metronomeVolume !== undefined) {
-                setMetronomeVolumeState(globalSettings.metronomeVolume);
-                if (appServices.setMetronomeVolume) {
-                    appServices.setMetronomeVolume(globalSettings.metronomeVolume);
-                }
-            }
-            // Restore scale mode state
-            if (globalSettings.scaleMode !== undefined) {
-                setScaleModeState(globalSettings.scaleMode);
-            }
-            // Restore chord mode state
-            if (globalSettings.chordMode !== undefined) {
-                setChordModeState(globalSettings.chordMode);
-            }
-            // Restore loop region state
-            if (globalSettings.loopRegion !== undefined) {
-                setLoopRegionState(globalSettings.loopRegion);
-            }
-            // Restore swing state
-            if (globalSettings.swing !== undefined) {
-                setSwingState(globalSettings.swing);
+            // Restore multi-mute state
+            if (globalSettings.mutedTrackIds && Array.isArray(globalSettings.mutedTrackIds)) {
+                setMutedTrackIdsState(globalSettings.mutedTrackIds);
+                getTracksState().forEach(t => { // Apply mute state for all muted tracks
+                    if (t && globalSettings.mutedTrackIds.includes(t.id)) {
+                        t.isMuted = true;
+                        if (typeof t.applyMuteState === 'function') t.applyMuteState();
+                        if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'muteChanged');
+                    }
+                });
             }
         }
     } catch (error) {
@@ -1608,15 +805,17 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     // Window reconstruction needs to happen after tracks are potentially created, as some windows depend on track IDs.
     try {
         if (projectData.windowStates && Array.isArray(projectData.windowStates)) {
-            const sortedWindowStates = projectData.windowStates.sort((a, b) => (a?.zIndex || 0) - (b?.zIndex || 0));
+            const sortedWindowStates = projectData.windowStates.sort((a, b) => (((a) && (a).zIndex) || 0) - (((b) && (b).zIndex) || 0));
             for (const winState of sortedWindowStates) {
                 if (!winState || !winState.id) { console.warn("[State reconstructDAWInternal] Invalid window state found:", winState); continue; }
                 const key = winState.initialContentKey || winState.id; // Use initialContentKey for routing
+                console.log(`[State reconstructDAWInternal] Reconstructing window: ${key}, ID: ${winState.id}`);
                 if (key === 'globalControls' && appServices.openGlobalControlsWindow) {
                     // FIX: Pass a callback to wire up controls even during reconstruction
                     // The callback will be called by openGlobalControlsWindow to attach event listeners
                     appServices.openGlobalControlsWindow((elements) => {
                         if (elements && appServices.attachGlobalControlEvents) {
+                            console.log("[State reconstructDAWInternal] Wiring up global controls after reconstruction");
                             appServices.attachGlobalControlEvents(elements);
                         }
                     }, winState);
@@ -1665,9 +864,11 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
 
     if (appServices) appServices._isReconstructingDAW_flag = false;
     if (!isUndoRedo && appServices.showNotification) appServices.showNotification(`Project loaded successfully.`, 3500);
+    console.log("[State reconstructDAWInternal] Reconstruction finished.");
 }
 
 
+// --- Manual Project Save/Load (file download/upload) ---
 export function saveProjectInternal() {
     try {
         const projectData = gatherProjectDataInternal();
@@ -1692,7 +893,7 @@ export function saveProjectInternal() {
 }
 
 export function loadProjectInternal() {
-    const loadProjectInputEl = appServices.uiElementsCache?.loadProjectInput;
+    const loadProjectInputEl = ((appServices.uiElementsCache) && (appServices.uiElementsCache).loadProjectInput);
     if (loadProjectInputEl) {
         loadProjectInputEl.click();
     } else {
@@ -1757,9 +958,9 @@ export async function exportToWavInternal() {
 
         if (currentPlaybackMode === 'timeline') {
             tracks.forEach(track => {
-                if (track?.timelineClips) {
+                if (((track) && (track).timelineClips)) {
                     track.timelineClips.forEach(clip => {
-                        if (clip?.startTime !== undefined && clip?.duration !== undefined) {
+                        if (((clip) && (clip).startTime) !== undefined && ((clip) && (clip).duration) !== undefined) {
                             maxDuration = Math.max(maxDuration, clip.startTime + clip.duration);
                         }
                     });
@@ -1769,7 +970,7 @@ export async function exportToWavInternal() {
             tracks.forEach(track => {
                 if (track && track.type !== 'Audio') {
                     const activeSeq = track.getActiveSequence();
-                    if (activeSeq?.length > 0) {
+                    if (((activeSeq) && (activeSeq).length) > 0) {
                         const sixteenthNoteTime = Tone.Time("16n").toSeconds();
                         maxDuration = Math.max(maxDuration, activeSeq.length * sixteenthNoteTime);
                     }
@@ -1783,11 +984,12 @@ export async function exportToWavInternal() {
         }
         
         maxDuration = Math.min(maxDuration + 2, 600);
+        console.log(`[State exportToWavInternal] Export duration: ${maxDuration.toFixed(1)}s`);
 
         // Stop everything first
         Tone.Transport.stop();
         Tone.Transport.cancel(0);
-        tracks.forEach(t => { if (t?.stopPlayback) t.stopPlayback(); });
+        tracks.forEach(t => { if (((t) && (t).stopPlayback)) t.stopPlayback(); });
         await new Promise(r => setTimeout(r, 100));
 
         appServices.showNotification(`Rendering audio (${maxDuration.toFixed(1)}s)...`, 15000);
@@ -1803,6 +1005,7 @@ export async function exportToWavInternal() {
         
         // Connect master gain to recorder
         masterGain.connect(recorder);
+        console.log("[Export] Recorder connected to master gain");
 
         // Reset transport
         Tone.Transport.position = 0;
@@ -1810,26 +1013,29 @@ export async function exportToWavInternal() {
         
         // Schedule all tracks
         for (const track of tracks) {
-            if (track?.schedulePlayback) {
+            if (((track) && (track).schedulePlayback)) {
                 await track.schedulePlayback(0, maxDuration);
             }
         }
 
         // Start recording and playback
         await recorder.start();
+        console.log("[Export] Recording started");
         
         Tone.Transport.start();
+        console.log("[Export] Transport started");
 
         // Wait for recording
         await new Promise(resolve => setTimeout(resolve, maxDuration * 1000 + 500));
 
         // Stop recording
         const recording = await recorder.stop();
+        console.log("[Export] Recording stopped, size:", recording.size);
 
         // Stop transport
         Tone.Transport.stop();
         Tone.Transport.cancel(0);
-        tracks.forEach(t => { if (t?.stopPlayback) t.stopPlayback(); });
+        tracks.forEach(t => { if (((t) && (t).stopPlayback)) t.stopPlayback(); });
 
         // Cleanup
         try { masterGain.disconnect(recorder); } catch (e) {}
@@ -1837,7 +1043,7 @@ export async function exportToWavInternal() {
 
         if (!recording || recording.size < 1000) {
             appServices.showNotification("Export failed: No audio recorded.", 3000);
-            console.error("[Export] Recording too small:", recording?.size);
+            console.error("[Export] Recording too small:", ((recording) && (recording).size));
             return;
         }
 
@@ -1852,6 +1058,7 @@ export async function exportToWavInternal() {
         URL.revokeObjectURL(url);
 
         appServices.showNotification("Export to WAV successful!", 3000);
+        console.log("[Export] Complete, size:", recording.size);
 
     } catch (error) {
         console.error("[State exportToWavInternal] Error:", error);
@@ -1861,346 +1068,304 @@ export async function exportToWavInternal() {
     }
 }
 
-// MIDI Note name to MIDI note number mapping (C4 = 60)
-const noteNameToMidi = {
-    'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5, 'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
-};
-
-function noteNameToMidiNumber(noteName, octave) {
-    // MIDI note number = (octave + 1) * 12 + noteNameToMidi[noteNameWithoutOctave]
-    // Middle C (C4) = 60
-    const baseNote = noteName.replace(/\d+$/, ''); // Remove octave number
-    const noteNum = noteNameToMidi[baseNote];
-    if (noteNum === undefined) return 60; // Default to middle C
-    return (octave + 1) * 12 + noteNum;
-}
-
-function pitchToRow(rowIndex, trackType) {
-    if (trackType === 'Synth' || trackType === 'InstrumentSampler') {
-        // synthPitches is reversed, so we need to map properly
-        // synthPitches[0] is last (highest), so rowIndex needs mapping
-        // The actual pitch for row 0 is at synthPitches[0] which is the FIRST element of the reversed array
-        // synthPitches was reversed, so first element is highest pitch (B6)
-        // But actual row 0 is HIGHEST, so let's use a similar approach to synth, starting from a base
-        const baseNote = 48; // C3 as base
-        return baseNote + rowIndex;
-    } else if (trackType === 'DrumSampler') {
-        // DrumSampler rows map to pads 0-7, which map to MIDI notes 36-43
-        return 36 + rowIndex; // Rows 0-7 = MIDI 36-43
-    } else if (trackType === 'Sampler') {
-        // Sampler rows map to slices
-        // Use a similar approach to synth, starting from a base
-        const baseNote = 48; // C3 as base
-        return baseNote + rowIndex;
-    }
-    return 60; // Default to middle C
-}
-
-// Convert tempo and time signature to ticks
-function tempoToTicks(tempo, ticksPerQuarterNote) {
-    // We use fixed tempo at the resolution for simplicity
-    // MIDI delta time is in ticks, and tempo is embedded
-    return ticksPerQuarterNote; // Always ticks per quarter note
-}
-
-// ============================================
-// Import from MIDI - Main Function
-// ============================================
-export async function importFromMidiInternal() {
-    if (!appServices.showNotification) {
-        console.error("[State importFromMidiInternal] Required appServices not available.");
-        alert("Import MIDI feature is currently unavailable due to an internal error.");
+export async function exportStemsInternal() {
+    const { getTracksState, getPlaybackModeState } = await import('./state.js');
+    const { initAudioContextAndMasterMeter, getActualMasterGainNode: getMasterGain } = await import('./audio.js');
+    
+    const audioReady = await initAudioContextAndMasterMeter(true);
+    if (!audioReady) {
+        appServices.showNotification("Audio system not ready for export.", 3000);
         return;
     }
     
-    if (!appServices.createFileInputForMidiImport) {
-        console.error("[State importFromMidiInternal] createFileInputForMidiImport service not available.");
-        appServices.showNotification("Import MIDI feature is not fully configured.", 3000);
+    const tracks = getTracksState();
+    const currentPlaybackMode = getPlaybackModeState();
+    let maxDuration = 0;
+    
+    // Calculate max duration
+    tracks.forEach(track => {
+        if (((track) && (track).timelineClips)) {
+            track.timelineClips.forEach(clip => {
+                if (((clip) && (clip).startTime) !== undefined && ((clip) && (clip).duration) !== undefined) {
+                    maxDuration = Math.max(maxDuration, clip.startTime + clip.duration);
+                }
+            });
+        }
+        if (track && track.type !== 'Audio') {
+            const activeSeq = track.getActiveSequence();
+            if (((activeSeq) && (activeSeq).length) > 0) {
+                const sixteenthNoteTime = Tone.Time("16n").toSeconds();
+                maxDuration = Math.max(maxDuration, activeSeq.length * sixteenthNoteTime);
+            }
+        }
+    });
+    
+    if (maxDuration === 0) {
+        appServices.showNotification("Nothing to export. Add some notes or audio first.", 3000);
         return;
     }
     
-    try {
-        appServices.createFileInputForMidiImport();
-        appServices.showNotification("Select a MIDI file to import...", 2000);
-    } catch (error) {
-        console.error("[State importFromMidiInternal] Error:", error);
-        appServices.showNotification(`Import error: ${error.message}`, 5000);
-    }
-}
-
-// ============================================
-// Export to MIDI - Main Function
-// ============================================
-export async function exportToMidiInternal() {
-    if (!appServices.showNotification) {
-        console.error("[State exportToMidiInternal] Required appServices not available.");
-        alert("Export MIDI feature is currently unavailable due to an internal error.");
-        return;
-    }
-
-    const { getTempoState, getTimeSignatureState, getTracksState, getPlaybackModeState, getSequencesState } = await import('./state.js');
-
-    try {
-        // Get tempo directly from Tone.Transport since state.js doesn't maintain separate tempo state
-        const tempo = (typeof Tone !== 'undefined' && Tone.Transport && Tone.Transport.bpm) ? Tone.Transport.bpm.value : (Constants.DEFAULT_TEMPO || 120);
-        const timeSig = getTimeSignatureState() || { numerator: 4, denominator: 4 };
-        const tracks = getTracksState() || [];
-        const playbackMode = getPlaybackModeState() || 'sequence';
-
-        // Collect all notes from all tracks
-        const allNotes = [];
-        const trackInfo = [];
-
-        for (const track of tracks) {
-            if (!track || track.type === 'Audio') continue;
-
-            let sequences = [];
-
-            if (playbackMode === 'sequence') {
-                // Get the active sequence for this track
-                const activeSeq = track.getActiveSequence ? track.getActiveSequence() : null;
-                if (activeSeq) {
-                    sequences = [activeSeq];
-                }
-            } else {
-                // timeline mode - get all sequences from timeline clips (simplified for now)
-                sequences = track.sequences || [];
+    maxDuration = Math.min(maxDuration + 2, 600);
+    appServices.showNotification(`Exporting ${tracks.length} stems...`, 5000);
+    
+    for (let i = 0; i < tracks.length; i++) {
+        const track = tracks[i];
+        appServices.showNotification(`Exporting stem ${i+1}/${tracks.length}: ${track.name}`, 5000);
+        
+        // Stop everything
+        Tone.Transport.stop();
+        Tone.Transport.cancel(0);
+        tracks.forEach(t => { if (((t) && (t).stopPlayback)) t.stopPlayback(); });
+        await new Promise(r => setTimeout(r, 100));
+        
+        // Setup recorder
+        const recorder = new Tone.Recorder();
+        const masterGain = getMasterGain();
+        
+        if (!masterGain || masterGain.disposed) continue;
+        
+        // Connect ONLY this track to recorder (mute others)
+        const originalMutes = {};
+        tracks.forEach((t, idx) => {
+            originalMutes[idx] = t.isMuted;
+            if (idx !== i && t.gainNode) {
+                t.gainNode.gain.value = 0;
             }
-
-            for (const seq of sequences) {
-                if (!seq || !seq.data) continue;
-
-                const trackRowOffset = allNotes.length > 0 ? allNotes.length : 0;
-
-                for (let row = 0; row < seq.data.length; row++) {
-                    const rowData = seq.data[row];
-                    if (!rowData) continue;
-
-                    for (let col = 0; col < rowData.length; col++) {
-                        const cell = rowData[col];
-                        if (!cell || !cell.active) continue;
-
-                        const midiNote = pitchToRow(row, track.type);
-                        const velocity = cell.velocity !== undefined ? Math.round(cell.velocity * Constants.MIDI_EXPORT_VELOCITY_SCALE) : 100;
-                        const probability = cell.probability !== undefined ? cell.probability : 1.0;
-
-                        // Calculate time position
-                        // Each step = 1/16th note (since STEPS_PER_BAR = 16)
-                        // In ticks, with 480 TicksPerQuarterNote, a 16th note = 120 ticks
-                        const stepDurationTicks = Constants.MIDI_EXPORT_TicksPerQuarterNote / 4; // 120 ticks per 16th note
-                        const startTicks = col * stepDurationTicks;
-                        const noteLengthTicks = (cell.length || 1) * stepDurationTicks;
-
-                        // Calculate bar from step
-                        const stepsPerBar = 16; // STEPS_PER_BAR
-                        const bar = Math.floor(col / stepsPerBar);
-                        const beatInBar = (col % stepsPerBar) / 4; // 4 steps per beat
-                        const quarterNotesPerBar = 4; // Assuming 4/4 time
-                        const ticksPerBar = Constants.MIDI_EXPORT_TicksPerQuarterNote * quarterNotesPerBar;
-
-                        const absoluteTicks = bar * ticksPerBar + beatInBar * Constants.MIDI_EXPORT_TicksPerQuarterNote;
-
-                        allNotes.push({
-                            time: absoluteTicks,
-                            duration: noteLengthTicks,
-                            note: midiNote,
-                            velocity: velocity,
-                            probability: probability,
-                            track: track.name,
-                            trackId: track.id
-                        });
-
-                        trackInfo.push({ trackId: track.id, trackName: track.name, trackType: track.type });
-                    }
-                }
+        });
+        
+        masterGain.connect(recorder);
+        
+        // Schedule playback
+        Tone.Transport.position = 0;
+        Tone.Transport.loop = false;
+        
+        if (((track) && (track).schedulePlayback)) {
+            await track.schedulePlayback(0, maxDuration);
+        }
+        
+        // Record
+        await recorder.start();
+        Tone.Transport.start();
+        await new Promise(resolve => setTimeout(resolve, maxDuration * 1000 + 500));
+        
+        const recording = await recorder.stop();
+        
+        // Restore mutes
+        tracks.forEach((t, idx) => {
+            if (idx !== i && t.gainNode) {
+                t.gainNode.gain.value = originalMutes[idx] ? 0 : 1;
             }
-        }
-
-        if (allNotes.length === 0) {
-            appServices.showNotification("Nothing to export. Add some notes first.", 3000);
-            return;
-        }
-
-        appServices.showNotification(`Exporting ${allNotes.length} notes to MIDI...`, 2000);
-
-        // Build MIDI file structure
-        // MIDI File Format 0 (single track)
-        // Header Chunk: MThd
-        // Track Chunk: MTrk
-
-        const ticksPerQuarter = Constants.MIDI_EXPORT_TicksPerQuarterNote;
-
-        // Build track events
-        // We'll put all notes in a single track (format 0)
-        const trackEvents = [];
-
-        // Set tempo event (meta event 0xFF 0x51)
-        // Tempo in microseconds per quarter note
-        const microsecondsPerQuarter = Math.round(60000000 / tempo);
-        trackEvents.push({ tick: 0, type: 'tempo', value: microsecondsPerQuarter });
-
-        // Time signature event (meta event 0xFF 0x58)
-        trackEvents.push({ tick: 0, type: 'timeSig', numerator: timeSig.numerator || 4, denominator: timeSig.denominator || 4 });
-
-        // Track name event
-        trackEvents.push({ tick: 0, type: 'trackName', name: 'SnugOS Export' });
-
-        // Add note events (sorted by time)
-        allNotes.sort((a, b) => a.time - b.time);
-
-        let lastTick = 0;
-        for (const note of allNotes) {
-            // Note On event
-            trackEvents.push({
-                tick: note.time - lastTick,
-                type: 'noteOn',
-                channel: Constants.MIDI_DEFAULT_CHANNEL,
-                note: note.note,
-                velocity: note.velocity
-            });
-            lastTick = note.time;
-
-            // Note Off event
-            trackEvents.push({
-                tick: note.duration,
-                type: 'noteOff',
-                channel: Constants.MIDI_DEFAULT_CHANNEL,
-                note: note.note,
-                velocity: 0
-            });
-        }
-
-        // End of track event
-        trackEvents.push({ tick: 0, type: 'endOfTrack' });
-
-        // Build MIDI file
-        const midiData = buildMidiFile(trackEvents, ticksPerQuarter);
-
+        });
+        
+        // Cleanup
+        try { masterGain.disconnect(recorder); } catch (e) {}
+        recorder.dispose();
+        
+        if (!recording || recording.size < 1000) continue;
+        
         // Download
-        const blob = new Blob([midiData], { type: 'audio/midi' });
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(recording);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${Constants.DEFAULT_MIDI_EXPORT_FILENAME_PREFIX}-${new Date().toISOString().replace(/[:.]/g, '-')}.mid`;
+        a.download = `snugos-stem-${track.name.replace(/[^a-zA-Z0-9]/g, '-')}.wav`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+    
+    // Restore all tracks
+    tracks.forEach(t => { if (((t) && (t).gainNode)) t.gainNode.gain.value = t.isMuted ? 0 : 1; });
+    
+    Tone.Transport.stop();
+    Tone.Transport.cancel(0);
+    
+    appServices.showNotification("Stems export complete!", 3000);
+}
 
-        appServices.showNotification(`Export to MIDI successful! (${allNotes.length} notes)`, 3000);
 
+// --- Auto-Save to LocalStorage ---
+const AUTOSAVE_KEY = 'snugosAutosave';
+const AUTOSAVE_TIMESTAMP_KEY = 'snugosAutosaveTimestamp';
+const FAVORITES_KEY = 'snugosFavorites';
+const RECENTLY_PLAYED_KEY = 'snugosRecentlyPlayed';
+const MAX_RECENTLY_PLAYED = 20;
+const AUTOSAVE_INTERVAL_MS = 120000; // 2 minutes
+
+let autoSaveIntervalId = null;
+
+export function startAutoSave() {
+    if (autoSaveIntervalId !== null) return; // Already running
+    autoSaveIntervalId = setInterval(() => {
+        autoSaveToLocalStorage();
+    }, AUTOSAVE_INTERVAL_MS);
+    console.log(`[State] Auto-save started (every ${AUTOSAVE_INTERVAL_MS / 1000}s)`);
+}
+
+export function stopAutoSave() {
+    if (autoSaveIntervalId !== null) {
+        clearInterval(autoSaveIntervalId);
+        autoSaveIntervalId = null;
+        console.log("[State] Auto-save stopped");
+    }
+}
+
+export function autoSaveToLocalStorage() {
+    try {
+        const projectData = gatherProjectDataInternal();
+        if (!projectData) {
+            console.warn("[State autoSaveToLocalStorage] No project data to save");
+            return false;
+        }
+        // Don't save if no tracks exist
+        if (!projectData.tracks || projectData.tracks.length === 0) {
+            return false;
+        }
+        const jsonString = JSON.stringify(projectData);
+        localStorage.setItem(AUTOSAVE_KEY, jsonString);
+        localStorage.setItem(AUTOSAVE_TIMESTAMP_KEY, new Date().toISOString());
+        console.log("[State] Project auto-saved to localStorage");
+        return true;
     } catch (error) {
-        console.error("[State exportToMidiInternal] Error:", error);
-        appServices.showNotification(`Export error: ${error.message}`, 5000);
+        console.error("[State autoSaveToLocalStorage] Error:", error);
+        // Quota exceeded or other storage error
+        if (error.name === 'QuotaExceededError' || error.message.includes('localStorage')) {
+            console.warn("[State] localStorage quota exceeded, skipping auto-save");
+        }
+        return false;
     }
 }
 
-function buildMidiFile(events, ticksPerQuarter) {
-    // Build variable-length quantity (delta time) for MIDI
-    function toVLQ(value) {
-        if (value === 0) return [0];
-
-        const bytes = [];
-        let v = value;
-        bytes.unshift(v & 0x7F);
-        v >>= 7;
-        while (v > 0) {
-            bytes.unshift((v & 0x7F) | 0x80);
-            v >>= 7;
-        }
-        // Clear the high bit of the last byte
-        bytes[bytes.length - 1] &= 0x7F;
-        return bytes;
-    }
-
-    function writeVarInt(buffer, value) {
-        const vlq = toVLQ(value);
-        for (const b of vlq) {
-            buffer.push(b);
-        }
-    }
-
-    function writeString(buffer, str) {
-        for (let i = 0; i < str.length; i++) {
-            buffer.push(str.charCodeAt(i));
-        }
-    }
-
-    function intToVLQ(value) {
-        return toVLQ(value);
-    }
-
-    const buffer = [];
-
-    // MIDI Header Chunk: MThd
-    writeString(buffer, 'MThd');
-    buffer.push(0, 0, 0, 6); // Chunk length (6 bytes)
-    buffer.push(0, 0); // Format 0
-    buffer.push(0, 1); // 1 track
-    buffer.push((ticksPerQuarter >> 8) & 0xFF, ticksPerQuarter & 0xFF); // Division (ticks per quarter note)
-
-    // Build track data first
-    const trackBuffer = [];
-    let lastTick = 0;
-
-    for (const event of events) {
-        const deltaTick = event.tick - lastTick;
-        lastTick = event.tick;
-
-        writeVarInt(trackBuffer, deltaTick);
-
-        switch (event.type) {
-            case 'tempo':
-                trackBuffer.push(0xFF, 0x51, 0x03);
-                trackBuffer.push((event.value >> 16) & 0xFF);
-                trackBuffer.push((event.value >> 8) & 0xFF);
-                trackBuffer.push(event.value & 0xFF);
-                break;
-
-            case 'timeSig':
-                trackBuffer.push(0xFF, 0x58, 0x04);
-                trackBuffer.push(event.numerator);
-                trackBuffer.push(Math.log2(event.denominator));
-                trackBuffer.push(24); // Clocks per metronome click
-                trackBuffer.push(8); // 32nd notes per quarter note
-                break;
-
-            case 'trackName':
-                trackBuffer.push(0xFF, 0x03);
-                const nameBytes = new TextEncoder().encode(event.name);
-                trackBuffer.push(nameBytes.length);
-                for (const b of nameBytes) trackBuffer.push(b);
-                break;
-
-            case 'noteOn':
-                trackBuffer.push(0x90 | event.channel);
-                trackBuffer.push(event.note & 0x7F);
-                trackBuffer.push(event.velocity & 0x7F);
-                break;
-
-            case 'noteOff':
-                trackBuffer.push(0x80 | event.channel);
-                trackBuffer.push(event.note & 0x7F);
-                trackBuffer.push(0);
-                break;
-
-            case 'endOfTrack':
-                trackBuffer.push(0xFF, 0x2F, 0x00);
-                break;
-        }
-    }
-
-    // MIDI Track Chunk: MTrk
-    writeString(buffer, 'MTrk');
-    const trackLength = trackBuffer.length;
-    buffer.push((trackLength >> 24) & 0xFF);
-    buffer.push((trackLength >> 16) & 0xFF);
-    buffer.push((trackLength >> 8) & 0xFF);
-    buffer.push(trackLength & 0xFF);
-    for (const b of trackBuffer) buffer.push(b);
-
-    return new Uint8Array(buffer);
+export function hasAutoSavedProject() {
+    return localStorage.getItem(AUTOSAVE_KEY) !== null;
 }
+
+export function getAutoSavedProjectTimestamp() {
+    return localStorage.getItem(AUTOSAVE_TIMESTAMP_KEY) || null;
+}
+
+export async function recoverAutoSavedProject() {
+    try {
+        const savedJson = localStorage.getItem(AUTOSAVE_KEY);
+        if (!savedJson) {
+            console.log("[State recoverAutoSavedProject] No auto-saved project found");
+            return null;
+        }
+        const projectData = JSON.parse(savedJson);
+        console.log("[State recoverAutoSavedProject] Found auto-saved project, version:", projectData.version);
+        return projectData;
+    } catch (error) {
+        console.error("[State recoverAutoSavedProject] Error loading auto-saved project:", error);
+        return null;
+    }
+}
+
+export function clearAutoSavedProject() {
+    localStorage.removeItem(AUTOSAVE_KEY);
+    localStorage.removeItem(AUTOSAVE_TIMESTAMP_KEY);
+    console.log("[State] Auto-saved project cleared");
+}
+
+// --- Favorites and Recently Played for Sound Browser ---
+let favoriteSoundsGlobal = [];
+let recentlyPlayedGlobal = [];
+
+function loadFavoritesFromStorage() {
+    try {
+        const stored = localStorage.getItem(FAVORITES_KEY);
+        if (stored) {
+            favoriteSoundsGlobal = JSON.parse(stored);
+            console.log("[State] Favorites loaded:", favoriteSoundsGlobal.length);
+        }
+    } catch (e) {
+        console.warn("[State] Error loading favorites:", e);
+        favoriteSoundsGlobal = [];
+    }
+}
+
+function saveFavoritesToStorage() {
+    try {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoriteSoundsGlobal));
+    } catch (e) {
+        console.warn("[State] Error saving favorites:", e);
+    }
+}
+
+function makeSoundKey(sound) {
+    return `${sound.libraryName}:${sound.fullPath}`;
+}
+
+export function getFavoriteSounds() {
+    if (favoriteSoundsGlobal.length === 0) loadFavoritesFromStorage();
+    return [...favoriteSoundsGlobal];
+}
+
+export function isFavorite(sound) {
+    if (favoriteSoundsGlobal.length === 0) loadFavoritesFromStorage();
+    const key = makeSoundKey(sound);
+    return favoriteSoundsGlobal.some(f => makeSoundKey(f) === key);
+}
+
+export function toggleFavorite(sound) {
+    if (favoriteSoundsGlobal.length === 0) loadFavoritesFromStorage();
+    const key = makeSoundKey(sound);
+    const idx = favoriteSoundsGlobal.findIndex(f => makeSoundKey(f) === key);
+    if (idx >= 0) {
+        favoriteSoundsGlobal.splice(idx, 1);
+        console.log("[State] Removed from favorites:", sound.fileName);
+    } else {
+        favoriteSoundsGlobal.push({ ...sound, addedAt: Date.now() });
+        console.log("[State] Added to favorites:", sound.fileName);
+    }
+    saveFavoritesToStorage();
+    return idx >= 0; // returns true if was favorite (now removed), false if added
+}
+
+export function addToRecentlyPlayed(sound) {
+    try {
+        const stored = localStorage.getItem(RECENTLY_PLAYED_KEY);
+        recentlyPlayedGlobal = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        recentlyPlayedGlobal = [];
+    }
+    const key = makeSoundKey(sound);
+    // Remove if already exists (to move to top)
+    recentlyPlayedGlobal = recentlyPlayedGlobal.filter(f => makeSoundKey(f) !== key);
+    // Add to front
+    recentlyPlayedGlobal.unshift({ ...sound, playedAt: Date.now() });
+    // Trim to max
+    if (recentlyPlayedGlobal.length > MAX_RECENTLY_PLAYED) {
+        recentlyPlayedGlobal = recentlyPlayedGlobal.slice(0, MAX_RECENTLY_PLAYED);
+    }
+    try {
+        localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(recentlyPlayedGlobal));
+    } catch (e) {
+        console.warn("[State] Error saving recently played:", e);
+    }
+}
+
+export function getRecentlyPlayedSounds() {
+    // Only load from localStorage if the in-memory array is empty
+    // (prevents discarding the in-memory state that addToRecentlyPlayed just updated)
+    if (recentlyPlayedGlobal.length === 0) {
+        try {
+            const stored = localStorage.getItem(RECENTLY_PLAYED_KEY);
+            recentlyPlayedGlobal = stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            recentlyPlayedGlobal = [];
+        }
+    }
+    return [...recentlyPlayedGlobal];
+}
+
+export function clearRecentlyPlayed() {
+    recentlyPlayedGlobal = [];
+    localStorage.removeItem(RECENTLY_PLAYED_KEY);
+    console.log("[State] Recently played cleared");
+}
+
+// Initialize favorites on load
+loadFavoritesFromStorage();
 
 
 // Helper function to convert AudioBuffer to WAV
@@ -2259,6 +1424,3 @@ function writeString(view, offset, string) {
         view.setUint8(offset + i, string.charCodeAt(i));
     }
 }
-
-// ============================================
-// File ends here after removing duplicate
