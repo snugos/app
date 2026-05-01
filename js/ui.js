@@ -60,8 +60,10 @@ export function initializeUIModule(appServicesFromMain) {
     }
     if (!localAppServices.setSelectedSoundForPreview) {
         console.log('[UI Init] setSelectedSoundForPreview service not found in appServices, wiring locally.');
+        localAppServices.setSelectedSoundForPreview = (data) => {
             console.log('[UI setSelectedSoundForPreview] Setting selected sound data:', JSON.stringify(data));
             selectedSoundForPreviewData = data;
+        };
     }
 
     if (!localAppServices.effectsRegistryAccess) {
