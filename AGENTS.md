@@ -1,3 +1,55 @@
+#### Day 417: Punch Recording Functions Tests (2026-05-01)
+- **Feature**: Added 34 new unit tests for Punch Recording Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 34 new tests in Day 417 section:
+    - Punch Recording - scheduleRecordingForPunch is a function export
+    - Punch Recording - scheduleRecordingForPunch accepts 2 parameters
+    - Punch Recording - scheduleRecordingForPunch references trackId parameter
+    - Punch Recording - scheduleRecordingForPunch references onPunchOutTriggered parameter
+    - Punch Recording - scheduleRecordingForPunch clears previous scheduling
+    - Punch Recording - scheduleRecordingForPunch schedules Tone.Transport callback
+    - Punch Recording - scheduleRecordingForPunch references punchRegion.out
+    - Punch Recording - scheduleRecordingForPunch handles recorder state check
+    - Punch Recording - scheduleRecordingForPunch calls recorder.stop
+    - Punch Recording - scheduleRecordingForPunch calls onPunchOutTriggered callback
+    - Punch Recording - cancelScheduledRecording is a function export
+    - Punch Recording - cancelScheduledRecording accepts 0 parameters
+    - Punch Recording - cancelScheduledRecording clears recordingScheduledId
+    - Punch Recording - cancelScheduledRecording clears recordingScheduledTrackId
+    - Punch Recording - getRecordingScheduledTrackId is a function export
+    - Punch Recording - getRecordingScheduledTrackId accepts 0 parameters
+    - Punch Recording - getRecordingScheduledTrackId returns recordingScheduledTrackId
+    - Punch Recording - cleanupRecordingScheduling is a function export
+    - Punch Recording - cleanupRecordingScheduling accepts 0 parameters
+    - Punch Recording - cleanupRecordingScheduling calls cancelScheduledRecording
+    - Punch Recording - getPunchRegion is a function export
+    - Punch Recording - getPunchRegion accepts 0 parameters
+    - Punch Recording - setPunchRegion is a function export
+    - Punch Recording - setPunchRegion accepts 2 parameters
+    - Punch Recording - setPunchRegion references inBars parameter
+    - Punch Recording - setPunchRegion references outBars parameter
+    - Punch Recording - setPunchRegionEnabled is a function export
+    - Punch Recording - setPunchRegionEnabled accepts 1 parameter
+    - Punch Recording - isPunchRegionEnabled is a function export
+    - Punch Recording - isPunchRegionEnabled accepts 0 parameters
+    - Punch Recording - isPositionInPunchRegion is a function export
+    - Punch Recording - isPositionInPunchRegion accepts 1 parameter
+    - Punch Recording - isPositionInPunchRegion references positionString parameter
+    - Punch Recording - APP_VERSION validation for Day 417
+  - `js/constants.js`: Bumped APP_VERSION to 2.95.0
+- **Feature Details**:
+  - Tests validate scheduleRecordingForPunch function (2 params: trackId, onPunchOutTriggered)
+  - Tests validate scheduleRecordingForPunch schedules Tone.Transport callback for punch-out
+  - Tests validate scheduleRecordingForPunch handles recorder state check and calls recorder.stop
+  - Tests validate cancelScheduledRecording function (0 params, clears recordingScheduledId and recordingScheduledTrackId)
+  - Tests validate getRecordingScheduledTrackId function (0 params, returns recordingScheduledTrackId)
+  - Tests validate cleanupRecordingScheduling function (0 params, calls cancelScheduledRecording)
+  - Tests validate Punch Region state functions (getPunchRegion, setPunchRegion, setPunchRegionEnabled, isPunchRegionEnabled)
+  - Tests validate isPositionInPunchRegion function (1 param: positionString, calculates position in punch region)
+  - Tests validate isPositionInPunchRegion checks punchRegion.enabled and calculates total sixteenths
+  - Tests validate getPunchInBars and getPunchOutBars functions (0 params each)
+  - Total tests increased from 12262 to 12492
+- **Version**: Bumped to 2.95.0
 #### Day 416: Automation & Count-In Audio Functions Tests (2026-05-01)
 - **Feature**: Added 35 new unit tests for Automation and Count-In Audio Functions to expand test coverage
 - **Files Modified**:
