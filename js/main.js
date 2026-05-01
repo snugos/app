@@ -21,7 +21,10 @@ import {
     openMasterEffectsRackWindow,
     renderTimeline,
     updatePlayheadPosition,
-    openTimelineWindow
+    openTimelineWindow,
+    showKeyboardShortcutsHelpWindow,
+    openTrackTemplatesWindow,
+    openSendEffectsWindow
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -503,6 +506,9 @@ const appServices = {
     openMixerWindow,
     openMasterEffectsRackWindow,
     openGlobalControlsWindow,
+    showKeyboardShortcutsHelpWindow,
+    openTrackTemplatesWindow,
+    openSendEffectsWindow,
 
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,
