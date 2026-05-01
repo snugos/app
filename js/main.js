@@ -147,6 +147,14 @@ function panicStopAllAudio() {
 
 // panicStopAllAudio is now defined above
 
+function removeCustomDesktopBackground() {
+    localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
+    localStorage.removeItem(DESKTOP_BG_TYPE_KEY);
+    bgDb.delete('desktopVideo').catch(() => {});
+    applyDesktopBackground(null, 'default');
+    showSafeNotification('Custom background removed.', 2000);
+}
+
 const appServices = {
     updateTaskbarTempoDisplay: (tempo) => {
         if (uiElementsCache.taskbarTempoDisplay) {
@@ -439,6 +447,14 @@ const appServices = {
 
     handleOpenEffectsRack: (trackId) => {
         if (appServices.openEffectsRackWindow) appServices.openEffectsRackWindow(trackId);
+    },
+
+    openEffectsRackWindow: (trackId, savedState = null) => {
+        if (typeof openTrackEffectsRackWindow === 'function') {
+            openTrackEffectsRackWindow(trackId, savedState);
+        } else {
+            console.warn("openTrackEffectsRackWindow function not available.");
+        }
     },
 
     handleOpenSequencer: (trackId) => {
