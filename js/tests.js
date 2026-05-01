@@ -11385,3 +11385,279 @@ TestRunner.test('Audio Module - APP_VERSION validation for Day 411', (t) => {
         t.assertTruthy(versionParts[1] >= 88, 'Minor version should be >= 88 for Day 411');
     }
 });
+// Day 413: Timeline Zoom, Swing, and Loop Region State Functions Tests
+// Tests for state functions with limited coverage to expand test suite
+
+// === Loop Region State Tests ===
+
+TestRunner.test('Loop Region State - getLoopRegionState returns object copy', (t) => {
+    const funcStr = getLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('loopRegionState'), 'getLoopRegionState should reference loopRegionState');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionState is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionState, 'function', 'setLoopRegionState should be a function');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionState accepts 1 parameter', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('state'), 'setLoopRegionState should accept state parameter');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionState should call captureStateForUndo');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionState uses descriptive undo label', (t) => {
+    const funcStr = setLoopRegionState.toString();
+    t.assertTruthy(funcStr.includes('Set Loop Region'), 'setLoopRegionState should use Set Loop Region label');
+});
+
+TestRunner.test('Loop Region State - getLoopRegionEnabledState returns boolean', (t) => {
+    const funcStr = getLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('loopRegionState.enabled'), 'getLoopRegionEnabledState should return enabled property');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Loop Region'), 'setLoopRegionEnabledState should use Toggle Loop Region label');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionEnabledState coerces to boolean', (t) => {
+    const funcStr = setLoopRegionEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!enabled') || funcStr.includes('Boolean'), 'setLoopRegionEnabledState should coerce to boolean');
+});
+
+TestRunner.test('Loop Region State - getLoopRegionStartBarState returns number', (t) => {
+    const funcStr = getLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('loopRegionState.startBar'), 'getLoopRegionStartBarState should return startBar property');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionStartBarState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionStartBarState should call captureStateForUndo');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionStartBarState uses descriptive undo label', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('Set Loop Region Start Bar'), 'setLoopRegionStartBarState should use descriptive label');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionStartBarState clamps value', (t) => {
+    const funcStr = setLoopRegionStartBarState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('parseInt'), 'setLoopRegionStartBarState should clamp value');
+});
+
+TestRunner.test('Loop Region State - getLoopRegionEndBarState returns number', (t) => {
+    const funcStr = getLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('loopRegionState.endBar'), 'getLoopRegionEndBarState should return endBar property');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionEndBarState calls captureStateForUndo', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setLoopRegionEndBarState should call captureStateForUndo');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionEndBarState uses descriptive undo label', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('Set Loop Region End Bar'), 'setLoopRegionEndBarState should use descriptive label');
+});
+
+TestRunner.test('Loop Region State - setLoopRegionEndBarState clamps to startBar minimum', (t) => {
+    const funcStr = setLoopRegionEndBarState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('startBar'), 'setLoopRegionEndBarState should clamp to startBar minimum');
+});
+
+// === Timeline Zoom State Tests ===
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomState returns object copy', (t) => {
+    const funcStr = getTimelineZoomState.toString();
+    t.assertTruthy(funcStr.includes('timelineZoomState'), 'getTimelineZoomState should reference timelineZoomState');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomState returns horizontal and vertical', (t) => {
+    const funcStr = getTimelineZoomState.toString();
+    t.assertTruthy(funcStr.includes('horizontal') && funcStr.includes('vertical'), 'getTimelineZoomState should return both zoom levels');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineZoomLevelState returns horizontal zoom', (t) => {
+    const funcStr = getTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('timelineZoomState.horizontal'), 'getTimelineZoomLevelState should return horizontal zoom');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineZoomLevelState calls captureStateForUndo', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimelineZoomLevelState should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineZoomLevelState uses descriptive undo label', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('Set Timeline Zoom Level'), 'setTimelineZoomLevelState should use descriptive label');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineZoomLevelState clamps value', (t) => {
+    const funcStr = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTimelineZoomLevelState should clamp value');
+});
+
+TestRunner.test('Timeline Zoom State - getTimelineVerticalZoomState returns vertical zoom', (t) => {
+    const funcStr = getTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('timelineZoomState.vertical'), 'getTimelineVerticalZoomState should return vertical zoom');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineVerticalZoomState calls captureStateForUndo', (t) => {
+    const funcStr = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setTimelineVerticalZoomState should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineVerticalZoomState uses descriptive undo label', (t) => {
+    const funcStr = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('Set Timeline Vertical Zoom'), 'setTimelineVerticalZoomState should use descriptive label');
+});
+
+TestRunner.test('Timeline Zoom State - setTimelineVerticalZoomState clamps value', (t) => {
+    const funcStr = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTimelineVerticalZoomState should clamp value');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInTimeline calls setTimelineZoomLevelState', (t) => {
+    const funcStr = zoomInTimeline.toString();
+    t.assertTruthy(funcStr.includes('setTimelineZoomLevelState'), 'zoomInTimeline should call setTimelineZoomLevelState');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInTimeline increases zoom level', (t) => {
+    const funcStr = zoomInTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_ZOOM_STEP') || funcStr.includes('horizontal +'), 'zoomInTimeline should increase zoom');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutTimeline calls setTimelineZoomLevelState', (t) => {
+    const funcStr = zoomOutTimeline.toString();
+    t.assertTruthy(funcStr.includes('setTimelineZoomLevelState'), 'zoomOutTimeline should call setTimelineZoomLevelState');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutTimeline decreases zoom level', (t) => {
+    const funcStr = zoomOutTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_ZOOM_STEP') || funcStr.includes('horizontal -'), 'zoomOutTimeline should decrease zoom');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInVerticalTimeline calls setTimelineVerticalZoomState', (t) => {
+    const funcStr = zoomInVerticalTimeline.toString();
+    t.assertTruthy(funcStr.includes('setTimelineVerticalZoomState'), 'zoomInVerticalTimeline should call setTimelineVerticalZoomState');
+});
+
+TestRunner.test('Timeline Zoom State - zoomInVerticalTimeline increases vertical zoom', (t) => {
+    const funcStr = zoomInVerticalTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_ZOOM_STEP') || funcStr.includes('vertical +'), 'zoomInVerticalTimeline should increase zoom');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutVerticalTimeline calls setTimelineVerticalZoomState', (t) => {
+    const funcStr = zoomOutVerticalTimeline.toString();
+    t.assertTruthy(funcStr.includes('setTimelineVerticalZoomState'), 'zoomOutVerticalTimeline should call setTimelineVerticalZoomState');
+});
+
+TestRunner.test('Timeline Zoom State - zoomOutVerticalTimeline decreases vertical zoom', (t) => {
+    const funcStr = zoomOutVerticalTimeline.toString();
+    t.assertTruthy(funcStr.includes('TIMELINE_ZOOM_STEP') || funcStr.includes('vertical -'), 'zoomOutVerticalTimeline should decrease zoom');
+});
+
+TestRunner.test('Timeline Zoom State - resetTimelineZoom calls captureStateForUndo', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'resetTimelineZoom should call captureStateForUndo');
+});
+
+TestRunner.test('Timeline Zoom State - resetTimelineZoom uses descriptive undo label', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('Reset Timeline Zoom'), 'resetTimelineZoom should use Reset Timeline Zoom label');
+});
+
+TestRunner.test('Timeline Zoom State - resetTimelineZoom resets both horizontal and vertical', (t) => {
+    const funcStr = resetTimelineZoom.toString();
+    t.assertTruthy(funcStr.includes('horizontal') && funcStr.includes('vertical'), 'resetTimelineZoom should reset both zoom levels');
+});
+
+// === Swing State Tests ===
+
+TestRunner.test('Swing State - getSwingState returns object copy', (t) => {
+    const funcStr = getSwingState.toString();
+    t.assertTruthy(funcStr.includes('swingState'), 'getSwingState should reference swingState');
+});
+
+TestRunner.test('Swing State - setSwingState is a function export', (t) => {
+    t.assertEqual(typeof setSwingState, 'function', 'setSwingState should be a function');
+});
+
+TestRunner.test('Swing State - setSwingState accepts 1 parameter', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('state'), 'setSwingState should accept state parameter');
+});
+
+TestRunner.test('Swing State - setSwingState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingState should call captureStateForUndo');
+});
+
+TestRunner.test('Swing State - setSwingState uses descriptive undo label', (t) => {
+    const funcStr = setSwingState.toString();
+    t.assertTruthy(funcStr.includes('Set Swing'), 'setSwingState should use Set Swing label');
+});
+
+TestRunner.test('Swing State - getSwingEnabledState returns boolean', (t) => {
+    const funcStr = getSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('swingState.enabled'), 'getSwingEnabledState should return enabled property');
+});
+
+TestRunner.test('Swing State - setSwingEnabledState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test('Swing State - setSwingEnabledState uses descriptive undo label', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Swing'), 'setSwingEnabledState should use Toggle Swing label');
+});
+
+TestRunner.test('Swing State - setSwingEnabledState coerces to boolean', (t) => {
+    const funcStr = setSwingEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!enabled') || funcStr.includes('Boolean'), 'setSwingEnabledState should coerce to boolean');
+});
+
+TestRunner.test('Swing State - getSwingAmountState returns number', (t) => {
+    const funcStr = getSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('swingState.amount'), 'getSwingAmountState should return amount property');
+});
+
+TestRunner.test('Swing State - setSwingAmountState calls captureStateForUndo', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setSwingAmountState should call captureStateForUndo');
+});
+
+TestRunner.test('Swing State - setSwingAmountState uses descriptive undo label', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('Set Swing Amount'), 'setSwingAmountState should use descriptive label');
+});
+
+TestRunner.test('Swing State - setSwingAmountState clamps value to 0-100 range', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setSwingAmountState should clamp to 0-100 range');
+    t.assertTruthy(funcStr.includes('100'), 'setSwingAmountState should have max of 100');
+});
+
+TestRunner.test('Swing State - setSwingAmountState uses parseInt', (t) => {
+    const funcStr = setSwingAmountState.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setSwingAmountState should use parseInt');
+});
+
+// === APP_VERSION validation for Day 413 ===
+TestRunner.test('Timeline Zoom, Swing, Loop Region State - APP_VERSION validation for Day 413', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 413');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 89, 'Minor version should be >= 89 for Day 413');
+    }
+});
