@@ -54,7 +54,6 @@ import {
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
     gatherProjectDataInternal, reconstructDAWInternal, saveProjectInternal,
     loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal, exportStemsInternal,
-    exportToMidiInternal, importFromMidiInternal,
     // Auto-save
     startAutoSave, stopAutoSave,
     // Auto-save (aliased for appServices surface)
@@ -75,6 +74,8 @@ import {
     getProjectNameState, setProjectNameState,
     // Synth Presets
     getSynthPresets, saveSynthPreset, deleteSynthPreset,
+    // Muted Track Ids
+    getMutedTrackIdsState, setMutedTrackIdsState,
 } from './state.js';
 import { DESKTOP_BACKGROUND_KEY, DESKTOP_BG_TYPE_KEY } from './constants.js';
 import { getAudio as bgDbGet, storeAudio as bgDbStore, deleteAudio as bgDbDelete } from './db.js';
@@ -481,6 +482,10 @@ const appServices = {
         if (appServices.removeTrack) appServices.removeTrack(trackId);
     },
 
+    panicStopAllAudio: panicStopAllAudio,
+    getMutedTrackIds: getMutedTrackIdsState,
+    setMutedTrackIds: setMutedTrackIdsState,
+
     handleOpenTrackInspector: (trackId) => {
         if (typeof openTrackInspectorWindow === 'function') openTrackInspectorWindow(trackId);
     },
@@ -655,6 +660,15 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                             }
                         }
                     }
+                }
+                break;
+            case 'trackColorChanged':
+                // Update mixer and timeline if they're open
+                if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
+                    appServices.updateMixerWindow();
+                }
+                if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') {
+                    appServices.renderTimeline();
                 }
                 break;
             default:
