@@ -187,6 +187,8 @@ function removeCustomDesktopBackground() {
 }
 
 const appServices = {
+    // Event Handler Passthroughs
+    selectMIDIInput: eventSelectMIDIInput,
     updateTaskbarTempoDisplay: (tempo) => {
         if (uiElementsCache.taskbarTempoDisplay) {
             uiElementsCache.taskbarTempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;

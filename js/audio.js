@@ -848,6 +848,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
 export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false) {
 
     const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
+    const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
 
     if (loadedZips && typeof loadedZips === 'object') { // Ensure loadedZips is an object before keying
 
