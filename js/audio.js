@@ -888,6 +888,14 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         const zipData = await response.arrayBuffer();
         const loadedZipInstance = await new JSZip().loadAsync(zipData);
 
+        // Build fileTree from loadedZipInstance
+        const fileTree = {};
+        const files = Object.keys(loadedZipInstance.files);
+        for (const file of files) {
+            if (!file.endsWith('/') && !file.startsWith('_')) {
+                fileTree[file] = loadedZipInstance.files[file];
+            }
+        }
         const latestSoundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
         latestSoundTrees[libraryName] = fileTree;
 
