@@ -486,6 +486,8 @@ const appServices = {
     },
 
     panicStopAllAudio: panicStopAllAudio,
+    undoLastAction: undoLastActionInternal,
+    redoLastAction: redoLastActionInternal,
     getMutedTrackIds: getMutedTrackIdsState,
     setMutedTrackIds: setMutedTrackIdsState,
 
@@ -1328,18 +1330,6 @@ window.addEventListener('beforeunload', (e) => {
         return "You have unsaved changes. Are you sure you want to leave?"; 
     }
 });
-
-window.addEventListener('load', () => {
-    const startBtn = document.getElementById('startButton');
-    const startMenu = document.getElementById('startMenu');
-    if (startBtn && startMenu) {
-        startBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            startMenu.classList.toggle('hidden');
-        });
-    } else {
-        console.error('[Main] Start button or menu not found');
     }
 });
 
