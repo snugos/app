@@ -9,7 +9,7 @@ import { showNotification as utilShowNotification, createContextMenu, createDrop
 import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
-    handleTimelineLaneDrop
+    handleTimelineLaneDrop, selectMIDIInput
 } from './eventHandlers.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
@@ -188,7 +188,7 @@ function removeCustomDesktopBackground() {
 
 const appServices = {
     // Event Handler Passthroughs
-    selectMIDIInput: eventSelectMIDIInput,
+    selectMIDIInput: selectMIDIInput,
     updateTaskbarTempoDisplay: (tempo) => {
         if (uiElementsCache.taskbarTempoDisplay) {
             uiElementsCache.taskbarTempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
