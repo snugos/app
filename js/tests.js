@@ -13027,3 +13027,115 @@ TestRunner.test('SnugWindow - APP_VERSION validation for Day 418', (t) => {
         t.assertTruthy(versionParts[1] >= 95, 'Minor version should be >= 95 for Day 418');
     }
 });
+
+// === Day 419: Missing State Functions Undo/Redo Verification Tests ===
+
+TestRunner.test('State Functions - setProjectNameState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setProjectNameState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setProjectNameState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setLoadedZipFilesState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setLoadedZipFilesState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setLoadedZipFilesState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setSoundLibraryFileTreesState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setSoundLibraryFileTreesState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setSoundLibraryFileTreesState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setMutedTrackIdsState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setMutedTrackIdsState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setHighestZState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setHighestZState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setHighestZState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setMasterEffectsState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setMasterEffectsState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setMasterEffectsState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setMasterGainValueState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setMasterGainValueState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setMasterGainValueState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setMidiAccessState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setMidiAccessState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setMidiAccessState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setActiveMIDIInputState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setActiveMIDIInputState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setActiveMIDIInputState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setCurrentLibraryNameState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setCurrentLibraryNameState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setCurrentLibraryNameState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setCurrentSoundFileTreeState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setCurrentSoundFileTreeState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setCurrentSoundBrowserPathState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setCurrentSoundBrowserPathState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setPreviewPlayerState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setPreviewPlayerState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setPreviewPlayerState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setClipboardDataState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setClipboardDataState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setClipboardDataState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setArmedTrackIdState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setArmedTrackIdState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setIsRecordingState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setIsRecordingState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setIsRecordingState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setRecordingTrackIdState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setRecordingTrackIdState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setRecordingTrackIdState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setRecordingStartTimeState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setRecordingStartTimeState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setRecordingStartTimeState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setActiveSequencerTrackIdState does NOT call captureStateForUndo', (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setActiveSequencerTrackIdState should NOT call captureStateForUndo');
+});
+
+TestRunner.test('State Functions - setPlaybackModeStateInternal does NOT call captureStateForUndo directly', (t) => {
+    const funcBody = setPlaybackModeStateInternal.toString();
+    // setPlaybackModeStateInternal uses captureStateForUndo through appServices, not directly
+    t.assertTruthy(!funcBody.includes('captureStateForUndoInternal'), 'setPlaybackModeStateInternal should NOT call captureStateForUndoInternal directly');
+});
+
+TestRunner.test('Day 419 - APP_VERSION validation for Day 419', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 419');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 97, 'Minor version should be >= 97 for Day 419');
+    }
+});
+

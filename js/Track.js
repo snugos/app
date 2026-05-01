@@ -22,7 +22,7 @@ export class Track {
         console.log(`[Track ${this.id} Constructor] Initializing track "${this.name}" of type "${this.type}". InitialData present: ${!!initialData}`);
 
         this.isMuted = ((initialData) && (initialData).isMuted) || false;
-        this.isMonitoringEnabled = ((initialData) && (initialData).isMonitoringEnabled) !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio'); 
+        this.isMonitoringEnabled = initialData?.isMonitoringEnabled ?? (this.type === 'Audio'); 
 
         const currentSoloedId = this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
         this.isSoloed = currentSoloedId === this.id;
@@ -54,10 +54,10 @@ export class Track {
                 loop: false, reverse: false,
                 envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
             }));
-        this.selectedSliceForEdit = ((initialData) && (initialData).selectedSliceForEdit) || 0;
-        this.waveformZoom = ((initialData) && (initialData).waveformZoom) || 1;
-        this.waveformScrollOffset = ((initialData) && (initialData).waveformScrollOffset) || 0;
-        this.slicerIsPolyphonic = ((initialData) && (initialData).slicerIsPolyphonic) !== undefined ? initialData.slicerIsPolyphonic : true;
+        this.selectedSliceForEdit = initialData?.selectedSliceForEdit ?? 0;
+        this.waveformZoom = initialData?.waveformZoom ?? 1;
+        this.waveformScrollOffset = initialData?.waveformScrollOffset ?? 0;
+        this.slicerIsPolyphonic = initialData?.slicerIsPolyphonic ?? true;
         this.slicerMonoPlayer = null;
         this.slicerMonoEnvelope = null;
         this.slicerMonoGain = null;
