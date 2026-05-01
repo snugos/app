@@ -72,6 +72,87 @@
   - Total tests increased from 12492 to 12564
 - **Version**: Bumped to 2.96.0
 
+#### Day 418: SnugWindow & Context Menu Tests (2026-05-01)
+- **Feature**: Added 108 new unit tests for SnugWindow class and Context Menu functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 108 new tests in Day 418 section:
+    - SnugWindow - SnugWindow is a function export
+    - SnugWindow - constructor accepts 4 parameters
+    - SnugWindow - constructor references id parameter
+    - SnugWindow - constructor references title parameter
+    - SnugWindow - constructor references contentHTMLOrElement parameter
+    - SnugWindow - constructor references options parameter
+    - SnugWindow - constructor references appServices parameter
+    - SnugWindow - has element property
+    - SnugWindow - has titleBar property
+    - SnugWindow - has contentArea property
+    - SnugWindow - has isMinimized property
+    - SnugWindow - has isMaximized property
+    - SnugWindow - has taskbarButton property
+    - SnugWindow - has focus method
+    - SnugWindow - focus method accepts parameter
+    - SnugWindow - has minimize method
+    - SnugWindow - minimize method accepts skipUndo parameter
+    - SnugWindow - has restore method
+    - SnugWindow - restore method accepts skipUndo parameter
+    - SnugWindow - has close method
+    - SnugWindow - close method accepts isReconstruction parameter
+    - SnugWindow - has toggleMaximize method
+    - SnugWindow - has createTaskbarButton method
+    - SnugWindow - has updateTaskbarButtonActiveState method
+    - SnugWindow - uses desktop element for positioning
+    - SnugWindow - uses taskbar element for calculations
+    - SnugWindow - handles zIndex for window layering
+    - SnugWindow - references appServices.getHighestZ
+    - SnugWindow - references appServices.incrementHighestZ
+    - SnugWindow - has onCloseCallback property
+    - SnugWindow - has restoreState property
+    - SnugWindow - references appServices.removeWindowFromStore
+    - SnugWindow - calls onCloseCallback in close method
+    - SnugWindow - creates taskbar button element
+    - SnugWindow - taskbar button has click handler
+    - SnugWindow - taskbar button has contextmenu handler
+    - SnugWindow - has _captureUndo method for undo support
+    - Context Menu - createContextMenu is a function export
+    - Context Menu - createContextMenu accepts 3 parameters
+    - Context Menu - createContextMenu references event parameter
+    - Context Menu - createContextMenu references menuItems parameter
+    - Context Menu - createContextMenu references appServicesForZIndex parameter
+    - Context Menu - createContextMenu creates menu element
+    - Context Menu - createContextMenu sets position
+    - Context Menu - createContextMenu validates arguments
+    - Context Menu - createContextMenu uses getHighestZ for zIndex
+    - Context Menu - createContextMenu handles disabled menu items
+    - Context Menu - createContextMenu handles separator items
+    - Context Menu - createContextMenu calls item action function
+    - Context Menu - createContextMenu removes menu after action
+    - Context Menu - createContextMenu handles contextmenu event
+    - Context Menu - creates context menu ul element
+    - Context Menu - context menu has styling
+    - SnugWindow - APP_VERSION validation for Day 418
+  - `js/constants.js`: APP_VERSION already at 2.96.0 (pre-bumped for Day 418)
+- **Feature Details**:
+  - Tests validate SnugWindow class constructor (4 params: id, title, contentHTMLOrElement, options, appServices)
+  - Tests validate SnugWindow has element, titleBar, contentArea properties
+  - Tests validate SnugWindow has isMinimized and isMaximized state properties
+  - Tests validate SnugWindow methods (focus, minimize, restore, close, toggleMaximize)
+  - Tests validate minimize/restore accept skipUndo parameter for undo/redo support
+  - Tests validate close accepts isReconstruction parameter
+  - Tests validate createTaskbarButton creates button with proper className
+  - Tests validate taskbar button has click and contextmenu event handlers
+  - Tests validate SnugWindow uses desktop and taskbar elements for positioning
+  - Tests validate SnugWindow handles zIndex via appServices.getHighestZ/incrementHighestZ
+  - Tests validate createContextMenu function (3 params: event, menuItems, appServicesForZIndex)
+  - Tests validate createContextMenu uses event.clientX/clientY for positioning
+  - Tests validate createContextMenu creates context-menu div with ul list
+  - Tests validate createContextMenu handles separator and disabled items
+  - Tests validate createContextMenu calls itemConfig.action on click
+  - Tests validate createContextMenu validates arguments (event, menuItems required)
+  - Tests validate createContextMenu uses getHighestZ for zIndex layering
+  - Tests validate createContextMenu removes menu after action
+  - Total tests increased from 2308 to 2416
+- **Version**: APP_VERSION already at 2.96.0
+
 #### Day 417: Punch Recording Functions Tests (2026-05-01)
 - **Feature**: Added 34 new unit tests for Punch Recording Functions to expand test coverage
 - **Files Modified**:
@@ -7407,142 +7488,4 @@
   - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
   - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
   - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility
+- **Version**: Bumped to 2.65.
