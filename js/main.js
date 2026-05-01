@@ -1330,8 +1330,6 @@ window.addEventListener('beforeunload', (e) => {
         return "You have unsaved changes. Are you sure you want to leave?"; 
     }
 });
-    }
-});
 
 console.log(`SCRIPT EXECUTION FINISHED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
 window._snugOSMainLoaded = true;
