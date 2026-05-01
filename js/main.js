@@ -536,7 +536,6 @@ const appServices = {
     cleanupRecordingScheduling,
     exportToWav: exportToWavInternal,
     exportToMidi: exportToMidiInternal,
-    importFromMidiInternal,
     importFromMidi: importFromMidiInternal,
 
     saveProject: saveProjectInternal,
