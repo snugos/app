@@ -181,8 +181,10 @@
             <li id="menuAddSamplerTrack">Add Slicer Sampler Track</li>
             <li id="menuAddDrumSamplerTrack">Add Sampler (Pads)</li>
             <li id="menuAddInstrumentSamplerTrack">Add Instrument Sampler Track</li>
+            <li id="menuAddAudioTrack">Add Audio Track</li>
             <li><hr></li>
             <li id="menuOpenSoundBrowser">Sound Browser</li>
+            <li id="menuImportAudioFile">Import Audio File</li>
             <li><hr></li>
             <li id="menuOpenMixer">Mixer</li>
             <li id="menuOpenMasterEffects">Master Effects Rack</li>
@@ -193,7 +195,13 @@
             <li id="menuSaveProject">Save Project (.snug)</li>
             <li id="menuLoadProject">Load Project (.snug)</li>
             <li id="menuExportWav">Export to WAV</li>
+            <li id="menuExportMidi">Export to MIDI</li>
+            <li id="menuImportMidi">Import MIDI</li>
             <li><hr></li>
+            <li id="menuSaveTrackAsTemplate">Save Track as Template</li>
+            <li id="menuOpenTrackTemplates">Track Templates</li>
+            <li><hr></li>
+            <li id="menuKeyboardShortcuts">Keyboard Shortcuts</li>
             <li id="menuToggleFullScreen">Toggle Full Screen</li>
         </ul>
     </div>
@@ -201,6 +209,7 @@
     <input type="file" id="loadProjectInput" class="hidden" accept=".snug">
     <input type="file" id="customBgInput" class="hidden" accept="image/*,video/*">
     <input type="file" id="sampleFileInput" class="hidden" accept="audio/*">
+    <input type="file" id="midiFileInput" class="hidden" accept=".mid,.midi">
 
 
     <div id="notification-area"></div>
