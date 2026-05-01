@@ -1424,3 +1424,509 @@ function writeString(view, offset, string) {
         view.setUint8(offset + i, string.charCodeAt(i));
     }
 }
+
+// ============================================
+// MIDI Export/Import Functions (Day 369/370)
+// ============================================
+
+// Helper: Convert note name and octave to MIDI note number
+export function noteNameToMidiNumber(noteName, octave) {
+    const NOTE_MAP = { 'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11 };
+    const note = NOTE_MAP[noteName];
+    if (note === undefined) return 60; // Default to C4
+    return (octave + 1) * 12 + note;
+}
+
+// Helper: Convert row index (0-127) to MIDI note number based on track type
+export function pitchToRow(rowIndex, trackType) {
+    if (trackType === 'Synth') {
+        // Synth uses C4 (MIDI 60) as the base for row 0
+        return 60 + rowIndex;
+    } else if (trackType === 'DrumSampler') {
+        // DrumSampler uses samplerMIDINoteStart (36/C2) as the base
+        return 36 + rowIndex;
+    } else if (trackType === 'Sampler') {
+        // Sampler uses MIDI 0 as base (chromatic)
+        return rowIndex;
+    }
+    return 60 + rowIndex;
+}
+
+// Helper: Convert MIDI note number to row index based on track type
+function midiToRow(midiNote, trackType) {
+    if (trackType === 'Synth') {
+        return midiNote - 60;
+    } else if (trackType === 'DrumSampler') {
+        return midiNote - 36;
+    } else if (trackType === 'Sampler') {
+        return midiNote;
+    }
+    return midiNote - 60;
+}
+
+// Helper: Variable Length Quantity (VLQ) encoding for MIDI
+function toVLQ(value) {
+    if (value < 0) value = 0;
+    const bytes = [];
+    bytes.unshift(value & 0x7F);
+    value >>= 7;
+    while (value > 0) {
+        bytes.unshift((value & 0x7F) | 0x80);
+        value >>= 7;
+    }
+    return bytes;
+}
+
+// Helper: Convert ticks to delta time VLQ
+function ticksToVLQ(ticks) {
+    return toVLQ(ticks);
+}
+
+// Build MIDI file from events array
+// Events: { type: 'noteOn'|'noteOff'|'tempo'|'timeSig'|'trackName'|'endOfTrack', time: ticks, data: [...] }
+export function buildMidiFile(events, ticksPerQuarter = 480) {
+    const TICKS_PER_QUARTER = ticksPerQuarter || 480;
+    // Sort events by time
+    const sortedEvents = [...events].sort((a, b) => a.time - b.time);
+    let lastTime = 0;
+    const trackEvents = [];
+    
+    for (const evt of sortedEvents) {
+        const deltaTime = Math.max(0, evt.time - lastTime);
+        lastTime = evt.time;
+        const deltaVLQ = ticksToVLQ(deltaTime);
+        
+        if (evt.type === 'noteOn') {
+            trackEvents.push(...deltaVLQ, 0x90 | (evt.channel || 0), evt.data[0], evt.data[1]); // note, velocity
+        } else if (evt.type === 'noteOff') {
+            trackEvents.push(...deltaVLQ, 0x80 | (evt.channel || 0), evt.data[0], 0); // velocity 0
+        } else if (evt.type === 'tempo') {
+            // Tempo meta event: FF 51 03 tt tt tt (microseconds per quarter note)
+            trackEvents.push(...deltaVLQ, 0xFF, 0x51, 0x03, ...evt.data);
+        } else if (evt.type === 'timeSig') {
+            // Time signature meta event: FF 58 04 nn dd cc bb
+            trackEvents.push(...deltaVLQ, 0xFF, 0x58, 0x04, ...evt.data);
+        } else if (evt.type === 'trackName') {
+            // Track name meta event: FF 03 len str
+            const nameBytes = Array.from(evt.data[0] || evt.trackName || 'Track');
+            trackEvents.push(...deltaVLQ, 0xFF, 0x03, nameBytes.length, ...nameBytes);
+        } else if (evt.type === 'endOfTrack') {
+            // End of track: FF 2F 00
+            trackEvents.push(...deltaVLQ, 0xFF, 0x2F, 0x00);
+        }
+    }
+    
+    // Ensure end of track
+    const lastEvt = sortedEvents[sortedEvents.length - 1];
+    const finalDelta = lastEvt ? ticksToVLQ(1) : [0];
+    trackEvents.push(...finalDelta, 0xFF, 0x2F, 0x00);
+    
+    // Build track chunk (MTrk)
+    const trackData = new Uint8Array(trackEvents);
+    const trackChunk = new Uint8Array(8 + trackData.length);
+    const trackView = new DataView(trackChunk.buffer);
+    // MTrk header
+    trackView.setUint8(0, 0x4D); // 'M'
+    trackView.setUint8(1, 0x54); // 'T'
+    trackView.setUint8(2, 0x72); // 'r'
+    trackView.setUint8(3, 0x6B); // 'k'
+    // Track length
+    trackView.setUint32(4, trackData.length, false);
+    // Copy track data
+    trackChunk.set(trackData, 8);
+    
+    // Build header chunk (MThd)
+    const headerChunk = new Uint8Array(14);
+    const headerView = new DataView(headerChunk.buffer);
+    // MThd header
+    headerView.setUint8(0, 0x4D); // 'M'
+    headerView.setUint8(1, 0x54); // 'T'
+    headerView.setUint8(2, 0x68); // 'h'
+    headerView.setUint8(3, 0x64); // 'd'
+    // Header length (6)
+    headerView.setUint32(4, 6, false);
+    // Format type 0 (single track)
+    headerView.setUint16(6, 0, false);
+    // Number of tracks
+    headerView.setUint16(8, 1, false);
+    // Ticks per quarter note
+    headerView.setUint16(10, TICKS_PER_QUARTER, false);
+    
+    // Combine header and track
+    const midiFile = new Uint8Array(headerChunk.length + trackChunk.length);
+    midiFile.set(headerChunk, 0);
+    midiFile.set(trackChunk, headerChunk.length);
+    
+    return midiFile;
+}
+
+// Export to MIDI file
+export async function exportToMidiInternal() {
+    const { getTracksState, getPlaybackModeState, getTempoState, getTimeSignatureState } = await import('./state.js');
+    
+    if (!appServices || !appServices.showNotification) {
+        console.error("[MIDI Export] appServices not available");
+        return;
+    }
+    
+    const tracks = getTracksState();
+    if (!tracks || tracks.length === 0) {
+        appServices.showNotification("No tracks to export.", 3000);
+        return;
+    }
+    
+    const tempo = getTempoState();
+    const timeSig = getTimeSignatureState();
+    const ticksPerQuarter = Constants.MIDI_EXPORT_TicksPerQuarterNote || 480;
+    const channel = Constants.MIDI_DEFAULT_CHANNEL || 0;
+    const velocityScale = Constants.MIDI_EXPORT_VELOCITY_SCALE || 127;
+    const filePrefix = Constants.DEFAULT_MIDI_EXPORT_FILENAME_PREFIX || 'snugos-export';
+    
+    // Collect all note events from all tracks
+    const allEvents = [];
+    const sixteenthNoteTime = Tone.Time("16n").toSeconds();
+    
+    for (const track of tracks) {
+        if (!track || track.type === 'Audio') continue;
+        if (track.type !== 'Synth' && track.type !== 'DrumSampler' && track.type !== 'Sampler') continue;
+        
+        const activeSeq = track.getActiveSequence();
+        if (!activeSeq || activeSeq.length === 0) continue;
+        
+        for (let step = 0; step < activeSeq.length; step++) {
+            const cell = activeSeq[step];
+            if (!cell || !cell.notes || cell.notes.length === 0) continue;
+            
+            const startTimeTicks = Math.round((step * sixteenthNoteTime * ticksPerQuarter) / (sixteenthNoteTime));
+            
+            for (const note of cell.notes) {
+                if (!note || note.probability === 0) continue;
+                
+                const midiPitch = pitchToRow(note.row || 0, track.type);
+                const velocity = Math.round((note.velocity || 0.8) * velocityScale);
+                const noteDurationTicks = Math.round((note.duration || 0.1) * ticksPerQuarter / (sixteenthNoteTime));
+                
+                // Note on
+                allEvents.push({
+                    type: 'noteOn',
+                    time: startTimeTicks,
+                    channel,
+                    data: [Math.max(0, Math.min(127, midiPitch)), Math.max(1, Math.min(127, velocity))]
+                });
+                
+                // Note off
+                allEvents.push({
+                    type: 'noteOff',
+                    time: startTimeTicks + noteDurationTicks,
+                    channel,
+                    data: [Math.max(0, Math.min(127, midiPitch)), 0]
+                });
+            }
+        }
+    }
+    
+    if (allEvents.length === 0) {
+        appServices.showNotification("No notes to export.", 3000);
+        return;
+    }
+    
+    // Sort by time
+    allEvents.sort((a, b) => a.time - b.time);
+    
+    // Add tempo and time signature events at the beginning
+    const microsecondsPerQuarter = Math.round(60000000 / tempo); // tempo is BPM
+    const events = [
+        { type: 'trackName', time: 0, trackName: 'SnugOS Export' },
+        { type: 'tempo', time: 0, data: [
+            (microsecondsPerQuarter >> 16) & 0xFF,
+            (microsecondsPerQuarter >> 8) & 0xFF,
+            microsecondsPerQuarter & 0xFF
+        ]},
+        { type: 'timeSig', time: 0, data: [
+            timeSig.numerator || 4,
+            Math.log2(timeSig.denominator || 4),
+            24, // clocks per metronome click
+            8   // 32nd notes per quarter note
+        ]},
+        ...allEvents,
+        { type: 'endOfTrack', time: (allEvents[allEvents.length - 1].time || 0) + ticksPerQuarter }
+    ];
+    
+    const midiData = buildMidiFile(events, ticksPerQuarter);
+    
+    // Trigger download
+    const blob = new Blob([midiData], { type: 'audio/midi' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    a.download = `${filePrefix}-${timestamp}.mid`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    appServices.showNotification(`MIDI exported: ${a.download}`, 3000);
+}
+
+// Helper: Create a file input for MIDI import
+function createFileInputForMidiImport() {
+    return new Promise((resolve, reject) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.mid,.midi,audio/midi,audio/x-midi';
+        input.onchange = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) resolve(file);
+            else reject(new Error("No file selected"));
+        };
+        input.click();
+    });
+}
+
+// Parse a MIDI file into events
+function parseMidiFile(arrayBuffer) {
+    const view = new DataView(arrayBuffer);
+    const events = [];
+    
+    // Read header chunk
+    if (view.getUint32(0, false) !== 0x4D546864) { // 'MThd'
+        throw new Error("Invalid MIDI file: missing MThd header");
+    }
+    const headerLen = view.getUint32(4, false);
+    const format = view.getUint16(8, false);
+    const numTracks = view.getUint16(10, false);
+    const ticksPerQuarter = view.getUint16(12, false);
+    
+    let offset = 8 + headerLen;
+    const isTicksPerQuarterNote = ticksPerQuarter < 0x8000; // If high bit not set, it's ticks per quarter note
+    
+    for (let t = 0; t < numTracks; t++) {
+        if (view.getUint32(offset, false) !== 0x4D54726B) { // 'MTrk'
+            offset += 8; // Skip invalid track
+            continue;
+        }
+        const trackLen = view.getUint32(offset + 4, false);
+        offset += 8;
+        
+        const trackEnd = offset + trackLen;
+        let currentTime = 0;
+        let runningStatus = 0;
+        
+        while (offset < trackEnd) {
+            // Read delta time (VLQ)
+            let deltaTime = 0;
+            let byte;
+            do {
+                byte = view.getUint8(offset++);
+                deltaTime = (deltaTime << 7) | (byte & 0x7F);
+                if (offset > trackEnd) break;
+            } while (byte & 0x80);
+            currentTime += deltaTime;
+            
+            if (offset >= trackEnd) break;
+            
+            let status = view.getUint8(offset);
+            if (status < 0x80) {
+                // Running status
+                status = runningStatus;
+                offset--; // Step back, we'll re-read the data byte
+            } else {
+                runningStatus = status;
+                offset++;
+            }
+            
+            // Check for meta events (0xFF)
+            if (status === 0xFF) {
+                const metaType = view.getUint8(offset++);
+                let metaLen = 0;
+                let metaByte;
+                do {
+                    metaByte = view.getUint8(offset++);
+                    metaLen = (metaLen << 7) | (metaByte & 0x7F);
+                    if (offset > trackEnd) break;
+                } while (metaByte & 0x80);
+                
+                if (metaType === 0x2F) {
+                    // End of track
+                    break;
+                } else if (metaType === 0x51) {
+                    // Tempo
+                    if (metaLen >= 3) {
+                        const usPerQuarter = (view.getUint8(offset) << 16) | (view.getUint8(offset + 1) << 8) | view.getUint8(offset + 2);
+                        events.push({ type: 'tempo', time: currentTime, data: [usPerQuarter] });
+                    }
+                    offset += metaLen;
+                } else if (metaType === 0x58) {
+                    // Time signature
+                    if (metaLen >= 4) {
+                        const nn = view.getUint8(offset);
+                        const dd = view.getUint8(offset + 1);
+                        events.push({ type: 'timeSig', time: currentTime, data: [nn, dd] });
+                    }
+                    offset += metaLen;
+                } else if (metaType === 0x03) {
+                    // Track name
+                    const trackName = String.fromCharCode(...new Uint8Array(arrayBuffer, offset, metaLen));
+                    events.push({ type: 'trackName', time: currentTime, data: [trackName] });
+                    offset += metaLen;
+                } else {
+                    offset += metaLen;
+                }
+            } else if (status === 0xF0 || status === 0xF7) {
+                // SysEx - skip
+                let sysexLen = 0;
+                let sysexByte;
+                do {
+                    sysexByte = view.getUint8(offset++);
+                    sysexLen = (sysexLen << 7) | (sysexByte & 0x7F);
+                    if (offset > trackEnd) break;
+                } while (sysexByte & 0x80);
+                offset += sysexLen;
+            } else {
+                // MIDI channel message
+                const command = status & 0xF0;
+                const channel = status & 0x0F;
+                
+                if (command === 0x80 || command === 0x90 || command === 0xA0 || command === 0xB0 || command === 0xE0) {
+                    const data1 = view.getUint8(offset++);
+                    const data2 = view.getUint8(offset++);
+                    
+                    if (command === 0x90 && data2 > 0) {
+                        events.push({ type: 'noteOn', time: currentTime, channel, data: [data1, data2] });
+                    } else if (command === 0x80 || (command === 0x90 && data2 === 0)) {
+                        events.push({ type: 'noteOff', time: currentTime, channel, data: [data1, data2] });
+                    }
+                } else if (command === 0xC0 || command === 0xD0) {
+                    const data1 = view.getUint8(offset++);
+                    events.push({ type: 'controller', time: currentTime, channel, data: [command, data1] });
+                } else {
+                    offset += 2;
+                }
+            }
+        }
+        offset = trackEnd;
+    }
+    
+    return { events, ticksPerQuarter };
+}
+
+// Import from MIDI file
+export async function importFromMidiInternal() {
+    const { getTracksState, getTempoState, getTimeSignatureState, setTempoState } = await import('./state.js');
+    
+    if (!appServices || !appServices.showNotification) {
+        console.error("[MIDI Import] appServices not available");
+        return;
+    }
+    
+    try {
+        const file = await createFileInputForMidiImport();
+        if (!file) return;
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const { events, ticksPerQuarter } = parseMidiFile(arrayBuffer);
+        
+        if (!events || events.length === 0) {
+            appServices.showNotification("No events found in MIDI file.", 3000);
+            return;
+        }
+        
+        // Count note events
+        const noteOnEvents = events.filter(e => e.type === 'noteOn');
+        if (noteOnEvents.length < (Constants.MIDI_IMPORT_MIN_NOTES || 1)) {
+            appServices.showNotification(`MIDI file has too few notes (${noteOnEvents.length}). Minimum: ${Constants.MIDI_IMPORT_MIN_NOTES || 1}.`, 3000);
+            return;
+        }
+        
+        // Extract tempo if present
+        const tempoEvent = events.find(e => e.type === 'tempo');
+        if (tempoEvent && tempoEvent.data && tempoEvent.data[0]) {
+            const usPerQuarter = tempoEvent.data[0];
+            const bpm = Math.round(60000000 / usPerQuarter);
+            if (bpm > 20 && bpm < 500) {
+                setTempoState(bpm);
+                appServices.showNotification(`Imported tempo: ${bpm} BPM`, 2000);
+            }
+        }
+        
+        // Snap to grid (16th notes)
+        const snapToGrid = Constants.MIDI_IMPORT_SNAP_TO_GRID !== false;
+        const ticksPer16th = Math.floor(ticksPerQuarter / 4);
+        
+        // Find or create a Synth track for import
+        let tracks = getTracksState();
+        let targetTrack = tracks.find(t => t.type === 'Synth');
+        
+        if (!targetTrack) {
+            // Try any non-audio track
+            targetTrack = tracks.find(t => t.type !== 'Audio');
+        }
+        
+        if (!targetTrack) {
+            appServices.showNotification("No suitable track found for MIDI import. Create a Synth or DrumSampler track first.", 3000);
+            return;
+        }
+        
+        // Clear existing sequences on target track if importing fresh
+        const activeSeq = targetTrack.getActiveSequence();
+        if (activeSeq && activeSeq.length > 0) {
+            // Optionally clear or append - for simplicity we clear
+            for (let i = 0; i < activeSeq.length; i++) {
+                if (activeSeq[i]) {
+                    activeSeq[i].notes = [];
+                }
+            }
+        }
+        
+        // Convert MIDI events to sequence notes
+        // Group note ons and offs
+        const pendingNoteOns = [];
+        
+        for (const evt of events) {
+            if (evt.type === 'noteOn') {
+                pendingNoteOns.push({ ...evt, time: evt.time });
+            } else if (evt.type === ' 'noteOff') {
+                // Match with a pending note on
+                const matchingOn = pendingNoteOns.find(p => p.data[0] === evt.data[0] && !p.matched);
+                if (matchingOn) {
+                    matchingOn.matched = true;
+                    const startStep = snapToGrid ? Math.floor(matchingOn.time / ticksPer16th) : Math.floor(matchingOn.time / ticksPer16th);
+                    const endStep = snapToGrid ? Math.floor(evt.time / ticksPer16th) : Math.floor(evt.time / ticksPer16th);
+                    const duration = Math.max(1, endStep - startStep);
+                    
+                    const rowIndex = midiToRow(evt.data[0], targetTrack.type);
+                    const velocity = Math.min(1, (evt.data[1] || 100) * (Constants.MIDI_IMPORT_VELOCITY_SCALE || (1 / 127)));
+                    
+                    // Place note in sequence
+                    for (let step = startStep; step < Math.min(startStep + duration, activeSeq.length); step++) {
+                        if (step >= 0 && step < activeSeq.length) {
+                            if (!activeSeq[step]) activeSeq[step] = { notes: [] };
+                            if (step === startStep) {
+                                activeSeq[step].notes.push({
+                                    row: rowIndex,
+                                    velocity: velocity,
+                                    duration: duration,
+                                    probability: Constants.MIDI_IMPORT_DEFAULT_PROBABILITY || 1.0
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Update track UI
+        if (appServices.updateTrackUI) {
+            appServices.updateTrackUI(targetTrack.id, 'sequencerContentChanged');
+        }
+        
+        appServices.showNotification(`Imported ${noteOnEvents.length} notes from MIDI file.`, 3000);
+        
+    } catch (error) {
+        console.error("[MIDI Import] Error:", error);
+        if (appServices && appServices.showNotification) {
+            appServices.showNotification(`MIDI import failed: ${error.message}`, 3000);
+        }
+    }
+}

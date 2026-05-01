@@ -39,6 +39,7 @@ import {
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
     gatherProjectDataInternal, reconstructDAWInternal, saveProjectInternal,
     loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal, exportStemsInternal,
+    exportToMidiInternal, importFromMidiInternal,
     // Auto-save
     startAutoSave, stopAutoSave,
     // Auto-save (aliased for appServices surface)
@@ -483,6 +484,8 @@ const appServices = {
     cancelScheduledRecording,
     cleanupRecordingScheduling,
     exportToWav: exportToWavInternal,
+    exportToMidi: exportToMidiInternal,
+    importFromMidi: importFromMidiInternal,
 
     saveProject: saveProjectInternal,
 
