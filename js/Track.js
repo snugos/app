@@ -76,7 +76,7 @@ export class Track {
             envelope: ((initialData) && (initialData).instrumentSamplerSettings)?.envelope ? JSON.parse(JSON.stringify(initialData.instrumentSamplerSettings.envelope)) : { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 },
             status: ((initialData) && (initialData).instrumentSamplerSettings)?.status || (((initialData) && (initialData).instrumentSamplerSettings)?.dbKey || ((initialData) && (initialData).instrumentSamplerSettings)?.audioBufferDataURL ? 'missing' : 'empty')
         };
-        this.instrumentSamplerIsPolyphonic = ((initialData) && (initialData).instrumentSamplerIsPolyphonic) !== undefined ? initialData.instrumentSamplerIsPolyphonic : true;
+        this.instrumentSamplerIsPolyphonic = initialData?.instrumentSamplerIsPolyphonic ?? true;
         this.toneSampler = null;
 
         // Drum Sampler specific
