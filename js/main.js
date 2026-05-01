@@ -237,7 +237,10 @@ const appServices = {
     },
     updateTrackUI: handleTrackUIUpdate, 
     createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
-    uiElementsCache: uiElementsCache, 
+    uiElementsCache: uiElementsCache,
+    addWindowToStore: addWindowToStoreState,
+    removeWindowFromStore: removeWindowFromStoreState,
+    setMidiAccess: setMidiAccessState, 
 
     addMasterEffect: async (effectType) => {
         try {
