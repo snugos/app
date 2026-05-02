@@ -66,6 +66,13 @@ let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
 let undoStack = [];
 let redoStack = [];
 
+// --- Master Automation Arm State ---
+let masterAutomationArmedState = false;
+export function getMasterAutomationArmedState() { return masterAutomationArmedState; }
+export function setMasterAutomationArmedState(value) {
+    masterAutomationArmedState = !!value;
+}
+
 // --- Synth Presets Storage ---
 let synthPresetsGlobal = {};
 
