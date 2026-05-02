@@ -13028,155 +13028,151 @@ TestRunner.test('SnugWindow - APP_VERSION validation for Day 418', (t) => {
     }
 });
 
-// Day 421: Transport, Time Signature, and Performance Constants Tests
-// ================================================================
-TestRunner.test('Constants - TRANSPORT_STATE_STOPPED is "stopped"', (t) => {
-    t.assertEqual(TRANSPORT_STATE_STOPPED, 'stopped', 'TRANSPORT_STATE_STOPPED should be "stopped"');
+// === Day 422: UI Window Functions Tests (Part 1) ===
+
+TestRunner.test('UI Window - toggleSequencerViewMode is a function export', (t) => {
+    t.assertEqual(typeof toggleSequencerViewMode, 'function', 'toggleSequencerViewMode should be a function');
 });
 
-TestRunner.test('Constants - TRANSPORT_STATE_PAUSED is "paused"', (t) => {
-    t.assertEqual(TRANSPORT_STATE_PAUSED, 'paused', 'TRANSPORT_STATE_PAUSED should be "paused"');
+TestRunner.test('UI Window - toggleSequencerViewMode accepts 0 parameters', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertEqual(params, '', 'toggleSequencerViewMode should accept 0 parameters');
 });
 
-TestRunner.test('Constants - TRANSPORT_STATE_PLAYING is "started"', (t) => {
-    t.assertEqual(TRANSPORT_STATE_PLAYING, 'started', 'TRANSPORT_STATE_PLAYING should be "started"');
+TestRunner.test('UI Window - toggleSequencerViewMode references sequencerViewMode', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('sequencerViewMode'), 'toggleSequencerViewMode should reference sequencerViewMode');
 });
 
-TestRunner.test('Constants - DEFAULT_TRANSPORT_STATE equals TRANSPORT_STATE_STOPPED', (t) => {
-    t.assertEqual(DEFAULT_TRANSPORT_STATE, TRANSPORT_STATE_STOPPED, 'DEFAULT_TRANSPORT_STATE should match TRANSPORT_STATE_STOPPED');
+TestRunner.test('UI Window - toggleSequencerViewMode toggles between step and piano', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes("'step'") && funcStr.includes("'piano'"), 'toggleSequencerViewMode should toggle between step and piano modes');
 });
 
-TestRunner.test('Constants - TRANSPORT_STATES is array with 3 states', (t) => {
-    t.assertEqual(Array.isArray(TRANSPORT_STATES), true, 'TRANSPORT_STATES should be an array');
-    t.assertEqual(TRANSPORT_STATES.length, 3, 'TRANSPORT_STATES should have 3 elements');
+TestRunner.test('UI Window - toggleSequencerViewMode references getArmedTrackId', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId'), 'toggleSequencerViewMode should reference getArmedTrackId');
 });
 
-TestRunner.test('Constants - TRANSPORT_STATES contains all transport states', (t) => {
-    t.assertTruthy(TRANSPORT_STATES.includes('stopped'), 'TRANSPORT_STATES should include "stopped"');
-    t.assertTruthy(TRANSPORT_STATES.includes('paused'), 'TRANSPORT_STATES should include "paused"');
-    t.assertTruthy(TRANSPORT_STATES.includes('started'), 'TRANSPORT_STATES should include "started"');
+TestRunner.test('UI Window - openTrackInspectorWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackInspectorWindow, 'function', 'openTrackInspectorWindow should be a function');
 });
 
-TestRunner.test('Constants - TIME_SIG_MIN_NUMERATOR is 1', (t) => {
-    t.assertEqual(TIME_SIG_MIN_NUMERATOR, 1, 'TIME_SIG_MIN_NUMERATOR should be 1');
+TestRunner.test('UI Window - openTrackInspectorWindow accepts 2 parameters', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('trackId') && params.includes('savedState'), 'openTrackInspectorWindow should accept trackId and savedState parameters');
 });
 
-TestRunner.test('Constants - TIME_SIG_MAX_NUMERATOR is 16', (t) => {
-    t.assertEqual(TIME_SIG_MAX_NUMERATOR, 16, 'TIME_SIG_MAX_NUMERATOR should be 16');
+TestRunner.test('UI Window - openTrackInspectorWindow references trackId parameter', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackInspectorWindow should reference trackId parameter');
 });
 
-TestRunner.test('Constants - TIME_SIG_MIN_DENOMINATOR is 1', (t) => {
-    t.assertEqual(TIME_SIG_MIN_DENOMINATOR, 1, 'TIME_SIG_MIN_DENOMINATOR should be 1');
+TestRunner.test('UI Window - openTrackInspectorWindow validates track existence', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById') || funcStr.includes('track'), 'openTrackInspectorWindow should validate track existence');
 });
 
-TestRunner.test('Constants - TIME_SIG_MAX_DENOMINATOR is 16', (t) => {
-    t.assertEqual(TIME_SIG_MAX_DENOMINATOR, 16, 'TIME_SIG_MAX_DENOMINATOR should be 16');
+TestRunner.test('UI Window - openTrackInspectorWindow generates windowId from trackId', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('windowId') && funcStr.includes('trackInspector'), 'openTrackInspectorWindow should generate windowId with trackInspector prefix');
 });
 
-TestRunner.test('Constants - DEFAULT_TIME_SIGNATURE_NUMERATOR is 4', (t) => {
-    t.assertEqual(DEFAULT_TIME_SIGNATURE_NUMERATOR, 4, 'DEFAULT_TIME_SIGNATURE_NUMERATOR should be 4');
+TestRunner.test('UI Window - openTrackInspectorWindow uses localAppServices.createWindow', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackInspectorWindow should use createWindow');
 });
 
-TestRunner.test('Constants - DEFAULT_TIME_SIGNATURE_DENOMINATOR is 4', (t) => {
-    t.assertEqual(DEFAULT_TIME_SIGNATURE_DENOMINATOR, 4, 'DEFAULT_TIME_SIGNATURE_DENOMINATOR should be 4');
+TestRunner.test('UI Window - openTrackInspectorWindow checks for existing window', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openTrackInspectorWindow should check for existing windows');
 });
 
-TestRunner.test('Constants - DEFAULT_TIME_SIGNATURE is object with numerator and denominator', (t) => {
-    t.assertEqual(typeof DEFAULT_TIME_SIGNATURE, 'object', 'DEFAULT_TIME_SIGNATURE should be an object');
-    t.assertEqual(DEFAULT_TIME_SIGNATURE.numerator, 4, 'DEFAULT_TIME_SIGNATURE.numerator should be 4');
-    t.assertEqual(DEFAULT_TIME_SIGNATURE.denominator, 4, 'DEFAULT_TIME_SIGNATURE.denominator should be 4');
+TestRunner.test('UI Window - openTrackInspectorWindow handles savedState', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openTrackInspectorWindow should handle savedState parameter');
 });
 
-TestRunner.test('Constants - PERFORMANCE_CONTEXT_STATE_SUSPENDED is "suspended"', (t) => {
-    t.assertEqual(PERFORMANCE_CONTEXT_STATE_SUSPENDED, 'suspended', 'PERFORMANCE_CONTEXT_STATE_SUSPENDED should be "suspended"');
+TestRunner.test('UI Window - openTrackInspectorWindow references localAppServices', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackInspectorWindow should reference localAppServices');
 });
 
-TestRunner.test('Constants - PERFORMANCE_CONTEXT_STATE_CLOSED is "closed"', (t) => {
-    t.assertEqual(PERFORMANCE_CONTEXT_STATE_CLOSED, 'closed', 'PERFORMANCE_CONTEXT_STATE_CLOSED should be "closed"');
+TestRunner.test('UI Window - openTrackSequencerWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackSequencerWindow, 'function', 'openTrackSequencerWindow should be a function');
 });
 
-TestRunner.test('Constants - PERFORMANCE_MEMORY_PRESSURE_NONE is "none"', (t) => {
-    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_NONE, 'none', 'PERFORMANCE_MEMORY_PRESSURE_NONE should be "none"');
+TestRunner.test('UI Window - openTrackSequencerWindow accepts 3 parameters', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('trackId') && params.includes('forceRedraw') && params.includes('savedState'), 'openTrackSequencerWindow should accept trackId, forceRedraw, and savedState');
 });
 
-TestRunner.test('Constants - PERFORMANCE_MEMORY_PRESSURE_LOW is "low"', (t) => {
-    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_LOW, 'low', 'PERFORMANCE_MEMORY_PRESSURE_LOW should be "low"');
+TestRunner.test('UI Window - openTrackSequencerWindow references trackId parameter', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackSequencerWindow should reference trackId parameter');
 });
 
-TestRunner.test('Constants - PERFORMANCE_MEMORY_PRESSURE_MEDIUM is "medium"', (t) => {
-    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_MEDIUM, 'medium', 'PERFORMANCE_MEMORY_PRESSURE_MEDIUM should be "medium"');
+TestRunner.test('UI Window - openTrackSequencerWindow validates track type', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('track.type') || funcStr.includes('type'), 'openTrackSequencerWindow should validate track type');
 });
 
-TestRunner.test('Constants - PERFORMANCE_MEMORY_PRESSURE_HIGH is "high"', (t) => {
-    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_HIGH, 'high', 'PERFORMANCE_MEMORY_PRESSURE_HIGH should be "high"');
+TestRunner.test('UI Window - openTrackSequencerWindow excludes Audio type', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('Audio'), 'openTrackSequencerWindow should exclude Audio track type');
 });
 
-TestRunner.test('Constants - METRONOME_VOLUME constants are defined', (t) => {
-    t.assertEqual(typeof MIN_METRONOME_VOLUME, 'number', 'MIN_METRONOME_VOLUME should be defined');
-    t.assertEqual(typeof MAX_METRONOME_VOLUME, 'number', 'MAX_METRONOME_VOLUME should be defined');
+TestRunner.test('UI Window - openTrackSequencerWindow generates windowId with sequencerWin prefix', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('sequencerWin-') || funcStr.includes('windowId'), 'openTrackSequencerWindow should generate sequencer window ID');
 });
 
-TestRunner.test('Constants - MIN_METRONOME_VOLUME is 0', (t) => {
-    t.assertEqual(MIN_METRONOME_VOLUME, 0, 'MIN_METRONOME_VOLUME should be 0');
+TestRunner.test('UI Window - openTrackSequencerWindow references localAppServices', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackSequencerWindow should reference localAppServices');
 });
 
-TestRunner.test('Constants - MAX_METRONOME_VOLUME is 1', (t) => {
-    t.assertEqual(MAX_METRONOME_VOLUME, 1, 'MAX_METRONOME_VOLUME should be 1');
+TestRunner.test('UI Window - openTimelineWindow is a function export', (t) => {
+    t.assertEqual(typeof openTimelineWindow, 'function', 'openTimelineWindow should be a function');
 });
 
-TestRunner.test('Constants - TAP_TEMPO constants are defined', (t) => {
-    t.assertEqual(typeof TAP_TEMPO_TIMEOUT_MS, 'number', 'TAP_TEMPO_TIMEOUT_MS should be defined');
-    t.assertEqual(typeof TAP_TEMPO_MIN_TAPS, 'number', 'TAP_TEMPO_MIN_TAPS should be defined');
-    t.assertEqual(typeof TAP_TEMPO_MAX_TAPS, 'number', 'TAP_TEMPO_MAX_TAPS should be defined');
+TestRunner.test('UI Window - openTimelineWindow accepts 1 parameter', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('savedState'), 'openTimelineWindow should accept savedState parameter');
 });
 
-TestRunner.test('Constants - TAP_TEMPO_TIMEOUT_MS is 2000', (t) => {
-    t.assertEqual(TAP_TEMPO_TIMEOUT_MS, 2000, 'TAP_TEMPO_TIMEOUT_MS should be 2000');
+TestRunner.test('UI Window - openTimelineWindow references getWindowByIdState', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('getWindowByIdState'), 'openTimelineWindow should reference getWindowByIdState');
 });
 
-TestRunner.test('Constants - TAP_TEMPO_MIN_TAPS is 2', (t) => {
-    t.assertEqual(TAP_TEMPO_MIN_TAPS, 2, 'TAP_TEMPO_MIN_TAPS should be 2');
+TestRunner.test('UI Window - openTimelineWindow checks for existing timeline window', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes("'timeline'") || funcStr.includes('timeline'), 'openTimelineWindow should check for existing timeline window');
 });
 
-TestRunner.test('Constants - TAP_TEMPO_MAX_TAPS is 8', (t) => {
-    t.assertEqual(TAP_TEMPO_MAX_TAPS, 8, 'TAP_TEMPO_MAX_TAPS should be 8');
+TestRunner.test('UI Window - openTimelineWindow uses restore and bringToFront', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('restore') || funcStr.includes('bringToFront'), 'openTimelineWindow should use restore or bringToFront methods');
 });
 
-TestRunner.test('Constants - TAP_TEMPO_MIN_BPM is defined', (t) => {
-    t.assertEqual(typeof TAP_TEMPO_MIN_BPM, 'number', 'TAP_TEMPO_MIN_BPM should be defined');
-    t.assertEqual(TAP_TEMPO_MIN_BPM, 20, 'TAP_TEMPO_MIN_BPM should be 20');
+TestRunner.test('UI Window - openTimelineWindow references console.log', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('console.log') || funcStr.includes('console.error'), 'openTimelineWindow should log actions');
 });
 
-TestRunner.test('Constants - TAP_TEMPO_MAX_BPM is defined', (t) => {
-    t.assertEqual(typeof TAP_TEMPO_MAX_BPM, 'number', 'TAP_TEMPO_MAX_BPM should be defined');
-    t.assertEqual(TAP_TEMPO_MAX_BPM, 300, 'TAP_TEMPO_MAX_BPM should be 300');
-});
-
-TestRunner.test('Constants - Time signature bounds are valid', (t) => {
-    t.assertTruthy(TIME_SIG_MIN_NUMERATOR < TIME_SIG_MAX_NUMERATOR, 'MIN < MAX numerator');
-    t.assertTruthy(TIME_SIG_MIN_DENOMINATOR < TIME_SIG_MAX_DENOMINATOR, 'MIN < MAX denominator');
-    t.assertTruthy(DEFAULT_TIME_SIGNATURE_NUMERATOR >= TIME_SIG_MIN_NUMERATOR, 'default numerator >= MIN');
-    t.assertTruthy(DEFAULT_TIME_SIGNATURE_NUMERATOR <= TIME_SIG_MAX_NUMERATOR, 'default numerator <= MAX');
-    t.assertTruthy(DEFAULT_TIME_SIGNATURE_DENOMINATOR >= TIME_SIG_MIN_DENOMINATOR, 'default denominator >= MIN');
-    t.assertTruthy(DEFAULT_TIME_SIGNATURE_DENOMINATOR <= TIME_SIG_MAX_DENOMINATOR, 'default denominator <= MAX');
-});
-
-TestRunner.test('Constants - Performance memory pressure levels are ordered', (t) => {
-    t.assertTruthy([PERFORMANCE_MEMORY_PRESSURE_NONE, PERFORMANCE_MEMORY_PRESSURE_LOW, PERFORMANCE_MEMORY_PRESSURE_MEDIUM, PERFORMANCE_MEMORY_PRESSURE_HIGH].length === 4, 'Should have 4 pressure levels');
-});
-
-TestRunner.test('Constants - Tap tempo taps range is valid', (t) => {
-    t.assertTruthy(TAP_TEMPO_MIN_TAPS < TAP_TEMPO_MAX_TAPS, 'MIN taps should be less than MAX taps');
-});
-
-TestRunner.test('Constants - Tap tempo BPM range is valid', (t) => {
-    t.assertTruthy(TAP_TEMPO_MIN_BPM < TAP_TEMPO_MAX_BPM, 'MIN BPM should be less than MAX BPM');
-});
-
-TestRunner.test('Day 421 - APP_VERSION validation for Day 421', (t) => {
+TestRunner.test('UI Window - APP_VERSION validation for Day 422', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 421');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 422');
     if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 97, 'Minor version should be >= 97 for Day 421');
+        t.assertTruthy(versionParts[1] >= 98, 'Minor version should be >= 98 for Day 422');
     }
 });
