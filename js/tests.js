@@ -13176,3 +13176,197 @@ TestRunner.test('UI Window - APP_VERSION validation for Day 422', (t) => {
         t.assertTruthy(versionParts[1] >= 98, 'Minor version should be >= 98 for Day 422');
     }
 });
+
+// === Day 423: MIDI CC Learn Functions Tests ===
+
+TestRunner.test('MIDI CC Learn - getMidiCCMappings is a function export', (t) => {
+    t.assertEqual(typeof getMidiCCMappings, 'function', 'getMidiCCMappings should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCMappings accepts 0 parameters', (t) => {
+    const funcStr = getMidiCCMappings.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertEqual(params, '', 'getMidiCCMappings should accept 0 parameters');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCMappings returns _midiCCMappings', (t) => {
+    const funcStr = getMidiCCMappings.toString();
+    t.assertTruthy(funcStr.includes('_midiCCMappings'), 'getMidiCCMappings should return _midiCCMappings');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCLearnActive is a function export', (t) => {
+    t.assertEqual(typeof getMidiCCLearnActive, 'function', 'getMidiCCLearnActive should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCLearnActive accepts 0 parameters', (t) => {
+    const funcStr = getMidiCCLearnActive.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertEqual(params, '', 'getMidiCCLearnActive should accept 0 parameters');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCLearnActive returns _midiCCLearnActive', (t) => {
+    const funcStr = getMidiCCLearnActive.toString();
+    t.assertTruthy(funcStr.includes('_midiCCLearnActive'), 'getMidiCCLearnActive should return _midiCCLearnActive');
+});
+
+TestRunner.test('MIDI CC Learn - clearMidiCCMappings is a function export', (t) => {
+    t.assertEqual(typeof clearMidiCCMappings, 'function', 'clearMidiCCMappings should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - clearMidiCCMappings accepts 0 parameters', (t) => {
+    const funcStr = clearMidiCCMappings.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertEqual(params, '', 'clearMidiCCMappings should accept 0 parameters');
+});
+
+TestRunner.test('MIDI CC Learn - clearMidiCCMappings clears _midiCCMappings', (t) => {
+    const funcStr = clearMidiCCMappings.toString();
+    t.assertTruthy(funcStr.includes('_midiCCMappings') && funcStr.includes('{}'), 'clearMidiCCMappings should clear _midiCCMappings to empty object');
+});
+
+TestRunner.test('MIDI CC Learn - removeMidiCCMapping is a function export', (t) => {
+    t.assertEqual(typeof removeMidiCCMapping, 'function', 'removeMidiCCMapping should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - removeMidiCCMapping accepts 1 parameter', (t) => {
+    const funcStr = removeMidiCCMapping.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('targetId'), 'removeMidiCCMapping should accept targetId parameter');
+});
+
+TestRunner.test('MIDI CC Learn - removeMidiCCMapping uses delete', (t) => {
+    const funcStr = removeMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('delete'), 'removeMidiCCMapping should use delete operator');
+});
+
+TestRunner.test('MIDI CC Learn - removeMidiCCMapping references targetId', (t) => {
+    const funcStr = removeMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('targetId'), 'removeMidiCCMapping should reference targetId parameter');
+});
+
+TestRunner.test('MIDI CC Learn - setMidiCCMapping is a function export', (t) => {
+    t.assertEqual(typeof setMidiCCMapping, 'function', 'setMidiCCMapping should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - setMidiCCMapping accepts 2 parameters', (t) => {
+    const funcStr = setMidiCCMapping.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('targetId') && params.includes('mapping'), 'setMidiCCMapping should accept targetId and mapping parameters');
+});
+
+TestRunner.test('MIDI CC Learn - setMidiCCMapping sets _midiCCMappings', (t) => {
+    const funcStr = setMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('_midiCCMappings'), 'setMidiCCMapping should set _midiCCMappings');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCMapping is a function export', (t) => {
+    t.assertEqual(typeof getMidiCCMapping, 'function', 'getMidiCCMapping should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCMapping accepts 1 parameter', (t) => {
+    const funcStr = getMidiCCMapping.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('targetId'), 'getMidiCCMapping should accept targetId parameter');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCMapping returns mapping or null', (t) => {
+    const funcStr = getMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('null'), 'getMidiCCMapping should return mapping or null');
+});
+
+TestRunner.test('MIDI CC Learn - getMidiCCMapping uses || null fallback', (t) => {
+    const funcStr = getMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('|| null'), 'getMidiCCMapping should use || null fallback');
+});
+
+TestRunner.test('MIDI CC Learn - startMidiCCLearn is a function export', (t) => {
+    t.assertEqual(typeof startMidiCCLearn, 'function', 'startMidiCCLearn should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - startMidiCCLearn accepts 5 parameters', (t) => {
+    const funcStr = startMidiCCLearn.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('targetId') && params.includes('paramPath') && params.includes('trackId') && params.includes('defaultMin') && params.includes('defaultMax'), 'startMidiCCLearn should accept targetId, paramPath, trackId, defaultMin, and defaultMax parameters');
+});
+
+TestRunner.test('MIDI CC Learn - startMidiCCLearn sets _midiCCLearnActive', (t) => {
+    const funcStr = startMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('_midiCCLearnActive'), 'startMidiCCLearn should set _midiCCLearnActive');
+});
+
+TestRunner.test('MIDI CC Learn - startMidiCCLearn uses default value fallback', (t) => {
+    const funcStr = startMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('!== undefined') || funcStr.includes('defaultMin !=='), 'startMidiCCLearn should handle default value fallback');
+});
+
+TestRunner.test('MIDI CC Learn - startMidiCCLearn references localAppServices.showNotification', (t) => {
+    const funcStr = startMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'startMidiCCLearn should show notification');
+});
+
+TestRunner.test('MIDI CC Learn - startMidiCCLearn references console.log', (t) => {
+    const funcStr = startMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('console.log'), 'startMidiCCLearn should log');
+});
+
+TestRunner.test('MIDI CC Learn - cancelMidiCCLearn is a function export', (t) => {
+    t.assertEqual(typeof cancelMidiCCLearn, 'function', 'cancelMidiCCLearn should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - cancelMidiCCLearn accepts 0 parameters', (t) => {
+    const funcStr = cancelMidiCCLearn.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertEqual(params, '', 'cancelMidiCCLearn should accept 0 parameters');
+});
+
+TestRunner.test('MIDI CC Learn - cancelMidiCCLearn checks _midiCCLearnActive', (t) => {
+    const funcStr = cancelMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('_midiCCLearnActive'), 'cancelMidiCCLearn should check _midiCCLearnActive');
+});
+
+TestRunner.test('MIDI CC Learn - cancelMidiCCLearn sets to null', (t) => {
+    const funcStr = cancelMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('null'), 'cancelMidiCCLearn should set _midiCCLearnActive to null');
+});
+
+TestRunner.test('MIDI CC Learn - cancelMidiCCLearn references console.log', (t) => {
+    const funcStr = cancelMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('console.log'), 'cancelMidiCCLearn should log');
+});
+
+TestRunner.test('MIDI CC Learn - initializeEventHandlersModule is a function export', (t) => {
+    t.assertEqual(typeof initializeEventHandlersModule, 'function', 'initializeEventHandlersModule should be a function');
+});
+
+TestRunner.test('MIDI CC Learn - initializeEventHandlersModule accepts 1 parameter', (t) => {
+    const funcStr = initializeEventHandlersModule.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('appServicesFromMain') || params.includes('appServices'), 'initializeEventHandlersModule should accept appServicesFromMain parameter');
+});
+
+TestRunner.test('MIDI CC Learn - initializeEventHandlersModule sets localAppServices', (t) => {
+    const funcStr = initializeEventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'initializeEventHandlersModule should set localAppServices');
+});
+
+TestRunner.test('MIDI CC Learn - initializeEventHandlersModule guards against undefined', (t) => {
+    const funcStr = initializeEventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('|| {}') || funcStr.includes('appServicesFromMain ||'), 'initializeEventHandlersModule should guard against undefined');
+});
+
+TestRunner.test('MIDI CC Learn - APP_VERSION validation for Day 423', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 423');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 98, 'Minor version should be >= 98 for Day 423');
+    }
+});

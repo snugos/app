@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.98.0'; // Day 422: UI Window Functions Tests (Part 1)
+export const APP_VERSION = '2.99.0'; // Day 423: MIDI CC Learn Functions Tests
 // Day 418: Synth Presets & Additional State Functions Tests // Day 417: Punch Recording Functions Tests // Day 416: Automation & Count-In Audio Functions Tests // Day 415: Additional State Functions Tests // Day 414: Armed/Soloed/Sequencer Track & Undo Stack State Tests // Day 413: Timeline Zoom, Swing, Loop Region State Tests // Day 412: Bug Fix - Missing Module Imports // Day 411: Audio Module Core Functions Tests // Day 410: Audio Clip Getters & Clipboard State Tests // Day 408: Audio Clip Editor UI Tests // Day 407: Performance Monitor State Extended Tests
 
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
