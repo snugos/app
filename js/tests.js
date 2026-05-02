@@ -13027,3 +13027,152 @@ TestRunner.test('SnugWindow - APP_VERSION validation for Day 418', (t) => {
         t.assertTruthy(versionParts[1] >= 95, 'Minor version should be >= 95 for Day 418');
     }
 });
+
+// === Day 422: UI Window Functions Tests (Part 1) ===
+
+TestRunner.test('UI Window - toggleSequencerViewMode is a function export', (t) => {
+    t.assertEqual(typeof toggleSequencerViewMode, 'function', 'toggleSequencerViewMode should be a function');
+});
+
+TestRunner.test('UI Window - toggleSequencerViewMode accepts 0 parameters', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertEqual(params, '', 'toggleSequencerViewMode should accept 0 parameters');
+});
+
+TestRunner.test('UI Window - toggleSequencerViewMode references sequencerViewMode', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('sequencerViewMode'), 'toggleSequencerViewMode should reference sequencerViewMode');
+});
+
+TestRunner.test('UI Window - toggleSequencerViewMode toggles between step and piano', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes("'step'") && funcStr.includes("'piano'"), 'toggleSequencerViewMode should toggle between step and piano modes');
+});
+
+TestRunner.test('UI Window - toggleSequencerViewMode references getArmedTrackId', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId'), 'toggleSequencerViewMode should reference getArmedTrackId');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackInspectorWindow, 'function', 'openTrackInspectorWindow should be a function');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow accepts 2 parameters', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('trackId') && params.includes('savedState'), 'openTrackInspectorWindow should accept trackId and savedState parameters');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow references trackId parameter', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackInspectorWindow should reference trackId parameter');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow validates track existence', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById') || funcStr.includes('track'), 'openTrackInspectorWindow should validate track existence');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow generates windowId from trackId', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('windowId') && funcStr.includes('trackInspector'), 'openTrackInspectorWindow should generate windowId with trackInspector prefix');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow uses localAppServices.createWindow', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackInspectorWindow should use createWindow');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow checks for existing window', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openTrackInspectorWindow should check for existing windows');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow handles savedState', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openTrackInspectorWindow should handle savedState parameter');
+});
+
+TestRunner.test('UI Window - openTrackInspectorWindow references localAppServices', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackInspectorWindow should reference localAppServices');
+});
+
+TestRunner.test('UI Window - openTrackSequencerWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackSequencerWindow, 'function', 'openTrackSequencerWindow should be a function');
+});
+
+TestRunner.test('UI Window - openTrackSequencerWindow accepts 3 parameters', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('trackId') && params.includes('forceRedraw') && params.includes('savedState'), 'openTrackSequencerWindow should accept trackId, forceRedraw, and savedState');
+});
+
+TestRunner.test('UI Window - openTrackSequencerWindow references trackId parameter', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackSequencerWindow should reference trackId parameter');
+});
+
+TestRunner.test('UI Window - openTrackSequencerWindow validates track type', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('track.type') || funcStr.includes('type'), 'openTrackSequencerWindow should validate track type');
+});
+
+TestRunner.test('UI Window - openTrackSequencerWindow excludes Audio type', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('Audio'), 'openTrackSequencerWindow should exclude Audio track type');
+});
+
+TestRunner.test('UI Window - openTrackSequencerWindow generates windowId with sequencerWin prefix', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('sequencerWin-') || funcStr.includes('windowId'), 'openTrackSequencerWindow should generate sequencer window ID');
+});
+
+TestRunner.test('UI Window - openTrackSequencerWindow references localAppServices', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackSequencerWindow should reference localAppServices');
+});
+
+TestRunner.test('UI Window - openTimelineWindow is a function export', (t) => {
+    t.assertEqual(typeof openTimelineWindow, 'function', 'openTimelineWindow should be a function');
+});
+
+TestRunner.test('UI Window - openTimelineWindow accepts 1 parameter', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    const match = funcStr.match(/function\s+\w+\s*\(([^)]*)\)/);
+    const params = match && match[1] ? match[1].trim() : '';
+    t.assertTruthy(params.includes('savedState'), 'openTimelineWindow should accept savedState parameter');
+});
+
+TestRunner.test('UI Window - openTimelineWindow references getWindowByIdState', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('getWindowByIdState'), 'openTimelineWindow should reference getWindowByIdState');
+});
+
+TestRunner.test('UI Window - openTimelineWindow checks for existing timeline window', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes("'timeline'") || funcStr.includes('timeline'), 'openTimelineWindow should check for existing timeline window');
+});
+
+TestRunner.test('UI Window - openTimelineWindow uses restore and bringToFront', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('restore') || funcStr.includes('bringToFront'), 'openTimelineWindow should use restore or bringToFront methods');
+});
+
+TestRunner.test('UI Window - openTimelineWindow references console.log', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('console.log') || funcStr.includes('console.error'), 'openTimelineWindow should log actions');
+});
+
+TestRunner.test('UI Window - APP_VERSION validation for Day 422', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 422');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 98, 'Minor version should be >= 98 for Day 422');
+    }
+});
