@@ -986,6 +986,23 @@ export function openMasterEffectsRackWindow(savedState = null) {
     if (((rackWindow) && (rackWindow).element)) {
         renderEffectsList(null, 'master', rackWindow.element.querySelector(`#effectsList-master`), rackWindow.element.querySelector(`#effectControlsContainer-master`));
         rackWindow.element.querySelector(`#addEffectBtn-master`)?.addEventListener('click', () => showAddEffectModal(null, 'master'));
+        // Wire up master automation arm button
+        const masterAutoBtn = rackWindow.element.querySelector('#masterAutomationArmBtn');
+        if (masterAutoBtn) {
+            masterAutoBtn.addEventListener('click', () => {
+                const current = localAppServices.masterAutomationArmed ? localAppServices.masterAutomationArmed() : false;
+                if (typeof localAppServices.setMasterAutomationArmed === 'function') {
+                    localAppServices.setMasterAutomationArmed(!current);
+                }
+                masterAutoBtn.classList.toggle('automation-armed', !current);
+                if (localAppServices.showNotification) {
+                    localAppServices.showNotification(!current ? 'Master automation ARMED' : 'Master automation DISARMED', 1500);
+                }
+            });
+            // Set initial visual state
+            const initialState = localAppServices.masterAutomationArmed ? localAppServices.masterAutomationArmed() : false;
+            masterAutoBtn.classList.toggle('automation-armed', initialState);
+        }
     }
     return rackWindow;
 }

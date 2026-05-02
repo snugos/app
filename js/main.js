@@ -77,6 +77,8 @@ import {
     getSynthPresets, saveSynthPreset, deleteSynthPreset,
     // Muted Track Ids
     getMutedTrackIdsState, setMutedTrackIdsState,
+    // Master Automation Arm
+    getMasterAutomationArmedState, setMasterAutomationArmedState,
     // MIDI Export
     exportToMidiInternal,
     importFromMidiInternal,
@@ -332,6 +334,7 @@ const appServices = {
             writeMasterVolumeAutomation(timeInSeconds, volumeValue);
         }
     },
+    masterAutomationArmed: getMasterAutomationArmedState(),
     getMasterEffectsBus: () => {
         if (typeof getMasterEffectsBusInputNode === 'function') {
             return getMasterEffectsBusInputNode();
