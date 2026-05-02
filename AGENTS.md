@@ -7546,3 +7546,50 @@
     - State Utility - resetTimelineZoom is a function export
     - State Utility - resetTimelineZoom accepts 0 parameters
     - State Utility
+#### Day 421: Transport, Time Signature, and Performance Constants Tests (2026-05-01)
+- **Feature**: Added 33 new unit tests for Transport, Time Signature, and Performance Constants to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 33 new tests in Day 421 section:
+    - Constants - TRANSPORT_STATE_STOPPED is "stopped"
+    - Constants - TRANSPORT_STATE_PAUSED is "paused"
+    - Constants - TRANSPORT_STATE_PLAYING is "started"
+    - Constants - DEFAULT_TRANSPORT_STATE equals TRANSPORT_STATE_STOPPED
+    - Constants - TRANSPORT_STATES is array with 3 states
+    - Constants - TRANSPORT_STATES contains all transport states
+    - Constants - TIME_SIG_MIN_NUMERATOR is 1
+    - Constants - TIME_SIG_MAX_NUMERATOR is 16
+    - Constants - TIME_SIG_MIN_DENOMINATOR is 1
+    - Constants - TIME_SIG_MAX_DENOMINATOR is 16
+    - Constants - DEFAULT_TIME_SIGNATURE_NUMERATOR is 4
+    - Constants - DEFAULT_TIME_SIGNATURE_DENOMINATOR is 4
+    - Constants - DEFAULT_TIME_SIGNATURE is object with numerator and denominator
+    - Constants - PERFORMANCE_CONTEXT_STATE_SUSPENDED is "suspended"
+    - Constants - PERFORMANCE_CONTEXT_STATE_CLOSED is "closed"
+    - Constants - PERFORMANCE_MEMORY_PRESSURE_NONE is "none"
+    - Constants - PERFORMANCE_MEMORY_PRESSURE_LOW is "low"
+    - Constants - PERFORMANCE_MEMORY_PRESSURE_MEDIUM is "medium"
+    - Constants - PERFORMANCE_MEMORY_PRESSURE_HIGH is "high"
+    - Constants - METRONOME_VOLUME constants are defined
+    - Constants - MIN_METRONOME_VOLUME is 0
+    - Constants - MAX_METRONOME_VOLUME is 1
+    - Constants - TAP_TEMPO constants are defined
+    - Constants - TAP_TEMPO_TIMEOUT_MS is 2000
+    - Constants - TAP_TEMPO_MIN_TAPS is 2
+    - Constants - TAP_TEMPO_MAX_TAPS is 8
+    - Constants - TAP_TEMPO_MIN_BPM is defined
+    - Constants - TAP_TEMPO_MAX_BPM is defined
+    - Constants - Time signature bounds are valid
+    - Constants - Performance memory pressure levels are ordered
+    - Constants - Tap tempo taps range is valid
+    - Constants - Tap tempo BPM range is valid
+    - Day 421 - APP_VERSION validation for Day 421
+  - `js/constants.js`: Bumped APP_VERSION to 2.97.0
+- **Feature Details**:
+  - Tests validate Transport State constants (TRANSPORT_STATE_STOPPED, TRANSPORT_STATE_PAUSED, TRANSPORT_STATE_PLAYING, DEFAULT_TRANSPORT_STATE, TRANSPORT_STATES array)
+  - Tests validate Time Signature constants (TIME_SIG_MIN/MAX_NUMERATOR, TIME_SIG_MIN/MAX_DENOMINATOR, DEFAULT_TIME_SIGNATURE_NUMERATOR/DENOMINATOR, DEFAULT_TIME_SIGNATURE object)
+  - Tests validate Performance Monitor constants (PERFORMANCE_CONTEXT_STATE_SUSPENDED/CLOSED, PERFORMANCE_MEMORY_PRESSURE_NONE/LOW/MEDIUM/HIGH)
+  - Tests validate Metronome Volume constants (MIN_METRONOME_VOLUME, MAX_METRONOME_VOLUME)
+  - Tests validate Tap Tempo constants (TAP_TEMPO_TIMEOUT_MS, TAP_TEMPO_MIN_TAPS, TAP_TEMPO_MAX_TAPS, TAP_TEMPO_MIN_BPM, TAP_TEMPO_MAX_BPM)
+  - Tests validate bounds consistency for time signatures, tap tempo taps, and BPM ranges
+  - Total tests increased from 2416 to 2449
+- **Version**: Bumped to 2.97.0

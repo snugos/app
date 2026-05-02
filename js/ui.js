@@ -2128,7 +2128,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 if (!currentActiveSeq || !currentActiveSeq.data) return;
 
                 // Apply snap quantization if enabled
-                const snapValue = window.SEQUENCER_SNAP_VALUE || 16;
+                const snapValue = window.SEQUENCER_SNAP_VALUE || 0;
                 if (snapValue > 0) {
                     // Snap the column to the nearest snap point
                     const nearestSnapCol = Math.round(col / snapValue) * snapValue;
