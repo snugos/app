@@ -454,7 +454,7 @@ export class SnugWindow {
             });
             if (windowToFocus) windowToFocus.focus(true);
             else if (this.appServices.getOpenWindows) { // If no other window, just update all taskbar buttons
-                 this.appServices.getOpenWindows().forEach(win => ((win) && (win).updateTaskbarButtonActiveState)?.());
+                 this.appServices.getOpenWindows().forEach(win => win?.updateTaskbarButtonActiveState?.());
             }
         }
         this.updateTaskbarButtonActiveState(); // Update own button state

@@ -76,7 +76,7 @@ export class Track {
             envelope: ((initialData) && (initialData).instrumentSamplerSettings)?.envelope ? JSON.parse(JSON.stringify(initialData.instrumentSamplerSettings.envelope)) : { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 },
             status: ((initialData) && (initialData).instrumentSamplerSettings)?.status || (((initialData) && (initialData).instrumentSamplerSettings)?.dbKey || ((initialData) && (initialData).instrumentSamplerSettings)?.audioBufferDataURL ? 'missing' : 'empty')
         };
-        this.instrumentSamplerIsPolyphonic = ((initialData) && (initialData).instrumentSamplerIsPolyphonic) !== undefined ? initialData.instrumentSamplerIsPolyphonic : true;
+        this.instrumentSamplerIsPolyphonic = initialData?.instrumentSamplerIsPolyphonic ?? true;
         this.toneSampler = null;
 
         // Drum Sampler specific
@@ -1065,10 +1065,17 @@ export class Track {
 
             if (target && typeof target[finalKey] !== 'undefined') {
                 if (target[finalKey] && typeof target[finalKey].setValueAtTime === 'function') {
+                    // It's a Tone.Signal - use setValueAtTime
                     target[finalKey].setValueAtTime(value, Tone.now());
-                } else if (target[finalKey] && typeof target[finalKey].value !== 'undefined') {
-                     target[finalKey].value = value;
+                } else if (target[finalKey] && typeof target[finalKey] === 'object' && 'value' in target[finalKey]) {
+                    // It's an object with a .value property (like Tone.Param)
+                    if (typeof target[finalKey].value === 'object' && 'value' in target[finalKey].value) {
+                        target[finalKey].value.value = value;
+                    } else {
+                        target[finalKey].value = value;
+                    }
                 } else {
+                    // It's a plain value or the property doesn't exist yet
                     target[finalKey] = value;
                 }
             } else if (target && typeof target.set === 'function') {

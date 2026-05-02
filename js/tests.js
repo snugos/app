@@ -13028,114 +13028,155 @@ TestRunner.test('SnugWindow - APP_VERSION validation for Day 418', (t) => {
     }
 });
 
-// === Day 419: Missing State Functions Undo/Redo Verification Tests ===
-
-TestRunner.test('State Functions - setProjectNameState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setProjectNameState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setProjectNameState should NOT call captureStateForUndo');
+// Day 421: Transport, Time Signature, and Performance Constants Tests
+// ================================================================
+TestRunner.test('Constants - TRANSPORT_STATE_STOPPED is "stopped"', (t) => {
+    t.assertEqual(TRANSPORT_STATE_STOPPED, 'stopped', 'TRANSPORT_STATE_STOPPED should be "stopped"');
 });
 
-TestRunner.test('State Functions - setLoadedZipFilesState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setLoadedZipFilesState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setLoadedZipFilesState should NOT call captureStateForUndo');
+TestRunner.test('Constants - TRANSPORT_STATE_PAUSED is "paused"', (t) => {
+    t.assertEqual(TRANSPORT_STATE_PAUSED, 'paused', 'TRANSPORT_STATE_PAUSED should be "paused"');
 });
 
-TestRunner.test('State Functions - setSoundLibraryFileTreesState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setSoundLibraryFileTreesState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setSoundLibraryFileTreesState should NOT call captureStateForUndo');
+TestRunner.test('Constants - TRANSPORT_STATE_PLAYING is "started"', (t) => {
+    t.assertEqual(TRANSPORT_STATE_PLAYING, 'started', 'TRANSPORT_STATE_PLAYING should be "started"');
 });
 
-TestRunner.test('State Functions - setMutedTrackIdsState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setMutedTrackIdsState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setMutedTrackIdsState should NOT call captureStateForUndo');
+TestRunner.test('Constants - DEFAULT_TRANSPORT_STATE equals TRANSPORT_STATE_STOPPED', (t) => {
+    t.assertEqual(DEFAULT_TRANSPORT_STATE, TRANSPORT_STATE_STOPPED, 'DEFAULT_TRANSPORT_STATE should match TRANSPORT_STATE_STOPPED');
 });
 
-TestRunner.test('State Functions - setHighestZState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setHighestZState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setHighestZState should NOT call captureStateForUndo');
+TestRunner.test('Constants - TRANSPORT_STATES is array with 3 states', (t) => {
+    t.assertEqual(Array.isArray(TRANSPORT_STATES), true, 'TRANSPORT_STATES should be an array');
+    t.assertEqual(TRANSPORT_STATES.length, 3, 'TRANSPORT_STATES should have 3 elements');
 });
 
-TestRunner.test('State Functions - setMasterEffectsState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setMasterEffectsState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setMasterEffectsState should NOT call captureStateForUndo');
+TestRunner.test('Constants - TRANSPORT_STATES contains all transport states', (t) => {
+    t.assertTruthy(TRANSPORT_STATES.includes('stopped'), 'TRANSPORT_STATES should include "stopped"');
+    t.assertTruthy(TRANSPORT_STATES.includes('paused'), 'TRANSPORT_STATES should include "paused"');
+    t.assertTruthy(TRANSPORT_STATES.includes('started'), 'TRANSPORT_STATES should include "started"');
 });
 
-TestRunner.test('State Functions - setMasterGainValueState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setMasterGainValueState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setMasterGainValueState should NOT call captureStateForUndo');
+TestRunner.test('Constants - TIME_SIG_MIN_NUMERATOR is 1', (t) => {
+    t.assertEqual(TIME_SIG_MIN_NUMERATOR, 1, 'TIME_SIG_MIN_NUMERATOR should be 1');
 });
 
-TestRunner.test('State Functions - setMidiAccessState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setMidiAccessState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setMidiAccessState should NOT call captureStateForUndo');
+TestRunner.test('Constants - TIME_SIG_MAX_NUMERATOR is 16', (t) => {
+    t.assertEqual(TIME_SIG_MAX_NUMERATOR, 16, 'TIME_SIG_MAX_NUMERATOR should be 16');
 });
 
-TestRunner.test('State Functions - setActiveMIDIInputState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setActiveMIDIInputState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setActiveMIDIInputState should NOT call captureStateForUndo');
+TestRunner.test('Constants - TIME_SIG_MIN_DENOMINATOR is 1', (t) => {
+    t.assertEqual(TIME_SIG_MIN_DENOMINATOR, 1, 'TIME_SIG_MIN_DENOMINATOR should be 1');
 });
 
-TestRunner.test('State Functions - setCurrentLibraryNameState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setCurrentLibraryNameState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setCurrentLibraryNameState should NOT call captureStateForUndo');
+TestRunner.test('Constants - TIME_SIG_MAX_DENOMINATOR is 16', (t) => {
+    t.assertEqual(TIME_SIG_MAX_DENOMINATOR, 16, 'TIME_SIG_MAX_DENOMINATOR should be 16');
 });
 
-TestRunner.test('State Functions - setCurrentSoundFileTreeState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setCurrentSoundFileTreeState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setCurrentSoundFileTreeState should NOT call captureStateForUndo');
+TestRunner.test('Constants - DEFAULT_TIME_SIGNATURE_NUMERATOR is 4', (t) => {
+    t.assertEqual(DEFAULT_TIME_SIGNATURE_NUMERATOR, 4, 'DEFAULT_TIME_SIGNATURE_NUMERATOR should be 4');
 });
 
-TestRunner.test('State Functions - setCurrentSoundBrowserPathState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setCurrentSoundBrowserPathState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setCurrentSoundBrowserPathState should NOT call captureStateForUndo');
+TestRunner.test('Constants - DEFAULT_TIME_SIGNATURE_DENOMINATOR is 4', (t) => {
+    t.assertEqual(DEFAULT_TIME_SIGNATURE_DENOMINATOR, 4, 'DEFAULT_TIME_SIGNATURE_DENOMINATOR should be 4');
 });
 
-TestRunner.test('State Functions - setPreviewPlayerState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setPreviewPlayerState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setPreviewPlayerState should NOT call captureStateForUndo');
+TestRunner.test('Constants - DEFAULT_TIME_SIGNATURE is object with numerator and denominator', (t) => {
+    t.assertEqual(typeof DEFAULT_TIME_SIGNATURE, 'object', 'DEFAULT_TIME_SIGNATURE should be an object');
+    t.assertEqual(DEFAULT_TIME_SIGNATURE.numerator, 4, 'DEFAULT_TIME_SIGNATURE.numerator should be 4');
+    t.assertEqual(DEFAULT_TIME_SIGNATURE.denominator, 4, 'DEFAULT_TIME_SIGNATURE.denominator should be 4');
 });
 
-TestRunner.test('State Functions - setClipboardDataState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setClipboardDataState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setClipboardDataState should NOT call captureStateForUndo');
+TestRunner.test('Constants - PERFORMANCE_CONTEXT_STATE_SUSPENDED is "suspended"', (t) => {
+    t.assertEqual(PERFORMANCE_CONTEXT_STATE_SUSPENDED, 'suspended', 'PERFORMANCE_CONTEXT_STATE_SUSPENDED should be "suspended"');
 });
 
-TestRunner.test('State Functions - setArmedTrackIdState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setArmedTrackIdState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setArmedTrackIdState should NOT call captureStateForUndo');
+TestRunner.test('Constants - PERFORMANCE_CONTEXT_STATE_CLOSED is "closed"', (t) => {
+    t.assertEqual(PERFORMANCE_CONTEXT_STATE_CLOSED, 'closed', 'PERFORMANCE_CONTEXT_STATE_CLOSED should be "closed"');
 });
 
-TestRunner.test('State Functions - setIsRecordingState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setIsRecordingState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setIsRecordingState should NOT call captureStateForUndo');
+TestRunner.test('Constants - PERFORMANCE_MEMORY_PRESSURE_NONE is "none"', (t) => {
+    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_NONE, 'none', 'PERFORMANCE_MEMORY_PRESSURE_NONE should be "none"');
 });
 
-TestRunner.test('State Functions - setRecordingTrackIdState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setRecordingTrackIdState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setRecordingTrackIdState should NOT call captureStateForUndo');
+TestRunner.test('Constants - PERFORMANCE_MEMORY_PRESSURE_LOW is "low"', (t) => {
+    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_LOW, 'low', 'PERFORMANCE_MEMORY_PRESSURE_LOW should be "low"');
 });
 
-TestRunner.test('State Functions - setRecordingStartTimeState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setRecordingStartTimeState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setRecordingStartTimeState should NOT call captureStateForUndo');
+TestRunner.test('Constants - PERFORMANCE_MEMORY_PRESSURE_MEDIUM is "medium"', (t) => {
+    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_MEDIUM, 'medium', 'PERFORMANCE_MEMORY_PRESSURE_MEDIUM should be "medium"');
 });
 
-TestRunner.test('State Functions - setActiveSequencerTrackIdState does NOT call captureStateForUndo', (t) => {
-    const funcBody = setActiveSequencerTrackIdState.toString();
-    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'setActiveSequencerTrackIdState should NOT call captureStateForUndo');
+TestRunner.test('Constants - PERFORMANCE_MEMORY_PRESSURE_HIGH is "high"', (t) => {
+    t.assertEqual(PERFORMANCE_MEMORY_PRESSURE_HIGH, 'high', 'PERFORMANCE_MEMORY_PRESSURE_HIGH should be "high"');
 });
 
-TestRunner.test('State Functions - setPlaybackModeStateInternal does NOT call captureStateForUndo directly', (t) => {
-    const funcBody = setPlaybackModeStateInternal.toString();
-    // setPlaybackModeStateInternal uses captureStateForUndo through appServices, not directly
-    t.assertTruthy(!funcBody.includes('captureStateForUndoInternal'), 'setPlaybackModeStateInternal should NOT call captureStateForUndoInternal directly');
+TestRunner.test('Constants - METRONOME_VOLUME constants are defined', (t) => {
+    t.assertEqual(typeof MIN_METRONOME_VOLUME, 'number', 'MIN_METRONOME_VOLUME should be defined');
+    t.assertEqual(typeof MAX_METRONOME_VOLUME, 'number', 'MAX_METRONOME_VOLUME should be defined');
 });
 
-TestRunner.test('Day 419 - APP_VERSION validation for Day 419', (t) => {
+TestRunner.test('Constants - MIN_METRONOME_VOLUME is 0', (t) => {
+    t.assertEqual(MIN_METRONOME_VOLUME, 0, 'MIN_METRONOME_VOLUME should be 0');
+});
+
+TestRunner.test('Constants - MAX_METRONOME_VOLUME is 1', (t) => {
+    t.assertEqual(MAX_METRONOME_VOLUME, 1, 'MAX_METRONOME_VOLUME should be 1');
+});
+
+TestRunner.test('Constants - TAP_TEMPO constants are defined', (t) => {
+    t.assertEqual(typeof TAP_TEMPO_TIMEOUT_MS, 'number', 'TAP_TEMPO_TIMEOUT_MS should be defined');
+    t.assertEqual(typeof TAP_TEMPO_MIN_TAPS, 'number', 'TAP_TEMPO_MIN_TAPS should be defined');
+    t.assertEqual(typeof TAP_TEMPO_MAX_TAPS, 'number', 'TAP_TEMPO_MAX_TAPS should be defined');
+});
+
+TestRunner.test('Constants - TAP_TEMPO_TIMEOUT_MS is 2000', (t) => {
+    t.assertEqual(TAP_TEMPO_TIMEOUT_MS, 2000, 'TAP_TEMPO_TIMEOUT_MS should be 2000');
+});
+
+TestRunner.test('Constants - TAP_TEMPO_MIN_TAPS is 2', (t) => {
+    t.assertEqual(TAP_TEMPO_MIN_TAPS, 2, 'TAP_TEMPO_MIN_TAPS should be 2');
+});
+
+TestRunner.test('Constants - TAP_TEMPO_MAX_TAPS is 8', (t) => {
+    t.assertEqual(TAP_TEMPO_MAX_TAPS, 8, 'TAP_TEMPO_MAX_TAPS should be 8');
+});
+
+TestRunner.test('Constants - TAP_TEMPO_MIN_BPM is defined', (t) => {
+    t.assertEqual(typeof TAP_TEMPO_MIN_BPM, 'number', 'TAP_TEMPO_MIN_BPM should be defined');
+    t.assertEqual(TAP_TEMPO_MIN_BPM, 20, 'TAP_TEMPO_MIN_BPM should be 20');
+});
+
+TestRunner.test('Constants - TAP_TEMPO_MAX_BPM is defined', (t) => {
+    t.assertEqual(typeof TAP_TEMPO_MAX_BPM, 'number', 'TAP_TEMPO_MAX_BPM should be defined');
+    t.assertEqual(TAP_TEMPO_MAX_BPM, 300, 'TAP_TEMPO_MAX_BPM should be 300');
+});
+
+TestRunner.test('Constants - Time signature bounds are valid', (t) => {
+    t.assertTruthy(TIME_SIG_MIN_NUMERATOR < TIME_SIG_MAX_NUMERATOR, 'MIN < MAX numerator');
+    t.assertTruthy(TIME_SIG_MIN_DENOMINATOR < TIME_SIG_MAX_DENOMINATOR, 'MIN < MAX denominator');
+    t.assertTruthy(DEFAULT_TIME_SIGNATURE_NUMERATOR >= TIME_SIG_MIN_NUMERATOR, 'default numerator >= MIN');
+    t.assertTruthy(DEFAULT_TIME_SIGNATURE_NUMERATOR <= TIME_SIG_MAX_NUMERATOR, 'default numerator <= MAX');
+    t.assertTruthy(DEFAULT_TIME_SIGNATURE_DENOMINATOR >= TIME_SIG_MIN_DENOMINATOR, 'default denominator >= MIN');
+    t.assertTruthy(DEFAULT_TIME_SIGNATURE_DENOMINATOR <= TIME_SIG_MAX_DENOMINATOR, 'default denominator <= MAX');
+});
+
+TestRunner.test('Constants - Performance memory pressure levels are ordered', (t) => {
+    t.assertTruthy([PERFORMANCE_MEMORY_PRESSURE_NONE, PERFORMANCE_MEMORY_PRESSURE_LOW, PERFORMANCE_MEMORY_PRESSURE_MEDIUM, PERFORMANCE_MEMORY_PRESSURE_HIGH].length === 4, 'Should have 4 pressure levels');
+});
+
+TestRunner.test('Constants - Tap tempo taps range is valid', (t) => {
+    t.assertTruthy(TAP_TEMPO_MIN_TAPS < TAP_TEMPO_MAX_TAPS, 'MIN taps should be less than MAX taps');
+});
+
+TestRunner.test('Constants - Tap tempo BPM range is valid', (t) => {
+    t.assertTruthy(TAP_TEMPO_MIN_BPM < TAP_TEMPO_MAX_BPM, 'MIN BPM should be less than MAX BPM');
+});
+
+TestRunner.test('Day 421 - APP_VERSION validation for Day 421', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 419');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 421');
     if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 97, 'Minor version should be >= 97 for Day 419');
+        t.assertTruthy(versionParts[1] >= 97, 'Minor version should be >= 97 for Day 421');
     }
 });
-

@@ -9,7 +9,8 @@ import { showNotification as utilShowNotification, createContextMenu, createDrop
 import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
-    handleTimelineLaneDrop, selectMIDIInput
+    handleTimelineLaneDrop,
+    selectMIDIInput
 } from './eventHandlers.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
@@ -54,7 +55,6 @@ import {
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
     gatherProjectDataInternal, reconstructDAWInternal, saveProjectInternal,
     loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal, exportStemsInternal,
-    exportToMidiInternal, importFromMidiInternal,
     // Auto-save
     startAutoSave, stopAutoSave,
     // Auto-save (aliased for appServices surface)
@@ -75,6 +75,11 @@ import {
     getProjectNameState, setProjectNameState,
     // Synth Presets
     getSynthPresets, saveSynthPreset, deleteSynthPreset,
+    // Muted Track Ids
+    getMutedTrackIdsState, setMutedTrackIdsState,
+    // MIDI Export
+    exportToMidiInternal,
+    importFromMidiInternal,
 } from './state.js';
 import { DESKTOP_BACKGROUND_KEY, DESKTOP_BG_TYPE_KEY } from './constants.js';
 import { getAudio as bgDbGet, storeAudio as bgDbStore, deleteAudio as bgDbDelete } from './db.js';
@@ -335,6 +340,7 @@ const appServices = {
             return null;
         }
     },
+    getMasterEffectsBusInputNode: getMasterEffectsBusInputNode,
     effectsRegistryAccess: {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
@@ -345,6 +351,9 @@ const appServices = {
     getTracks: getTracksState,
     getTrackById: getTrackByIdState,
     getOpenWindows: getOpenWindowsState,
+    getHighestZ: getHighestZState,
+    setHighestZ: setHighestZState,
+    incrementHighestZ: incrementHighestZState,
     getWindowById: getWindowByIdState,
     getArmedTrackId: getArmedTrackIdState,
     setArmedTrackId: setArmedTrackIdState,
@@ -477,6 +486,12 @@ const appServices = {
         if (appServices.removeTrack) appServices.removeTrack(trackId);
     },
 
+    panicStopAllAudio: panicStopAllAudio,
+    undoLastAction: undoLastActionInternal,
+    redoLastAction: redoLastActionInternal,
+    getMutedTrackIds: getMutedTrackIdsState,
+    setMutedTrackIds: setMutedTrackIdsState,
+
     handleOpenTrackInspector: (trackId) => {
         if (typeof openTrackInspectorWindow === 'function') openTrackInspectorWindow(trackId);
     },
@@ -494,10 +509,11 @@ const appServices = {
     },
 
     handleOpenSequencer: (trackId) => {
-        if (typeof openTrackSequencerWindow === 'function') openTrackSequencerWindow(trackId);
+        if (appServices.openTrackSequencerWindow) appServices.openTrackSequencerWindow(trackId);
     },
-
     handleTimelineLaneDrop,
+    renderTimeline,
+    initAudioContextAndMasterMeter,
 
     renameTrackInState,
 
@@ -510,6 +526,9 @@ const appServices = {
     openTimelineWindow,
     openMixerWindow,
     openMasterEffectsRackWindow,
+    openTrackInspectorWindow,
+    openTrackSequencerWindow,
+    openTrackEffectsRackWindow,
     openGlobalControlsWindow,
     showKeyboardShortcutsHelpWindow,
     openTrackTemplatesWindow,
@@ -650,6 +669,15 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                     }
                 }
                 break;
+            case 'trackColorChanged':
+                // Update mixer and timeline if they're open
+                if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
+                    appServices.updateMixerWindow();
+                }
+                if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') {
+                    appServices.renderTimeline();
+                }
+                break;
             default:
                 console.warn(`[Main UI Update] Unhandled reason: ${reason} for track ${trackId}`);
         }
@@ -729,15 +757,8 @@ async function initializeSnugOS() {
         Object.assign(uiElementsCache, globalElements);
         console.log('[Main] uiElementsCache populated. Keys:', Object.keys(uiElementsCache).filter(k => uiElementsCache[k]));
         
-        const startBtn = document.getElementById('startButton');
-        const startMenu = document.getElementById('startMenu');
-        if (startBtn && startMenu) {
-            startBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                startMenu.classList.toggle('hidden');
-            });
-        }
-        
+        // Start button click handler is in eventHandlers.js via initializePrimaryEventListeners
+         
 
         try {
             const effectsRegistry = await import('./effectsRegistry.js');
@@ -1309,20 +1330,6 @@ window.addEventListener('beforeunload', (e) => {
         e.preventDefault(); 
         e.returnValue = ''; 
         return "You have unsaved changes. Are you sure you want to leave?"; 
-    }
-});
-
-window.addEventListener('load', () => {
-    const startBtn = document.getElementById('startButton');
-    const startMenu = document.getElementById('startMenu');
-    if (startBtn && startMenu) {
-        startBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            startMenu.classList.toggle('hidden');
-        });
-    } else {
-        console.error('[Main] Start button or menu not found');
     }
 });
 
