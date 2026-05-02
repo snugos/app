@@ -378,6 +378,11 @@ const appServices = {
     getPlaybackMode: getPlaybackModeState,
     setPlaybackMode: setPlaybackModeState,
 
+    // Synth preset functions - exposed for UI
+    getSynthPresets: getSynthPresets,
+    saveSynthPreset: saveSynthPreset,
+    deleteSynthPreset: deleteSynthPreset,
+
     // Audio loading functions - exposed for UI and other modules
     loadSampleFile: loadSampleFile,
     loadSoundFromBrowserToTarget: loadSoundFromBrowserToTarget,
