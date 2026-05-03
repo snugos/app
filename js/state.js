@@ -47,10 +47,20 @@ let previewPlayerGlobal = null;
 // Getters for Sound Browser State
 export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
 export function setLoadedZipFilesState(val) {
-    loadedZipFilesGlobal = Array.isArray(val) ? val : {};
+    const nextValue = Array.isArray(val) ? val : {};
+    if (!Object.is(loadedZipFilesGlobal, nextValue)) {
+        captureStateForUndoIfAllowed('Set Loaded ZIP Files');
+    }
+    loadedZipFilesGlobal = nextValue;
 }
 export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
-export function setSoundLibraryFileTreesState(val) { soundLibraryFileTreesGlobal = val; }
+export function setSoundLibraryFileTreesState(val) {
+    const nextValue = val && typeof val === 'object' ? val : {};
+    if (!Object.is(soundLibraryFileTreesGlobal, nextValue)) {
+        captureStateForUndoIfAllowed('Set Sound Library File Trees');
+    }
+    soundLibraryFileTreesGlobal = nextValue;
+}
 
 // Clipboard
 let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
@@ -119,12 +129,17 @@ export function getSynthPresets() {
 }
 
 export function saveSynthPreset(name, presetData) {
-    synthPresetsGlobal[name] = JSON.parse(JSON.stringify(presetData));
+    const nextPreset = JSON.parse(JSON.stringify(presetData));
+    if (!Object.is(synthPresetsGlobal[name], nextPreset)) {
+        captureStateForUndoIfAllowed(`Save Synth Preset ${name}`);
+    }
+    synthPresetsGlobal[name] = nextPreset;
     saveSynthPresetsToStorage();
 }
 
 export function deleteSynthPreset(name) {
     if (synthPresetsGlobal[name]) {
+        captureStateForUndoIfAllowed(`Delete Synth Preset ${name}`);
         delete synthPresetsGlobal[name];
         saveSynthPresetsToStorage();
         return true;
@@ -270,14 +285,45 @@ export function setMasterGainValueState(value) {
     masterGainValueState = nextValue;
 }
 
-export function setMidiAccessState(access) { midiAccessGlobal = access; }
-export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
+export function setMidiAccessState(access) {
+    if (!Object.is(midiAccessGlobal, access)) {
+        captureStateForUndoIfAllowed('Set MIDI Access');
+    }
+    midiAccessGlobal = access;
+}
+export function setActiveMIDIInputState(input) {
+    if (!Object.is(activeMIDIInputGlobal, input)) {
+        captureStateForUndoIfAllowed('Set Active MIDI Input');
+    }
+    activeMIDIInputGlobal = input;
+}
 
 
-export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; }
-export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal = tree; }
-export function setCurrentSoundBrowserPathState(path) { currentSoundBrowserPathGlobal = Array.isArray(path) ? path : []; }
-export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
+export function setCurrentLibraryNameState(name) {
+    if (!Object.is(currentLibraryNameGlobal, name)) {
+        captureStateForUndoIfAllowed('Set Current Library');
+    }
+    currentLibraryNameGlobal = name;
+}
+export function setCurrentSoundFileTreeState(tree) {
+    if (!Object.is(currentSoundFileTreeGlobal, tree)) {
+        captureStateForUndoIfAllowed('Set Sound File Tree');
+    }
+    currentSoundFileTreeGlobal = tree;
+}
+export function setCurrentSoundBrowserPathState(path) {
+    const nextPath = Array.isArray(path) ? path : [];
+    if (!Object.is(currentSoundBrowserPathGlobal, nextPath)) {
+        captureStateForUndoIfAllowed('Set Sound Browser Path');
+    }
+    currentSoundBrowserPathGlobal = nextPath;
+}
+export function setPreviewPlayerState(player) {
+    if (!Object.is(previewPlayerGlobal, player)) {
+        captureStateForUndoIfAllowed('Set Preview Player');
+    }
+    previewPlayerGlobal = player;
+}
 
 export function setClipboardDataState(data) {
     const nextClipboardData = typeof data === 'object' && data !== null ? data : { type: null, data: null };
