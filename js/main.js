@@ -381,6 +381,21 @@ const appServices = {
     getPlaybackMode: getPlaybackModeState,
     setPlaybackMode: setPlaybackModeState,
 
+    // Recording state
+    getRecordingTrackId: getRecordingTrackIdState,
+    setRecordingTrackId: setRecordingTrackIdState,
+    getRecordingStartTime: getRecordingStartTimeState,
+    setRecordingStartTime: setRecordingStartTimeState,
+    setIsRecording: setIsRecordingState,
+
+    // Undo/Redo state
+    getUndoStack: getUndoStackState,
+    getRedoStack: getRedoStackState,
+
+    // Master automation arm
+    getMasterAutomationArmed: getMasterAutomationArmedState,
+    setMasterAutomationArmed: setMasterAutomationArmedState,
+
     // Synth preset functions - exposed for UI
     getSynthPresets: getSynthPresets,
     saveSynthPreset: saveSynthPreset,
