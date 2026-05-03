@@ -12,7 +12,13 @@ import {
 // --- Project Metadata ---
 let projectNameState = 'Untitled Project';
 export function getProjectNameState() { return projectNameState; }
-export function setProjectNameState(name) { projectNameState = typeof name === 'string' ? name : 'Untitled Project'; }
+export function setProjectNameState(name) {
+    const nextName = typeof name === 'string' ? name : 'Untitled Project';
+    if (!Object.is(projectNameState, nextName)) {
+        captureStateForUndoIfAllowed(`Set Project Name to ${nextName}`);
+    }
+    projectNameState = nextName;
+}
 
 // --- Centralized State Variables ---
 let tracks = [];
@@ -70,7 +76,11 @@ let redoStack = [];
 let masterAutomationArmedState = false;
 export function getMasterAutomationArmedState() { return masterAutomationArmedState; }
 export function setMasterAutomationArmedState(value) {
-    masterAutomationArmedState = !!value;
+    const nextValue = !!value;
+    if (masterAutomationArmedState !== nextValue) {
+        captureStateForUndoIfAllowed(`Toggle Master Automation Arm ${nextValue ? 'On' : 'Off'}`);
+    }
+    masterAutomationArmedState = nextValue;
 }
 
 // --- Synth Presets Storage ---
@@ -125,6 +135,18 @@ export function deleteSynthPreset(name) {
 // --- AppServices Placeholder (will be populated by main.js) ---
 let appServices = {}; // Populated by initializeStateModule
 
+function captureStateForUndoIfAllowed(description = "Unknown action") {
+    if (appServices && appServices._isReconstructingDAW_flag) {
+        return false;
+    }
+    if (appServices && typeof appServices.captureStateForUndo === 'function') {
+        appServices.captureStateForUndo(description);
+    } else {
+        captureStateForUndoInternal(description);
+    }
+    return true;
+}
+
 export function initializeStateModule(services) {
     appServices = services || {}; // Ensure appServices is an object
     if (!Array.isArray(masterEffectsChainState)) {
@@ -165,14 +187,23 @@ export function getArmedTrackIdState() { return armedTrackId; }
 export function getSoloedTrackIdState() { return soloedTrackId; }
 export function setSoloedTrackIdState(id) {
     const previousId = soloedTrackId;
-    soloedTrackId = (id === undefined || id === null) ? null : id;
+    const nextId = (id === undefined || id === null) ? null : id;
+    if (!Object.is(previousId, nextId)) {
+        captureStateForUndoIfAllowed(nextId === null ? 'Clear Soloed Track' : `Set Soloed Track to ${nextId}`);
+    }
+    soloedTrackId = nextId;
     if (appServices && typeof appServices.onSoloedTrackChanged === 'function') {
         appServices.onSoloedTrackChanged(soloedTrackId, previousId);
     }
 }
 export function getMutedTrackIdsState() { return [...mutedTrackIds]; }
 export function setMutedTrackIdsState(ids) {
-    mutedTrackIds = Array.isArray(ids) ? [...ids] : [];
+    const nextMutedTrackIds = Array.isArray(ids) ? [...ids] : [];
+    const changed = mutedTrackIds.length !== nextMutedTrackIds.length || mutedTrackIds.some((trackId, index) => trackId !== nextMutedTrackIds[index]);
+    if (changed) {
+        captureStateForUndoIfAllowed('Set Muted Tracks');
+    }
+    mutedTrackIds = nextMutedTrackIds;
     if (appServices && typeof appServices.onMutedTracksChanged === 'function') {
         appServices.onMutedTracksChanged(mutedTrackIds);
     }
@@ -181,7 +212,12 @@ export function isTrackMutedState(trackId) {
     return mutedTrackIds.includes(trackId);
 }
 export function setTrackMutedState(trackId, muted) {
-    if (muted) {
+    const isCurrentlyMuted = mutedTrackIds.includes(trackId);
+    const shouldMute = !!muted;
+    if (isCurrentlyMuted !== shouldMute) {
+        captureStateForUndoIfAllowed(`${shouldMute ? 'Mute' : 'Unmute'} Track ${trackId}`);
+    }
+    if (shouldMute) {
         if (!mutedTrackIds.includes(trackId)) mutedTrackIds.push(trackId);
     } else {
         mutedTrackIds = mutedTrackIds.filter(id => id !== trackId);
@@ -195,13 +231,44 @@ export function isTrackSoloedState(trackId) {
 }
 
 // --- Setters for Centralized State (called internally or via appServices) ---
-export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
-export function removeWindowFromStoreState(id) { openWindowsMap.delete(id); }
-export function setHighestZState(value) { highestZ = Number.isFinite(value) ? value : 100; }
-export function incrementHighestZState() { return ++highestZ; }
+export function addWindowToStoreState(id, instance) {
+    if (!openWindowsMap.has(id) || openWindowsMap.get(id) !== instance) {
+        captureStateForUndoIfAllowed(`Open Window ${id}`);
+    }
+    openWindowsMap.set(id, instance);
+}
+export function removeWindowFromStoreState(id) {
+    if (openWindowsMap.has(id)) {
+        captureStateForUndoIfAllowed(`Close Window ${id}`);
+    }
+    openWindowsMap.delete(id);
+}
+export function setHighestZState(value) {
+    const nextValue = Number.isFinite(value) ? value : 100;
+    if (highestZ !== nextValue) {
+        captureStateForUndoIfAllowed(`Set Highest Z to ${nextValue}`);
+    }
+    highestZ = nextValue;
+}
+export function incrementHighestZState() {
+    captureStateForUndoIfAllowed('Increment Highest Z');
+    return ++highestZ;
+}
 
-export function setMasterEffectsState(newChain) { masterEffectsChainState = Array.isArray(newChain) ? newChain : []; }
-export function setMasterGainValueState(value) { masterGainValueState = Number.isFinite(value) ? value : Tone.dbToGain(0); }
+export function setMasterEffectsState(newChain) {
+    const nextChain = Array.isArray(newChain) ? newChain : [];
+    if (masterEffectsChainState !== nextChain) {
+        captureStateForUndoIfAllowed('Set Master Effects Chain');
+    }
+    masterEffectsChainState = nextChain;
+}
+export function setMasterGainValueState(value) {
+    const nextValue = Number.isFinite(value) ? value : Tone.dbToGain(0);
+    if (masterGainValueState !== nextValue) {
+        captureStateForUndoIfAllowed(`Set Master Volume to ${nextValue}`);
+    }
+    masterGainValueState = nextValue;
+}
 
 export function setMidiAccessState(access) { midiAccessGlobal = access; }
 export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
@@ -212,14 +279,47 @@ export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal 
 export function setCurrentSoundBrowserPathState(path) { currentSoundBrowserPathGlobal = Array.isArray(path) ? path : []; }
 export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
 
-export function setClipboardDataState(data) { clipboardDataGlobal = typeof data === 'object' && data !== null ? data : { type: null, data: null }; }
+export function setClipboardDataState(data) {
+    const nextClipboardData = typeof data === 'object' && data !== null ? data : { type: null, data: null };
+    if (JSON.stringify(clipboardDataGlobal) !== JSON.stringify(nextClipboardData)) {
+        captureStateForUndoIfAllowed('Set Clipboard Data');
+    }
+    clipboardDataGlobal = nextClipboardData;
+}
 
-export function setArmedTrackIdState(id) { armedTrackId = id; }
-export function setIsRecordingState(status) { isRecordingGlobal = !!status; }
-export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
-export function setRecordingStartTimeState(time) { recordingStartTime = Number.isFinite(time) ? time : 0; }
+export function setArmedTrackIdState(id) {
+    if (!Object.is(armedTrackId, id)) {
+        captureStateForUndoIfAllowed(id === null ? 'Clear Armed Track' : `Set Armed Track to ${id}`);
+    }
+    armedTrackId = id;
+}
+export function setIsRecordingState(status) {
+    const nextValue = !!status;
+    if (isRecordingGlobal !== nextValue) {
+        captureStateForUndoIfAllowed(`Set Recording State ${nextValue ? 'On' : 'Off'}`);
+    }
+    isRecordingGlobal = nextValue;
+}
+export function setRecordingTrackIdState(id) {
+    if (!Object.is(recordingTrackIdGlobal, id)) {
+        captureStateForUndoIfAllowed(id === null ? 'Clear Recording Track' : `Set Recording Track to ${id}`);
+    }
+    recordingTrackIdGlobal = id;
+}
+export function setRecordingStartTimeState(time) {
+    const nextTime = Number.isFinite(time) ? time : 0;
+    if (recordingStartTime !== nextTime) {
+        captureStateForUndoIfAllowed(`Set Recording Start Time to ${nextTime}`);
+    }
+    recordingStartTime = nextTime;
+}
 export function getRecordingStartTimeState() { return recordingStartTime; }
-export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
+export function setActiveSequencerTrackIdState(id) {
+    if (!Object.is(activeSequencerTrackId, id)) {
+        captureStateForUndoIfAllowed(id === null ? 'Clear Active Sequencer Track' : `Set Active Sequencer Track to ${id}`);
+    }
+    activeSequencerTrackId = id;
+}
 export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
 
 export function getUndoStackState() { return [...undoStack]; }
@@ -441,6 +541,7 @@ export function addMasterEffectToState(effectType, initialParams) {
         ? appServices.effectsRegistryAccess.getEffectDefaultParams(effectType)
         : getEffectDefaultParamsFromRegistry(effectType); // Fallback
 
+    captureStateForUndoIfAllowed(`Add ${effectType} Master Effect`);
     masterEffectsChainState.push({
         id: effectId,
         type: effectType,
@@ -452,6 +553,7 @@ export function addMasterEffectToState(effectType, initialParams) {
 export function removeMasterEffectFromState(effectId) {
     const effectIndex = masterEffectsChainState.findIndex(e => e.id === effectId);
     if (effectIndex > -1) {
+        captureStateForUndoIfAllowed(`Remove Master Effect ${effectId}`);
         masterEffectsChainState.splice(effectIndex, 1);
     }
 }
@@ -462,6 +564,7 @@ export function updateMasterEffectParamInState(effectId, paramPath, value) {
         console.warn(`[State updateMasterEffectParamInState] Effect wrapper or params not found for ID: ${effectId}`);
         return;
     }
+    captureStateForUndoIfAllowed(`Update Master Effect ${effectId} ${paramPath}`);
     try {
         const keys = paramPath.split('.');
         let currentStoredParamLevel = effectWrapper.params;
@@ -481,6 +584,7 @@ export function reorderMasterEffectInState(effectId, newIndex) {
         if (oldIndex === -1) console.warn(`[State reorderMasterEffectInState] Effect ID ${effectId} not found.`);
         return;
     }
+    captureStateForUndoIfAllowed(`Reorder Master Effect ${effectId}`);
     const [effectToMove] = masterEffectsChainState.splice(oldIndex, 1);
     masterEffectsChainState.splice(newIndex, 0, effectToMove);
 }
