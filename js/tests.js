@@ -12562,6 +12562,136 @@ TestRunner.test('Synth Presets - deleteSynthPreset returns boolean', (t) => {
     t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'deleteSynthPreset should return boolean');
 });
 
+// === Day 423: Undo Capture Coverage Tests ===
+TestRunner.test('Undo Capture Coverage - setMasterAutomationArmedState is a function export', (t) => {
+    t.assertEqual(typeof setMasterAutomationArmedState, 'function', 'setMasterAutomationArmedState should be a function');
+});
+
+TestRunner.test('Undo Capture Coverage - setMasterAutomationArmedState accepts 1 parameter', (t) => {
+    t.assertEqual(setMasterAutomationArmedState.length, 1, 'setMasterAutomationArmedState should accept 1 parameter');
+});
+
+TestRunner.test('Undo Capture Coverage - setMasterAutomationArmedState calls captureStateForUndo', (t) => {
+    const funcStr = setMasterAutomationArmedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMasterAutomationArmedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setMasterAutomationArmedState uses descriptive undo label', (t) => {
+    const funcStr = setMasterAutomationArmedState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Master Automation Arm') || funcStr.includes('Master Automation'), 'setMasterAutomationArmedState should use descriptive undo label');
+});
+
+TestRunner.test('Undo Capture Coverage - setMasterAutomationArmedState guards against missing appServices', (t) => {
+    const funcStr = setMasterAutomationArmedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed') || funcStr.includes('appServices'), 'setMasterAutomationArmedState should guard against missing appServices');
+});
+
+TestRunner.test('Undo Capture Coverage - setProjectNameState is a function export', (t) => {
+    t.assertEqual(typeof setProjectNameState, 'function', 'setProjectNameState should be a function');
+});
+
+TestRunner.test('Undo Capture Coverage - setProjectNameState accepts 1 parameter', (t) => {
+    t.assertEqual(setProjectNameState.length, 1, 'setProjectNameState should accept 1 parameter');
+});
+
+TestRunner.test('Undo Capture Coverage - setProjectNameState calls captureStateForUndo', (t) => {
+    const funcStr = setProjectNameState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setProjectNameState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setProjectNameState uses descriptive undo label', (t) => {
+    const funcStr = setProjectNameState.toString();
+    t.assertTruthy(funcStr.includes('Set Project Name'), 'setProjectNameState should use descriptive undo label');
+});
+
+TestRunner.test('Undo Capture Coverage - setMasterGainValueState calls captureStateForUndo', (t) => {
+    const funcStr = setMasterGainValueState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setMasterGainValueState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setClipboardDataState calls captureStateForUndo', (t) => {
+    const funcStr = setClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setClipboardDataState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setMutedTrackIdsState calls captureStateForUndo', (t) => {
+    const funcStr = setMutedTrackIdsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setMutedTrackIdsState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setTrackMutedState calls captureStateForUndo', (t) => {
+    const funcStr = setTrackMutedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setTrackMutedState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - addWindowToStoreState calls captureStateForUndo', (t) => {
+    const funcStr = addWindowToStoreState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'addWindowToStoreState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - removeWindowFromStoreState calls captureStateForUndo', (t) => {
+    const funcStr = removeWindowFromStoreState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'removeWindowFromStoreState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setHighestZState calls captureStateForUndo', (t) => {
+    const funcStr = setHighestZState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setHighestZState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - incrementHighestZState calls captureStateForUndo', (t) => {
+    const funcStr = incrementHighestZState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'incrementHighestZState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setMasterEffectsState calls captureStateForUndo', (t) => {
+    const funcStr = setMasterEffectsState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setMasterEffectsState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setRecordingTrackIdState calls captureStateForUndo', (t) => {
+    const funcStr = setRecordingTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setRecordingTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setRecordingStartTimeState calls captureStateForUndo', (t) => {
+    const funcStr = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setRecordingStartTimeState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - setActiveSequencerTrackIdState calls captureStateForUndo', (t) => {
+    const funcStr = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setActiveSequencerTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - addMasterEffectToState calls captureStateForUndo', (t) => {
+    const funcStr = addMasterEffectToState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'addMasterEffectToState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - removeMasterEffectFromState calls captureStateForUndo', (t) => {
+    const funcStr = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'removeMasterEffectFromState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - updateMasterEffectParamInState calls captureStateForUndo', (t) => {
+    const funcStr = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'updateMasterEffectParamInState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - reorderMasterEffectInState calls captureStateForUndo', (t) => {
+    const funcStr = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'reorderMasterEffectInState should call captureStateForUndo');
+});
+
+TestRunner.test('Undo Capture Coverage - APP_VERSION validation for Day 423', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 423');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 98, 'Minor version should be >= 98 for Day 423');
+    }
+});
+
 // === Day 418: Additional State Setter Functions Tests ===
 
 TestRunner.test('State - setSoloedTrackIdState is a function export', (t) => {
