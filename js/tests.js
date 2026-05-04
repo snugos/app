@@ -6794,3 +6794,310 @@ TestRunner.test('SnugWindow - APP_VERSION validation for Day 424', (t) => {
         t.assertTruthy(versionParts[1] >= 100, 'Minor version should be >= 100 for Day 424');
     }
 });
+
+// ============================================================
+// Day 426: Context Suspension Monitoring & Sidechain Tests
+// ============================================================
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring is a function export', (t) => {
+    t.assertEquals(typeof startContextSuspensionMonitoring, 'function', 'startContextSuspensionMonitoring should be a function');
+});
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring accepts 1 parameter', (t) => {
+    const paramCount = startContextSuspensionMonitoring.length;
+    t.assertEquals(paramCount, 1, 'startContextSuspensionMonitoring should accept 1 parameter');
+});
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring references intervalMs parameter', (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('intervalMs'), 'startContextSuspensionMonitoring should reference intervalMs parameter');
+});
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring checks resumeAttemptScheduled', (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('resumeAttemptScheduled'), 'startContextSuspensionMonitoring should check resumeAttemptScheduled flag');
+});
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring uses setInterval', (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('setInterval'), 'startContextSuspensionMonitoring should use setInterval');
+});
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring references Tone.context', (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('Tone.context'), 'startContextSuspensionMonitoring should reference Tone.context');
+});
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring handles suspended state', (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('suspended'), 'startContextSuspensionMonitoring should handle suspended state');
+});
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring calls context.resume()', (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('resume'), 'startContextSuspensionMonitoring should call resume()');
+});
+
+TestRunner.test('Context Monitor - startContextSuspensionMonitoring increments contextSuspendedCount', (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('contextSuspendedCount'), 'startContextSuspensionMonitoring should increment contextSuspendedCount');
+});
+
+TestRunner.test('Context Monitor - stopContextSuspensionMonitoring is a function export', (t) => {
+    t.assertEquals(typeof stopContextSuspensionMonitoring, 'function', 'stopContextSuspensionMonitoring should be a function');
+});
+
+TestRunner.test('Context Monitor - stopContextSuspensionMonitoring accepts 0 parameters', (t) => {
+    const paramCount = stopContextSuspensionMonitoring.length;
+    t.assertEquals(paramCount, 0, 'stopContextSuspensionMonitoring should accept 0 parameters');
+});
+
+TestRunner.test('Context Monitor - stopContextSuspensionMonitoring resets resumeAttemptScheduled', (t) => {
+    const funcStr = stopContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('resumeAttemptScheduled'), 'stopContextSuspensionMonitoring should reset resumeAttemptScheduled');
+});
+
+TestRunner.test('Context Monitor - stopContextSuspensionMonitoring resets contextSuspendedCount', (t) => {
+    const funcStr = stopContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('contextSuspendedCount'), 'stopContextSuspensionMonitoring should reset contextSuspendedCount');
+});
+
+TestRunner.test('Context Monitor - getContextSuspensionCount is a function export', (t) => {
+    t.assertEquals(typeof getContextSuspensionCount, 'function', 'getContextSuspensionCount should be a function');
+});
+
+TestRunner.test('Context Monitor - getContextSuspensionCount accepts 0 parameters', (t) => {
+    const paramCount = getContextSuspensionCount.length;
+    t.assertEquals(paramCount, 0, 'getContextSuspensionCount should accept 0 parameters');
+});
+
+TestRunner.test('Context Monitor - getContextSuspensionCount returns contextSuspendedCount', (t) => {
+    const funcStr = getContextSuspensionCount.toString();
+    t.assertTruthy(funcStr.includes('contextSuspendedCount'), 'getContextSuspensionCount should return contextSuspendedCount');
+});
+
+TestRunner.test('Context Monitor - getContextState is a function export', (t) => {
+    t.assertEquals(typeof getContextState, 'function', 'getContextState should be a function');
+});
+
+TestRunner.test('Context Monitor - getContextState accepts 0 parameters', (t) => {
+    const paramCount = getContextState.length;
+    t.assertEquals(paramCount, 0, 'getContextState should accept 0 parameters');
+});
+
+TestRunner.test('Context Monitor - getContextState references Tone.context.state', (t) => {
+    const funcStr = getContextState.toString();
+    t.assertTruthy(funcStr.includes('Tone.context.state') || funcStr.includes('context.state'), 'getContextState should reference Tone.context.state');
+});
+
+TestRunner.test('Sidechain - getSidechainBusInput is a function export', (t) => {
+    t.assertEquals(typeof getSidechainBusInput, 'function', 'getSidechainBusInput should be a function');
+});
+
+TestRunner.test('Sidechain - getSidechainBusInput accepts 0 parameters', (t) => {
+    const paramCount = getSidechainBusInput.length;
+    t.assertEquals(paramCount, 0, 'getSidechainBusInput should accept 0 parameters');
+});
+
+TestRunner.test('Sidechain - getSidechainBusInput checks sidechainBus state', (t) => {
+    const funcStr = getSidechainBusInput.toString();
+    t.assertTruthy(funcStr.includes('sidechainBus'), 'getSidechainBusInput should check sidechainBus state');
+});
+
+TestRunner.test('Sidechain - getSidechainBusInput creates Tone.Gain node', (t) => {
+    const funcStr = getSidechainBusInput.toString();
+    t.assertTruthy(funcStr.includes('Tone.Gain') || funcStr.includes('Gain'), 'getSidechainBusInput should create Tone.Gain node');
+});
+
+TestRunner.test('Sidechain - getSidechainBusInput disposes existing node if disposed flag is false', (t) => {
+    const funcStr = getSidechainBusInput.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'getSidechainBusInput should dispose existing node');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic is a function export', (t) => {
+    t.assertEquals(typeof enableSidechainFromMic, 'function', 'enableSidechainFromMic should be a function');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic is async', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('async') || enableSidechainFromMic.constructor.name === 'AsyncFunction', 'enableSidechainFromMic should be async');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic accepts 1 parameter', (t) => {
+    const paramCount = enableSidechainFromMic.length;
+    t.assertEquals(paramCount, 1, 'enableSidechainFromMic should accept 1 parameter');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic references compressorNode parameter', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('compressorNode'), 'enableSidechainFromMic should reference compressorNode parameter');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic validates compressorNode', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('compressorNode.disposed'), 'enableSidechainFromMic should validate compressorNode');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic checks micForSidechain state', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('micForSidechain'), 'enableSidechainFromMic should check micForSidechain state');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic calls Tone.start()', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('Tone.start'), 'enableSidechainFromMic should call Tone.start()');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic getsUserMedia from navigator', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('getUserMedia') || funcStr.includes('navigator.mediaDevices'), 'enableSidechainFromMic should getUserMedia');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic creates Tone.UserMedia instance', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('Tone.UserMedia'), 'enableSidechainFromMic should create Tone.UserMedia instance');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic connects mic to sidechainBus', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('connect'), 'enableSidechainFromMic should connect nodes');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic calls showNotification', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'enableSidechainFromMic should call showNotification');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic has error handling', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('catch') || funcStr.includes('console.error'), 'enableSidechainFromMic should have error handling');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromMic returns boolean', (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'enableSidechainFromMic should return boolean');
+});
+
+TestRunner.test('Sidechain - disableSidechainFromMic is a function export', (t) => {
+    t.assertEquals(typeof disableSidechainFromMic, 'function', 'disableSidechainFromMic should be a function');
+});
+
+TestRunner.test('Sidechain - disableSidechainFromMic accepts 0 parameters', (t) => {
+    const paramCount = disableSidechainFromMic.length;
+    t.assertEquals(paramCount, 0, 'disableSidechainFromMic should accept 0 parameters');
+});
+
+TestRunner.test('Sidechain - disableSidechainFromMic checks micForSidechain', (t) => {
+    const funcStr = disableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('micForSidechain'), 'disableSidechainFromMic should check micForSidechain');
+});
+
+TestRunner.test('Sidechain - disableSidechainFromMic calls disconnect', (t) => {
+    const funcStr = disableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('disconnect'), 'disableSidechainFromMic should call disconnect');
+});
+
+TestRunner.test('Sidechain - disableSidechainFromMic calls close', (t) => {
+    const funcStr = disableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('close'), 'disableSidechainFromMic should call close');
+});
+
+TestRunner.test('Sidechain - disableSidechainFromMic sets micForSidechain to null', (t) => {
+    const funcStr = disableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('= null') && funcStr.includes('micForSidechain'), 'disableSidechainFromMic should nullify micForSidechain');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn is a function export', (t) => {
+    t.assertEquals(typeof enableSidechainFromTrackIn, 'function', 'enableSidechainFromTrackIn should be a function');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn is async', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('async') || enableSidechainFromTrackIn.constructor.name === 'AsyncFunction', 'enableSidechainFromTrackIn should be async');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn accepts 2 parameters', (t) => {
+    const paramCount = enableSidechainFromTrackIn.length;
+    t.assertEquals(paramCount, 2, 'enableSidechainFromTrackIn should accept 2 parameters');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn references trackId parameter', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'enableSidechainFromTrackIn should reference trackId parameter');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn references compressorNode parameter', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('compressorNode'), 'enableSidechainFromTrackIn should reference compressorNode parameter');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn validates compressorNode', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('compressorNode.disposed'), 'enableSidechainFromTrackIn should validate compressorNode');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn gets track from appServices', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'enableSidechainFromTrackIn should get track from appServices');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn checks track.inputChannel', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('inputChannel'), 'enableSidechainFromTrackIn should check track.inputChannel');
+});
+
+TestRunner.test('Sidechain - enableSidechainFromTrackIn connects track to sidechainBus', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('connect'), 'enableSidechainFromTrackIn should connect track to sidechainBus');
+});
+
+TestRunner.test('Sidechain - disableSidechainBus is a function export', (t) => {
+    t.assertEquals(typeof disableSidechainBus, 'function', 'disableSidechainBus should be a function');
+});
+
+TestRunner.test('Sidechain - disableSidechainBus accepts 0 parameters', (t) => {
+    const paramCount = disableSidechainBus.length;
+    t.assertEquals(paramCount, 0, 'disableSidechainBus should accept 0 parameters');
+});
+
+TestRunner.test('Sidechain - disableSidechainBus calls disableSidechainFromMic', (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('disableSidechainFromMic'), 'disableSidechainBus should call disableSidechainFromMic');
+});
+
+TestRunner.test('Sidechain - disableSidechainBus disposes sidechainBus', (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'disableSidechainBus should dispose sidechainBus');
+});
+
+TestRunner.test('Sidechain - disableSidechainBus sets sidechainBus to null', (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('= null') && funcStr.includes('sidechainBus'), 'disableSidechainBus should nullify sidechainBus');
+});
+
+TestRunner.test('Sidechain - isMicOpenForSidechain is a function export', (t) => {
+    t.assertEquals(typeof isMicOpenForSidechain, 'function', 'isMicOpenForSidechain should be a function');
+});
+
+TestRunner.test('Sidechain - isMicOpenForSidechain accepts 0 parameters', (t) => {
+    const paramCount = isMicOpenForSidechain.length;
+    t.assertEquals(paramCount, 0, 'isMicOpenForSidechain should accept 0 parameters');
+});
+
+TestRunner.test('Sidechain - isMicOpenForSidechain references micForSidechain', (t) => {
+    const funcStr = isMicOpenForSidechain.toString();
+    t.assertTruthy(funcStr.includes('micForSidechain'), 'isMicOpenForSidechain should reference micForSidechain');
+});
+
+TestRunner.test('Sidechain - isMicOpenForSidechain checks mic state', (t) => {
+    const funcStr = isMicOpenForSidechain.toString();
+    t.assertTruthy(funcStr.includes('state') && funcStr.includes('started'), 'isMicOpenForSidechain should check mic state');
+});
+
+TestRunner.test('Context Monitor & Sidechain - APP_VERSION validation for Day 426', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 426');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 101, 'Minor version should be >= 101 for Day 426');
+    }
+});
