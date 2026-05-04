@@ -36,7 +36,7 @@ import {
     getLoadedZipFilesState, getSoundLibraryFileTreesState, getCurrentLibraryNameState,
     getCurrentSoundFileTreeState, getCurrentSoundBrowserPathState, getPreviewPlayerState,
     getClipboardDataState, getArmedTrackIdState, getSoloedTrackIdState, isTrackRecordingState,
-    getRecordingTrackIdState,
+    getRecordingTrackIdState, getRecordingStartTimeState,
     getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState, getPlaybackModeState,
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,

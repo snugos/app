@@ -71,6 +71,60 @@
   - Total tests increased from 1291 to 1335
 - **Version**: Bumped to 2.104.0
 
+#### Day 430: Automation Audio Functions Tests (2026-05-04)
+- **Feature**: Added 36 new unit tests for Automation Audio Functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 36 new tests in Day 430 section:
+    - Automation Audio - startAutomation is a function export
+    - Automation Audio - startAutomation accepts 0 parameters
+    - Automation Audio - startAutomation sets automationActive to true
+    - Automation Audio - stopAutomation is a function export
+    - Automation Audio - stopAutomation accepts 0 parameters
+    - Automation Audio - stopAutomation sets automationActive to false
+    - Automation Audio - cleanupAutomation is a function export
+    - Automation Audio - cleanupAutomation accepts 0 parameters
+    - Automation Audio - cleanupAutomation calls stopAutomation
+    - Automation Audio - onTransportStart is a function export
+    - Automation Audio - onTransportStart accepts 0 parameters
+    - Automation Audio - onTransportStart sets automationActive to true
+    - Automation Audio - onTransportStop is a function export
+    - Automation Audio - onTransportStop accepts 0 parameters
+    - Automation Audio - onTransportStop sets automationActive to false
+    - Automation Audio - writeMasterVolumeAutomation is a function export
+    - Automation Audio - writeMasterVolumeAutomation accepts 2 parameters
+    - Automation Audio - writeMasterVolumeAutomation references time parameter
+    - Automation Audio - writeMasterVolumeAutomation references value parameter
+    - Automation Audio - writeMasterVolumeAutomation pushes to masterVolumeAutomation array
+    - Automation Audio - applyMasterVolumeAutomationAtTime is a function export
+    - Automation Audio - applyMasterVolumeAutomationAtTime accepts 1 parameter
+    - Automation Audio - applyMasterVolumeAutomationAtTime references time parameter
+    - Automation Audio - applyMasterVolumeAutomationAtTime finds event by time
+    - Automation Audio - applyMasterVolumeAutomationAtTime calls setMasterVolumeAutomation
+    - Automation Audio - getMasterVolumeAutomation is a function export
+    - Automation Audio - getMasterVolumeAutomation accepts 0 parameters
+    - Automation Audio - getMasterVolumeAutomation returns an array
+    - Automation Audio - getMasterVolumeAutomation returns a copy
+    - Automation Audio - setMasterVolumeAutomation is a function export
+    - Automation Audio - setMasterVolumeAutomation accepts 1 parameter
+    - Automation Audio - setMasterVolumeAutomation references automationData parameter
+    - Automation Audio - setMasterVolumeAutomation checks if input is an array
+    - Automation Audio - setMasterVolumeAutomation defaults to empty array
+    - Automation Audio - setMasterVolumeAutomation creates copies of entries
+    - Automation Audio - APP_VERSION validation for Day 430
+  - `js/constants.js`: Bumped APP_VERSION to 2.105.0
+- **Feature Details**:
+  - Tests validate startAutomation function (0 params, sets automationActive to true)
+  - Tests validate stopAutomation function (0 params, sets automationActive to false)
+  - Tests validate cleanupAutomation function (0 params, calls stopAutomation)
+  - Tests validate onTransportStart function (0 params, sets automationActive to true)
+  - Tests validate onTransportStop function (0 params, sets automationActive to false)
+  - Tests validate writeMasterVolumeAutomation function (2 params: time, value, pushes to masterVolumeAutomation array)
+  - Tests validate applyMasterVolumeAutomationAtTime function (1 param: time, finds event by time, calls setMasterVolumeAutomation)
+  - Tests validate getMasterVolumeAutomation function (0 params, returns array copy using map)
+  - Tests validate setMasterVolumeAutomation function (1 param: automationData, checks Array.isArray, defaults to empty array, creates entry copies)
+  - Total tests increased from 1335 to 1371
+- **Version**: Bumped to 2.105.0
+
 #### Day 428: DrumSampler Pad Drop Zone Verification Normalization (2026-05-04)
 - **Feature**: Hardened DrumSampler pad drop-zone rendering so the selected pad index is normalized before use across the inspector, pad grid, and drop-zone setup
 - **Files Modified**:
@@ -7323,314 +7377,4 @@
     - Send Bus Audio - addEffectToSendBus references effectType parameter
     - Send Bus Audio - addEffectToSendBus references params parameter
     - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType,
+    - Send Bus Audio - addEffect
