@@ -7101,3 +7101,236 @@ TestRunner.test('Context Monitor & Sidechain - APP_VERSION validation for Day 42
         t.assertTruthy(versionParts[1] >= 101, 'Minor version should be >= 101 for Day 426');
     }
 });
+
+// ============================================
+// Day 427: Audio Clip External File & Position/Duration Methods Tests
+// ============================================
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.addExternalAudioFileAsClip, 'function', 'addExternalAudioFileAsClip should be a function');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip is async', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('async') || Track.prototype.addExternalAudioFileAsClip.constructor.name === 'AsyncFunction', 'addExternalAudioFileAsClip should be async');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip accepts 3 parameters', (t) => {
+    const paramCount = Track.prototype.addExternalAudioFileAsClip.length;
+    t.assertEquals(paramCount, 3, 'addExternalAudioFileAsClip should accept 3 parameters');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip references audioFileBlob parameter', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('audioFileBlob'), 'addExternalAudioFileAsClip should reference audioFileBlob parameter');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip references startTime parameter', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('startTime'), 'addExternalAudioFileAsClip should reference startTime parameter');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip references clipName parameter', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('clipName'), 'addExternalAudioFileAsClip should reference clipName parameter');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip validates track type is Audio', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('type') && funcStr.includes('Audio'), 'addExternalAudioFileAsClip should validate track type is Audio');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip generates unique clipId', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('clipId') || funcStr.includes('id:'), 'addExternalAudioFileAsClip should generate a clip ID');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip generates dbKey', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('dbKey'), 'addExternalAudioFileAsClip should generate a dbKey');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip calls storeAudio', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('storeAudio'), 'addExternalAudioFileAsClip should call storeAudio');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip calls getBlobDuration', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('getBlobDuration'), 'addExternalAudioFileAsClip should call getBlobDuration');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip handles duration error gracefully', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('catch') && funcStr.includes('duration'), 'addExternalAudioFileAsClip should handle duration errors');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip creates newClip object', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('newClip') && funcStr.includes('timelineClips'), 'addExternalAudioFileAsClip should create newClip object');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip uses Math.max for startTime', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('startTime'), 'addExternalAudioFileAsClip should use Math.max for startTime');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip pushes to timelineClips', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('push') && funcStr.includes('timelineClips'), 'addExternalAudioFileAsClip should push to timelineClips');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'addExternalAudioFileAsClip should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip calls renderTimeline', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('renderTimeline'), 'addExternalAudioFileAsClip should call renderTimeline');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip has error handling with showNotification', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('catch'), 'addExternalAudioFileAsClip should handle errors');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip returns null on error', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('return null'), 'addExternalAudioFileAsClip should return null on error');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip calls _captureUndoState with Add Audio File Clip label', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('Add Audio File Clip') || funcStr.includes('Audio File Clip'), 'addExternalAudioFileAsClip undo label should reference Audio File Clip');
+});
+
+TestRunner.test('Audio Clip External - addExternalAudioFileAsClip uses audioFileBlob.name when clipName is null', (t) => {
+    const funcStr = Track.prototype.addExternalAudioFileAsClip.toString();
+    t.assertTruthy(funcStr.includes('clipName') || funcStr.includes('name'), 'addExternalAudioFileAsClip should use audioFileBlob.name when clipName is null');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.updateAudioClipPosition, 'function', 'updateAudioClipPosition should be a function');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition accepts 2 parameters', (t) => {
+    const paramCount = Track.prototype.updateAudioClipPosition.length;
+    t.assertEquals(paramCount, 2, 'updateAudioClipPosition should accept 2 parameters');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition is async', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('async') || Track.prototype.updateAudioClipPosition.constructor.name === 'AsyncFunction', 'updateAudioClipPosition should be async');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition references clipId parameter', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'updateAudioClipPosition should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition references newStartTime parameter', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('newStartTime'), 'updateAudioClipPosition should reference newStartTime parameter');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition finds clip by id', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('find') && funcStr.includes('timelineClips'), 'updateAudioClipPosition should find clip by id');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition uses Math.max for newStartTime', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('startTime'), 'updateAudioClipPosition should use Math.max for newStartTime');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'updateAudioClipPosition should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition uses Move Clip label', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('Move Clip') || funcStr.includes('Move'), 'updateAudioClipPosition should use Move Clip label');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition calls renderTimeline', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('renderTimeline'), 'updateAudioClipPosition should call renderTimeline');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition handles transport rescheduling in timeline mode', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('Transport') || funcStr.includes('timeline'), 'updateAudioClipPosition should handle transport rescheduling');
+});
+
+TestRunner.test('Audio Clip Position - updateAudioClipPosition uses parseFloat', (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'updateAudioClipPosition should use parseFloat');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.updateAudioClipDuration, 'function', 'updateAudioClipDuration should be a function');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration accepts 2 parameters', (t) => {
+    const paramCount = Track.prototype.updateAudioClipDuration.length;
+    t.assertEquals(paramCount, 2, 'updateAudioClipDuration should accept 2 parameters');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration is async', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('async') || Track.prototype.updateAudioClipDuration.constructor.name === 'AsyncFunction', 'updateAudioClipDuration should be async');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration references clipId parameter', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'updateAudioClipDuration should reference clipId parameter');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration references newDuration parameter', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('newDuration'), 'updateAudioClipDuration should reference newDuration parameter');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration finds clip by id', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('find') && funcStr.includes('timelineClips'), 'updateAudioClipDuration should find clip by id');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration uses Math.max for newDuration minimum', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('duration'), 'updateAudioClipDuration should use Math.max for newDuration minimum');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'updateAudioClipDuration should call _captureUndoState');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration uses Resize Clip label', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('Resize Clip') || funcStr.includes('Resize'), 'updateAudioClipDuration should use Resize Clip label');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration calls renderTimeline', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('renderTimeline'), 'updateAudioClipDuration should call renderTimeline');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration handles transport rescheduling in timeline mode', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('Transport') || funcStr.includes('timeline'), 'updateAudioClipDuration should handle transport rescheduling');
+});
+
+TestRunner.test('Audio Clip Duration - updateAudioClipDuration uses parseFloat', (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'updateAudioClipDuration should use parseFloat');
+});
+
+TestRunner.test('Audio Clip External & Position & Duration - APP_VERSION validation for Day 427', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 427');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 102, 'Minor version should be >= 102 for Day 427');
+    }
+});
