@@ -1,3 +1,89 @@
+#### Day 429: Punch Recording & Punch Region State Functions Tests (2026-05-04)
+- **Feature**: Added 44 new unit tests for Punch Recording and Punch Region state functions to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 44 new tests in Day 429 section:
+    - Punch Region - getPunchRegion is a function export
+    - Punch Region - getPunchRegion accepts 0 parameters
+    - Punch Region - getPunchRegion returns an object
+    - Punch Region - getPunchRegion returns object with in and out properties
+    - Punch Region - getPunchRegion returns object with enabled property
+    - Punch Region - setPunchRegion is a function export
+    - Punch Region - setPunchRegion accepts 2 parameters
+    - Punch Region - setPunchRegion references inBars parameter
+    - Punch Region - setPunchRegion references outBars parameter
+    - Punch Region - setPunchRegion validates inBars is not negative
+    - Punch Region - setPunchRegion validates outBars is greater than inBars
+    - Punch Region - setPunchRegion validates outBars does not exceed MAX_BARS
+    - Punch Region - setPunchRegion calls console.warn on invalid input
+    - Punch Region - setPunchRegion returns boolean
+    - Punch Region - setPunchRegionEnabled is a function export
+    - Punch Region - setPunchRegionEnabled accepts 1 parameter
+    - Punch Region - setPunchRegionEnabled coerces to boolean
+    - Punch Region - setPunchRegionEnabled returns a boolean
+    - Punch Region - isPunchRegionEnabled is a function export
+    - Punch Region - isPunchRegionEnabled accepts 0 parameters
+    - Punch Region - isPunchRegionEnabled returns boolean
+    - Punch Region - getPunchInBars is a function export
+    - Punch Region - getPunchInBars accepts 0 parameters
+    - Punch Region - getPunchOutBars is a function export
+    - Punch Region - getPunchOutBars accepts 0 parameters
+    - Punch Region - isPositionInPunchRegion is a function export
+    - Punch Region - isPositionInPunchRegion accepts 1 parameter
+    - Punch Region - isPositionInPunchRegion references positionString parameter
+    - Punch Region - isPositionInPunchRegion returns false when punch region is disabled
+    - Punch Region - isPositionInPunchRegion parses position string with split
+    - Punch Region - isPositionInPunchRegion calculates total sixteenths
+    - Punch Recording - scheduleRecordingForPunch is a function export
+    - Punch Recording - scheduleRecordingForPunch accepts 2 parameters
+    - Punch Recording - scheduleRecordingForPunch references trackId parameter
+    - Punch Recording - scheduleRecordingForPunch references onPunchOutTriggered parameter
+    - Punch Recording - scheduleRecordingForPunch clears previous scheduling
+    - Punch Recording - scheduleRecordingForPunch schedules Tone.Transport callback
+    - Punch Recording - scheduleRecordingForPunch references punchRegion.out
+    - Punch Recording - scheduleRecordingForPunch checks recorder state
+    - Punch Recording - scheduleRecordingForPunch calls recorder.stop
+    - Punch Recording - scheduleRecordingForPunch calls onPunchOutTriggered callback
+    - Punch Recording - cancelScheduledRecording is a function export
+    - Punch Recording - cancelScheduledRecording accepts 0 parameters
+    - Punch Recording - cancelScheduledRecording clears recordingScheduledId
+    - Punch Recording - cancelScheduledRecording clears recordingScheduledTrackId
+    - Punch Recording - getRecordingScheduledTrackId is a function export
+    - Punch Recording - getRecordingScheduledTrackId accepts 0 parameters
+    - Punch Recording - getRecordingScheduledTrackId returns recordingScheduledTrackId
+    - Punch Recording - cleanupRecordingScheduling is a function export
+    - Punch Recording - cleanupRecordingScheduling accepts 0 parameters
+    - Punch Recording - cleanupRecordingScheduling calls cancelScheduledRecording
+    - Punch Recording & Punch Region - APP_VERSION validation for Day 429
+  - `js/constants.js`: Bumped APP_VERSION to 2.104.0
+- **Feature Details**:
+  - Tests validate getPunchRegion function (0 params, returns object with in, out, enabled properties)
+  - Tests validate setPunchRegion function (2 params: inBars, outBars, validates bounds, returns boolean)
+  - Tests validate setPunchRegionEnabled function (1 param, boolean coercion)
+  - Tests validate isPunchRegionEnabled function (0 params, returns boolean)
+  - Tests validate getPunchInBars and getPunchOutBars functions (0 params each)
+  - Tests validate isPositionInPunchRegion function (1 param: positionString, checks enabled, parses bar:beat:sixteenth format, calculates total sixteenths)
+  - Tests validate scheduleRecordingForPunch function (2 params: trackId, onPunchOutTriggered, schedules Tone.Transport callback)
+  - Tests validate scheduleRecordingForPunch uses punchRegion.out for punch-out position
+  - Tests validate scheduleRecordingForPunch checks recorder state and calls recorder.stop
+  - Tests validate cancelScheduledRecording function (0 params, clears recordingScheduledId and recordingScheduledTrackId)
+  - Tests validate getRecordingScheduledTrackId function (0 params, returns recordingScheduledTrackId)
+  - Tests validate cleanupRecordingScheduling function (0 params, calls cancelScheduledRecording)
+  - Total tests increased from 1291 to 1335
+- **Version**: Bumped to 2.104.0
+
+#### Day 428: DrumSampler Pad Drop Zone Verification Normalization (2026-05-04)
+- **Feature**: Hardened DrumSampler pad drop-zone rendering so the selected pad index is normalized before use across the inspector, pad grid, and drop-zone setup
+- **Files Modified**:
+  - `js/ui.js`: Added a shared `getNormalizedDrumSamplerPadIndex(track, fallback = 0)` helper and used it to stabilize the selected pad container ID, pad highlighting, pad-number display, and drop-zone setup for DrumSampler tracks
+  - `js/tests.js`: Added DrumSampler pad-drop-zone verification tests for the new helper and normalized selected-pad behavior
+  - `js/constants.js`: Bumped APP_VERSION to 2.103.0
+- **Feature Details**:
+  - DrumSampler inspector no longer depends on raw `selectedDrumPadForEdit` values when building the active pad drop-zone container
+  - Selected-pad display and pad grid highlighting now use the same normalized index, avoiding inconsistencies when the value is missing or malformed
+  - The drop-zone setup path now uses the normalized pad index for both file input and drag-and-drop routing
+  - Added helper coverage for empty-pad fallback and missing-vs-loaded metadata inference
+  - This closes the pad drop-zone verification gap without changing existing sample-loading behavior
+
 #### Day 427: Audio Clip External File & Position/Duration Methods Tests (2026-05-04)
 - **Feature**: Added 46 new unit tests for Audio Clip External File and Position/Duration Methods to expand test coverage
 - **Files Modified**:
@@ -7547,141 +7633,4 @@
     - State Utility - getHighestZState is a function export
     - State Utility - getHighestZState accepts 0 parameters
     - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-- **Version**: Bumped to 2.64.0
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
+    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType,

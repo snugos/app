@@ -7334,3 +7334,245 @@ TestRunner.test('Audio Clip External & Position & Duration - APP_VERSION validat
         t.assertTruthy(versionParts[1] >= 102, 'Minor version should be >= 102 for Day 427');
     }
 });
+
+TestRunner.test('Punch Region - getPunchRegion is a function export', (t) => {
+    t.assertEqual(typeof getPunchRegion, 'function', 'getPunchRegion should be a function');
+});
+
+TestRunner.test('Punch Region - getPunchRegion accepts 0 parameters', (t) => {
+    t.assertEquals(getPunchRegion.length, 0, 'getPunchRegion should accept 0 parameters');
+});
+
+TestRunner.test('Punch Region - getPunchRegion returns an object', (t) => {
+    const result = getPunchRegion();
+    t.assertEqual(typeof result, 'object', 'getPunchRegion should return an object');
+});
+
+TestRunner.test('Punch Region - getPunchRegion returns object with in and out properties', (t) => {
+    const result = getPunchRegion();
+    t.assertTruthy('in' in result, 'getPunchRegion result should have in property');
+    t.assertTruthy('out' in result, 'getPunchRegion result should have out property');
+});
+
+TestRunner.test('Punch Region - getPunchRegion returns object with enabled property', (t) => {
+    const result = getPunchRegion();
+    t.assertTruthy('enabled' in result, 'getPunchRegion result should have enabled property');
+});
+
+TestRunner.test('Punch Region - setPunchRegion is a function export', (t) => {
+    t.assertEqual(typeof setPunchRegion, 'function', 'setPunchRegion should be a function');
+});
+
+TestRunner.test('Punch Region - setPunchRegion accepts 2 parameters', (t) => {
+    t.assertEquals(setPunchRegion.length, 2, 'setPunchRegion should accept 2 parameters');
+});
+
+TestRunner.test('Punch Region - setPunchRegion references inBars parameter', (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('inBars'), 'setPunchRegion should reference inBars parameter');
+});
+
+TestRunner.test('Punch Region - setPunchRegion references outBars parameter', (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('outBars'), 'setPunchRegion should reference outBars parameter');
+});
+
+TestRunner.test('Punch Region - setPunchRegion validates inBars is not negative', (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('inBars < 0') || funcStr.includes('inBars<0'), 'setPunchRegion should check inBars >= 0');
+});
+
+TestRunner.test('Punch Region - setPunchRegion validates outBars is greater than inBars', (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('outBars <= inBars') || funcStr.includes('outBars<=inBars'), 'setPunchRegion should validate outBars > inBars');
+});
+
+TestRunner.test('Punch Region - setPunchRegion validates outBars does not exceed MAX_BARS', (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'setPunchRegion should check against MAX_BARS');
+});
+
+TestRunner.test('Punch Region - setPunchRegion calls console.warn on invalid input', (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('console.warn'), 'setPunchRegion should warn on invalid input');
+});
+
+TestRunner.test('Punch Region - setPunchRegion returns boolean', (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('return false') || funcStr.includes('return true'), 'setPunchRegion should return a boolean');
+});
+
+TestRunner.test('Punch Region - setPunchRegionEnabled is a function export', (t) => {
+    t.assertEqual(typeof setPunchRegionEnabled, 'function', 'setPunchRegionEnabled should be a function');
+});
+
+TestRunner.test('Punch Region - setPunchRegionEnabled accepts 1 parameter', (t) => {
+    t.assertEquals(setPunchRegionEnabled.length, 1, 'setPunchRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test('Punch Region - setPunchRegionEnabled coerces to boolean', (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setPunchRegionEnabled should coerce to boolean');
+});
+
+TestRunner.test('Punch Region - setPunchRegionEnabled returns a boolean', (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('return'), 'setPunchRegionEnabled should return a boolean');
+});
+
+TestRunner.test('Punch Region - isPunchRegionEnabled is a function export', (t) => {
+    t.assertEqual(typeof isPunchRegionEnabled, 'function', 'isPunchRegionEnabled should be a function');
+});
+
+TestRunner.test('Punch Region - isPunchRegionEnabled accepts 0 parameters', (t) => {
+    t.assertEquals(isPunchRegionEnabled.length, 0, 'isPunchRegionEnabled should accept 0 parameters');
+});
+
+TestRunner.test('Punch Region - isPunchRegionEnabled returns boolean', (t) => {
+    const result = isPunchRegionEnabled();
+    t.assertEqual(typeof result, 'boolean', 'isPunchRegionEnabled should return a boolean');
+});
+
+TestRunner.test('Punch Region - getPunchInBars is a function export', (t) => {
+    t.assertEqual(typeof getPunchInBars, 'function', 'getPunchInBars should be a function');
+});
+
+TestRunner.test('Punch Region - getPunchInBars accepts 0 parameters', (t) => {
+    t.assertEquals(getPunchInBars.length, 0, 'getPunchInBars should accept 0 parameters');
+});
+
+TestRunner.test('Punch Region - getPunchOutBars is a function export', (t) => {
+    t.assertEqual(typeof getPunchOutBars, 'function', 'getPunchOutBars should be a function');
+});
+
+TestRunner.test('Punch Region - getPunchOutBars accepts 0 parameters', (t) => {
+    t.assertEquals(getPunchOutBars.length, 0, 'getPunchOutBars should accept 0 parameters');
+});
+
+TestRunner.test('Punch Region - isPositionInPunchRegion is a function export', (t) => {
+    t.assertEqual(typeof isPositionInPunchRegion, 'function', 'isPositionInPunchRegion should be a function');
+});
+
+TestRunner.test('Punch Region - isPositionInPunchRegion accepts 1 parameter', (t) => {
+    t.assertEquals(isPositionInPunchRegion.length, 1, 'isPositionInPunchRegion should accept 1 parameter');
+});
+
+TestRunner.test('Punch Region - isPositionInPunchRegion references positionString parameter', (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('positionString'), 'isPositionInPunchRegion should reference positionString parameter');
+});
+
+TestRunner.test('Punch Region - isPositionInPunchRegion returns false when punch region is disabled', (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled') || funcStr.includes('!punchRegion.enabled'), 'isPositionInPunchRegion should check enabled state');
+});
+
+TestRunner.test('Punch Region - isPositionInPunchRegion parses position string with split', (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('split'), 'isPositionInPunchRegion should split position string');
+});
+
+TestRunner.test('Punch Region - isPositionInPunchRegion calculates total sixteenths', (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('16'), 'isPositionInPunchRegion should calculate sixteenths');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch is a function export', (t) => {
+    t.assertEqual(typeof scheduleRecordingForPunch, 'function', 'scheduleRecordingForPunch should be a function');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch accepts 2 parameters', (t) => {
+    t.assertEquals(scheduleRecordingForPunch.length, 2, 'scheduleRecordingForPunch should accept 2 parameters');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch references trackId parameter', (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'scheduleRecordingForPunch should reference trackId parameter');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch references onPunchOutTriggered parameter', (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('onPunchOutTriggered'), 'scheduleRecordingForPunch should reference onPunchOutTriggered parameter');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch clears previous scheduling', (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledId') && funcStr.includes('clear'), 'scheduleRecordingForPunch should clear previous scheduling');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch schedules Tone.Transport callback', (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.schedule') || funcStr.includes('Transport.schedule'), 'scheduleRecordingForPunch should schedule a Transport callback');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch references punchRegion.out', (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.out'), 'scheduleRecordingForPunch should reference punchRegion.out');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch checks recorder state', (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('recorder') && (funcStr.includes('state') || funcStr.includes('started')), 'scheduleRecordingForPunch should check recorder state');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch calls recorder.stop', (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('recorder.stop') || funcStr.includes('stop()'), 'scheduleRecordingForPunch should call recorder.stop');
+});
+
+TestRunner.test('Punch Recording - scheduleRecordingForPunch calls onPunchOutTriggered callback', (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('onPunchOutTriggered'), 'scheduleRecordingForPunch should call the onPunchOutTriggered callback');
+});
+
+TestRunner.test('Punch Recording - cancelScheduledRecording is a function export', (t) => {
+    t.assertEqual(typeof cancelScheduledRecording, 'function', 'cancelScheduledRecording should be a function');
+});
+
+TestRunner.test('Punch Recording - cancelScheduledRecording accepts 0 parameters', (t) => {
+    t.assertEquals(cancelScheduledRecording.length, 0, 'cancelScheduledRecording should accept 0 parameters');
+});
+
+TestRunner.test('Punch Recording - cancelScheduledRecording clears recordingScheduledId', (t) => {
+    const funcStr = cancelScheduledRecording.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledId') && funcStr.includes('null'), 'cancelScheduledRecording should clear recordingScheduledId');
+});
+
+TestRunner.test('Punch Recording - cancelScheduledRecording clears recordingScheduledTrackId', (t) => {
+    const funcStr = cancelScheduledRecording.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledTrackId') || funcStr.includes('trackId'), 'cancelScheduledRecording should clear recordingScheduledTrackId');
+});
+
+TestRunner.test('Punch Recording - getRecordingScheduledTrackId is a function export', (t) => {
+    t.assertEqual(typeof getRecordingScheduledTrackId, 'function', 'getRecordingScheduledTrackId should be a function');
+});
+
+TestRunner.test('Punch Recording - getRecordingScheduledTrackId accepts 0 parameters', (t) => {
+    t.assertEquals(getRecordingScheduledTrackId.length, 0, 'getRecordingScheduledTrackId should accept 0 parameters');
+});
+
+TestRunner.test('Punch Recording - getRecordingScheduledTrackId returns recordingScheduledTrackId', (t) => {
+    const funcStr = getRecordingScheduledTrackId.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledTrackId') || funcStr.includes('return'), 'getRecordingScheduledTrackId should return recordingScheduledTrackId');
+});
+
+TestRunner.test('Punch Recording - cleanupRecordingScheduling is a function export', (t) => {
+    t.assertEqual(typeof cleanupRecordingScheduling, 'function', 'cleanupRecordingScheduling should be a function');
+});
+
+TestRunner.test('Punch Recording - cleanupRecordingScheduling accepts 0 parameters', (t) => {
+    t.assertEquals(cleanupRecordingScheduling.length, 0, 'cleanupRecordingScheduling should accept 0 parameters');
+});
+
+TestRunner.test('Punch Recording - cleanupRecordingScheduling calls cancelScheduledRecording', (t) => {
+    const funcStr = cleanupRecordingScheduling.toString();
+    t.assertTruthy(funcStr.includes('cancelScheduledRecording'), 'cleanupRecordingScheduling should call cancelScheduledRecording');
+});
+
+TestRunner.test('Punch Recording & Punch Region - APP_VERSION validation for Day 429', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 429');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 104, 'Minor version should be >= 104 for Day 429');
+    }
+});

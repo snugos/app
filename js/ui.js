@@ -371,6 +371,14 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     </div>`;
 }
 
+function getNormalizedDrumSamplerPadIndex(track, fallback = 0) {
+    const parsedIndex = Number.parseInt(track?.selectedDrumPadForEdit, 10);
+    if (Number.isInteger(parsedIndex) && parsedIndex >= 0) {
+        return parsedIndex;
+    }
+    return fallback;
+}
+
 export function getDrumSamplerPadExistingAudioData(track, padIndex) {
     const padData = track && track.drumSamplerPads && track.drumSamplerPads[padIndex] ? track.drumSamplerPads[padIndex] : null;
     if (!padData) {
@@ -383,10 +391,11 @@ export function getDrumSamplerPadExistingAudioData(track, padIndex) {
 }
 
 function buildDrumSamplerSpecificInspectorDOM(track) {
+    const selectedPadIndex = getNormalizedDrumSamplerPadIndex(track);
     return `<div class="drum-sampler-controls p-1 space-y-2">
         <div class="selected-pad-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
             <h4 class="text-xs font-semibold dark:text-slate-200">Edit Pad: <span id="selectedDrumPadInfo-${track.id}">1</span></h4>
-            <div id="drumPadDropZoneContainer-${track.id}-${track.selectedDrumPadForEdit}" class="mb-1 text-xs"></div>
+            <div id="drumPadDropZoneContainer-${track.id}-${selectedPadIndex}" class="mb-1 text-xs"></div>
             <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
                 <div id="drumPadVolumeKnob-${track.id}-placeholder"></div>
                 <div id="drumPadPitchKnob-${track.id}-placeholder"></div>
@@ -406,7 +415,7 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
 export function renderDrumPadEditorControls(track) {
     if (!track || track.type !== 'DrumSampler') return null;
 
-    const selectedPadIndex = Number.isInteger(track.selectedDrumPadForEdit) ? track.selectedDrumPadForEdit : 0;
+    const selectedPadIndex = getNormalizedDrumSamplerPadIndex(track);
     const inspectorWindow = document.getElementById(`window-trackInspector-${track.id}`);
     if (!inspectorWindow) return null;
 
@@ -781,14 +790,15 @@ function initializeTypeSpecificInspectorControls(track, winEl) {
     else if (track.type === 'Sampler') initializeSamplerSpecificControls(track, winEl);
     else if (track.type === 'DrumSampler') {
         // Set up drop zone for drum pad sample upload
-        const dzContainerEl = winEl.querySelector(`#drumPadDropZoneContainer-${track.id}-${track.selectedDrumPadForEdit}`);
+        const selectedPadIndex = getNormalizedDrumSamplerPadIndex(track);
+        const dzContainerEl = winEl.querySelector(`#drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`);
         if (dzContainerEl) {
-            const existingAudioData = getDrumSamplerPadExistingAudioData(track, track.selectedDrumPadForEdit);
-            dzContainerEl.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`, 'DrumSampler', track.selectedDrumPadForEdit, existingAudioData);
+            const existingAudioData = getDrumSamplerPadExistingAudioData(track, selectedPadIndex);
+            dzContainerEl.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${selectedPadIndex}`, 'DrumSampler', selectedPadIndex, existingAudioData);
             const dzEl = dzContainerEl.querySelector('.drop-zone');
-            const fileInputEl = dzContainerEl.querySelector(`#drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`);
-            if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', track.selectedDrumPadForEdit, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
-            if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, track.selectedDrumPadForEdit); };
+            const fileInputEl = dzContainerEl.querySelector(`#drumPadFileInput-${track.id}-${selectedPadIndex}`);
+            if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
+            if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
         }
         renderDrumPadEditorControls(track);
         renderDrumSamplerPads(track);
@@ -2899,10 +2909,11 @@ export function renderDrumSamplerPads(track) {
     
     const numPads = 8; // 4x4 grid
     let html = '';
+    const selectedPadIndex = getNormalizedDrumSamplerPadIndex(track, -1);
     for (let i = 0; i < numPads; i++) {
         const padData = track.drumSamplerPads && track.drumSamplerPads[i];
         const hasSample = padData && padData.audioBuffer;
-        const isSelected = track.selectedDrumPadForEdit === i;
+        const isSelected = selectedPadIndex === i;
         html += `<div class="drum-pad pad-button ${hasSample ? 'has-sample' : ''} ${isSelected ? 'selected-for-edit' : ''}" 
             data-pad-index="${i}" data-track-id="${track.id}">
             <span class="pad-label">${i + 1}</span>
@@ -3038,7 +3049,7 @@ export function updateDrumPadControlsUI(track) {
     
     const padInfoEl = document.getElementById(`selectedDrumPadInfo-${track.id}`);
     if (padInfoEl) {
-        padInfoEl.textContent = (track.selectedDrumPadForEdit || 0) + 1;
+        padInfoEl.textContent = getNormalizedDrumSamplerPadIndex(track) + 1;
     }
     
     renderDrumPadEditorControls(track);
