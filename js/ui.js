@@ -371,6 +371,17 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     </div>`;
 }
 
+export function getDrumSamplerPadExistingAudioData(track, padIndex) {
+    const padData = track && track.drumSamplerPads && track.drumSamplerPads[padIndex] ? track.drumSamplerPads[padIndex] : null;
+    if (!padData) {
+        return { originalFileName: null, status: 'empty' };
+    }
+    return {
+        originalFileName: padData.originalFileName || padData.sampleName || null,
+        status: padData.status || ((padData.dbKey || padData.audioBufferDataURL) ? 'missing' : 'empty')
+    };
+}
+
 function buildDrumSamplerSpecificInspectorDOM(track) {
     return `<div class="drum-sampler-controls p-1 space-y-2">
         <div class="selected-pad-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
@@ -422,11 +433,7 @@ export function renderDrumPadEditorControls(track) {
         }
     }
 
-    const padData = track.drumSamplerPads && track.drumSamplerPads[selectedPadIndex] ? track.drumSamplerPads[selectedPadIndex] : null;
-    const existingAudioData = padData ? {
-        originalFileName: padData.originalFileName || padData.sampleName || null,
-        status: padData.status || ((padData.dbKey || padData.audioBufferDataURL) ? 'missing' : 'empty')
-    } : { originalFileName: null, status: 'empty' };
+    const existingAudioData = getDrumSamplerPadExistingAudioData(track, selectedPadIndex);
     const inputId = `drumPadFileInput-${track.id}-${selectedPadIndex}`;
 
     container.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', selectedPadIndex, existingAudioData);
@@ -776,9 +783,7 @@ function initializeTypeSpecificInspectorControls(track, winEl) {
         // Set up drop zone for drum pad sample upload
         const dzContainerEl = winEl.querySelector(`#drumPadDropZoneContainer-${track.id}-${track.selectedDrumPadForEdit}`);
         if (dzContainerEl) {
-            const existingAudioData = track.drumSamplerPads && track.drumSamplerPads[track.selectedDrumPadForEdit] ? 
-                { fileName: track.drumSamplerPads[track.selectedDrumPadForEdit].fileName, status: 'loaded' } : 
-                { fileName: null, status: 'empty' };
+            const existingAudioData = getDrumSamplerPadExistingAudioData(track, track.selectedDrumPadForEdit);
             dzContainerEl.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`, 'DrumSampler', track.selectedDrumPadForEdit, existingAudioData);
             const dzEl = dzContainerEl.querySelector('.drop-zone');
             const fileInputEl = dzContainerEl.querySelector(`#drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`);
