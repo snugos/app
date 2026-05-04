@@ -7765,3 +7765,81 @@ TestRunner.test('Automation Audio - APP_VERSION validation for Day 430', (t) => 
         t.assertTruthy(versionParts[1] >= 105, 'Minor version should be >= 105 for Day 430');
     }
 });
+
+// ============================================
+// Day 431: Track Color Prototype & Constants Tests
+// ============================================
+import { Track } from './Track.js';
+
+TestRunner.test('Track Color - Track.prototype.setTrackColor is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setTrackColor, 'function', 'setTrackColor should be a function');
+});
+
+TestRunner.test('Track Color - Track.prototype.setTrackColor accepts 1 parameter', (t) => {
+    const paramCount = Track.prototype.setTrackColor.length;
+    t.assertEquals(paramCount, 1, 'setTrackColor should accept 1 parameter');
+});
+
+TestRunner.test('Track Color - Track.prototype.setTrackColor calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setTrackColor should call _captureUndoState');
+});
+
+TestRunner.test('Track Color - Track.prototype.setTrackColor uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('Change color') || funcStr.includes('color'), 'setTrackColor undo label should mention color');
+});
+
+TestRunner.test('Track Color - Track.prototype.setTrackColor assigns trackColor property', (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('trackColor'), 'setTrackColor should assign trackColor property');
+});
+
+TestRunner.test('Track Color - TRACK_COLORS is defined and is an array', (t) => {
+    t.assertEqual(Array.isArray(TRACK_COLORS), true, 'TRACK_COLORS should be an array');
+});
+
+TestRunner.test('Track Color - TRACK_COLORS has at least 12 colors', (t) => {
+    t.assertTruthy(TRACK_COLORS.length >= 12, 'TRACK_COLORS should have at least 12 colors');
+});
+
+TestRunner.test('Track Color - TRACK_COLORS contains valid hex colors', (t) => {
+    const hexRegex = /^#[0-9A-Fa-f]{6}$/;
+    for (const color of TRACK_COLORS) {
+        t.assertTruthy(hexRegex.test(color), `TRACK_COLORS should contain valid hex colors, found: ${color}`);
+    }
+});
+
+TestRunner.test('Track Color - DEFAULT_TRACK_COLOR_INDEX is defined', (t) => {
+    t.assertTruthy(DEFAULT_TRACK_COLOR_INDEX !== undefined, 'DEFAULT_TRACK_COLOR_INDEX should be defined');
+});
+
+TestRunner.test('Track Color - DEFAULT_TRACK_COLOR_INDEX is a non-negative number', (t) => {
+    t.assertEqual(typeof DEFAULT_TRACK_COLOR_INDEX, 'number', 'DEFAULT_TRACK_COLOR_INDEX should be a number');
+    t.assertTruthy(DEFAULT_TRACK_COLOR_INDEX >= 0, 'DEFAULT_TRACK_COLOR_INDEX should be non-negative');
+});
+
+TestRunner.test('Track Color - DEFAULT_TRACK_COLOR is defined', (t) => {
+    t.assertTruthy(DEFAULT_TRACK_COLOR !== undefined, 'DEFAULT_TRACK_COLOR should be defined');
+});
+
+TestRunner.test('Track Color - DEFAULT_TRACK_COLOR is a valid hex color', (t) => {
+    const hexRegex = /^#[0-9A-Fa-f]{6}$/;
+    t.assertTruthy(hexRegex.test(DEFAULT_TRACK_COLOR), 'DEFAULT_TRACK_COLOR should be a valid hex color');
+});
+
+TestRunner.test('Track Color - DEFAULT_TRACK_COLOR matches TRACK_COLORS[DEFAULT_TRACK_COLOR_INDEX]', (t) => {
+    t.assertEqual(DEFAULT_TRACK_COLOR, TRACK_COLORS[DEFAULT_TRACK_COLOR_INDEX], 'DEFAULT_TRACK_COLOR should match TRACK_COLORS[DEFAULT_TRACK_COLOR_INDEX]');
+});
+
+TestRunner.test('Track Color - DEFAULT_TRACK_COLOR_INDEX is within TRACK_COLORS bounds', (t) => {
+    t.assertTruthy(DEFAULT_TRACK_COLOR_INDEX < TRACK_COLORS.length, 'DEFAULT_TRACK_COLOR_INDEX should be within TRACK_COLORS bounds');
+});
+
+TestRunner.test('Track Color - APP_VERSION validation for Day 431', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 431');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 106, 'Minor version should be >= 106 for Day 431');
+    }
+});

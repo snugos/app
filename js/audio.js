@@ -662,6 +662,93 @@ export function getMimeTypeFromFilename(filename) {
     return 'application/octet-stream';
 }
 
+async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint, padIndex = null) {
+    const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingDAW() : false;
+
+    if (localAppServices.captureStateForUndo && !isReconstructing) {
+        const targetName = trackTypeHint === 'DrumSampler' && padIndex !== null ?
+            `Pad ${padIndex + 1} on ${track.name}` :
+            track.name;
+        localAppServices.captureStateForUndo(`Load ${sourceName} to ${targetName}`);
+    }
+
+    let objectURLForTone = null;
+    try {
+        objectURLForTone = URL.createObjectURL(fileObject);
+        const dbKeySuffix = trackTypeHint === 'DrumSampler' && padIndex !== null ?
+            `drumPad-${padIndex}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}` :
+            `${trackTypeHint}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}`;
+        const dbKey = `track-${track.id}-${dbKeySuffix}-${fileObject.size}-${fileObject.lastModified}`;
+        await storeAudio(dbKey, fileObject);
+        const newAudioBuffer = await new Tone.Buffer().load(objectURLForTone);
+
+        if (trackTypeHint === 'Sampler') {
+            if (track.audioBuffer && !track.audioBuffer.disposed) track.audioBuffer.dispose();
+            track.disposeSlicerMonoNodes();
+            track.audioBuffer = newAudioBuffer;
+            track.samplerAudioData = { fileName: sourceName, dbKey: dbKey, status: 'loaded' };
+            if (!track.slicerIsPolyphonic && track.audioBuffer && track.audioBuffer.loaded) track.setupSlicerMonoNodes();
+            if (localAppServices.autoSliceSample && track.audioBuffer.loaded && (!track.slices || track.slices.every(s => s.duration === 0))) {
+                localAppServices.autoSliceSample(track.id, Constants.numSlices);
+            }
+            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'samplerLoaded');
+
+        } else if (trackTypeHint === 'InstrumentSampler') {
+            if (track.instrumentSamplerSettings.audioBuffer && !track.instrumentSamplerSettings.audioBuffer.disposed) {
+                track.instrumentSamplerSettings.audioBuffer.dispose();
+            }
+            if (track.toneSampler && !track.toneSampler.disposed) track.toneSampler.dispose();
+
+            track.instrumentSamplerSettings = {
+                ...track.instrumentSamplerSettings,
+                audioBuffer: newAudioBuffer,
+                originalFileName: sourceName,
+                dbKey: dbKey,
+                status: 'loaded',
+                loopStart: 0,
+                loopEnd: newAudioBuffer.duration
+            };
+            track.setupToneSampler();
+            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'instrumentSamplerLoaded');
+
+        } else if (trackTypeHint === 'DrumSampler' && padIndex !== null) {
+            const padData = track.drumSamplerPads[padIndex];
+            if (padData) {
+                if (padData.audioBuffer && !padData.audioBuffer.disposed) padData.audioBuffer.dispose();
+                if (track.drumPadPlayers[padIndex] && !track.drumPadPlayers[padIndex].disposed) track.drumPadPlayers[padIndex].dispose();
+
+                padData.audioBuffer = newAudioBuffer;
+                padData.originalFileName = sourceName;
+                padData.dbKey = dbKey;
+                padData.status = 'loaded';
+                track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer);
+            } else {
+                console.error(`[Audio commonLoadSampleLogic] Pad data not found for index ${padIndex} on track ${track.id}`);
+                throw new Error(`Pad data not found for index ${padIndex}.`);
+            }
+            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'drumPadLoaded', padIndex);
+        }
+
+        track.rebuildEffectChain();
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(`Sample "${sourceName}" loaded for ${track.name}${trackTypeHint === 'DrumSampler' && padIndex !== null ? ` (Pad ${padIndex+1})` : ''}.`, 2000);
+        }
+
+    } catch (error) {
+        console.error(`[Audio commonLoadSampleLogic] Error loading sample "${sourceName}" for track ${track.id} (${trackTypeHint}):`, error);
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(`Error loading sample "${sourceName.substring(0,30)}": ${error.message || 'Unknown error.'}`, 4000);
+        }
+        if (trackTypeHint === 'Sampler') if(track.samplerAudioData) track.samplerAudioData.status = 'error';
+        else if (trackTypeHint === 'InstrumentSampler') if(track.instrumentSamplerSettings) track.instrumentSamplerSettings.status = 'error';
+        else if (trackTypeHint === 'DrumSampler' && padIndex !== null && track.drumSamplerPads[padIndex]) track.drumSamplerPads[padIndex].status = 'error';
+
+        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sampleLoadError', padIndex);
+    } finally {
+        if (objectURLForTone) URL.revokeObjectURL(objectURLForTone);
+    }
+}
+
 export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNameForUrl = null) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) {
