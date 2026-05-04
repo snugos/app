@@ -392,6 +392,65 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
     </div>`;
 }
 
+export function renderDrumPadEditorControls(track) {
+    if (!track || track.type !== 'DrumSampler') return null;
+
+    const selectedPadIndex = Number.isInteger(track.selectedDrumPadForEdit) ? track.selectedDrumPadForEdit : 0;
+    const inspectorWindow = document.getElementById(`window-trackInspector-${track.id}`);
+    if (!inspectorWindow) return null;
+
+    const controlsWrapper = inspectorWindow.querySelector('.selected-pad-controls');
+    if (!controlsWrapper) return null;
+
+    const containerId = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`;
+    let container = controlsWrapper.querySelector(`#${containerId}`);
+    if (!container) {
+        const existingContainer = controlsWrapper.querySelector('[id^="drumPadDropZoneContainer-"]');
+        if (existingContainer) {
+            existingContainer.id = containerId;
+            container = existingContainer;
+        } else {
+            container = document.createElement('div');
+            container.id = containerId;
+            container.className = 'mb-1 text-xs';
+            const volumePlaceholder = controlsWrapper.querySelector(`#drumPadVolumeKnob-${track.id}-placeholder`);
+            if (volumePlaceholder && volumePlaceholder.parentElement) {
+                volumePlaceholder.parentElement.insertBefore(container, volumePlaceholder.parentElement.firstChild);
+            } else {
+                controlsWrapper.insertBefore(container, controlsWrapper.firstChild);
+            }
+        }
+    }
+
+    const padData = track.drumSamplerPads && track.drumSamplerPads[selectedPadIndex] ? track.drumSamplerPads[selectedPadIndex] : null;
+    const existingAudioData = padData ? {
+        originalFileName: padData.originalFileName || padData.sampleName || null,
+        status: padData.status || ((padData.dbKey || padData.audioBufferDataURL) ? 'missing' : 'empty')
+    } : { originalFileName: null, status: 'empty' };
+    const inputId = `drumPadFileInput-${track.id}-${selectedPadIndex}`;
+
+    container.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', selectedPadIndex, existingAudioData);
+
+    const dropZone = container.querySelector('.drop-zone');
+    const fileInput = container.querySelector(`#${inputId}`);
+    if (dropZone) {
+        setupGenericDropZoneListeners(
+            dropZone,
+            track.id,
+            'DrumSampler',
+            selectedPadIndex,
+            localAppServices.loadSoundFromBrowserToTarget,
+            localAppServices.loadDrumSamplerPadFile,
+            localAppServices.getTrackById
+        );
+    }
+    if (fileInput && localAppServices.loadDrumSamplerPadFile) {
+        fileInput.onchange = (e) => localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex);
+    }
+
+    return container;
+}
+
 // --- Specific Inspector Control Initializers ---
 function buildSynthEngineControls(track, container, engineType) {
     const definitions = ((localAppServices.effectsRegistryAccess) && (localAppServices.effectsRegistryAccess).synthEngineControlDefinitions)?.[engineType] || [];
@@ -726,6 +785,7 @@ function initializeTypeSpecificInspectorControls(track, winEl) {
             if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', track.selectedDrumPadForEdit, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
             if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, track.selectedDrumPadForEdit); };
         }
+        renderDrumPadEditorControls(track);
         renderDrumSamplerPads(track);
         updateDrumPadControlsUI(track);
     }
@@ -2852,6 +2912,9 @@ export function renderDrumSamplerPads(track) {
             const trackId = e.currentTarget.dataset.trackId;
             if (localAppServices.selectDrumPad) {
                 localAppServices.selectDrumPad(trackId, padIndex);
+            } else {
+                track.selectedDrumPadForEdit = padIndex;
+                updateDrumPadControlsUI(track);
             }
         });
     });
@@ -2973,13 +3036,8 @@ export function updateDrumPadControlsUI(track) {
         padInfoEl.textContent = (track.selectedDrumPadForEdit || 0) + 1;
     }
     
-    // Update pad grid selection
-    const container = document.getElementById(`drumPadsGridContainer-${track.id}`);
-    if (container) {
-        container.querySelectorAll('.drum-pad').forEach((pad, index) => {
-            pad.classList.toggle('selected-for-edit', index === track.selectedDrumPadForEdit);
-        });
-    }
+    renderDrumPadEditorControls(track);
+    renderDrumSamplerPads(track);
 }
 
 // Snap-to-grid for clips: reads from global controls bar or defaults to sequence snap
