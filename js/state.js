@@ -303,6 +303,157 @@ export function setActiveMIDIInputState(input) {
     activeMIDIInputGlobal = input;
 }
 
+// --- Send Tracks State (placeholder - feature referenced in tests) ---
+let sendTracksState = []; // Array of send track objects
+
+export function getSendTracksState() { return [...sendTracksState]; }
+export function getSendTrackByIdState(sendId) { return sendTracksState.find(s => s && s.id === sendId); }
+export function getTrackSendsState(trackId) { return sendTracksState.filter(s => s && s.trackId === trackId); }
+export function getTrackSendPreFaderState(sendId) { const s = getSendTrackByIdState(sendId); return s ? s.preFader : false; }
+export function setTrackSendPreFaderState(sendId, preFader) { const s = getSendTrackByIdState(sendId); if (s) { s.preFader = !!preFader; } }
+export function getSendTrackLevelState(sendId) { const s = getSendTrackByIdState(sendId); return s ? s.level : 1; }
+export function addSendTrackState(sendData) { captureStateForUndoIfAllowed('Add Send Track'); sendTracksState.push(sendData); return true; }
+export function setSendTrackMutedState(sendId, muted) { const s = getSendTrackByIdState(sendId); if (s) { s.muted = !!muted; } }
+export function setSendTrackNameState(sendId, name) { const s = getSendTrackByIdState(sendId); if (s) { s.name = name; } }
+export function setSendTrackLevelState(sendId, level) { const s = getSendTrackByIdState(sendId); if (s) { s.level = level; } }
+export function setSendTrackEffectsState(sendId, effects) { const s = getSendTrackByIdState(sendId); if (s) { s.effects = effects; } }
+export function removeSendTrackState(sendId) { captureStateForUndoIfAllowed('Remove Send Track'); sendTracksState = sendTracksState.filter(s => s && s.id !== sendId); }
+export function setTrackSendLevelState(sendId, level) { setSendTrackLevelState(sendId, level); }
+
+// --- Timeline Markers State ---
+let timelineMarkers = [];
+export function getTimelineMarkersState() { return [...timelineMarkers]; }
+export function getTimelineMarkerByIdState(markerId) { return timelineMarkers.find(m => m && m.id === markerId); }
+export function addTimelineMarkerState(markerData) { captureStateForUndoIfAllowed('Add Timeline Marker'); timelineMarkers.push(markerData); return true; }
+export function setTimelineMarkerState(markerId, updates) { const m = getTimelineMarkerByIdState(markerId); if (m) Object.assign(m, updates); }
+export function removeTimelineMarkerState(markerId) { captureStateForUndoIfAllowed('Remove Timeline Marker'); timelineMarkers = timelineMarkers.filter(m => m && m.id !== markerId); }
+export function clearTimelineMarkersState() { captureStateForUndoIfAllowed('Clear Timeline Markers'); timelineMarkers = []; }
+
+// --- Chord Mode State ---
+let chordModeEnabled = false;
+let chordModeRoot = 'C';
+let chordModeType = 'major';
+let chordModeLock = false;
+let chordVoicing = null;
+export function getChordModeState() { return { enabled: chordModeEnabled, root: chordModeRoot, type: chordModeType, lock: chordModeLock, voicing: chordVoicing }; }
+export function getChordModeEnabledState() { return chordModeEnabled; }
+export function setChordModeEnabledState(v) { chordModeEnabled = !!v; }
+export function getChordModeRootState() { return chordModeRoot; }
+export function setChordModeRootState(r) { chordModeRoot = r; }
+export function getChordModeTypeState() { return chordModeType; }
+export function setChordModeTypeState(t) { chordModeType = t; }
+export function getChordModeLockState() { return chordModeLock; }
+export function setChordModeLockState(l) { chordModeLock = !!l; }
+export function getChordVoicingState() { return chordVoicing; }
+export function setChordVoicingState(v) { chordVoicing = v; }
+export function setChordModeState(cm) { if (cm) { chordModeEnabled = cm.enabled !== undefined ? cm.enabled : chordModeEnabled; chordModeRoot = cm.root || chordModeRoot; chordModeType = cm.type || chordModeType; chordModeLock = !!cm.lock; chordVoicing = cm.voicing !== undefined ? cm.voicing : chordVoicing; } }
+
+// --- Time Signature State ---
+let timeSignatureNumerator = 4;
+let timeSignatureDenominator = 4;
+export function getTimeSignatureState() { return { numerator: timeSignatureNumerator, denominator: timeSignatureDenominator }; }
+export function getTimeSignatureNumeratorState() { return timeSignatureNumerator; }
+export function setTimeSignatureNumeratorState(n) { timeSignatureNumerator = Math.max(1, Math.min(16, n)); }
+export function getTimeSignatureDenominatorState() { return timeSignatureDenominator; }
+export function setTimeSignatureDenominatorState(d) { timeSignatureDenominator = Math.max(1, Math.min(16, d)); }
+
+// --- Ghost Track State ---
+let ghostTrackId = null;
+export function getGhostTrackIdState() { return ghostTrackId; }
+export function setGhostTrackIdState(id) { ghostTrackId = id; }
+
+// --- Scale Mode State ---
+let scaleModeEnabled = false;
+let scaleModeScale = 'chromatic';
+let scaleModeRoot = 'C';
+let scaleModeLock = false;
+export function getScaleModeState() { return { enabled: scaleModeEnabled, scale: scaleModeScale, root: scaleModeRoot, lock: scaleModeLock }; }
+export function getScaleModeEnabledState() { return scaleModeEnabled; }
+export function setScaleModeEnabledState(v) { scaleModeEnabled = !!v; }
+export function getScaleModeScaleState() { return scaleModeScale; }
+export function setScaleModeScaleState(s) { scaleModeScale = s || 'chromatic'; }
+export function getScaleModeRootState() { return scaleModeRoot; }
+export function setScaleModeRootState(r) { scaleModeRoot = r || 'C'; }
+export function getScaleModeLockState() { return scaleModeLock; }
+export function setScaleModeLockState(l) { scaleModeLock = !!l; }
+export function setScaleModeState(sm) { if (sm) { scaleModeEnabled = sm.enabled !== undefined ? sm.enabled : scaleModeEnabled; scaleModeScale = sm.scale || scaleModeScale; scaleModeRoot = sm.root || scaleModeRoot; scaleModeLock = !!sm.lock; } }
+
+// --- Loop Region State ---
+let loopRegionState = { start: 0, end: 16, enabled: false };
+export function getLoopRegionState() { return { ...loopRegionState }; }
+export function setLoopRegionState(start, end) { loopRegionState.start = start; loopRegionState.end = end; }
+export function getLoopRegionEnabledState() { return loopRegionState.enabled; }
+export function setLoopRegionEnabledState(e) { loopRegionState.enabled = !!e; }
+export function getLoopRegionStartBarState() { return loopRegionState.start; }
+export function setLoopRegionStartBarState(s) { loopRegionState.start = s; }
+export function getLoopRegionEndBarState() { return loopRegionState.end; }
+export function setLoopRegionEndBarState(e) { loopRegionState.end = e; }
+
+// --- Timeline Zoom State ---
+let timelineZoomLevel = 1.0;
+let timelineVerticalZoom = 1.0;
+export function getTimelineZoomState() { return timelineZoomLevel; }
+export function setTimelineZoomLevelState(z) { timelineZoomLevel = z; }
+export function getTimelineVerticalZoomState() { return timelineVerticalZoom; }
+export function setTimelineVerticalZoomState(v) { timelineVerticalZoom = v; }
+export function zoomInTimeline() { timelineZoomLevel = Math.min(4.0, timelineZoomLevel + 0.25); }
+export function zoomOutTimeline() { timelineZoomLevel = Math.max(0.25, timelineZoomLevel - 0.25); }
+export function zoomInVerticalTimeline() { timelineVerticalZoom = Math.min(2.0, timelineVerticalZoom + 0.1); }
+export function zoomOutVerticalTimeline() { timelineVerticalZoom = Math.max(0.5, timelineVerticalZoom - 0.1); }
+export function resetTimelineZoom() { captureStateForUndoIfAllowed('Reset Timeline Zoom'); timelineZoomLevel = 1.0; timelineVerticalZoom = 1.0; }
+
+// --- Swing State ---
+let swingAmount = 0;
+let swingEnabled = false;
+export function getSwingState() { return { amount: swingAmount, enabled: swingEnabled }; }
+export function setSwingState(amount, enabled) { swingAmount = amount; swingEnabled = enabled; }
+export function getSwingEnabledState() { return swingEnabled; }
+export function setSwingEnabledState(e) { swingEnabled = !!e; }
+export function getSwingAmountState() { return swingAmount; }
+export function setSwingAmountState(a) { swingAmount = Math.max(0, Math.min(1, a)); }
+
+// --- Track Groups State ---
+let trackGroups = [];
+export function getTrackGroupsState() { return [...trackGroups]; }
+export function getTrackGroupByIdState(groupId) { return trackGroups.find(g => g && g.id === groupId); }
+export function addTrackGroupState(groupData) { captureStateForUndoIfAllowed('Add Track Group'); trackGroups.push(groupData); return groupData; }
+export function setTrackGroupNameState(groupId, name) { const g = getTrackGroupByIdState(groupId); if (g) g.name = name; }
+export function addTrackToGroupState(groupId, trackId) { const g = getTrackGroupByIdState(groupId); if (g && !g.trackIds.includes(trackId)) { captureStateForUndoIfAllowed('Add Track to Group'); g.trackIds.push(trackId); } }
+export function removeTrackFromGroupState(groupId, trackId) { const g = getTrackGroupByIdState(groupId); if (g) { captureStateForUndoIfAllowed('Remove Track from Group'); g.trackIds = g.trackIds.filter(id => id !== trackId); } }
+export function setTrackGroupColorState(groupId, color) { const g = getTrackGroupByIdState(groupId); if (g) g.color = color; }
+export function setTrackGroupMutedState(groupId, muted) { const g = getTrackGroupByIdState(groupId); if (g) g.muted = muted; }
+export function setTrackGroupSoloedState(groupId, soloed) { const g = getTrackGroupByIdState(groupId); if (g) g.soloed = soloed; }
+export function removeTrackGroupState(groupId) { captureStateForUndoIfAllowed('Remove Track Group'); trackGroups = trackGroups.filter(g => g && g.id !== groupId); }
+
+// --- Track Templates State ---
+let trackTemplates = [];
+export function clearTrackTemplatesState() { trackTemplates = []; }
+export function getTrackTemplatesState() { return [...trackTemplates]; }
+export function getTrackTemplateByIdState(templateId) { return trackTemplates.find(t => t && t.id === templateId); }
+export function addTrackTemplateState(templateData) { trackTemplates.push(templateData); return templateData; }
+export function updateTrackTemplateState(templateId, updates) { const t = getTrackTemplateByIdState(templateId); if (t) Object.assign(t, updates); }
+export function removeTrackTemplateState(templateId) { trackTemplates = trackTemplates.filter(t => t && t.id !== templateId); }
+
+// --- Performance Monitor State ---
+let performanceMonitorEnabled = false;
+let audioContextState = 'unknown';
+let cpuUsage = 0;
+let memoryPressure = 'none';
+let activeVoices = 0;
+let audioLatency = 0;
+let lastCallbackTime = 0;
+let droppedCallbacks = 0;
+
+export function setPerformanceMonitorEnabledState(v) { performanceMonitorEnabled = !!v; }
+export function setAudioContextStateState(s) { audioContextState = s; }
+export function setCPUUsageState(u) { cpuUsage = u; }
+export function setMemoryPressureState(p) { memoryPressure = p; }
+export function setActiveVoicesState(v) { activeVoices = v; }
+export function setAudioLatencyState(l) { audioLatency = l; }
+export function setLastCallbackTimeState(t) { lastCallbackTime = t; }
+export function setDroppedCallbacksState(n) { droppedCallbacks = n; }
+export function incrementDroppedCallbacksState() { droppedCallbacks++; }
+
 // --- MIDI Learn State Functions ---
 export function getMidiLearnMappingsState() {
     return [...midiLearnMappings];
