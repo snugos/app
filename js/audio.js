@@ -7,6 +7,7 @@ import { storeAudio, getAudio } from './db.js';
 import {
     getRecordingStartTimeState,
     getRecordingTrackIdState,
+    isTrackRecordingState,
     setIsRecordingState,
     setRecordingTrackIdState,
     setRecordingStartTimeState,
@@ -279,8 +280,12 @@ export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 
     const explicitTrack = trackId !== null && trackId !== undefined && localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     const armedTrackId = trackId === null || trackId === undefined ? (localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null) : null;
     const armedTrack = armedTrackId !== null && localAppServices.getTrackById ? localAppServices.getTrackById(armedTrackId) : null;
-    const autoSelectedTrack = trackId === null || trackId === undefined ? tracks.find(track => track && track.type === 'Audio') : null;
-    const recordingTrack = explicitTrack || (armedTrack && armedTrack.type === 'Audio' ? armedTrack : autoSelectedTrack);
+    const autoSelectedTrack = Array.isArray(tracks) ? tracks.find(track => track && track.type === 'Audio') : null;
+    const recordingTrack = (explicitTrack && explicitTrack.type === 'Audio')
+        ? explicitTrack
+        : (armedTrack && armedTrack.type === 'Audio')
+            ? armedTrack
+            : autoSelectedTrack;
 
     if (!recordingTrack || recordingTrack.type !== 'Audio') {
         const result = {
@@ -289,6 +294,34 @@ export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 
             message: 'No Audio track is available for microphone recording.',
             trackId: null,
             trackName: null
+        };
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(result.message, 4000);
+        }
+        return result;
+    }
+
+    if (isTrackRecordingState()) {
+        const result = {
+            ok: false,
+            step: 'busy',
+            message: 'Stop the current recording before running the microphone test.',
+            trackId: recordingTrack.id,
+            trackName: recordingTrack.name
+        };
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(result.message, 4000);
+        }
+        return result;
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+        const result = {
+            ok: false,
+            step: 'unsupported',
+            message: 'This browser does not support real microphone recording.',
+            trackId: recordingTrack.id,
+            trackName: recordingTrack.name
         };
         if (localAppServices.showNotification) {
             localAppServices.showNotification(result.message, 4000);

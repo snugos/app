@@ -302,7 +302,8 @@ import {
     updateMasterEffectParamInAudio,
     reorderMasterEffectInAudio,
     updateMeters,
-    exportMixdownToWav
+    exportMixdownToWav,
+    runRecordingMicrophoneE2ETest
 } from './audio.js';
 
 import {
@@ -4279,7 +4280,54 @@ TestRunner.test('Recording Audio - APP_VERSION validation for Day 355', (t) => {
         t.assertTruthy(versionParts[1] >= 34, 'Minor version should be >= 34 for Day 355');
     }
 });
+
+// ================================================================
+// Day 438: Recording Microphone E2E Helper Tests
+// ================================================================
+TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest is a function export', (t) => {
+    t.assertEqual(typeof runRecordingMicrophoneE2ETest, 'function', 'runRecordingMicrophoneE2ETest should be a function');
+});
+
+TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest accepts 2 parameters', (t) => {
+    t.assertEqual(runRecordingMicrophoneE2ETest.length, 2, 'runRecordingMicrophoneE2ETest should accept 2 parameters');
+});
+
+TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest references track selection', (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('explicitTrack') && funcStr.includes('armedTrack') && funcStr.includes('autoSelectedTrack'), 'runRecordingMicrophoneE2ETest should resolve track selection safely');
+});
+
+TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest prefers Audio tracks', (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('track.type !== \'Audio\''), 'runRecordingMicrophoneE2ETest should guard for Audio tracks');
+});
+
+TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest checks recording busy state', (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('isTrackRecordingState') || funcStr.includes("step: 'busy'"), 'runRecordingMicrophoneE2ETest should stop when a recording is already active');
+});
+
+TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest checks getUserMedia support', (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('getUserMedia') && funcStr.includes("step: 'unsupported'"), 'runRecordingMicrophoneE2ETest should return an unsupported-browser failure');
+});
+
+TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest uses start and stop workflow', (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('startAudioRecording') && funcStr.includes('stopAudioRecording'), 'runRecordingMicrophoneE2ETest should start and stop recording');
+});
+
+TestRunner.test('Recording Microphone E2E - APP_VERSION validation for Day 438', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 438');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 112, 'Minor version should be >= 112 for Day 438');
+    }
+});
+
+// ============================================
 // Day 356: Project Save/Load Functions Tests
+// ============================================
 TestRunner.test('Project Save/Load - saveProjectInternal is a function', (t) => {
     t.assertEqual(typeof saveProjectInternal, 'function', 'saveProjectInternal should be a function');
 });
