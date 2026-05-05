@@ -1306,6 +1306,26 @@ export function getContextState() {
     return Tone.context ? Tone.context.state : 'unavailable';
 }
 
+// ============================================================
+// TRANSPORT TIME DISPLAY FUNCTIONS
+// ============================================================
+
+export function getTransportPosition() {
+    return Tone.Transport.position;
+}
+
+export function getTransportSeconds() {
+    return Tone.Transport.seconds;
+}
+
+export function getTransportBpm() {
+    return Tone.Transport.bpm.value;
+}
+
+export function getTransportState() {
+    return Tone.Transport.state;
+}
+
 export async function exportMixdownToWav(durationSeconds) {
     console.log('[Audio exportMixdownToWav] Starting export, duration:', durationSeconds, 's');
     const maxDuration = 600; // 10 minutes max

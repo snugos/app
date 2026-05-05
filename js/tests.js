@@ -249,6 +249,10 @@ import {
     updateMasterEffectParamInAudio,
     reorderMasterEffectInAudio,
     updateMeters,
+    getTransportPosition,
+    getTransportSeconds,
+    getTransportBpm,
+    getTransportState,
     getMimeTypeFromFilename,
     clearAllMasterEffectNodes,
     autoSliceSample,
@@ -7841,5 +7845,72 @@ TestRunner.test('Track Color - APP_VERSION validation for Day 431', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 431');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 106, 'Minor version should be >= 106 for Day 431');
+    }
+});
+
+// ============================================
+// Day 433: Transport Time Display Functions Tests
+// ============================================
+TestRunner.test('Transport Display - getTransportPosition is a function export', (t) => {
+    t.assertEqual(typeof getTransportPosition, 'function', 'getTransportPosition should be a function');
+});
+
+TestRunner.test('Transport Display - getTransportPosition accepts 0 parameters', (t) => {
+    const paramCount = getTransportPosition.length;
+    t.assertEquals(paramCount, 0, 'getTransportPosition should accept 0 parameters');
+});
+
+TestRunner.test('Transport Display - getTransportPosition references Tone.Transport.position', (t) => {
+    const funcStr = getTransportPosition.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.position') || funcStr.includes('Transport.position'), 'getTransportPosition should reference Tone.Transport.position');
+});
+
+TestRunner.test('Transport Display - getTransportSeconds is a function export', (t) => {
+    t.assertEqual(typeof getTransportSeconds, 'function', 'getTransportSeconds should be a function');
+});
+
+TestRunner.test('Transport Display - getTransportSeconds accepts 0 parameters', (t) => {
+    const paramCount = getTransportSeconds.length;
+    t.assertEquals(paramCount, 0, 'getTransportSeconds should accept 0 parameters');
+});
+
+TestRunner.test('Transport Display - getTransportSeconds references Tone.Transport.seconds', (t) => {
+    const funcStr = getTransportSeconds.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.seconds') || funcStr.includes('Transport.seconds'), 'getTransportSeconds should reference Tone.Transport.seconds');
+});
+
+TestRunner.test('Transport Display - getTransportBpm is a function export', (t) => {
+    t.assertEqual(typeof getTransportBpm, 'function', 'getTransportBpm should be a function');
+});
+
+TestRunner.test('Transport Display - getTransportBpm accepts 0 parameters', (t) => {
+    const paramCount = getTransportBpm.length;
+    t.assertEquals(paramCount, 0, 'getTransportBpm should accept 0 parameters');
+});
+
+TestRunner.test('Transport Display - getTransportBpm references Tone.Transport.bpm.value', (t) => {
+    const funcStr = getTransportBpm.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.bpm.value') || funcStr.includes('bpm.value') || funcStr.includes('Transport.bpm'), 'getTransportBpm should reference Tone.Transport.bpm.value');
+});
+
+TestRunner.test('Transport Display - getTransportState is a function export', (t) => {
+    t.assertEqual(typeof getTransportState, 'function', 'getTransportState should be a function');
+});
+
+TestRunner.test('Transport Display - getTransportState accepts 0 parameters', (t) => {
+    const paramCount = getTransportState.length;
+    t.assertEquals(paramCount, 0, 'getTransportState should accept 0 parameters');
+});
+
+TestRunner.test('Transport Display - getTransportState references Tone.Transport.state', (t) => {
+    const funcStr = getTransportState.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.state') || funcStr.includes('Transport.state'), 'getTransportState should reference Tone.Transport.state');
+});
+
+TestRunner.test('Transport Display - APP_VERSION validation for Day 433', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 433');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 107, 'Minor version should be >= 107 for Day 433');
     }
 });
