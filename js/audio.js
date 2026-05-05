@@ -272,6 +272,113 @@ export async function stopAudioRecording() {
     return recording;
 }
 
+export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 2500) {
+    cleanupRecordingScheduling();
+
+    const tracks = getTracksState();
+    const explicitTrack = trackId !== null && trackId !== undefined && localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    const armedTrackId = trackId === null || trackId === undefined ? (localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null) : null;
+    const armedTrack = armedTrackId !== null && localAppServices.getTrackById ? localAppServices.getTrackById(armedTrackId) : null;
+    const autoSelectedTrack = trackId === null || trackId === undefined ? tracks.find(track => track && track.type === 'Audio') : null;
+    const recordingTrack = explicitTrack || (armedTrack && armedTrack.type === 'Audio' ? armedTrack : autoSelectedTrack);
+
+    if (!recordingTrack || recordingTrack.type !== 'Audio') {
+        const result = {
+            ok: false,
+            step: 'track-selection',
+            message: 'No Audio track is available for microphone recording.',
+            trackId: null,
+            trackName: null
+        };
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(result.message, 4000);
+        }
+        return result;
+    }
+
+    const initialClipCount = Array.isArray(recordingTrack.timelineClips) ? recordingTrack.timelineClips.length : 0;
+    const initialRecordingState = isTrackRecordingState();
+    const initialRecordingTrackId = getRecordingTrackIdState();
+    const durationMs = Number.isFinite(Number(recordDurationMs)) ? Math.max(1000, Number(recordDurationMs)) : 2500;
+
+    try {
+        const started = await startAudioRecording(recordingTrack, !!recordingTrack.isMonitoringEnabled);
+        if (!started) {
+            const result = {
+                ok: false,
+                step: 'start',
+                message: 'Recording did not start.',
+                trackId: recordingTrack.id,
+                trackName: recordingTrack.name,
+                initialClipCount,
+                finalClipCount: initialClipCount,
+                addedClipId: null,
+                initialRecordingState,
+                finalRecordingState: isTrackRecordingState(),
+                initialRecordingTrackId,
+                finalRecordingTrackId: getRecordingTrackIdState(),
+                durationMs
+            };
+            if (localAppServices.showNotification) {
+                localAppServices.showNotification(result.message, 4000);
+            }
+            return result;
+        }
+
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(`Recording test running on ${recordingTrack.name}...`, 1000);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, durationMs));
+
+        const stopResult = await stopAudioRecording();
+        const finalClipCount = Array.isArray(recordingTrack.timelineClips) ? recordingTrack.timelineClips.length : 0;
+        const newClip = finalClipCount > initialClipCount ? recordingTrack.timelineClips[finalClipCount - 1] : null;
+        const ok = !!stopResult && finalClipCount > initialClipCount && !!newClip && newClip.type === 'audio';
+        const result = {
+            ok,
+            step: ok ? 'complete' : 'verify',
+            trackId: recordingTrack.id,
+            trackName: recordingTrack.name,
+            initialClipCount,
+            finalClipCount,
+            addedClipId: newClip ? newClip.id : null,
+            initialRecordingState,
+            finalRecordingState: isTrackRecordingState(),
+            initialRecordingTrackId,
+            finalRecordingTrackId: getRecordingTrackIdState(),
+            stopResult: !!stopResult,
+            durationMs
+        };
+
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(ok ? `Mic recording test passed for ${recordingTrack.name}.` : `Mic recording test did not create a clip for ${recordingTrack.name}.`, ok ? 2500 : 4000);
+        }
+
+        return result;
+    } catch (error) {
+        console.error('[Audio runRecordingMicrophoneE2ETest] Error:', error);
+        try {
+            await stopAudioRecording();
+        } catch (cleanupError) {
+            console.warn('[Audio runRecordingMicrophoneE2ETest] Cleanup stop failed:', cleanupError);
+        }
+        const result = {
+            ok: false,
+            step: 'error',
+            trackId: recordingTrack.id,
+            trackName: recordingTrack.name,
+            error: error && error.message ? error.message : 'Unknown error'
+        };
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(`Mic recording test failed: ${result.error}`, 4000);
+        }
+        return result;
+    } finally {
+        cleanupRecordingScheduling();
+    }
+}
+
 export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
     if (audioContextInitialized && Tone.context && Tone.context.state === 'running') {
         if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed ||

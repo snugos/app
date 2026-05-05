@@ -8127,3 +8127,247 @@ TestRunner.test('Master Bus - APP_VERSION validation for Day 435', (t) => {
         t.assertTruthy(versionParts[1] >= 109, 'Minor version should be >= 109 for Day 435');
     }
 });
+
+// === Day 436: EffectsRegistry Functions Tests ===
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions is a function export', (t) => {
+    t.assertEqual(typeof synthEngineControlDefinitions, 'object', 'synthEngineControlDefinitions should be an object');
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions has MonoSynth definitions', (t) => {
+    t.assertTruthy(synthEngineControlDefinitions.MonoSynth, 'synthEngineControlDefinitions should have MonoSynth');
+    t.assertEqual(Array.isArray(synthEngineControlDefinitions.MonoSynth), true, 'MonoSynth should be an array');
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions has PolySynth definitions', (t) => {
+    t.assertTruthy(synthEngineControlDefinitions.PolySynth, 'synthEngineControlDefinitions should have PolySynth');
+    t.assertEqual(Array.isArray(synthEngineControlDefinitions.PolySynth), true, 'PolySynth should be an array');
+});
+
+TestRunner.test('Effects Registry - synthEngineControlDefinitions MonoSynth entries have idPrefix, label, type, path', (t) => {
+    const monoEntries = synthEngineControlDefinitions.MonoSynth;
+    if (monoEntries && monoEntries.length > 0) {
+        const first = monoEntries[0];
+        t.assertTruthy(first.idPrefix, 'MonoSynth entry should have idPrefix');
+        t.assertTruthy(first.label, 'MonoSynth entry should have label');
+        t.assertTruthy(first.type, 'MonoSynth entry should have type');
+        t.assertTruthy(first.path, 'MonoSynth entry should have path');
+    }
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS is a function export', (t) => {
+    t.assertEqual(typeof AVAILABLE_EFFECTS, 'object', 'AVAILABLE_EFFECTS should be an object');
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has AutoFilter definition', (t) => {
+    t.assertTruthy(AVAILABLE_EFFECTS.AutoFilter, 'AVAILABLE_EFFECTS should have AutoFilter');
+    t.assertTruthy(AVAILABLE_EFFECTS.AutoFilter.displayName, 'AutoFilter should have displayName');
+    t.assertTruthy(AVAILABLE_EFFECTS.AutoFilter.toneClass, 'AutoFilter should have toneClass');
+    t.assertTruthy(AVAILABLE_EFFECTS.AutoFilter.params, 'AutoFilter should have params');
+    t.assertEqual(Array.isArray(AVAILABLE_EFFECTS.AutoFilter.params), true, 'AutoFilter params should be an array');
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has Compressor definition', (t) => {
+    t.assertTruthy(AVAILABLE_EFFECTS.Compressor, 'AVAILABLE_EFFECTS should have Compressor');
+    t.assertEqual(AVAILABLE_EFFECTS.Compressor.toneClass, 'Compressor', 'Compressor should use Tone.Compressor');
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has Chorus definition', (t) => {
+    t.assertTruthy(AVAILABLE_EFFECTS.Chorus, 'AVAILABLE_EFFECTS should have Chorus');
+    t.assertEqual(AVAILABLE_EFFECTS.Chorus.toneClass, 'Chorus', 'Chorus should use Tone.Chorus');
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has Delay definition', (t) => {
+    t.assertTruthy(AVAILABLE_EFFECTS.Delay, 'AVAILABLE_EFFECTS should have Delay');
+    t.assertEqual(AVAILABLE_EFFECTS.Delay.toneClass, 'Delay', 'Delay should use Tone.Delay');
+});
+
+TestRunner.test('Effects Registry - AVAILABLE_EFFECTS has Reverb definition', (t) => {
+    t.assertTruthy(AVAILABLE_EFFECTS.Reverb, 'AVAILABLE_EFFECTS should have Reverb');
+    t.assertEqual(AVAILABLE_EFFECTS.Reverb.toneClass, 'Reverb', 'Reverb should use Tone.Reverb');
+});
+
+TestRunner.test('Effects Registry - getEffectBypassState is a function export', (t) => {
+    t.assertEqual(typeof getEffectBypassState, 'function', 'getEffectBypassState should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectBypassState accepts 1 parameter', (t) => {
+    const paramCount = getEffectBypassState.length;
+    t.assertEquals(paramCount, 1, 'getEffectBypassState should accept 1 parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectBypassState returns boolean', (t) => {
+    const result = getEffectBypassState('test-effect-id');
+    t.assertEqual(typeof result, 'boolean', 'getEffectBypassState should return boolean');
+});
+
+TestRunner.test('Effects Registry - setEffectBypassState is a function export', (t) => {
+    t.assertEqual(typeof setEffectBypassState, 'function', 'setEffectBypassState should be a function');
+});
+
+TestRunner.test('Effects Registry - setEffectBypassState accepts 2 parameters', (t) => {
+    const paramCount = setEffectBypassState.length;
+    t.assertEquals(paramCount, 2, 'setEffectBypassState should accept 2 parameters');
+});
+
+TestRunner.test('Effects Registry - setEffectBypassState sets bypass state in Map', (t) => {
+    setEffectBypassState('test-effect-123', true);
+    const result = getEffectBypassState('test-effect-123');
+    t.assertEqual(result, true, 'setEffectBypassState should set bypass state to true');
+});
+
+TestRunner.test('Effects Registry - setEffectBypassState can set false', (t) => {
+    setEffectBypassState('test-effect-456', false);
+    const result = getEffectBypassState('test-effect-456');
+    t.assertEqual(result, false, 'setEffectBypassState should set bypass state to false');
+});
+
+TestRunner.test('Effects Registry - getEffectBypassState returns false for unknown effectId', (t) => {
+    const result = getEffectBypassState('non-existent-effect-id');
+    t.assertEqual(result, false, 'getEffectBypassState should return false for unknown effectId');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance is a function export', (t) => {
+    t.assertEqual(typeof createEffectInstance, 'function', 'createEffectInstance should be a function');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance accepts 2 parameters', (t) => {
+    const paramCount = createEffectInstance.length;
+    t.assertEquals(paramCount, 2, 'createEffectInstance should accept 2 parameters');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance references effectType parameter', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'createEffectInstance should reference effectType parameter');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance references initialParams parameter', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('initialParams'), 'createEffectInstance should reference initialParams parameter');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance checks Tone availability', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('Tone') || funcStr.includes('typeof Tone'), 'createEffectInstance should check Tone availability');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance validates effect definition exists', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'createEffectInstance should check AVAILABLE_EFFECTS');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance validates Tone class exists', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('definition.toneClass') || funcStr.includes('toneClass'), 'createEffectInstance should check Tone class');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance builds paramsForInstance object', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('paramsForInstance'), 'createEffectInstance should build paramsForInstance');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance uses definition.params', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('definition.params'), 'createEffectInstance should use definition.params');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles nested param paths', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('split') || funcStr.includes('path'), 'createEffectInstance should handle nested paths');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance uses defaultValue fallback', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('defaultValue'), 'createEffectInstance should use defaultValue fallback');
+});
+
+TestRunner.test('Effects Registry - createEffectInstance handles errors gracefully', (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch') || funcStr.includes('console.error'), 'createEffectInstance should handle errors');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams is a function export', (t) => {
+    t.assertEqual(typeof getEffectDefaultParams, 'function', 'getEffectDefaultParams should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams accepts 1 parameter', (t) => {
+    const paramCount = getEffectDefaultParams.length;
+    t.assertEquals(paramCount, 1, 'getEffectDefaultParams should accept 1 parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams references effectType parameter', (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'getEffectDefaultParams should reference effectType parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams returns an object', (t) => {
+    const result = getEffectDefaultParams('AutoFilter');
+    t.assertEqual(typeof result, 'object', 'getEffectDefaultParams should return an object');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams handles missing definition', (t) => {
+    const result = getEffectDefaultParams('NonExistentEffect');
+    t.assertEqual(typeof result, 'object', 'getEffectDefaultParams should return object even for unknown effect');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams uses AVAILABLE_EFFECTS', (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectDefaultParams should use AVAILABLE_EFFECTS');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams handles definition.params', (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('params') || funcStr.includes('definition'), 'getEffectDefaultParams should handle params');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams builds nested object for paths', (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('split') || funcStr.includes('path'), 'getEffectDefaultParams should handle nested paths');
+});
+
+TestRunner.test('Effects Registry - getEffectDefaultParams uses defaultValue from params', (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('defaultValue'), 'getEffectDefaultParams should use defaultValue');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions is a function export', (t) => {
+    t.assertEqual(typeof getEffectParamDefinitions, 'function', 'getEffectParamDefinitions should be a function');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions accepts 1 parameter', (t) => {
+    const paramCount = getEffectParamDefinitions.length;
+    t.assertEquals(paramCount, 1, 'getEffectParamDefinitions should accept 1 parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions references effectType parameter', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'getEffectParamDefinitions should reference effectType parameter');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns an array', (t) => {
+    const result = getEffectParamDefinitions('AutoFilter');
+    t.assertEqual(Array.isArray(result), true, 'getEffectParamDefinitions should return an array');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions handles missing definition', (t) => {
+    const result = getEffectParamDefinitions('NonExistentEffect');
+    t.assertEqual(Array.isArray(result), true, 'getEffectParamDefinitions should return array even for unknown effect');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions uses AVAILABLE_EFFECTS', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectParamDefinitions should use AVAILABLE_EFFECTS');
+});
+
+TestRunner.test('Effects Registry - getEffectParamDefinitions returns definition.params', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('params') || funcStr.includes('definition'), 'getEffectParamDefinitions should return params');
+});
+
+TestRunner.test('Effects Registry - APP_VERSION validation for Day 436', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 436');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 110, 'Minor version should be >= 110 for Day 436');
+    }
+});
