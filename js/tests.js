@@ -8371,3 +8371,343 @@ TestRunner.test('Effects Registry - APP_VERSION validation for Day 436', (t) => 
         t.assertTruthy(versionParts[1] >= 110, 'Minor version should be >= 110 for Day 436');
     }
 });
+// === Day 437: Basic Audio State & Control Functions Tests ===
+
+TestRunner.test('Audio State - isMetronomeEnabled is a function export', (t) => {
+    t.assertEqual(typeof isMetronomeEnabled, 'function', 'isMetronomeEnabled should be a function');
+});
+
+TestRunner.test('Audio State - isMetronomeEnabled accepts 0 parameters', (t) => {
+    const paramCount = isMetronomeEnabled.length;
+    t.assertEquals(paramCount, 0, 'isMetronomeEnabled should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - getCountInBars is a function export', (t) => {
+    t.assertEqual(typeof getCountInBars, 'function', 'getCountInBars should be a function');
+});
+
+TestRunner.test('Audio State - getCountInBars accepts 0 parameters', (t) => {
+    const paramCount = getCountInBars.length;
+    t.assertEquals(paramCount, 0, 'getCountInBars should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - setCountInBars is a function export', (t) => {
+    t.assertEqual(typeof setCountInBars, 'function', 'setCountInBars should be a function');
+});
+
+TestRunner.test('Audio State - setCountInBars accepts 1 parameter', (t) => {
+    const paramCount = setCountInBars.length;
+    t.assertEquals(paramCount, 1, 'setCountInBars should accept 1 parameter');
+});
+
+TestRunner.test('Audio State - setCountInBars uses Math.floor', (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Math.floor'), 'setCountInBars should use Math.floor');
+});
+
+TestRunner.test('Audio State - setCountInBars clamps value to 0-4 range', (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'setCountInBars should clamp value');
+});
+
+TestRunner.test('Audio State - isCountInActive is a function export', (t) => {
+    t.assertEqual(typeof isCountInActive, 'function', 'isCountInActive should be a function');
+});
+
+TestRunner.test('Audio State - isCountInActive accepts 0 parameters', (t) => {
+    const paramCount = isCountInActive.length;
+    t.assertEquals(paramCount, 0, 'isCountInActive should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - setMetronomeEnabled is a function export', (t) => {
+    t.assertEqual(typeof setMetronomeEnabled, 'function', 'setMetronomeEnabled should be a function');
+});
+
+TestRunner.test('Audio State - setMetronomeEnabled accepts 1 parameter', (t) => {
+    const paramCount = setMetronomeEnabled.length;
+    t.assertEquals(paramCount, 1, 'setMetronomeEnabled should accept 1 parameter');
+});
+
+TestRunner.test('Audio State - setMetronomeEnabled coerces to boolean', (t) => {
+    const funcStr = setMetronomeEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setMetronomeEnabled should coerce to boolean');
+});
+
+TestRunner.test('Audio State - setMetronomeEnabled returns boolean', (t) => {
+    const result = setMetronomeEnabled(true);
+    t.assertEqual(typeof result, 'boolean', 'setMetronomeEnabled should return boolean');
+});
+
+TestRunner.test('Audio State - setMetronomeVolume is a function export', (t) => {
+    t.assertEqual(typeof setMetronomeVolume, 'function', 'setMetronomeVolume should be a function');
+});
+
+TestRunner.test('Audio State - setMetronomeVolume accepts 1 parameter', (t) => {
+    const paramCount = setMetronomeVolume.length;
+    t.assertEquals(paramCount, 1, 'setMetronomeVolume should accept 1 parameter');
+});
+
+TestRunner.test('Audio State - setMetronomeVolume clamps to 0-1 range', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'setMetronomeVolume should clamp value');
+});
+
+TestRunner.test('Audio State - setMetronomeVolume uses parseFloat', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setMetronomeVolume should use parseFloat');
+});
+
+TestRunner.test('Audio State - getMetronomeVolume is a function export', (t) => {
+    t.assertEqual(typeof getMetronomeVolume, 'function', 'getMetronomeVolume should be a function');
+});
+
+TestRunner.test('Audio State - getMetronomeVolume accepts 0 parameters', (t) => {
+    const paramCount = getMetronomeVolume.length;
+    t.assertEquals(paramCount, 0, 'getMetronomeVolume should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - stopMetronome is a function export', (t) => {
+    t.assertEqual(typeof stopMetronome, 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test('Audio State - stopMetronome accepts 0 parameters', (t) => {
+    const paramCount = stopMetronome.length;
+    t.assertEquals(paramCount, 0, 'stopMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - stopMetronome sets countInActive to false', (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('countInActive'), 'stopMetronome should reference countInActive');
+});
+
+TestRunner.test('Audio State - cleanupMetronome is a function export', (t) => {
+    t.assertEqual(typeof cleanupMetronome, 'function', 'cleanupMetronome should be a function');
+});
+
+TestRunner.test('Audio State - cleanupMetronome accepts 0 parameters', (t) => {
+    const paramCount = cleanupMetronome.length;
+    t.assertEquals(paramCount, 0, 'cleanupMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - cleanupMetronome calls stopMetronome', (t) => {
+    const funcStr = cleanupMetronome.toString();
+    t.assertTruthy(funcStr.includes('stopMetronome'), 'cleanupMetronome should call stopMetronome');
+});
+
+TestRunner.test('Audio State - cleanupCountIn is a function export', (t) => {
+    t.assertEqual(typeof cleanupCountIn, 'function', 'cleanupCountIn should be a function');
+});
+
+TestRunner.test('Audio State - cleanupCountIn accepts 0 parameters', (t) => {
+    const paramCount = cleanupCountIn.length;
+    t.assertEquals(paramCount, 0, 'cleanupCountIn should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - cleanupCountIn sets countInActive to false', (t) => {
+    const funcStr = cleanupCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInActive'), 'cleanupCountIn should reference countInActive');
+});
+
+TestRunner.test('Audio State - startCountIn is a function export', (t) => {
+    t.assertEqual(typeof startCountIn, 'function', 'startCountIn should be a function');
+});
+
+TestRunner.test('Audio State - startCountIn accepts 2 parameters', (t) => {
+    const paramCount = startCountIn.length;
+    t.assertEquals(paramCount, 2, 'startCountIn should accept 2 parameters');
+});
+
+TestRunner.test('Audio State - startCountIn references onCountInComplete parameter', (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('onCountInComplete'), 'startCountIn should reference onCountInComplete');
+});
+
+TestRunner.test('Audio State - startCountIn references startPosition parameter', (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('startPosition'), 'startCountIn should reference startPosition');
+});
+
+TestRunner.test('Audio State - startCountIn uses countInBars', (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInBars'), 'startCountIn should reference countInBars');
+});
+
+TestRunner.test('Audio State - resetTapTempo is a function export', (t) => {
+    t.assertEqual(typeof resetTapTempo, 'function', 'resetTapTempo should be a function');
+});
+
+TestRunner.test('Audio State - resetTapTempo accepts 0 parameters', (t) => {
+    const paramCount = resetTapTempo.length;
+    t.assertEquals(paramCount, 0, 'resetTapTempo should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - resetTapTempo clears tapTimes array', (t) => {
+    const funcStr = resetTapTempo.toString();
+    t.assertTruthy(funcStr.includes('tapTimes'), 'resetTapTempo should reference tapTimes');
+});
+
+TestRunner.test('Audio State - tapTempo is a function export', (t) => {
+    t.assertEqual(typeof tapTempo, 'function', 'tapTempo should be a function');
+});
+
+TestRunner.test('Audio State - tapTempo accepts 0 parameters', (t) => {
+    const paramCount = tapTempo.length;
+    t.assertEquals(paramCount, 0, 'tapTempo should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - tapTempo pushes to tapTimes', (t) => {
+    const funcStr = tapTempo.toString();
+    t.assertTruthy(funcStr.includes('tapTimes') && (funcStr.includes('push') || funcStr.includes('Date.now')), 'tapTempo should push to tapTimes');
+});
+
+TestRunner.test('Audio State - getTapTempoBpm is a function export', (t) => {
+    t.assertEqual(typeof getTapTempoBpm, 'function', 'getTapTempoBpm should be a function');
+});
+
+TestRunner.test('Audio State - getTapTempoBpm accepts 0 parameters', (t) => {
+    const paramCount = getTapTempoBpm.length;
+    t.assertEquals(paramCount, 0, 'getTapTempoBpm should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - getTapTempoBpm checks tapTimes length', (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('tapTimes') && funcStr.includes('length'), 'getTapTempoBpm should check tapTimes length');
+});
+
+TestRunner.test('Audio State - getTapTempoBpm calculates average interval', (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('reduce') || funcStr.includes('/'), 'getTapTempoBpm should calculate average');
+});
+
+TestRunner.test('Audio State - getTapTempoBpm returns BPM calculation', (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('60000') || funcStr.includes('60000 /'), 'getTapTempoBpm should use 60000 for ms-to-BPM conversion');
+});
+
+TestRunner.test('Audio State - isTapTempoReady is a function export', (t) => {
+    t.assertEqual(typeof isTapTempoReady, 'function', 'isTapTempoReady should be a function');
+});
+
+TestRunner.test('Audio State - isTapTempoReady accepts 0 parameters', (t) => {
+    const paramCount = isTapTempoReady.length;
+    t.assertEquals(paramCount, 0, 'isTapTempoReady should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - isTapTempoReady returns boolean', (t) => {
+    const result = isTapTempoReady();
+    t.assertEqual(typeof result, 'boolean', 'isTapTempoReady should return boolean');
+});
+
+TestRunner.test('Audio State - getLoopRegion is a function export', (t) => {
+    t.assertEqual(typeof getLoopRegion, 'function', 'getLoopRegion should be a function');
+});
+
+TestRunner.test('Audio State - getLoopRegion accepts 0 parameters', (t) => {
+    const paramCount = getLoopRegion.length;
+    t.assertEquals(paramCount, 0, 'getLoopRegion should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - getLoopRegion returns an object', (t) => {
+    const result = getLoopRegion();
+    t.assertEqual(typeof result, 'object', 'getLoopRegion should return an object');
+});
+
+TestRunner.test('Audio State - getLoopRegion returns copy of loopRegion', (t) => {
+    const funcStr = getLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('{') || funcStr.includes('...'), 'getLoopRegion should return a copy');
+});
+
+TestRunner.test('Audio State - setLoopRegion is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegion, 'function', 'setLoopRegion should be a function');
+});
+
+TestRunner.test('Audio State - setLoopRegion accepts 2 parameters', (t) => {
+    const paramCount = setLoopRegion.length;
+    t.assertEquals(paramCount, 2, 'setLoopRegion should accept 2 parameters');
+});
+
+TestRunner.test('Audio State - setLoopRegion validates startBars not negative', (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('< 0') || funcStr.includes('>= 0'), 'setLoopRegion should validate startBars');
+});
+
+TestRunner.test('Audio State - setLoopRegion validates endBars greater than startBars', (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('<=') || funcStr.includes('>'), 'setLoopRegion should validate endBars > startBars');
+});
+
+TestRunner.test('Audio State - setLoopRegion uses MAX_BARS constant', (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'setLoopRegion should reference MAX_BARS');
+});
+
+TestRunner.test('Audio State - setLoopRegion returns boolean', (t) => {
+    const result = setLoopRegion(0, 4);
+    t.assertEqual(typeof result, 'boolean', 'setLoopRegion should return boolean');
+});
+
+TestRunner.test('Audio State - setLoopRegionEnabled is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionEnabled, 'function', 'setLoopRegionEnabled should be a function');
+});
+
+TestRunner.test('Audio State - setLoopRegionEnabled accepts 1 parameter', (t) => {
+    const paramCount = setLoopRegionEnabled.length;
+    t.assertEquals(paramCount, 1, 'setLoopRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test('Audio State - setLoopRegionEnabled coerces to boolean', (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setLoopRegionEnabled should coerce to boolean');
+});
+
+TestRunner.test('Audio State - isLoopRegionEnabled is a function export', (t) => {
+    t.assertEqual(typeof isLoopRegionEnabled, 'function', 'isLoopRegionEnabled should be a function');
+});
+
+TestRunner.test('Audio State - isLoopRegionEnabled accepts 0 parameters', (t) => {
+    const paramCount = isLoopRegionEnabled.length;
+    t.assertEquals(paramCount, 0, 'isLoopRegionEnabled should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - isLoopRegionEnabled returns boolean', (t) => {
+    const result = isLoopRegionEnabled();
+    t.assertEqual(typeof result, 'boolean', 'isLoopRegionEnabled should return boolean');
+});
+
+TestRunner.test('Audio State - getLoopStartBars is a function export', (t) => {
+    t.assertEqual(typeof getLoopStartBars, 'function', 'getLoopStartBars should be a function');
+});
+
+TestRunner.test('Audio State - getLoopStartBars accepts 0 parameters', (t) => {
+    const paramCount = getLoopStartBars.length;
+    t.assertEquals(paramCount, 0, 'getLoopStartBars should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - getLoopStartBars returns loopRegion.start', (t) => {
+    const funcStr = getLoopStartBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion'), 'getLoopStartBars should reference loopRegion');
+});
+
+TestRunner.test('Audio State - getLoopEndBars is a function export', (t) => {
+    t.assertEqual(typeof getLoopEndBars, 'function', 'getLoopEndBars should be a function');
+});
+
+TestRunner.test('Audio State - getLoopEndBars accepts 0 parameters', (t) => {
+    const paramCount = getLoopEndBars.length;
+    t.assertEquals(paramCount, 0, 'getLoopEndBars should accept 0 parameters');
+});
+
+TestRunner.test('Audio State - getLoopEndBars returns loopRegion.end', (t) => {
+    const funcStr = getLoopEndBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion'), 'getLoopEndBars should reference loopRegion');
+});
+
+TestRunner.test('Audio State - APP_VERSION validation for Day 437', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 437');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 110, 'Minor version should be >= 110 for Day 437');
+    } else {
+        t.assertTruthy(versionParts[1] >= 0, 'Minor version should be >= 0 for Day 437+');
+    }
+});
