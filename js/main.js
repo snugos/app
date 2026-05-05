@@ -6,7 +6,7 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
-import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain } from './audio.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted, getSendBusNodes, getTrackSendNodes, connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTimelineLaneDrop,
@@ -414,18 +414,20 @@ const appServices = {
     loadSampleFile: loadSampleFile,
     loadSoundFromBrowserToTarget: loadSoundFromBrowserToTarget,
 
-    // Send track functions - exposed for UI
-    getSendTracks: getSendTracksState,
-    getSendTrackById: getSendTrackByIdState,
-    getTrackSends: getTrackSendsState,
-    getSendTrackLevel: getSendTrackLevelState,
-    getSendTrackPreFader: getTrackSendPreFaderState,
-    setSendTrackMuted: setSendTrackMutedState,
-    setSendTrackName: setSendTrackNameState,
-    setSendTrackLevel: setSendTrackLevelState,
-    setSendTrackPreFader: setSendTrackPreFaderState,
-    addSendTrack: addSendTrackState,
-    removeSendTrack: removeSendTrackState,
+    // Send bus audio functions - exposed for UI
+    createSendBusInAudio: createSendBusInAudio,
+    deleteSendBusFromAudio: deleteSendBusFromAudio,
+    addEffectToSendBus: addEffectToSendBus,
+    removeEffectFromSendBus: removeEffectFromSendBus,
+    reorderEffectInSendBus: reorderEffectInSendBus,
+    updateSendBusEffectParam: updateSendBusEffectParam,
+    setSendBusLevel: setSendBusLevel,
+    setSendBusMuted: setSendBusMuted,
+    getSendBusNodes: getSendBusNodes,
+    getTrackSendNodes: getTrackSendNodes,
+    connectTrackToSendBus: connectTrackToSendBus,
+    disconnectTrackFromSendBus: disconnectTrackFromSendBus,
+    setTrackSendLevel: setTrackSendLevel,
 
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
