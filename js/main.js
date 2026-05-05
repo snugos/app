@@ -429,6 +429,19 @@ const appServices = {
     disconnectTrackFromSendBus: disconnectTrackFromSendBus,
     setTrackSendLevel: setTrackSendLevel,
 
+    // Send track state functions - exposed for UI
+    getSendTracks: getSendTracksState,
+    getSendTrackById: getSendTrackByIdState,
+    getTrackSends: getTrackSendsState,
+    getSendTrackLevel: getSendTrackLevelState,
+    getSendTrackPreFader: getTrackSendPreFaderState,
+    setSendTrackMuted: setSendTrackMutedState,
+    setSendTrackName: setSendTrackNameState,
+    setSendTrackLevel: setSendTrackLevelState,
+    setSendTrackPreFader: setTrackSendPreFaderState,
+    addSendTrack: addSendTrackState,
+    removeSendTrack: removeSendTrackState,
+
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
