@@ -83,6 +83,11 @@ import {
     // MIDI Export
     exportToMidiInternal,
     importFromMidiInternal,
+    // Send Tracks
+    getSendTracksState, getSendTrackByIdState, getTrackSendsState,
+    getSendTrackLevelState, getTrackSendPreFaderState,
+    setSendTrackMutedState, setSendTrackNameState, setSendTrackLevelState,
+    setSendTrackPreFaderState, addSendTrackState, removeSendTrackState,
 } from './state.js';
 import { DESKTOP_BACKGROUND_KEY, DESKTOP_BG_TYPE_KEY } from './constants.js';
 import { getAudio as bgDbGet, storeAudio as bgDbStore, deleteAudio as bgDbDelete } from './db.js';
@@ -408,6 +413,19 @@ const appServices = {
     // Audio loading functions - exposed for UI and other modules
     loadSampleFile: loadSampleFile,
     loadSoundFromBrowserToTarget: loadSoundFromBrowserToTarget,
+
+    // Send track functions - exposed for UI
+    getSendTracks: getSendTracksState,
+    getSendTrackById: getSendTrackByIdState,
+    getTrackSends: getTrackSendsState,
+    getSendTrackLevel: getSendTrackLevelState,
+    getSendTrackPreFader: getTrackSendPreFaderState,
+    setSendTrackMuted: setSendTrackMutedState,
+    setSendTrackName: setSendTrackNameState,
+    setSendTrackLevel: setSendTrackLevelState,
+    setSendTrackPreFader: setSendTrackPreFaderState,
+    addSendTrack: addSendTrackState,
+    removeSendTrack: removeSendTrackState,
 
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
