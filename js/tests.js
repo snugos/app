@@ -295,13 +295,6 @@ import {
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
     setTrackSendLevel,
-    initializeAudioModule,
-    getMasterEffectsBusInputNode,
-    getActualMasterGainNode,
-    rebuildMasterEffectChain,
-    updateMasterEffectParamInAudio,
-    reorderMasterEffectInAudio,
-    updateMeters,
     exportMixdownToWav,
     runRecordingMicrophoneE2ETest
 } from './audio.js';
