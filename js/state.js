@@ -36,6 +36,11 @@ let masterGainValueState = Tone.dbToGain(0); // Linear gain value
 let midiAccessGlobal = null;
 let activeMIDIInputGlobal = null;
 
+// MIDI Learn State
+let midiLearnMappings = []; // Array of { channel, cc, trackId, paramType, paramPath, min, max }
+let midiLearnMode = false; // Whether MIDI Learn mode is currently active
+let midiLearnPendingParam = null; // Parameter awaiting MIDI Learn assignment
+
 // Sound Browser State
 let loadedZipFilesGlobal = {};
 let soundLibraryFileTreesGlobal = {};
@@ -296,6 +301,76 @@ export function setActiveMIDIInputState(input) {
         captureStateForUndoIfAllowed('Set Active MIDI Input');
     }
     activeMIDIInputGlobal = input;
+}
+
+// --- MIDI Learn State Functions ---
+export function getMidiLearnMappingsState() {
+    return [...midiLearnMappings];
+}
+
+export function getMidiLearnModeState() {
+    return midiLearnMode;
+}
+
+export function setMidiLearnModeState(mode) {
+    const nextMode = !!mode;
+    if (midiLearnMode !== nextMode) {
+        captureStateForUndoIfAllowed(nextMode ? 'Enable MIDI Learn' : 'Disable MIDI Learn');
+    }
+    midiLearnMode = nextMode;
+    return midiLearnMode;
+}
+
+export function getMidiLearnPendingParamState() {
+    return midiLearnPendingParam;
+}
+
+export function setMidiLearnPendingParamState(param) {
+    const nextParam = param || null;
+    if (midiLearnPendingParam !== nextParam) {
+        captureStateForUndoIfAllowed(nextParam ? 'Set MIDI Learn Pending Param' : 'Clear MIDI Learn Pending Param');
+    }
+    midiLearnPendingParam = nextParam;
+    return midiLearnPendingParam;
+}
+
+export function addMidiLearnMapping(mapping) {
+    const newMapping = { ...Constants.DEFAULT_MIDI_LEARN_MAPPING, ...mapping };
+    if (midiLearnMappings.length >= Constants.MAX_MIDI_LEARN_MAPPINGS) {
+        console.warn('[State addMidiLearnMapping] Max mappings reached:', Constants.MAX_MIDI_LEARN_MAPPINGS);
+        return false;
+    }
+    captureStateForUndoIfAllowed('Add MIDI Learn Mapping');
+    midiLearnMappings.push(newMapping);
+    return true;
+}
+
+export function removeMidiLearnMapping(index) {
+    if (index < 0 || index >= midiLearnMappings.length) return false;
+    captureStateForUndoIfAllowed('Remove MIDI Learn Mapping');
+    midiLearnMappings.splice(index, 1);
+    return true;
+}
+
+export function clearMidiLearnMappings() {
+    if (midiLearnMappings.length === 0) return;
+    captureStateForUndoIfAllowed('Clear MIDI Learn Mappings');
+    midiLearnMappings = [];
+}
+
+export function findMidiLearnMapping(channel, cc) {
+    return midiLearnMappings.findIndex(m => m.channel === channel && m.cc === cc);
+}
+
+export function updateMidiLearnMapping(index, updates) {
+    if (index < 0 || index >= midiLearnMappings.length) return false;
+    captureStateForUndoIfAllowed('Update MIDI Learn Mapping');
+    midiLearnMappings[index] = { ...midiLearnMappings[index], ...updates };
+    return true;
+}
+
+export function getMidiLearnMappingByIndex(index) {
+    return midiLearnMappings[index];
 }
 
 
