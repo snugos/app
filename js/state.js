@@ -303,7 +303,7 @@ export function setActiveMIDIInputState(input) {
     activeMIDIInputGlobal = input;
 }
 
-// --- Send Tracks State (placeholder - feature referenced in tests) ---
+// --- Send Tracks State ---
 let sendTracksState = []; // Array of send track objects
 
 export function getSendTracksState() { return [...sendTracksState]; }
