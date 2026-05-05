@@ -301,7 +301,8 @@ import {
     rebuildMasterEffectChain,
     updateMasterEffectParamInAudio,
     reorderMasterEffectInAudio,
-    updateMeters
+    updateMeters,
+    exportMixdownToWav
 } from './audio.js';
 
 import {
@@ -8016,5 +8017,113 @@ TestRunner.test('Sidechain Effect - APP_VERSION validation for Day 434', (t) => 
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 434');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 108, 'Minor version should be >= 108 for Day 434');
+    }
+});
+// === Day 435: Export Mixdown & Master Bus Node Functions Tests ===
+TestRunner.test('Export Mixdown - exportMixdownToWav is a function export', (t) => {
+    t.assertEqual(typeof exportMixdownToWav, 'function', 'exportMixdownToWav should be a function');
+});
+
+TestRunner.test('Export Mixdown - exportMixdownToWav is async', (t) => {
+    const result = exportMixdownToWav(10);
+    t.assertTruthy(result instanceof Promise, 'exportMixdownToWav should return a Promise');
+});
+
+TestRunner.test('Export Mixdown - exportMixdownToWav accepts 1 parameter', (t) => {
+    const paramCount = exportMixdownToWav.length;
+    t.assertEquals(paramCount, 1, 'exportMixdownToWav should accept 1 parameter');
+});
+
+TestRunner.test('Export Mixdown - exportMixdownToWav references durationSeconds parameter', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('durationSeconds'), 'exportMixdownToWav should reference durationSeconds parameter');
+});
+
+TestRunner.test('Export Mixdown - exportMixdownToWav uses Tone.Recorder', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('Tone.Recorder'), 'exportMixdownToWav should use Tone.Recorder');
+});
+
+TestRunner.test('Export Mixdown - exportMixdownToWav connects masterGain to recorder', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('masterGain.connect(recorder)'), 'exportMixdownToWav should connect masterGain to recorder');
+});
+
+TestRunner.test('Export Mixdown - exportMixdownToWav handles transport state (wasPlaying)', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('wasPlaying'), 'exportMixdownToWav should track wasPlaying state');
+});
+
+TestRunner.test('Export Mixdown - exportMixdownToWav checks recording size', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('recording.size') || funcStr.includes('size < 1000'), 'exportMixdownToWav should check recording size');
+});
+
+TestRunner.test('Export Mixdown - exportMixdownToWav restores transport state in finally block', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('if (wasPlaying)'), 'exportMixdownToWav should restore transport state');
+});
+
+TestRunner.test('Export Mixdown - APP_VERSION validation for Day 435', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 435');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 109, 'Minor version should be >= 109 for Day 435');
+    }
+});
+
+TestRunner.test('Master Bus - getMasterEffectsBusInputNode is a function export', (t) => {
+    t.assertEqual(typeof getMasterEffectsBusInputNode, 'function', 'getMasterEffectsBusInputNode should be a function');
+});
+
+TestRunner.test('Master Bus - getMasterEffectsBusInputNode accepts 0 parameters', (t) => {
+    const paramCount = getMasterEffectsBusInputNode.length;
+    t.assertEquals(paramCount, 0, 'getMasterEffectsBusInputNode should accept 0 parameters');
+});
+
+TestRunner.test('Master Bus - getMasterEffectsBusInputNode checks for disposed state', (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getMasterEffectsBusInputNode should check disposed state');
+});
+
+TestRunner.test('Master Bus - getMasterEffectsBusInputNode calls setupMasterBus when disposed', (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'getMasterEffectsBusInputNode should call setupMasterBus when disposed');
+});
+
+TestRunner.test('Master Bus - getMasterEffectsBusInputNode returns masterEffectsBusInputNode', (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('return masterEffectsBusInputNode'), 'getMasterEffectsBusInputNode should return masterEffectsBusInputNode');
+});
+
+TestRunner.test('Master Bus - getActualMasterGainNode is a function export', (t) => {
+    t.assertEqual(typeof getActualMasterGainNode, 'function', 'getActualMasterGainNode should be a function');
+});
+
+TestRunner.test('Master Bus - getActualMasterGainNode accepts 0 parameters', (t) => {
+    const paramCount = getActualMasterGainNode.length;
+    t.assertEquals(paramCount, 0, 'getActualMasterGainNode should accept 0 parameters');
+});
+
+TestRunner.test('Master Bus - getActualMasterGainNode checks for disposed state', (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getActualMasterGainNode should check disposed state');
+});
+
+TestRunner.test('Master Bus - getActualMasterGainNode calls setupMasterBus when disposed', (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'getActualMasterGainNode should call setupMasterBus when disposed');
+});
+
+TestRunner.test('Master Bus - getActualMasterGainNode returns masterGainNodeActual', (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('return masterGainNodeActual'), 'getActualMasterGainNode should return masterGainNodeActual');
+});
+
+TestRunner.test('Master Bus - APP_VERSION validation for Day 435', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 435');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 109, 'Minor version should be >= 109 for Day 435');
     }
 });
