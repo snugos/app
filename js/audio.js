@@ -44,6 +44,214 @@ let recordingInputGainValue = Constants.DEFAULT_RECORDING_INPUT_GAIN;
 let sendBusNodes = new Map(); // sendId -> { inputGain, effects[], outputGain, muted }
 let trackSendNodes = new Map(); // trackId -> Map<sendId, { sendGainNode, sendLevel }>
 
+// ============================================================
+// SEND BUS AUDIO ROUTING FUNCTIONS
+// ============================================================
+
+export async function createSendBusInAudio(sendId) {
+    if (!sendId) {
+        console.warn('[Audio createSendBusInAudio] No sendId provided.');
+        return false;
+    }
+    if (sendBusNodes.has(sendId)) {
+        console.log('[Audio createSendBusInAudio] Send bus already exists:', sendId);
+        return true;
+    }
+    try {
+        const inputGain = new Tone.Gain(1);
+        const outputGain = new Tone.Gain(1);
+        const busData = {
+            inputGain,
+            effects: [],
+            outputGain,
+            muted: false
+        };
+        sendBusNodes.set(sendId, busData);
+        console.log('[Audio createSendBusInAudio] Created send bus:', sendId);
+        return true;
+    } catch (e) {
+        console.error('[Audio createSendBusInAudio] Error creating send bus:', sendId, e);
+        return false;
+    }
+}
+
+export async function deleteSendBusFromAudio(sendId) {
+    if (!sendId) return;
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn('[Audio deleteSendBusFromAudio] Send bus not found:', sendId);
+        return;
+    }
+    // Dispose all effect nodes
+    busData.effects.forEach(effectNode => {
+        try { effectNode.dispose(); } catch (e) {}
+    });
+    // Dispose input/output gain nodes
+    try { busData.inputGain.dispose(); } catch (e) {}
+    try { busData.outputGain.dispose(); } catch (e) {}
+    sendBusNodes.delete(sendId);
+    console.log('[Audio deleteSendBusFromAudio] Deleted send bus:', sendId);
+}
+
+export async function addEffectToSendBus(sendId, effectType, params = {}) {
+    if (!sendId || !effectType) {
+        console.warn('[Audio addEffectToSendBus] Missing sendId or effectType.');
+        return null;
+    }
+    let busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        const created = await createSendBusInAudio(sendId);
+        if (!created) return null;
+        busData = sendBusNodes.get(sendId);
+    }
+    try {
+        const effectInstance = createEffectInstance(effectType, params);
+        busData.effects.push(effectInstance);
+        // Reconnect chain: input -> effects -> output
+        rebuildSendBusChain(sendId);
+        console.log('[Audio addEffectToSendBus] Added effect', effectType, 'to send bus', sendId);
+        return effectInstance;
+    } catch (e) {
+        console.error('[Audio addEffectToSendBus] Error adding effect:', e);
+        return null;
+    }
+}
+
+function rebuildSendBusChain(sendId) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return;
+    try {
+        busData.inputGain.disconnect();
+        busData.effects.forEach(effect => {
+            try { effect.disconnect(); } catch (e) {}
+        });
+        busData.outputGain.disconnect();
+        // Connect chain: input -> effects -> output -> destination
+        if (busData.effects.length > 0) {
+            busData.inputGain.connect(busData.effects[0]);
+            for (let i = 0; i < busData.effects.length - 1; i++) {
+                busData.effects[i].connect(busData.effects[i + 1]);
+            }
+            busData.effects[busData.effects.length - 1].connect(busData.outputGain);
+        } else {
+            busData.inputGain.connect(busData.outputGain);
+        }
+        busData.outputGain.toDestination();
+    } catch (e) {
+        console.error('[Audio rebuildSendBusChain] Error rebuilding chain:', sendId, e);
+    }
+}
+
+export function removeEffectFromSendBus(sendId, effectId) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn('[Audio removeEffectFromSendBus] Send bus not found:', sendId);
+        return false;
+    }
+    const idx = busData.effects.findIndex(e => e.id === effectId);
+    if (idx === -1) {
+        console.warn('[Audio removeEffectFromSendBus] Effect not found in send bus:', sendId, effectId);
+        return false;
+    }
+    const [removed] = busData.effects.splice(idx, 1);
+    try { removed.dispose(); } catch (e) {}
+    rebuildSendBusChain(sendId);
+    console.log('[Audio removeEffectFromSendBus] Removed effect', effectId, 'from send bus', sendId);
+    return true;
+}
+
+export function updateSendBusEffectParam(sendId, effectId, paramPath, value) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return;
+    const effectNode = busData.effects.find(e => e.id === effectId);
+    if (!effectNode) return;
+    const paramParts = paramPath.split('.');
+    let target = effectNode;
+    for (let i = 0; i < paramParts.length - 1; i++) {
+        target = target[paramParts[i]];
+        if (!target) return;
+    }
+    const finalKey = paramParts[paramParts.length - 1];
+    if (target[finalKey] && typeof target[finalKey].setValueAtTime === 'function') {
+        target[finalKey].setValueAtTime(value, Tone.now());
+    } else if (target[finalKey] !== undefined) {
+        target[finalKey] = value;
+    }
+}
+
+export function reorderEffectInSendBus(sendId, effectId, newIndex) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return false;
+    const oldIdx = busData.effects.findIndex(e => e.id === effectId);
+    if (oldIdx === -1) return false;
+    const [removed] = busData.effects.splice(oldIdx, 1);
+    const insertIdx = Math.min(Math.max(0, newIndex), busData.effects.length);
+    busData.effects.splice(insertIdx, 0, removed);
+    rebuildSendBusChain(sendId);
+    return true;
+}
+
+export function setSendBusLevel(sendId, level) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return;
+    const clampedLevel = Math.max(0, Math.min(1, level));
+    busData.outputGain.gain.setValueAtTime(clampedLevel, Tone.now());
+}
+
+export function setSendBusMuted(sendId, muted) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return;
+    busData.muted = muted;
+    busData.outputGain.gain.setValueAtTime(muted ? 0 : 1, Tone.now());
+}
+
+export function getSendBusNodes() {
+    return sendBusNodes;
+}
+
+export function getTrackSendNodes() {
+    return trackSendNodes;
+}
+
+export function connectTrackToSendBus(trackId, sendId, level = 1) {
+    if (!trackId || !sendId) return false;
+    let trackMap = trackSendNodes.get(trackId);
+    if (!trackMap) {
+        trackMap = new Map();
+        trackSendNodes.set(trackId, trackMap);
+    }
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return false;
+    const sendGainNode = new Tone.Gain(level);
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (track && track.inputChannel) {
+        track.inputChannel.connect(sendGainNode);
+        sendGainNode.connect(busData.inputGain);
+    }
+    trackMap.set(sendId, { sendGainNode, sendLevel: level });
+    return true;
+}
+
+export function disconnectTrackFromSendBus(trackId, sendId) {
+    const trackMap = trackSendNodes.get(trackId);
+    if (!trackMap) return false;
+    const entry = trackMap.get(sendId);
+    if (!entry) return false;
+    try { entry.sendGainNode.dispose(); } catch (e) {}
+    trackMap.delete(sendId);
+    return true;
+}
+
+export function setTrackSendLevel(trackId, sendId, level) {
+    const trackMap = trackSendNodes.get(trackId);
+    if (!trackMap) return;
+    const entry = trackMap.get(sendId);
+    if (!entry) return;
+    const clampedLevel = Math.max(0, Math.min(1, level));
+    entry.sendGainNode.gain.setValueAtTime(clampedLevel, Tone.now());
+    entry.sendLevel = clampedLevel;
+}
+
 export function initializeAudioModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
