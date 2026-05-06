@@ -10170,3 +10170,72 @@ TestRunner.test('Sound Browser & Autosave State - APP_VERSION validation for Day
         t.assertTruthy(versionParts[1] >= 118, 'Minor version should be >= 118 for Day 444');
     }
 });
+
+// Day 445: Audio State Undo Capture Coverage
+TestRunner.test('Audio State - setCountInBars calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setCountInBars should capture undo state');
+});
+
+TestRunner.test('Audio State - setCountInBars uses a descriptive undo label', (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Set Count-In Bars'), 'setCountInBars should use a descriptive undo label');
+});
+
+TestRunner.test('Audio State - setMetronomeEnabled calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = setMetronomeEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMetronomeEnabled should capture undo state');
+});
+
+TestRunner.test('Audio State - setMetronomeEnabled uses a toggle undo label', (t) => {
+    const funcStr = setMetronomeEnabled.toString();
+    t.assertTruthy(funcStr.includes('Toggle Metronome'), 'setMetronomeEnabled should use a toggle undo label');
+});
+
+TestRunner.test('Audio State - setMetronomeVolume calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMetronomeVolume should capture undo state');
+});
+
+TestRunner.test('Audio State - startAutomation calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = startAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'startAutomation should capture undo state');
+});
+
+TestRunner.test('Audio State - stopAutomation calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = stopAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'stopAutomation should capture undo state');
+});
+
+TestRunner.test('Audio State - setMasterVolumeAutomation calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMasterVolumeAutomation should capture undo state');
+});
+
+TestRunner.test('Audio State - setLoopRegion calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegion should capture undo state');
+});
+
+TestRunner.test('Audio State - setLoopRegionEnabled calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegionEnabled should capture undo state');
+});
+
+TestRunner.test('Audio State - setPunchRegion calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegion should capture undo state');
+});
+
+TestRunner.test('Audio State - setPunchRegionEnabled calls captureStateForUndoIfAllowed', (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegionEnabled should capture undo state');
+});
+
+TestRunner.test('Audio State - APP_VERSION validation for Day 445', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 445');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 119, 'Minor version should be >= 119 for Day 445');
+    }
+});

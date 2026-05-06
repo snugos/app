@@ -1191,16 +1191,29 @@ export function clearAllMasterEffectNodes() {
 
 export function isMetronomeEnabled() { return metronomeEnabled; }
 export function getCountInBars() { return countInBars; }
-export function setCountInBars(bars) { countInBars = Math.max(0, Math.min(4, Math.floor(bars))); }
+export function setCountInBars(bars) {
+    const nextBars = Math.max(0, Math.min(4, Math.floor(bars)));
+    if (countInBars !== nextBars) {
+        captureAudioStateForUndoIfAllowed(`Set Count-In Bars to ${nextBars}`);
+    }
+    countInBars = nextBars;
+}
 export function isCountInActive() { return countInActive; }
 
 export function setMetronomeEnabled(enabled) {
-    metronomeEnabled = !!enabled;
+    const nextValue = !!enabled;
+    if (metronomeEnabled !== nextValue) {
+        captureAudioStateForUndoIfAllowed(`Toggle Metronome ${nextValue ? 'On' : 'Off'}`);
+    }
+    metronomeEnabled = nextValue;
     return metronomeEnabled;
 }
 
 export function setMetronomeVolume(vol) {
     const nextValue = Math.max(0, Math.min(1, parseFloat(vol) || 0));
+    if (_metronomeVolume !== nextValue) {
+        captureAudioStateForUndoIfAllowed(`Set Metronome Volume to ${nextValue.toFixed(2)}`);
+    }
     _metronomeVolume = nextValue;
     return nextValue;
 }
@@ -1230,10 +1243,12 @@ export function startCountIn(onCountInComplete, startPosition = 0) {
 }
 
 export function startAutomation() {
+    captureAudioStateForUndoIfAllowed('Start Automation');
     automationActive = true;
 }
 
 export function stopAutomation() {
+    captureAudioStateForUndoIfAllowed('Stop Automation');
     automationActive = false;
 }
 
@@ -1265,6 +1280,7 @@ export function getMasterVolumeAutomation() {
 }
 
 export function setMasterVolumeAutomation(automationData) {
+    captureAudioStateForUndoIfAllowed('Set Master Volume Automation');
     masterVolumeAutomation = Array.isArray(automationData) ? automationData.map(entry => ({ ...entry })) : [];
 }
 
@@ -1299,13 +1315,18 @@ export function setLoopRegion(startBars, endBars) {
         console.warn('[Loop] Invalid region:', startBars, endBars);
         return false;
     }
+    captureAudioStateForUndoIfAllowed(`Set Loop Region ${startBars} - ${endBars}`);
     loopRegion.start = startBars;
     loopRegion.end = endBars;
     return true;
 }
 
 export function setLoopRegionEnabled(enabled) {
-    loopRegion.enabled = !!enabled;
+    const nextValue = !!enabled;
+    if (loopRegion.enabled !== nextValue) {
+        captureAudioStateForUndoIfAllowed(`Toggle Loop Region ${nextValue ? 'On' : 'Off'}`);
+    }
+    loopRegion.enabled = nextValue;
     return loopRegion.enabled;
 }
 
@@ -1325,6 +1346,7 @@ export function setPunchRegion(inBars, outBars) {
         console.warn('[Punch] Invalid region:', inBars, outBars);
         return false;
     }
+    captureAudioStateForUndoIfAllowed(`Set Punch Region ${inBars} - ${outBars}`);
     punchRegion.in = inBars;
     punchRegion.out = outBars;
     console.log(`[Punch] Set to ${punchRegion.in} - ${punchRegion.out} bars`);
@@ -1332,7 +1354,11 @@ export function setPunchRegion(inBars, outBars) {
 }
 
 export function setPunchRegionEnabled(enabled) {
-    punchRegion.enabled = !!enabled;
+    const nextValue = !!enabled;
+    if (punchRegion.enabled !== nextValue) {
+        captureAudioStateForUndoIfAllowed(`Toggle Punch Region ${nextValue ? 'On' : 'Off'}`);
+    }
+    punchRegion.enabled = nextValue;
     console.log(`[Punch] ${punchRegion.enabled ? 'Enabled' : 'Disabled'}`);
     return punchRegion.enabled;
 }
