@@ -1418,6 +1418,7 @@ export class Track {
             }
         });
 
+        this._captureUndoState(`Humanize velocities on ${activeSeq.name}`);
         return humanizedCount;
     }
 
@@ -1602,6 +1603,7 @@ export class Track {
             }
         }
 
+        this._captureUndoState(`Paste Sequence Section on ${activeSeq.name}`);
         return pastedCount;
     }
 

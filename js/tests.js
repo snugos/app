@@ -10239,3 +10239,44 @@ TestRunner.test('Audio State - APP_VERSION validation for Day 445', (t) => {
         t.assertTruthy(versionParts[1] >= 119, 'Minor version should be >= 119 for Day 445');
     }
 });
+
+// Day 446: Sequence Editing Undo Capture Coverage
+// ===============================================
+
+TestRunner.test('Track Sequence - humanizeVelocity calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'humanizeVelocity should call _captureUndoState');
+});
+
+TestRunner.test('Track Sequence - humanizeVelocity uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('Humanize velocities on'), 'humanizeVelocity should use descriptive undo label');
+});
+
+TestRunner.test('Track Sequence - pasteSequenceSection calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'pasteSequenceSection should call _captureUndoState');
+});
+
+TestRunner.test('Track Sequence - pasteSequenceSection uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('Paste Sequence Section on'), 'pasteSequenceSection should use descriptive undo label');
+});
+
+TestRunner.test('Track Sequence - pasteSequenceSection accepts skipUndo parameter', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('skipUndo'), 'pasteSequenceSection should accept skipUndo parameter');
+});
+
+TestRunner.test('Track Sequence - pasteSequenceSection respects skipUndo guard', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('skipUndo') && funcStr.includes('_captureUndoState'), 'pasteSequenceSection should guard _captureUndoState with skipUndo');
+});
+
+TestRunner.test('Track Sequence - Day 446 APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 446');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 120, 'Minor version should be >= 120 for Day 446');
+    }
+});
