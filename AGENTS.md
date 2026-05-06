@@ -1,3 +1,46 @@
+#### Day 440: Track Automation Methods Tests (2026-05-05)
+- **Feature**: Added 60 new unit tests for Track Automation Methods to expand test coverage
+- **Files Modified**:
+  - `js/tests.js`: Added 60 new tests in Day 440 section covering Track Automation Methods and Master Automation Armed state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.114.0
+- **Feature Details**:
+  - Tests validate writeVolumeAutomation function (2 params: time, value, initializes automation.volume, clamps to 0-1.5, sorts by time)
+  - Tests validate writeMuteAutomation function (2 params: time, value, initializes automation.mute, coerces to boolean)
+  - Tests validate writeSoloAutomation function (2 params: time, value, initializes automation.solo, coerces to boolean)
+  - Tests validate removeAutomationEventsInRange function (3 params: type, startTime, endTime, filters events)
+  - Tests validate applyAutomationAtTime function (1 param: time, handles volume/mute/solo automation)
+  - Tests validate toggleMuteAutomationNow function (0 params, checks automationArmed, calls writeMuteAutomation)
+  - Tests validate toggleSoloAutomationNow function (0 params, checks automationArmed, calls writeSoloAutomation)
+  - Tests validate getMasterAutomationArmedState function (0 params, returns boolean)
+  - Tests validate setMasterAutomationArmedState function (1 param, calls captureStateForUndo with descriptive label)
+  - Tests validate Track constructor initializes automation object with volume/mute/solo arrays and automationArmed flag
+  - Total tests increased from 1585 to 1645
+- **Version**: Bumped to 2.114.0
+
+#### Day 439: Track Undo Capture Coverage (2026-05-04)
+- **Feature**: Expanded undo/redo capture coverage for remaining Track mutators that were still mutating without a checkpoint
+- **Files Modified**:
+  - `js/Track.js`: Added `_captureUndoState(...)` calls to:
+    - `loadSampleToPad(padIndex, sampleSource)`
+    - `addEffect(effectType)`
+    - `removeEffect(effectId)`
+    - `updateEffectParam(effectId, paramPath, value)`
+    - `reorderEffect(effectId, newIndex)`
+    - `setInstrumentSamplerLoopStart(time)`
+    - `setInstrumentSamplerLoopEnd(time)`
+    - `setInstrumentSamplerEnv(param, value)`
+    - `setActiveSequence(sequenceId)`
+    - `setNoteLength(row, col, lengthInSteps)`
+  - `js/tests.js`: Added a Day 439 test block covering the new undo-capture coverage on Track mutators and the version bump
+  - `js/constants.js`: Bumped APP_VERSION to 2.113.0
+- **Feature Details**:
+  - DrumSampler pad loading now records an undo checkpoint before persisting the new pad sample
+  - Track effect edits now all participate in undo history, including add/remove/reorder and param updates
+  - Instrument Sampler loop controls and envelope edits now participate in undo history
+  - Active sequence changes and note-length edits now participate in undo history
+  - This closes the remaining obvious undo-capture gaps in `Track.js`
+  - Version bumped to 2.113.0
+
 #### Day 438: Recording Microphone E2E Helper Hardening (2026-05-04)
 - **Feature**: Hardened the recording microphone E2E helper so it selects a valid Audio track safely, rejects concurrent recordings, and returns a structured unsupported-browser failure when real microphone capture is unavailable
 - **Files Modified**:

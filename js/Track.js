@@ -196,6 +196,8 @@ export class Track {
             }
 
             if (audioData) {
+                this._captureUndoState(`Load Pad ${padIndex + 1} Sample on ${this.name}`);
+
                 // 2. Save to IndexedDB so the sample persists on reload
                 const dbKey = `track_${this.id}_pad_${padIndex}`;
                 await storeAudio(dbKey, audioData);
@@ -222,20 +224,20 @@ export class Track {
                     this.drumPadPlayers[padIndex].dispose();
                 }
                 this.drumPadPlayers[padIndex] = new Tone.Player(buffer);
-                
-                // 6. Connect player to effects chain or gain node
                 this.rebuildEffectChain();
 
-                console.log(`[Track ${this.id}] Successfully loaded "${fileName}" to pad ${padIndex}`);
+                if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'drumPadChanged');
+                if (this.appServices.renderTimeline) this.appServices.renderTimeline();
                 return true;
             }
-        } catch (e) {
-            console.error("[Track loadSampleToPad] Error:", e);
+            return false;
+        } catch (error) {
+            console.error(`[Track ${this.id} loadSampleToPad] Error loading sample to pad ${padIndex}:`, error);
             if (this.appServices.showNotification) {
-                this.appServices.showNotification("Error loading sample to pad.");
+                this.appServices.showNotification(`Error loading sample to pad ${padIndex + 1}: ${error.message}`, 4000);
             }
+            return false;
         }
-        return false;
     }
     // --- Sequence Management ---
     getActiveSequence() {
@@ -452,6 +454,7 @@ export class Track {
         const toneNode = createEffectInstance(effectType, defaultParams);
 
         if (toneNode) {
+            this._captureUndoState(`Add ${effectType} effect on ${this.name}`);
             const effectId = `effect-${this.id}-${effectType}-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
             this.activeEffects.push({
                 id: effectId, type: effectType, toneNode: toneNode, params: JSON.parse(JSON.stringify(defaultParams))
@@ -471,6 +474,7 @@ export class Track {
         const effectIndex = this.activeEffects.findIndex(e => e.id === effectId);
         if (effectIndex > -1) {
             const effectToRemove = this.activeEffects[effectIndex];
+            this._captureUndoState(`Remove ${effectToRemove.type} effect from ${this.name}`);
             console.log(`[Track ${this.id}] Removing effect "${effectToRemove.type}" (ID: ${effectId})`);
             if (effectToRemove.toneNode && !effectToRemove.toneNode.disposed) {
                 try {
@@ -520,6 +524,8 @@ export class Track {
             console.warn(`[Track ${this.id}] ToneNode for effect ${effectId} ("${effectWrapper.type}") is invalid or disposed.`);
             return;
         }
+
+        this._captureUndoState(`Update ${effectWrapper.type} effect on ${this.name}`);
 
         try {
             const keys = paramPath.split('.');
@@ -580,6 +586,7 @@ export class Track {
         newIndex = Math.max(0, Math.min(newIndex, this.activeEffects.length - 1));
         if (oldIndex === newIndex) return;
 
+        this._captureUndoState(`Reorder effect on ${this.name}`);
         console.log(`[Track ${this.id}] Reordering effect ${effectId} from index ${oldIndex} to ${newIndex}.`);
         const [effectToMove] = this.activeEffects.splice(oldIndex, 1);
         this.activeEffects.splice(newIndex, 0, effectToMove);
@@ -1172,18 +1179,21 @@ export class Track {
     }
     setInstrumentSamplerLoopStart(time) {
         if (this.instrumentSamplerSettings) {
+            this._captureUndoState(`Set instrument sampler loop start on ${this.name}`);
             this.instrumentSamplerSettings.loopStart = parseFloat(time) || 0;
             if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.loopStart = this.instrumentSamplerSettings.loopStart;
         }
     }
     setInstrumentSamplerLoopEnd(time) {
         if (this.instrumentSamplerSettings) {
+            this._captureUndoState(`Set instrument sampler loop end on ${this.name}`);
             this.instrumentSamplerSettings.loopEnd = parseFloat(time) || 0;
             if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.loopEnd = this.instrumentSamplerSettings.loopEnd;
         }
     }
     setInstrumentSamplerEnv(param, value) {
         if (this.instrumentSamplerSettings && this.instrumentSamplerSettings.envelope) {
+            this._captureUndoState(`Set instrument sampler ${param} on ${this.name}`);
             this.instrumentSamplerSettings.envelope[param] = parseFloat(value);
             if (this.toneSampler && !this.toneSampler.disposed) {
                 if (param === 'attack' && typeof this.toneSampler.attack !== 'undefined') this.toneSampler.attack = value;
@@ -1298,6 +1308,7 @@ export class Track {
         if (this.type === 'Audio') return;
         const seq = this.sequences ? this.sequences.find(s => s.id === sequenceId) : null;
         if (seq && this.activeSequenceId !== sequenceId) {
+            this._captureUndoState(`Set active sequence to "${seq.name}" on ${this.name}`);
             console.log(`[Track ${this.id}] Setting active sequence to: "${seq.name}" (ID: ${sequenceId})`);
             this.activeSequenceId = sequenceId;
             this.recreateToneSequence(true);
@@ -1417,6 +1428,7 @@ export class Track {
         if (!activeSeq || !activeSeq.data) return;
         const stepData = activeSeq.data[row]?.[col];
         if (!stepData || !stepData.active) return;
+        this._captureUndoState(`Set note length at row ${row + 1}, col ${col + 1} on ${this.name}`);
         const clamped = Math.max(1, Math.min(lengthInSteps, activeSeq.length - col));
         activeSeq.data[row][col].length = clamped;
     }
