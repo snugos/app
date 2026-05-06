@@ -41,6 +41,16 @@ let recordingScheduledTrackId = null; // Track ID for the scheduled recording ca
 let recordingInputGainNode = null;
 let recordingInputGainValue = Constants.DEFAULT_RECORDING_INPUT_GAIN;
 
+// Transport / click / automation state
+let metronomeEnabled = Constants.DEFAULT_METRONOME_ENABLED;
+let countInBars = 1;
+let countInActive = false;
+let _metronomeVolume = Constants.DEFAULT_METRONOME_VOLUME;
+let automationActive = false;
+let masterVolumeAutomation = [];
+let loopRegion = { ...Constants.DEFAULT_LOOP_REGION };
+let punchRegion = { in: 0, out: 16, enabled: false };
+
 // Send Bus Audio Routing
 let sendBusNodes = new Map(); // sendId -> { inputGain, effects[], outputGain, muted }
 let trackSendNodes = new Map(); // trackId -> Map<sendId, { sendGainNode, sendLevel }>

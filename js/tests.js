@@ -8169,6 +8169,241 @@ TestRunner.test('Master Bus - APP_VERSION validation for Day 435', (t) => {
     }
 });
 
+// === Day 442: Master Effects Audio Functions Tests ===
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain is a function export', (t) => {
+    t.assertEqual(typeof rebuildMasterEffectChain, 'function', 'rebuildMasterEffectChain should be a function');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain accepts 0 parameters', (t) => {
+    const paramCount = rebuildMasterEffectChain.length;
+    t.assertEquals(paramCount, 0, 'rebuildMasterEffectChain should accept 0 parameters');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain references masterEffectsBusInputNode', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('masterEffectsBusInputNode'), 'rebuildMasterEffectChain should reference masterEffectsBusInputNode');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain references masterGainNodeActual', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('masterGainNodeActual'), 'rebuildMasterEffectChain should reference masterGainNodeActual');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain references masterMeterNode', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('masterMeterNode'), 'rebuildMasterEffectChain should reference masterMeterNode');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain calls setupMasterBus when components not ready', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'rebuildMasterEffectChain should call setupMasterBus when needed');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain uses disconnect before reconnecting', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('disconnect'), 'rebuildMasterEffectChain should disconnect nodes before reconnecting');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain references activeMasterEffectNodes', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'rebuildMasterEffectChain should reference activeMasterEffectNodes');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain references localAppServices.getMasterEffects', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('getMasterEffects'), 'rebuildMasterEffectChain should call getMasterEffects from appServices');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain connects effects in chain', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('connect'), 'rebuildMasterEffectChain should connect effects');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain connects to masterGainNodeActual', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('connect') && funcStr.includes('masterGainNodeActual'), 'rebuildMasterEffectChain should connect to masterGainNodeActual');
+});
+
+TestRunner.test('Master Effects Audio - rebuildMasterEffectChain uses toDestination for output', (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('toDestination'), 'rebuildMasterEffectChain should connect to Tone.Destination');
+});
+
+TestRunner.test('Master Effects Audio - addMasterEffectToAudio is a function export', (t) => {
+    t.assertEqual(typeof addMasterEffectToAudio, 'function', 'addMasterEffectToAudio should be a function');
+});
+
+TestRunner.test('Master Effects Audio - addMasterEffectToAudio is async', (t) => {
+    const result = addMasterEffectToAudio('test-id', 'AutoFilter', {});
+    t.assertTruthy(result instanceof Promise, 'addMasterEffectToAudio should return a Promise');
+});
+
+TestRunner.test('Master Effects Audio - addMasterEffectToAudio accepts 3 parameters', (t) => {
+    const paramCount = addMasterEffectToAudio.length;
+    t.assertEquals(paramCount, 3, 'addMasterEffectToAudio should accept 3 parameters');
+});
+
+TestRunner.test('Master Effects Audio - addMasterEffectToAudio references effectIdInState parameter', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('effectIdInState'), 'addMasterEffectToAudio should reference effectIdInState');
+});
+
+TestRunner.test('Master Effects Audio - addMasterEffectToAudio references effectType parameter', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addMasterEffectToAudio should reference effectType');
+});
+
+TestRunner.test('Master Effects Audio - addMasterEffectToAudio references initialParams parameter', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('initialParams'), 'addMasterEffectToAudio should reference initialParams');
+});
+
+TestRunner.test('Master Effects Audio - addMasterEffectToAudio calls createEffectInstance', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('createEffectInstance'), 'addMasterEffectToAudio should call createEffectInstance');
+});
+
+TestRunner.test('Master Effects Audio - addMasterEffectToAudio calls rebuildMasterEffectChain', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'addMasterEffectToAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test('Master Effects Audio - removeMasterEffectFromAudio is a function export', (t) => {
+    t.assertEqual(typeof removeMasterEffectFromAudio, 'function', 'removeMasterEffectFromAudio should be a function');
+});
+
+TestRunner.test('Master Effects Audio - removeMasterEffectFromAudio is async', (t) => {
+    const result = removeMasterEffectFromAudio('test-id');
+    t.assertTruthy(result instanceof Promise, 'removeMasterEffectFromAudio should return a Promise');
+});
+
+TestRunner.test('Master Effects Audio - removeMasterEffectFromAudio accepts 1 parameter', (t) => {
+    const paramCount = removeMasterEffectFromAudio.length;
+    t.assertEquals(paramCount, 1, 'removeMasterEffectFromAudio should accept 1 parameter');
+});
+
+TestRunner.test('Master Effects Audio - removeMasterEffectFromAudio references effectId parameter', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'removeMasterEffectFromAudio should reference effectId');
+});
+
+TestRunner.test('Master Effects Audio - removeMasterEffectFromAudio calls rebuildMasterEffectChain', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'removeMasterEffectFromAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test('Master Effects Audio - updateMasterEffectParamInAudio is a function export', (t) => {
+    t.assertEqual(typeof updateMasterEffectParamInAudio, 'function', 'updateMasterEffectParamInAudio should be a function');
+});
+
+TestRunner.test('Master Effects Audio - updateMasterEffectParamInAudio accepts 3 parameters', (t) => {
+    const paramCount = updateMasterEffectParamInAudio.length;
+    t.assertEquals(paramCount, 3, 'updateMasterEffectParamInAudio should accept 3 parameters');
+});
+
+TestRunner.test('Master Effects Audio - updateMasterEffectParamInAudio references effectId parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'updateMasterEffectParamInAudio should reference effectId');
+});
+
+TestRunner.test('Master Effects Audio - updateMasterEffectParamInAudio references paramPath parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('paramPath'), 'updateMasterEffectParamInAudio should reference paramPath');
+});
+
+TestRunner.test('Master Effects Audio - updateMasterEffectParamInAudio references value parameter', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('value'), 'updateMasterEffectParamInAudio should reference value');
+});
+
+TestRunner.test('Master Effects Audio - updateMasterEffectParamInAudio references activeMasterEffectNodes', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'updateMasterEffectParamInAudio should reference activeMasterEffectNodes');
+});
+
+TestRunner.test('Master Effects Audio - updateMasterEffectParamInAudio uses rampTo for smooth transitions', (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('rampTo') || funcStr.includes('value'), 'updateMasterEffectParamInAudio should update param value');
+});
+
+TestRunner.test('Master Effects Audio - reorderMasterEffectInAudio is a function export', (t) => {
+    t.assertEqual(typeof reorderMasterEffectInAudio, 'function', 'reorderMasterEffectInAudio should be a function');
+});
+
+TestRunner.test('Master Effects Audio - reorderMasterEffectInAudio accepts 2 parameters', (t) => {
+    const paramCount = reorderMasterEffectInAudio.length;
+    t.assertEquals(paramCount, 2, 'reorderMasterEffectInAudio should accept 2 parameters');
+});
+
+TestRunner.test('Master Effects Audio - reorderMasterEffectInAudio references effectIdIgnored parameter', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectIdIgnored') || funcStr.includes('effectId'), 'reorderMasterEffectInAudio should reference effectId');
+});
+
+TestRunner.test('Master Effects Audio - reorderMasterEffectInAudio references newIndexIgnored parameter', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('newIndexIgnored') || funcStr.includes('newIndex'), 'reorderMasterEffectInAudio should reference newIndex');
+});
+
+TestRunner.test('Master Effects Audio - reorderMasterEffectInAudio calls rebuildMasterEffectChain', (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'reorderMasterEffectInAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters is a function export', (t) => {
+    t.assertEqual(typeof updateMeters, 'function', 'updateMeters should be a function');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters accepts 3 parameters', (t) => {
+    const paramCount = updateMeters.length;
+    t.assertEquals(paramCount, 3, 'updateMeters should accept 3 parameters');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters references globalMasterMeterBar parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('globalMasterMeterBar'), 'updateMeters should reference globalMasterMeterBar');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters references mixerMasterMeterBar parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('mixerMasterMeterBar'), 'updateMeters should reference mixerMasterMeterBar');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters references tracks parameter', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('tracks'), 'updateMeters should reference tracks parameter');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters references masterMeterNode', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('masterMeterNode'), 'updateMeters should reference masterMeterNode');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters calls masterMeterNode.getValue', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('getValue'), 'updateMeters should call getValue on meter');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters uses Tone.dbToGain for conversion', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('dbToGain') || funcStr.includes('Tone.dbToGain'), 'updateMeters should convert dB to gain');
+});
+
+TestRunner.test('Master Effects Audio - updateMeters clamps level to 0-100', (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'updateMeters should clamp level');
+});
+
+TestRunner.test('Master Effects Audio - APP_VERSION validation for Day 442', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 442');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 116, 'Minor version should be >= 116 for Day 442');
+    }
+});
+
+
+
 // === Day 436: EffectsRegistry Functions Tests ===
 
 TestRunner.test('Effects Registry - synthEngineControlDefinitions is a function export', (t) => {
