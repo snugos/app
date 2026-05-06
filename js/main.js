@@ -459,6 +459,57 @@ const appServices = {
         }
         if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') appServices.renderTimeline();
     },
+    onSoloedTrackChanged: (soloedTrackId, previousId) => {
+        // Update all track UI elements to reflect the new solo state
+        const allTracks = getTracksState ? getTracksState() : [];
+        allTracks.forEach(t => {
+            if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged');
+        });
+        // Update mixer if open
+        if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    },
+    onMutedTracksChanged: (mutedTrackIds) => {
+        // Update all track UI elements to reflect the new mute states
+        const allTracks = getTracksState ? getTracksState() : [];
+        allTracks.forEach(t => {
+            if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'muteChanged');
+        });
+        // Update mixer if open
+        if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    },
+    onTrackNameChange: (trackId, newName) => {
+        // Update open track inspector window title if it exists
+        const inspectorWindow = getWindowByIdState ? getWindowByIdState(`trackInspector-${trackId}`) : null;
+        if (inspectorWindow && inspectorWindow.element) {
+            const titleEl = inspectorWindow.element.querySelector('.window-title');
+            if (titleEl) titleEl.textContent = `Inspector: ${newName}`;
+        }
+        // Update track sequencer window title if it exists
+        const sequencerWindow = getWindowByIdState ? getWindowByIdState(`sequencerWin-${trackId}`) : null;
+        if (sequencerWindow && sequencerWindow.element) {
+            const titleEl = sequencerWindow.element.querySelector('.window-title');
+            if (titleEl) {
+                // Keep the sequence name part, just update track name
+                const seqMatch = titleEl.textContent.match(/Sequencer: (.+) - (.+)/);
+                if (seqMatch) titleEl.textContent = `Sequencer: ${newName} - ${seqMatch[2]}`;
+                else titleEl.textContent = `Sequencer: ${newName}`;
+            }
+        }
+        // Update track effects rack window title if it exists
+        const effectsWindow = getWindowByIdState ? getWindowByIdState(`effectsRack-${trackId}`) : null;
+        if (effectsWindow && effectsWindow.element) {
+            const titleEl = effectsWindow.element.querySelector('.window-title');
+            if (titleEl) titleEl.textContent = `Effects: ${newName}`;
+        }
+        // Update mixer display if open
+        if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    },
     updateProjectNameDisplay: (name) => {
         if (uiElementsCache.projectNameBtnGlobal) {
             uiElementsCache.projectNameBtnGlobal.textContent = name || 'Untitled Project';
