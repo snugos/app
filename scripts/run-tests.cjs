@@ -1,4 +1,4 @@
-// scripts/run-tests.js - Headless browser test runner for SnugOS
+// js/testRunner.js - Headless browser test runner for SnugOS
 // Usage: node scripts/run-tests.js
 
 const puppeteer = require('puppeteer');
@@ -10,7 +10,8 @@ const fs = require('fs');
 function createServer(dir, port) {
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
-      let filePath = path.join(dir, req.url === '/' ? 'index.html' : req.url);
+      const requestPath = new URL(req.url, 'http://localhost').pathname;
+      let filePath = path.join(dir, requestPath === '/' ? 'index.html' : requestPath);
       const ext = path.extname(filePath);
       const mimeTypes = {
         '.html': 'text/html',

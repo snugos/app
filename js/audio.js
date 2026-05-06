@@ -28,6 +28,16 @@ let resumeAttemptScheduled = false;
 
 let localAppServices = {};
 
+function captureAudioStateForUndoIfAllowed(description = 'Unknown audio action') {
+    if (localAppServices && localAppServices._isReconstructingDAW_flag) {
+        return false;
+    }
+    if (localAppServices && typeof localAppServices.captureStateForUndo === 'function') {
+        localAppServices.captureStateForUndo(description);
+    }
+    return true;
+}
+
 // Variables for sidechain compression
 let sidechainBus = null; // Tone.Gain node that receives mic input for sidechain
 let micForSidechain = null; // Reference to the mic when used for sidechain
@@ -106,6 +116,9 @@ export function setRecordingInputGain(gainValue) {
     const nextValue = Number.isFinite(parseFloat(gainValue))
         ? Math.max(Constants.MIN_RECORDING_INPUT_GAIN, Math.min(Constants.MAX_RECORDING_INPUT_GAIN, parseFloat(gainValue)))
         : Constants.DEFAULT_RECORDING_INPUT_GAIN;
+    if (recordingInputGainValue !== nextValue) {
+        captureAudioStateForUndoIfAllowed(`Set Recording Input Gain to ${nextValue.toFixed(2)}`);
+    }
     recordingInputGainValue = nextValue;
     if (recordingInputGainNode && !recordingInputGainNode.disposed) {
         try {

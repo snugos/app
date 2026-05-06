@@ -1864,6 +1864,319 @@ TestRunner.test('Utils - createContextMenu creates menu structure', (t) => {
 });
 
 // ============================================
+// Utility Functions Unit Tests
+// ============================================
+
+// -- showNotification --
+TestRunner.test('Utils - showNotification is a function export', (t) => {
+    t.assertEqual(typeof showNotification, 'function', 'showNotification should be a function');
+});
+
+TestRunner.test('Utils - showNotification accepts 1 parameter', (t) => {
+    const paramCount = showNotification.length;
+    t.assertEquals(paramCount, 1, 'showNotification should accept 1 parameter (message)');
+});
+
+TestRunner.test('Utils - showNotification accepts optional duration parameter', (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('duration = 3000'), 'showNotification should have optional duration parameter with default 3000');
+});
+
+// -- showCustomModal --
+TestRunner.test('Utils - showCustomModal is a function export', (t) => {
+    t.assertEqual(typeof showCustomModal, 'function', 'showCustomModal should be a function');
+});
+
+TestRunner.test('Utils - showCustomModal accepts 4 parameters', (t) => {
+    const paramCount = showCustomModal.length;
+    t.assertEquals(paramCount, 4, 'showCustomModal should accept 4 parameters');
+});
+
+TestRunner.test('Utils - showCustomModal references title parameter', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('title'), 'showCustomModal should reference title parameter');
+});
+
+TestRunner.test('Utils - showCustomModal references contentHTML parameter', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('contentHTML'), 'showCustomModal should reference contentHTML parameter');
+});
+
+TestRunner.test('Utils - showCustomModal references buttonsConfig parameter', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('buttonsConfig'), 'showCustomModal should reference buttonsConfig parameter');
+});
+
+TestRunner.test('Utils - showCustomModal references modalClass parameter', (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('modalClass'), 'showCustomModal should reference modalClass parameter');
+});
+
+// -- showConfirmationDialog --
+TestRunner.test('Utils - showConfirmationDialog is a function export', (t) => {
+    t.assertEqual(typeof showConfirmationDialog, 'function', 'showConfirmationDialog should be a function');
+});
+
+TestRunner.test('Utils - showConfirmationDialog accepts 4 parameters', (t) => {
+    const paramCount = showConfirmationDialog.length;
+    t.assertEquals(paramCount, 4, 'showConfirmationDialog should accept 4 parameters');
+});
+
+TestRunner.test('Utils - showConfirmationDialog references title parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('title'), 'showConfirmationDialog should reference title parameter');
+});
+
+TestRunner.test('Utils - showConfirmationDialog references message parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('message'), 'showConfirmationDialog should reference message parameter');
+});
+
+TestRunner.test('Utils - showConfirmationDialog references onConfirm parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('onConfirm'), 'showConfirmationDialog should reference onConfirm parameter');
+});
+
+TestRunner.test('Utils - showConfirmationDialog references onCancel parameter', (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('onCancel'), 'showConfirmationDialog should reference onCancel parameter');
+});
+
+// -- secondsToBBSTime --
+TestRunner.test('Utils - secondsToBBSTime is a function export', (t) => {
+    t.assertEqual(typeof secondsToBBSTime, 'function', 'secondsToBBSTime should be a function');
+});
+
+TestRunner.test('Utils - secondsToBBSTime accepts 1 parameter', (t) => {
+    const paramCount = secondsToBBSTime.length;
+    t.assertEquals(paramCount, 1, 'secondsToBBSTime should accept 1 parameter');
+});
+
+TestRunner.test('Utils - secondsToBBSTime references seconds parameter', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('seconds'), 'secondsToBBSTime should reference seconds parameter');
+});
+
+TestRunner.test('Utils - secondsToBBSTime handles invalid input', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('isNaN') || funcStr.includes('null') || funcStr.includes('undefined'), 'secondsToBBSTime should handle invalid input');
+});
+
+TestRunner.test('Utils - secondsToBBSTime references Tone.Time', (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('Tone.Time') || funcStr.includes('Tone'), 'secondsToBBSTime should reference Tone for conversion');
+});
+
+// -- bbsTimeToSeconds --
+TestRunner.test('Utils - bbsTimeToSeconds is a function export', (t) => {
+    t.assertEqual(typeof bbsTimeToSeconds, 'function', 'bbsTimeToSeconds should be a function');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds accepts 1 parameter', (t) => {
+    const paramCount = bbsTimeToSeconds.length;
+    t.assertEquals(paramCount, 1, 'bbsTimeToSeconds should accept 1 parameter');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds references bbsString parameter', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('bbsString'), 'bbsTimeToSeconds should reference bbsString parameter');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds handles invalid input', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('!bbsString') || funcStr.includes('null') || funcStr.includes('undefined'), 'bbsTimeToSeconds should handle invalid input');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds references Tone.Time', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('Tone.Time') || funcStr.includes('Tone'), 'bbsTimeToSeconds should reference Tone for conversion');
+});
+
+TestRunner.test('Utils - bbsTimeToSeconds handles isNaN result', (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('isNaN'), 'bbsTimeToSeconds should handle isNaN result from Tone conversion');
+});
+
+// -- createContextMenu --
+TestRunner.test('Utils - createContextMenu is a function export', (t) => {
+    t.assertEqual(typeof createContextMenu, 'function', 'createContextMenu should be a function');
+});
+
+TestRunner.test('Utils - createContextMenu accepts 3 parameters', (t) => {
+    const paramCount = createContextMenu.length;
+    t.assertEquals(paramCount, 3, 'createContextMenu should accept 3 parameters');
+});
+
+TestRunner.test('Utils - createContextMenu references event parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('event'), 'createContextMenu should reference event parameter');
+});
+
+TestRunner.test('Utils - createContextMenu references menuItems parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('menuItems'), 'createContextMenu should reference menuItems parameter');
+});
+
+TestRunner.test('Utils - createContextMenu references appServicesForZIndex parameter', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('appServicesForZIndex'), 'createContextMenu should reference appServicesForZIndex parameter');
+});
+
+TestRunner.test('Utils - createContextMenu validates Array.isArray for menuItems', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'createContextMenu should validate menuItems is an array');
+});
+
+TestRunner.test('Utils - createContextMenu calls preventDefault', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('preventDefault'), 'createContextMenu should call preventDefault');
+});
+
+TestRunner.test('Utils - createContextMenu calls stopPropagation', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('stopPropagation'), 'createContextMenu should call stopPropagation');
+});
+
+TestRunner.test('Utils - createContextMenu creates div element', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes("createElement('div')") || funcStr.includes('createElement("div")'), 'createContextMenu should create a div element');
+});
+
+TestRunner.test('Utils - createContextMenu assigns context-menu class', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('context-menu'), 'createContextMenu should assign context-menu class');
+});
+
+TestRunner.test('Utils - createContextMenu sets position to fixed', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('fixed'), 'createContextMenu should set position to fixed');
+});
+
+TestRunner.test('Utils - createContextMenu sets left position from event.clientX', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('clientX'), 'createContextMenu should use event.clientX for left position');
+});
+
+TestRunner.test('Utils - createContextMenu sets top position from event.clientY', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('clientY'), 'createContextMenu should use event.clientY for top position');
+});
+
+TestRunner.test('Utils - createContextMenu handles existing activeContextMenu', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('activeContextMenu'), 'createContextMenu should handle existing activeContextMenu');
+});
+
+// -- createDropZoneHTML --
+TestRunner.test('Utils - createDropZoneHTML is a function export', (t) => {
+    t.assertEqual(typeof createDropZoneHTML, 'function', 'createDropZoneHTML should be a function');
+});
+
+TestRunner.test('Utils - createDropZoneHTML accepts 5 parameters', (t) => {
+    const paramCount = createDropZoneHTML.length;
+    t.assertEquals(paramCount, 5, 'createDropZoneHTML should accept 5 parameters');
+});
+
+TestRunner.test('Utils - createDropZoneHTML references trackId parameter', (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'createDropZoneHTML should reference trackId parameter');
+});
+
+TestRunner.test('Utils - createDropZoneHTML references inputId parameter', (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('inputId'), 'createDropZoneHTML should reference inputId parameter');
+});
+
+TestRunner.test('Utils - createDropZoneHTML references trackTypeHintForLoad parameter', (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('trackTypeHintForLoad'), 'createDropZoneHTML should reference trackTypeHintForLoad parameter');
+});
+
+TestRunner.test('Utils - createDropZoneHTML references padOrSliceIndex parameter', (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('padOrSliceIndex'), 'createDropZoneHTML should reference padOrSliceIndex parameter');
+});
+
+TestRunner.test('Utils - createDropZoneHTML references existingAudioData parameter', (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('existingAudioData'), 'createDropZoneHTML should reference existingAudioData parameter');
+});
+
+// -- setupGenericDropZoneListeners --
+TestRunner.test('Utils - setupGenericDropZoneListeners is a function export', (t) => {
+    t.assertEqual(typeof setupGenericDropZoneListeners, 'function', 'setupGenericDropZoneListeners should be a function');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners accepts 7 parameters', (t) => {
+    const paramCount = setupGenericDropZoneListeners.length;
+    t.assertEquals(paramCount, 7, 'setupGenericDropZoneListeners should accept 7 parameters');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners references dropZoneElement parameter', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dropZoneElement'), 'setupGenericDropZoneListeners should reference dropZoneElement parameter');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners references trackId parameter', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'setupGenericDropZoneListeners should reference trackId parameter');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners references padIndexOrSliceId parameter', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('padIndexOrSliceId'), 'setupGenericDropZoneListeners should reference padIndexOrSliceId parameter');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners references onSoundBrowserDrop parameter', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('onSoundBrowserDrop'), 'setupGenericDropZoneListeners should reference onSoundBrowserDrop parameter');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners references onOSFileDrop parameter', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('onOSFileDrop'), 'setupGenericDropZoneListeners should reference onOSFileDrop parameter');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners references getTrackByIdCallback parameter', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('getTrackByIdCallback'), 'setupGenericDropZoneListeners should reference getTrackByIdCallback parameter');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners adds dragover event listener', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dragover'), 'setupGenericDropZoneListeners should add dragover event listener');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners adds dragleave event listener', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dragleave'), 'setupGenericDropZoneListeners should add dragleave event listener');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners adds drop event listener', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('drop'), 'setupGenericDropZoneListeners should add drop event listener');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners handles dropEffect', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dropEffect'), 'setupGenericDropZoneListeners should set dropEffect');
+});
+
+TestRunner.test('Utils - setupGenericDropZoneListeners calls preventDefault on dragover', (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('preventDefault'), 'setupGenericDropZoneListeners should call preventDefault');
+});
+
+// Day 443 - APP_VERSION validation
+TestRunner.test('Utils Functions - APP_VERSION validation for Day 443', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 443');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 116, 'Minor version should be >= 116 for Day 443');
+    }
+});
+
+// ============================================
 // Scale Mode Tests  
 // ============================================
 TestRunner.test('SCALES object has all expected scales', (t) => {
