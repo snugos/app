@@ -6,7 +6,7 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
-import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest } from './audio.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, getRecordingInputGainNode } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTimelineLaneDrop,
@@ -655,9 +655,44 @@ const appServices = {
         }
     },
     setTrackMonitoring: (trackId, enabled) => {
-        // Monitoring is handled by the audio engine for recording input routing
-        // This is a placeholder - actual monitoring implementation would route audio input to track output
-        console.log(`[setTrackMonitoring] Track ${trackId} monitoring: ${enabled}`);
+        const track = getTrackByIdState ? getTrackByIdState(trackId) : null;
+        if (!track || track.type !== 'Audio') {
+            console.warn(`[Main setTrackMonitoring] Track ${trackId} is not a valid Audio track for monitoring.`);
+            return;
+        }
+
+        try {
+            // Ensure inputChannel exists for monitoring
+            if (!track.inputChannel || track.inputChannel.disposed) {
+                console.warn(`[Main setTrackMonitoring] Track ${trackId} inputChannel not available.`);
+                return;
+            }
+
+            // Get the recording input gain node which is the麦克风输入的gain node
+            const inputGainNode = getRecordingInputGainNode();
+            if (!inputGainNode || inputGainNode.disposed) {
+                console.warn(`[Main setTrackMonitoring] Recording input gain node not available.`);
+                return;
+            }
+
+            if (enabled) {
+                // Connect input gain node to track's inputChannel so user can hear themselves
+                inputGainNode.connect(track.inputChannel);
+            } else {
+                // Disconnect input gain node from track's inputChannel
+                try {
+                    inputGainNode.disconnect(track.inputChannel);
+                } catch (e) {
+                    // May fail if not connected, which is fine
+                }
+            }
+
+            // Update the track's monitoring state flag
+            track.isMonitoringEnabled = enabled;
+            console.log(`[Main setTrackMonitoring] Track ${trackId} monitoring: ${enabled}`);
+        } catch (error) {
+            console.error(`[Main setTrackMonitoring] Error for track ${trackId}:`, error);
+        }
     },
     // Notification passthrough
     showNotification: showSafeNotification,

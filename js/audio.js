@@ -65,7 +65,7 @@ export function getActualMasterGainNode() {
     return masterGainNodeActual;
 }
 
-function getRecordingInputGainNode() {
+export function getRecordingInputGainNode() {
     if (!recordingInputGainNode || recordingInputGainNode.disposed) {
         if (recordingInputGainNode && !recordingInputGainNode.disposed) {
             try { recordingInputGainNode.dispose(); } catch (e) { console.warn('[Audio getRecordingInputGainNode] Error disposing old recording input gain node:', e.message); }
