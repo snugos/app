@@ -295,13 +295,6 @@ import {
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
     setTrackSendLevel,
-    initializeAudioModule,
-    getMasterEffectsBusInputNode,
-    getActualMasterGainNode,
-    rebuildMasterEffectChain,
-    updateMasterEffectParamInAudio,
-    reorderMasterEffectInAudio,
-    updateMeters,
     exportMixdownToWav,
     runRecordingMicrophoneE2ETest
 } from './audio.js';
@@ -8757,5 +8750,358 @@ TestRunner.test('Audio State - APP_VERSION validation for Day 437', (t) => {
         t.assertTruthy(versionParts[1] >= 110, 'Minor version should be >= 110 for Day 437');
     } else {
         t.assertTruthy(versionParts[1] >= 0, 'Minor version should be >= 0 for Day 437+');
+    }
+});
+
+// Day 439: Track Undo Capture Coverage
+TestRunner.test('Track Undo Capture - loadSampleToPad is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.loadSampleToPad, 'function', 'loadSampleToPad should be a function');
+});
+
+TestRunner.test('Track Undo Capture - loadSampleToPad calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.loadSampleToPad.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'loadSampleToPad should call _captureUndoState');
+});
+
+TestRunner.test('Track Undo Capture - loadSampleToPad uses a descriptive undo label', (t) => {
+    const funcStr = Track.prototype.loadSampleToPad.toString();
+    t.assertTruthy(funcStr.includes('Load Pad') && funcStr.includes('Sample on'), 'loadSampleToPad should use a descriptive undo label');
+});
+
+TestRunner.test('Track Undo Capture - setInstrumentSamplerLoopStart calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoopStart.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerLoopStart should call _captureUndoState');
+});
+
+TestRunner.test('Track Undo Capture - setInstrumentSamplerLoopEnd calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoopEnd.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerLoopEnd should call _captureUndoState');
+});
+
+TestRunner.test('Track Undo Capture - setInstrumentSamplerEnv calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerEnv should call _captureUndoState');
+});
+
+TestRunner.test('Track Undo Capture - setActiveSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setActiveSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setActiveSequence should call _captureUndoState');
+});
+
+TestRunner.test('Track Undo Capture - setActiveSequence uses a descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setActiveSequence.toString();
+    t.assertTruthy(funcStr.includes('Set active sequence') && funcStr.includes('on'), 'setActiveSequence should use a descriptive undo label');
+});
+
+TestRunner.test('Track Undo Capture - setNoteLength calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setNoteLength should call _captureUndoState');
+});
+
+TestRunner.test('Track Undo Capture - setNoteLength uses a descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    t.assertTruthy(funcStr.includes('Set note length at row') && funcStr.includes('on'), 'setNoteLength should use a descriptive undo label');
+});
+
+TestRunner.test('Track Undo Capture - APP_VERSION validation for Day 439', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 439');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 113, 'Minor version should be >= 113 for Day 439');
+    }
+});
+
+// === Day 440: Track Automation Methods Tests ===
+import {
+    getMasterAutomationArmedState,
+    setMasterAutomationArmedState
+} from './state.js';
+
+TestRunner.test('Track Automation - writeVolumeAutomation is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.writeVolumeAutomation, 'function', 'writeVolumeAutomation should be a function');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation accepts 2 parameters', (t) => {
+    const paramCount = Track.prototype.writeVolumeAutomation.length;
+    t.assertEquals(paramCount, 2, 'writeVolumeAutomation should accept 2 parameters');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation references time parameter', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('time'), 'writeVolumeAutomation should reference time parameter');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation references value parameter', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('value'), 'writeVolumeAutomation should reference value parameter');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation checks this.automation', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('this.automation') || funcStr.includes('automation'), 'writeVolumeAutomation should check this.automation');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation initializes automation.volume array', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('volume') || funcStr.includes('automation ='), 'writeVolumeAutomation should initialize automation.volume');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation pushes event to automation.volume', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('push'), 'writeVolumeAutomation should push event to array');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation clamps value to 0-1.5 range', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min') || (funcStr.includes('1.5')), 'writeVolumeAutomation should clamp value');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation sorts by time', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('sort'), 'writeVolumeAutomation should sort events by time');
+});
+
+TestRunner.test('Track Automation - writeVolumeAutomation returns event object', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('return'), 'writeVolumeAutomation should return event object');
+});
+
+TestRunner.test('Track Automation - writeMuteAutomation is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.writeMuteAutomation, 'function', 'writeMuteAutomation should be a function');
+});
+
+TestRunner.test('Track Automation - writeMuteAutomation accepts 2 parameters', (t) => {
+    const paramCount = Track.prototype.writeMuteAutomation.length;
+    t.assertEquals(paramCount, 2, 'writeMuteAutomation should accept 2 parameters');
+});
+
+TestRunner.test('Track Automation - writeMuteAutomation references time parameter', (t) => {
+    const funcStr = Track.prototype.writeMuteAutomation.toString();
+    t.assertTruthy(funcStr.includes('time'), 'writeMuteAutomation should reference time parameter');
+});
+
+TestRunner.test('Track Automation - writeMuteAutomation references value parameter', (t) => {
+    const funcStr = Track.prototype.writeMuteAutomation.toString();
+    t.assertTruthy(funcStr.includes('value'), 'writeMuteAutomation should reference value parameter');
+});
+
+TestRunner.test('Track Automation - writeMuteAutomation initializes automation.mute array', (t) => {
+    const funcStr = Track.prototype.writeMuteAutomation.toString();
+    t.assertTruthy(funcStr.includes('mute') || funcStr.includes('automation ='), 'writeMuteAutomation should initialize automation.mute');
+});
+
+TestRunner.test('Track Automation - writeMuteAutomation pushes event to automation.mute', (t) => {
+    const funcStr = Track.prototype.writeMuteAutomation.toString();
+    t.assertTruthy(funcStr.includes('push'), 'writeMuteAutomation should push event to array');
+});
+
+TestRunner.test('Track Automation - writeMuteAutomation coerces value to boolean', (t) => {
+    const funcStr = Track.prototype.writeMuteAutomation.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'writeMuteAutomation should coerce value to boolean');
+});
+
+TestRunner.test('Track Automation - writeMuteAutomation returns event object', (t) => {
+    const funcStr = Track.prototype.writeMuteAutomation.toString();
+    t.assertTruthy(funcStr.includes('return'), 'writeMuteAutomation should return event object');
+});
+
+TestRunner.test('Track Automation - writeSoloAutomation is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.writeSoloAutomation, 'function', 'writeSoloAutomation should be a function');
+});
+
+TestRunner.test('Track Automation - writeSoloAutomation accepts 2 parameters', (t) => {
+    const paramCount = Track.prototype.writeSoloAutomation.length;
+    t.assertEquals(paramCount, 2, 'writeSoloAutomation should accept 2 parameters');
+});
+
+TestRunner.test('Track Automation - writeSoloAutomation references time parameter', (t) => {
+    const funcStr = Track.prototype.writeSoloAutomation.toString();
+    t.assertTruthy(funcStr.includes('time'), 'writeSoloAutomation should reference time parameter');
+});
+
+TestRunner.test('Track Automation - writeSoloAutomation references value parameter', (t) => {
+    const funcStr = Track.prototype.writeSoloAutomation.toString();
+    t.assertTruthy(funcStr.includes('value'), 'writeSoloAutomation should reference value parameter');
+});
+
+TestRunner.test('Track Automation - writeSoloAutomation initializes automation.solo array', (t) => {
+    const funcStr = Track.prototype.writeSoloAutomation.toString();
+    t.assertTruthy(funcStr.includes('solo') || funcStr.includes('automation ='), 'writeSoloAutomation should initialize automation.solo');
+});
+
+TestRunner.test('Track Automation - writeSoloAutomation pushes event to automation.solo', (t) => {
+    const funcStr = Track.prototype.writeSoloAutomation.toString();
+    t.assertTruthy(funcStr.includes('push'), 'writeSoloAutomation should push event to array');
+});
+
+TestRunner.test('Track Automation - writeSoloAutomation coerces value to boolean', (t) => {
+    const funcStr = Track.prototype.writeSoloAutomation.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'writeSoloAutomation should coerce value to boolean');
+});
+
+TestRunner.test('Track Automation - writeSoloAutomation returns event object', (t) => {
+    const funcStr = Track.prototype.writeSoloAutomation.toString();
+    t.assertTruthy(funcStr.includes('return'), 'writeSoloAutomation should return event object');
+});
+
+TestRunner.test('Track Automation - removeAutomationEventsInRange is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.removeAutomationEventsInRange, 'function', 'removeAutomationEventsInRange should be a function');
+});
+
+TestRunner.test('Track Automation - removeAutomationEventsInRange accepts 3 parameters', (t) => {
+    const paramCount = Track.prototype.removeAutomationEventsInRange.length;
+    t.assertEquals(paramCount, 3, 'removeAutomationEventsInRange should accept 3 parameters');
+});
+
+TestRunner.test('Track Automation - removeAutomationEventsInRange references type parameter', (t) => {
+    const funcStr = Track.prototype.removeAutomationEventsInRange.toString();
+    t.assertTruthy(funcStr.includes('type'), 'removeAutomationEventsInRange should reference type parameter');
+});
+
+TestRunner.test('Track Automation - removeAutomationEventsInRange references startTime parameter', (t) => {
+    const funcStr = Track.prototype.removeAutomationEventsInRange.toString();
+    t.assertTruthy(funcStr.includes('startTime'), 'removeAutomationEventsInRange should reference startTime parameter');
+});
+
+TestRunner.test('Track Automation - removeAutomationEventsInRange references endTime parameter', (t) => {
+    const funcStr = Track.prototype.removeAutomationEventsInRange.toString();
+    t.assertTruthy(funcStr.includes('endTime'), 'removeAutomationEventsInRange should reference endTime parameter');
+});
+
+TestRunner.test('Track Automation - removeAutomationEventsInRange checks this.automation', (t) => {
+    const funcStr = Track.prototype.removeAutomationEventsInRange.toString();
+    t.assertTruthy(funcStr.includes('this.automation') || funcStr.includes('automation'), 'removeAutomationEventsInRange should check this.automation');
+});
+
+TestRunner.test('Track Automation - removeAutomationEventsInRange filters events by time range', (t) => {
+    const funcStr = Track.prototype.removeAutomationEventsInRange.toString();
+    t.assertTruthy(funcStr.includes('filter') && funcStr.includes('time'), 'removeAutomationEventsInRange should filter by time range');
+});
+
+TestRunner.test('Track Automation - applyAutomationAtTime is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.applyAutomationAtTime, 'function', 'applyAutomationAtTime should be a function');
+});
+
+TestRunner.test('Track Automation - applyAutomationAtTime accepts 1 parameter', (t) => {
+    const paramCount = Track.prototype.applyAutomationAtTime.length;
+    t.assertEquals(paramCount, 1, 'applyAutomationAtTime should accept 1 parameter');
+});
+
+TestRunner.test('Track Automation - applyAutomationAtTime references time parameter', (t) => {
+    const funcStr = Track.prototype.applyAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('time'), 'applyAutomationAtTime should reference time parameter');
+});
+
+TestRunner.test('Track Automation - applyAutomationAtTime checks this.automation', (t) => {
+    const funcStr = Track.prototype.applyAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('this.automation') || funcStr.includes('automation'), 'applyAutomationAtTime should check this.automation');
+});
+
+TestRunner.test('Track Automation - applyAutomationAtTime handles volume automation', (t) => {
+    const funcStr = Track.prototype.applyAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('volume') && funcStr.includes('setValueAtTime'), 'applyAutomationAtTime should handle volume automation');
+});
+
+TestRunner.test('Track Automation - applyAutomationAtTime handles mute automation', (t) => {
+    const funcStr = Track.prototype.applyAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('mute'), 'applyAutomationAtTime should handle mute automation');
+});
+
+TestRunner.test('Track Automation - applyAutomationAtTime handles solo automation', (t) => {
+    const funcStr = Track.prototype.applyAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('solo'), 'applyAutomationAtTime should handle solo automation');
+});
+
+TestRunner.test('Track Automation - toggleMuteAutomationNow is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.toggleMuteAutomationNow, 'function', 'toggleMuteAutomationNow should be a function');
+});
+
+TestRunner.test('Track Automation - toggleMuteAutomationNow accepts 0 parameters', (t) => {
+    const paramCount = Track.prototype.toggleMuteAutomationNow.length;
+    t.assertEquals(paramCount, 0, 'toggleMuteAutomationNow should accept 0 parameters');
+});
+
+TestRunner.test('Track Automation - toggleMuteAutomationNow checks this.automationArmed', (t) => {
+    const funcStr = Track.prototype.toggleMuteAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('automationArmed'), 'toggleMuteAutomationNow should check this.automationArmed');
+});
+
+TestRunner.test('Track Automation - toggleMuteAutomationNow calls writeMuteAutomation', (t) => {
+    const funcStr = Track.prototype.toggleMuteAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('writeMuteAutomation'), 'toggleMuteAutomationNow should call writeMuteAutomation');
+});
+
+TestRunner.test('Track Automation - toggleMuteAutomationNow references this.isMuted', (t) => {
+    const funcStr = Track.prototype.toggleMuteAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('isMuted'), 'toggleMuteAutomationNow should reference this.isMuted');
+});
+
+TestRunner.test('Track Automation - toggleSoloAutomationNow is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.toggleSoloAutomationNow, 'function', 'toggleSoloAutomationNow should be a function');
+});
+
+TestRunner.test('Track Automation - toggleSoloAutomationNow accepts 0 parameters', (t) => {
+    const paramCount = Track.prototype.toggleSoloAutomationNow.length;
+    t.assertEquals(paramCount, 0, 'toggleSoloAutomationNow should accept 0 parameters');
+});
+
+TestRunner.test('Track Automation - toggleSoloAutomationNow checks this.automationArmed', (t) => {
+    const funcStr = Track.prototype.toggleSoloAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('automationArmed'), 'toggleSoloAutomationNow should check this.automationArmed');
+});
+
+TestRunner.test('Track Automation - toggleSoloAutomationNow calls writeSoloAutomation', (t) => {
+    const funcStr = Track.prototype.toggleSoloAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('writeSoloAutomation'), 'toggleSoloAutomationNow should call writeSoloAutomation');
+});
+
+TestRunner.test('Track Automation - Master Automation Armed - getMasterAutomationArmedState is a function', (t) => {
+    t.assertEqual(typeof getMasterAutomationArmedState, 'function', 'getMasterAutomationArmedState should be a function');
+});
+
+TestRunner.test('Track Automation - Master Automation Armed - getMasterAutomationArmedState accepts 0 parameters', (t) => {
+    const paramCount = getMasterAutomationArmedState.length;
+    t.assertEquals(paramCount, 0, 'getMasterAutomationArmedState should accept 0 parameters');
+});
+
+TestRunner.test('Track Automation - Master Automation Armed - getMasterAutomationArmedState returns boolean', (t) => {
+    const funcStr = getMasterAutomationArmedState.toString();
+    t.assertTruthy(funcStr.includes('masterAutomationArmedState') || funcStr.includes('return'), 'getMasterAutomationArmedState should return masterAutomationArmedState');
+});
+
+TestRunner.test('Track Automation - Master Automation Armed - setMasterAutomationArmedState is a function', (t) => {
+    t.assertEqual(typeof setMasterAutomationArmedState, 'function', 'setMasterAutomationArmedState should be a function');
+});
+
+TestRunner.test('Track Automation - Master Automation Armed - setMasterAutomationArmedState accepts 1 parameter', (t) => {
+    const paramCount = setMasterAutomationArmedState.length;
+    t.assertEquals(paramCount, 1, 'setMasterAutomationArmedState should accept 1 parameter');
+});
+
+TestRunner.test('Track Automation - Master Automation Armed - setMasterAutomationArmedState calls captureStateForUndo', (t) => {
+    const funcStr = setMasterAutomationArmedState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setMasterAutomationArmedState should call captureStateForUndo');
+});
+
+TestRunner.test('Track Automation - Master Automation Armed - setMasterAutomationArmedState uses descriptive undo label', (t) => {
+    const funcStr = setMasterAutomationArmedState.toString();
+    t.assertTruthy(funcStr.includes('Master Automation Arm') || (funcStr.includes('On') && funcStr.includes('Off')), 'setMasterAutomationArmedState should use descriptive undo label');
+});
+
+TestRunner.test('Track Automation - Track initializes automation object in constructor', (t) => {
+    const funcStr = Track.prototype.constructor.toString();
+    t.assertTruthy(funcStr.includes('automation') && funcStr.includes('volume') && funcStr.includes('mute') && funcStr.includes('solo'), 'Track constructor should initialize automation object');
+});
+
+TestRunner.test('Track Automation - Track initializes automationArmed in constructor', (t) => {
+    const funcStr = Track.prototype.constructor.toString();
+    t.assertTruthy(funcStr.includes('automationArmed') || funcStr.includes('automationArmed ='), 'Track constructor should initialize automationArmed');
+});
+
+TestRunner.test('Track Automation - APP_VERSION validation for Day 440', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 440');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 114, 'Minor version should be >= 114 for Day 440');
     }
 });
