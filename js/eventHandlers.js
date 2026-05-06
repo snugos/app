@@ -220,7 +220,7 @@ export function attachGlobalControlEvents(elements) {
         console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
         return;
     }
-    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal, shortcutsBtnGlobal, exportBtnGlobal } = elements;
+    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, micTestBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal, shortcutsBtnGlobal, exportBtnGlobal } = elements;
 
     // Shortcuts button
     if (shortcutsBtnGlobal) {
@@ -301,6 +301,41 @@ export function attachGlobalControlEvents(elements) {
         });
     } else {
         console.warn("[EventHandlers] exportBtnGlobal not found in provided elements.");
+    }
+
+    if (micTestBtnGlobal) {
+        micTestBtnGlobal.addEventListener('click', async () => {
+            const originalLabel = micTestBtnGlobal.textContent;
+            try {
+                if (!localAppServices.initAudioContextAndMasterMeter) {
+                    console.error("initAudioContextAndMasterMeter service not available.");
+                    showNotification("Audio system error.", 3000);
+                    return;
+                }
+                const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+                if (!audioReady) {
+                    showNotification("Audio context not ready. Please interact with the page.", 3000);
+                    return;
+                }
+                if (!localAppServices.runRecordingMicrophoneE2ETest) {
+                    console.error("runRecordingMicrophoneE2ETest service not available.");
+                    showNotification("Microphone test service unavailable.", 3000);
+                    return;
+                }
+
+                micTestBtnGlobal.disabled = true;
+                micTestBtnGlobal.textContent = 'Testing...';
+                await localAppServices.runRecordingMicrophoneE2ETest(null, 2500);
+            } catch (error) {
+                console.error("[EventHandlers Mic Test] Error:", error);
+                showNotification(`Microphone test failed: ${error.message}`, 4000);
+            } finally {
+                micTestBtnGlobal.disabled = false;
+                micTestBtnGlobal.textContent = originalLabel;
+            }
+        });
+    } else {
+        console.warn("[EventHandlers] micTestBtnGlobal not found in provided elements.");
     }
 
     // Helper function to toggle play/pause icons

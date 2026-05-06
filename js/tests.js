@@ -9105,3 +9105,473 @@ TestRunner.test('Track Automation - APP_VERSION validation for Day 440', (t) => 
         t.assertTruthy(versionParts[1] >= 114, 'Minor version should be >= 114 for Day 440');
     }
 });
+
+// ================================================================
+// Day 441: Global Controls Mic Test Wiring Tests
+// ================================================================
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents is a function export', (t) => {
+    t.assertEqual(typeof attachGlobalControlEvents, 'function', 'attachGlobalControlEvents should be a function');
+});
+
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents accepts 1 parameter', (t) => {
+    t.assertEqual(attachGlobalControlEvents.length, 1, 'attachGlobalControlEvents should accept 1 parameter');
+});
+
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents references micTestBtnGlobal', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('micTestBtnGlobal'), 'attachGlobalControlEvents should reference micTestBtnGlobal');
+});
+
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents references runRecordingMicrophoneE2ETest', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('runRecordingMicrophoneE2ETest'), 'attachGlobalControlEvents should reference runRecordingMicrophoneE2ETest');
+});
+
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents disables the button while testing', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('disabled = true') && funcStr.includes('disabled = false'), 'attachGlobalControlEvents should disable and re-enable the mic test button');
+});
+
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents restores button label', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('originalLabel') && funcStr.includes('Testing...'), 'attachGlobalControlEvents should restore the original label after testing');
+});
+
+TestRunner.test('Global Controls Mic Test - APP_VERSION validation for Day 441', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 441');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 115, 'Minor version should be >= 115 for Day 441');
+    }
+});
+
+// === Day 441: UI Module State & Window Functions Tests ===
+
+TestRunner.test('UI Module - toggleSequencerViewMode is a function export', (t) => {
+    t.assertEqual(typeof toggleSequencerViewMode, 'function', 'toggleSequencerViewMode should be a function');
+});
+
+TestRunner.test('UI Module - toggleSequencerViewMode accepts 0 parameters', (t) => {
+    const paramCount = toggleSequencerViewMode.length;
+    t.assertEquals(paramCount, 0, 'toggleSequencerViewMode should accept 0 parameters');
+});
+
+TestRunner.test('UI Module - toggleSequencerViewMode toggles sequencerViewMode variable', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('sequencerViewMode'), 'toggleSequencerViewMode should reference sequencerViewMode');
+});
+
+TestRunner.test('UI Module - toggleSequencerViewMode uses step and piano modes', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes("'step'") || funcStr.includes('"step"'), 'toggleSequencerViewMode should reference step mode');
+    t.assertTruthy(funcStr.includes("'piano'") || funcStr.includes('"piano"'), 'toggleSequencerViewMode should reference piano mode');
+});
+
+TestRunner.test('UI Module - toggleSequencerViewMode checks localAppServices', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'toggleSequencerViewMode should reference localAppServices');
+});
+
+TestRunner.test('UI Module - initializeUIModule is a function export', (t) => {
+    t.assertEqual(typeof initializeUIModule, 'function', 'initializeUIModule should be a function');
+});
+
+TestRunner.test('UI Module - initializeUIModule accepts 1 parameter', (t) => {
+    const paramCount = initializeUIModule.length;
+    t.assertEquals(paramCount, 1, 'initializeUIModule should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - initializeUIModule references appServicesFromMain', (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('appServicesFromMain'), 'initializeUIModule should reference appServicesFromMain parameter');
+});
+
+TestRunner.test('UI Module - initializeUIModule merges into localAppServices', (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'initializeUIModule should set localAppServices');
+});
+
+TestRunner.test('UI Module - createKnob is a function export', (t) => {
+    t.assertEqual(typeof createKnob, 'function', 'createKnob should be a function');
+});
+
+TestRunner.test('UI Module - createKnob accepts options parameter', (t) => {
+    const paramCount = createKnob.length;
+    t.assertEquals(paramCount, 1, 'createKnob should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - createKnob references options.label', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options') && funcStr.includes('label'), 'createKnob should reference options.label');
+});
+
+TestRunner.test('UI Module - createKnob creates a container element', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('container'), 'createKnob should create a container element');
+});
+
+TestRunner.test('UI Module - getDrumSamplerPadExistingAudioData is a function export', (t) => {
+    t.assertEqual(typeof getDrumSamplerPadExistingAudioData, 'function', 'getDrumSamplerPadExistingAudioData should be a function');
+});
+
+TestRunner.test('UI Module - getDrumSamplerPadExistingAudioData accepts 2 parameters', (t) => {
+    const paramCount = getDrumSamplerPadExistingAudioData.length;
+    t.assertEquals(paramCount, 2, 'getDrumSamplerPadExistingAudioData should accept 2 parameters');
+});
+
+TestRunner.test('UI Module - getDrumSamplerPadExistingAudioData references track parameter', (t) => {
+    const funcStr = getDrumSamplerPadExistingAudioData.toString();
+    t.assertTruthy(funcStr.includes('track'), 'getDrumSamplerPadExistingAudioData should reference track parameter');
+});
+
+TestRunner.test('UI Module - getDrumSamplerPadExistingAudioData references padIndex parameter', (t) => {
+    const funcStr = getDrumSamplerPadExistingAudioData.toString();
+    t.assertTruthy(funcStr.includes('padIndex'), 'getDrumSamplerPadExistingAudioData should reference padIndex parameter');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow is a function export', (t) => {
+    t.assertEqual(typeof showKeyboardShortcutsHelpWindow, 'function', 'showKeyboardShortcutsHelpWindow should be a function');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow accepts 0 parameters', (t) => {
+    const paramCount = showKeyboardShortcutsHelpWindow.length;
+    t.assertEquals(paramCount, 0, 'showKeyboardShortcutsHelpWindow should accept 0 parameters');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow references localAppServices', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'showKeyboardShortcutsHelpWindow should reference localAppServices');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow uses keyboardShortcutsHelp windowId', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('keyboardShortcutsHelp'), 'showKeyboardShortcutsHelpWindow should use keyboardShortcutsHelp windowId');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow builds shortcuts HTML with tables', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('table') && funcStr.includes('padding'), 'showKeyboardShortcutsHelpWindow should build HTML with tables');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow includes playback controls section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Playback') || funcStr.includes('Play'), 'showKeyboardShortcutsHelpWindow should include Playback Controls section');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow includes edit operations section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Edit') || funcStr.includes('Undo') || funcStr.includes('Copy'), 'showKeyboardShortcutsHelpWindow should include Edit Operations section');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow includes keyboard shortcuts for Space', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Space') || funcStr.includes('Play'), 'showKeyboardShortcutsHelpWindow should include Space key for Play/Pause');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow includes keyboard shortcuts for Ctrl+Z', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Ctrl+Z') || funcStr.includes('Undo'), 'showKeyboardShortcutsHelpWindow should include Ctrl+Z for Undo');
+});
+
+TestRunner.test('UI Module - showKeyboardShortcutsHelpWindow includes keyboard shortcuts for Ctrl+Y', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Ctrl+Y') || funcStr.includes('Redo'), 'showKeyboardShortcutsHelpWindow should include Ctrl+Y for Redo');
+});
+
+TestRunner.test('UI Module - openTrackInspectorWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackInspectorWindow, 'function', 'openTrackInspectorWindow should be a function');
+});
+
+TestRunner.test('UI Module - openTrackInspectorWindow accepts 2 parameters', (t) => {
+    const paramCount = openTrackInspectorWindow.length;
+    t.assertEquals(paramCount, 2, 'openTrackInspectorWindow should accept 2 parameters');
+});
+
+TestRunner.test('UI Module - openTrackInspectorWindow references trackId parameter', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'openTrackInspectorWindow should reference trackId parameter');
+});
+
+TestRunner.test('UI Module - openTrackInspectorWindow uses localAppServices.createWindow', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackInspectorWindow should use createWindow');
+});
+
+TestRunner.test('UI Module - openTrackInspectorWindow uses localAppServices.getTrackById', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackInspectorWindow should use getTrackById to find track');
+});
+
+TestRunner.test('UI Module - renderEffectsList is a function export', (t) => {
+    t.assertEqual(typeof renderEffectsList, 'function', 'renderEffectsList should be a function');
+});
+
+TestRunner.test('UI Module - renderEffectsList accepts 4 parameters', (t) => {
+    const paramCount = renderEffectsList.length;
+    t.assertEquals(paramCount, 4, 'renderEffectsList should accept 4 parameters');
+});
+
+TestRunner.test('UI Module - renderEffectsList references owner and ownerType parameters', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('owner') && funcStr.includes('ownerType'), 'renderEffectsList should reference owner and ownerType parameters');
+});
+
+TestRunner.test('UI Module - renderEffectsList references listDiv and controlsContainer parameters', (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('listDiv') && funcStr.includes('controlsContainer'), 'renderEffectsList should reference listDiv and controlsContainer parameters');
+});
+
+TestRunner.test('UI Module - renderEffectControls is a function export', (t) => {
+    t.assertEqual(typeof renderEffectControls, 'function', 'renderEffectControls should be a function');
+});
+
+TestRunner.test('UI Module - renderEffectControls accepts 4 parameters', (t) => {
+    const paramCount = renderEffectControls.length;
+    t.assertEquals(paramCount, 4, 'renderEffectControls should accept 4 parameters');
+});
+
+TestRunner.test('UI Module - renderEffectControls references owner and ownerType', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('owner') && funcStr.includes('ownerType'), 'renderEffectControls should reference owner and ownerType');
+});
+
+TestRunner.test('UI Module - renderEffectControls references effectId parameter', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'renderEffectControls should reference effectId parameter');
+});
+
+TestRunner.test('UI Module - openTrackEffectsRackWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackEffectsRackWindow, 'function', 'openTrackEffectsRackWindow should be a function');
+});
+
+TestRunner.test('UI Module - openTrackEffectsRackWindow accepts 2 parameters', (t) => {
+    const paramCount = openTrackEffectsRackWindow.length;
+    t.assertEquals(paramCount, 2, 'openTrackEffectsRackWindow should accept 2 parameters');
+});
+
+TestRunner.test('UI Module - openTrackEffectsRackWindow uses localAppServices.createWindow', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackEffectsRackWindow should use createWindow');
+});
+
+TestRunner.test('UI Module - openMasterEffectsRackWindow is a function export', (t) => {
+    t.assertEqual(typeof openMasterEffectsRackWindow, 'function', 'openMasterEffectsRackWindow should be a function');
+});
+
+TestRunner.test('UI Module - openMasterEffectsRackWindow accepts 1 parameter', (t) => {
+    const paramCount = openMasterEffectsRackWindow.length;
+    t.assertEquals(paramCount, 1, 'openMasterEffectsRackWindow should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - openGlobalControlsWindow is a function export', (t) => {
+    t.assertEqual(typeof openGlobalControlsWindow, 'function', 'openGlobalControlsWindow should be a function');
+});
+
+TestRunner.test('UI Module - openGlobalControlsWindow accepts 2 parameters', (t) => {
+    const paramCount = openGlobalControlsWindow.length;
+    t.assertEquals(paramCount, 2, 'openGlobalControlsWindow should accept 2 parameters');
+});
+
+TestRunner.test('UI Module - openSoundBrowserWindow is a function export', (t) => {
+    t.assertEqual(typeof openSoundBrowserWindow, 'function', 'openSoundBrowserWindow should be a function');
+});
+
+TestRunner.test('UI Module - openSoundBrowserWindow accepts 1 parameter', (t) => {
+    const paramCount = openSoundBrowserWindow.length;
+    t.assertEquals(paramCount, 1, 'openSoundBrowserWindow should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - openMixerWindow is a function export', (t) => {
+    t.assertEqual(typeof openMixerWindow, 'function', 'openMixerWindow should be a function');
+});
+
+TestRunner.test('UI Module - openMixerWindow accepts 1 parameter', (t) => {
+    const paramCount = openMixerWindow.length;
+    t.assertEquals(paramCount, 1, 'openMixerWindow should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - openTrackSequencerWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackSequencerWindow, 'function', 'openTrackSequencerWindow should be a function');
+});
+
+TestRunner.test('UI Module - openTrackSequencerWindow accepts 3 parameters', (t) => {
+    const paramCount = openTrackSequencerWindow.length;
+    t.assertEquals(paramCount, 3, 'openTrackSequencerWindow should accept 3 parameters');
+});
+
+TestRunner.test('UI Module - openTrackSequencerWindow uses localAppServices.createWindow', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackSequencerWindow should use createWindow');
+});
+
+TestRunner.test('UI Module - renderTimeline is a function export', (t) => {
+    t.assertEqual(typeof renderTimeline, 'function', 'renderTimeline should be a function');
+});
+
+TestRunner.test('UI Module - renderTimeline accepts 0 parameters', (t) => {
+    const paramCount = renderTimeline.length;
+    t.assertEquals(paramCount, 0, 'renderTimeline should accept 0 parameters');
+});
+
+TestRunner.test('UI Module - renderTimeline references localAppServices', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'renderTimeline should reference localAppServices');
+});
+
+TestRunner.test('UI Module - updatePlayheadPosition is a function export', (t) => {
+    t.assertEqual(typeof updatePlayheadPosition, 'function', 'updatePlayheadPosition should be a function');
+});
+
+TestRunner.test('UI Module - updatePlayheadPosition accepts 1 parameter', (t) => {
+    const paramCount = updatePlayheadPosition.length;
+    t.assertEquals(paramCount, 1, 'updatePlayheadPosition should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - renderDrumSamplerPads is a function export', (t) => {
+    t.assertEqual(typeof renderDrumSamplerPads, 'function', 'renderDrumSamplerPads should be a function');
+});
+
+TestRunner.test('UI Module - renderDrumSamplerPads accepts 1 parameter', (t) => {
+    const paramCount = renderDrumSamplerPads.length;
+    t.assertEquals(paramCount, 1, 'renderDrumSamplerPads should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - renderDrumSamplerPads references track parameter', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('track'), 'renderDrumSamplerPads should reference track parameter');
+});
+
+TestRunner.test('UI Module - renderDrumSamplerPads uses numPads or pad count constant', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('numPads') || funcStr.includes('pad'), 'renderDrumSamplerPads should reference pad count');
+});
+
+TestRunner.test('UI Module - renderSamplePads is a function export', (t) => {
+    t.assertEqual(typeof renderSamplePads, 'function', 'renderSamplePads should be a function');
+});
+
+TestRunner.test('UI Module - renderSamplePads accepts 1 parameter', (t) => {
+    const paramCount = renderSamplePads.length;
+    t.assertEquals(paramCount, 1, 'renderSamplePads should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - updateSliceEditorUI is a function export', (t) => {
+    t.assertEqual(typeof updateSliceEditorUI, 'function', 'updateSliceEditorUI should be a function');
+});
+
+TestRunner.test('UI Module - updateSliceEditorUI accepts 1 parameter', (t) => {
+    const paramCount = updateSliceEditorUI.length;
+    t.assertEquals(paramCount, 1, 'updateSliceEditorUI should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - updateDrumPadControlsUI is a function export', (t) => {
+    t.assertEqual(typeof updateDrumPadControlsUI, 'function', 'updateDrumPadControlsUI should be a function');
+});
+
+TestRunner.test('UI Module - updateDrumPadControlsUI accepts 1 parameter', (t) => {
+    const paramCount = updateDrumPadControlsUI.length;
+    t.assertEquals(paramCount, 1, 'updateDrumPadControlsUI should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - updateDrumPadControlsUI calls renderDrumSamplerPads', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('renderDrumSamplerPads'), 'updateDrumPadControlsUI should call renderDrumSamplerPads');
+});
+
+TestRunner.test('UI Module - openTimelineWindow is a function export', (t) => {
+    t.assertEqual(typeof openTimelineWindow, 'function', 'openTimelineWindow should be a function');
+});
+
+TestRunner.test('UI Module - openTimelineWindow accepts 1 parameter', (t) => {
+    const paramCount = openTimelineWindow.length;
+    t.assertEquals(paramCount, 1, 'openTimelineWindow should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - openTrackTemplatesWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackTemplatesWindow, 'function', 'openTrackTemplatesWindow should be a function');
+});
+
+TestRunner.test('UI Module - openTrackTemplatesWindow accepts 1 parameter', (t) => {
+    const paramCount = openTrackTemplatesWindow.length;
+    t.assertEquals(paramCount, 1, 'openTrackTemplatesWindow should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - openSendEffectsWindow is a function export', (t) => {
+    t.assertEqual(typeof openSendEffectsWindow, 'function', 'openSendEffectsWindow should be a function');
+});
+
+TestRunner.test('UI Module - openSendEffectsWindow accepts 2 parameters', (t) => {
+    const paramCount = openSendEffectsWindow.length;
+    t.assertEquals(paramCount, 2, 'openSendEffectsWindow should accept 2 parameters');
+});
+
+TestRunner.test('UI Module - drawWaveform is a function export', (t) => {
+    t.assertEqual(typeof drawWaveform, 'function', 'drawWaveform should be a function');
+});
+
+TestRunner.test('UI Module - drawWaveform accepts 1 parameter', (t) => {
+    const paramCount = drawWaveform.length;
+    t.assertEquals(paramCount, 1, 'drawWaveform should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - drawInstrumentWaveform is a function export', (t) => {
+    t.assertEqual(typeof drawInstrumentWaveform, 'function', 'drawInstrumentWaveform should be a function');
+});
+
+TestRunner.test('UI Module - drawInstrumentWaveform accepts 1 parameter', (t) => {
+    const paramCount = drawInstrumentWaveform.length;
+    t.assertEquals(paramCount, 1, 'drawInstrumentWaveform should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - highlightPlayingStep is a function export', (t) => {
+    t.assertEqual(typeof highlightPlayingStep, 'function', 'highlightPlayingStep should be a function');
+});
+
+TestRunner.test('UI Module - highlightPlayingStep accepts 3 parameters', (t) => {
+    const paramCount = highlightPlayingStep.length;
+    t.assertEquals(paramCount, 3, 'highlightPlayingStep should accept 3 parameters');
+});
+
+TestRunner.test('UI Module - updateSequencerCellUI is a function export', (t) => {
+    t.assertEqual(typeof updateSequencerCellUI, 'function', 'updateSequencerCellUI should be a function');
+});
+
+TestRunner.test('UI Module - updateSequencerCellUI accepts 5 parameters', (t) => {
+    const paramCount = updateSequencerCellUI.length;
+    t.assertEquals(paramCount, 5, 'updateSequencerCellUI should accept 5 parameters');
+});
+
+TestRunner.test('UI Module - updateMixerWindow is a function export', (t) => {
+    t.assertEqual(typeof updateMixerWindow, 'function', 'updateMixerWindow should be a function');
+});
+
+TestRunner.test('UI Module - updateMixerWindow accepts 0 parameters', (t) => {
+    const paramCount = updateMixerWindow.length;
+    t.assertEquals(paramCount, 0, 'updateMixerWindow should accept 0 parameters');
+});
+
+TestRunner.test('UI Module - renderMixer is a function export', (t) => {
+    t.assertEqual(typeof renderMixer, 'function', 'renderMixer should be a function');
+});
+
+TestRunner.test('UI Module - renderMixer accepts 1 parameter', (t) => {
+    const paramCount = renderMixer.length;
+    t.assertEquals(paramCount, 1, 'renderMixer should accept 1 parameter');
+});
+
+TestRunner.test('UI Module - updateSoundBrowserDisplayForLibrary is a function export', (t) => {
+    t.assertEqual(typeof updateSoundBrowserDisplayForLibrary, 'function', 'updateSoundBrowserDisplayForLibrary should be a function');
+});
+
+TestRunner.test('UI Module - updateSoundBrowserDisplayForLibrary accepts 3 parameters', (t) => {
+    const paramCount = updateSoundBrowserDisplayForLibrary.length;
+    t.assertEquals(paramCount, 3, 'updateSoundBrowserDisplayForLibrary should accept 3 parameters');
+});
+
+TestRunner.test('UI Module - APP_VERSION validation for Day 441', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 441');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 115, 'Minor version should be >= 115 for Day 441');
+    }
+});
