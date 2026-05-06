@@ -1405,6 +1405,9 @@ export async function recoverAutoSavedProject() {
 }
 
 export function clearAutoSavedProject() {
+    if (localStorage.getItem(AUTOSAVE_KEY) || localStorage.getItem(AUTOSAVE_TIMESTAMP_KEY)) {
+        captureStateForUndoIfAllowed('Clear Auto-Saved Project');
+    }
     localStorage.removeItem(AUTOSAVE_KEY);
     localStorage.removeItem(AUTOSAVE_TIMESTAMP_KEY);
     console.log("[State] Auto-saved project cleared");
@@ -1436,7 +1439,7 @@ function saveFavoritesToStorage() {
 }
 
 function makeSoundKey(sound) {
-    return `${sound.libraryName}:${sound.fullPath}`;
+    return `${sound?.sourceType || 'unknown'}|${sound?.fileName || sound?.name || ''}|${sound?.url || sound?.path || sound?.source || ''}`;
 }
 
 export function getFavoriteSounds() {
@@ -1455,9 +1458,11 @@ export function toggleFavorite(sound) {
     const key = makeSoundKey(sound);
     const idx = favoriteSoundsGlobal.findIndex(f => makeSoundKey(f) === key);
     if (idx >= 0) {
+        captureStateForUndoIfAllowed(`Remove Favorite ${sound.fileName}`);
         favoriteSoundsGlobal.splice(idx, 1);
         console.log("[State] Removed from favorites:", sound.fileName);
     } else {
+        captureStateForUndoIfAllowed(`Add Favorite ${sound.fileName}`);
         favoriteSoundsGlobal.push({ ...sound, addedAt: Date.now() });
         console.log("[State] Added to favorites:", sound.fileName);
     }
@@ -1472,6 +1477,7 @@ export function addToRecentlyPlayed(sound) {
     } catch (e) {
         recentlyPlayedGlobal = [];
     }
+    captureStateForUndoIfAllowed(`Add Recently Played ${sound.fileName}`);
     const key = makeSoundKey(sound);
     // Remove if already exists (to move to top)
     recentlyPlayedGlobal = recentlyPlayedGlobal.filter(f => makeSoundKey(f) !== key);
@@ -1503,6 +1509,9 @@ export function getRecentlyPlayedSounds() {
 }
 
 export function clearRecentlyPlayed() {
+    if (recentlyPlayedGlobal.length > 0) {
+        captureStateForUndoIfAllowed('Clear Recently Played');
+    }
     recentlyPlayedGlobal = [];
     localStorage.removeItem(RECENTLY_PLAYED_KEY);
     console.log("[State] Recently played cleared");

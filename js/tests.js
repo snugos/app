@@ -115,6 +115,13 @@ import {
     setCurrentSoundFileTreeState,
     setCurrentSoundBrowserPathState,
     setPreviewPlayerState,
+    getFavoriteSounds,
+    isFavorite,
+    toggleFavorite,
+    addToRecentlyPlayed,
+    getRecentlyPlayedSounds,
+    clearRecentlyPlayed,
+    clearAutoSavedProject,
     setSendTrackMutedState,
     setSendTrackNameState,
     setSendTrackLevelState,
@@ -8128,7 +8135,6 @@ TestRunner.test('Automation Audio - APP_VERSION validation for Day 430', (t) => 
 // ============================================
 // Day 431: Track Color Prototype & Constants Tests
 // ============================================
-import { Track } from './Track.js';
 
 TestRunner.test('Track Color - Track.prototype.setTrackColor is a function', (t) => {
     t.assertEqual(typeof Track.prototype.setTrackColor, 'function', 'setTrackColor should be a function');
@@ -10121,5 +10127,46 @@ TestRunner.test('UI Module - APP_VERSION validation for Day 441', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 441');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 115, 'Minor version should be >= 115 for Day 441');
+    }
+});
+
+// Day 444 - Sound Browser & Autosave Undo Capture Coverage
+TestRunner.test('Sound Browser State - getFavoriteSounds is a function export', (t) => {
+    t.assertEqual(typeof getFavoriteSounds, 'function', 'getFavoriteSounds should be a function');
+});
+
+TestRunner.test('Sound Browser State - isFavorite is a function export', (t) => {
+    t.assertEqual(typeof isFavorite, 'function', 'isFavorite should be a function');
+});
+
+TestRunner.test('Sound Browser State - toggleFavorite references undo capture', (t) => {
+    const funcStr = toggleFavorite.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'toggleFavorite should capture undo state');
+});
+
+TestRunner.test('Sound Browser State - addToRecentlyPlayed references undo capture', (t) => {
+    const funcStr = addToRecentlyPlayed.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'addToRecentlyPlayed should capture undo state');
+});
+
+TestRunner.test('Sound Browser State - getRecentlyPlayedSounds is a function export', (t) => {
+    t.assertEqual(typeof getRecentlyPlayedSounds, 'function', 'getRecentlyPlayedSounds should be a function');
+});
+
+TestRunner.test('Sound Browser State - clearRecentlyPlayed references undo capture', (t) => {
+    const funcStr = clearRecentlyPlayed.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'clearRecentlyPlayed should capture undo state');
+});
+
+TestRunner.test('Autosave State - clearAutoSavedProject references undo capture', (t) => {
+    const funcStr = clearAutoSavedProject.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'clearAutoSavedProject should capture undo state');
+});
+
+TestRunner.test('Sound Browser & Autosave State - APP_VERSION validation for Day 444', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 444');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 118, 'Minor version should be >= 118 for Day 444');
     }
 });
