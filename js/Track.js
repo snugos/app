@@ -174,6 +174,46 @@ export class Track {
         this.inputChannel = null;
         this.clipPlayers = new Map(); 
     }
+
+    setAutomationArmed(armed) {
+        const nextValue = !!armed;
+        if (this.automationArmed !== nextValue) {
+            this._captureUndoState(`Toggle Automation Arm ${nextValue ? 'On' : 'Off'} for ${this.name}`);
+        }
+        this.automationArmed = nextValue;
+        return this.automationArmed;
+    }
+
+    setMonitoringEnabled(enabled) {
+        const nextValue = !!enabled;
+        if (this.isMonitoringEnabled !== nextValue) {
+            this._captureUndoState(`Toggle Input Monitoring ${nextValue ? 'On' : 'Off'} for ${this.name}`);
+        }
+        this.isMonitoringEnabled = nextValue;
+        return this.isMonitoringEnabled;
+    }
+
+    setSelectedSliceForEdit(sliceIndex) {
+        const maxIndex = Array.isArray(this.slices) && this.slices.length > 0 ? this.slices.length - 1 : 0;
+        const parsedIndex = Number.parseInt(sliceIndex, 10);
+        const nextIndex = Number.isFinite(parsedIndex) ? Math.max(0, Math.min(maxIndex, parsedIndex)) : 0;
+        if (this.selectedSliceForEdit !== nextIndex) {
+            this._captureUndoState(`Select Slice ${nextIndex + 1} on ${this.name}`);
+        }
+        this.selectedSliceForEdit = nextIndex;
+        return this.selectedSliceForEdit;
+    }
+
+    setSelectedDrumPadForEdit(padIndex) {
+        const maxIndex = Array.isArray(this.drumSamplerPads) && this.drumSamplerPads.length > 0 ? this.drumSamplerPads.length - 1 : 0;
+        const parsedIndex = Number.parseInt(padIndex, 10);
+        const nextIndex = Number.isFinite(parsedIndex) ? Math.max(0, Math.min(maxIndex, parsedIndex)) : 0;
+        if (this.selectedDrumPadForEdit !== nextIndex) {
+            this._captureUndoState(`Select Drum Pad ${nextIndex + 1} on ${this.name}`);
+        }
+        this.selectedDrumPadForEdit = nextIndex;
+        return this.selectedDrumPadForEdit;
+    }
 /**
      * Loads a sample to a specific drum pad and saves it to IndexedDB.
      * @param {number} padIndex The index of the pad (0-15).

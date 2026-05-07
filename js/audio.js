@@ -65,6 +65,249 @@ let punchRegion = { in: 0, out: 16, enabled: false };
 let sendBusNodes = new Map(); // sendId -> { inputGain, effects[], outputGain, muted }
 let trackSendNodes = new Map(); // trackId -> Map<sendId, { sendGainNode, sendLevel }>
 
+// ============================================================
+// SEND BUS AUDIO ROUTING
+// ============================================================
+
+export function getSendBusNodes() {
+    return sendBusNodes;
+}
+
+export function connectTrackToSendBus(trackId, sendId) {
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) {
+        console.warn(`[Audio connectTrackToSendBus] Track not found: ${trackId}`);
+        return false;
+    }
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio connectTrackToSendBus] Send bus not found: ${sendId}`);
+        return false;
+    }
+    if (!trackSendNodes.has(trackId)) {
+        trackSendNodes.set(trackId, new Map());
+    }
+    const existing = trackSendNodes.get(trackId).get(sendId);
+    if (existing) {
+        return true; // already connected
+    }
+    const sendGain = new Tone.Gain(busData.outputGain.gain.value);
+    if (track.outputChannel) {
+        try { track.outputChannel.connect(sendGain); } catch(e) {}
+    }
+    try { sendGain.connect(busData.inputGain); } catch(e) {}
+    trackSendNodes.get(trackId).set(sendId, { sendGainNode: sendGain, sendLevel: busData.outputGain.gain.value });
+    return true;
+}
+
+export function disconnectTrackFromSendBus(trackId, sendId) {
+    const trackMap = trackSendNodes.get(trackId);
+    if (!trackMap) return true;
+    const entry = trackMap.get(sendId);
+    if (!entry) return true;
+    const { sendGainNode } = entry;
+    if (sendGainNode && !sendGainNode.disposed) {
+        try { sendGainNode.disconnect(); } catch(e) {}
+        try { sendGainNode.dispose(); } catch(e) {}
+    }
+    trackMap.delete(sendId);
+    return true;
+}
+
+export async function createSendBusInAudio(sendId) {
+    if (sendBusNodes.has(sendId)) {
+        console.warn(`[Audio createSendBusInAudio] Send bus already exists: ${sendId}`);
+        return true;
+    }
+    try {
+        const inputGain = new Tone.Gain(1);
+        const outputGain = new Tone.Gain(1);
+        inputGain.connect(outputGain);
+        outputGain.toDestination();
+        sendBusNodes.set(sendId, {
+            inputGain,
+            effects: [],
+            outputGain,
+            muted: false
+        });
+        return true;
+    } catch (e) {
+        console.error(`[Audio createSendBusInAudio] Failed to create send bus ${sendId}:`, e);
+        return false;
+    }
+}
+
+export function deleteSendBusFromAudio(sendId) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        return true;
+    }
+    // Disconnect all tracks from this send bus
+    trackSendNodes.forEach((sendMap, trackId) => {
+        if (sendMap.has(sendId)) {
+            disconnectTrackFromSendBus(trackId, sendId);
+        }
+    });
+    // Dispose effect nodes
+    if (busData.effects) {
+        busData.effects.forEach(effectNode => {
+            if (effectNode && typeof effectNode.disconnect === 'function') {
+                try { effectNode.disconnect(); } catch(e) {}
+            }
+            if (effectNode && !effectNode.disposed && typeof effectNode.dispose === 'function') {
+                try { effectNode.dispose(); } catch(e) {}
+            }
+        });
+    }
+    // Dispose gain nodes
+    if (busData.inputGain && !busData.inputGain.disposed) {
+        try { busData.inputGain.dispose(); } catch(e) {}
+    }
+    if (busData.outputGain && !busData.outputGain.disposed) {
+        try { busData.outputGain.dispose(); } catch(e) {}
+    }
+    sendBusNodes.delete(sendId);
+    return true;
+}
+
+export function addEffectToSendBus(sendId, effectType, params) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio addEffectToSendBus] Send bus not found: ${sendId}`);
+        return false;
+    }
+    const toneNode = createEffectInstance(effectType, params);
+    if (!toneNode) {
+        console.error(`[Audio addEffectToSendBus] Failed to create effect ${effectType} for send bus ${sendId}`);
+        return false;
+    }
+    // Rebuild chain: disconnect output from previous node, chain effect, connect to outputGain
+    const lastNode = busData.effects.length > 0 ? busData.effects[busData.effects.length - 1] : busData.inputGain;
+    try { lastNode.disconnect(); } catch(e) {}
+    try { lastNode.connect(toneNode); } catch(e) {}
+    try { toneNode.connect(busData.outputGain); } catch(e) {}
+    busData.effects.push(toneNode);
+    return true;
+}
+
+export function removeEffectFromSendBus(sendId, effectId) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return false;
+    const idx = busData.effects.findIndex(e => e && e._effectId === effectId);
+    if (idx === -1) {
+        // Try by identity
+        const found = busData.effects.find(e => e === effectId);
+        if (found) {
+            const fidx = busData.effects.indexOf(found);
+            busData.effects.splice(fidx, 1);
+        } else {
+            return false;
+        }
+    } else {
+        busData.effects.splice(idx, 1);
+    }
+    // Rebuild chain after removal
+    try { busData.inputGain.disconnect(); } catch(e) {}
+    busData.effects.forEach(e => {
+        try { e.disconnect(); } catch(e) {}
+    });
+    let current = busData.inputGain;
+    busData.effects.forEach(e => {
+        try { current.connect(e); } catch(e) {}
+        current = e;
+    });
+    try { current.connect(busData.outputGain); } catch(e) {}
+    return true;
+}
+
+export function reorderEffectInSendBus(sendId, effectId, newIndex) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return false;
+    const idx = busData.effects.findIndex(e => e && e._effectId === effectId);
+    if (idx === -1) {
+        const found = busData.effects.find(e => e === effectId);
+        if (found) {
+            const fidx = busData.effects.indexOf(found);
+            busData.effects.splice(fidx, 1);
+            busData.effects.splice(newIndex, 0, found);
+        }
+    } else {
+        busData.effects.splice(idx, 1);
+        busData.effects.splice(newIndex, 0, busData.effects[idx]);
+    }
+    // Rebuild chain
+    try { busData.inputGain.disconnect(); } catch(e) {}
+    busData.effects.forEach(e => {
+        try { e.disconnect(); } catch(e) {}
+    });
+    let current = busData.inputGain;
+    busData.effects.forEach(e => {
+        try { current.connect(e); } catch(e) {}
+        current = e;
+    });
+    try { current.connect(busData.outputGain); } catch(e) {}
+    return true;
+}
+
+export function updateSendBusEffectParam(sendId, effectId, paramPath, value) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return false;
+    const effectNode = busData.effects.find(e => e && e._effectId === effectId);
+    if (!effectNode) {
+        // Try direct reference
+        const found = busData.effects.find(e => e === effectId);
+        if (!found) return false;
+        const parts = paramPath.split('.');
+        let target = found;
+        for (let i = 0; i < parts.length - 1; i++) {
+            target = target[parts[i]];
+        }
+        const finalKey = parts[parts.length - 1];
+        if (target && finalKey in target) {
+            if (typeof target[finalKey].rampTo === 'function') {
+                target[finalKey].rampTo(value, 0.05);
+            } else {
+                target[finalKey] = value;
+            }
+        }
+        return true;
+    }
+    const parts = paramPath.split('.');
+    let target = effectNode;
+    for (let i = 0; i < parts.length - 1; i++) {
+        target = target[parts[i]];
+    }
+    const finalKey = parts[parts.length - 1];
+    if (target && finalKey in target) {
+        if (typeof target[finalKey].rampTo === 'function') {
+            target[finalKey].rampTo(value, 0.05);
+        } else {
+            target[finalKey] = value;
+        }
+    }
+    return true;
+}
+
+export function setSendBusLevel(sendId, level) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return false;
+    const clamped = Math.max(0, Math.min(1, level));
+    if (busData.outputGain && !busData.outputGain.disposed) {
+        busData.outputGain.gain.rampTo(clamped, 0.05);
+    }
+    return true;
+}
+
+export function setSendBusMuted(sendId, muted) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) return false;
+    busData.muted = !!muted;
+    if (busData.inputGain && !busData.inputGain.disposed) {
+        busData.inputGain.gain.value = busData.muted ? 0 : 1;
+    }
+    return true;
+}
+
 export function initializeAudioModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
