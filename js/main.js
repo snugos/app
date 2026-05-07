@@ -6,7 +6,7 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
-import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, getRecordingInputGainNode } from './audio.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, resolveRecordingMicrophoneTestTrack, getRecordingInputGainNode } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTimelineLaneDrop,
@@ -391,6 +391,7 @@ const appServices = {
     stopAudioRecording: stopAudioRecording,
     setRecordingInputGain: setRecordingInputGain,
     runRecordingMicrophoneE2ETest: runRecordingMicrophoneE2ETest,
+    resolveRecordingMicrophoneTestTrack: resolveRecordingMicrophoneTestTrack,
 
     // Undo/Redo state
     getUndoStack: getUndoStackState,

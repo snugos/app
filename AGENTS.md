@@ -1,3 +1,16 @@
+#### Day 450: Recording Microphone E2E Track Resolver Tests (2026-05-06)
+- **Feature**: Added a reusable microphone recording track resolver so the E2E helper always falls back cleanly from an invalid explicit track to the armed Audio track and then the first available Audio track
+- **Files Modified**:
+  - `js/audio.js`: Added `resolveRecordingMicrophoneTestTrack(trackId, tracks, getTrackByIdFn, getArmedTrackIdFn)` and refactored `runRecordingMicrophoneE2ETest(...)` to use it, preserving the existing start/stop workflow while exposing selection metadata in returned results
+  - `js/main.js`: Exposed `resolveRecordingMicrophoneTestTrack` on `appServices` for future UI or automation use
+  - `js/tests.js`: Added a Day 450 test block covering resolver exports, fallback order, metadata exposure, and APP_VERSION validation
+  - `js/constants.js`: Bumped APP_VERSION to 2.124.0
+- **Feature Details**:
+  - Invalid explicit track IDs now fall through to the armed Audio track instead of stopping the microphone test early
+  - If no armed Audio track exists, the helper uses the first available Audio track as a deterministic fallback
+  - Returned results now include the selection source so callers can tell whether the resolver used an explicit, armed, or auto-selected track
+  - Version bumped to 2.124.0
+
 #### Day 449: Track Undo Capture Coverage for Automation and Presets (2026-05-06)
 - **Feature**: Hardened the remaining user-facing track mutators so effect bypass, automation writing, automation range removal, and synth preset application now participate in undo history
 - **Files Modified**:

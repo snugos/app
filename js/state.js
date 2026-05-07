@@ -36,6 +36,95 @@ let masterGainValueState = Tone.dbToGain(0); // Linear gain value
 let midiAccessGlobal = null;
 let activeMIDIInputGlobal = null;
 
+// MIDI Learn State
+let midiLearnMappings = [];
+let midiLearnModeGlobal = Constants.DEFAULT_MIDI_LEARN_MODE;
+let midiLearnPendingParamGlobal = null;
+
+export function getMidiLearnMappingsState() {
+    return midiLearnMappings.map(mapping => ({ ...mapping }));
+}
+
+export function getMidiLearnModeState() {
+    return !!midiLearnModeGlobal;
+}
+
+export function setMidiLearnModeState(value) {
+    const nextValue = !!value;
+    if (midiLearnModeGlobal !== nextValue) {
+        captureStateForUndoIfAllowed(`Toggle MIDI Learn ${nextValue ? 'On' : 'Off'}`);
+    }
+    midiLearnModeGlobal = nextValue;
+    return midiLearnModeGlobal;
+}
+
+export function getMidiLearnPendingParamState() {
+    return midiLearnPendingParamGlobal;
+}
+
+export function setMidiLearnPendingParamState(value) {
+    const nextValue = value && typeof value === 'object' ? { ...value } : value ?? null;
+    if (JSON.stringify(midiLearnPendingParamGlobal) !== JSON.stringify(nextValue)) {
+        captureStateForUndoIfAllowed('Set MIDI Learn Pending Param');
+    }
+    midiLearnPendingParamGlobal = nextValue;
+    return midiLearnPendingParamGlobal;
+}
+
+export function addMidiLearnMapping(mapping) {
+    if (!Array.isArray(midiLearnMappings) || midiLearnMappings.length >= Constants.MAX_MIDI_LEARN_MAPPINGS) {
+        return false;
+    }
+    const nextMapping = {
+        ...Constants.DEFAULT_MIDI_LEARN_MAPPING,
+        ...(mapping && typeof mapping === 'object' ? mapping : {})
+    };
+    captureStateForUndoIfAllowed('Add MIDI Learn Mapping');
+    midiLearnMappings.push({ ...nextMapping });
+    return true;
+}
+
+export function removeMidiLearnMapping(index) {
+    const nextIndex = Number.isFinite(Number(index)) ? Number(index) : -1;
+    if (nextIndex < 0 || nextIndex >= midiLearnMappings.length) {
+        return false;
+    }
+    captureStateForUndoIfAllowed('Remove MIDI Learn Mapping');
+    midiLearnMappings.splice(nextIndex, 1);
+    return true;
+}
+
+export function clearMidiLearnMappings() {
+    if (midiLearnMappings.length > 0) {
+        captureStateForUndoIfAllowed('Clear MIDI Learn Mappings');
+        midiLearnMappings.length = 0;
+    }
+    return true;
+}
+
+export function findMidiLearnMapping(channel, cc) {
+    return midiLearnMappings.findIndex(mapping => mapping && mapping.channel === channel && mapping.cc === cc);
+}
+
+export function updateMidiLearnMapping(index, updates) {
+    const nextIndex = Number.isFinite(Number(index)) ? Number(index) : -1;
+    if (nextIndex < 0 || nextIndex >= midiLearnMappings.length) {
+        return false;
+    }
+    captureStateForUndoIfAllowed(`Update MIDI Learn Mapping ${nextIndex}`);
+    const current = midiLearnMappings[nextIndex] || {};
+    midiLearnMappings[nextIndex] = {
+        ...current,
+        ...(updates && typeof updates === 'object' ? updates : {})
+    };
+    return true;
+}
+
+export function getMidiLearnMappingByIndex(index) {
+    const nextIndex = Number.isFinite(Number(index)) ? Number(index) : -1;
+    return nextIndex >= 0 && nextIndex < midiLearnMappings.length ? midiLearnMappings[nextIndex] : undefined;
+}
+
 // Sound Browser State
 let loadedZipFilesGlobal = {};
 let soundLibraryFileTreesGlobal = {};

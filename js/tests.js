@@ -294,6 +294,7 @@ import {
     loadSampleFile,
     fetchSoundLibrary,
     panicAllAudio,
+    resolveRecordingMicrophoneTestTrack,
     getPerformanceMetrics,
     startPerformanceMonitor,
     stopPerformanceMonitor,
@@ -4591,6 +4592,46 @@ TestRunner.test('Recording Audio - APP_VERSION validation for Day 355', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 355');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 34, 'Minor version should be >= 34 for Day 355');
+    }
+});
+
+// ================================================================
+// Day 450: Recording Microphone E2E Track Resolver Tests
+// ================================================================
+TestRunner.test('Recording Microphone E2E - resolveRecordingMicrophoneTestTrack is a function export', (t) => {
+    t.assertEqual(typeof resolveRecordingMicrophoneTestTrack, 'function', 'resolveRecordingMicrophoneTestTrack should be a function');
+});
+
+TestRunner.test('Recording Microphone E2E - resolveRecordingMicrophoneTestTrack accepts 4 parameters', (t) => {
+    t.assertEqual(resolveRecordingMicrophoneTestTrack.length, 4, 'resolveRecordingMicrophoneTestTrack should accept 4 parameters');
+});
+
+TestRunner.test('Recording Microphone E2E - resolveRecordingMicrophoneTestTrack falls back from invalid explicit track to armed track', (t) => {
+    const armedTrack = { id: 9, type: 'Audio', name: 'Armed Audio' };
+    const selected = resolveRecordingMicrophoneTestTrack(123, [armedTrack], () => null, () => 9);
+    t.assertEqual(selected.track, armedTrack, 'should select the armed Audio track when the explicit track is invalid');
+    t.assertEqual(selected.trackSelectionSource, 'armed', 'should report the armed track source');
+});
+
+TestRunner.test('Recording Microphone E2E - resolveRecordingMicrophoneTestTrack falls back to the first Audio track', (t) => {
+    const fallbackTrack = { id: 12, type: 'Audio', name: 'Fallback Audio' };
+    const selected = resolveRecordingMicrophoneTestTrack(null, [fallbackTrack], () => null, () => null);
+    t.assertEqual(selected.track, fallbackTrack, 'should select the first available Audio track');
+    t.assertEqual(selected.trackSelectionSource, 'auto', 'should report the auto-selected track source');
+});
+
+TestRunner.test('Recording Microphone E2E - resolveRecordingMicrophoneTestTrack returns selection metadata', (t) => {
+    const explicitTrack = { id: 21, type: 'Audio', name: 'Explicit Audio' };
+    const selected = resolveRecordingMicrophoneTestTrack(21, [explicitTrack], (id) => (id === 21 ? explicitTrack : null), () => null);
+    t.assertEqual(selected.explicitTrack, explicitTrack, 'should expose the explicit track');
+    t.assertEqual(selected.trackSelectionSource, 'explicit', 'should mark explicit selections clearly');
+});
+
+TestRunner.test('Recording Microphone E2E - resolveRecordingMicrophoneTestTrack APP_VERSION validation for Day 450', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 450');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 124, 'Minor version should be >= 124 for Day 450');
     }
 });
 

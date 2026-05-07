@@ -539,19 +539,66 @@ export async function stopAudioRecording() {
     return recording;
 }
 
+export function resolveRecordingMicrophoneTestTrack(trackId, tracks, getTrackByIdFn, getArmedTrackIdFn) {
+    const trackList = Array.isArray(tracks) ? tracks : getTracksState();
+    const resolveTrackById = typeof getTrackByIdFn === 'function'
+        ? getTrackByIdFn
+        : (localAppServices && typeof localAppServices.getTrackById === 'function' ? localAppServices.getTrackById : null);
+    const resolveArmedTrackId = typeof getArmedTrackIdFn === 'function'
+        ? getArmedTrackIdFn
+        : (localAppServices && typeof localAppServices.getArmedTrackId === 'function' ? localAppServices.getArmedTrackId : null);
+
+    const explicitTrack = trackId !== null && trackId !== undefined && resolveTrackById ? resolveTrackById(trackId) : null;
+    const armedTrackId = resolveArmedTrackId ? resolveArmedTrackId() : null;
+    const armedTrack = armedTrackId !== null && armedTrackId !== undefined && resolveTrackById ? resolveTrackById(armedTrackId) : null;
+    const autoSelectedTrack = Array.isArray(trackList) ? trackList.find(track => track && track.type === 'Audio') : null;
+
+    if (explicitTrack && explicitTrack.type === 'Audio') {
+        return {
+            track: explicitTrack,
+            trackSelectionSource: 'explicit',
+            explicitTrack,
+            armedTrack,
+            autoSelectedTrack
+        };
+    }
+
+    if (armedTrack && armedTrack.type === 'Audio') {
+        return {
+            track: armedTrack,
+            trackSelectionSource: 'armed',
+            explicitTrack,
+            armedTrack,
+            autoSelectedTrack
+        };
+    }
+
+    if (autoSelectedTrack && autoSelectedTrack.type === 'Audio') {
+        return {
+            track: autoSelectedTrack,
+            trackSelectionSource: 'auto',
+            explicitTrack,
+            armedTrack,
+            autoSelectedTrack
+        };
+    }
+
+    return {
+        track: null,
+        trackSelectionSource: 'none',
+        explicitTrack,
+        armedTrack,
+        autoSelectedTrack
+    };
+}
+
 export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 2500) {
     cleanupRecordingScheduling();
 
     const tracks = getTracksState();
-    const explicitTrack = trackId !== null && trackId !== undefined && localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
-    const armedTrackId = trackId === null || trackId === undefined ? (localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null) : null;
-    const armedTrack = armedTrackId !== null && localAppServices.getTrackById ? localAppServices.getTrackById(armedTrackId) : null;
-    const autoSelectedTrack = Array.isArray(tracks) ? tracks.find(track => track && track.type === 'Audio') : null;
-    const recordingTrack = (explicitTrack && explicitTrack.type === 'Audio')
-        ? explicitTrack
-        : (armedTrack && armedTrack.type === 'Audio')
-            ? armedTrack
-            : autoSelectedTrack;
+    const selection = resolveRecordingMicrophoneTestTrack(trackId, tracks);
+    const recordingTrack = selection.track;
+    const trackSelectionSource = selection.trackSelectionSource;
 
     if (!recordingTrack || recordingTrack.type !== 'Audio') {
         const result = {
@@ -559,7 +606,8 @@ export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 
             step: 'track-selection',
             message: 'No Audio track is available for microphone recording.',
             trackId: null,
-            trackName: null
+            trackName: null,
+            trackSelectionSource
         };
         if (localAppServices.showNotification) {
             localAppServices.showNotification(result.message, 4000);
@@ -573,7 +621,8 @@ export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 
             step: 'busy',
             message: 'Stop the current recording before running the microphone test.',
             trackId: recordingTrack.id,
-            trackName: recordingTrack.name
+            trackName: recordingTrack.name,
+            trackSelectionSource
         };
         if (localAppServices.showNotification) {
             localAppServices.showNotification(result.message, 4000);
@@ -587,7 +636,8 @@ export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 
             step: 'unsupported',
             message: 'This browser does not support real microphone recording.',
             trackId: recordingTrack.id,
-            trackName: recordingTrack.name
+            trackName: recordingTrack.name,
+            trackSelectionSource
         };
         if (localAppServices.showNotification) {
             localAppServices.showNotification(result.message, 4000);
@@ -609,6 +659,7 @@ export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 
                 message: 'Recording did not start.',
                 trackId: recordingTrack.id,
                 trackName: recordingTrack.name,
+                trackSelectionSource,
                 initialClipCount,
                 finalClipCount: initialClipCount,
                 addedClipId: null,
@@ -639,6 +690,7 @@ export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 
             step: ok ? 'complete' : 'verify',
             trackId: recordingTrack.id,
             trackName: recordingTrack.name,
+            trackSelectionSource,
             initialClipCount,
             finalClipCount,
             addedClipId: newClip ? newClip.id : null,
@@ -667,6 +719,7 @@ export async function runRecordingMicrophoneE2ETest(trackId, recordDurationMs = 
             step: 'error',
             trackId: recordingTrack.id,
             trackName: recordingTrack.name,
+            trackSelectionSource,
             error: error && error.message ? error.message : 'Unknown error'
         };
         if (localAppServices.showNotification) {
