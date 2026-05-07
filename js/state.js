@@ -932,7 +932,11 @@ export function gatherProjectDataInternal() {
                         restoreState: win.isMaximized ? JSON.parse(JSON.stringify(win.restoreState)) : {},
                         initialContentKey: win.initialContentKey || win.id // Ensure this is saved
                     };
-                }).filter(ws => ws !== null)
+                }).filter(ws => ws !== null),
+            // MIDI CC Learn mappings (runtime-only, persisted via project save/load)
+            midiCCMappings: appServices && typeof appServices.getMidiCCMappingsForProject === 'function'
+                ? appServices.getMidiCCMappingsForProject()
+                : []
         };
         console.log("[State gatherProjectDataInternal] Project data gathered successfully.");
         return projectData;
@@ -990,6 +994,14 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         setPlaybackModeStateInternal(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');
         if (appServices && typeof appServices.updateTaskbarTempoDisplay === 'function') appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
         setHighestZState(Number.isFinite(gs.highestZIndex) ? gs.highestZIndex : 100);
+
+        // Restore MIDI CC mappings from project data
+        if (projectData.midiCCMappings && Array.isArray(projectData.midiCCMappings)) {
+            if (appServices && typeof appServices.loadMidiCCMappingsFromProject === 'function') {
+                appServices.loadMidiCCMappingsFromProject(projectData.midiCCMappings);
+                console.log(`[State reconstructDAWInternal] Restored ${projectData.midiCCMappings.length} MIDI CC mappings from project.`);
+            }
+        }
         // Armed and Soloed will be set after tracks are created
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error applying global settings:", error);

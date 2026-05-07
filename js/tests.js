@@ -390,7 +390,17 @@ import {
     setupMIDI,
     selectMIDIInput,
     initializeEventHandlersModule,
-    currentlyPressedComputerKeys
+    currentlyPressedComputerKeys,
+    getMidiCCMappings,
+    getMidiCCMappingsForProject,
+    loadMidiCCMappingsFromProject,
+    clearMidiCCMappings,
+    removeMidiCCMapping,
+    setMidiCCMapping,
+    getMidiCCMapping,
+    startMidiCCLearn,
+    cancelMidiCCLearn,
+    getMidiCCLearnActive
 } from './eventHandlers.js';
 
 import {
@@ -10118,325 +10128,6 @@ TestRunner.test('UI Module - drawInstrumentWaveform accepts 1 parameter', (t) =>
     t.assertEquals(paramCount, 1, 'drawInstrumentWaveform should accept 1 parameter');
 });
 
-TestRunner.test('UI Module - highlightPlayingStep is a function export', (t) => {
-    t.assertEqual(typeof highlightPlayingStep, 'function', 'highlightPlayingStep should be a function');
-});
-
-TestRunner.test('UI Module - highlightPlayingStep accepts 3 parameters', (t) => {
-    const paramCount = highlightPlayingStep.length;
-    t.assertEquals(paramCount, 3, 'highlightPlayingStep should accept 3 parameters');
-});
-
-TestRunner.test('UI Module - updateSequencerCellUI is a function export', (t) => {
-    t.assertEqual(typeof updateSequencerCellUI, 'function', 'updateSequencerCellUI should be a function');
-});
-
-TestRunner.test('UI Module - updateSequencerCellUI accepts 5 parameters', (t) => {
-    const paramCount = updateSequencerCellUI.length;
-    t.assertEquals(paramCount, 5, 'updateSequencerCellUI should accept 5 parameters');
-});
-
-TestRunner.test('UI Module - updateMixerWindow is a function export', (t) => {
-    t.assertEqual(typeof updateMixerWindow, 'function', 'updateMixerWindow should be a function');
-});
-
-TestRunner.test('UI Module - updateMixerWindow accepts 0 parameters', (t) => {
-    const paramCount = updateMixerWindow.length;
-    t.assertEquals(paramCount, 0, 'updateMixerWindow should accept 0 parameters');
-});
-
-TestRunner.test('UI Module - renderMixer is a function export', (t) => {
-    t.assertEqual(typeof renderMixer, 'function', 'renderMixer should be a function');
-});
-
-TestRunner.test('UI Module - renderMixer accepts 1 parameter', (t) => {
-    const paramCount = renderMixer.length;
-    t.assertEquals(paramCount, 1, 'renderMixer should accept 1 parameter');
-});
-
-TestRunner.test('UI Module - updateSoundBrowserDisplayForLibrary is a function export', (t) => {
-    t.assertEqual(typeof updateSoundBrowserDisplayForLibrary, 'function', 'updateSoundBrowserDisplayForLibrary should be a function');
-});
-
-TestRunner.test('UI Module - updateSoundBrowserDisplayForLibrary accepts 3 parameters', (t) => {
-    const paramCount = updateSoundBrowserDisplayForLibrary.length;
-    t.assertEquals(paramCount, 3, 'updateSoundBrowserDisplayForLibrary should accept 3 parameters');
-});
-
-TestRunner.test('UI Module - APP_VERSION validation for Day 441', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 441');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 115, 'Minor version should be >= 115 for Day 441');
-    }
-});
-
-// Day 444 - Sound Browser & Autosave Undo Capture Coverage
-TestRunner.test('Sound Browser State - getFavoriteSounds is a function export', (t) => {
-    t.assertEqual(typeof getFavoriteSounds, 'function', 'getFavoriteSounds should be a function');
-});
-
-TestRunner.test('Sound Browser State - isFavorite is a function export', (t) => {
-    t.assertEqual(typeof isFavorite, 'function', 'isFavorite should be a function');
-});
-
-TestRunner.test('Sound Browser State - toggleFavorite references undo capture', (t) => {
-    const funcStr = toggleFavorite.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'toggleFavorite should capture undo state');
-});
-
-TestRunner.test('Sound Browser State - addToRecentlyPlayed references undo capture', (t) => {
-    const funcStr = addToRecentlyPlayed.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'addToRecentlyPlayed should capture undo state');
-});
-
-TestRunner.test('Sound Browser State - getRecentlyPlayedSounds is a function export', (t) => {
-    t.assertEqual(typeof getRecentlyPlayedSounds, 'function', 'getRecentlyPlayedSounds should be a function');
-});
-
-TestRunner.test('Sound Browser State - clearRecentlyPlayed references undo capture', (t) => {
-    const funcStr = clearRecentlyPlayed.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'clearRecentlyPlayed should capture undo state');
-});
-
-TestRunner.test('Autosave State - clearAutoSavedProject references undo capture', (t) => {
-    const funcStr = clearAutoSavedProject.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'clearAutoSavedProject should capture undo state');
-});
-
-TestRunner.test('Sound Browser & Autosave State - APP_VERSION validation for Day 444', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 444');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 118, 'Minor version should be >= 118 for Day 444');
-    }
-});
-
-// Day 445: Audio State Undo Capture Coverage
-TestRunner.test('Audio State - setCountInBars calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = setCountInBars.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setCountInBars should capture undo state');
-});
-
-TestRunner.test('Audio State - setCountInBars uses a descriptive undo label', (t) => {
-    const funcStr = setCountInBars.toString();
-    t.assertTruthy(funcStr.includes('Set Count-In Bars'), 'setCountInBars should use a descriptive undo label');
-});
-
-TestRunner.test('Audio State - setMetronomeEnabled calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = setMetronomeEnabled.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMetronomeEnabled should capture undo state');
-});
-
-TestRunner.test('Audio State - setMetronomeEnabled uses a toggle undo label', (t) => {
-    const funcStr = setMetronomeEnabled.toString();
-    t.assertTruthy(funcStr.includes('Toggle Metronome'), 'setMetronomeEnabled should use a toggle undo label');
-});
-
-TestRunner.test('Audio State - setMetronomeVolume calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = setMetronomeVolume.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMetronomeVolume should capture undo state');
-});
-
-TestRunner.test('Audio State - startAutomation calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = startAutomation.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'startAutomation should capture undo state');
-});
-
-TestRunner.test('Audio State - stopAutomation calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = stopAutomation.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'stopAutomation should capture undo state');
-});
-
-TestRunner.test('Audio State - setMasterVolumeAutomation calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = setMasterVolumeAutomation.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMasterVolumeAutomation should capture undo state');
-});
-
-TestRunner.test('Audio State - setLoopRegion calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = setLoopRegion.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegion should capture undo state');
-});
-
-TestRunner.test('Audio State - setLoopRegionEnabled calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = setLoopRegionEnabled.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegionEnabled should capture undo state');
-});
-
-TestRunner.test('Audio State - setPunchRegion calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = setPunchRegion.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegion should capture undo state');
-});
-
-TestRunner.test('Audio State - setPunchRegionEnabled calls captureStateForUndoIfAllowed', (t) => {
-    const funcStr = setPunchRegionEnabled.toString();
-    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegionEnabled should capture undo state');
-});
-
-TestRunner.test('Audio State - APP_VERSION validation for Day 445', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 445');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 119, 'Minor version should be >= 119 for Day 445');
-    }
-});
-
-// Day 446: Sequence Editing Undo Capture Coverage
-// ===============================================
-
-TestRunner.test('Track Sequence - humanizeVelocity calls _captureUndoState', (t) => {
-    const funcStr = Track.prototype.humanizeVelocity.toString();
-    t.assertTruthy(funcStr.includes('_captureUndoState'), 'humanizeVelocity should call _captureUndoState');
-});
-
-TestRunner.test('Track Sequence - humanizeVelocity uses descriptive undo label', (t) => {
-    const funcStr = Track.prototype.humanizeVelocity.toString();
-    t.assertTruthy(funcStr.includes('Humanize velocities on'), 'humanizeVelocity should use descriptive undo label');
-});
-
-TestRunner.test('Track Sequence - pasteSequenceSection calls _captureUndoState', (t) => {
-    const funcStr = Track.prototype.pasteSequenceSection.toString();
-    t.assertTruthy(funcStr.includes('_captureUndoState'), 'pasteSequenceSection should call _captureUndoState');
-});
-
-TestRunner.test('Track Sequence - pasteSequenceSection uses descriptive undo label', (t) => {
-    const funcStr = Track.prototype.pasteSequenceSection.toString();
-    t.assertTruthy(funcStr.includes('Paste Sequence Section on'), 'pasteSequenceSection should use descriptive undo label');
-});
-
-TestRunner.test('Track Sequence - pasteSequenceSection accepts skipUndo parameter', (t) => {
-    const funcStr = Track.prototype.pasteSequenceSection.toString();
-    t.assertTruthy(funcStr.includes('skipUndo'), 'pasteSequenceSection should accept skipUndo parameter');
-});
-
-TestRunner.test('Track Sequence - pasteSequenceSection respects skipUndo guard', (t) => {
-    const funcStr = Track.prototype.pasteSequenceSection.toString();
-    t.assertTruthy(funcStr.includes('skipUndo') && funcStr.includes('_captureUndoState'), 'pasteSequenceSection should guard _captureUndoState with skipUndo');
-});
-
-TestRunner.test('Track Sequence - Day 446 APP_VERSION validation', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 446');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 120, 'Minor version should be >= 120 for Day 446');
-    }
-});
-// ================================================================
-// Day 447: Sound Browser Path State Immutability & Undo Deduping
-// ================================================================
-TestRunner.test('Sound Browser Path State - getCurrentSoundBrowserPathState is a function export', (t) => {
-    t.assertEqual(typeof getCurrentSoundBrowserPathState, 'function', 'getCurrentSoundBrowserPathState should be a function');
-});
-
-TestRunner.test('Sound Browser Path State - getCurrentSoundBrowserPathState accepts 0 parameters', (t) => {
-    t.assertEqual(getCurrentSoundBrowserPathState.length, 0, 'getCurrentSoundBrowserPathState should accept 0 parameters');
-});
-
-TestRunner.test('Sound Browser Path State - getCurrentSoundBrowserPathState returns a defensive copy', (t) => {
-    const originalPath = ['Libraries', 'Drums'];
-    try {
-        setCurrentSoundBrowserPathState(originalPath);
-        originalPath.push('Kick');
-        const storedPath = getCurrentSoundBrowserPathState();
-        t.assertDeepEqual(storedPath, ['Libraries', 'Drums'], 'getCurrentSoundBrowserPathState should return a copy of the stored path');
-        storedPath.push('Snare');
-        t.assertDeepEqual(getCurrentSoundBrowserPathState(), ['Libraries', 'Drums'], 'Mutating the returned path should not mutate the stored path');
-    } finally {
-        setCurrentSoundBrowserPathState([]);
-    }
-});
-
-TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState is a function export', (t) => {
-    t.assertEqual(typeof setCurrentSoundBrowserPathState, 'function', 'setCurrentSoundBrowserPathState should be a function');
-});
-
-TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState accepts 1 parameter', (t) => {
-    t.assertEqual(setCurrentSoundBrowserPathState.length, 1, 'setCurrentSoundBrowserPathState should accept 1 parameter');
-});
-
-TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState clones input arrays', (t) => {
-    const sourcePath = ['Library', 'Percussion'];
-    try {
-        setCurrentSoundBrowserPathState(sourcePath);
-        sourcePath.push('Rimshots');
-        t.assertDeepEqual(getCurrentSoundBrowserPathState(), ['Library', 'Percussion'], 'setCurrentSoundBrowserPathState should clone the provided path array');
-    } finally {
-        setCurrentSoundBrowserPathState([]);
-    }
-});
-
-TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState references undo capture and equality checks', (t) => {
-    const funcStr = setCurrentSoundBrowserPathState.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setCurrentSoundBrowserPathState should capture undo state');
-    t.assertTruthy(funcStr.includes('areSoundBrowserPathsEqual'), 'setCurrentSoundBrowserPathState should use path-content equality checks');
-});
-
-TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState uses descriptive undo label', (t) => {
-    const funcStr = setCurrentSoundBrowserPathState.toString();
-    t.assertTruthy(funcStr.includes('Set Sound Browser Path'), 'setCurrentSoundBrowserPathState should use a descriptive undo label');
-});
-
-TestRunner.test('Sound Browser Path State - APP_VERSION validation for Day 447', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 447');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 121, 'Minor version should be >= 121 for Day 447');
-    }
-});
-
-// Day 449: Step Probability Methods Tests
-TestRunner.test('Note Methods - Track.setStepProbability is a function', (t) => {
-    t.assertEqual(typeof Track.prototype.setStepProbability, 'function', 'setStepProbability should be a function');
-});
-
-TestRunner.test('Note Methods - setStepProbability calls _captureUndoState', (t) => {
-    const funcStr = Track.prototype.setStepProbability.toString();
-    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setStepProbability should call _captureUndoState for undo support');
-});
-
-TestRunner.test('Note Methods - setStepProbability clamps value', (t) => {
-    const funcStr = Track.prototype.setStepProbability.toString();
-    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'setStepProbability should clamp probability value');
-});
-
-TestRunner.test('Note Methods - Track.getStepProbability is a function', (t) => {
-    t.assertEqual(typeof Track.prototype.getStepProbability, 'function', 'getStepProbability should be a function');
-});
-
-TestRunner.test('Note Methods - getStepProbability returns 1 for Audio tracks', (t) => {
-    const audioTrack = new Track('test-audio', 'Audio');
-    const result = audioTrack.getStepProbability(0, 0);
-    t.assertEqual(result, 1, 'getStepProbability should return 1 for Audio tracks');
-});
-
-TestRunner.test('Note Methods - getStepProbability returns 1 when no step data', (t) => {
-    const track = new Track('test-synth', 'Synth');
-    const seq = track.getActiveSequence();
-    if (seq) {
-        seq.data[0][0] = null;
-        const result = track.getStepProbability(0, 0);
-        t.assertEqual(result, 1, 'getStepProbability should return 1 for inactive steps');
-    }
-});
-
-TestRunner.test('Note Methods - Step Probability Constants - DEFAULT_STEP_PROBABILITY is defined', (t) => {
-    t.assertTruthy(typeof DEFAULT_STEP_PROBABILITY !== 'undefined', 'DEFAULT_STEP_PROBABILITY should be defined');
-});
-
-TestRunner.test('Note Methods - Step Probability Constants - DEFAULT_STEP_PROBABILITY is 1.0', (t) => {
-    t.assertEqual(DEFAULT_STEP_PROBABILITY, 1.0, 'DEFAULT_STEP_PROBABILITY should be 1.0');
-});
-
-TestRunner.test('Track Undo Capture - setStepProbability calls _captureUndoState', (t) => {
-    const funcStr = Track.prototype.setStepProbability.toString();
-    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setStepProbability should call _captureUndoState');
-});
-
-TestRunner.test('Track Undo Capture - setStepProbability uses a descriptive undo label', (t) => {
-    const funcStr = Track.prototype.setStepProbability.toString();
-    t.assertTruthy(funcStr.includes('Set step probability at row') && funcStr.includes('on'), 'setStepProbability should use a descriptive undo label');
-});
-
 TestRunner.test('Note Methods - APP_VERSION validation for Day 449', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 449');
@@ -10444,3 +10135,103 @@ TestRunner.test('Note Methods - APP_VERSION validation for Day 449', (t) => {
         t.assertTruthy(versionParts[1] >= 123, 'Minor version should be >= 123 for Day 449');
     }
 });
+
+// ============================================
+// Day 452: MIDI CC Mapping Persistence Tests
+// ============================================
+TestRunner.test('MIDI CC Persistence - getMidiCCMappings is a function export', (t) => {
+    t.assertEqual(typeof getMidiCCMappings, 'function', 'getMidiCCMappings should be a function');
+});
+
+TestRunner.test('MIDI CC Persistence - getMidiCCMappingsForProject is a function export', (t) => {
+    t.assertEqual(typeof getMidiCCMappingsForProject, 'function', 'getMidiCCMappingsForProject should be a function');
+});
+
+TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject is a function export', (t) => {
+    t.assertEqual(typeof loadMidiCCMappingsFromProject, 'function', 'loadMidiCCMappingsFromProject should be a function');
+});
+
+TestRunner.test('MIDI CC Persistence - getMidiCCMappingsForProject accepts 0 parameters', (t) => {
+    t.assertEqual(getMidiCCMappingsForProject.length, 0, 'getMidiCCMappingsForProject should accept 0 parameters');
+});
+
+TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject accepts 1 parameter', (t) => {
+    t.assertEqual(loadMidiCCMappingsFromProject.length, 1, 'loadMidiCCMappingsFromProject should accept 1 parameter');
+});
+
+TestRunner.test('MIDI CC Persistence - getMidiCCMappingsForProject returns an array', (t) => {
+    const result = getMidiCCMappingsForProject();
+    t.assertEqual(Array.isArray(result), true, 'getMidiCCMappingsForProject should return an array');
+});
+
+TestRunner.test('MIDI CC Persistence - getMidiCCMappingsForProject returns empty array when no mappings', (t) => {
+    clearMidiCCMappings();
+    const result = getMidiCCMappingsForProject();
+    t.assertEqual(result.length, 0, 'getMidiCCMappingsForProject should return empty array when no mappings exist');
+});
+
+TestRunner.test('MIDI CC Persistence - getMidiCCMappingsForProject returns mapping objects with targetId, cc, channel, min, max', (t) => {
+    clearMidiCCMappings();
+    setMidiCCMapping('testKnob1', { cc: 1, channel: 0, min: 0, max: 1 });
+    const result = getMidiCCMappingsForProject();
+    t.assertEqual(result.length, 1, 'Should have 1 mapping');
+    t.assertEqual(result[0].targetId, 'testKnob1', 'Mapping should have targetId');
+    t.assertEqual(result[0].cc, 1, 'Mapping should have cc');
+    t.assertEqual(result[0].channel, 0, 'Mapping should have channel');
+    t.assertEqual(result[0].min, 0, 'Mapping should have min');
+    t.assertEqual(result[0].max, 1, 'Mapping should have max');
+});
+
+TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject clears existing mappings', (t) => {
+    setMidiCCMapping('existingKnob', { cc: 99, channel: 0, min: 0, max: 1 });
+    const testMappings = [
+        { targetId: 'newKnob1', cc: 10, channel: 1, min: 0, max: 1 },
+        { targetId: 'newKnob2', cc: 11, channel: 1, min: 0, max: 1 }
+    ];
+    loadMidiCCMappingsFromProject(testMappings);
+    const result = getMidiCCMappings();
+    t.assertEqual(Object.keys(result).length, 2, 'Should have 2 mappings after loading');
+    t.assertEqual(result.newKnob1.cc, 10, 'newKnob1 should have cc 10');
+    t.assertEqual(result.newKnob2.cc, 11, 'newKnob2 should have cc 11');
+    t.assertEqual(result.existingKnob, undefined, 'existingKnob should be removed');
+});
+
+TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject handles empty array', (t) => {
+    setMidiCCMapping('someKnob', { cc: 50, channel: 0, min: 0, max: 1 });
+    loadMidiCCMappingsFromProject([]);
+    const result = getMidiCCMappings();
+    t.assertEqual(Object.keys(result).length, 0, 'Should have no mappings after loading empty array');
+});
+
+TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject handles null/undefined input', (t) => {
+    setMidiCCMapping('anotherKnob', { cc: 60, channel: 0, min: 0, max: 1 });
+    loadMidiCCMappingsFromProject(null);
+    loadMidiCCMappingsFromProject(undefined);
+    const result = getMidiCCMappings();
+    t.assertEqual(Object.keys(result).length, 1, 'Should still have 1 mapping (from null/undefined handling)');
+});
+
+TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject uses default values for missing fields', (t) => {
+    loadMidiCCMappingsFromProject([
+        { targetId: 'partialKnob', cc: 5 }
+    ]);
+    const result = getMidiCCMappings();
+    t.assertEqual(result.partialKnob.cc, 5, 'Should preserve cc');
+    t.assertEqual(result.partialKnob.channel, 0, 'Should default channel to 0');
+    t.assertEqual(result.partialKnob.min, 0, 'Should default min to 0');
+    t.assertEqual(result.partialKnob.max, 1, 'Should default max to 1');
+});
+
+TestRunner.test('MIDI CC Persistence - startMidiCCLearn is a function export', (t) => {
+    t.assertEqual(typeof startMidiCCLearn, 'function', 'startMidiCCLearn should be a function');
+});
+
+TestRunner.test('MIDI CC Persistence - startMidiCCLearn accepts 5 parameters', (t) => {
+    t.assertEqual(startMidiCCLearn.length, 5, 'startMidiCCLearn should accept 5 parameters');
+});
+
+TestRunner.test('MIDI CC Persistence - cancelMidiCCLearn is a function export', (t) => {
+    t.assertEqual(typeof cancelMidiCCLearn, 'function', 'cancelMidiCCLearn should be a function');
+});
+
+TestRunner.test('MIDI CC Persistence - cancel

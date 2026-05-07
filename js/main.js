@@ -10,7 +10,10 @@ import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolum
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTimelineLaneDrop,
-    selectMIDIInput
+    selectMIDIInput,
+    getMidiCCMappingsForProject, loadMidiCCMappingsFromProject,
+    getMidiCCMappings, clearMidiCCMappings, removeMidiCCMapping, setMidiCCMapping, getMidiCCMapping,
+    startMidiCCLearn, cancelMidiCCLearn, getMidiCCLearnActive
 } from './eventHandlers.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
@@ -626,6 +629,16 @@ const appServices = {
     loadProject: loadProjectInternal,
 
     // MIDI CC Learn / Mapping services
+    getMidiCCMappings: getMidiCCMappings,
+    getMidiCCMappingsForProject: getMidiCCMappingsForProject,
+    loadMidiCCMappingsFromProject: loadMidiCCMappingsFromProject,
+    clearMidiCCMappings: clearMidiCCMappings,
+    removeMidiCCMapping: removeMidiCCMapping,
+    setMidiCCMapping: setMidiCCMapping,
+    getMidiCCMapping: getMidiCCMapping,
+    startMidiCCLearn: startMidiCCLearn,
+    cancelMidiCCLearn: cancelMidiCCLearn,
+    getMidiCCLearnActive: getMidiCCLearnActive,
     applyMidiCCToKnob: (targetId, value) => {
         // Find the knob by its registered targetId and set its value
         // Knobs register themselves with a unique targetId when created
