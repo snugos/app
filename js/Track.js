@@ -1810,7 +1810,7 @@ export class Track {
                     for (let rowIndex = 0; rowIndex < Constants.synthPitches.length; rowIndex++) {
                         const pitchName = Constants.synthPitches[rowIndex];
                         const step = sequenceDataForTone[rowIndex]?.[col];
-                        if (((step) && (step).active) && !notePlayedThisStep) {
+                        if (((step) && (step).active) && (step.probability == null || Math.random() < step.probability) && !notePlayedThisStep) {
                             this.instrument.triggerAttackRelease(pitchName, "16n", time, step.velocity * Constants.defaultVelocity); 
                             notePlayedThisStep = true;
                         }
@@ -1818,7 +1818,7 @@ export class Track {
                 } else if (this.type === 'Sampler') {
                      (this.slices || []).forEach((sliceData, sliceIndex) => {
                         const step = sequenceDataForTone[sliceIndex]?.[col];
-                        if (((step) && (step).active) && ((sliceData) && (sliceData).duration) > 0 && ((this.audioBuffer) && (this.audioBuffer).loaded)) {
+                        if (((step) && (step).active) && (step.probability == null || Math.random() < step.probability) && ((sliceData) && (sliceData).duration) > 0 && ((this.audioBuffer) && (this.audioBuffer).loaded)) {
                             const targetVolumeLinear = sliceData.volume * step.velocity;
                             const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12);
                             let playDuration = sliceData.duration / playbackRate;
@@ -1859,7 +1859,7 @@ export class Track {
                     Array.from({ length: Constants.numDrumSamplerPads }).forEach((_, padIndex) => {
                         const step = sequenceDataForTone[padIndex]?.[col];
                         const padData = this.drumSamplerPads[padIndex];
-                        if (((step) && (step).active) && padData && this.drumPadPlayers[padIndex] && !this.drumPadPlayers[padIndex].disposed && this.drumPadPlayers[padIndex].loaded) {
+                        if (((step) && (step).active) && (step.probability == null || Math.random() < step.probability) && padData && this.drumPadPlayers[padIndex] && !this.drumPadPlayers[padIndex].disposed && this.drumPadPlayers[padIndex].loaded) {
                             const player = this.drumPadPlayers[padIndex];
                             player.volume.value = Tone.gainToDb(padData.volume * step.velocity * 0.7);
                             player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
@@ -1870,7 +1870,7 @@ export class Track {
                     let notePlayedThisStep = false;
                     Constants.synthPitches.forEach((pitchName, rowIndex) => {
                         const step = sequenceDataForTone[rowIndex]?.[col];
-                        if (((step) && (step).active)) {
+                        if (((step) && (step).active) && (step.probability == null || Math.random() < step.probability)) {
                             if (!this.instrumentSamplerIsPolyphonic && !notePlayedThisStep) {
                                 this.toneSampler.releaseAll(time); notePlayedThisStep = true;
                             }
