@@ -6,7 +6,7 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
-import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest } from './audio.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, getRecordingInputGainNode } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTimelineLaneDrop,
@@ -459,6 +459,57 @@ const appServices = {
         }
         if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') appServices.renderTimeline();
     },
+    onSoloedTrackChanged: (soloedTrackId, previousId) => {
+        // Update all track UI elements to reflect the new solo state
+        const allTracks = getTracksState ? getTracksState() : [];
+        allTracks.forEach(t => {
+            if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged');
+        });
+        // Update mixer if open
+        if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    },
+    onMutedTracksChanged: (mutedTrackIds) => {
+        // Update all track UI elements to reflect the new mute states
+        const allTracks = getTracksState ? getTracksState() : [];
+        allTracks.forEach(t => {
+            if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'muteChanged');
+        });
+        // Update mixer if open
+        if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    },
+    onTrackNameChange: (trackId, newName) => {
+        // Update open track inspector window title if it exists
+        const inspectorWindow = getWindowByIdState ? getWindowByIdState(`trackInspector-${trackId}`) : null;
+        if (inspectorWindow && inspectorWindow.element) {
+            const titleEl = inspectorWindow.element.querySelector('.window-title');
+            if (titleEl) titleEl.textContent = `Inspector: ${newName}`;
+        }
+        // Update track sequencer window title if it exists
+        const sequencerWindow = getWindowByIdState ? getWindowByIdState(`sequencerWin-${trackId}`) : null;
+        if (sequencerWindow && sequencerWindow.element) {
+            const titleEl = sequencerWindow.element.querySelector('.window-title');
+            if (titleEl) {
+                // Keep the sequence name part, just update track name
+                const seqMatch = titleEl.textContent.match(/Sequencer: (.+) - (.+)/);
+                if (seqMatch) titleEl.textContent = `Sequencer: ${newName} - ${seqMatch[2]}`;
+                else titleEl.textContent = `Sequencer: ${newName}`;
+            }
+        }
+        // Update track effects rack window title if it exists
+        const effectsWindow = getWindowByIdState ? getWindowByIdState(`effectsRack-${trackId}`) : null;
+        if (effectsWindow && effectsWindow.element) {
+            const titleEl = effectsWindow.element.querySelector('.window-title');
+            if (titleEl) titleEl.textContent = `Effects: ${newName}`;
+        }
+        // Update mixer display if open
+        if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    },
     updateProjectNameDisplay: (name) => {
         if (uiElementsCache.projectNameBtnGlobal) {
             uiElementsCache.projectNameBtnGlobal.textContent = name || 'Untitled Project';
@@ -593,6 +644,58 @@ const appServices = {
             delete window._midiCCKnobRegistry[targetId];
         }
     },
+    // Audio preview and drum pad
+    playSlicePreview,
+    loadDrumSamplerPadFile,
+    selectDrumPad: (trackId, padIndex) => {
+        const track = getTrackByIdState ? getTrackByIdState(trackId) : null;
+        if (track) {
+            track.selectedDrumPadForEdit = padIndex;
+            if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track);
+        }
+    },
+    setTrackMonitoring: (trackId, enabled) => {
+        const track = getTrackByIdState ? getTrackByIdState(trackId) : null;
+        if (!track || track.type !== 'Audio') {
+            console.warn(`[Main setTrackMonitoring] Track ${trackId} is not a valid Audio track for monitoring.`);
+            return;
+        }
+
+        try {
+            // Ensure inputChannel exists for monitoring
+            if (!track.inputChannel || track.inputChannel.disposed) {
+                console.warn(`[Main setTrackMonitoring] Track ${trackId} inputChannel not available.`);
+                return;
+            }
+
+            // Get the recording input gain node which is the麦克风输入的gain node
+            const inputGainNode = getRecordingInputGainNode();
+            if (!inputGainNode || inputGainNode.disposed) {
+                console.warn(`[Main setTrackMonitoring] Recording input gain node not available.`);
+                return;
+            }
+
+            if (enabled) {
+                // Connect input gain node to track's inputChannel so user can hear themselves
+                inputGainNode.connect(track.inputChannel);
+            } else {
+                // Disconnect input gain node from track's inputChannel
+                try {
+                    inputGainNode.disconnect(track.inputChannel);
+                } catch (e) {
+                    // May fail if not connected, which is fine
+                }
+            }
+
+            // Update the track's monitoring state flag
+            track.isMonitoringEnabled = enabled;
+            console.log(`[Main setTrackMonitoring] Track ${trackId} monitoring: ${enabled}`);
+        } catch (error) {
+            console.error(`[Main setTrackMonitoring] Error for track ${trackId}:`, error);
+        }
+    },
+    // Notification passthrough
+    showNotification: showSafeNotification,
 };
 
 window.appServices = appServices;
