@@ -10342,3 +10342,64 @@ TestRunner.test('Sound Browser Path State - APP_VERSION validation for Day 447',
         t.assertTruthy(versionParts[1] >= 121, 'Minor version should be >= 121 for Day 447');
     }
 });
+
+// Day 449: Step Probability Methods Tests
+TestRunner.test('Note Methods - Track.setStepProbability is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setStepProbability, 'function', 'setStepProbability should be a function');
+});
+
+TestRunner.test('Note Methods - setStepProbability calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setStepProbability.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setStepProbability should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Note Methods - setStepProbability clamps value', (t) => {
+    const funcStr = Track.prototype.setStepProbability.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'setStepProbability should clamp probability value');
+});
+
+TestRunner.test('Note Methods - Track.getStepProbability is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.getStepProbability, 'function', 'getStepProbability should be a function');
+});
+
+TestRunner.test('Note Methods - getStepProbability returns 1 for Audio tracks', (t) => {
+    const audioTrack = new Track('test-audio', 'Audio');
+    const result = audioTrack.getStepProbability(0, 0);
+    t.assertEqual(result, 1, 'getStepProbability should return 1 for Audio tracks');
+});
+
+TestRunner.test('Note Methods - getStepProbability returns 1 when no step data', (t) => {
+    const track = new Track('test-synth', 'Synth');
+    const seq = track.getActiveSequence();
+    if (seq) {
+        seq.data[0][0] = null;
+        const result = track.getStepProbability(0, 0);
+        t.assertEqual(result, 1, 'getStepProbability should return 1 for inactive steps');
+    }
+});
+
+TestRunner.test('Note Methods - Step Probability Constants - DEFAULT_STEP_PROBABILITY is defined', (t) => {
+    t.assertTruthy(typeof DEFAULT_STEP_PROBABILITY !== 'undefined', 'DEFAULT_STEP_PROBABILITY should be defined');
+});
+
+TestRunner.test('Note Methods - Step Probability Constants - DEFAULT_STEP_PROBABILITY is 1.0', (t) => {
+    t.assertEqual(DEFAULT_STEP_PROBABILITY, 1.0, 'DEFAULT_STEP_PROBABILITY should be 1.0');
+});
+
+TestRunner.test('Track Undo Capture - setStepProbability calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setStepProbability.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setStepProbability should call _captureUndoState');
+});
+
+TestRunner.test('Track Undo Capture - setStepProbability uses a descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setStepProbability.toString();
+    t.assertTruthy(funcStr.includes('Set step probability at row') && funcStr.includes('on'), 'setStepProbability should use a descriptive undo label');
+});
+
+TestRunner.test('Note Methods - APP_VERSION validation for Day 449', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 449');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 123, 'Minor version should be >= 123 for Day 449');
+    }
+});

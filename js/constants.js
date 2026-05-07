@@ -100,6 +100,7 @@ export const numDrumSamplerPads = 8; // Number of pads for the DrumSampler
 export const samplerMIDINoteStart = 36; // C2, used for mapping MIDI notes to sampler slices/pads
 
 export const defaultVelocity = 0.7; // Default velocity for new notes
+export const DEFAULT_STEP_PROBABILITY = 1.0; // Default probability (100%) — step always triggers unless overridden
 
 export const defaultDesktopBg = '#101010'; // Matches style.css body background
 
