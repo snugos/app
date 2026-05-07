@@ -2264,6 +2264,269 @@ export class Track {
         }
     }
 
+    deleteTimelineClip(clipId) {
+        const clipIndex = this.timelineClips.findIndex(c => c.id === clipId);
+        if (clipIndex === -1) {
+            console.warn(`[${this.id}] Could not find clip ${clipId} to delete.`);
+            return false;
+        }
+        const clip = this.timelineClips[clipIndex];
+        this.timelineClips = this.timelineClips.filter(c => c.id !== clipId);
+        this._captureUndoState(`Delete Clip "${clip.name || clip.id.slice(-4)}" from ${this.name}`);
+        if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+        return true;
+    }
+
+    splitAudioClip(clipId, splitTime) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (!clip) {
+            console.warn(`[${this.id}] Could not find clip ${clipId} to split.`);
+            return null;
+        }
+        const clipEnd = clip.startTime + clip.duration;
+        if (splitTime <= clip.startTime || splitTime >= clipEnd) {
+            console.warn(`[${this.id}] splitTime ${splitTime} is outside clip range (${clip.startTime} to ${clipEnd}).`);
+            return null;
+        }
+        const originalDuration = clip.duration;
+        clip.duration = splitTime - clip.startTime;
+        const newClip = {
+            id: `${clip.type}clip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+            type: clip.type,
+            sourceId: clip.sourceId,
+            startTime: splitTime,
+            duration: originalDuration - clip.duration,
+            name: clip.name ? `${clip.name} (split)` : 'Split Clip',
+            color: clip.color,
+            gain: clip.gain,
+            playbackRate: clip.playbackRate,
+            startOffset: clip.startOffset || 0,
+            endOffset: clip.endOffset || 0,
+            crossfade: clip.crossfade || 0,
+            fadeInCurve: clip.fadeInCurve,
+            fadeOutCurve: clip.fadeOutCurve,
+            reverse: clip.reverse || false
+        };
+        if (clip.sourceSequenceId) newClip.sourceSequenceId = clip.sourceSequenceId;
+        this.timelineClips.push(newClip);
+        this._captureUndoState(`Split Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
+        if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+        return newClip;
+    }
+
+    duplicateTimelineClip(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (!clip) {
+            console.warn(`[${this.id}] Could not find clip ${clipId} to duplicate.`);
+            return null;
+        }
+        const newClip = Object.assign({}, clip, {
+            id: `${clip.type}clip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+            startTime: clip.startTime + clip.duration + 0.01,
+            name: clip.name ? `${clip.name} (copy)` : 'Copy'
+        });
+        this.timelineClips.push(newClip);
+        this._captureUndoState(`Duplicate Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
+        if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+        return newClip;
+    }
+
+    // Audio Clip Accessor Methods
+    _getAudioClip(clipId) {
+        return this.timelineClips.find(c => c.id === clipId);
+    }
+
+    setAudioClipName(clipId, name) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.name = name;
+        this._captureUndoState(`Rename Clip "${clip.name}" on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipName(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? clip.name : '';
+    }
+
+    setAudioClipColor(clipId, color) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.color = color;
+        this._captureUndoState(`Set Clip color on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipColor(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? clip.color : '#ffffff';
+    }
+
+    setAudioClipGain(clipId, gain) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.gain = Math.max(0, Math.min(2, parseFloat(gain) || 1));
+        this._captureUndoState(`Set Clip gain on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipGain(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.gain !== undefined ? clip.gain : 1) : 1;
+    }
+
+    setAudioClipPlaybackRate(clipId, rate) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.playbackRate = Math.max(0.25, Math.min(4, parseFloat(rate) || 1));
+        this._captureUndoState(`Set Clip playback rate on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipPlaybackRate(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.playbackRate !== undefined ? clip.playbackRate : 1) : 1;
+    }
+
+    setAudioClipStartOffset(clipId, offset) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.startOffset = Math.max(0, parseFloat(offset) || 0);
+        this._captureUndoState(`Set Clip start offset on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipStartOffset(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.startOffset || 0) : 0;
+    }
+
+    setAudioClipEndOffset(clipId, offset) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.endOffset = Math.max(0, parseFloat(offset) || 0);
+        this._captureUndoState(`Set Clip end offset on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipEndOffset(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.endOffset || 0) : 0;
+    }
+
+    setAudioClipCrossfade(clipId, crossfade) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.crossfade = Math.max(0, Math.min(1, parseFloat(crossfade) || 0));
+        this._captureUndoState(`Set Clip crossfade on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipCrossfade(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.crossfade || 0) : 0;
+    }
+
+    setAudioClipFadeInCurve(clipId, curve) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        const validCurves = ['linear', 'exponential', 'logarithmic', 's-curve'];
+        if (!validCurves.includes(curve)) {
+            console.warn(`[${this.id}] Invalid fade in curve: ${curve}. Using 'linear'.`);
+            curve = 'linear';
+        }
+        clip.fadeInCurve = curve;
+        this._captureUndoState(`Set Clip fade in curve on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipFadeInCurve(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.fadeInCurve || 'linear') : 'linear';
+    }
+
+    setAudioClipFadeOutCurve(clipId, curve) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        const validCurves = ['linear', 'exponential', 'logarithmic', 's-curve'];
+        if (!validCurves.includes(curve)) {
+            console.warn(`[${this.id}] Invalid fade out curve: ${curve}. Using 'linear'.`);
+            curve = 'linear';
+        }
+        clip.fadeOutCurve = curve;
+        this._captureUndoState(`Set Clip fade out curve on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipFadeOutCurve(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.fadeOutCurve || 'linear') : 'linear';
+    }
+
+    setAudioClipFadeIn(clipId, duration) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.fadeIn = Math.max(0, parseFloat(duration) || 0);
+        this._captureUndoState(`Set Clip fade in on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipFadeIn(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.fadeIn || 0) : 0;
+    }
+
+    setAudioClipFadeOut(clipId, duration) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.fadeOut = Math.max(0, parseFloat(duration) || 0);
+        this._captureUndoState(`Set Clip fade out on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipFadeOut(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.fadeOut || 0) : 0;
+    }
+
+    setAudioClipReverse(clipId, reverse) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.reverse = !!reverse;
+        this._captureUndoState(`Set Clip reverse on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipReverse(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.reverse || false) : false;
+    }
+
+    setAudioClipStartTime(clipId, startTime) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.startTime = Math.max(0, parseFloat(startTime) || 0);
+        this._captureUndoState(`Move Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipStartTime(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? clip.startTime : 0;
+    }
+
+    setAudioClipDuration(clipId, duration) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.duration = Math.max(0.01, parseFloat(duration) || 0.1);
+        this._captureUndoState(`Resize Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipDuration(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? clip.duration : 0;
+    }
     dispose() {
         const trackNameForLog = this.name || `Track ${this.id}`; 
         console.log(`[Track Dispose START ${this.id}] Starting disposal for track: "${trackNameForLog}"`);
