@@ -168,6 +168,7 @@ export class Track {
         this.instrumentWaveformCanvasCtx = null;
         this.automation = ((initialData) && (initialData).automation) ? JSON.parse(JSON.stringify(initialData.automation)) : { volume: [], mute: [], solo: [] };
         this.automationArmed = ((initialData) && (initialData).automationArmed) || false;
+        this._suppressAutomationUndoCapture = false;
         this.inspectorControls = {};
 
         // Audio Track specific
@@ -543,12 +544,13 @@ export class Track {
             console.warn(`[Track ${this.id}] ToneNode for effect ${effectId} ("${effectWrapper.type}") is invalid or disposed.`);
             return;
         }
-        if (this.appServices.captureStateForUndo) {
-            this.appServices.captureStateForUndo(`${bypassed ? 'Bypass' : 'Enable'} ${effectWrapper.type} on ${this.name}`);
+        const nextValue = !!bypassed;
+        if (effectWrapper.toneNode.bypass !== nextValue) {
+            this._captureUndoState(`${nextValue ? 'Bypass' : 'Enable'} ${effectWrapper.type} on ${this.name}`);
         }
         try {
-            effectWrapper.toneNode.bypass = !!bypassed;
-            console.log(`[Track ${this.id}] Effect "${effectWrapper.type}" (ID: ${effectId}) bypass set to ${!!bypassed}`);
+            effectWrapper.toneNode.bypass = nextValue;
+            console.log(`[Track ${this.id}] Effect "${effectWrapper.type}" (ID: ${effectId}) bypass set to ${nextValue}`);
         } catch (e) {
             console.warn(`[Track ${this.id}] Error setting bypass on effect "${effectWrapper.type}":`, e.message);
         }
@@ -922,7 +924,12 @@ export class Track {
         if (fromInteraction && this.automationArmed) {
             const transportPos = Tone.Transport.position;
             const timeInSeconds = Tone.Transport.seconds;
-            this.writeVolumeAutomation(timeInSeconds, this.previousVolumeBeforeMute);
+            this._suppressAutomationUndoCapture = true;
+            try {
+                this.writeVolumeAutomation(timeInSeconds, this.previousVolumeBeforeMute);
+            } finally {
+                this._suppressAutomationUndoCapture = false;
+            }
             console.log(`[Track ${this.id}] Volume automation recorded at pos ${transportPos}, time ${timeInSeconds.toFixed(3)}s, value ${this.previousVolumeBeforeMute.toFixed(3)}`);
         }
     }
@@ -993,6 +1000,9 @@ export class Track {
     writeVolumeAutomation(time, value) {
         if (!this.automation) this.automation = { volume: [], mute: [], solo: [] };
         if (!this.automation.volume) this.automation.volume = [];
+        if (!this._suppressAutomationUndoCapture) {
+            this._captureUndoState(`Write Volume Automation on ${this.name}`);
+        }
         const event = { time: parseFloat(time), value: Math.max(0, Math.min(parseFloat(value) || 0, 1.5)) };
         this.automation.volume.push(event);
         if (this.automation.volume.length > 10000) this.automation.volume.splice(0, 1000);
@@ -1003,6 +1013,7 @@ export class Track {
     writeMuteAutomation(time, value) {
         if (!this.automation) this.automation = { volume: [], mute: [], solo: [] };
         if (!this.automation.mute) this.automation.mute = [];
+        this._captureUndoState(`Write Mute Automation on ${this.name}`);
         const event = { time: parseFloat(time), value: !!value };
         this.automation.mute.push(event);
         if (this.automation.mute.length > 10000) this.automation.mute.splice(0, 1000);
@@ -1013,6 +1024,7 @@ export class Track {
     writeSoloAutomation(time, value) {
         if (!this.automation) this.automation = { volume: [], mute: [], solo: [] };
         if (!this.automation.solo) this.automation.solo = [];
+        this._captureUndoState(`Write Solo Automation on ${this.name}`);
         const event = { time: parseFloat(time), value: !!value };
         this.automation.solo.push(event);
         if (this.automation.solo.length > 10000) this.automation.solo.splice(0, 1000);
@@ -1022,10 +1034,13 @@ export class Track {
 
     removeAutomationEventsInRange(type, startTime, endTime) {
         if (!this.automation || !this.automation[type]) return;
-        const before = this.automation[type].length;
-        this.automation[type] = this.automation[type].filter(e => e.time < startTime || e.time > endTime);
-        const removed = before - this.automation[type].length;
-        if (removed > 0) console.log(`[Track ${this.id}] Removed ${removed} ${type} automation events in range ${startTime.toFixed(2)}-${endTime.toFixed(2)}`);
+        const filteredEvents = this.automation[type].filter(e => e.time < startTime || e.time > endTime);
+        if (filteredEvents.length !== this.automation[type].length) {
+            this._captureUndoState(`Remove ${type} automation events on ${this.name}`);
+            this.automation[type] = filteredEvents;
+            const removed = this.automation[type].length - filteredEvents.length;
+            if (removed > 0) console.log(`[Track ${this.id}] Removed ${removed} ${type} automation events in range ${startTime.toFixed(2)}-${endTime.toFixed(2)}`);
+        }
     }
 
     /**
@@ -1144,10 +1159,19 @@ export class Track {
     async applySynthPreset(presetData) {
         if (this.type !== 'Synth') return;
         try {
-            if (presetData.synthEngineType) {
+            const hasEngineType = Object.prototype.hasOwnProperty.call(presetData || {}, 'synthEngineType');
+            const hasParams = Object.prototype.hasOwnProperty.call(presetData || {}, 'synthParams');
+            const nextSynthEngineType = hasEngineType ? presetData.synthEngineType : this.synthEngineType;
+            const nextSynthParams = hasParams ? JSON.parse(JSON.stringify(presetData.synthParams)) : null;
+            const engineTypeChanged = this.synthEngineType !== nextSynthEngineType;
+            const paramsChanged = hasParams ? JSON.stringify(this.synthParams) !== JSON.stringify(nextSynthParams) : false;
+            if (engineTypeChanged || paramsChanged) {
+                this._captureUndoState(`Apply Synth Preset on ${this.name}`);
+            }
+            if (hasEngineType) {
                 this.synthEngineType = presetData.synthEngineType;
             }
-            if (presetData.synthParams) {
+            if (hasParams) {
                 this.synthParams = JSON.parse(JSON.stringify(presetData.synthParams));
             }
             await this.initializeInstrument();
@@ -1248,6 +1272,13 @@ export class Track {
         } else {
             console.warn(`[Track ${this.id}] captureStateForUndo service not available.`);
         }
+    }
+
+    _captureAutomationUndoState(description) {
+        if (this._suppressAutomationUndoCapture) {
+            return;
+        }
+        this._captureUndoState(description);
     }
 
     createNewSequence(name = `Sequence ${this.sequences.length + 1}`, initialLengthSteps = Constants.defaultStepsPerBar, skipUndo = false) {
