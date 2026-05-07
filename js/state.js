@@ -44,6 +44,24 @@ let currentSoundFileTreeGlobal = null;
 let currentSoundBrowserPathGlobal = [];
 let previewPlayerGlobal = null;
 
+function areSoundBrowserPathsEqual(previousPath, nextPath) {
+    if (previousPath === nextPath) {
+        return true;
+    }
+    if (!Array.isArray(previousPath) || !Array.isArray(nextPath)) {
+        return false;
+    }
+    if (previousPath.length !== nextPath.length) {
+        return false;
+    }
+    for (let i = 0; i < previousPath.length; i++) {
+        if (!Object.is(previousPath[i], nextPath[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // Getters for Sound Browser State
 export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
 export function setLoadedZipFilesState(val) {
@@ -193,7 +211,7 @@ export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
 
 export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
 export function getCurrentSoundFileTreeState() { return currentSoundFileTreeGlobal; }
-export function getCurrentSoundBrowserPathState() { return currentSoundBrowserPathGlobal; }
+export function getCurrentSoundBrowserPathState() { return [...currentSoundBrowserPathGlobal]; }
 export function getPreviewPlayerState() { return previewPlayerGlobal; }
 
 export function getClipboardDataState() { return clipboardDataGlobal; }
@@ -312,8 +330,8 @@ export function setCurrentSoundFileTreeState(tree) {
     currentSoundFileTreeGlobal = tree;
 }
 export function setCurrentSoundBrowserPathState(path) {
-    const nextPath = Array.isArray(path) ? path : [];
-    if (!Object.is(currentSoundBrowserPathGlobal, nextPath)) {
+    const nextPath = Array.isArray(path) ? [...path] : [];
+    if (!areSoundBrowserPathsEqual(currentSoundBrowserPathGlobal, nextPath)) {
         captureStateForUndoIfAllowed('Set Sound Browser Path');
     }
     currentSoundBrowserPathGlobal = nextPath;

@@ -1,3 +1,15 @@
+#### Day 447: Sound Browser Path State Immutability & Undo Deduping (2026-05-06)
+- **Feature**: Hardened the sound browser path state so callers get defensive copies, input arrays are cloned on write, and undo checkpoints only record when the path contents actually change
+- **Files Modified**:
+  - `js/state.js`: Added a shallow sound-browser path equality helper, changed `getCurrentSoundBrowserPathState()` to return a copy, and changed `setCurrentSoundBrowserPathState(path)` to clone inputs and dedupe identical path contents before capturing undo
+  - `js/tests.js`: Added a Day 447 test block covering defensive-copy behavior, input cloning, undo-capture references, and APP_VERSION validation
+  - `js/constants.js`: Bumped APP_VERSION to 2.121.0
+- **Feature Details**:
+  - Sound browser navigation state is now isolated from accidental external mutation
+  - Repeated writes of the same logical path no longer create redundant undo checkpoints
+  - This makes the browser path state safer to pass around and keeps undo history cleaner
+  - Version bumped to 2.121.0
+
 #### Day 445: Audio State Undo Capture Coverage (2026-05-05)
 - **Feature**: Added undo-capture coverage to the remaining user-facing audio state mutators so transport and region changes participate in history too
 - **Files Modified**:

@@ -10280,3 +10280,65 @@ TestRunner.test('Track Sequence - Day 446 APP_VERSION validation', (t) => {
         t.assertTruthy(versionParts[1] >= 120, 'Minor version should be >= 120 for Day 446');
     }
 });
+// ================================================================
+// Day 447: Sound Browser Path State Immutability & Undo Deduping
+// ================================================================
+TestRunner.test('Sound Browser Path State - getCurrentSoundBrowserPathState is a function export', (t) => {
+    t.assertEqual(typeof getCurrentSoundBrowserPathState, 'function', 'getCurrentSoundBrowserPathState should be a function');
+});
+
+TestRunner.test('Sound Browser Path State - getCurrentSoundBrowserPathState accepts 0 parameters', (t) => {
+    t.assertEqual(getCurrentSoundBrowserPathState.length, 0, 'getCurrentSoundBrowserPathState should accept 0 parameters');
+});
+
+TestRunner.test('Sound Browser Path State - getCurrentSoundBrowserPathState returns a defensive copy', (t) => {
+    const originalPath = ['Libraries', 'Drums'];
+    try {
+        setCurrentSoundBrowserPathState(originalPath);
+        originalPath.push('Kick');
+        const storedPath = getCurrentSoundBrowserPathState();
+        t.assertDeepEqual(storedPath, ['Libraries', 'Drums'], 'getCurrentSoundBrowserPathState should return a copy of the stored path');
+        storedPath.push('Snare');
+        t.assertDeepEqual(getCurrentSoundBrowserPathState(), ['Libraries', 'Drums'], 'Mutating the returned path should not mutate the stored path');
+    } finally {
+        setCurrentSoundBrowserPathState([]);
+    }
+});
+
+TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState is a function export', (t) => {
+    t.assertEqual(typeof setCurrentSoundBrowserPathState, 'function', 'setCurrentSoundBrowserPathState should be a function');
+});
+
+TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState accepts 1 parameter', (t) => {
+    t.assertEqual(setCurrentSoundBrowserPathState.length, 1, 'setCurrentSoundBrowserPathState should accept 1 parameter');
+});
+
+TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState clones input arrays', (t) => {
+    const sourcePath = ['Library', 'Percussion'];
+    try {
+        setCurrentSoundBrowserPathState(sourcePath);
+        sourcePath.push('Rimshots');
+        t.assertDeepEqual(getCurrentSoundBrowserPathState(), ['Library', 'Percussion'], 'setCurrentSoundBrowserPathState should clone the provided path array');
+    } finally {
+        setCurrentSoundBrowserPathState([]);
+    }
+});
+
+TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState references undo capture and equality checks', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setCurrentSoundBrowserPathState should capture undo state');
+    t.assertTruthy(funcStr.includes('areSoundBrowserPathsEqual'), 'setCurrentSoundBrowserPathState should use path-content equality checks');
+});
+
+TestRunner.test('Sound Browser Path State - setCurrentSoundBrowserPathState uses descriptive undo label', (t) => {
+    const funcStr = setCurrentSoundBrowserPathState.toString();
+    t.assertTruthy(funcStr.includes('Set Sound Browser Path'), 'setCurrentSoundBrowserPathState should use a descriptive undo label');
+});
+
+TestRunner.test('Sound Browser Path State - APP_VERSION validation for Day 447', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 447');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 121, 'Minor version should be >= 121 for Day 447');
+    }
+});
