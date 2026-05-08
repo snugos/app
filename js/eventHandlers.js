@@ -253,7 +253,24 @@ export function attachGlobalControlEvents(elements) {
         console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
         return;
     }
-    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, micTestBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal, shortcutsBtnGlobal, exportBtnGlobal } = elements;
+    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, micTestBtnGlobal, micTestStatusGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal, shortcutsBtnGlobal, exportBtnGlobal } = elements;
+
+    function setMicTestStatus(text, state = 'idle') {
+        if (!micTestStatusGlobal) return;
+        micTestStatusGlobal.textContent = text;
+        micTestStatusGlobal.title = text;
+        micTestStatusGlobal.dataset.state = state;
+        micTestStatusGlobal.classList.remove('text-gray-400', 'text-yellow-400', 'text-green-400', 'text-red-400');
+        if (state === 'running') {
+            micTestStatusGlobal.classList.add('text-yellow-400');
+        } else if (state === 'pass') {
+            micTestStatusGlobal.classList.add('text-green-400');
+        } else if (state === 'fail') {
+            micTestStatusGlobal.classList.add('text-red-400');
+        } else {
+            micTestStatusGlobal.classList.add('text-gray-400');
+        }
+    }
 
     // Shortcuts button
     if (shortcutsBtnGlobal) {
@@ -343,25 +360,49 @@ export function attachGlobalControlEvents(elements) {
                 if (!localAppServices.initAudioContextAndMasterMeter) {
                     console.error("initAudioContextAndMasterMeter service not available.");
                     showNotification("Audio system error.", 3000);
+                    setMicTestStatus('Audio system error', 'fail');
                     return;
                 }
                 const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
                 if (!audioReady) {
                     showNotification("Audio context not ready. Please interact with the page.", 3000);
+                    setMicTestStatus('Audio not ready', 'fail');
                     return;
                 }
                 if (!localAppServices.runRecordingMicrophoneE2ETest) {
                     console.error("runRecordingMicrophoneE2ETest service not available.");
                     showNotification("Microphone test service unavailable.", 3000);
+                    setMicTestStatus('Test unavailable', 'fail');
                     return;
                 }
 
                 micTestBtnGlobal.disabled = true;
                 micTestBtnGlobal.textContent = 'Testing...';
-                await localAppServices.runRecordingMicrophoneE2ETest(null, 2500);
+                setMicTestStatus('Testing...', 'running');
+                const result = await localAppServices.runRecordingMicrophoneE2ETest(null, 2500);
+                if (result && typeof result.ok === 'boolean') {
+                    const sourceLabel = result.trackSelectionSource ? ` (${result.trackSelectionSource})` : '';
+                    const trackLabel = `${result.trackName || 'Audio track'}${sourceLabel}`;
+                    setMicTestStatus(
+                        result.ok
+                            ? `Passed: ${trackLabel}`
+                            : `Failed: ${trackLabel} — ${result.message || 'Microphone test did not create a clip'}`,
+                        result.ok ? 'pass' : 'fail'
+                    );
+                    micTestBtnGlobal.title = result.ok
+                        ? `Microphone test passed on ${trackLabel}`
+                        : `Microphone test failed on ${trackLabel}: ${result.message || 'Unknown error'}`;
+                } else {
+                    setMicTestStatus('Failed: No result from test', 'fail');
+                    micTestBtnGlobal.title = 'Microphone test failed: no result';
+                }
             } catch (error) {
                 console.error("[EventHandlers Mic Test] Error:", error);
                 showNotification(`Microphone test failed: ${error.message}`, 4000);
+                setMicTestStatus(`Error: ${error.message}`, 'fail');
+                if (micTestBtnGlobal) {
+                    micTestBtnGlobal.title = `Microphone test failed: ${error.message}`;
+                }
             } finally {
                 micTestBtnGlobal.disabled = false;
                 micTestBtnGlobal.textContent = originalLabel;

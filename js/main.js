@@ -6,7 +6,7 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
-import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, playDrumSamplerPadPreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, getRecordingInputGainNode, getPunchInBars, getPunchOutBars } from './audio.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, playDrumSamplerPadPreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, resolveRecordingMicrophoneTestTrack, getRecordingInputGainNode, getPunchInBars, getPunchOutBars } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTimelineLaneDrop,
@@ -123,7 +123,7 @@ const uiElementsCache = {
     menuToggleFullScreen: null, menuExportMidi: null, menuImportMidi: null,
     menuImportAudioFile: null, menuKeyboardShortcuts: null, menuTetris: null,
     menuSaveTrackAsTemplate: null, menuOpenTrackTemplates: null,
-    playBtnGlobal: null, recordBtnGlobal: null, stopBtnGlobal: null, micTestBtnGlobal: null,
+    playBtnGlobal: null, recordBtnGlobal: null, stopBtnGlobal: null, micTestBtnGlobal: null, micTestStatusGlobal: null,
     tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null,
     masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
     playbackModeToggleBtnGlobal: null,
@@ -863,6 +863,7 @@ async function initializeSnugOS() {
             recordBtnGlobal: document.getElementById('recordBtnGlobal'),
             stopBtnGlobal: document.getElementById('stopBtnGlobal'),
             micTestBtnGlobal: document.getElementById('micTestBtnGlobal'),
+            micTestStatusGlobal: document.getElementById('micTestStatusGlobal'),
             tempoGlobalInput: document.getElementById('tempoGlobalInput'),
             midiInputSelectGlobal: document.getElementById('midiInputSelectGlobal'),
             masterMeterContainerGlobal: document.getElementById('masterMeterContainerGlobal'),

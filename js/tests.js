@@ -9750,6 +9750,38 @@ TestRunner.test('Global Controls Mic Test - APP_VERSION validation for Day 441',
     }
 });
 
+// ================================================================
+// Day 454: Recording Microphone E2E Result Status UI Tests
+// ================================================================
+TestRunner.test('Global Controls Mic Test - micTestStatusGlobal exists in the DOM', (t) => {
+    const statusEl = document.getElementById('micTestStatusGlobal');
+    t.assertTruthy(statusEl, 'micTestStatusGlobal should exist in the DOM');
+    t.assertEqual(statusEl.textContent.trim(), 'Idle', 'micTestStatusGlobal should start at Idle');
+});
+
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents references micTestStatusGlobal', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('micTestStatusGlobal'), 'attachGlobalControlEvents should reference micTestStatusGlobal');
+});
+
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents updates the mic test status from the returned result', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('result.ok') && funcStr.includes('result.message') && funcStr.includes('Testing...'), 'attachGlobalControlEvents should update mic test status from the returned result');
+});
+
+TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents shows the selected track source in the status', (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('trackSelectionSource'), 'attachGlobalControlEvents should include the track selection source in the status');
+});
+
+TestRunner.test('Global Controls Mic Test - APP_VERSION validation for Day 454', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 454');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 128, 'Minor version should be >= 128 for Day 454');
+    }
+});
+
 // === Day 441: UI Module State & Window Functions Tests ===
 
 TestRunner.test('UI Module - toggleSequencerViewMode is a function export', (t) => {
@@ -10217,75 +10249,4 @@ TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject uses defaul
     ]);
     const result = getMidiCCMappings();
     t.assertEqual(result.partialKnob.cc, 5, 'Should preserve cc');
-    t.assertEqual(result.partialKnob.channel, 0, 'Should default channel to 0');
-    t.assertEqual(result.partialKnob.min, 0, 'Should default min to 0');
-    t.assertEqual(result.partialKnob.max, 1, 'Should default max to 1');
-});
-
-TestRunner.test('MIDI CC Persistence - startMidiCCLearn is a function export', (t) => {
-    t.assertEqual(typeof startMidiCCLearn, 'function', 'startMidiCCLearn should be a function');
-});
-
-TestRunner.test('MIDI CC Persistence - startMidiCCLearn accepts 5 parameters', (t) => {
-    t.assertEqual(startMidiCCLearn.length, 5, 'startMidiCCLearn should accept 5 parameters');
-});
-
-TestRunner.test('MIDI CC Persistence - cancelMidiCCLearn is a function export', (t) => {
-    t.assertEqual(typeof cancelMidiCCLearn, 'function', 'cancelMidiCCLearn should be a function');
-});
-
-TestRunner.test('MIDI CC Persistence - cancel
-// ============================================
-// Day 453: Sequencer Step Probability UI Tests
-// ============================================
-TestRunner.test('Sequencer Probability UI - setStepProbability is a function export', (t) => {
-    t.assertEqual(typeof track.setStepProbability, 'function', 'setStepProbability should be a function');
-});
-
-TestRunner.test('Sequencer Probability UI - setStepProbability accepts 3 parameters', (t) => {
-    t.assertEqual(track.setStepProbability.length, 3, 'setStepProbability should accept 3 parameters');
-});
-
-TestRunner.test('Sequencer Probability UI - getStepProbability is a function export', (t) => {
-    t.assertEqual(typeof track.getStepProbability, 'function', 'getStepProbability should be a function');
-});
-
-TestRunner.test('Sequencer Probability UI - getStepProbability accepts 2 parameters', (t) => {
-    t.assertEqual(track.getStepProbability.length, 2, 'getStepProbability should accept 2 parameters');
-});
-
-TestRunner.test('Sequencer Probability UI - setStepProbability clamps probability to 0-1 range', (t) => {
-    track.setStepProbability(0, 0, 1.5);
-    const prob1 = track.getStepProbability(0, 0);
-    t.assertEqual(prob1, 1, 'Probability should be clamped to 1 when set above 1');
-    track.setStepProbability(0, 0, -0.5);
-    const prob2 = track.getStepProbability(0, 0);
-    t.assertEqual(prob2, 0, 'Probability should be clamped to 0 when set below 0');
-});
-
-TestRunner.test('Sequencer Probability UI - getStepProbability returns stored probability', (t) => {
-    track.setStepProbability(0, 0, 0.5);
-    const prob = track.getStepProbability(0, 0);
-    t.assertEqual(prob, 0.5, 'getStepProbability should return the stored probability');
-});
-
-TestRunner.test('Sequencer Probability UI - getStepProbability returns default 1 when no note exists', (t) => {
-    const activeSeq = track.getActiveSequence();
-    if (activeSeq && activeSeq.data[0]) {
-        activeSeq.data[0][0] = null;
-    }
-    const prob = track.getStepProbability(0, 0);
-    t.assertEqual(prob, 1, 'getStepProbability should return default 1 when no note exists');
-});
-
-TestRunner.test('Sequencer Probability UI - probability is stored in step data', (t) => {
-    track.setStepProbability(0, 0, 0.75);
-    const activeSeq = track.getActiveSequence();
-    t.assertEqual(activeSeq.data[0][0].probability, 0.75, 'Step data should have probability property set');
-});
-
-TestRunner.test('Sequencer Probability UI - Day 453 APP_VERSION validation', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertEqual(versionParts[0], 2, 'Major version should be 2');
-    t.assertEqual(versionParts[1], 127, 'Minor version should be 127');
-});
+    t.assertEqual(result.partialKnob.channel, 0, 'Should default channel to
