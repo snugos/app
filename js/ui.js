@@ -2300,8 +2300,11 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             
             const noteLen = stepData.length || 1;
             const maxLen = activeSequence.length - col;
+            const currentProb = stepData.probability ?? 1;
+            const probPct = Math.round(currentProb * 100);
+            const noteLabel = rowLabels[row] || `R${row + 1}`;
             const menuItems = [
-                { label: `Note: ${noteLabel} | Vel: ${velPct}% | Len: ${noteLen}`, action: () => {}, disabled: true },
+                { label: `Note: ${noteLabel} | Vel: ${velPct}% | Len: ${noteLen} | Prob: ${probPct}%`, action: () => {}, disabled: true },
                 { separator: true },
                 { label: `Velocity`, action: () => {}, disabled: true },
                 { label: `  Set to 100%`, action: () => { setVelocity(row, col, 1.0); } },
@@ -2320,6 +2323,14 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 { label: `  16 steps`, action: () => { setNoteLen(row, col, 16); } },
                 { label: `  + 1 step`, action: () => { setNoteLen(row, col, Math.min(maxLen, noteLen + 1)); } },
                 { label: `  - 1 step`, action: () => { setNoteLen(row, col, Math.max(1, noteLen - 1)); } },
+                { separator: true },
+                { label: `Probability`, action: () => {}, disabled: true },
+                { label: `  100% (always)`, action: () => { setProbability(row, col, 1.0); } },
+                { label: `  75%`, action: () => { setProbability(row, col, 0.75); } },
+                { label: `  50% (half)`, action: () => { setProbability(row, col, 0.5); } },
+                { label: `  25%`, action: () => { setProbability(row, col, 0.25); } },
+                { label: `  10% (rare)`, action: () => { setProbability(row, col, 0.1); } },
+                { label: `  Custom...`, action: () => { promptProbability(row, col, currentProb); } },
             ];
             
             function setVelocity(r, c, v) {
@@ -2334,6 +2345,22 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 currentActiveSeq.data[r][c].length = clampedLen;
                 if (localAppServices.openTrackSequencerWindow) localAppServices.openTrackSequencerWindow(track.id, true);
                 showNotification(`Note length: ${clampedLen} step${clampedLen > 1 ? 's' : ''}`, 1000);
+            }
+            function setProbability(r, c, prob) {
+                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Probability on ${track.name}`);
+                track.setStepProbability(r, c, prob);
+                if (localAppServices.openTrackSequencerWindow) localAppServices.openTrackSequencerWindow(track.id, true);
+                showNotification(`Probability: ${Math.round(prob * 100)}%`, 1000);
+            }
+            function promptProbability(r, c, currentProb) {
+                const input = window.prompt(`Enter probability (0-100%):`, Math.round(currentProb * 100));
+                if (input === null) return;
+                const val = parseFloat(input);
+                if (isNaN(val) || val < 0 || val > 100) {
+                    showNotification("Invalid probability. Use 0-100.", 2000);
+                    return;
+                }
+                setProbability(r, c, val / 100);
             }
             
             createContextMenu(e, menuItems, localAppServices);
