@@ -69,6 +69,7 @@ import {
     // Sound Browser Favorites & Recent
     getFavoriteSounds,
     isFavorite,
+    toggleFavorite,
     addToRecentlyPlayed,
     getRecentlyPlayedSounds,
     clearRecentlyPlayed,

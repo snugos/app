@@ -10249,4 +10249,7 @@ TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject uses defaul
     ]);
     const result = getMidiCCMappings();
     t.assertEqual(result.partialKnob.cc, 5, 'Should preserve cc');
-    t.assertEqual(result.partialKnob.channel, 0, 'Should default channel to
+    t.assertEqual(result.partialKnob.channel, 0, 'Should default channel to 0');
+    t.assertEqual(result.partialKnob.min, 0, 'Should default min to 0');
+    t.assertEqual(result.partialKnob.max, 1, 'Should default max to 1');
+});
