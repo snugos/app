@@ -10229,5 +10229,72 @@ TestRunner.test('MIDI CC Persistence - APP_VERSION validation for Day 452', (t) 
         t.assertTruthy(versionParts[1] >= 126, 'Minor version should be >= 126 for Day 452');
     }
 });
+t) => {
+    t.assertEqual(typeof startMidiCCLearn, 'function', 'startMidiCCLearn should be a function');
+});
 
-TestRunner.test('MIDI CC Persistence - startMidiCCLearn is a function export', (t
+// ============================================
+// Day 460: DrumSampler Pad Normalization Tests  
+// ============================================
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex is a function export', (t) => {
+    t.assertEqual(typeof getNormalizedDrumSamplerPadIndex, 'function', 'getNormalizedDrumSamplerPadIndex should be a function');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex accepts 2 parameters', (t) => {
+    const paramCount = getNormalizedDrumSamplerPadIndex.length;
+    t.assertEqual(paramCount, 2, 'getNormalizedDrumSamplerPadIndex should accept 2 parameters');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex parses valid integer', (t) => {
+    const track = { selectedDrumPadForEdit: 3 };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 3, 'Should return parsed integer 3');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex returns fallback for invalid value', (t) => {
+    const track = { selectedDrumPadForEdit: 'invalid' };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 0, 'Should return fallback value');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex returns fallback for negative value', (t) => {
+    const track = { selectedDrumPadForEdit: -1 };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 0, 'Should return fallback value for negative');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex returns fallback for null track', (t) => {
+    const result = getNormalizedDrumSamplerPadIndex(null, 5);
+    t.assertEqual(result, 5, 'Should return fallback value for null track');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex returns fallback for undefined track', (t) => {
+    const result = getNormalizedDrumSamplerPadIndex(undefined, 2);
+    t.assertEqual(result, 2, 'Should return fallback value for undefined track');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex handles string number', (t) => {
+    const track = { selectedDrumPadForEdit: '5' };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 5, 'Should parse string number to integer');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex handles float by flooring', (t) => {
+    const track = { selectedDrumPadForEdit: 3.7 };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 3, 'Should floor float to integer');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex handles NaN', (t) => {
+    const track = { selectedDrumPadForEdit: NaN };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 0, 'Should return fallback for NaN');
+});
+
+TestRunner.test('DrumSampler Pad Normalization - APP_VERSION validation for Day 460', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 460');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 132, 'Minor version should be >= 132 for Day 460');
+    }
+});
