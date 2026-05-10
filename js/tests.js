@@ -10253,3 +10253,11 @@ TestRunner.test('MIDI CC Persistence - loadMidiCCMappingsFromProject uses defaul
     t.assertEqual(result.partialKnob.min, 0, 'Should default min to 0');
     t.assertEqual(result.partialKnob.max, 1, 'Should default max to 1');
 });
+
+TestRunner.test('MIDI CC Persistence - APP_VERSION validation for Day 452', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 452');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 126, 'Minor version should be >= 126 for Day 452');
+    }
+});
