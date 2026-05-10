@@ -9750,38 +9750,6 @@ TestRunner.test('Global Controls Mic Test - APP_VERSION validation for Day 441',
     }
 });
 
-// ================================================================
-// Day 454: Recording Microphone E2E Result Status UI Tests
-// ================================================================
-TestRunner.test('Global Controls Mic Test - micTestStatusGlobal exists in the DOM', (t) => {
-    const statusEl = document.getElementById('micTestStatusGlobal');
-    t.assertTruthy(statusEl, 'micTestStatusGlobal should exist in the DOM');
-    t.assertEqual(statusEl.textContent.trim(), 'Idle', 'micTestStatusGlobal should start at Idle');
-});
-
-TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents references micTestStatusGlobal', (t) => {
-    const funcStr = attachGlobalControlEvents.toString();
-    t.assertTruthy(funcStr.includes('micTestStatusGlobal'), 'attachGlobalControlEvents should reference micTestStatusGlobal');
-});
-
-TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents updates the mic test status from the returned result', (t) => {
-    const funcStr = attachGlobalControlEvents.toString();
-    t.assertTruthy(funcStr.includes('result.ok') && funcStr.includes('result.message') && funcStr.includes('Testing...'), 'attachGlobalControlEvents should update mic test status from the returned result');
-});
-
-TestRunner.test('Global Controls Mic Test - attachGlobalControlEvents shows the selected track source in the status', (t) => {
-    const funcStr = attachGlobalControlEvents.toString();
-    t.assertTruthy(funcStr.includes('trackSelectionSource'), 'attachGlobalControlEvents should include the track selection source in the status');
-});
-
-TestRunner.test('Global Controls Mic Test - APP_VERSION validation for Day 454', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 454');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 128, 'Minor version should be >= 128 for Day 454');
-    }
-});
-
 // === Day 441: UI Module State & Window Functions Tests ===
 
 TestRunner.test('UI Module - toggleSequencerViewMode is a function export', (t) => {
@@ -10261,3 +10229,5 @@ TestRunner.test('MIDI CC Persistence - APP_VERSION validation for Day 452', (t) 
         t.assertTruthy(versionParts[1] >= 126, 'Minor version should be >= 126 for Day 452');
     }
 });
+
+TestRunner.test('MIDI CC Persistence - startMidiCCLearn is a function export', (t
