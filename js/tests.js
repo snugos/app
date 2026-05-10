@@ -10807,3 +10807,173 @@ TestRunner.test('Day 461 - APP_VERSION validation for Day 461', (t) => {
         t.assertTruthy(versionParts[1] >= 133, 'Minor version should be >= 133 for Day 461');
     }
 });
+
+// ============================================
+// Day 465: Undo/Redo Internal Functions Tests
+// ============================================
+
+// --- Undo Stack State ---
+
+TestRunner.test('Day 465 - Undo/Redo - getUndoStackState is a function export', (t) => {
+    t.assertEqual(typeof getUndoStackState, 'function', 'getUndoStackState should be a function');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - getUndoStackState accepts 0 parameters', (t) => {
+    t.assertEqual(getUndoStackState.length, 0, 'getUndoStackState should accept 0 parameters');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - getUndoStackState returns an array', (t) => {
+    const result = getUndoStackState();
+    t.assertEqual(Array.isArray(result), true, 'getUndoStackState should return an array');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - getUndoStackState returns a copy of the stack', (t) => {
+    const result = getUndoStackState();
+    const originalLength = result.length;
+    result.push({ fake: 'data' });
+    const result2 = getUndoStackState();
+    t.assertEqual(result2.length, originalLength, 'getUndoStackState should return a copy not a reference');
+});
+
+// --- Redo Stack State ---
+
+TestRunner.test('Day 465 - Undo/Redo - getRedoStackState is a function export', (t) => {
+    t.assertEqual(typeof getRedoStackState, 'function', 'getRedoStackState should be a function');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - getRedoStackState accepts 0 parameters', (t) => {
+    t.assertEqual(getRedoStackState.length, 0, 'getRedoStackState should accept 0 parameters');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - getRedoStackState returns an array', (t) => {
+    const result = getRedoStackState();
+    t.assertEqual(Array.isArray(result), true, 'getRedoStackState should return an array');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - getRedoStackState returns a copy of the stack', (t) => {
+    const result = getRedoStackState();
+    const originalLength = result.length;
+    result.push({ fake: 'data' });
+    const result2 = getRedoStackState();
+    t.assertEqual(result2.length, originalLength, 'getRedoStackState should return a copy not a reference');
+});
+
+// --- Undo Last Action Internal ---
+
+TestRunner.test('Day 465 - Undo/Redo - undoLastActionInternal is a function export', (t) => {
+    t.assertEqual(typeof undoLastActionInternal, 'function', 'undoLastActionInternal should be a function');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - undoLastActionInternal accepts 0 parameters', (t) => {
+    t.assertEqual(undoLastActionInternal.length, 0, 'undoLastActionInternal should accept 0 parameters');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - undoLastActionInternal is async', (t) => {
+    const result = undoLastActionInternal();
+    t.assertEqual(result instanceof Promise, true, 'undoLastActionInternal should return a Promise');
+});
+
+// --- Redo Last Action Internal ---
+
+TestRunner.test('Day 465 - Undo/Redo - redoLastActionInternal is a function export', (t) => {
+    t.assertEqual(typeof redoLastActionInternal, 'function', 'redoLastActionInternal should be a function');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - redoLastActionInternal accepts 0 parameters', (t) => {
+    t.assertEqual(redoLastActionInternal.length, 0, 'redoLastActionInternal should accept 0 parameters');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - redoLastActionInternal is async', (t) => {
+    const result = redoLastActionInternal();
+    t.assertEqual(result instanceof Promise, true, 'redoLastActionInternal should return a Promise');
+});
+
+// --- Capture State For Undo Internal ---
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal is a function export', (t) => {
+    t.assertEqual(typeof captureStateForUndoInternal, 'function', 'captureStateForUndoInternal should be a function');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal accepts 1 parameter', (t) => {
+    t.assertEqual(captureStateForUndoInternal.length, 1, 'captureStateForUndoInternal should accept 1 parameter');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal references description parameter', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('description'), 'captureStateForUndoInternal should reference description parameter');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal has default value for description', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('"Unknown action"') || funcStr.includes("'Unknown action'"), 'captureStateForUndoInternal should have default "Unknown action"');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal references undoStack', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack'), 'captureStateForUndoInternal should reference undoStack');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal references redoStack', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('redoStack'), 'captureStateForUndoInternal should reference redoStack and clear it on new action');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal references gatherProjectDataInternal', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('gatherProjectDataInternal'), 'captureStateForUndoInternal should call gatherProjectDataInternal');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal pushes to undoStack', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack.push') || funcStr.includes('undoStack['), 'captureStateForUndoInternal should push to undoStack');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - captureStateForUndoInternal limits stack size with MAX_HISTORY_STATES', (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('MAX_HISTORY_STATES'), 'captureStateForUndoInternal should limit stack size using MAX_HISTORY_STATES');
+});
+
+// --- Gather Project Data Internal ---
+
+TestRunner.test('Day 465 - Undo/Redo - gatherProjectDataInternal is a function export', (t) => {
+    t.assertEqual(typeof gatherProjectDataInternal, 'function', 'gatherProjectDataInternal should be a function');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - gatherProjectDataInternal accepts 0 parameters', (t) => {
+    t.assertEqual(gatherProjectDataInternal.length, 0, 'gatherProjectDataInternal should accept 0 parameters');
+});
+
+// --- Reconstruct DAW Internal ---
+
+TestRunner.test('Day 465 - Undo/Redo - reconstructDAWInternal is a function export', (t) => {
+    t.assertEqual(typeof reconstructDAWInternal, 'function', 'reconstructDAWInternal should be a function');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - reconstructDAWInternal is async', (t) => {
+    const result = reconstructDAWInternal({}, false);
+    t.assertEqual(result instanceof Promise, true, 'reconstructDAWInternal should return a Promise');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - reconstructDAWInternal accepts 2 parameters', (t) => {
+    t.assertEqual(reconstructDAWInternal.length, 2, 'reconstructDAWInternal should accept 2 parameters');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - reconstructDAWInternal references projectData parameter', (t) => {
+    const funcStr = reconstructDAWInternal.toString();
+    t.assertTruthy(funcStr.includes('projectData'), 'reconstructDAWInternal should reference projectData parameter');
+});
+
+TestRunner.test('Day 465 - Undo/Redo - reconstructDAWInternal references isUndoRedo parameter', (t) => {
+    const funcStr = reconstructDAWInternal.toString();
+    t.assertTruthy(funcStr.includes('isUndoRedo'), 'reconstructDAWInternal should reference isUndoRedo parameter');
+});
+
+// --- APP_VERSION validation ---
+
+TestRunner.test('Day 465 - Undo/Redo - APP_VERSION validation for Day 465', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 465');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 136, 'Minor version should be >= 136 for Day 465');
+    }
+});
