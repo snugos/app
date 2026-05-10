@@ -258,6 +258,486 @@ export function deleteSynthPreset(name) {
 let sendTracksState = [];
 let trackSendsState = {};
 
+// --- Track Groups State ---
+let trackGroupsState = [];
+let trackGroupIdCounter = 0;
+
+function cloneTrackGroup(group) {
+    if (!group || typeof group !== 'object') return null;
+    return {
+        ...group,
+        trackIds: Array.isArray(group.trackIds) ? [...group.trackIds] : [],
+        muted: !!group.muted,
+        soloed: !!group.soloed
+    };
+}
+
+export function getTrackGroupsState() {
+    return trackGroupsState.map(cloneTrackGroup);
+}
+
+export function getTrackGroupByIdState(id) {
+    const idx = trackGroupsState.findIndex(g => g && g.id === id);
+    return idx >= 0 ? cloneTrackGroup(trackGroupsState[idx]) : undefined;
+}
+
+export function addTrackGroupState(name) {
+    const nextName = typeof name === 'string' && name.trim() ? name.trim() : Constants.DEFAULT_TRACK_GROUP_NAME;
+    if (trackGroupsState.length >= Constants.MAX_TRACK_GROUPS) {
+        return null;
+    }
+    const id = trackGroupIdCounter++;
+    const nextColor = Constants.TRACK_GROUP_COLORS[trackGroupsState.length % Constants.TRACK_GROUP_COLORS.length] || Constants.DEFAULT_TRACK_GROUP_COLOR;
+    const newGroup = {
+        ...Constants.DEFAULT_TRACK_GROUP,
+        name: nextName,
+        color: nextColor,
+        trackIds: [],
+        muted: false,
+        soloed: false
+    };
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Create Track Group "${nextName}"`);
+    }
+    trackGroupsState.push(newGroup);
+    return cloneTrackGroup(newGroup);
+}
+
+export function setTrackGroupNameState(id, name) {
+    const idx = trackGroupsState.findIndex(g => g && g.id === id);
+    if (idx < 0) return false;
+    const nextName = typeof name === 'string' && name.trim() ? name.trim() : trackGroupsState[idx].name;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Rename Track Group "${trackGroupsState[idx].name}" to "${nextName}"`);
+    }
+    trackGroupsState[idx].name = nextName;
+    return true;
+}
+
+export function setTrackGroupColorState(id, color) {
+    const idx = trackGroupsState.findIndex(g => g && g.id === id);
+    if (idx < 0) return false;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Change Track Group "${trackGroupsState[idx].name}" Color`);
+    }
+    trackGroupsState[idx].color = color || Constants.DEFAULT_TRACK_GROUP_COLOR;
+    return true;
+}
+
+export function addTrackToGroupState(id, trackId) {
+    const idx = trackGroupsState.findIndex(g => g && g.id === id);
+    if (idx < 0) return false;
+    const alreadyMember = trackGroupsState[idx].trackIds.includes(trackId);
+    if (alreadyMember) return true;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Add Track to Group "${trackGroupsState[idx].name}"`);
+    }
+    trackGroupsState[idx].trackIds.push(trackId);
+    return true;
+}
+
+export function removeTrackFromGroupState(id, trackId) {
+    const idx = trackGroupsState.findIndex(g => g && g.id === id);
+    if (idx < 0) return false;
+    const existingIdx = trackGroupsState[idx].trackIds.indexOf(trackId);
+    if (existingIdx < 0) return true;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Remove Track from Group "${trackGroupsState[idx].name}"`);
+    }
+    trackGroupsState[idx].trackIds.splice(existingIdx, 1);
+    return true;
+}
+
+export function setTrackGroupMutedState(id, muted) {
+    const idx = trackGroupsState.findIndex(g => g && g.id === id);
+    if (idx < 0) return false;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Toggle Track Group "${trackGroupsState[idx].name}" Mute ${muted ? 'On' : 'Off'}`);
+    }
+    trackGroupsState[idx].muted = !!muted;
+    return true;
+}
+
+export function setTrackGroupSoloedState(id, soloed) {
+    const idx = trackGroupsState.findIndex(g => g && g.id === id);
+    if (idx < 0) return false;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Toggle Track Group "${trackGroupsState[idx].name}" Solo ${soloed ? 'On' : 'Off'}`);
+    }
+    trackGroupsState[idx].soloed = !!soloed;
+    return true;
+}
+
+export function removeTrackGroupState(id) {
+    const idx = trackGroupsState.findIndex(g => g && g.id === id);
+    if (idx < 0) return false;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Delete Track Group "${trackGroupsState[idx].name}"`);
+    }
+    trackGroupsState.splice(idx, 1);
+    return true;
+}
+
+// --- Track Templates State ---
+let trackTemplatesState = [];
+let trackTemplateIdCounter = 0;
+
+export function getTrackTemplatesState() {
+    return [...trackTemplatesState];
+}
+
+export function getTrackTemplateByIdState(id) {
+    return trackTemplatesState.find(t => t && t.id === id);
+}
+
+export function addTrackTemplateState(templateData) {
+    if (trackTemplatesState.length >= Constants.MAX_TRACK_TEMPLATES) {
+        return null;
+    }
+    const source = templateData && typeof templateData === 'object' ? templateData : {};
+    const nextId = trackTemplateIdCounter++;
+    const newTemplate = {
+        ...Constants.DEFAULT_TRACK_TEMPLATE,
+        ...source,
+        id: nextId,
+        name: source.name || `${Constants.DEFAULT_TEMPLATE_NAME_PREFIX} ${trackTemplatesState.length + 1}`
+    };
+    trackTemplatesState.push(newTemplate);
+    return newTemplate;
+}
+
+export function updateTrackTemplateState(id, updates) {
+    const idx = trackTemplatesState.findIndex(t => t && t.id === id);
+    if (idx < 0) return null;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Update Track Template "${trackTemplatesState[idx].name}"`);
+    }
+    trackTemplatesState[idx] = { ...trackTemplatesState[idx], ...(updates && typeof updates === 'object' ? updates : {}) };
+    return trackTemplatesState[idx];
+}
+
+export function removeTrackTemplateState(id) {
+    const idx = trackTemplatesState.findIndex(t => t && t.id === id);
+    if (idx < 0) return false;
+    trackTemplatesState.splice(idx, 1);
+    return true;
+}
+
+export function clearTrackTemplatesState() {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo('Clear All Track Templates');
+    }
+    trackTemplatesState.length = 0;
+}
+
+// --- Scale Mode State ---
+let scaleModeState = { ...Constants.DEFAULT_SCALE_MODE };
+
+export function getScaleModeState() { return { ...scaleModeState }; }
+
+export function setScaleModeState(state) {
+    const nextState = state && typeof state === 'object' ? state : {};
+    const merged = { ...Constants.DEFAULT_SCALE_MODE, ...nextState };
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo('Set Scale Mode');
+    }
+    scaleModeState = merged;
+}
+
+export function getScaleModeEnabledState() { return !!scaleModeState.enabled; }
+export function setScaleModeEnabledState(enabled) {
+    if (scaleModeState.enabled !== !!enabled) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Toggle Scale Mode ${enabled ? 'On' : 'Off'}`);
+        }
+        scaleModeState.enabled = !!enabled;
+    }
+}
+
+export function getScaleModeScaleState() { return scaleModeState.scale; }
+export function setScaleModeScaleState(scale) {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Scale to ${scale}`);
+    }
+    scaleModeState.scale = scale || 'Major';
+}
+
+export function getScaleModeRootState() { return scaleModeState.root; }
+export function setScaleModeRootState(root) {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Scale Root to ${root}`);
+    }
+    scaleModeState.root = root || 'C';
+}
+
+export function getScaleModeLockState() { return !!scaleModeState.lock; }
+export function setScaleModeLockState(lock) {
+    if (scaleModeState.lock !== !!lock) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Toggle Scale Lock ${lock ? 'On' : 'Off'}`);
+        }
+        scaleModeState.lock = !!lock;
+    }
+}
+
+// --- Ghost Track State ---
+let ghostTrackIdState = null;
+
+export function getGhostTrackIdState() { return ghostTrackIdState; }
+export function setGhostTrackIdState(trackId) {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo('Set Ghost Track');
+    }
+    ghostTrackIdState = trackId;
+}
+
+// --- Loop Region State ---
+let loopRegionState = { ...Constants.DEFAULT_LOOP_REGION };
+
+export function getLoopRegionState() { return { ...loopRegionState }; }
+
+export function setLoopRegionState(startBar, endBar) {
+    const nextStart = Math.max(1, Math.min(parseInt(startBar) || 1, Constants.MAX_BARS));
+    const nextEnd = Math.max(nextStart, Math.min(parseInt(endBar) || nextStart, Constants.MAX_BARS));
+    if (loopRegionState.startBar === nextStart && loopRegionState.endBar === nextEnd) {
+        return;
+    }
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Loop Region to ${nextStart}-${nextEnd}`);
+    }
+    loopRegionState = {
+        ...loopRegionState,
+        startBar: nextStart,
+        endBar: nextEnd
+    };
+}
+
+export function getLoopRegionEnabledState() { return !!loopRegionState.enabled; }
+export function setLoopRegionEnabledState(enabled) {
+    if (loopRegionState.enabled !== !!enabled) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Toggle Loop Region ${enabled ? 'On' : 'Off'}`);
+        }
+        loopRegionState.enabled = !!enabled;
+    }
+}
+
+export function getLoopRegionStartBarState() { return loopRegionState.startBar; }
+export function setLoopRegionStartBarState(startBar) {
+    const nextStart = Math.max(1, Math.min(parseInt(startBar) || 1, Constants.MAX_BARS));
+    if (loopRegionState.startBar === nextStart) return;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Loop Region Start to Bar ${nextStart}`);
+    }
+    loopRegionState.startBar = nextStart;
+    if (loopRegionState.endBar < nextStart) {
+        loopRegionState.endBar = nextStart;
+    }
+}
+
+export function getLoopRegionEndBarState() { return loopRegionState.endBar; }
+export function setLoopRegionEndBarState(endBar) {
+    const nextEnd = Math.max(loopRegionState.startBar, Math.min(parseInt(endBar) || loopRegionState.startBar, Constants.MAX_BARS));
+    if (loopRegionState.endBar === nextEnd) return;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Loop Region End to Bar ${nextEnd}`);
+    }
+    loopRegionState.endBar = nextEnd;
+}
+
+// --- Swing State ---
+let swingState = { ...Constants.DEFAULT_SWING };
+
+export function getSwingState() { return { ...swingState }; }
+
+export function setSwingState(enabled, amount) {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo('Set Swing');
+    }
+    swingState = {
+        enabled: !!(enabled),
+        amount: Math.max(0, Math.min(parseInt(amount) || 0, Constants.MAX_SWING_AMOUNT))
+    };
+}
+
+export function getSwingEnabledState() { return !!swingState.enabled; }
+export function setSwingEnabledState(enabled) {
+    if (swingState.enabled !== !!enabled) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Toggle Swing ${enabled ? 'On' : 'Off'}`);
+        }
+        swingState.enabled = !!enabled;
+    }
+}
+
+export function getSwingAmountState() { return swingState.amount; }
+export function setSwingAmountState(amount) {
+    const nextAmount = Math.max(0, Math.min(parseInt(amount) || 0, Constants.MAX_SWING_AMOUNT));
+    if (swingState.amount !== nextAmount) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Swing Amount to ${nextAmount}%`);
+        }
+        swingState.amount = nextAmount;
+    }
+}
+
+// --- Time Signature State ---
+let timeSignatureState = { ...Constants.DEFAULT_TIME_SIGNATURE };
+
+export function getTimeSignatureState() { return { ...timeSignatureState }; }
+
+export function setTimeSignatureState(numerator, denominator) {
+    const nextNum = Math.max(Constants.TIME_SIG_MIN_NUMERATOR, Math.min(parseInt(numerator) || 4, Constants.TIME_SIG_MAX_NUMERATOR));
+    const nextDen = Math.max(Constants.TIME_SIG_MIN_DENOMINATOR, Math.min(parseInt(denominator) || 4, Constants.TIME_SIG_MAX_DENOMINATOR));
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Time Signature to ${nextNum}/${nextDen}`);
+    }
+    timeSignatureState = { numerator: nextNum, denominator: nextDen };
+}
+
+export function getTimeSignatureNumeratorState() { return timeSignatureState.numerator; }
+export function setTimeSignatureNumeratorState(numerator) {
+    const nextNum = Math.max(Constants.TIME_SIG_MIN_NUMERATOR, Math.min(parseInt(numerator) || 4, Constants.TIME_SIG_MAX_NUMERATOR));
+    if (timeSignatureState.numerator !== nextNum) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Time Signature Numerator to ${nextNum}`);
+        }
+        timeSignatureState.numerator = nextNum;
+    }
+}
+
+export function getTimeSignatureDenominatorState() { return timeSignatureState.denominator; }
+export function setTimeSignatureDenominatorState(denominator) {
+    const nextDen = Math.max(Constants.TIME_SIG_MIN_DENOMINATOR, Math.min(parseInt(denominator) || 4, Constants.TIME_SIG_MAX_DENOMINATOR));
+    if (timeSignatureState.denominator !== nextDen) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Time Signature Denominator to ${nextDen}`);
+        }
+        timeSignatureState.denominator = nextDen;
+    }
+}
+
+// --- Timeline Markers State ---
+let timelineMarkersState = [];
+let timelineMarkerIdCounter = 0;
+
+export function getTimelineMarkersState() {
+    return timelineMarkersState.map(m => ({ ...m }));
+}
+
+export function getTimelineMarkerByIdState(id) {
+    const marker = timelineMarkersState.find(m => m && m.id === id);
+    return marker ? { ...marker } : undefined;
+}
+
+export function addTimelineMarkerState(name, bar, color) {
+    if (timelineMarkersState.length >= Constants.MAX_TIMELINE_MARKERS) {
+        return null;
+    }
+    const id = timelineMarkerIdCounter++;
+    const marker = {
+        id,
+        name: name || `Marker ${timelineMarkersState.length + 1}`,
+        bar: Math.max(1, Math.min(parseInt(bar) || 1, Constants.MAX_BARS)),
+        color: color || Constants.DEFAULT_MARKER_COLOR
+    };
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Add Timeline Marker "${marker.name}"`);
+    }
+    timelineMarkersState.push(marker);
+    timelineMarkersState.sort((a, b) => a.bar - b.bar);
+    return { ...marker };
+}
+
+export function setTimelineMarkerState(id, updates) {
+    const marker = timelineMarkersState.find(m => m && m.id === id);
+    if (!marker) return null;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Update Timeline Marker "${marker.name}"`);
+    }
+    if (updates.name !== undefined) marker.name = updates.name;
+    if (updates.bar !== undefined) marker.bar = Math.max(1, Math.min(parseInt(updates.bar) || 1, Constants.MAX_BARS));
+    if (updates.color !== undefined) marker.color = updates.color;
+    timelineMarkersState.sort((a, b) => a.bar - b.bar);
+    return { ...marker };
+}
+
+export function removeTimelineMarkerState(id) {
+    const idx = timelineMarkersState.findIndex(m => m && m.id === id);
+    if (idx < 0) return false;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Remove Timeline Marker "${timelineMarkersState[idx].name}"`);
+    }
+    timelineMarkersState.splice(idx, 1);
+    return true;
+}
+
+export function clearTimelineMarkersState() {
+    if (timelineMarkersState.length === 0) return;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo('Clear All Timeline Markers');
+    }
+    timelineMarkersState.length = 0;
+}
+
+// --- Chord Mode State ---
+let chordModeState = { ...Constants.DEFAULT_CHORD_MODE };
+
+export function getChordModeState() { return { ...chordModeState }; }
+export function getChordModeEnabledState() { return !!chordModeState.enabled; }
+export function getChordModeRootState() { return chordModeState.root; }
+export function getChordModeTypeState() { return chordModeState.type; }
+export function getChordModeLockState() { return !!chordModeState.lockChord; }
+
+export function setChordModeState(state) {
+    if (!state || typeof state !== 'object') return;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo('Set Chord Mode');
+    }
+    chordModeState = { ...Constants.DEFAULT_CHORD_MODE, ...state };
+}
+
+export function setChordModeEnabledState(enabled) {
+    if (chordModeState.enabled !== !!enabled) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Toggle Chord Mode ${enabled ? 'On' : 'Off'}`);
+        }
+        chordModeState.enabled = !!enabled;
+    }
+}
+
+export function setChordModeRootState(root) {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Chord Root to ${root}`);
+    }
+    chordModeState.root = root;
+}
+
+export function setChordModeTypeState(type) {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Chord Type to ${type}`);
+    }
+    chordModeState.type = type;
+}
+
+export function setChordModeLockState(lock) {
+    if (chordModeState.lockChord !== !!lock) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Toggle Chord Lock ${lock ? 'On' : 'Off'}`);
+        }
+        chordModeState.lockChord = !!lock;
+    }
+}
+
+export function getChordVoicingState() { return chordModeState.voicing || Constants.DEFAULT_CHORD_VOICING; }
+export function setChordVoicingState(voicing) {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Chord Voicing to ${voicing}`);
+    }
+    chordModeState.voicing = voicing;
+}
+
+
 function cloneSendTrack(sendTrack) {
     if (!sendTrack || typeof sendTrack !== 'object') {
         return null;
