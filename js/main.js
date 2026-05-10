@@ -32,6 +32,11 @@ import {
 } from './ui.js';
 import {
     initializeStateModule, 
+    // Send Track State
+    getSendTracksState, getSendTrackByIdState, addSendTrackState,
+    setSendTrackNameState, setSendTrackLevelState, setSendTrackMutedState, setSendTrackEffectsState,
+    removeSendTrackState, getTrackSendsState, getTrackSendByIdState,
+    getTrackSendLevelState, setTrackSendLevelState, getTrackSendPreFaderState, setTrackSendPreFaderState,
     // State Getters
     getTracksState, getTrackByIdState, getOpenWindowsState, getWindowByIdState, getHighestZState,
     getMasterEffectsState, getMasterGainValueState,
@@ -383,7 +388,22 @@ const appServices = {
     getCurrentSoundBrowserPath: getCurrentSoundBrowserPathState,
     setCurrentSoundBrowserPath: setCurrentSoundBrowserPathState,
     getPlaybackMode: getPlaybackModeState,
-    setPlaybackMode: setPlaybackModeState,
+
+    // Send Track State - exposed for UI and other modules
+    getSendTracks: getSendTracksState,
+    getSendTrackById: getSendTrackByIdState,
+    addSendTrack: addSendTrackState,
+    setSendTrackName: setSendTrackNameState,
+    setSendTrackLevel: setSendTrackLevelState,
+    setSendTrackMuted: setSendTrackMutedState,
+    setSendTrackEffects: setSendTrackEffectsState,
+    removeSendTrack: removeSendTrackState,
+    getTrackSends: getTrackSendsState,
+    getTrackSendById: getTrackSendByIdState,
+    getTrackSendLevel: getTrackSendLevelState,
+    setTrackSendLevel: setTrackSendLevelState,
+    getTrackSendPreFader: getTrackSendPreFaderState,
+    setTrackSendPreFader: setTrackSendPreFaderState,
 
     // Recording state
     getRecordingTrackId: getRecordingTrackIdState,
