@@ -254,6 +254,231 @@ export function deleteSynthPreset(name) {
     return false;
 }
 
+// --- Send Track State ---
+let sendTracksState = [];
+let trackSendsState = {};
+
+function cloneSendTrack(sendTrack) {
+    if (!sendTrack || typeof sendTrack !== 'object') {
+        return null;
+    }
+    return {
+        ...sendTrack,
+        effects: Array.isArray(sendTrack.effects)
+            ? sendTrack.effects.map(effect => (effect && typeof effect === 'object' ? { ...effect } : effect))
+            : [],
+        muted: !!sendTrack.muted,
+        preFader: !!sendTrack.preFader
+    };
+}
+
+function cloneTrackSendBucket(bucket) {
+    const source = bucket && typeof bucket === 'object' ? bucket : {};
+    const cloned = {};
+    Object.keys(source).forEach(sendId => {
+        const entry = source[sendId];
+        cloned[sendId] = entry && typeof entry === 'object' ? { ...entry } : { level: Constants.DEFAULT_SEND_LEVEL, preFader: Constants.DEFAULT_SEND_PRE_FADER };
+    });
+    return cloned;
+}
+
+function normalizeSendTrack(sendTrackData) {
+    const source = sendTrackData && typeof sendTrackData === 'object' ? sendTrackData : {};
+    const parsedLevel = Number.parseFloat(source.level);
+    const nextName = typeof source.name === 'string' && source.name.trim() ? source.name.trim() : Constants.DEFAULT_SEND_TRACK.name;
+    let nextId = typeof source.id === 'string' && source.id.trim() ? source.id.trim() : `send_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    while (sendTracksState.some(sendTrack => sendTrack && sendTrack.id === nextId)) {
+        nextId = `send_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+    return {
+        ...Constants.DEFAULT_SEND_TRACK,
+        ...source,
+        id: nextId,
+        name: nextName,
+        level: Number.isFinite(parsedLevel) ? Math.max(Constants.SEND_LEVEL_MIN, Math.min(Constants.SEND_LEVEL_MAX, parsedLevel)) : Constants.DEFAULT_SEND_TRACK.level,
+        muted: !!source.muted,
+        preFader: !!source.preFader,
+        effects: Array.isArray(source.effects)
+            ? source.effects.map(effect => (effect && typeof effect === 'object' ? { ...effect } : effect))
+            : []
+    };
+}
+
+function findSendTrackIndex(sendId) {
+    return sendTracksState.findIndex(sendTrack => sendTrack && sendTrack.id === sendId);
+}
+
+function ensureTrackSendBucket(trackId) {
+    if (!trackSendsState[trackId]) {
+        trackSendsState[trackId] = {};
+    }
+    return trackSendsState[trackId];
+}
+
+export function getSendTracksState() {
+    return sendTracksState.map(cloneSendTrack).filter(Boolean);
+}
+
+export function getSendTrackByIdState(sendId) {
+    const idx = findSendTrackIndex(sendId);
+    return idx >= 0 ? cloneSendTrack(sendTracksState[idx]) : undefined;
+}
+
+export function addSendTrackState(sendTrackData = {}) {
+    if (sendTracksState.length >= Constants.MAX_SEND_TRACKS) {
+        return null;
+    }
+    const nextSendTrack = normalizeSendTrack(sendTrackData);
+    captureStateForUndoIfAllowed(`Add Send Bus ${nextSendTrack.name}`);
+    sendTracksState.push(nextSendTrack);
+    if (appServices && typeof appServices.updateMixerWindow === 'function') {
+        appServices.updateMixerWindow();
+    }
+    return cloneSendTrack(nextSendTrack);
+}
+
+export function setSendTrackNameState(sendId, name) {
+    const idx = findSendTrackIndex(sendId);
+    if (idx === -1) {
+        return false;
+    }
+    const nextName = typeof name === 'string' && name.trim() ? name.trim() : Constants.DEFAULT_SEND_TRACK.name;
+    if (sendTracksState[idx].name !== nextName) {
+        captureStateForUndoIfAllowed(`Rename Send Bus ${sendTracksState[idx].name} to ${nextName}`);
+        sendTracksState[idx].name = nextName;
+        if (appServices && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    }
+    return true;
+}
+
+export function setSendTrackLevelState(sendId, level) {
+    const idx = findSendTrackIndex(sendId);
+    if (idx === -1) {
+        return false;
+    }
+    const parsedLevel = Number.parseFloat(level);
+    const nextLevel = Number.isFinite(parsedLevel)
+        ? Math.max(Constants.SEND_LEVEL_MIN, Math.min(Constants.SEND_LEVEL_MAX, parsedLevel))
+        : Constants.DEFAULT_SEND_TRACK.level;
+    if (sendTracksState[idx].level !== nextLevel) {
+        captureStateForUndoIfAllowed(`Set Send Level for ${sendTracksState[idx].name} to ${nextLevel}`);
+        sendTracksState[idx].level = nextLevel;
+        if (appServices && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    }
+    return true;
+}
+
+export function setSendTrackMutedState(sendId, muted) {
+    const idx = findSendTrackIndex(sendId);
+    if (idx === -1) {
+        return false;
+    }
+    const nextMuted = !!muted;
+    if (sendTracksState[idx].muted !== nextMuted) {
+        captureStateForUndoIfAllowed(`Toggle Send Bus ${sendTracksState[idx].name} ${nextMuted ? 'On' : 'Off'}`);
+        sendTracksState[idx].muted = nextMuted;
+        if (appServices && typeof appServices.updateMixerWindow === 'function') {
+            appServices.updateMixerWindow();
+        }
+    }
+    return true;
+}
+
+export function setSendTrackEffectsState(sendId, effects) {
+    const idx = findSendTrackIndex(sendId);
+    if (idx === -1) {
+        return false;
+    }
+    const nextEffects = Array.isArray(effects)
+        ? effects.map(effect => (effect && typeof effect === 'object' ? { ...effect } : effect))
+        : [];
+    captureStateForUndoIfAllowed(`Set Send Bus Effects for ${sendTracksState[idx].name}`);
+    sendTracksState[idx].effects = nextEffects;
+    if (appServices && typeof appServices.updateMixerWindow === 'function') {
+        appServices.updateMixerWindow();
+    }
+    return true;
+}
+
+export function removeSendTrackState(sendId) {
+    const idx = findSendTrackIndex(sendId);
+    if (idx === -1) {
+        return false;
+    }
+    captureStateForUndoIfAllowed(`Remove Send Bus ${sendTracksState[idx].name}`);
+    sendTracksState.splice(idx, 1);
+    Object.keys(trackSendsState).forEach(trackId => {
+        if (trackSendsState[trackId] && typeof trackSendsState[trackId] === 'object') {
+            delete trackSendsState[trackId][sendId];
+        }
+    });
+    if (appServices && typeof appServices.updateMixerWindow === 'function') {
+        appServices.updateMixerWindow();
+    }
+    return true;
+}
+
+export function getTrackSendsState() {
+    return Object.keys(trackSendsState).map(trackId => ({
+        trackId,
+        sends: cloneTrackSendBucket(trackSendsState[trackId])
+    }));
+}
+
+export function getTrackSendByIdState(trackId) {
+    if (!Object.prototype.hasOwnProperty.call(trackSendsState, trackId)) {
+        return undefined;
+    }
+    return cloneTrackSendBucket(trackSendsState[trackId]);
+}
+
+export function getTrackSendLevelState(trackId, sendId) {
+    const trackBucket = trackSendsState[trackId];
+    const sendState = trackBucket ? trackBucket[sendId] : null;
+    return sendState && Number.isFinite(Number(sendState.level)) ? sendState.level : Constants.DEFAULT_SEND_LEVEL;
+}
+
+export function setTrackSendLevelState(trackId, sendId, level) {
+    const bucket = ensureTrackSendBucket(trackId);
+    const parsedLevel = Number.parseFloat(level);
+    const nextLevel = Number.isFinite(parsedLevel)
+        ? Math.max(Constants.SEND_LEVEL_MIN, Math.min(Constants.SEND_LEVEL_MAX, parsedLevel))
+        : Constants.DEFAULT_SEND_LEVEL;
+    const current = bucket[sendId] || { level: Constants.DEFAULT_SEND_LEVEL, preFader: Constants.DEFAULT_SEND_PRE_FADER };
+    if (current.level !== nextLevel) {
+        captureStateForUndoIfAllowed(`Set Track Send Level for ${trackId} -> ${sendId}`);
+    }
+    bucket[sendId] = {
+        ...current,
+        level: nextLevel
+    };
+    return true;
+}
+
+export function getTrackSendPreFaderState(trackId, sendId) {
+    const trackBucket = trackSendsState[trackId];
+    const sendState = trackBucket ? trackBucket[sendId] : null;
+    return sendState && typeof sendState.preFader === 'boolean' ? sendState.preFader : Constants.DEFAULT_SEND_PRE_FADER;
+}
+
+export function setTrackSendPreFaderState(trackId, sendId, preFader) {
+    const bucket = ensureTrackSendBucket(trackId);
+    const nextPreFader = !!preFader;
+    const current = bucket[sendId] || { level: Constants.DEFAULT_SEND_LEVEL, preFader: Constants.DEFAULT_SEND_PRE_FADER };
+    if (current.preFader !== nextPreFader) {
+        captureStateForUndoIfAllowed(`Set Track Send Pre-Fader for ${trackId} -> ${sendId}`);
+    }
+    bucket[sendId] = {
+        ...current,
+        preFader: nextPreFader
+    };
+    return true;
+}
+
 // --- AppServices Placeholder (will be populated by main.js) ---
 let appServices = {}; // Populated by initializeStateModule
 
