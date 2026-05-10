@@ -1777,6 +1777,7 @@ export function renderMixer(container) {
             {label: "Record Mute Automation", action: () => { if (track.toggleMuteAutomationNow) track.toggleMuteAutomationNow(); else showNotification('Arm automation first', 1500); }},
             {label: "Record Solo Automation", action: () => { if (track.toggleSoloAutomationNow) track.toggleSoloAutomationNow(); else showNotification('Arm automation first', 1500); }},
             {separator: true},
+            {label: "Save Track as Template", action: () => { const templateName = track.name || 'Track Template'; const templateData = { name: templateName, color: track.trackColor || '#54a0ff', type: track.type, synthParams: track.synthParams || {}, activeEffects: (track.activeEffects || []).map(e => ({ type: e.type, params: e.params || {} })) }; if (localAppServices.addTrackTemplate) { const t = localAppServices.addTrackTemplate(templateData); if (t) showNotification(`Template "${t.name}" saved`, 2000); else showNotification('Failed to save template', 2000); } else { showNotification('Template API not available', 2000); } }},
             {label: "Remove Track", action: () => localAppServices.handleRemoveTrack(track.id)}
         ], localAppServices); });
         container.appendChild(trackDiv);
@@ -3279,18 +3280,43 @@ export function openTrackTemplatesWindow(savedState = null) {
         return openWindows.get(windowId);
     }
 
+    const templates = localAppServices.getTrackTemplates ? localAppServices.getTrackTemplates() : [];
+    const hasTemplates = templates && templates.length > 0;
+
+    const templatesListHTML = hasTemplates
+        ? templates.map(t => `
+            <div class="template-item p-2 border-b border-gray-600 dark:border-slate-600 hover:bg-purple-900/30 cursor-pointer" data-template-id="${t.id}">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="template-color w-3 h-3 rounded" style="background-color:${t.color || '#54a0ff'}"></span>
+                        <span class="template-name font-medium text-slate-200">${t.name || 'Unnamed Template'}</span>
+                        <span class="text-xs text-slate-400">(${t.type || 'Synth'})</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="load-template-btn px-2 py-1 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded">Load</button>
+                        <button class="delete-template-btn px-2 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded">Delete</button>
+                    </div>
+                </div>
+                ${t.activeEffects && t.activeEffects.length > 0 ? `<div class="text-xs text-slate-400 mt-1">FX: ${t.activeEffects.map(e => e.type || 'unknown').join(', ')}</div>` : ''}
+            </div>
+        `).join('')
+        : '<p class="text-slate-400 italic text-center py-4">No templates saved yet. Use "Save Track as Template" from the track menu to save your first template.</p>';
+
     const contentHTML = `
-        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0;">
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column;">
             <h3 style="margin: 0 0 10px 0; color: #fff;">📋 Track Templates</h3>
-            <p style="color: #888;">No saved templates yet. Use "Save Track as Template" from the track menu to save your first template.</p>
+            <div id="trackTemplatesList" class="flex-grow overflow-y-auto border border-slate-600 rounded bg-slate-800 mb-2" style="min-height: 150px;">
+                ${templatesListHTML}
+            </div>
+            <div class="text-xs text-slate-500">Click "Load" to apply a template to a selected track, or "Delete" to remove it.</div>
         </div>
     `;
 
     const options = {
-        width: 400,
-        height: 300,
-        minWidth: 300,
-        minHeight: 200,
+        width: 450,
+        height: 350,
+        minWidth: 350,
+        minHeight: 250,
         closable: true,
         minimizable: true,
         resizable: true,
@@ -3298,6 +3324,60 @@ export function openTrackTemplatesWindow(savedState = null) {
     };
 
     const win = localAppServices.createWindow(windowId, 'Track Templates', contentHTML, options);
+
+    // Wire up load/delete buttons
+    if (hasTemplates && win && win.element) {
+        const listContainer = win.element.querySelector('#trackTemplatesList');
+        if (listContainer) {
+            listContainer.querySelectorAll('.template-item').forEach(item => {
+                const templateId = parseInt(item.dataset.templateId, 10);
+                const loadBtn = item.querySelector('.load-template-btn');
+                const deleteBtn = item.querySelector('.delete-template-btn');
+                if (loadBtn) {
+                    loadBtn.addEventListener('click', () => {
+                        const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+                        if (tracks.length === 0) { showNotification('No tracks available to apply template', 2000); return; }
+                        const targetTrack = tracks[0]; // Apply to first track for now
+                        const template = localAppServices.getTrackTemplateById ? localAppServices.getTrackTemplateById(templateId) : null;
+                        if (!template) { showNotification('Template not found', 2000); return; }
+                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Apply Template "${template.name}" to ${targetTrack.name}`);
+                        if (template.synthParams && targetTrack.synthParams !== undefined) {
+                            Object.keys(template.synthParams).forEach(k => { if (targetTrack.setSynthParam) targetTrack.setSynthParam(k, template.synthParams[k]); });
+                        }
+                        if (template.activeEffects && Array.isArray(template.activeEffects)) {
+                            // Clear existing effects and apply template effects
+                            while (targetTrack.activeEffects && targetTrack.activeEffects.length > 0) {
+                                const eff = targetTrack.activeEffects[0];
+                                if (targetTrack.removeEffect) targetTrack.removeEffect(eff.id);
+                            }
+                            template.activeEffects.forEach(effDef => {
+                                if (targetTrack.addEffect) targetTrack.addEffect(effDef.type);
+                            });
+                        }
+                        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(targetTrack.id, 'inspectorUpdated');
+                        showNotification(`Template "${template.name}" applied to ${targetTrack.name}`, 2000);
+                    });
+                }
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', () => {
+                        const template = localAppServices.getTrackTemplateById ? localAppServices.getTrackTemplateById(templateId) : null;
+                        if (localAppServices.removeTrackTemplate) {
+                            localAppServices.removeTrackTemplate(templateId);
+                            showNotification(`Template "${template ? template.name : 'Template'}" deleted`, 2000);
+                            // Refresh window
+                            if (localAppServices.getOpenWindows) {
+                                const wins = localAppServices.getOpenWindows();
+                                const tw = wins.get(windowId);
+                                if (tw && tw.close) tw.close(true);
+                            }
+                            openTrackTemplatesWindow();
+                        }
+                    });
+                }
+            });
+        }
+    }
+
     return win;
 }
 
