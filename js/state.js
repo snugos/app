@@ -1161,7 +1161,9 @@ export function gatherProjectDataInternal() {
             // MIDI CC Learn mappings (runtime-only, persisted via project save/load)
             midiCCMappings: appServices && typeof appServices.getMidiCCMappingsForProject === 'function'
                 ? appServices.getMidiCCMappingsForProject()
-                : []
+                : [],
+            // Send Tracks (send/aux buses)
+            sendTracks: getSendTracksState()
         };
         console.log("[State gatherProjectDataInternal] Project data gathered successfully.");
         return projectData;
@@ -1247,6 +1249,23 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error reconstructuring master effects:", error);
         if (appServices.showNotification) appServices.showNotification("Error loading master effects.", 3000);
+    }
+
+    // --- Send Tracks ---
+    try {
+        if (projectData.sendTracks && Array.isArray(projectData.sendTracks)) {
+            for (const sendData of projectData.sendTracks) {
+                if (sendData && sendData.id) {
+                    addSendTrackState(sendData);
+                    console.log(`[State reconstructDAWInternal] Restored send track: ${sendData.name} (${sendData.id})`);
+                } else {
+                    console.warn("[State reconstructDAWInternal] Invalid send track data found:", sendData);
+                }
+            }
+        }
+    } catch (error) {
+        console.error("[State reconstructDAWInternal] Error reconstructing send tracks:", error);
+        if (appServices.showNotification) appServices.showNotification("Error loading send tracks.", 3000);
     }
 
     try { // --- Tracks ---
