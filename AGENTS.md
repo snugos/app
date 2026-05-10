@@ -1,4 +1,26 @@
 #### Day 457: Wire Send Track State Functions to appServices (2026-05-10)
+
+#### Day 458: Restore Missing State Functions (2026-05-10)
+- **Feature**: Restored 11 groups of missing state functions that had been removed or lost during earlier development, bringing total exports from 110 to 176
+- **Files Modified**:
+  - `js/state.js`: Added ~700 lines of missing state functions across 11 feature groups
+  - `js/constants.js`: Bumped APP_VERSION to 2.129.0
+- **Feature Details**:
+  - **Track Groups** (10 functions): State management for organizing tracks into groups with color, name, mute, solo, and track membership — all with undo capture
+  - **Track Templates** (6 functions): State management for saved track configurations
+  - **Scale Mode** (8 functions): Scale key, root, enabled, and lock state with undo capture
+  - **Ghost Track** (2 functions): Show notes from other tracks in sequencer
+  - **Loop Region** (5 functions): Loop playback region state with undo capture
+  - **Swing** (5 functions): Swing amount and enabled state with undo capture
+  - **Time Signature** (5 functions): Time signature state with undo capture
+  - **Timeline Markers** (6 functions): Timeline marker state with undo capture, ID generation, and bar position sorting
+  - **Chord Mode** (9 functions): Chord mode state with voicing, root, type, lock with undo capture
+- **Verification**:
+  - All JS files pass `node --check` syntax validation
+  - state.js now exports 176 functions (up from 110)
+  - tests.js passes syntax validation
+- **Version**: Bumped to 2.129.0
+
 - **Feature**: Added missing Send Track state function imports from `state.js` to `main.js` and exposed them on the `appServices` object so the UI can actually use them
 - **Files Modified**:
   - `js/main.js`: Added import for 13 Send Track state functions from `./state.js` and added corresponding entries to the `appServices` surface
