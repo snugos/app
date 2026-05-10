@@ -1836,6 +1836,86 @@ export function renderMixer(container) {
             });
         }
     });
+
+    // Render send bus strips in the mixer
+    const sendTracks = localAppServices.getSendTracks ? localAppServices.getSendTracks() : [];
+    sendTracks.forEach(sendTrack => {
+        const sendDiv = document.createElement('div');
+        sendDiv.className = 'mixer-send-track inline-block align-top p-1.5 border rounded bg-purple-100 dark:bg-slate-700 dark:border-slate-600 shadow w-28 mr-2 text-xs';
+        sendDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 dark:text-slate-200 flex items-center" title="${sendTrack.name}"><span class="track-color-dot w-2 h-2 rounded-full mr-1" style="background-color:${sendTrack.color || '#a855f7'}"></span>${sendTrack.name}</div> <div id="sendVolumeKnob-${sendTrack.id}-placeholder" class="h-12 mx-auto mb-0.5"></div> <div id="sendFxSlots-${sendTrack.id}" class="send-fx-slots flex flex-wrap gap-0.5 mb-0.5 justify-center min-h-[18px]"></div> <div class="flex justify-center mb-0.5"> <button id="sendFxBtn-${sendTrack.id}" title="Send Effects Rack" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 bg-purple-200 dark:bg-slate-600">FX</button> </div>`;
+        sendDiv.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            createContextMenu(e, [
+                {label: "Open Send Effects Rack", action: () => localAppServices.openSendEffectsWindow ? localAppServices.openSendEffectsWindow(sendTrack.id) : showNotification('Send Effects not available', 1500)},
+                {separator: true},
+                {label: `Mute`, action: () => { if (localAppServices.setSendTrackMuted) localAppServices.setSendTrackMuted(sendTrack.id, !sendTrack.muted); if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow(); }},
+                {label: "Remove Send Bus", action: () => { if (localAppServices.removeSendTrack) localAppServices.removeSendTrack(sendTrack.id); if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow(); }}
+            ], localAppServices);
+        });
+        container.appendChild(sendDiv);
+
+        // Volume knob for send bus
+        const volKnobPlaceholder = sendDiv.querySelector(`#sendVolumeKnob-${sendTrack.id}-placeholder`);
+        if (volKnobPlaceholder) {
+            const volKnob = createKnob({
+                label: `Send ${sendTrack.id}`,
+                min: 0,
+                max: 1,
+                step: 0.01,
+                initialValue: sendTrack.level !== undefined ? sendTrack.level : 1,
+                decimals: 2,
+                onValueChange: (val, o, fromInteraction) => {
+                    if (localAppServices.setSendTrackLevel) localAppServices.setSendTrackLevel(sendTrack.id, val);
+                    if (localAppServices.setSendBusLevel) localAppServices.setSendBusLevel(sendTrack.id, val);
+                    if (fromInteraction && localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Send Bus ${sendTrack.name} level to ${val.toFixed(2)}`);
+                }
+            });
+            volKnobPlaceholder.innerHTML = '';
+            volKnobPlaceholder.appendChild(volKnob.element);
+        }
+
+        // FX slots for send bus
+        const fxSlotsContainer = sendDiv.querySelector(`#sendFxSlots-${sendTrack.id}`);
+        if (fxSlotsContainer && sendTrack.effects && sendTrack.effects.length > 0) {
+            const AVAILABLE_EFFECTS_LOCAL = ((localAppServices.effectsRegistryAccess) && (localAppServices.effectsRegistryAccess).AVAILABLE_EFFECTS) || {};
+            sendTrack.effects.forEach(effect => {
+                const effectDef = AVAILABLE_EFFECTS_LOCAL[effect.type];
+                const displayName = effectDef ? effectDef.displayName : effect.type;
+                const slot = document.createElement('button');
+                slot.className = 'mixer-fx-slot-btn text-[9px] px-1 py-0 border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 hover:bg-slate-300 dark:bg-slate-800 truncate max-w-[50px]';
+                slot.title = `Open ${displayName} for ${sendTrack.name}`;
+                slot.textContent = displayName;
+                slot.style.borderColor = sendTrack.color || '#a855f7';
+                slot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (localAppServices.openSendEffectsWindow) localAppServices.openSendEffectsWindow(sendTrack.id);
+                });
+                fxSlotsContainer.appendChild(slot);
+            });
+        }
+
+        // Wire FX button for send bus
+        sendDiv.querySelector(`#sendFxBtn-${sendTrack.id}`)?.addEventListener('click', () => {
+            if (localAppServices.openSendEffectsWindow) localAppServices.openSendEffectsWindow(sendTrack.id);
+        });
+    });
+
+    // Add a "+" button to add a new send bus
+    const addSendBtn = document.createElement('button');
+    addSendBtn.className = 'inline-block align-top p-1.5 border-2 border-dashed border-purple-400 rounded w-28 mr-2 text-xs text-purple-400 hover:bg-purple-900/20 dark:hover:bg-slate-700 dark:border-slate-600 dark:text-slate-400';
+    addSendBtn.innerHTML = '+ Send Bus';
+    addSendBtn.title = 'Add a new send bus';
+    addSendBtn.addEventListener('click', () => {
+        if (localAppServices.addSendTrack) {
+            const newSend = localAppServices.addSendTrack({ name: `Send ${(localAppServices.getSendTracks ? localAppServices.getSendTracks().length + 1 : '1')}`, color: '#a855f7' });
+            if (newSend && localAppServices.createSendBusInAudio) localAppServices.createSendBusInAudio(newSend.id);
+            if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
+            if (newSend && localAppServices.showNotification) localAppServices.showNotification(`Send bus "${newSend.name}" created`, 2000);
+        } else {
+            showNotification('Add Send Bus not available', 1500);
+        }
+    });
+    container.appendChild(addSendBtn);
 }
 
 // --- Sequencer Window ---
@@ -3390,12 +3470,237 @@ export function openSendEffectsWindow(sendId, savedState = null) {
         return openWindows.get(windowId);
     }
 
-    const contentHTML = `
-        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0;">
-            <h3 style="margin: 0 0 10px 0; color: #fff;">📨 Send Effects: ${sendId}</h3>
-            <p style="color: #888;">Send effect chain goes here.</p>
-        </div>
-    `;
+    // Helper to build the send effects rack DOM
+    function buildSendEffectsRackDOM(sendTrack) {
+        const ownerId = sendId;
+        const ownerName = sendTrack ? sendTrack.name : sendId;
+        return `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full dark:bg-slate-900 dark:text-slate-300">
+            <h3 class="text-sm font-semibold dark:text-slate-200">Effects Rack: ${ownerName}</h3>
+            <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600"></div>
+            <button id="addEffectBtn-${ownerId}" class="text-xs px-2 py-1 bg-purple-400 text-white rounded hover:bg-purple-500 dark:bg-purple-500 dark:hover:bg-purple-600">Add Effect</button>
+            <div id="effectControlsContainer-${ownerId}" class="mt-2 space-y-2"></div>
+        </div>`;
+    }
+
+    // Helper to render effects list for a send bus
+    function renderSendEffectsList(sendTrack, listDiv, controlsContainer) {
+        if (!listDiv) return;
+        listDiv.innerHTML = '';
+        const AVAILABLE_EFFECTS_LOCAL = ((localAppServices.effectsRegistryAccess) && (localAppServices.effectsRegistryAccess).AVAILABLE_EFFECTS) || {};
+        const effectsArray = sendTrack && sendTrack.effects ? sendTrack.effects : [];
+
+        if (!effectsArray || effectsArray.length === 0) {
+            listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">No effects added.</p>';
+            if (controlsContainer) controlsContainer.innerHTML = '';
+            return;
+        }
+
+        effectsArray.forEach((effect, index) => {
+            const effectDef = AVAILABLE_EFFECTS_LOCAL[effect.type];
+            const displayName = effectDef ? effectDef.displayName : effect.type;
+            const item = document.createElement('div');
+            item.className = `effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs`;
+            item.innerHTML = `<span class="effect-name flex-grow cursor-pointer hover:text-purple-500 dark:text-slate-300 dark:hover:text-purple-300" title="Edit ${displayName}">${displayName}</span>
+                <div class="effect-actions flex items-center gap-1">
+                    <button class="up-btn text-xs px-0.5 ${index === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:text-pink-500 dark:hover:text-pink-300'} dark:text-slate-400" ${index === 0 ? 'disabled' : ''} title="Move Up">▲</button>
+                    <button class="down-btn text-xs px-0.5 ${index === effectsArray.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-pink-500 dark:hover:text-pink-300'} dark:text-slate-400" ${index === effectsArray.length - 1 ? 'disabled' : ''} title="Move Down">▼</button>
+                    <button class="remove-btn text-xs px-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" title="Remove Effect">✕</button>
+                </div>`;
+
+            item.querySelector('.up-btn').addEventListener('click', () => {
+                if (index === 0) return;
+                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Reorder effect ${displayName} up`);
+                if (localAppServices.reorderEffectInSendBus) localAppServices.reorderEffectInSendBus(sendId, effect.id, index - 1);
+                // Update state
+                const newEffects = [...effectsArray];
+                [newEffects[index - 1], newEffects[index]] = [newEffects[index], newEffects[index - 1]];
+                if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
+                renderSendEffectsList(sendTrack, listDiv, controlsContainer);
+            });
+
+            item.querySelector('.down-btn').addEventListener('click', () => {
+                if (index === effectsArray.length - 1) return;
+                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Reorder effect ${displayName} down`);
+                if (localAppServices.reorderEffectInSendBus) localAppServices.reorderEffectInSendBus(sendId, effect.id, index + 1);
+                const newEffects = [...effectsArray];
+                [newEffects[index], newEffects[index + 1]] = [newEffects[index + 1], newEffects[index]];
+                if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
+                renderSendEffectsList(sendTrack, listDiv, controlsContainer);
+            });
+
+            item.querySelector('.remove-btn').addEventListener('click', () => {
+                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Remove effect ${displayName} from send bus`);
+                if (localAppServices.removeEffectFromSendBus) localAppServices.removeEffectFromSendBus(sendId, effect.id);
+                const newEffects = effectsArray.filter((_, i) => i !== index);
+                if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
+                renderSendEffectsList(sendTrack, listDiv, controlsContainer);
+            });
+
+            item.querySelector('.effect-name').addEventListener('click', () => {
+                // Show effect controls
+                if (controlsContainer) {
+                    renderSendEffectControls(effect, sendId, effectsArray, controlsContainer);
+                }
+            });
+
+            listDiv.appendChild(item);
+        });
+    }
+
+    // Helper to render effect parameter controls for a send bus effect
+    function renderSendEffectControls(effect, sendId, effectsArray, controlsContainer) {
+        controlsContainer.innerHTML = '';
+        const AVAILABLE_EFFECTS_LOCAL = ((localAppServices.effectsRegistryAccess) && (localAppServices.effectsRegistryAccess).AVAILABLE_EFFECTS) || {};
+        const paramDefs = (localAppServices.effectsRegistryAccess && localAppServices.effectsRegistryAccess.getEffectParamDefinitions)
+            ? localAppServices.effectsRegistryAccess.getEffectParamDefinitions(effect.type)
+            : [];
+        const effectDef = AVAILABLE_EFFECTS_LOCAL[effect.type];
+        const displayName = effectDef ? effectDef.displayName : effect.type;
+
+        if (paramDefs.length === 0) {
+            controlsContainer.innerHTML = `<p class="text-xs text-slate-400 italic">No adjustable parameters for ${displayName}.</p>`;
+            return;
+        }
+
+        const gridContainer = document.createElement('div');
+        gridContainer.className = 'grid grid-cols-2 gap-1';
+
+        paramDefs.forEach(paramDef => {
+            const currentValue = effect.params && effect.params[paramDef.key] !== undefined ? effect.params[paramDef.key] : paramDef.defaultValue;
+            const controlWrapper = document.createElement('div');
+            controlWrapper.className = 'flex flex-col gap-0.5';
+
+            const label = document.createElement('label');
+            label.className = 'text-[10px] dark:text-slate-400 truncate';
+            label.textContent = paramDef.label;
+            label.title = paramDef.label;
+
+            if (paramDef.type === 'range') {
+                const slider = document.createElement('input');
+                slider.type = 'range';
+                slider.min = paramDef.min !== undefined ? paramDef.min : 0;
+                slider.max = paramDef.max !== undefined ? paramDef.max : 1;
+                slider.step = paramDef.step !== undefined ? paramDef.step : 0.01;
+                slider.value = currentValue;
+                slider.className = 'w-full h-2 bg-gray-200 dark:bg-slate-600 rounded cursor-pointer';
+                slider.addEventListener('input', (e) => {
+                    const newValue = parseFloat(e.target.value);
+                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Change ${paramDef.label} for ${displayName}`);
+                    if (localAppServices.updateSendBusEffectParam) localAppServices.updateSendBusEffectParam(sendId, effect.id, paramDef.key, newValue);
+                    // Update state
+                    const newEffects = effectsArray.map(ef => {
+                        if (ef.id === effect.id) {
+                            return { ...ef, params: { ...ef.params, [paramDef.key]: newValue } };
+                        }
+                        return ef;
+                    });
+                    if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
+                    // Update slider display
+                    const valDisplay = controlWrapper.querySelector('.value-display');
+                    if (valDisplay) valDisplay.textContent = newValue.toFixed(2);
+                });
+                controlWrapper.appendChild(label);
+                controlWrapper.appendChild(slider);
+                const valueDisplay = document.createElement('span');
+                valueDisplay.className = 'value-display text-[10px] text-center dark:text-slate-300';
+                valueDisplay.textContent = currentValue !== undefined ? parseFloat(currentValue).toFixed(2) : (paramDef.defaultValue !== undefined ? paramDef.defaultValue.toFixed(2) : '0.00');
+                controlWrapper.appendChild(valueDisplay);
+            } else if (paramDef.type === 'select') {
+                const selectEl = document.createElement('select');
+                selectEl.className = 'w-full p-0.5 border rounded text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200';
+                const options = paramDef.options || [];
+                let initialValue = currentValue;
+                if (options.length > 0 && initialValue === undefined) initialValue = options[0].value;
+                options.forEach(opt => {
+                    const optEl = document.createElement('option');
+                    optEl.value = opt.value;
+                    optEl.textContent = opt.label || opt.value;
+                    if (opt.value === initialValue) optEl.selected = true;
+                    selectEl.appendChild(optEl);
+                });
+                selectEl.addEventListener('change', (e) => {
+                    const newValue = e.target.value;
+                    const finalValue = (typeof paramDef.defaultValue === 'number' && !isNaN(parseFloat(newValue))) ? parseFloat(newValue) : newValue;
+                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Change ${paramDef.label} for ${displayName}`);
+                    if (localAppServices.updateSendBusEffectParam) localAppServices.updateSendBusEffectParam(sendId, effect.id, paramDef.key, finalValue);
+                    const newEffects = effectsArray.map(ef => {
+                        if (ef.id === effect.id) {
+                            return { ...ef, params: { ...ef.params, [paramDef.key]: finalValue } };
+                        }
+                        return ef;
+                    });
+                    if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
+                });
+                controlWrapper.appendChild(label);
+                controlWrapper.appendChild(selectEl);
+            } else if (paramDef.type === 'toggle') {
+                const button = document.createElement('button');
+                button.className = `w-full p-1 border rounded text-xs dark:border-slate-500 dark:text-slate-300 ${currentValue ? 'bg-purple-400 text-white dark:bg-purple-500' : 'bg-gray-200 dark:bg-slate-600'}`;
+                button.textContent = `${paramDef.label}: ${currentValue ? 'ON' : 'OFF'}`;
+                button.addEventListener('click', () => {
+                    const newValue = !currentValue;
+                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle ${paramDef.label} for ${displayName}`);
+                    if (localAppServices.updateSendBusEffectParam) localAppServices.updateSendBusEffectParam(sendId, effect.id, paramDef.key, newValue);
+                    const newEffects = effectsArray.map(ef => {
+                        if (ef.id === effect.id) {
+                            return { ...ef, params: { ...ef.params, [paramDef.key]: newValue } };
+                        }
+                        return ef;
+                    });
+                    if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
+                    button.className = `w-full p-1 border rounded text-xs dark:border-slate-500 dark:text-slate-300 ${newValue ? 'bg-purple-400 text-white dark:bg-purple-500' : 'bg-gray-200 dark:bg-slate-600'}`;
+                    button.textContent = `${paramDef.label}: ${newValue ? 'ON' : 'OFF'}`;
+                });
+                controlWrapper.appendChild(label);
+                controlWrapper.appendChild(button);
+            }
+            gridContainer.appendChild(controlWrapper);
+        });
+        controlsContainer.appendChild(gridContainer);
+    }
+
+    // Helper for add effect modal on send bus
+    function showSendAddEffectModal(sendTrack) {
+        const ownerName = sendTrack ? sendTrack.name : sendId;
+        let modalContentHTML = `<div class="max-h-60 overflow-y-auto"><ul class="list-none p-0 m-0">`;
+        const AVAILABLE_EFFECTS_LOCAL = ((localAppServices.effectsRegistryAccess) && (localAppServices.effectsRegistryAccess).AVAILABLE_EFFECTS) || {};
+
+        for (const effectKey in AVAILABLE_EFFECTS_LOCAL) {
+            modalContentHTML += `<li class="p-1.5 hover:bg-purple-200 dark:hover:bg-purple-600 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS_LOCAL[effectKey].displayName}</li>`;
+        }
+        modalContentHTML += `</ul></div>`;
+        const modal = showCustomModal(`Add Effect to ${ownerName}`, modalContentHTML, [], 'add-effect-modal');
+        if ((modal) && (modal).contentDiv) {
+            modal.contentDiv.querySelectorAll('li[data-effect-type]').forEach(item => {
+                item.addEventListener('click', () => {
+                    const effectType = item.dataset.effectType;
+                    const defaultParams = (localAppServices.effectsRegistryAccess && localAppServices.effectsRegistryAccess.getEffectDefaultParams)
+                        ? localAppServices.effectsRegistryAccess.getEffectDefaultParams(effectType)
+                        : {};
+                    const effectId = `sendfx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    const newEffect = { id: effectId, type: effectType, params: defaultParams };
+                    // Add to audio
+                    if (localAppServices.addEffectToSendBus) localAppServices.addEffectToSendBus(sendId, effectType, defaultParams);
+                    // Add to state
+                    const currentEffects = sendTrack && sendTrack.effects ? sendTrack.effects : [];
+                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Add ${AVAILABLE_EFFECTS_LOCAL[effectType]?.displayName || effectType} to send bus`);
+                    if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, [...currentEffects, newEffect]);
+                    modal.overlay.remove();
+                    // Refresh the window content
+                    const win = openWindows.get(windowId);
+                    if (win && win.element) {
+                        const listDiv = win.element.querySelector(`#effectsList-${sendId}`);
+                        const controlsContainer = win.element.querySelector(`#effectControlsContainer-${sendId}`);
+                        const updatedSendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : sendTrack;
+                        renderSendEffectsList(updatedSendTrack, listDiv, controlsContainer);
+                    }
+                });
+            });
+        }
+    }
+
+    const sendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : null;
+    const contentHTML = buildSendEffectsRackDOM(sendTrack);
 
     const options = {
         width: 350,
@@ -3408,6 +3713,30 @@ export function openSendEffectsWindow(sendId, savedState = null) {
         initialContentKey: windowId
     };
 
-    const win = localAppServices.createWindow(windowId, `Send Effects: ${sendId}`, contentHTML, options);
+    if (savedState) {
+        Object.assign(options, {
+            x: parseInt(savedState.left, 10),
+            y: parseInt(savedState.top, 10),
+            width: parseInt(savedState.width, 10),
+            height: parseInt(savedState.height, 10),
+            zIndex: savedState.zIndex,
+            isMinimized: savedState.isMinimized
+        });
+    }
+
+    const win = localAppServices.createWindow(windowId, `Send Effects: ${sendTrack ? sendTrack.name : sendId}`, contentHTML, options);
+
+    // Wire up initial state
+    if (win && win.element) {
+        const listDiv = win.element.querySelector(`#effectsList-${sendId}`);
+        const controlsContainer = win.element.querySelector(`#effectControlsContainer-${sendId}`);
+        const updatedSendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : sendTrack;
+        renderSendEffectsList(updatedSendTrack, listDiv, controlsContainer);
+        win.element.querySelector(`#addEffectBtn-${sendId}`)?.addEventListener('click', () => {
+            const currentSendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : sendTrack;
+            showSendAddEffectModal(currentSendTrack);
+        });
+    }
+
     return win;
 }
