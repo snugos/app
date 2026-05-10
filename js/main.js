@@ -37,6 +37,38 @@ import {
     setSendTrackNameState, setSendTrackLevelState, setSendTrackMutedState, setSendTrackEffectsState,
     removeSendTrackState, getTrackSendsState, getTrackSendByIdState,
     getTrackSendLevelState, setTrackSendLevelState, getTrackSendPreFaderState, setTrackSendPreFaderState,
+    // Track Groups
+    getTrackGroupsState, getTrackGroupByIdState, addTrackGroupState,
+    setTrackGroupNameState, setTrackGroupColorState, addTrackToGroupState,
+    removeTrackFromGroupState, setTrackGroupMutedState, setTrackGroupSoloedState, removeTrackGroupState,
+    // Track Templates
+    getTrackTemplatesState, getTrackTemplateByIdState, addTrackTemplateState,
+    updateTrackTemplateState, removeTrackTemplateState, clearTrackTemplatesState,
+    // Scale Mode
+    getScaleModeState, setScaleModeState,
+    getScaleModeEnabledState, setScaleModeEnabledState,
+    getScaleModeScaleState, setScaleModeScaleState,
+    getScaleModeRootState, setScaleModeRootState,
+    getScaleModeLockState, setScaleModeLockState,
+    // Ghost Track
+    getGhostTrackIdState, setGhostTrackIdState,
+    // Loop Region
+    getLoopRegionState, setLoopRegionState,
+    getLoopRegionEnabledState, setLoopRegionEnabledState,
+    getLoopRegionStartBarState, setLoopRegionStartBarState,
+    getLoopRegionEndBarState, setLoopRegionEndBarState,
+    // Swing
+    getSwingState, setSwingState,
+    getSwingEnabledState, setSwingEnabledState,
+    getSwingAmountState, setSwingAmountState,
+    // Timeline Markers
+    getTimelineMarkersState, getTimelineMarkerByIdState, addTimelineMarkerState,
+    setTimelineMarkerState, removeTimelineMarkerState, clearTimelineMarkersState,
+    // Chord Mode
+    getChordModeState, getChordModeEnabledState, getChordModeRootState,
+    getChordModeTypeState, getChordModeLockState,
+    setChordModeState, setChordModeEnabledState, setChordModeRootState,
+    setChordModeTypeState, setChordModeLockState,
     // State Getters
     getTracksState, getTrackByIdState, getOpenWindowsState, getWindowByIdState, getHighestZState,
     getMasterEffectsState, getMasterGainValueState,
@@ -404,6 +436,80 @@ const appServices = {
     setTrackSendLevel: setTrackSendLevelState,
     getTrackSendPreFader: getTrackSendPreFaderState,
     setTrackSendPreFader: setTrackSendPreFaderState,
+
+    // Track Groups State - exposed for UI
+    getTrackGroups: getTrackGroupsState,
+    getTrackGroupById: getTrackGroupByIdState,
+    addTrackGroup: addTrackGroupState,
+    setTrackGroupName: setTrackGroupNameState,
+    setTrackGroupColor: setTrackGroupColorState,
+    addTrackToGroup: addTrackToGroupState,
+    removeTrackFromGroup: removeTrackFromGroupState,
+    setTrackGroupMuted: setTrackGroupMutedState,
+    setTrackGroupSoloed: setTrackGroupSoloedState,
+    removeTrackGroup: removeTrackGroupState,
+
+    // Track Templates State - exposed for UI
+    getTrackTemplates: getTrackTemplatesState,
+    getTrackTemplateById: getTrackTemplateByIdState,
+    addTrackTemplate: addTrackTemplateState,
+    updateTrackTemplate: updateTrackTemplateState,
+    removeTrackTemplate: removeTrackTemplateState,
+    clearTrackTemplates: clearTrackTemplatesState,
+
+    // Scale Mode State - exposed for UI
+    getScaleMode: getScaleModeState,
+    setScaleMode: setScaleModeState,
+    getScaleModeEnabled: getScaleModeEnabledState,
+    setScaleModeEnabled: setScaleModeEnabledState,
+    getScaleModeScale: getScaleModeScaleState,
+    setScaleModeScale: setScaleModeScaleState,
+    getScaleModeRoot: getScaleModeRootState,
+    setScaleModeRoot: setScaleModeRootState,
+    getScaleModeLock: getScaleModeLockState,
+    setScaleModeLock: setScaleModeLockState,
+
+    // Ghost Track State - exposed for UI
+    getGhostTrackId: getGhostTrackIdState,
+    setGhostTrackId: setGhostTrackIdState,
+
+    // Loop Region State - exposed for UI
+    getLoopRegion: getLoopRegionState,
+    setLoopRegion: setLoopRegionState,
+    getLoopRegionEnabled: getLoopRegionEnabledState,
+    setLoopRegionEnabled: setLoopRegionEnabledState,
+    getLoopRegionStartBar: getLoopRegionStartBarState,
+    setLoopRegionStartBar: setLoopRegionStartBarState,
+    getLoopRegionEndBar: getLoopRegionEndBarState,
+    setLoopRegionEndBar: setLoopRegionEndBarState,
+
+    // Swing State - exposed for UI
+    getSwing: getSwingState,
+    setSwing: setSwingState,
+    getSwingEnabled: getSwingEnabledState,
+    setSwingEnabled: setSwingEnabledState,
+    getSwingAmount: getSwingAmountState,
+    setSwingAmount: setSwingAmountState,
+
+    // Timeline Markers State - exposed for UI
+    getTimelineMarkers: getTimelineMarkersState,
+    getTimelineMarkerById: getTimelineMarkerByIdState,
+    addTimelineMarker: addTimelineMarkerState,
+    setTimelineMarker: setTimelineMarkerState,
+    removeTimelineMarker: removeTimelineMarkerState,
+    clearTimelineMarkers: clearTimelineMarkersState,
+
+    // Chord Mode State - exposed for UI
+    getChordMode: getChordModeState,
+    setChordMode: setChordModeState,
+    getChordModeEnabled: getChordModeEnabledState,
+    setChordModeEnabled: setChordModeEnabledState,
+    getChordModeRoot: getChordModeRootState,
+    setChordModeRoot: setChordModeRootState,
+    getChordModeType: getChordModeTypeState,
+    setChordModeType: setChordModeTypeState,
+    getChordModeLock: getChordModeLockState,
+    setChordModeLock: setChordModeLockState,
 
     // Send Bus Audio - audio engine-level functions for send bus management
     createSendBusInAudio: createSendBusInAudio,
