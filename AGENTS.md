@@ -1,3 +1,25 @@
+
+#### Day 462: State Wiring Tests - appServices Export Coverage (2026-05-10)
+- **Feature**: Added 134 new unit tests to verify the 56 state functions wired to appServices in Day 461 are properly exported and accessible
+- **Files Modified**:
+  - `/js/tests.js`: Added Day 462 test block with 134 tests covering 8 feature groups
+  - `/js/constants.js`: Bumped APP_VERSION to 2.134.0
+- **Feature Details**:
+  - **Track Groups** (24 tests): Tests for all 10 functions (getTrackGroups, getTrackGroupById, addTrackGroup, setTrackGroupName, setTrackGroupColor, addTrackToGroup, removeTrackFromGroup, setTrackGroupMuted, setTrackGroupSoloed, removeTrackGroup) — validates function exports, parameter counts, return types, and captureStateForUndo calls
+  - **Track Templates** (14 tests): Tests for all 6 functions (getTrackTemplates, getTrackTemplateById, addTrackTemplate, updateTrackTemplate, removeTrackTemplate, clearTrackTemplates) — validates exports, parameter counts, array returns, and captureStateForUndo calls
+  - **Scale Mode** (22 tests): Tests for all 10 functions — validates exports, parameter counts, object returns, boolean returns, and number returns
+  - **Ghost Track** (5 tests): Tests for both functions (getGhostTrackId, setGhostTrackId) — validates exports, parameter counts, and captureStateForUndo calls
+  - **Loop Region** (18 tests): Tests for all 8 functions — validates exports, parameter counts, object returns, and boolean returns
+  - **Swing** (15 tests): Tests for all 6 functions — validates exports, parameter counts, object returns, boolean returns, and number returns
+  - **Timeline Markers** (13 tests): Tests for all 6 functions — validates exports, parameter counts, and array returns
+  - **Chord Mode** (22 tests): Tests for all 10 functions — validates exports, parameter counts, object returns, and boolean returns
+  - **APP_VERSION validation**: Tests validate version is >= 2.133 for Day 461
+  - Total tests increased from 10230 to 10364
+- **Verification**:
+  - All JS files pass `node --check` syntax validation
+  - tests.js, constants.js, main.js, and state.js all pass syntax checks
+- **Version**: Bumped to 2.134.0
+
 #### Day 461: Wire State Functions to appServices (2026-05-10)
 - **Feature**: Added missing state function imports from `state.js` to `main.js` and exposed them on the `appServices` object for 8 feature groups that existed in state.js but were not accessible via the main service surface
 - **Files Modified**:

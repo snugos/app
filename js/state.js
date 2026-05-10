@@ -402,6 +402,7 @@ export function addTrackTemplateState(templateData) {
         id: nextId,
         name: source.name || `${Constants.DEFAULT_TEMPLATE_NAME_PREFIX} ${trackTemplatesState.length + 1}`
     };
+    captureStateForUndoIfAllowed(`Add Track Template "${newTemplate.name}"`);
     trackTemplatesState.push(newTemplate);
     return newTemplate;
 }
@@ -419,6 +420,7 @@ export function updateTrackTemplateState(id, updates) {
 export function removeTrackTemplateState(id) {
     const idx = trackTemplatesState.findIndex(t => t && t.id === id);
     if (idx < 0) return false;
+    captureStateForUndoIfAllowed(`Remove Track Template "${trackTemplatesState[idx].name}"`);
     trackTemplatesState.splice(idx, 1);
     return true;
 }

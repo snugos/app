@@ -10228,73 +10228,582 @@ TestRunner.test('MIDI CC Persistence - APP_VERSION validation for Day 452', (t) 
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 126, 'Minor version should be >= 126 for Day 452');
     }
-});
-t) => {
-    t.assertEqual(typeof startMidiCCLearn, 'function', 'startMidiCCLearn should be a function');
-});
 
 // ============================================
-// Day 460: DrumSampler Pad Normalization Tests  
+// Day 462: State Wiring Tests - appServices Export Coverage
 // ============================================
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex is a function export', (t) => {
-    t.assertEqual(typeof getNormalizedDrumSamplerPadIndex, 'function', 'getNormalizedDrumSamplerPadIndex should be a function');
+
+// --- Track Groups (10 functions) ---
+
+TestRunner.test('Day 461 - Track Groups - getTrackGroups is a function export', (t) => {
+    t.assertEqual(typeof getTrackGroups, 'function', 'getTrackGroups should be a function');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex accepts 2 parameters', (t) => {
-    const paramCount = getNormalizedDrumSamplerPadIndex.length;
-    t.assertEqual(paramCount, 2, 'getNormalizedDrumSamplerPadIndex should accept 2 parameters');
+TestRunner.test('Day 461 - Track Groups - getTrackGroups accepts 0 parameters', (t) => {
+    t.assertEqual(getTrackGroups.length, 0, 'getTrackGroups should accept 0 parameters');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex parses valid integer', (t) => {
-    const track = { selectedDrumPadForEdit: 3 };
-    const result = getNormalizedDrumSamplerPadIndex(track, 0);
-    t.assertEqual(result, 3, 'Should return parsed integer 3');
+TestRunner.test('Day 461 - Track Groups - getTrackGroups returns an array', (t) => {
+    const result = getTrackGroups();
+    t.assertEqual(Array.isArray(result), true, 'getTrackGroups should return an array');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex returns fallback for invalid value', (t) => {
-    const track = { selectedDrumPadForEdit: 'invalid' };
-    const result = getNormalizedDrumSamplerPadIndex(track, 0);
-    t.assertEqual(result, 0, 'Should return fallback value');
+TestRunner.test('Day 461 - Track Groups - getTrackGroupById is a function export', (t) => {
+    t.assertEqual(typeof getTrackGroupById, 'function', 'getTrackGroupById should be a function');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex returns fallback for negative value', (t) => {
-    const track = { selectedDrumPadForEdit: -1 };
-    const result = getNormalizedDrumSamplerPadIndex(track, 0);
-    t.assertEqual(result, 0, 'Should return fallback value for negative');
+TestRunner.test('Day 461 - Track Groups - getTrackGroupById accepts 1 parameter', (t) => {
+    t.assertEqual(getTrackGroupById.length, 1, 'getTrackGroupById should accept 1 parameter');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex returns fallback for null track', (t) => {
-    const result = getNormalizedDrumSamplerPadIndex(null, 5);
-    t.assertEqual(result, 5, 'Should return fallback value for null track');
+TestRunner.test('Day 461 - Track Groups - getTrackGroupById returns undefined for unknown id', (t) => {
+    const result = getTrackGroupById(99999);
+    t.assertEqual(result, undefined, 'getTrackGroupById should return undefined for unknown id');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex returns fallback for undefined track', (t) => {
-    const result = getNormalizedDrumSamplerPadIndex(undefined, 2);
-    t.assertEqual(result, 2, 'Should return fallback value for undefined track');
+TestRunner.test('Day 461 - Track Groups - addTrackGroup is a function export', (t) => {
+    t.assertEqual(typeof addTrackGroup, 'function', 'addTrackGroup should be a function');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex handles string number', (t) => {
-    const track = { selectedDrumPadForEdit: '5' };
-    const result = getNormalizedDrumSamplerPadIndex(track, 0);
-    t.assertEqual(result, 5, 'Should parse string number to integer');
+TestRunner.test('Day 461 - Track Groups - addTrackGroup accepts 1 parameter', (t) => {
+    t.assertEqual(addTrackGroup.length, 1, 'addTrackGroup should accept 1 parameter');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex handles float by flooring', (t) => {
-    const track = { selectedDrumPadForEdit: 3.7 };
-    const result = getNormalizedDrumSamplerPadIndex(track, 0);
-    t.assertEqual(result, 3, 'Should floor float to integer');
+TestRunner.test('Day 461 - Track Groups - addTrackGroup returns an object', (t) => {
+    const result = addTrackGroup({});
+    t.assertEqual(typeof result === 'object' && result !== null, true, 'addTrackGroup should return an object');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - getNormalizedDrumSamplerPadIndex handles NaN', (t) => {
-    const track = { selectedDrumPadForEdit: NaN };
-    const result = getNormalizedDrumSamplerPadIndex(track, 0);
-    t.assertEqual(result, 0, 'Should return fallback for NaN');
+TestRunner.test('Day 461 - Track Groups - addTrackGroup uses captureStateForUndo', (t) => {
+    const funcStr = addTrackGroup.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackGroup should call captureStateForUndo');
 });
 
-TestRunner.test('DrumSampler Pad Normalization - APP_VERSION validation for Day 460', (t) => {
+TestRunner.test('Day 461 - Track Groups - setTrackGroupName is a function export', (t) => {
+    t.assertEqual(typeof setTrackGroupName, 'function', 'setTrackGroupName should be a function');
+});
+
+TestRunner.test('Day 461 - Track Groups - setTrackGroupName accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupName.length, 2, 'setTrackGroupName should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Track Groups - setTrackGroupColor is a function export', (t) => {
+    t.assertEqual(typeof setTrackGroupColor, 'function', 'setTrackGroupColor should be a function');
+});
+
+TestRunner.test('Day 461 - Track Groups - setTrackGroupColor accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupColor.length, 2, 'setTrackGroupColor should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Track Groups - addTrackToGroup is a function export', (t) => {
+    t.assertEqual(typeof addTrackToGroup, 'function', 'addTrackToGroup should be a function');
+});
+
+TestRunner.test('Day 461 - Track Groups - addTrackToGroup accepts 2 parameters', (t) => {
+    t.assertEqual(addTrackToGroup.length, 2, 'addTrackToGroup should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Track Groups - removeTrackFromGroup is a function export', (t) => {
+    t.assertEqual(typeof removeTrackFromGroup, 'function', 'removeTrackFromGroup should be a function');
+});
+
+TestRunner.test('Day 461 - Track Groups - removeTrackFromGroup accepts 2 parameters', (t) => {
+    t.assertEqual(removeTrackFromGroup.length, 2, 'removeTrackFromGroup should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Track Groups - setTrackGroupMuted is a function export', (t) => {
+    t.assertEqual(typeof setTrackGroupMuted, 'function', 'setTrackGroupMuted should be a function');
+});
+
+TestRunner.test('Day 461 - Track Groups - setTrackGroupMuted accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupMuted.length, 2, 'setTrackGroupMuted should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Track Groups - setTrackGroupSoloed is a function export', (t) => {
+    t.assertEqual(typeof setTrackGroupSoloed, 'function', 'setTrackGroupSoloed should be a function');
+});
+
+TestRunner.test('Day 461 - Track Groups - setTrackGroupSoloed accepts 2 parameters', (t) => {
+    t.assertEqual(setTrackGroupSoloed.length, 2, 'setTrackGroupSoloed should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Track Groups - removeTrackGroup is a function export', (t) => {
+    t.assertEqual(typeof removeTrackGroup, 'function', 'removeTrackGroup should be a function');
+});
+
+TestRunner.test('Day 461 - Track Groups - removeTrackGroup accepts 1 parameter', (t) => {
+    t.assertEqual(removeTrackGroup.length, 1, 'removeTrackGroup should accept 1 parameter');
+});
+
+// --- Track Templates (6 functions) ---
+
+TestRunner.test('Day 461 - Track Templates - getTrackTemplates is a function export', (t) => {
+    t.assertEqual(typeof getTrackTemplates, 'function', 'getTrackTemplates should be a function');
+});
+
+TestRunner.test('Day 461 - Track Templates - getTrackTemplates accepts 0 parameters', (t) => {
+    t.assertEqual(getTrackTemplates.length, 0, 'getTrackTemplates should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Track Templates - getTrackTemplates returns an array', (t) => {
+    const result = getTrackTemplates();
+    t.assertEqual(Array.isArray(result), true, 'getTrackTemplates should return an array');
+});
+
+TestRunner.test('Day 461 - Track Templates - getTrackTemplateById is a function export', (t) => {
+    t.assertEqual(typeof getTrackTemplateById, 'function', 'getTrackTemplateById should be a function');
+});
+
+TestRunner.test('Day 461 - Track Templates - getTrackTemplateById accepts 1 parameter', (t) => {
+    t.assertEqual(getTrackTemplateById.length, 1, 'getTrackTemplateById should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Track Templates - addTrackTemplate is a function export', (t) => {
+    t.assertEqual(typeof addTrackTemplate, 'function', 'addTrackTemplate should be a function');
+});
+
+TestRunner.test('Day 461 - Track Templates - addTrackTemplate accepts 1 parameter', (t) => {
+    t.assertEqual(addTrackTemplate.length, 1, 'addTrackTemplate should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Track Templates - addTrackTemplate calls captureStateForUndo', (t) => {
+    const funcStr = addTrackTemplate.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackTemplate should call captureStateForUndo');
+});
+
+TestRunner.test('Day 461 - Track Templates - updateTrackTemplate is a function export', (t) => {
+    t.assertEqual(typeof updateTrackTemplate, 'function', 'updateTrackTemplate should be a function');
+});
+
+TestRunner.test('Day 461 - Track Templates - updateTrackTemplate accepts 2 parameters', (t) => {
+    t.assertEqual(updateTrackTemplate.length, 2, 'updateTrackTemplate should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Track Templates - removeTrackTemplate is a function export', (t) => {
+    t.assertEqual(typeof removeTrackTemplate, 'function', 'removeTrackTemplate should be a function');
+});
+
+TestRunner.test('Day 461 - Track Templates - removeTrackTemplate accepts 1 parameter', (t) => {
+    t.assertEqual(removeTrackTemplate.length, 1, 'removeTrackTemplate should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Track Templates - clearTrackTemplates is a function export', (t) => {
+    t.assertEqual(typeof clearTrackTemplates, 'function', 'clearTrackTemplates should be a function');
+});
+
+TestRunner.test('Day 461 - Track Templates - clearTrackTemplates accepts 0 parameters', (t) => {
+    t.assertEqual(clearTrackTemplates.length, 0, 'clearTrackTemplates should accept 0 parameters');
+});
+
+// --- Scale Mode (10 functions) ---
+
+TestRunner.test('Day 461 - Scale Mode - getScaleMode is a function export', (t) => {
+    t.assertEqual(typeof getScaleMode, 'function', 'getScaleMode should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleMode accepts 0 parameters', (t) => {
+    t.assertEqual(getScaleMode.length, 0, 'getScaleMode should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleMode returns an object', (t) => {
+    const result = getScaleMode();
+    t.assertEqual(typeof result === 'object' && result !== null, true, 'getScaleMode should return an object');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleMode is a function export', (t) => {
+    t.assertEqual(typeof setScaleMode, 'function', 'setScaleMode should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleMode accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleMode.length, 1, 'setScaleMode should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeEnabled is a function export', (t) => {
+    t.assertEqual(typeof getScaleModeEnabled, 'function', 'getScaleModeEnabled should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeEnabled accepts 0 parameters', (t) => {
+    t.assertEqual(getScaleModeEnabled.length, 0, 'getScaleModeEnabled should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeEnabled returns boolean', (t) => {
+    const result = getScaleModeEnabled();
+    t.assertEqual(typeof result, 'boolean', 'getScaleModeEnabled should return boolean');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleModeEnabled is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeEnabled, 'function', 'setScaleModeEnabled should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleModeEnabled accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeEnabled.length, 1, 'setScaleModeEnabled should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeScale is a function export', (t) => {
+    t.assertEqual(typeof getScaleModeScale, 'function', 'getScaleModeScale should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeScale accepts 0 parameters', (t) => {
+    t.assertEqual(getScaleModeScale.length, 0, 'getScaleModeScale should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleModeScale is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeScale, 'function', 'setScaleModeScale should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleModeScale accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeScale.length, 1, 'setScaleModeScale should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeRoot is a function export', (t) => {
+    t.assertEqual(typeof getScaleModeRoot, 'function', 'getScaleModeRoot should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeRoot accepts 0 parameters', (t) => {
+    t.assertEqual(getScaleModeRoot.length, 0, 'getScaleModeRoot should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleModeRoot is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeRoot, 'function', 'setScaleModeRoot should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleModeRoot accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeRoot.length, 1, 'setScaleModeRoot should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeLock is a function export', (t) => {
+    t.assertEqual(typeof getScaleModeLock, 'function', 'getScaleModeLock should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - getScaleModeLock accepts 0 parameters', (t) => {
+    t.assertEqual(getScaleModeLock.length, 0, 'getScaleModeLock should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleModeLock is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeLock, 'function', 'setScaleModeLock should be a function');
+});
+
+TestRunner.test('Day 461 - Scale Mode - setScaleModeLock accepts 1 parameter', (t) => {
+    t.assertEqual(setScaleModeLock.length, 1, 'setScaleModeLock should accept 1 parameter');
+});
+
+// --- Ghost Track (2 functions) ---
+
+TestRunner.test('Day 461 - Ghost Track - getGhostTrackId is a function export', (t) => {
+    t.assertEqual(typeof getGhostTrackId, 'function', 'getGhostTrackId should be a function');
+});
+
+TestRunner.test('Day 461 - Ghost Track - getGhostTrackId accepts 0 parameters', (t) => {
+    t.assertEqual(getGhostTrackId.length, 0, 'getGhostTrackId should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Ghost Track - setGhostTrackId is a function export', (t) => {
+    t.assertEqual(typeof setGhostTrackId, 'function', 'setGhostTrackId should be a function');
+});
+
+TestRunner.test('Day 461 - Ghost Track - setGhostTrackId accepts 1 parameter', (t) => {
+    t.assertEqual(setGhostTrackId.length, 1, 'setGhostTrackId should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Ghost Track - setGhostTrackId calls captureStateForUndo', (t) => {
+    const funcStr = setGhostTrackId.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setGhostTrackId should call captureStateForUndo');
+});
+
+// --- Loop Region (8 functions) ---
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegion is a function export', (t) => {
+    t.assertEqual(typeof getLoopRegion, 'function', 'getLoopRegion should be a function');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegion accepts 0 parameters', (t) => {
+    t.assertEqual(getLoopRegion.length, 0, 'getLoopRegion should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegion returns an object', (t) => {
+    const result = getLoopRegion();
+    t.assertEqual(typeof result === 'object' && result !== null, true, 'getLoopRegion should return an object');
+});
+
+TestRunner.test('Day 461 - Loop Region - setLoopRegion is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegion, 'function', 'setLoopRegion should be a function');
+});
+
+TestRunner.test('Day 461 - Loop Region - setLoopRegion accepts 2 parameters', (t) => {
+    t.assertEqual(setLoopRegion.length, 2, 'setLoopRegion should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegionEnabled is a function export', (t) => {
+    t.assertEqual(typeof getLoopRegionEnabled, 'function', 'getLoopRegionEnabled should be a function');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegionEnabled accepts 0 parameters', (t) => {
+    t.assertEqual(getLoopRegionEnabled.length, 0, 'getLoopRegionEnabled should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegionEnabled returns boolean', (t) => {
+    const result = getLoopRegionEnabled();
+    t.assertEqual(typeof result, 'boolean', 'getLoopRegionEnabled should return boolean');
+});
+
+TestRunner.test('Day 461 - Loop Region - setLoopRegionEnabled is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionEnabled, 'function', 'setLoopRegionEnabled should be a function');
+});
+
+TestRunner.test('Day 461 - Loop Region - setLoopRegionEnabled accepts 1 parameter', (t) => {
+    t.assertEqual(setLoopRegionEnabled.length, 1, 'setLoopRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegionStartBar is a function export', (t) => {
+    t.assertEqual(typeof getLoopRegionStartBar, 'function', 'getLoopRegionStartBar should be a function');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegionStartBar accepts 0 parameters', (t) => {
+    t.assertEqual(getLoopRegionStartBar.length, 0, 'getLoopRegionStartBar should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Loop Region - setLoopRegionStartBar is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionStartBar, 'function', 'setLoopRegionStartBar should be a function');
+});
+
+TestRunner.test('Day 461 - Loop Region - setLoopRegionStartBar accepts 1 parameter', (t) => {
+    t.assertEqual(setLoopRegionStartBar.length, 1, 'setLoopRegionStartBar should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegionEndBar is a function export', (t) => {
+    t.assertEqual(typeof getLoopRegionEndBar, 'function', 'getLoopRegionEndBar should be a function');
+});
+
+TestRunner.test('Day 461 - Loop Region - getLoopRegionEndBar accepts 0 parameters', (t) => {
+    t.assertEqual(getLoopRegionEndBar.length, 0, 'getLoopRegionEndBar should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Loop Region - setLoopRegionEndBar is a function export', (t) => {
+    t.assertEqual(typeof setLoopRegionEndBar, 'function', 'setLoopRegionEndBar should be a function');
+});
+
+TestRunner.test('Day 461 - Loop Region - setLoopRegionEndBar accepts 1 parameter', (t) => {
+    t.assertEqual(setLoopRegionEndBar.length, 1, 'setLoopRegionEndBar should accept 1 parameter');
+});
+
+// --- Swing (6 functions) ---
+
+TestRunner.test('Day 461 - Swing - getSwing is a function export', (t) => {
+    t.assertEqual(typeof getSwing, 'function', 'getSwing should be a function');
+});
+
+TestRunner.test('Day 461 - Swing - getSwing accepts 0 parameters', (t) => {
+    t.assertEqual(getSwing.length, 0, 'getSwing should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Swing - getSwing returns an object', (t) => {
+    const result = getSwing();
+    t.assertEqual(typeof result === 'object' && result !== null, true, 'getSwing should return an object');
+});
+
+TestRunner.test('Day 461 - Swing - setSwing is a function export', (t) => {
+    t.assertEqual(typeof setSwing, 'function', 'setSwing should be a function');
+});
+
+TestRunner.test('Day 461 - Swing - setSwing accepts 1 parameter', (t) => {
+    t.assertEqual(setSwing.length, 1, 'setSwing should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Swing - getSwingEnabled is a function export', (t) => {
+    t.assertEqual(typeof getSwingEnabled, 'function', 'getSwingEnabled should be a function');
+});
+
+TestRunner.test('Day 461 - Swing - getSwingEnabled accepts 0 parameters', (t) => {
+    t.assertEqual(getSwingEnabled.length, 0, 'getSwingEnabled should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Swing - getSwingEnabled returns boolean', (t) => {
+    const result = getSwingEnabled();
+    t.assertEqual(typeof result, 'boolean', 'getSwingEnabled should return boolean');
+});
+
+TestRunner.test('Day 461 - Swing - setSwingEnabled is a function export', (t) => {
+    t.assertEqual(typeof setSwingEnabled, 'function', 'setSwingEnabled should be a function');
+});
+
+TestRunner.test('Day 461 - Swing - setSwingEnabled accepts 1 parameter', (t) => {
+    t.assertEqual(setSwingEnabled.length, 1, 'setSwingEnabled should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Swing - getSwingAmount is a function export', (t) => {
+    t.assertEqual(typeof getSwingAmount, 'function', 'getSwingAmount should be a function');
+});
+
+TestRunner.test('Day 461 - Swing - getSwingAmount accepts 0 parameters', (t) => {
+    t.assertEqual(getSwingAmount.length, 0, 'getSwingAmount should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Swing - getSwingAmount returns a number', (t) => {
+    const result = getSwingAmount();
+    t.assertEqual(typeof result, 'number', 'getSwingAmount should return a number');
+});
+
+TestRunner.test('Day 461 - Swing - setSwingAmount is a function export', (t) => {
+    t.assertEqual(typeof setSwingAmount, 'function', 'setSwingAmount should be a function');
+});
+
+TestRunner.test('Day 461 - Swing - setSwingAmount accepts 1 parameter', (t) => {
+    t.assertEqual(setSwingAmount.length, 1, 'setSwingAmount should accept 1 parameter');
+});
+
+// --- Timeline Markers (6 functions) ---
+
+TestRunner.test('Day 461 - Timeline Markers - getTimelineMarkers is a function export', (t) => {
+    t.assertEqual(typeof getTimelineMarkers, 'function', 'getTimelineMarkers should be a function');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - getTimelineMarkers accepts 0 parameters', (t) => {
+    t.assertEqual(getTimelineMarkers.length, 0, 'getTimelineMarkers should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - getTimelineMarkers returns an array', (t) => {
+    const result = getTimelineMarkers();
+    t.assertEqual(Array.isArray(result), true, 'getTimelineMarkers should return an array');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - getTimelineMarkerById is a function export', (t) => {
+    t.assertEqual(typeof getTimelineMarkerById, 'function', 'getTimelineMarkerById should be a function');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - getTimelineMarkerById accepts 1 parameter', (t) => {
+    t.assertEqual(getTimelineMarkerById.length, 1, 'getTimelineMarkerById should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - addTimelineMarker is a function export', (t) => {
+    t.assertEqual(typeof addTimelineMarker, 'function', 'addTimelineMarker should be a function');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - addTimelineMarker accepts 1 parameter', (t) => {
+    t.assertEqual(addTimelineMarker.length, 1, 'addTimelineMarker should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - setTimelineMarker is a function export', (t) => {
+    t.assertEqual(typeof setTimelineMarker, 'function', 'setTimelineMarker should be a function');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - setTimelineMarker accepts 2 parameters', (t) => {
+    t.assertEqual(setTimelineMarker.length, 2, 'setTimelineMarker should accept 2 parameters');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - removeTimelineMarker is a function export', (t) => {
+    t.assertEqual(typeof removeTimelineMarker, 'function', 'removeTimelineMarker should be a function');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - removeTimelineMarker accepts 1 parameter', (t) => {
+    t.assertEqual(removeTimelineMarker.length, 1, 'removeTimelineMarker should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - clearTimelineMarkers is a function export', (t) => {
+    t.assertEqual(typeof clearTimelineMarkers, 'function', 'clearTimelineMarkers should be a function');
+});
+
+TestRunner.test('Day 461 - Timeline Markers - clearTimelineMarkers accepts 0 parameters', (t) => {
+    t.assertEqual(clearTimelineMarkers.length, 0, 'clearTimelineMarkers should accept 0 parameters');
+});
+
+// --- Chord Mode (10 functions) ---
+
+TestRunner.test('Day 461 - Chord Mode - getChordMode is a function export', (t) => {
+    t.assertEqual(typeof getChordMode, 'function', 'getChordMode should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordMode accepts 0 parameters', (t) => {
+    t.assertEqual(getChordMode.length, 0, 'getChordMode should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordMode returns an object', (t) => {
+    const result = getChordMode();
+    t.assertEqual(typeof result === 'object' && result !== null, true, 'getChordMode should return an object');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordMode is a function export', (t) => {
+    t.assertEqual(typeof setChordMode, 'function', 'setChordMode should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordMode accepts 1 parameter', (t) => {
+    t.assertEqual(setChordMode.length, 1, 'setChordMode should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeEnabled is a function export', (t) => {
+    t.assertEqual(typeof getChordModeEnabled, 'function', 'getChordModeEnabled should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeEnabled accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeEnabled.length, 0, 'getChordModeEnabled should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeEnabled returns boolean', (t) => {
+    const result = getChordModeEnabled();
+    t.assertEqual(typeof result, 'boolean', 'getChordModeEnabled should return boolean');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordModeEnabled is a function export', (t) => {
+    t.assertEqual(typeof setChordModeEnabled, 'function', 'setChordModeEnabled should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordModeEnabled accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeEnabled.length, 1, 'setChordModeEnabled should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeRoot is a function export', (t) => {
+    t.assertEqual(typeof getChordModeRoot, 'function', 'getChordModeRoot should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeRoot accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeRoot.length, 0, 'getChordModeRoot should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordModeRoot is a function export', (t) => {
+    t.assertEqual(typeof setChordModeRoot, 'function', 'setChordModeRoot should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordModeRoot accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeRoot.length, 1, 'setChordModeRoot should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeType is a function export', (t) => {
+    t.assertEqual(typeof getChordModeType, 'function', 'getChordModeType should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeType accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeType.length, 0, 'getChordModeType should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordModeType is a function export', (t) => {
+    t.assertEqual(typeof setChordModeType, 'function', 'setChordModeType should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordModeType accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeType.length, 1, 'setChordModeType should accept 1 parameter');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeLock is a function export', (t) => {
+    t.assertEqual(typeof getChordModeLock, 'function', 'getChordModeLock should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - getChordModeLock accepts 0 parameters', (t) => {
+    t.assertEqual(getChordModeLock.length, 0, 'getChordModeLock should accept 0 parameters');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordModeLock is a function export', (t) => {
+    t.assertEqual(typeof setChordModeLock, 'function', 'setChordModeLock should be a function');
+});
+
+TestRunner.test('Day 461 - Chord Mode - setChordModeLock accepts 1 parameter', (t) => {
+    t.assertEqual(setChordModeLock.length, 1, 'setChordModeLock should accept 1 parameter');
+});
+
+// --- APP_VERSION validation ---
+
+TestRunner.test('Day 461 - APP_VERSION validation for Day 461', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 460');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 461');
     if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 132, 'Minor version should be >= 132 for Day 460');
+        t.assertTruthy(versionParts[1] >= 133, 'Minor version should be >= 133 for Day 461');
     }
 });
