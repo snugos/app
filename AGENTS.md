@@ -7310,3 +7310,19 @@
     - Send Bus Audio - updateSendBusEffectParam is a function
     - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
     - Send Bus Audio - updateSendBusEffectParam references all parameters
+
+#### Day 471: Recording Audio Functions Extended Tests (2026-05-11)
+- **Feature**: Added 55 new unit tests for Recording Audio Functions (startAudioRecording, stopAudioRecording, cleanupRecordingAudioResources) to expand test coverage beyond what was tested in earlier test blocks
+- **Files Modified**:
+  - `js/tests.js`: Added Day 471 test block with 55 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.142.0
+- **Feature Details**:
+  - **startAudioRecording** (23 tests): Tests for function export, async, 2 parameters, track type Audio validation, initAudioContextAndMasterMeter call, existing recorder handling, recording constraints constants (RECORDING_SAMPLE_RATE, RECORDING_NUM_CHANNELS), Tone.UserMedia creation, microphone open, Tone.Recorder creation, RECORDING_MIME_TYPE, audio node chain (mic->gain->recorder), monitoring hookup to inputChannel when enabled, recorder.start call, isRecording/recordingTrackId/recordingStartTime state updates, NotAllowedError/NotFoundError handling, cleanupRecordingAudioResources call on error, showNotification on success/error, boolean return
+  - **stopAudioRecording** (23 tests): Tests for function export, async, 0 parameters, null activeRecorder handling, recorder state check, recorder.stop call, mic resource cleanup (disconnect/close/dispose), recorder dispose, empty recording size check (< 1000), track.addAudioClip call, recording state clearing, recording track ID clearing, recording start time clearing, cleanupRecordingScheduling call, recorder state not-started handling, getTrackById call, Audio track type validation, showNotification on success/empty/error
+  - **cleanupRecordingAudioResources** (4 tests): Tests for function export, 0 parameters, null mic handling, null recorder handling
+  - **APP_VERSION validation** (1 test): Tests validate version is >= 2.141 for Day 471
+  - Total tests increased from 2208 to 2263
+- **Verification**:
+  - All JS files pass `node --check` syntax validation
+  - tests.js and constants.js pass syntax checks
+- **Version**: Bumped to 2.142.0
