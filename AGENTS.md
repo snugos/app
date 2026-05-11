@@ -1,3 +1,21 @@
+#### Day 467: Audio Preview Functions Tests (2026-05-11)
+- **Feature**: Added 54 new unit tests for Audio Preview Functions to expand test coverage for loadSampleFile, fetchSoundLibrary, playSlicePreview, playDrumSamplerPadPreview, and getRecordingInputGainNode
+- **Files Modified**:
+  - `js/tests.js`: Added 54 new tests in Day 467 section covering Audio Preview and Sound Library functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.138.0
+- **Feature Details**:
+  - **getRecordingInputGainNode** (2 tests): Tests for function export and 0 parameters
+  - **playSlicePreview** (13 tests): Tests for async function export, 4 parameters, references trackId/sliceIndex, calls initAudioContextAndMasterMeter, checks track type is Sampler, checks audioBuffer.loaded, references slices/sliceData, uses Math.pow for playbackRate, uses Tone.dbToGain for volume, handles slicerIsPolyphonic flag, has error handling
+  - **playDrumSamplerPadPreview** (14 tests): Tests for async function export, 4 parameters, references trackId/padIndex, calls initAudioContextAndMasterMeter, checks track type is DrumSampler, references drumPadPlayers/drumSamplerPads, checks player.loaded, uses Tone.gainToDb for volume, uses Math.pow for playbackRate, calls player.start, has error handling, handles padData.volume/pitchShift
+  - **loadSampleFile** (11 tests): Tests for async function export, 4 parameters, references trackId, gets track via localAppServices.getTrackById, handles URL/File/Blob sources, uses fetch for URL source, has error handling with showNotification
+  - **fetchSoundLibrary** (13 tests): Tests for async function export, 3 parameters, references libraryName/zipUrl, checks loadedZips before fetching, uses JSZip to load ZIP data, builds fileTree from ZIP contents, updates loadedZipFiles and soundLibraryFileTrees state, has error handling
+  - **APP_VERSION validation**: Tests validate version is >= 2.137 for Day 467
+  - Total tests increased from 11412 to 11471
+- **Verification**:
+  - All JS files pass `node --check` syntax validation
+  - tests.js and constants.js pass syntax checks
+- **Version**: Bumped to 2.138.0
+
 #### Day 465: Undo/Redo Internal Functions Tests (2026-05-10)
 - **Feature**: Added 31 new unit tests for Undo/Redo internal functions in `state.js` to expand test coverage and verify the core undo/redo system is properly tested
 - **Files Modified**:

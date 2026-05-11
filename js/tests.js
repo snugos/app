@@ -11210,3 +11210,262 @@ TestRunner.test('Day 466 - Recording E2E - APP_VERSION validation for Day 466', 
         t.assertTruthy(versionParts[1] >= 137, 'Minor version should be >= 137 for Day 466');
     }
 });
+
+TestRunner.test('Day 467 - Audio Preview Functions - getRecordingInputGainNode is a function export', (t) => {
+    t.assertEqual(typeof getRecordingInputGainNode, 'function', 'getRecordingInputGainNode should be a function');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - getRecordingInputGainNode accepts 0 parameters', (t) => {
+    t.assertEqual(getRecordingInputGainNode.length, 0, 'getRecordingInputGainNode should accept 0 parameters');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview is a function export', (t) => {
+    t.assertEqual(typeof playSlicePreview, 'function', 'playSlicePreview should be a function');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview is async', (t) => {
+    t.assertEqual(playSlicePreview.constructor.name, 'AsyncFunction', 'playSlicePreview should be async');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview accepts 4 parameters', (t) => {
+    t.assertEqual(playSlicePreview.length, 4, 'playSlicePreview should accept 4 parameters');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview references trackId parameter', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'playSlicePreview should reference trackId parameter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview references sliceIndex parameter', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('sliceIndex'), 'playSlicePreview should reference sliceIndex parameter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview calls initAudioContextAndMasterMeter', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'playSlicePreview should call initAudioContextAndMasterMeter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview checks track type is Sampler', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('type') && funcStr.includes('Sampler'), 'playSlicePreview should check track type is Sampler');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview checks audioBuffer.loaded', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer') && funcStr.includes('loaded'), 'playSlicePreview should check audioBuffer.loaded');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview references slices array', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('slices') && funcStr.includes('sliceData'), 'playSlicePreview should reference slices array');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview uses Math.pow for playbackRate', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('Math.pow') && funcStr.includes('playbackRate'), 'playSlicePreview should use Math.pow for playbackRate');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview uses Tone.dbToGain for volume', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('Tone.dbToGain') && funcStr.includes('volume'), 'playSlicePreview should use Tone.dbToGain for volume');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview handles slicerIsPolyphonic flag', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('slicerIsPolyphonic'), 'playSlicePreview should handle slicerIsPolyphonic flag');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playSlicePreview has error handling with try/catch', (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('catch') && funcStr.includes('console.error'), 'playSlicePreview should have error handling');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview is a function export', (t) => {
+    t.assertEqual(typeof playDrumSamplerPadPreview, 'function', 'playDrumSamplerPadPreview should be a function');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview is async', (t) => {
+    t.assertEqual(playDrumSamplerPadPreview.constructor.name, 'AsyncFunction', 'playDrumSamplerPadPreview should be async');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview accepts 4 parameters', (t) => {
+    t.assertEqual(playDrumSamplerPadPreview.length, 4, 'playDrumSamplerPadPreview should accept 4 parameters');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview references trackId parameter', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'playDrumSamplerPadPreview should reference trackId parameter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview references padIndex parameter', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('padIndex'), 'playDrumSamplerPadPreview should reference padIndex parameter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview calls initAudioContextAndMasterMeter', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'playDrumSamplerPadPreview should call initAudioContextAndMasterMeter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview checks track type is DrumSampler', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('type') && funcStr.includes('DrumSampler'), 'playDrumSamplerPadPreview should check track type is DrumSampler');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview references drumPadPlayers array', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('drumPadPlayers'), 'playDrumSamplerPadPreview should reference drumPadPlayers array');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview references drumSamplerPads array', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads'), 'playDrumSamplerPadPreview should reference drumSamplerPads array');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview checks player.loaded status', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('loaded'), 'playDrumSamplerPadPreview should check player.loaded status');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview uses Tone.gainToDb for volume conversion', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('Tone.gainToDb'), 'playDrumSamplerPadPreview should use Tone.gainToDb');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview uses Math.pow for playbackRate', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('Math.pow') && funcStr.includes('playbackRate'), 'playDrumSamplerPadPreview should use Math.pow for playbackRate');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview calls player.start', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('player.start') || funcStr.includes('.start('), 'playDrumSamplerPadPreview should call player.start');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview has error handling with try/catch', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('catch') && funcStr.includes('console.error'), 'playDrumSamplerPadPreview should have error handling');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview handles padData.volume', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('padData') && funcStr.includes('volume'), 'playDrumSamplerPadPreview should handle padData.volume');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - playDrumSamplerPadPreview handles padData.pitchShift', (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('padData') && funcStr.includes('pitchShift'), 'playDrumSamplerPadPreview should handle padData.pitchShift');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile is a function export', (t) => {
+    t.assertEqual(typeof loadSampleFile, 'function', 'loadSampleFile should be a function');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile is async', (t) => {
+    t.assertEqual(loadSampleFile.constructor.name, 'AsyncFunction', 'loadSampleFile should be async');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile accepts 4 parameters', (t) => {
+    t.assertEqual(loadSampleFile.length, 4, 'loadSampleFile should accept 4 parameters');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile references trackId parameter', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'loadSampleFile should reference trackId parameter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile gets track via localAppServices.getTrackById', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'loadSampleFile should get track via localAppServices.getTrackById');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile handles URL source (string)', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('isUrlSource') || (funcStr.includes('fetch') && funcStr.includes('Blob')), 'loadSampleFile should handle URL source');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile handles File input (event.target.files)', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('target.files') || funcStr.includes('File'), 'loadSampleFile should handle File input');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile handles Blob source', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('Blob'), 'loadSampleFile should handle Blob source');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile uses fetch for URL source', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('fetch(') || funcStr.includes('response'), 'loadSampleFile should use fetch for URL source');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile has error handling', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('catch') && funcStr.includes('console.error'), 'loadSampleFile should have error handling');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - loadSampleFile shows notification on error', (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'loadSampleFile should show notification on error');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary is a function export', (t) => {
+    t.assertEqual(typeof fetchSoundLibrary, 'function', 'fetchSoundLibrary should be a function');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary is async', (t) => {
+    t.assertEqual(fetchSoundLibrary.constructor.name, 'AsyncFunction', 'fetchSoundLibrary should be async');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary accepts 3 parameters', (t) => {
+    t.assertEqual(fetchSoundLibrary.length, 3, 'fetchSoundLibrary should accept 3 parameters');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary references libraryName parameter', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName'), 'fetchSoundLibrary should reference libraryName parameter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary references zipUrl parameter', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('zipUrl'), 'fetchSoundLibrary should reference zipUrl parameter');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary checks loadedZips before fetching', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('loadedZips') && funcStr.includes('libraryName'), 'fetchSoundLibrary should check loadedZips before fetching');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary uses JSZip to load ZIP data', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('JSZip') || funcStr.includes('loadAsync'), 'fetchSoundLibrary should use JSZip to load ZIP data');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary builds fileTree from ZIP contents', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('fileTree') && funcStr.includes('loadedZipInstance'), 'fetchSoundLibrary should build fileTree from ZIP');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary updates loadedZipFiles state', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('setLoadedZipFilesState') || funcStr.includes('newLoadedZips'), 'fetchSoundLibrary should update loadedZipFiles state');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary updates soundLibraryFileTrees state', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('setSoundLibraryFileTreesState') || funcStr.includes('latestSoundTrees'), 'fetchSoundLibrary should update soundLibraryFileTrees state');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - fetchSoundLibrary has error handling with try/catch', (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('catch') && funcStr.includes('console.error'), 'fetchSoundLibrary should have error handling');
+});
+
+TestRunner.test('Day 467 - Audio Preview Functions - APP_VERSION validation for Day 467', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 467');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 137, 'Minor version should be >= 137 for Day 467');
+    }
+});
