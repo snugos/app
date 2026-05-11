@@ -11664,3 +11664,156 @@ TestRunner.test('Day 468 - Recording Audio - APP_VERSION validation for Day 468'
         t.assertTruthy(versionParts[1] >= 138, 'Minor version should be >= 138 for Day 468');
     }
 });
+
+// === Day 469: Sequence Section Copy/Paste Functions Tests ===
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.copySequenceSection, 'function', 'copySequenceSection should be a function');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection accepts 2 parameters', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('startCol') && funcStr.includes('endCol'), 'copySequenceSection should accept startCol and endCol parameters');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection references startCol parameter', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('startCol'), 'copySequenceSection should reference startCol parameter');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection references endCol parameter', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('endCol'), 'copySequenceSection should reference endCol parameter');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection returns null for Audio track type', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes("type==='Audio'"), 'copySequenceSection should return null for Audio track type');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection returns null when no active sequence', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence') && funcStr.includes('return null'), 'copySequenceSection should return null when no active sequence');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection returns null when no activeSeq.data', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('activeSeq.data') && funcStr.includes('return null'), 'copySequenceSection should return null when no activeSeq.data');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection builds sectionData array', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('sectionData') && funcStr.includes('push'), 'copySequenceSection should build sectionData array');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection handles out-of-bounds columns', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('null'), 'copySequenceSection should push null for out-of-bounds columns');
+});
+
+TestRunner.test('Day 469 - Sequence Section - copySequenceSection returns array', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('return sectionData'), 'copySequenceSection should return sectionData array');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.pasteSequenceSection, 'function', 'pasteSequenceSection should be a function');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection accepts 2 parameters', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('sectionData') && funcStr.includes('targetCol'), 'pasteSequenceSection should accept sectionData and targetCol parameters');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection returns 0 for Audio track type', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes("type==='Audio'"), 'pasteSequenceSection should return 0 for Audio track type');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection returns 0 when no active sequence', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence') && funcStr.includes('return 0'), 'pasteSequenceSection should return 0 when no active sequence');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection returns 0 when no sectionData', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('!sectionData') && funcStr.includes('return 0'), 'pasteSequenceSection should return 0 when no sectionData');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'pasteSequenceSection should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('Paste Sequence Section'), 'pasteSequenceSection undo label should mention Paste Sequence Section');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection uses JSON.parse and JSON.stringify for deep copy', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('JSON.parse') && funcStr.includes('JSON.stringify'), 'pasteSequenceSection should deep copy noteData using JSON parse/stringify');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection returns pastedCount', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('return pastedCount'), 'pasteSequenceSection should return pastedCount');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection handles targetCol out of bounds', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('targetColIndex') && funcStr.includes('continue'), 'pasteSequenceSection should skip out-of-bounds target columns');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection increments pastedCount for active notes', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('pastedCount'), 'pasteSequenceSection should track pastedCount');
+});
+
+TestRunner.test('Day 469 - Sequence Section - pasteSequenceSection clears target cells when source is null', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('null') && funcStr.includes('active'), 'pasteSequenceSection should clear target cells when pasting null notes');
+});
+
+TestRunner.test('Day 469 - Sequence Section - humanizeVelocity is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.humanizeVelocity, 'function', 'humanizeVelocity should be a function');
+});
+
+TestRunner.test('Day 469 - Sequence Section - humanizeVelocity accepts amount parameter', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('amount'), 'humanizeVelocity should accept amount parameter');
+});
+
+TestRunner.test('Day 469 - Sequence Section - humanizeVelocity returns null when no active sequence', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence') && funcStr.includes('return null'), 'humanizeVelocity should return null when no active sequence');
+});
+
+TestRunner.test('Day 469 - Sequence Section - humanizeVelocity calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'humanizeVelocity should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 469 - Sequence Section - humanizeVelocity uses Math.random for variation', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.random'), 'humanizeVelocity should use Math.random for velocity variation');
+});
+
+TestRunner.test('Day 469 - Sequence Section - humanizeVelocity clamps velocity to valid range', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'humanizeVelocity should clamp velocity values');
+});
+
+TestRunner.test('Day 469 - Sequence Section - APP_VERSION validation for Day 469', (t) => {
+    const versionLine = "export const APP_VERSION = '2.139.0'";
+    const constSrc = fs.readFileSync('/home/workspace/app/js/constants.js', 'utf-8');
+    const versionMatch = constSrc.match(/export const APP_VERSION = ['"]([^'"]+)['"]/);
+    t.assertTruthy(versionMatch, 'APP_VERSION should be defined in constants.js');
+    const version = versionMatch[1];
+    const versionParts = version.split('.');
+    const major = parseInt(versionParts[0]);
+    const minor = parseInt(versionParts[1]);
+    t.assertTruthy(major >= 2, 'Major version should be >= 2 for Day 469');
+    if (major === 2) {
+        t.assertTruthy(minor >= 139, 'Minor version should be >= 139 for Day 469');
+    }
+});
