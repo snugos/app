@@ -1,4 +1,21 @@
 #### Day 467: Audio Preview Functions Tests (2026-05-11)
+#### Day 468: Recording Audio Functions Tests (2026-05-11)
+- **Feature**: Added 41 new unit tests for Recording Audio Functions to expand test coverage for setRecordingInputGain, getRecordingInputGainNode, cleanupRecordingAudioResources, and all recording-related constants
+- **Files Modified**:
+  - `js/tests.js`: Added Day 468 test block with 41 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.139.0
+- **Feature Details**:
+  - **Recording Constants** (17 tests): Tests for RECORDING_SAMPLE_RATE (positive number), RECORDING_NUM_CHANNELS (1 for mono), RECORDING_MIME_TYPE (non-empty string), RECORDING_LATENCY_HINT (positive number), RECORDING_ECHO_CANCELLATION/AUTO_GAIN_CONTROL/NOISE_SUPPRESSION (all false), DEFAULT_RECORDING_INPUT_GAIN, MIN/MAX_RECORDING_INPUT_GAIN relationship, MAX/MIN_RECORDING_LENGTH_SECONDS relationship, DEFAULT_RECORDING_MONITORING_ENABLED (boolean), DEFAULT_RECORDING_MONITORING_VOLUME (0-1 range), MIN/MAX_RECORDING_MONITORING_VOLUME
+  - **setRecordingInputGain** (13 tests): Tests for function export, 1 parameter, references gainValue, uses parseFloat, clamps to MIN/MAX_RECORDING_INPUT_GAIN, defaults for invalid input, uses Number.isFinite, calls captureAudioStateForUndoIfAllowed when value changes, updates recordingInputGainValue state, updates gainNode.gain.value, checks disposed state, has try/catch error handling, returns clamped value
+  - **cleanupRecordingAudioResources** (2 tests): Tests function existence and that it handles mic and recorder cleanup (disconnect/close/dispose)
+  - **getRecordingInputGainNode** (7 tests): Tests function export, 0 parameters, creates new Tone.Gain when disposed, checks disposed state, disposes old node, uses recordingInputGainValue for gain
+  - **APP_VERSION validation**: Tests validate version is >= 2.138 for Day 468
+  - Total tests increased from 11471 to 11512
+- **Verification**:
+  - All JS files pass `node --check` syntax validation
+  - tests.js and constants.js pass syntax checks
+- **Version**: Bumped to 2.139.0
+
 - **Feature**: Added 54 new unit tests for Audio Preview Functions to expand test coverage for loadSampleFile, fetchSoundLibrary, playSlicePreview, playDrumSamplerPadPreview, and getRecordingInputGainNode
 - **Files Modified**:
   - `js/tests.js`: Added 54 new tests in Day 467 section covering Audio Preview and Sound Library functions
