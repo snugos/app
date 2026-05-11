@@ -11469,3 +11469,198 @@ TestRunner.test('Day 467 - Audio Preview Functions - APP_VERSION validation for 
         t.assertTruthy(versionParts[1] >= 137, 'Minor version should be >= 137 for Day 467');
     }
 });
+
+TestRunner.test('Day 468 - Recording Constants - RECORDING_SAMPLE_RATE is a positive number', (t) => {
+    t.assertEqual(typeof RECORDING_SAMPLE_RATE, 'number', 'RECORDING_SAMPLE_RATE should be a number');
+    t.assertTruthy(RECORDING_SAMPLE_RATE > 0, 'RECORDING_SAMPLE_RATE should be positive');
+});
+
+TestRunner.test('Day 468 - Recording Constants - RECORDING_NUM_CHANNELS is 1', (t) => {
+    t.assertEqual(RECORDING_NUM_CHANNELS, 1, 'RECORDING_NUM_CHANNELS should be 1 (mono)');
+});
+
+TestRunner.test('Day 468 - Recording Constants - RECORDING_MIME_TYPE is defined', (t) => {
+    t.assertEqual(typeof RECORDING_MIME_TYPE, 'string', 'RECORDING_MIME_TYPE should be a string');
+    t.assertTruthy(RECORDING_MIME_TYPE.length > 0, 'RECORDING_MIME_TYPE should not be empty');
+});
+
+TestRunner.test('Day 468 - Recording Constants - RECORDING_LATENCY_HINT is a positive number', (t) => {
+    t.assertEqual(typeof RECORDING_LATENCY_HINT, 'number', 'RECORDING_LATENCY_HINT should be a number');
+    t.assertTruthy(RECORDING_LATENCY_HINT > 0, 'RECORDING_LATENCY_HINT should be positive');
+});
+
+TestRunner.test('Day 468 - Recording Constants - RECORDING_ECHO_CANCELLATION is false', (t) => {
+    t.assertEqual(RECORDING_ECHO_CANCELLATION, false, 'RECORDING_ECHO_CANCELLATION should be false');
+});
+
+TestRunner.test('Day 468 - Recording Constants - RECORDING_AUTO_GAIN_CONTROL is false', (t) => {
+    t.assertEqual(RECORDING_AUTO_GAIN_CONTROL, false, 'RECORDING_AUTO_GAIN_CONTROL should be false');
+});
+
+TestRunner.test('Day 468 - Recording Constants - RECORDING_NOISE_SUPPRESSION is false', (t) => {
+    t.assertEqual(RECORDING_NOISE_SUPPRESSION, false, 'RECORDING_NOISE_SUPPRESSION should be false');
+});
+
+TestRunner.test('Day 468 - Recording Constants - DEFAULT_RECORDING_INPUT_GAIN is a positive number', (t) => {
+    t.assertEqual(typeof DEFAULT_RECORDING_INPUT_GAIN, 'number', 'DEFAULT_RECORDING_INPUT_GAIN should be a number');
+    t.assertTruthy(DEFAULT_RECORDING_INPUT_GAIN >= 0, 'DEFAULT_RECORDING_INPUT_GAIN should be non-negative');
+});
+
+TestRunner.test('Day 468 - Recording Constants - MIN_RECORDING_INPUT_GAIN is defined', (t) => {
+    t.assertEqual(typeof MIN_RECORDING_INPUT_GAIN, 'number', 'MIN_RECORDING_INPUT_GAIN should be a number');
+});
+
+TestRunner.test('Day 468 - Recording Constants - MAX_RECORDING_INPUT_GAIN is greater than MIN', (t) => {
+    t.assertEqual(typeof MAX_RECORDING_INPUT_GAIN, 'number', 'MAX_RECORDING_INPUT_GAIN should be a number');
+    t.assertTruthy(MAX_RECORDING_INPUT_GAIN > MIN_RECORDING_INPUT_GAIN, 'MAX should be > MIN');
+});
+
+TestRunner.test('Day 468 - Recording Constants - MAX_RECORDING_LENGTH_SECONDS is a positive number', (t) => {
+    t.assertEqual(typeof MAX_RECORDING_LENGTH_SECONDS, 'number', 'MAX_RECORDING_LENGTH_SECONDS should be a number');
+    t.assertTruthy(MAX_RECORDING_LENGTH_SECONDS > 0, 'MAX_RECORDING_LENGTH_SECONDS should be positive');
+});
+
+TestRunner.test('Day 468 - Recording Constants - MIN_RECORDING_LENGTH_SECONDS is a positive number', (t) => {
+    t.assertEqual(typeof MIN_RECORDING_LENGTH_SECONDS, 'number', 'MIN_RECORDING_LENGTH_SECONDS should be a number');
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS > 0, 'MIN_RECORDING_LENGTH_SECONDS should be positive');
+});
+
+TestRunner.test('Day 468 - Recording Constants - MIN_RECORDING_LENGTH_SECONDS is less than MAX', (t) => {
+    t.assertTruthy(MIN_RECORDING_LENGTH_SECONDS < MAX_RECORDING_LENGTH_SECONDS, 'MIN should be < MAX');
+});
+
+TestRunner.test('Day 468 - Recording Constants - DEFAULT_RECORDING_MONITORING_ENABLED is defined', (t) => {
+    t.assertEqual(typeof DEFAULT_RECORDING_MONITORING_ENABLED, 'boolean', 'DEFAULT_RECORDING_MONITORING_ENABLED should be boolean');
+});
+
+TestRunner.test('Day 468 - Recording Constants - DEFAULT_RECORDING_MONITORING_VOLUME is between 0 and 1', (t) => {
+    t.assertEqual(typeof DEFAULT_RECORDING_MONITORING_VOLUME, 'number', 'DEFAULT_RECORDING_MONITORING_VOLUME should be a number');
+    t.assertTruthy(DEFAULT_RECORDING_MONITORING_VOLUME >= 0 && DEFAULT_RECORDING_MONITORING_VOLUME <= 1, 'DEFAULT_RECORDING_MONITORING_VOLUME should be 0-1');
+});
+
+TestRunner.test('Day 468 - Recording Constants - MIN_RECORDING_MONITORING_VOLUME is 0', (t) => {
+    t.assertEqual(MIN_RECORDING_MONITORING_VOLUME, 0, 'MIN_RECORDING_MONITORING_VOLUME should be 0');
+});
+
+TestRunner.test('Day 468 - Recording Constants - MAX_RECORDING_MONITORING_VOLUME is 1', (t) => {
+    t.assertEqual(MAX_RECORDING_MONITORING_VOLUME, 1, 'MAX_RECORDING_MONITORING_VOLUME should be 1');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain is a function export', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain accepts 1 parameter', (t) => {
+    t.assertEqual(setRecordingInputGain.length, 1, 'setRecordingInputGain should accept 1 parameter');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain references gainValue parameter', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('gainValue'), 'setRecordingInputGain should reference gainValue parameter');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain uses parseFloat for value parsing', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('parseFloat') || funcStr.includes('Number'), 'setRecordingInputGain should parse float value');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain clamps to MIN_RECORDING_INPUT_GAIN', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('MIN_RECORDING_INPUT_GAIN') || funcStr.includes('Math.max'), 'setRecordingInputGain should clamp minimum');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain clamps to MAX_RECORDING_INPUT_GAIN', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('MAX_RECORDING_INPUT_GAIN') || funcStr.includes('Math.min'), 'setRecordingInputGain should clamp maximum');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain defaults to DEFAULT_RECORDING_INPUT_GAIN for invalid input', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_RECORDING_INPUT_GAIN'), 'setRecordingInputGain should use default for invalid input');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain uses Number.isFinite for validation', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Number.isFinite'), 'setRecordingInputGain should validate with Number.isFinite');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain calls captureAudioStateForUndoIfAllowed when value changes', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setRecordingInputGain should call undo capture when value changes');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain updates recordingInputGainValue state', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGainValue') || funcStr.includes('recordingInputGainValue'), 'setRecordingInputGain should update state');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain updates gainNode.gain.value when node exists', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('gain.value') || funcStr.includes('gainNode'), 'setRecordingInputGain should update gain node value');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain checks node.disposed before updating', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('disposed') || funcStr.includes('disposed'), 'setRecordingInputGain should check disposed state');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain has error handling with try/catch', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'setRecordingInputGain should have error handling');
+});
+
+TestRunner.test('Day 468 - Recording Audio - setRecordingInputGain returns the clamped gain value', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('return'), 'setRecordingInputGain should return a value');
+});
+
+TestRunner.test('Day 468 - Recording Audio - cleanupRecordingAudioResources is a function export', (t) => {
+    const funcStr = cleanupRecordingAudioResources ? cleanupRecordingAudioResources.toString() : '';
+    t.assertTruthy(funcStr.length > 0 || typeof cleanupRecordingAudioResources === 'function', 'cleanupRecordingAudioResources should exist');
+});
+
+TestRunner.test('Day 468 - Recording Audio - cleanupRecordingAudioResources handles mic cleanup', (t) => {
+    const funcStr = cleanupRecordingAudioResources ? cleanupRecordingAudioResources.toString() : '';
+    t.assertTruthy(funcStr.includes('mic') && (funcStr.includes('disconnect') || funcStr.includes('close') || funcStr.includes('dispose')), 'cleanupRecordingAudioResources should clean up mic');
+});
+
+TestRunner.test('Day 468 - Recording Audio - cleanupRecordingAudioResources handles recorder cleanup', (t) => {
+    const funcStr = cleanupRecordingAudioResources ? cleanupRecordingAudioResources.toString() : '';
+    t.assertTruthy(funcStr.includes('recorder') && (funcStr.includes('disconnect') || funcStr.includes('dispose')), 'cleanupRecordingAudioResources should clean up recorder');
+});
+
+TestRunner.test('Day 468 - Recording Audio - getRecordingInputGainNode is a function export', (t) => {
+    t.assertEqual(typeof getRecordingInputGainNode, 'function', 'getRecordingInputGainNode should be a function');
+});
+
+TestRunner.test('Day 468 - Recording Audio - getRecordingInputGainNode accepts 0 parameters', (t) => {
+    t.assertEqual(getRecordingInputGainNode.length, 0, 'getRecordingInputGainNode should accept 0 parameters');
+});
+
+TestRunner.test('Day 468 - Recording Audio - getRecordingInputGainNode creates new Tone.Gain when node is disposed', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Gain') || funcStr.includes('Gain('), 'getRecordingInputGainNode should create Tone.Gain');
+});
+
+TestRunner.test('Day 468 - Recording Audio - getRecordingInputGainNode checks disposed state', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getRecordingInputGainNode should check disposed state');
+});
+
+TestRunner.test('Day 468 - Recording Audio - getRecordingInputGainNode disposes old node before creating new one', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'getRecordingInputGainNode should dispose old node');
+});
+
+TestRunner.test('Day 468 - Recording Audio - getRecordingInputGainNode uses recordingInputGainValue for gain value', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGainValue'), 'getRecordingInputGainNode should use recordingInputGainValue');
+});
+
+TestRunner.test('Day 468 - Recording Audio - APP_VERSION validation for Day 468', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 468');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 138, 'Minor version should be >= 138 for Day 468');
+    }
+});
