@@ -11817,3 +11817,84 @@ TestRunner.test('Day 469 - Sequence Section - APP_VERSION validation for Day 469
         t.assertTruthy(minor >= 139, 'Minor version should be >= 139 for Day 469');
     }
 });
+
+// Day 470: getNormalizedDrumSamplerPadIndex Tests
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex is a function export', (t) => {
+    t.assertEqual(typeof getNormalizedDrumSamplerPadIndex, 'function', 'getNormalizedDrumSamplerPadIndex should be a function');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex accepts 2 parameters', (t) => {
+    t.assertEqual(getNormalizedDrumSamplerPadIndex.length, 2, 'getNormalizedDrumSamplerPadIndex should accept 2 parameters');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex returns parsed integer for valid positive integer', (t) => {
+    const track = { selectedDrumPadForEdit: 3 };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 3, 'Should return parsed integer 3');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex returns 0 for string "0"', (t) => {
+    const track = { selectedDrumPadForEdit: '0' };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 0, 'Should return 0 for string "0"');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex returns fallback for invalid non-integer string', (t) => {
+    const track = { selectedDrumPadForEdit: 'abc' };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 0, 'Should return fallback for non-integer string');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex returns fallback for negative value', (t) => {
+    const track = { selectedDrumPadForEdit: -1 };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 0, 'Should return fallback for negative value');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex returns fallback for null track', (t) => {
+    const result = getNormalizedDrumSamplerPadIndex(null, 5);
+    t.assertEqual(result, 5, 'Should return fallback when track is null');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex returns fallback for undefined track', (t) => {
+    const result = getNormalizedDrumSamplerPadIndex(undefined, 3);
+    t.assertEqual(result, 3, 'Should return fallback when track is undefined');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex returns fallback for NaN', (t) => {
+    const track = { selectedDrumPadForEdit: NaN };
+    const result = getNormalizedDrumSamplerPadIndex(track, 2);
+    t.assertEqual(result, 2, 'Should return fallback for NaN');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex parses string numbers to integers', (t) => {
+    const track = { selectedDrumPadForEdit: '5' };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 5, 'Should parse string "5" to integer 5');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex floors floats to integers', (t) => {
+    const track = { selectedDrumPadForEdit: 3.7 };
+    const result = getNormalizedDrumSamplerPadIndex(track, 0);
+    t.assertEqual(result, 3, 'Should floor 3.7 to 3');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex uses custom fallback when provided', (t) => {
+    const track = { selectedDrumPadForEdit: 'invalid' };
+    const result = getNormalizedDrumSamplerPadIndex(track, 7);
+    t.assertEqual(result, 7, 'Should return custom fallback 7');
+});
+
+TestRunner.test('Day 470 - getNormalizedDrumSamplerPadIndex APP_VERSION validation for Day 470', (t) => {
+    const constSrc = fs.readFileSync('/home/workspace/app/js/constants.js', 'utf-8');
+    const versionMatch = constSrc.match(/export const APP_VERSION = ['"]([^'"]+)['"]/);
+    t.assertTruthy(versionMatch, 'APP_VERSION should be defined in constants.js');
+    const version = versionMatch[1];
+    const versionParts = version.split('.');
+    const major = parseInt(versionParts[0]);
+    const minor = parseInt(versionParts[1]);
+    t.assertTruthy(major >= 2, 'Major version should be >= 2 for Day 470');
+    if (major === 2) {
+        t.assertTruthy(minor >= 140, 'Minor version should be >= 140 for Day 470');
+    }
+});
