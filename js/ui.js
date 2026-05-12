@@ -1778,6 +1778,49 @@ export function renderMixer(container) {
             {label: "Record Solo Automation", action: () => { if (track.toggleSoloAutomationNow) track.toggleSoloAutomationNow(); else showNotification('Arm automation first', 1500); }},
             {separator: true},
             {label: "Save Track as Template", action: () => { const templateName = track.name || 'Track Template'; const templateData = { name: templateName, color: track.trackColor || '#54a0ff', type: track.type, synthParams: track.synthParams || {}, activeEffects: (track.activeEffects || []).map(e => ({ type: e.type, params: e.params || {} })) }; if (localAppServices.addTrackTemplate) { const t = localAppServices.addTrackTemplate(templateData); if (t) showNotification(`Template "${t.name}" saved`, 2000); else showNotification('Failed to save template', 2000); } else { showNotification('Template API not available', 2000); } }},
+            {separator: true},
+            {label: "Add to Track Group", submenu: () => {
+                const groups = localAppServices.getTrackGroups ? localAppServices.getTrackGroups() : [];
+                if (groups.length === 0) return [{label: "No groups yet", enabled: false}];
+                return groups.map(g => ({
+                    label: `◆ ${g.name} (${g.trackIds ? g.trackIds.length : 0})`,
+                    action: () => {
+                        if (localAppServices.addTrackToGroup) {
+                            localAppServices.addTrackToGroup(g.id, track.id);
+                            showNotification(`Added ${track.name} to "${g.name}"`, 1500);
+                        }
+                    }
+                }));
+            }},
+            {label: "Remove from Track Group", action: () => {
+                const groups = localAppServices.getTrackGroups ? localAppServices.getTrackGroups() : [];
+                const memberOf = groups.filter(g => g.trackIds && g.trackIds.includes(track.id));
+                if (memberOf.length === 0) { showNotification(`${track.name} is not in any group`, 1500); return; }
+                memberOf.forEach(g => {
+                    if (localAppServices.removeTrackFromGroup) localAppServices.removeTrackFromGroup(g.id, track.id);
+                });
+                showNotification(`Removed ${track.name} from ${memberOf.length} group(s)`, 1500);
+            }},
+            {label: "Create Track Group from this Track", action: () => {
+                const groupName = `${track.name} Group`;
+                if (localAppServices.addTrackGroup) {
+                    const newGroup = localAppServices.addTrackGroup(groupName);
+                    if (newGroup && localAppServices.addTrackToGroup) {
+                        localAppServices.addTrackToGroup(newGroup.id, track.id);
+                        showNotification(`Created group "${groupName}" with ${track.name}`, 1500);
+                    }
+                } else {
+                    showNotification('Track Group API not available', 1500);
+                }
+            }},
+            {label: "Manage Track Groups...", action: () => {
+                if (localAppServices.openTrackGroupsWindow) {
+                    localAppServices.openTrackGroupsWindow();
+                } else {
+                    showNotification('Track Groups window not available', 1500);
+                }
+            }},
+            {separator: true},
             {label: "Remove Track", action: () => localAppServices.handleRemoveTrack(track.id)}
         ], localAppServices); });
         container.appendChild(trackDiv);
@@ -3461,6 +3504,90 @@ export function openTrackTemplatesWindow(savedState = null) {
     return win;
 }
 
+// --- MIDI CC Mappings Window ---
+export function openMidiCCMappingsWindow(savedState = null) {
+    const windowId = 'midiCCMappings';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function buildMappingsListHTML() {
+        const mappings = typeof getMidiCCMappings === 'function' ? getMidiCCMappings() : {};
+        const entries = Object.entries(mappings);
+
+        if (entries.length === 0) {
+            return '<p class="text-slate-400 italic text-center py-4">No MIDI CC mappings configured. Right-click any knob and select "Assign MIDI CC..." to create a mapping.</p>';
+        }
+
+        return entries.map(([targetId, mapping]) => {
+            const entry = window._midiCCKnobRegistry ? window._midiCCKnobRegistry[targetId] : null;
+            const ownerInfo = entry ? `${entry.ownerType || 'unknown'} / ${entry.ownerId || 'unknown'} / ${entry.paramPath || 'unknown'}` : targetId;
+            return `
+                <div class="mapping-item p-2 border-b border-gray-600 dark:border-slate-600 hover:bg-slate-700/50" data-target-id="${targetId}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="cc-badge px-2 py-0.5 text-xs font-mono bg-purple-700 text-purple-200 rounded">CC ${mapping.cc}</span>
+                            <span class="ch-badge text-xs text-slate-400">Ch ${(mapping.channel || 0) + 1}</span>
+                            <span class="range-badge text-xs text-slate-500">${mapping.min?.toFixed(2) || 0} – ${mapping.max?.toFixed(2) || 1}</span>
+                        </div>
+                        <button class="remove-mapping-btn px-2 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded" data-target-id="${targetId}">Remove</button>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1 truncate" title="${ownerInfo}">${ownerInfo}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderMappingsList(listContainer) {
+        if (!listContainer) return;
+        listContainer.innerHTML = buildMappingsListHTML();
+
+        listContainer.querySelectorAll('.remove-mapping-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = btn.dataset.targetId;
+                if (typeof removeMidiCCMapping === 'function') {
+                    removeMidiCCMapping(targetId);
+                    showNotification(`MIDI CC mapping removed.`, 2000);
+                }
+                renderMappingsList(listContainer);
+            });
+        });
+    }
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column;">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">🎹 MIDI CC Mappings</h3>
+            <div id="midiMappingsList" class="flex-grow overflow-y-auto border border-slate-600 rounded bg-slate-800 mb-2" style="min-height: 150px;">
+                ${buildMappingsListHTML()}
+            </div>
+            <div class="text-xs text-slate-500">Mappings are saved with your project. Click "Remove" to delete a mapping.</div>
+        </div>
+    `;
+
+    const options = {
+        width: 480,
+        height: 380,
+        minWidth: 350,
+        minHeight: 280,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, 'MIDI CC Mappings', contentHTML, options);
+
+    if (win && win.element) {
+        const listContainer = win.element.querySelector('#midiMappingsList');
+        renderMappingsList(listContainer);
+    }
+
+    return win;
+}
+
 // --- Send Effects Window ---
 export function openSendEffectsWindow(sendId, savedState = null) {
     const windowId = `sendEffectsRack-${sendId}`;
@@ -3735,6 +3862,152 @@ export function openSendEffectsWindow(sendId, savedState = null) {
         win.element.querySelector(`#addEffectBtn-${sendId}`)?.addEventListener('click', () => {
             const currentSendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : sendTrack;
             showSendAddEffectModal(currentSendTrack);
+        });
+    }
+
+    return win;
+}
+
+// --- Track Groups Window ---
+export function openTrackGroupsWindow(savedState = null) {
+    const windowId = 'trackGroups';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const groups = localAppServices.getTrackGroups ? localAppServices.getTrackGroups() : [];
+    const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+
+    const groupsListHTML = groups.length > 0
+        ? groups.map(g => {
+            const memberTracks = g.trackIds ? g.trackIds.map(tid => tracks.find(t => t.id === tid)).filter(Boolean) : [];
+            return `
+            <div class="group-item p-2 border-b border-gray-600 dark:border-slate-600 hover:bg-purple-900/30" data-group-id="${g.id}">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-2">
+                        <span class="group-color w-3 h-3 rounded" style="background-color:${g.color || '#54a0ff'}"></span>
+                        <input class="group-name-input bg-transparent border-none dark:text-slate-200 font-medium w-32" value="${g.name || 'Group'}" data-group-id="${g.id}" />
+                        <span class="text-xs text-slate-400">(${memberTracks.length} tracks)</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="rename-group-btn px-2 py-1 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded" data-group-id="${g.id}">Rename</button>
+                        <button class="delete-group-btn px-2 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded" data-group-id="${g.id}">Delete</button>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400 mb-1">${memberTracks.length} track(s): ${memberTracks.map(t => `<span class="inline-block px-1 py-0.5 rounded text-xs" style="background-color:${t.trackColor || '#6366f1'}20">${t.name}</span>`).join(' ') || 'None'}</div>
+                <div class="flex flex-wrap gap-1">
+                    ${memberTracks.map(t => `
+                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs text-white" style="background-color:${t.trackColor || '#6366f1'}">
+                            ${t.name}
+                            <button class="remove-from-group-btn hover:text-red-300 font-bold" data-group-id="${g.id}" data-track-id="${t.id}">×</button>
+                        </span>
+                    `).join('')}
+                </div>
+            </div>`;
+        }).join('')
+        : '<p class="text-slate-400 italic text-center py-4">No track groups yet. Create one from the mixer track menu or click "New Group" below.</p>';
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column;">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">🎹 Track Groups</h3>
+            <div id="trackGroupsList" class="flex-grow overflow-y-auto border border-slate-600 rounded bg-slate-800 mb-2" style="min-height: 150px;">
+                ${groupsListHTML}
+            </div>
+            <div class="flex gap-2 mb-2">
+                <button id="newGroupBtn" class="px-3 py-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded">+ New Group</button>
+                <button id="closeGroupsBtn" class="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-500 text-white rounded">Done</button>
+            </div>
+            <div class="text-xs text-slate-500">Click a group name to rename it inline. Use the mixer track menu to add/remove tracks from groups.</div>
+        </div>
+    `;
+
+    const options = {
+        width: 500,
+        height: 400,
+        minWidth: 400,
+        minHeight: 250,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    if (savedState) Object.assign(options, { x: parseInt(savedState.left, 10), y: parseInt(savedState.top, 10), width: parseInt(savedState.width, 10), height: parseInt(savedState.height, 10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+
+    const win = localAppServices.createWindow(windowId, 'Track Groups', contentHTML, options);
+
+    if (win && win.element) {
+        // New Group button
+        win.element.querySelector('#newGroupBtn')?.addEventListener('click', () => {
+            if (localAppServices.addTrackGroup) {
+                const newGroup = localAppServices.addTrackGroup('New Group');
+                showNotification(`Created group "${newGroup.name}"`, 1500);
+                // Refresh the window
+                const wins = localAppServices.getOpenWindows();
+                const tw = wins.get(windowId);
+                if (tw) { try { tw.close(true); } catch(e) {} }
+                openTrackGroupsWindow();
+            } else {
+                showNotification('Track Groups API not available', 1500);
+            }
+        });
+
+        // Close button
+        win.element.querySelector('#closeGroupsBtn')?.addEventListener('click', () => {
+            try { win.close(true); } catch(e) {}
+        });
+
+        // Rename group
+        win.element.querySelectorAll('.rename-group-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const groupId = parseInt(btn.dataset.groupId, 10);
+                const input = win.element.querySelector(`.group-name-input[data-group-id="${groupId}"]`);
+                const newName = input ? input.value.trim() : '';
+                if (newName && localAppServices.setTrackGroupName) {
+                    localAppServices.setTrackGroupName(groupId, newName);
+                    showNotification(`Renamed group to "${newName}"`, 1500);
+                    // Refresh the window
+                    const wins = localAppServices.getOpenWindows();
+                    const tw = wins.get(windowId);
+                    if (tw) { try { tw.close(true); } catch(e) {} }
+                    openTrackGroupsWindow();
+                }
+            });
+        });
+
+        // Delete group
+        win.element.querySelectorAll('.delete-group-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const groupId = parseInt(btn.dataset.groupId, 10);
+                if (localAppServices.removeTrackGroup) {
+                    localAppServices.removeTrackGroup(groupId);
+                    showNotification('Group deleted', 1500);
+                    // Refresh the window
+                    const wins = localAppServices.getOpenWindows();
+                    const tw = wins.get(windowId);
+                    if (tw) { try { tw.close(true); } catch(e) {} }
+                    openTrackGroupsWindow();
+                }
+            });
+        });
+
+        // Remove track from group
+        win.element.querySelectorAll('.remove-from-group-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const groupId = parseInt(btn.dataset.groupId, 10);
+                const trackId = parseInt(btn.dataset.trackId, 10);
+                if (localAppServices.removeTrackFromGroup) {
+                    localAppServices.removeTrackFromGroup(groupId, trackId);
+                    showNotification('Removed track from group', 1500);
+                    // Refresh the window
+                    const wins = localAppServices.getOpenWindows();
+                    const tw = wins.get(windowId);
+                    if (tw) { try { tw.close(true); } catch(e) {} }
+                    openTrackGroupsWindow();
+                }
+            });
         });
     }
 
