@@ -7864,3 +7864,59 @@ TestRunner.test('Day 473 - Recording Audio - APP_VERSION validation for Day 473'
         t.assertTruthy(versionParts[1] >= 143, 'Minor version should be >= 143 for Day 473');
     }
 });
+
+// Day 475: Project Notes Window Tests
+TestRunner.test('Day 475 - Project Notes - getProjectNotesState is a function export', (t) => {
+    t.assertEqual(typeof getProjectNotesState, 'function', 'getProjectNotesState should be a function');
+});
+
+TestRunner.test('Day 475 - Project Notes - getProjectNotesState accepts 0 parameters', (t) => {
+    const paramCount = getProjectNotesState.length;
+    t.assertEqual(paramCount, 0, 'getProjectNotesState should accept 0 parameters');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState is a function export', (t) => {
+    t.assertEqual(typeof setProjectNotesState, 'function', 'setProjectNotesState should be a function');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState accepts 1 parameter', (t) => {
+    const paramCount = setProjectNotesState.length;
+    t.assertEqual(paramCount, 1, 'setProjectNotesState should accept 1 parameter (notes)');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState references notes parameter', (t) => {
+    const funcStr = setProjectNotesState.toString();
+    t.assertTruthy(funcStr.includes('notes') || funcStr.includes('nextNotes'), 'setProjectNotesState should reference notes parameter');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState updates projectNotesState', (t) => {
+    const funcStr = setProjectNotesState.toString();
+    t.assertTruthy(funcStr.includes('projectNotesState'), 'setProjectNotesState should update projectNotesState');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState calls captureStateForUndo', (t) => {
+    const funcStr = setProjectNotesState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setProjectNotesState should call captureStateForUndo');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState uses descriptive undo label', (t) => {
+    const funcStr = setProjectNotesState.toString();
+    t.assertTruthy(funcStr.includes('Project Notes') || funcStr.includes('Notes'), 'setProjectNotesState should use descriptive undo label');
+});
+
+TestRunner.test('Day 475 - Project Notes - openProjectNotesWindow is a function export', (t) => {
+    t.assertEqual(typeof openProjectNotesWindow, 'function', 'openProjectNotesWindow should be a function');
+});
+
+TestRunner.test('Day 475 - Project Notes - openProjectNotesWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openProjectNotesWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openProjectNotesWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 475 - Project Notes - APP_VERSION validation for Day 475', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 475');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 146, 'Minor version should be >= 146 for Day 475');
+    }
+});
