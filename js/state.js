@@ -1126,13 +1126,8 @@ export function setCurrentSoundFileTreeState(tree) {
     currentSoundFileTreeGlobal = tree;
 }
 export function setCurrentSoundBrowserPathState(path) {
-<<<<<<< HEAD
     const nextPath = Array.isArray(path) ? [...path] : [];
     if (!areSoundBrowserPathsEqual(currentSoundBrowserPathGlobal, nextPath)) {
-=======
-    const nextPath = Array.isArray(path) ? path : [];
-    if (!Object.is(currentSoundBrowserPathGlobal, nextPath)) {
->>>>>>> main
         captureStateForUndoIfAllowed('Set Sound Browser Path');
     }
     currentSoundBrowserPathGlobal = nextPath;
