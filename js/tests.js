@@ -7920,3 +7920,132 @@ TestRunner.test('Day 475 - Project Notes - APP_VERSION validation for Day 475', 
         t.assertTruthy(versionParts[1] >= 146, 'Minor version should be >= 146 for Day 475');
     }
 });
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getCountInBars is a function export', (t) => {
+    t.assertEqual(typeof getCountInBars, 'function', 'getCountInBars should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getCountInBars accepts 0 parameters', (t) => {
+    const paramCount = getCountInBars.length;
+    t.assertEqual(paramCount, 0, 'getCountInBars should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setCountInBars is a function export', (t) => {
+    t.assertEqual(typeof setCountInBars, 'function', 'setCountInBars should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setCountInBars accepts 1 parameter', (t) => {
+    const paramCount = setCountInBars.length;
+    t.assertEqual(paramCount, 1, 'setCountInBars should accept 1 parameter (bars)');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setCountInBars references bars parameter', (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('bars') || funcStr.includes('nextBars'), 'setCountInBars should reference bars parameter');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - isCountInActive is a function export', (t) => {
+    t.assertEqual(typeof isCountInActive, 'function', 'isCountInActive should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - isCountInActive accepts 0 parameters', (t) => {
+    const paramCount = isCountInActive.length;
+    t.assertEqual(paramCount, 0, 'isCountInActive should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - startCountIn is a function export', (t) => {
+    t.assertEqual(typeof startCountIn, 'function', 'startCountIn should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - startCountIn accepts 2 parameters', (t) => {
+    const paramCount = startCountIn.length;
+    t.assertEqual(paramCount, 2, 'startCountIn should accept 2 parameters (onCountInComplete, startPosition)');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - cleanupCountIn is a function export', (t) => {
+    t.assertEqual(typeof cleanupCountIn, 'function', 'cleanupCountIn should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - cleanupCountIn accepts 0 parameters', (t) => {
+    const paramCount = cleanupCountIn.length;
+    t.assertEqual(paramCount, 0, 'cleanupCountIn should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setMetronomeVolume is a function export', (t) => {
+    t.assertEqual(typeof setMetronomeVolume, 'function', 'setMetronomeVolume should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setMetronomeVolume accepts 1 parameter', (t) => {
+    const paramCount = setMetronomeVolume.length;
+    t.assertEqual(paramCount, 1, 'setMetronomeVolume should accept 1 parameter (vol)');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getMetronomeVolume is a function export', (t) => {
+    t.assertEqual(typeof getMetronomeVolume, 'function', 'getMetronomeVolume should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getMetronomeVolume accepts 0 parameters', (t) => {
+    const paramCount = getMetronomeVolume.length;
+    t.assertEqual(paramCount, 0, 'getMetronomeVolume should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - stopMetronome is a function export', (t) => {
+    t.assertEqual(typeof stopMetronome, 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - stopMetronome accepts 0 parameters', (t) => {
+    const paramCount = stopMetronome.length;
+    t.assertEqual(paramCount, 0, 'stopMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - cleanupMetronome is a function export', (t) => {
+    t.assertEqual(typeof cleanupMetronome, 'function', 'cleanupMetronome should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - cleanupMetronome accepts 0 parameters', (t) => {
+    const paramCount = cleanupMetronome.length;
+    t.assertEqual(paramCount, 0, 'cleanupMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - tapTempo is a function export', (t) => {
+    t.assertEqual(typeof tapTempo, 'function', 'tapTempo should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - tapTempo accepts 0 parameters', (t) => {
+    const paramCount = tapTempo.length;
+    t.assertEqual(paramCount, 0, 'tapTempo should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getTapTempoBpm is a function export', (t) => {
+    t.assertEqual(typeof getTapTempoBpm, 'function', 'getTapTempoBpm should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getTapTempoBpm accepts 0 parameters', (t) => {
+    const paramCount = getTapTempoBpm.length;
+    t.assertEqual(paramCount, 0, 'getTapTempoBpm should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - resetTapTempo is a function export', (t) => {
+    t.assertEqual(typeof resetTapTempo, 'function', 'resetTapTempo should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - resetTapTempo accepts 0 parameters', (t) => {
+    const paramCount = resetTapTempo.length;
+    t.assertEqual(paramCount, 0, 'resetTapTempo should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - isTapTempoReady is a function export', (t) => {
+    t.assertEqual(typeof isTapTempoReady, 'function', 'isTapTempoReady should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - isTapTempoReady accepts 0 parameters', (t) => {
+    const paramCount = isTapTempoReady.length;
+    t.assertEqual(paramCount, 0, 'isTapTempoReady should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - APP_VERSION validation for Day 476', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 476');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 146, 'Minor version should be >= 146 for Day 476');
+    }
+});
