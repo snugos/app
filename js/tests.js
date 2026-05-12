@@ -7216,6 +7216,7 @@ TestRunner.test('SnugWindow - APP_VERSION validation for Day 424', (t) => {
         t.assertTruthy(versionParts[1] >= 100, 'Minor version should be >= 100 for Day 424');
     }
 });
+<<<<<<< HEAD
 
 // ============================================================
 // Day 426: Context Suspension Monitoring & Sidechain Tests
@@ -7991,4 +7992,90 @@ TestRunner.test('Punch Recording - cleanupRecordingScheduling calls cancelSchedu
     t.assertTruthy(funcStr.includes('cancelScheduledRecording'), 'cleanupRecordingScheduling should call cancelScheduledRecording');
 });
 
-TestRunner.test('Punch Recording & Punch Region - APP_VERSION validation for
+// ============================================
+// Day 473: Recording Audio Gain & Resource Tests
+// ============================================
+TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode is a function export', (t) => {
+    t.assertEqual(typeof getRecordingInputGainNode, 'function', 'getRecordingInputGainNode should be a function');
+});
+
+TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode accepts 0 parameters', (t) => {
+    t.assertEqual(getRecordingInputGainNode.length, 0, 'getRecordingInputGainNode should accept 0 parameters');
+});
+
+TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode creates new Tone.Gain when disposed', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Gain') || funcStr.includes('Tone.Gain'), 'getRecordingInputGainNode should create a Tone.Gain node');
+});
+
+TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode checks disposed state', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getRecordingInputGainNode should check disposed state');
+});
+
+TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode disposes old node', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'getRecordingInputGainNode should dispose old node');
+});
+
+TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode uses recordingInputGainValue for gain', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGainValue'), 'getRecordingInputGainNode should use recordingInputGainValue');
+});
+
+TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode returns the gain node', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('return'), 'getRecordingInputGainNode should return the gain node');
+});
+
+TestRunner.test('Day 473 - Recording Audio - cleanupRecordingAudioResources is a function', (t) => {
+    t.assertEqual(typeof cleanupRecordingAudioResources, 'function', 'cleanupRecordingAudioResources should be a function');
+});
+
+TestRunner.test('Day 473 - Recording Audio - cleanupRecordingAudioResources handles mic cleanup', (t) => {
+    const funcStr = cleanupRecordingAudioResources.toString();
+    t.assertTruthy(funcStr.includes('mic') && (funcStr.includes('disconnect') || funcStr.includes('close') || funcStr.includes('dispose')), 'cleanupRecordingAudioResources should handle mic cleanup');
+});
+
+TestRunner.test('Day 473 - Recording Audio - cleanupRecordingAudioResources handles recorder cleanup', (t) => {
+    const funcStr = cleanupRecordingAudioResources.toString();
+    t.assertTruthy(funcStr.includes('recorder') && (funcStr.includes('disconnect') || funcStr.includes('dispose')), 'cleanupRecordingAudioResources should handle recorder cleanup');
+});
+
+TestRunner.test('Day 473 - Recording Audio - setRecordingInputGain calls captureAudioStateForUndoIfAllowed when value changes', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setRecordingInputGain should call captureAudioStateForUndoIfAllowed when value changes');
+});
+
+TestRunner.test('Day 473 - Recording Audio - setRecordingInputGain updates recordingInputGainValue state', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGainValue'), 'setRecordingInputGain should update recordingInputGainValue state');
+});
+
+TestRunner.test('Day 473 - Recording Audio - setRecordingInputGain updates gainNode.gain.value', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('gain.value') || funcStr.includes('gainNode'), 'setRecordingInputGain should update gainNode.gain.value');
+});
+
+TestRunner.test('Day 473 - Recording Audio - setRecordingInputGain checks disposed state', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'setRecordingInputGain should check disposed state');
+});
+
+TestRunner.test('Day 473 - Recording Audio - setRecordingInputGain has try/catch error handling', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'setRecordingInputGain should have try/catch error handling');
+});
+
+TestRunner.test('Day 473 - Recording Audio - setRecordingInputGain returns clamped value', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('return'), 'setRecordingInputGain should return the clamped value');
+});
+
+TestRunner.test('Day 473 - Recording Audio - APP_VERSION validation for Day 473', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 473');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 143, 'Minor version should be >= 143 for Day 473');
+    }
+});

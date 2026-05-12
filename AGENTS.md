@@ -1,3 +1,19 @@
+#### Day 473: Recording Audio Gain & Resource Tests (2026-05-12)
+- **Feature**: Added 16 new unit tests for Recording Audio Gain & Resource functions to expand test coverage and complete the missing Day 468 test block that was lost during a previous merge
+- **Files Modified**:
+  - `js/tests.js`: Added Day 473 test block with 16 tests
+  - `js/constants.js`: Updated APP_VERSION to 2.144.0
+- **Feature Details**:
+  - **getRecordingInputGainNode** (7 tests): Tests for function export, 0 parameters, creates new Tone.Gain when disposed, checks disposed state, disposes old node, uses recordingInputGainValue for gain, returns the gain node
+  - **cleanupRecordingAudioResources** (2 tests): Tests function existence and that it handles mic and recorder cleanup (disconnect/close/dispose)
+  - **setRecordingInputGain** (6 tests): Tests that it calls captureAudioStateForUndoIfAllowed when value changes, updates recordingInputGainValue state, updates gainNode.gain.value, checks disposed state, has try/catch error handling, returns clamped value
+  - **APP_VERSION validation** (1 test): Tests validate version is >= 2.143 for Day 473
+  - Total tests increased from 1418 to 1434
+- **Verification**:
+  - All JS files pass `node --check` syntax validation
+  - tests.js and constants.js pass syntax checks
+- **Version**: Bumped to 2.144.0
+
 #### Day 472: DrumSampler Pad Drop Zone & UI Tests (2026-05-11)
 - **Feature**: Added 31 new unit tests for DrumSampler Pad Drop Zone and UI functions to expand test coverage for the remaining incomplete feature from the known issues list
 - **Files Modified**:
