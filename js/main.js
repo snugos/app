@@ -28,7 +28,9 @@ import {
     openTimelineWindow,
     showKeyboardShortcutsHelpWindow,
     openTrackTemplatesWindow,
-    openSendEffectsWindow
+    openTrackGroupsWindow,
+    openSendEffectsWindow,
+    openMidiCCMappingsWindow
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -754,7 +756,9 @@ const appServices = {
     openGlobalControlsWindow,
     showKeyboardShortcutsHelpWindow,
     openTrackTemplatesWindow,
+    openTrackGroupsWindow,
     openSendEffectsWindow,
+    openMidiCCMappingsWindow,
 
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,
