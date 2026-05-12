@@ -1133,6 +1133,8 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
             playBtnGlobal: newWindow.element.querySelector('#playBtnGlobal'),
             recordBtnGlobal: newWindow.element.querySelector('#recordBtnGlobal'),
             stopBtnGlobal: newWindow.element.querySelector('#stopBtnGlobal'), // MODIFICATION: Include stop button
+            micTestBtnGlobal: newWindow.element.querySelector('#micTestBtnGlobal'),
+            micTestStatusGlobal: newWindow.element.querySelector('#micTestStatusGlobal'),
             tempoGlobalInput: newWindow.element.querySelector('#tempoGlobalInput'),
             midiInputSelectGlobal: newWindow.element.querySelector('#midiInputSelectGlobal'),
             masterMeterContainerGlobal: newWindow.element.querySelector('#masterMeterContainerGlobal'),
