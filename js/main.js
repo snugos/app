@@ -30,7 +30,8 @@ import {
     openTrackTemplatesWindow,
     openTrackGroupsWindow,
     openSendEffectsWindow,
-    openMidiCCMappingsWindow
+    openMidiCCMappingsWindow,
+    openProjectNotesWindow
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -116,6 +117,8 @@ import {
     // setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars,
     // Project Name
     getProjectNameState, setProjectNameState,
+    // Project Notes
+    getProjectNotesState, setProjectNotesState,
     // Synth Presets
     getSynthPresets, saveSynthPreset, deleteSynthPreset,
     // Muted Track Ids
@@ -759,6 +762,7 @@ const appServices = {
     openTrackGroupsWindow,
     openSendEffectsWindow,
     openMidiCCMappingsWindow,
+    openProjectNotesWindow,
 
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,

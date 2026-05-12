@@ -3595,6 +3595,69 @@ export function openMidiCCMappingsWindow(savedState = null) {
     return win;
 }
 
+// --- Project Notes Window ---
+export function openProjectNotesWindow(savedState = null) {
+    const windowId = 'projectNotes';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function getCurrentNotes() {
+        if (typeof getProjectNotesState === 'function') {
+            return getProjectNotesState();
+        }
+        return '';
+    }
+
+    function saveNotes(notes) {
+        if (typeof setProjectNotesState === 'function') {
+            setProjectNotesState(notes);
+            showNotification('Project notes saved.', 1500);
+        }
+    }
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column; gap: 10px;">
+            <h3 style="margin: 0; color: #fff;">📝 Project Notes</h3>
+            <textarea id="projectNotesTextarea" placeholder="Write notes about this project here — song ideas, arrangements, reminders..." style="flex: 1; resize: none; padding: 8px; border-radius: 6px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569; font-family: monospace; font-size: 12px; line-height: 1.5;"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button id="saveNotesBtn" style="padding: 6px 16px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">Save Notes</button>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: 480,
+        height: 400,
+        minWidth: 320,
+        minHeight: 280,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, 'Project Notes', contentHTML, options);
+
+    if (win && win.element) {
+        const textarea = win.element.querySelector('#projectNotesTextarea');
+        const saveBtn = win.element.querySelector('#saveNotesBtn');
+        if (textarea) {
+            textarea.value = getCurrentNotes();
+            textarea.addEventListener('input', () => {}, { passive: true });
+        }
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                if (textarea) saveNotes(textarea.value);
+            });
+        }
+    }
+
+    return win;
+}
+
 // --- Send Effects Window ---
 export function openSendEffectsWindow(sendId, savedState = null) {
     const windowId = `sendEffectsRack-${sendId}`;
