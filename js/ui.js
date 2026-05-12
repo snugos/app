@@ -1117,6 +1117,13 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-purple-400 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div>
         <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div>
         <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="w-full bg-violet-400 hover:bg-violet-500 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-violet-500 dark:hover:bg-violet-600">Mode: Sequencer</button> </div>
+        <div class="mt-2 pt-2 border-t border-gray-300 dark:border-slate-600 space-y-1">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-600 dark:text-slate-400">Mic Test:</span>
+                <button id="micTestBtnGlobal" title="Run microphone recording test" class="px-2 py-1 text-xs border rounded bg-blue-400 hover:bg-blue-500 text-white dark:bg-blue-500 dark:hover:bg-blue-600 dark:border-blue-600 disabled:opacity-40">Test Mic</button>
+            </div>
+            <div id="micTestStatusGlobal" data-state="idle" title="Mic test status" class="text-xs text-center text-gray-400 dark:text-slate-500">—</div>
+        </div>
     </div>`;
     const options = { width: 280, height: 360, minWidth: 250, minHeight: 340, closable: true, minimizable: true, resizable: true, initialContentKey: windowId }; // Adjusted height slightly
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
