@@ -31,7 +31,8 @@ import {
     openTrackGroupsWindow,
     openSendEffectsWindow,
     openMidiCCMappingsWindow,
-    openProjectNotesWindow
+    openProjectNotesWindow,
+    openScaleModeWindow
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -763,6 +764,7 @@ const appServices = {
     openSendEffectsWindow,
     openMidiCCMappingsWindow,
     openProjectNotesWindow,
+    openScaleModeWindow,
 
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,

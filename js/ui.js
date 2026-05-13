@@ -3525,6 +3525,110 @@ export function openTrackTemplatesWindow(savedState = null) {
     return win;
 }
 
+// --- Scale Mode Window ---
+export function openScaleModeWindow(savedState = null) {
+    const windowId = 'scaleMode';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function getCurrentSettings() {
+        return {
+            enabled: localAppServices.getScaleModeEnabled ? localAppServices.getScaleModeEnabled() : false,
+            scale: localAppServices.getScaleModeScale ? localAppServices.getScaleModeScale() : 'Major',
+            root: localAppServices.getScaleModeRoot ? localAppServices.getScaleModeRoot() : 'C',
+            lock: localAppServices.getScaleModeLock ? localAppServices.getScaleModeLock() : false
+        };
+    }
+
+    const current = getCurrentSettings();
+    const scalesList = Object.keys(Constants.SCALES || {});
+    const rootsList = Constants.SCALE_ROOTS || ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="margin: 0; color: #fff;">🎹 Scale Mode</h3>
+            <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="scaleModeEnabled" ${current.enabled ? 'checked' : ''} />
+                <span>Enable Scale Mode</span>
+            </label>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Scale</label>
+                    <select id="scaleModeScale" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${scalesList.map(s => `<option value="${s}" ${s === current.scale ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Root</label>
+                    <select id="scaleModeRoot" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${rootsList.map(r => `<option value="${r}" ${r === current.root ? 'selected' : ''}>${r}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="scaleModeLock" ${current.lock ? 'checked' : ''} />
+                <span>Lock (only allow notes within the scale)</span>
+            </label>
+            <div id="scaleModePreview" style="padding: 8px; background: #0f172a; border-radius: 4px; font-size: 12px; color: #94a3b8;">
+                Notes: ${current.scale} / ${current.root}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: auto;">
+                <button id="saveScaleModeBtn" style="padding: 6px 16px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer;">Save</button>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: 400,
+        height: 350,
+        minWidth: 300,
+        minHeight: 250,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, 'Scale Mode', contentHTML, options);
+
+    if (win && win.element) {
+        const enabledCheckbox = win.element.querySelector('#scaleModeEnabled');
+        const scaleSelect = win.element.querySelector('#scaleModeScale');
+        const rootSelect = win.element.querySelector('#scaleModeRoot');
+        const lockCheckbox = win.element.querySelector('#scaleModeLock');
+        const saveBtn = win.element.querySelector('#saveScaleModeBtn');
+
+        const updatePreview = () => {
+            const scale = scaleSelect?.value || 'Major';
+            const root = rootSelect?.value || 'C';
+            const preview = win.element.querySelector('#scaleModePreview');
+            if (preview) preview.textContent = `Notes: ${scale} / ${root}`;
+        };
+
+        scaleSelect?.addEventListener('change', updatePreview);
+        rootSelect?.addEventListener('change', updatePreview);
+
+        saveBtn?.addEventListener('click', () => {
+            const enabled = enabledCheckbox?.checked || false;
+            const scale = scaleSelect?.value || 'Major';
+            const root = rootSelect?.value || 'C';
+            const lock = lockCheckbox?.checked || false;
+
+            if (localAppServices.setScaleModeEnabled) localAppServices.setScaleModeEnabled(enabled);
+            if (localAppServices.setScaleModeScale) localAppServices.setScaleModeScale(scale);
+            if (localAppServices.setScaleModeRoot) localAppServices.setScaleModeRoot(root);
+            if (localAppServices.setScaleModeLock) localAppServices.setScaleModeLock(lock);
+
+            showNotification('Scale Mode settings saved.', 1500);
+        });
+    }
+
+    return win;
+}
+
 // --- MIDI CC Mappings Window ---
 export function openMidiCCMappingsWindow(savedState = null) {
     const windowId = 'midiCCMappings';

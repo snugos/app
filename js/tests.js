@@ -7897,3 +7897,87 @@ TestRunner.test('Day 477 - Step Velocity Methods - APP_VERSION validation for Da
         t.assertTruthy(versionParts[1] >= 147, 'Minor version should be >= 147 for Day 477');
     }
 });
+
+// === Day 479: Scale Mode Window Tests ===
+
+TestRunner.test('Day 479 - Scale Mode Window - openScaleModeWindow is a function export', (t) => {
+    t.assertEqual(typeof openScaleModeWindow, 'function', 'openScaleModeWindow should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - openScaleModeWindow accepts 1 parameter', (t) => {
+    t.assertEqual(openScaleModeWindow.length, 1, 'openScaleModeWindow should accept 1 parameter (savedState)');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - getScaleModeEnabled is a function export', (t) => {
+    t.assertEqual(typeof getScaleModeEnabled, 'function', 'getScaleModeEnabled should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - setScaleModeEnabled is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeEnabled, 'function', 'setScaleModeEnabled should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - getScaleModeScale is a function export', (t) => {
+    t.assertEqual(typeof getScaleModeScale, 'function', 'getScaleModeScale should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - setScaleModeScale is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeScale, 'function', 'setScaleModeScale should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - getScaleModeRoot is a function export', (t) => {
+    t.assertEqual(typeof getScaleModeRoot, 'function', 'getScaleModeRoot should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - setScaleModeRoot is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeRoot, 'function', 'setScaleModeRoot should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - getScaleModeLock is a function export', (t) => {
+    t.assertEqual(typeof getScaleModeLock, 'function', 'getScaleModeLock should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - setScaleModeLock is a function export', (t) => {
+    t.assertEqual(typeof setScaleModeLock, 'function', 'setScaleModeLock should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - getScaleMode is a function export', (t) => {
+    t.assertEqual(typeof getScaleMode, 'function', 'getScaleMode should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - setScaleMode is a function export', (t) => {
+    t.assertEqual(typeof setScaleMode, 'function', 'setScaleMode should be a function');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - SCALES constant is an object', (t) => {
+    t.assertEqual(typeof SCALES, 'object', 'SCALES should be an object');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - SCALES has Major scale', (t) => {
+    t.assertEqual(SCALES['Major'] !== undefined, true, 'SCALES should have Major scale');
+    t.assertEqual(Array.isArray(SCALES['Major']), true, 'Major scale should be an array');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - SCALES has Minor scale', (t) => {
+    t.assertEqual(SCALES['Minor'] !== undefined, true, 'SCALES should have Minor scale');
+    t.assertEqual(Array.isArray(SCALES['Minor']), true, 'Minor scale should be an array');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - SCALE_ROOTS is an array', (t) => {
+    t.assertEqual(Array.isArray(SCALE_ROOTS), true, 'SCALE_ROOTS should be an array');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - SCALE_ROOTS has 12 notes', (t) => {
+    t.assertEqual(SCALE_ROOTS.length, 12, 'SCALE_ROOTS should have 12 notes');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - SCALE_ROOTS starts with C', (t) => {
+    t.assertEqual(SCALE_ROOTS[0], 'C', 'SCALE_ROOTS first note should be C');
+});
+
+TestRunner.test('Day 479 - Scale Mode Window - APP_VERSION validation for Day 479', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 479');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 149, 'Minor version should be >= 149 for Day 479');
+    }
+});
