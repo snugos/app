@@ -2486,10 +2486,9 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             }
             function setNoteLen(r, c, len) {
                 if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Note Length on ${track.name}`);
-                const clampedLen = Math.max(1, Math.min(len, activeSequence.length - c));
-                currentActiveSeq.data[r][c].length = clampedLen;
+                track.setNoteLength(r, c, len);
                 if (localAppServices.openTrackSequencerWindow) localAppServices.openTrackSequencerWindow(track.id, true);
-                showNotification(`Note length: ${clampedLen} step${clampedLen > 1 ? 's' : ''}`, 1000);
+                showNotification(`Note length: ${track.getNoteLength(r, c)} step(s)`, 1000);
             }
             function setProbability(r, c, prob) {
                 if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Probability on ${track.name}`);
