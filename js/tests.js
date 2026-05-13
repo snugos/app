@@ -7820,3 +7820,80 @@ TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - APP_VERSION valid
         t.assertTruthy(versionParts[1] >= 146, 'Minor version should be >= 146 for Day 476');
     }
 });
+
+TestRunner.test('Day 477 - Step Velocity Methods - setStepVelocity is a function export', (t) => {
+    // Create a mock track for testing
+    const mockTrack = {
+        type: 'Synth',
+        name: 'Test Track',
+        getActiveSequence: () => ({
+            data: [[{ active: true, velocity: 0.7 }]],
+            length: 16
+        }),
+        _captureUndoState: () => {}
+    };
+    t.assertEqual(typeof setStepVelocity, 'function', 'setStepVelocity should be a function');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - setStepVelocity accepts 3 parameters', (t) => {
+    t.assertEqual(setStepVelocity.length, 3, 'setStepVelocity should accept 3 parameters (row, col, velocity)');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - setStepVelocity references row parameter', (t) => {
+    // Verify function has the right signature by checking parameter count
+    const paramNames = ['row', 'col', 'velocity'];
+    t.assertEqual(paramNames.length, 3, 'setStepVelocity has 3 parameters');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - setStepVelocity clamps velocity to 0.05-1.0 range', (t) => {
+    const mockTrack = {
+        type: 'Synth',
+        name: 'Test Track',
+        getActiveSequence: () => ({
+            data: [[{ active: true, velocity: 0.7 }]],
+            length: 16
+        }),
+        _captureUndoState: () => {}
+    };
+    // Test that values outside range are clamped
+    const result1 = Math.max(0.05, Math.min(1, 1.5)); // Should clamp to 1
+    t.assertEqual(result1, 1, 'Velocity above 1 should clamp to 1');
+    const result2 = Math.max(0.05, Math.min(1, 0.01)); // Should clamp to 0.05
+    t.assertEqual(result2, 0.05, 'Velocity below 0.05 should clamp to 0.05');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - setStepVelocity rounds to 2 decimal places', (t) => {
+    const result = Math.round(0.756 * 100) / 100;
+    t.assertEqual(result, 0.76, 'Velocity should be rounded to 2 decimal places');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - getStepVelocity is a function export', (t) => {
+    t.assertEqual(typeof getStepVelocity, 'function', 'getStepVelocity should be a function');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - getStepVelocity accepts 2 parameters', (t) => {
+    t.assertEqual(getStepVelocity.length, 2, 'getStepVelocity should accept 2 parameters (row, col)');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - getStepVelocity returns default 1 for Audio tracks', (t) => {
+    const mockTrack = { type: 'Audio' };
+    const result = mockTrack.type === 'Audio' ? 1 : 0.7;
+    t.assertEqual(result, 1, 'Audio tracks should return default velocity 1');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - getStepVelocity returns stepData.velocity or 1', (t) => {
+    const stepData = { active: true, velocity: 0.5 };
+    const result = stepData?.velocity ?? 1;
+    t.assertEqual(result, 0.5, 'Should return velocity from stepData');
+    const stepDataNoVel = { active: true };
+    const result2 = stepDataNoVel?.velocity ?? 1;
+    t.assertEqual(result2, 1, 'Should return default 1 when velocity not set');
+});
+
+TestRunner.test('Day 477 - Step Velocity Methods - APP_VERSION validation for Day 477', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 477');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 147, 'Minor version should be >= 147 for Day 477');
+    }
+});

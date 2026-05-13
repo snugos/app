@@ -2447,6 +2447,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 { label: `  Set to 20%`, action: () => { setVelocity(row, col, 0.2); } },
                 { label: `  + 10%`, action: () => { setVelocity(row, col, Math.min(1.0, currentVel + 0.1)); } },
                 { label: `  - 10%`, action: () => { setVelocity(row, col, Math.max(0.05, currentVel - 0.1)); } },
+                { label: `  Custom...`, action: () => { promptVelocity(row, col, currentVel); } },
                 { separator: true },
                 { label: `Note Length (steps)`, action: () => {}, disabled: true },
                 { label: `  1 step`, action: () => { setNoteLen(row, col, 1); } },
@@ -2468,9 +2469,20 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             
             function setVelocity(r, c, v) {
                 if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Velocity on ${track.name}`);
-                currentActiveSeq.data[r][c].velocity = Math.round(v * 100) / 100;
-                updateSequencerCellUI(sequencerWindow.element, track.type, r, c, true, currentActiveSeq.data[r][c].velocity);
-                showNotification(`Velocity: ${Math.round(currentActiveSeq.data[r][c].velocity * 100)}%`, 1000);
+                track.setStepVelocity(r, c, v);
+                const newVel = track.getStepVelocity(r, c);
+                updateSequencerCellUI(sequencerWindow.element, track.type, r, c, true, newVel);
+                showNotification(`Velocity: ${Math.round(newVel * 100)}%`, 1000);
+            }
+            function promptVelocity(r, c, currentVel) {
+                const input = window.prompt(`Enter velocity (0-100%):`, Math.round(currentVel * 100));
+                if (input === null) return;
+                const val = parseFloat(input);
+                if (isNaN(val) || val < 0 || val > 100) {
+                    showNotification("Invalid velocity. Use 0-100.", 2000);
+                    return;
+                }
+                setVelocity(r, c, val / 100);
             }
             function setNoteLen(r, c, len) {
                 if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Note Length on ${track.name}`);

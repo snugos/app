@@ -1515,6 +1515,28 @@ export class Track {
         return stepData.length || 1;
     }
 
+    // Set the velocity of a note at a specific row/col
+    setStepVelocity(row, col, velocity) {
+        if (this.type === 'Audio') return;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) return;
+        const stepData = activeSeq.data[row]?.[col];
+        if (!stepData || !stepData.active) return;
+        this._captureUndoState(`Set step velocity at row ${row + 1}, col ${col + 1} on ${this.name}`);
+        const clamped = Math.max(0.05, Math.min(1, velocity));
+        activeSeq.data[row][col].velocity = Math.round(clamped * 100) / 100;
+    }
+
+    // Get the velocity of a note at a specific row/col
+    getStepVelocity(row, col) {
+        if (this.type === 'Audio') return 1;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) return 1;
+        const stepData = activeSeq.data[row]?.[col];
+        if (!stepData || !stepData.active) return 1;
+        return stepData.velocity ?? 1;
+    }
+
     // Set the probability of a note at a specific row/col
     setStepProbability(row, col, probability) {
         if (this.type === 'Audio') return;
