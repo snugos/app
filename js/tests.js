@@ -177,6 +177,7 @@ import {
     getDrumSamplerPadExistingAudioData,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
+    openChordModeWindow,
 } from './ui.js';
 
 import {
@@ -7926,5 +7927,111 @@ TestRunner.test('Day 480 - Note Length UI - APP_VERSION validation for Day 480',
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 480');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 150, 'Minor version should be >= 150 for Day 480');
+    }
+});
+
+// ============================================
+// Day 481: Chord Mode Window Tests
+// ============================================
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow is a function export', (t) => {
+    t.assertEqual(typeof openChordModeWindow, 'function', 'openChordModeWindow should be a function');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openChordModeWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openChordModeWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references getChordVoicing', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordVoicing'), 'openChordModeWindow should reference getChordVoicing');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references setChordVoicing', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setChordVoicing'), 'openChordModeWindow should reference setChordVoicing');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references localAppServices', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openChordModeWindow should use localAppServices');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references createWindow', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openChordModeWindow should call createWindow');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references getChordModeEnabled', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordModeEnabled'), 'openChordModeWindow should reference getChordModeEnabled');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references getChordModeRoot', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordModeRoot'), 'openChordModeWindow should reference getChordModeRoot');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references getChordModeType', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordModeType'), 'openChordModeWindow should reference getChordModeType');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references getChordModeLock', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordModeLock'), 'openChordModeWindow should reference getChordModeLock');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references setChordModeEnabled', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setChordModeEnabled'), 'openChordModeWindow should reference setChordModeEnabled');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references setChordModeRoot', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setChordModeRoot'), 'openChordModeWindow should reference setChordModeRoot');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references setChordModeType', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setChordModeType'), 'openChordModeWindow should reference setChordModeType');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body references setChordModeLock', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setChordModeLock'), 'openChordModeWindow should reference setChordModeLock');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body uses CHORD_TYPES from Constants', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('CHORD_TYPES'), 'openChordModeWindow should reference CHORD_TYPES');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body uses SCALE_ROOTS from Constants', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('SCALE_ROOTS'), 'openChordModeWindow should reference SCALE_ROOTS');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body uses CHORD_VOICINGS from Constants', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('CHORD_VOICINGS'), 'openChordModeWindow should reference CHORD_VOICINGS');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body has getChordNotes helper', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordNotes'), 'openChordModeWindow should have getChordNotes helper');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - openChordModeWindow function body shows live chord preview', (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('chordModePreview') || funcStr.includes('preview'), 'openChordModeWindow should display chord preview');
+});
+
+TestRunner.test('Day 481 - Chord Mode Window - APP_VERSION validation for Day 481', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 481');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 152, 'Minor version should be >= 152 for Day 481');
     }
 });
