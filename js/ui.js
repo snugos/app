@@ -4331,3 +4331,227 @@ export function openTrackGroupsWindow(savedState = null) {
 
     return win;
 }
+
+// --- Timeline Markers Window ---
+export function openTimelineMarkersWindow(savedState = null) {
+    const windowId = 'timelineMarkers';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const MARKER_COLORS_LIST = Constants.MARKER_COLORS || ['#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#ff9ff3', '#f368e0', '#ff9f43', '#54a0ff', '#5f27cd', '#c8d6e5'];
+
+    function getMarkers() {
+        return localAppServices.getTimelineMarkers ? localAppServices.getTimelineMarkers() : [];
+    }
+
+    function buildMarkersListHTML() {
+        const markers = getMarkers();
+        if (markers.length === 0) {
+            return '<p class="text-slate-400 italic text-center py-6">No timeline markers yet. Add one using the form below or double-click the timeline ruler.</p>';
+        }
+        return markers.map(m => {
+            const colorSwatches = MARKER_COLORS_LIST.map(c =>
+                `<span class="marker-color-option inline-block w-4 h-4 rounded cursor-pointer border-2 ${m.color === c ? 'border-white' : 'border-transparent'}" style="background-color:${c}" data-color="${c}" title="${c}"></span>`
+            ).join('');
+            return `
+            <div class="marker-item p-2 border-b border-gray-600 dark:border-slate-600 hover:bg-slate-700/50" data-marker-id="${m.id}">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-2">
+                        <span class="marker-color-dot w-3 h-3 rounded-full flex-shrink-0" style="background-color:${m.color || '#ff9f43'}"></span>
+                        <input class="marker-name-input bg-transparent border-none dark:text-slate-200 font-medium w-36" value="${m.name || 'Marker'}" data-marker-id="${m.id}" />
+                        <span class="text-xs text-slate-400">Bar</span>
+                        <input type="number" class="marker-bar-input w-16 bg-transparent border border-slate-600 dark:text-slate-200 text-xs px-1 rounded" value="${m.bar}" min="1" data-marker-id="${m.id}" />
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="save-marker-btn px-2 py-1 text-xs bg-green-600 hover:bg-green-500 text-white rounded" data-marker-id="${m.id}">Save</button>
+                        <button class="delete-marker-btn px-2 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded" data-marker-id="${m.id}">Delete</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 mt-1">
+                    <span class="text-xs text-slate-500">Color:</span>
+                    ${colorSwatches}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column; gap: 10px;">
+            <h3 style="margin: 0; color: #fff;">📍 Timeline Markers</h3>
+            <div id="addMarkerForm" class="p-2 border border-slate-600 rounded bg-slate-800">
+                <div class="text-xs text-slate-400 mb-1 font-semibold">+ Add New Marker</div>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input id="newMarkerName" type="text" placeholder="Marker name" class="flex-1 min-w-0 p-1 border border-slate-600 rounded bg-slate-700 text-slate-200 text-xs" />
+                    <label class="text-xs text-slate-400">Bar</label>
+                    <input id="newMarkerBar" type="number" value="1" min="1" class="w-20 p-1 border border-slate-600 rounded bg-slate-700 text-slate-200 text-xs" />
+                    <div class="flex items-center gap-1">
+                        <span class="text-xs text-slate-400">Color</span>
+                        <div id="newMarkerColorPicker" class="flex gap-0.5 flex-wrap">
+                            ${MARKER_COLORS_LIST.map((c, i) => `<span class="new-color-option inline-block w-4 h-4 rounded cursor-pointer border-2 ${i === 0 ? 'border-white' : 'border-transparent'}" style="background-color:${c}" data-color="${c}"></span>`).join('')}
+                        </div>
+                    </div>
+                    <button id="addMarkerBtn" class="px-3 py-1 text-xs bg-green-600 hover:bg-green-500 text-white rounded">Add</button>
+                </div>
+            </div>
+            <div id="timelineMarkersList" class="flex-grow overflow-y-auto border border-slate-600 rounded bg-slate-800" style="min-height: 120px;">
+                ${buildMarkersListHTML()}
+            </div>
+            <div class="flex gap-2">
+                <button id="clearAllMarkersBtn" class="px-3 py-1.5 text-xs bg-red-700 hover:bg-red-600 text-white rounded">Clear All</button>
+                <button id="closeMarkersBtn" class="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-500 text-white rounded">Done</button>
+            </div>
+            <div class="text-xs text-slate-500">Double-click the timeline ruler to add a marker at that bar.</div>
+        </div>
+    `;
+
+    const options = {
+        width: 520,
+        height: 450,
+        minWidth: 400,
+        minHeight: 300,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+    if (savedState) Object.assign(options, { x: parseInt(savedState.left, 10), y: parseInt(savedState.top, 10), width: parseInt(savedState.width, 10), height: parseInt(savedState.height, 10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+
+    const win = localAppServices.createWindow(windowId, 'Timeline Markers', contentHTML, options);
+    if (win && win.element) {
+        let selectedNewColor = MARKER_COLORS_LIST[0];
+
+        // Color picker for new marker
+        win.element.querySelectorAll('.new-color-option').forEach(el => {
+            el.addEventListener('click', () => {
+                selectedNewColor = el.dataset.color;
+                win.element.querySelectorAll('.new-color-option').forEach(o => o.classList.toggle('border-white', o.dataset.color === selectedNewColor));
+                win.element.querySelectorAll('.new-color-option').forEach(o => o.classList.toggle('border-transparent', o.dataset.color !== selectedNewColor));
+            });
+        });
+
+        // Add marker button
+        win.element.querySelector('#addMarkerBtn')?.addEventListener('click', () => {
+            const nameInput = win.element.querySelector('#newMarkerName');
+            const barInput = win.element.querySelector('#newMarkerBar');
+            const name = nameInput?.value.trim() || `Marker ${getMarkers().length + 1}`;
+            const bar = parseInt(barInput?.value, 10) || 1;
+            if (localAppServices.addTimelineMarker) {
+                localAppServices.addTimelineMarker(name, Math.max(1, bar), selectedNewColor);
+                showNotification(`Added marker "${name}" at bar ${bar}`, 1500);
+                refreshList();
+                nameInput.value = '';
+                barInput.value = '1';
+            } else {
+                showNotification('Timeline Markers API not available', 1500);
+            }
+        });
+
+        // Color picker on existing markers
+        win.element.querySelectorAll('.marker-color-option').forEach(el => {
+            el.addEventListener('click', () => {
+                const item = el.closest('.marker-item');
+                if (!item) return;
+                const markerId = parseInt(item.dataset.markerId, 10);
+                const newColor = el.dataset.color;
+                if (localAppServices.setTimelineMarker) {
+                    localAppServices.setTimelineMarker(markerId, { color: newColor });
+                    refreshList();
+                }
+            });
+        });
+
+        // Save marker button
+        win.element.querySelectorAll('.save-marker-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const markerId = parseInt(btn.dataset.markerId, 10);
+                const item = btn.closest('.marker-item');
+                const nameInput = item?.querySelector('.marker-name-input');
+                const barInput = item?.querySelector('.marker-bar-input');
+                const newName = nameInput?.value.trim() || 'Marker';
+                const newBar = parseInt(barInput?.value, 10) || 1;
+                if (localAppServices.setTimelineMarker) {
+                    localAppServices.setTimelineMarker(markerId, { name: newName, bar: Math.max(1, newBar) });
+                    showNotification(`Updated marker "${newName}"`, 1500);
+                    refreshList();
+                }
+            });
+        });
+
+        // Delete marker button
+        win.element.querySelectorAll('.delete-marker-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const markerId = parseInt(btn.dataset.markerId, 10);
+                if (localAppServices.removeTimelineMarker) {
+                    localAppServices.removeTimelineMarker(markerId);
+                    showNotification('Marker deleted', 1500);
+                    refreshList();
+                }
+            });
+        });
+
+        // Clear all button
+        win.element.querySelector('#clearAllMarkersBtn')?.addEventListener('click', () => {
+            if (getMarkers().length === 0) return;
+            if (localAppServices.clearTimelineMarkers) {
+                localAppServices.clearTimelineMarkers();
+                showNotification('All markers cleared', 1500);
+                refreshList();
+            }
+        });
+
+        // Close button
+        win.element.querySelector('#closeMarkersBtn')?.addEventListener('click', () => {
+            try { win.close(true); } catch (e) { }
+        });
+
+        function refreshList() {
+            const listContainer = win.element.querySelector('#timelineMarkersList');
+            if (listContainer) {
+                listContainer.innerHTML = buildMarkersListHTML();
+                // Re-attach event listeners after innerHTML refresh
+                win.element.querySelectorAll('.save-marker-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const markerId = parseInt(btn.dataset.markerId, 10);
+                        const item = btn.closest('.marker-item');
+                        const nameInput = item?.querySelector('.marker-name-input');
+                        const barInput = item?.querySelector('.marker-bar-input');
+                        const newName = nameInput?.value.trim() || 'Marker';
+                        const newBar = parseInt(barInput?.value, 10) || 1;
+                        if (localAppServices.setTimelineMarker) {
+                            localAppServices.setTimelineMarker(markerId, { name: newName, bar: Math.max(1, newBar) });
+                            showNotification(`Updated marker "${newName}"`, 1500);
+                            refreshList();
+                        }
+                    });
+                });
+                win.element.querySelectorAll('.delete-marker-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const markerId = parseInt(btn.dataset.markerId, 10);
+                        if (localAppServices.removeTimelineMarker) {
+                            localAppServices.removeTimelineMarker(markerId);
+                            showNotification('Marker deleted', 1500);
+                            refreshList();
+                        }
+                    });
+                });
+                win.element.querySelectorAll('.marker-color-option').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const item = el.closest('.marker-item');
+                        if (!item) return;
+                        const markerId = parseInt(item.dataset.markerId, 10);
+                        const newColor = el.dataset.color;
+                        if (localAppServices.setTimelineMarker) {
+                            localAppServices.setTimelineMarker(markerId, { color: newColor });
+                            refreshList();
+                        }
+                    });
+                });
+            }
+        }
+    }
+
+    return win;
+}

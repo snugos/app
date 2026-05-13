@@ -33,7 +33,8 @@ import {
     openMidiCCMappingsWindow,
     openProjectNotesWindow,
     openScaleModeWindow,
-    openChordModeWindow
+    openChordModeWindow,
+    openTimelineMarkersWindow
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -770,6 +771,7 @@ const appServices = {
     openProjectNotesWindow,
     openScaleModeWindow,
     openChordModeWindow,
+    openTimelineMarkersWindow,
 
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,
