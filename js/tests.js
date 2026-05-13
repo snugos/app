@@ -178,6 +178,8 @@ import {
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
     openChordModeWindow,
+    openTimelineMarkersWindow,
+    openTransportSettingsWindow,
 } from './ui.js';
 
 import {
@@ -8033,5 +8035,211 @@ TestRunner.test('Day 481 - Chord Mode Window - APP_VERSION validation for Day 48
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 481');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 152, 'Minor version should be >= 152 for Day 481');
+    }
+});
+
+// ============================================
+// Day 484: Timeline Markers & Transport Settings Window Tests
+// ============================================
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow is a function export', (t) => {
+    t.assertEqual(typeof openTimelineMarkersWindow, 'function', 'openTimelineMarkersWindow should be a function');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openTimelineMarkersWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openTimelineMarkersWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow function body uses getTimelineMarkers', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('getTimelineMarkers'), 'openTimelineMarkersWindow should reference getTimelineMarkers');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow function body uses addTimelineMarker', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('addTimelineMarker'), 'openTimelineMarkersWindow should reference addTimelineMarker');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow function body uses setTimelineMarker', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('setTimelineMarker'), 'openTimelineMarkersWindow should reference setTimelineMarker');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow function body uses removeTimelineMarker', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('removeTimelineMarker'), 'openTimelineMarkersWindow should reference removeTimelineMarker');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow function body uses clearTimelineMarkers', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('clearTimelineMarkers'), 'openTimelineMarkersWindow should reference clearTimelineMarkers');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow function body uses createWindow', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTimelineMarkersWindow should call createWindow');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow function body uses localAppServices', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTimelineMarkersWindow should use localAppServices');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow function body uses MARKER_COLORS', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('MARKER_COLORS'), 'openTimelineMarkersWindow should reference MARKER_COLORS');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - openTimelineMarkersWindow has single-instance window support', (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') && funcStr.includes('windowId'), 'openTimelineMarkersWindow should check for existing open windows');
+});
+
+TestRunner.test('Day 484 - Timeline Markers Window - APP_VERSION validation for Day 484', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 484');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 154, 'Minor version should be >= 154 for Day 484');
+    }
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow is a function export', (t) => {
+    t.assertEqual(typeof openTransportSettingsWindow, 'function', 'openTransportSettingsWindow should be a function');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openTransportSettingsWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openTransportSettingsWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses isMetronomeEnabled', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('isMetronomeEnabled'), 'openTransportSettingsWindow should reference isMetronomeEnabled');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses getMetronomeVolume', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getMetronomeVolume'), 'openTransportSettingsWindow should reference getMetronomeVolume');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses getCountInBars', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getCountInBars'), 'openTransportSettingsWindow should reference getCountInBars');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses getSwingEnabled', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getSwingEnabled'), 'openTransportSettingsWindow should reference getSwingEnabled');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses getSwingAmount', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getSwingAmount'), 'openTransportSettingsWindow should reference getSwingAmount');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses tapTempo', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('tapTempo'), 'openTransportSettingsWindow should reference tapTempo');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses resetTapTempo', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('resetTapTempo'), 'openTransportSettingsWindow should reference resetTapTempo');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses getTapTempoBpm', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getTapTempoBpm'), 'openTransportSettingsWindow should reference getTapTempoBpm');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses isTapTempoReady', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('isTapTempoReady'), 'openTransportSettingsWindow should reference isTapTempoReady');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses setMetronomeEnabled', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('setMetronomeEnabled'), 'openTransportSettingsWindow should reference setMetronomeEnabled');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses setMetronomeVolume', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('setMetronomeVolume'), 'openTransportSettingsWindow should reference setMetronomeVolume');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses setCountInBars', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('setCountInBars'), 'openTransportSettingsWindow should reference setCountInBars');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses setSwingEnabled', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('setSwingEnabled'), 'openTransportSettingsWindow should reference setSwingEnabled');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses setSwingAmount', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('setSwingAmount'), 'openTransportSettingsWindow should reference setSwingAmount');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses createWindow', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTransportSettingsWindow should call createWindow');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow function body uses localAppServices', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTransportSettingsWindow should use localAppServices');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - openTransportSettingsWindow has single-instance window support', (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') && funcStr.includes('windowId'), 'openTransportSettingsWindow should check for existing open windows');
+});
+
+TestRunner.test('Day 484 - Transport Settings Window - APP_VERSION validation for Day 484', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 484');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 154, 'Minor version should be >= 154 for Day 484');
+    }
+});
+
+TestRunner.test('Day 484 - Note Length Custom Prompt - promptNoteLen function exists', (t) => {
+    t.assertTruthy(typeof promptNoteLen === 'function', 'promptNoteLen should be a function exported from ui.js');
+});
+
+TestRunner.test('Day 484 - Note Length Custom Prompt - promptNoteLen accepts 4 parameters', (t) => {
+    const paramCount = promptNoteLen.length;
+    t.assertEqual(paramCount, 4, 'promptNoteLen should accept 4 parameters (r, c, currentLen, maxLen)');
+});
+
+TestRunner.test('Day 484 - Note Length Custom Prompt - promptNoteLen calls window.prompt', (t) => {
+    const funcStr = promptNoteLen.toString();
+    t.assertTruthy(funcStr.includes('window.prompt'), 'promptNoteLen should call window.prompt for user input');
+});
+
+TestRunner.test('Day 484 - Note Length Custom Prompt - promptNoteLen validates input is number >= 1', (t) => {
+    const funcStr = promptNoteLen.toString();
+    t.assertTruthy(funcStr.includes('isNaN') || funcStr.includes('parseInt'), 'promptNoteLen should validate input is a number');
+    t.assertTruthy(funcStr.includes('val < 1') || funcStr.includes('val < 1'), 'promptNoteLen should validate value is >= 1');
+});
+
+TestRunner.test('Day 484 - Note Length Custom Prompt - promptNoteLen clamps to maxLen', (t) => {
+    const funcStr = promptNoteLen.toString();
+    t.assertTruthy(funcStr.includes('Math.min') && funcStr.includes('maxLen'), 'promptNoteLen should clamp value to maxLen');
+});
+
+TestRunner.test('Day 484 - Note Length Custom Prompt - promptNoteLen calls setNoteLen with clamped value', (t) => {
+    const funcStr = promptNoteLen.toString();
+    t.assertTruthy(funcStr.includes('setNoteLen'), 'promptNoteLen should call setNoteLen with the validated/clamped value');
+});
+
+TestRunner.test('Day 484 - Note Length Custom Prompt - APP_VERSION validation for Day 484', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 484');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 154, 'Minor version should be >= 154 for Day 484');
     }
 });

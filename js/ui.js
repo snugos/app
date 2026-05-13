@@ -2457,6 +2457,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 { label: `  16 steps`, action: () => { setNoteLen(row, col, 16); } },
                 { label: `  + 1 step`, action: () => { setNoteLen(row, col, Math.min(maxLen, noteLen + 1)); } },
                 { label: `  - 1 step`, action: () => { setNoteLen(row, col, Math.max(1, noteLen - 1)); } },
+                { label: `  Custom...`, action: () => { promptNoteLen(row, col, noteLen, maxLen); } },
                 { separator: true },
                 { label: `Probability`, action: () => {}, disabled: true },
                 { label: `  100% (always)`, action: () => { setProbability(row, col, 1.0); } },
@@ -2489,6 +2490,16 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 track.setNoteLength(r, c, len);
                 if (localAppServices.openTrackSequencerWindow) localAppServices.openTrackSequencerWindow(track.id, true);
                 showNotification(`Note length: ${track.getNoteLength(r, c)} step(s)`, 1000);
+            }
+            function promptNoteLen(r, c, currentLen, maxLen) {
+                const input = window.prompt(`Enter note length in steps (1-${maxLen}):`, currentLen);
+                if (input === null) return;
+                const val = parseInt(input, 10);
+                if (isNaN(val) || val < 1) {
+                    showNotification("Invalid note length. Use 1 or more steps.", 2000);
+                    return;
+                }
+                setNoteLen(r, c, Math.min(maxLen, Math.max(1, val)));
             }
             function setProbability(r, c, prob) {
                 if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Probability on ${track.name}`);
