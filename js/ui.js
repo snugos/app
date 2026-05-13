@@ -4555,3 +4555,166 @@ export function openTimelineMarkersWindow(savedState = null) {
 
     return win;
 }
+
+// --- Transport Settings Window ---
+export function openTransportSettingsWindow(savedState = null) {
+    const windowId = 'transportSettings';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function getCurrentSettings() {
+        return {
+            metronomeEnabled: localAppServices.isMetronomeEnabled ? localAppServices.isMetronomeEnabled() : false,
+            metronomeVolume: localAppServices.getMetronomeVolume ? localAppServices.getMetronomeVolume() : 0.5,
+            countInBars: localAppServices.getCountInBars ? localAppServices.getCountInBars() : 1,
+            swingEnabled: localAppServices.getSwingEnabled ? localAppServices.getSwingEnabled() : false,
+            swingAmount: localAppServices.getSwingAmount ? localAppServices.getSwingAmount() : 0,
+            tapTempoReady: localAppServices.isTapTempoReady ? localAppServices.isTapTempoReady() : false,
+            tapTempoBpm: localAppServices.getTapTempoBpm ? localAppServices.getTapTempoBpm() : 120
+        };
+    }
+
+    const current = getCurrentSettings();
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="margin: 0; color: #fff;">🎵 Transport Settings</h3>
+
+            <!-- Metronome Section -->
+            <div class="border border-slate-600 rounded p-3 bg-slate-800">
+                <div class="text-xs text-slate-400 mb-2 font-semibold">Metronome</div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm">Enable Metronome</span>
+                    <input type="checkbox" id="transportMetronomeEnabled" ${current.metronomeEnabled ? 'checked' : ''} class="w-4 h-4" />
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 w-16">Volume</span>
+                    <input type="range" id="transportMetronomeVolume" min="0" max="100" value="${Math.round(current.metronomeVolume * 100)}" class="flex-1" />
+                    <span id="transportMetronomeVolumeLabel" class="text-xs w-10 text-right">${Math.round(current.metronomeVolume * 100)}%</span>
+                </div>
+            </div>
+
+            <!-- Count-In Section -->
+            <div class="border border-slate-600 rounded p-3 bg-slate-800">
+                <div class="text-xs text-slate-400 mb-2 font-semibold">Count-In</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm">Bars before playback</span>
+                    <select id="transportCountInBars" class="flex-1 p-1 border border-slate-600 rounded bg-slate-700 text-slate-200 text-sm">
+                        <option value="0" ${current.countInBars === 0 ? 'selected' : ''}>Off</option>
+                        <option value="1" ${current.countInBars === 1 ? 'selected' : ''}>1 bar</option>
+                        <option value="2" ${current.countInBars === 2 ? 'selected' : ''}>2 bars</option>
+                        <option value="4" ${current.countInBars === 4 ? 'selected' : ''}>4 bars</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Swing Section -->
+            <div class="border border-slate-600 rounded p-3 bg-slate-800">
+                <div class="text-xs text-slate-400 mb-2 font-semibold">Swing</div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm">Enable Swing</span>
+                    <input type="checkbox" id="transportSwingEnabled" ${current.swingEnabled ? 'checked' : ''} class="w-4 h-4" />
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 w-16">Amount</span>
+                    <input type="range" id="transportSwingAmount" min="0" max="100" value="${current.swingAmount}" class="flex-1" />
+                    <span id="transportSwingAmountLabel" class="text-xs w-10 text-right">${current.swingAmount}%</span>
+                </div>
+            </div>
+
+            <!-- Tap Tempo Section -->
+            <div class="border border-slate-600 rounded p-3 bg-slate-800">
+                <div class="text-xs text-slate-400 mb-2 font-semibold">Tap Tempo</div>
+                <div class="flex items-center gap-2">
+                    <button id="transportTapTempoBtn" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded flex-1">TAP</button>
+                    <span id="transportTapTempoBpm" class="text-sm ${current.tapTempoReady ? 'text-green-400' : 'text-slate-500'}">${current.tapTempoReady ? current.tapTempoBpm.toFixed(1) + ' BPM' : 'Tap to set tempo'}</span>
+                </div>
+                <div class="flex items-center justify-end mt-1">
+                    <button id="transportResetTapBtn" class="px-2 py-1 text-xs text-slate-400 hover:text-slate-300">Reset</button>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-auto">
+                <button id="transportSettingsSaveBtn" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold rounded">Save</button>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: 380,
+        height: 480,
+        minWidth: 300,
+        minHeight: 350,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+    if (savedState) Object.assign(options, { x: parseInt(savedState.left, 10), y: parseInt(savedState.top, 10), width: parseInt(savedState.width, 10), height: parseInt(savedState.height, 10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+
+    const win = localAppServices.createWindow(windowId, 'Transport Settings', contentHTML, options);
+
+    if (win && win.element) {
+        // Metronome volume slider
+        const metroVolumeSlider = win.element.querySelector('#transportMetronomeVolume');
+        const metroVolumeLabel = win.element.querySelector('#transportMetronomeVolumeLabel');
+        metroVolumeSlider?.addEventListener('input', () => {
+            const pct = parseInt(metroVolumeSlider.value, 10);
+            metroVolumeLabel.textContent = pct + '%';
+        });
+
+        // Swing amount slider
+        const swingSlider = win.element.querySelector('#transportSwingAmount');
+        const swingLabel = win.element.querySelector('#transportSwingAmountLabel');
+        swingSlider?.addEventListener('input', () => {
+            swingLabel.textContent = swingSlider.value + '%';
+        });
+
+        // Tap tempo button
+        const tapBtn = win.element.querySelector('#transportTapTempoBtn');
+        const tapBpmDisplay = win.element.querySelector('#transportTapTempoBpm');
+        const resetTapBtn = win.element.querySelector('#transportResetTapBtn');
+
+        if (tapBtn && localAppServices.tapTempo) {
+            tapBtn.addEventListener('click', () => {
+                localAppServices.tapTempo();
+                if (localAppServices.isTapTempoReady && localAppServices.isTapTempoReady()) {
+                    const bpm = localAppServices.getTapTempoBpm ? localAppServices.getTapTempoBpm() : 120;
+                    tapBpmDisplay.textContent = bpm.toFixed(1) + ' BPM';
+                    tapBpmDisplay.className = 'text-sm text-green-400';
+                }
+            });
+        }
+
+        if (resetTapBtn && localAppServices.resetTapTempo) {
+            resetTapBtn.addEventListener('click', () => {
+                localAppServices.resetTapTempo();
+                tapBpmDisplay.textContent = 'Tap to set tempo';
+                tapBpmDisplay.className = 'text-sm text-slate-500';
+            });
+        }
+
+        // Save button
+        const saveBtn = win.element.querySelector('#transportSettingsSaveBtn');
+        saveBtn?.addEventListener('click', () => {
+            const metroEnabled = win.element.querySelector('#transportMetronomeEnabled')?.checked || false;
+            const metroVolume = parseInt(win.element.querySelector('#transportMetronomeVolume')?.value || '50', 10) / 100;
+            const countInBars = parseInt(win.element.querySelector('#transportCountInBars')?.value || '1', 10);
+            const swingEnabled = win.element.querySelector('#transportSwingEnabled')?.checked || false;
+            const swingAmount = parseInt(win.element.querySelector('#transportSwingAmount')?.value || '0', 10);
+
+            if (localAppServices.setMetronomeEnabled) localAppServices.setMetronomeEnabled(metroEnabled);
+            if (localAppServices.setMetronomeVolume) localAppServices.setMetronomeVolume(metroVolume);
+            if (localAppServices.setCountInBars) localAppServices.setCountInBars(countInBars);
+            if (localAppServices.setSwingEnabled) localAppServices.setSwingEnabled(swingEnabled);
+            if (localAppServices.setSwingAmount) localAppServices.setSwingAmount(swingAmount);
+
+            showNotification('Transport settings saved.', 1500);
+            try { win.close(true); } catch (e) {}
+        });
+    }
+
+    return win;
+}

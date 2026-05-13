@@ -34,7 +34,8 @@ import {
     openProjectNotesWindow,
     openScaleModeWindow,
     openChordModeWindow,
-    openTimelineMarkersWindow
+    openTimelineMarkersWindow,
+    openTransportSettingsWindow
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -535,6 +536,23 @@ const appServices = {
     setSendBusLevel: setSendBusLevel,
     setSendBusMuted: setSendBusMuted,
 
+    // Metronome and Count-In
+    isMetronomeEnabled: isMetronomeEnabled,
+    setMetronomeEnabled: setMetronomeEnabled,
+    getMetronomeVolume: getMetronomeVolume,
+    setMetronomeVolume: setMetronomeVolume,
+    getCountInBars: getCountInBars,
+    setCountInBars: setCountInBars,
+    isCountInActive: isCountInActive,
+    startCountIn: startCountIn,
+    cleanupCountIn: cleanupCountIn,
+    stopMetronome: stopMetronome,
+    cleanupMetronome: cleanupMetronome,
+    tapTempo: tapTempo,
+    getTapTempoBpm: getTapTempoBpm,
+    resetTapTempo: resetTapTempo,
+    isTapTempoReady: isTapTempoReady,
+
     // Recording state
     getRecordingTrackId: getRecordingTrackIdState,
     setRecordingTrackId: setRecordingTrackIdState,
@@ -772,6 +790,7 @@ const appServices = {
     openScaleModeWindow,
     openChordModeWindow,
     openTimelineMarkersWindow,
+    openTransportSettingsWindow,
 
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,
