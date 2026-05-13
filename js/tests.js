@@ -8359,3 +8359,82 @@ TestRunner.test('Day 485 - Master Effects Audio - APP_VERSION validation for Day
         t.assertTruthy(versionParts[1] >= 155, 'Minor version should be >= 155 for Day 485');
     }
 });
+
+// Day 486: Timeline Ruler Implementation
+// ============================================
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler is a function export', (t) => {
+    t.assertEqual(typeof renderTimelineRuler, 'function', 'renderTimelineRuler should be a function');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler accepts 0 parameters', (t) => {
+    const paramCount = renderTimelineRuler.length;
+    t.assertEqual(paramCount, 0, 'renderTimelineRuler should accept 0 parameters');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler uses timelineZoomLevel', (t) => {
+    const funcStr = renderTimelineRuler.toString();
+    t.assertTruthy(funcStr.includes('timelineZoomLevel'), 'renderTimelineRuler should reference timelineZoomLevel');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler uses Constants.DEFAULT_MARKER_COLOR', (t) => {
+    const funcStr = renderTimelineRuler.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_MARKER_COLOR') || funcStr.includes('Constants'), 'renderTimelineRuler should reference Constants or DEFAULT_MARKER_COLOR');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler uses getTimelineMarkers', (t) => {
+    const funcStr = renderTimelineRuler.toString();
+    t.assertTruthy(funcStr.includes('getTimelineMarkers'), 'renderTimelineRuler should reference getTimelineMarkers');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler adds marker indicators to ruler', (t) => {
+    const funcStr = renderTimelineRuler.toString();
+    t.assertTruthy(funcStr.includes('marker.color') || funcStr.includes('markerLeft'), 'renderTimelineRuler should add marker indicators');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler has double-click handler for adding markers', (t) => {
+    const funcStr = renderTimelineRuler.toString();
+    t.assertTruthy(funcStr.includes('ondblclick') || funcStr.includes('dblclick') || funcStr.includes('addEventListener'), 'renderTimelineRuler should have double-click handler');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler double-click handler calls addTimelineMarker', (t) => {
+    const funcStr = renderTimelineRuler.toString();
+    t.assertTruthy(funcStr.includes('addTimelineMarker'), 'renderTimelineRuler double-click handler should call addTimelineMarker');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - getPlayheadPositionInBars is a function export', (t) => {
+    t.assertEqual(typeof getPlayheadPositionInBars, 'function', 'getPlayheadPositionInBars should be a function');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - getPlayheadPositionInBars accepts 0 parameters', (t) => {
+    const paramCount = getPlayheadPositionInBars.length;
+    t.assertEqual(paramCount, 0, 'getPlayheadPositionInBars should accept 0 parameters');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - getPlayheadPositionInBars uses Tone.Transport.position', (t) => {
+    const funcStr = getPlayheadPositionInBars.toString();
+    t.assertTruthy(funcStr.includes('Tone') && funcStr.includes('Transport') && funcStr.includes('position'), 'getPlayheadPositionInBars should reference Tone.Transport.position');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimeline calls renderTimelineRuler before rendering tracks', (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('renderTimelineRuler'), 'renderTimeline should call renderTimelineRuler');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler uses PIXELS_PER_BAR based on zoom', (t) => {
+    const funcStr = renderTimelineRuler.toString();
+    t.assertTruthy(funcStr.includes('PIXELS_PER_BAR') || funcStr.includes('120'), 'renderTimelineRuler should use PIXELS_PER_BAR (120 * zoom)');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - renderTimelineRuler renders bar numbers', (t) => {
+    const funcStr = renderTimelineRuler.toString();
+    t.assertTruthy(funcStr.includes('bar') && funcStr.includes('label'), 'renderTimelineRuler should render bar numbers');
+});
+
+TestRunner.test('Day 486 - Timeline Ruler - APP_VERSION validation for Day 486', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 486');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 156, 'Minor version should be >= 156 for Day 486');
+    }
+});
