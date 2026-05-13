@@ -3712,6 +3712,137 @@ export function openMidiCCMappingsWindow(savedState = null) {
     return win;
 }
 
+// --- Chord Mode Window ---
+export function openChordModeWindow(savedState = null) {
+    const windowId = 'chordMode';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function getCurrentChordSettings() {
+        return {
+            enabled: localAppServices.getChordModeEnabled ? localAppServices.getChordModeEnabled() : false,
+            root: localAppServices.getChordModeRoot ? localAppServices.getChordModeRoot() : 0,
+            type: localAppServices.getChordModeType ? localAppServices.getChordModeType() : 'major',
+            lock: localAppServices.getChordModeLock ? localAppServices.getChordModeLock() : false,
+            voicing: localAppServices.getChordVoicing ? localAppServices.getChordVoicing() : 'closed'
+        };
+    }
+
+    const current = getCurrentChordSettings();
+    const rootsList = Constants.SCALE_ROOTS || ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const typesList = Object.keys(Constants.CHORD_TYPES || {});
+    const voicingList = Constants.CHORD_VOICINGS || ['closed', 'wide', 'drop2', 'rootless'];
+
+    function getChordNotes(rootIndex, chordType) {
+        const intervals = Constants.CHORD_TYPES?.[chordType] || [0, 4, 7];
+        const noteNames = rootsList;
+        return intervals.map(i => noteNames[(rootIndex + i) % 12]);
+    }
+
+    const chordNotes = getChordNotes(current.root, current.type);
+    const previewNotes = chordNotes.join(' - ');
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="margin: 0; color: #fff;">🎸 Chord Mode</h3>
+            <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="chordModeEnabled" ${current.enabled ? 'checked' : ''} />
+                <span>Enable Chord Mode</span>
+            </label>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Root</label>
+                    <select id="chordModeRoot" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${rootsList.map((r, i) => `<option value="${i}" ${i === current.root ? 'selected' : ''}>${r}</option>`).join('')}
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Type</label>
+                    <select id="chordModeType" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${typesList.map(t => `<option value="${t}" ${t === current.type ? 'selected' : ''}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Voicing</label>
+                    <select id="chordModeVoicing" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${voicingList.map(v => `<option value="${v}" ${v === current.voicing ? 'selected' : ''}>${v.charAt(0).toUpperCase() + v.slice(1)}</option>`).join('')}
+                    </select>
+                </div>
+                <div style="flex: 1; display: flex; align-items: flex-end;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="chordModeLock" ${current.lock ? 'checked' : ''} />
+                        <span>Lock</span>
+                    </label>
+                </div>
+            </div>
+            <div id="chordModePreview" style="padding: 8px; background: #0f172a; border-radius: 4px; font-size: 12px; color: #94a3b8;">
+                Notes: ${previewNotes}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: auto;">
+                <button id="saveChordModeBtn" style="padding: 6px 16px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer;">Save</button>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: 400,
+        height: 380,
+        minWidth: 300,
+        minHeight: 280,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    if (savedState) Object.assign(options, { x: parseInt(savedState.left, 10), y: parseInt(savedState.top, 10), width: parseInt(savedState.width, 10), height: parseInt(savedState.height, 10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+
+    const win = localAppServices.createWindow(windowId, 'Chord Mode', contentHTML, options);
+
+    if (win && win.element) {
+        const enabledCheckbox = win.element.querySelector('#chordModeEnabled');
+        const rootSelect = win.element.querySelector('#chordModeRoot');
+        const typeSelect = win.element.querySelector('#chordModeType');
+        const voicingSelect = win.element.querySelector('#chordModeVoicing');
+        const lockCheckbox = win.element.querySelector('#chordModeLock');
+        const saveBtn = win.element.querySelector('#saveChordModeBtn');
+
+        const updatePreview = () => {
+            const root = parseInt(rootSelect?.value || '0', 10);
+            const type = typeSelect?.value || 'major';
+            const notes = getChordNotes(root, type);
+            const preview = win.element.querySelector('#chordModePreview');
+            if (preview) preview.textContent = `Notes: ${notes.join(' - ')}`;
+        };
+
+        rootSelect?.addEventListener('change', updatePreview);
+        typeSelect?.addEventListener('change', updatePreview);
+
+        saveBtn?.addEventListener('click', () => {
+            const enabled = enabledCheckbox?.checked || false;
+            const root = parseInt(rootSelect?.value || '0', 10);
+            const type = typeSelect?.value || 'major';
+            const voicing = voicingSelect?.value || 'closed';
+            const lock = lockCheckbox?.checked || false;
+
+            if (localAppServices.setChordModeEnabled) localAppServices.setChordModeEnabled(enabled);
+            if (localAppServices.setChordModeRoot) localAppServices.setChordModeRoot(root);
+            if (localAppServices.setChordModeType) localAppServices.setChordModeType(type);
+            if (localAppServices.setChordVoicing) localAppServices.setChordVoicing(voicing);
+            if (localAppServices.setChordModeLock) localAppServices.setChordModeLock(lock);
+
+            showNotification('Chord Mode settings saved.', 1500);
+        });
+    }
+
+    return win;
+}
+
 // --- Project Notes Window ---
 export function openProjectNotesWindow(savedState = null) {
     const windowId = 'projectNotes';

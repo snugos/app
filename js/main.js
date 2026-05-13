@@ -32,7 +32,8 @@ import {
     openSendEffectsWindow,
     openMidiCCMappingsWindow,
     openProjectNotesWindow,
-    openScaleModeWindow
+    openScaleModeWindow,
+    openChordModeWindow
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -71,6 +72,7 @@ import {
     // Chord Mode
     getChordModeState, getChordModeEnabledState, getChordModeRootState,
     getChordModeTypeState, getChordModeLockState,
+    getChordVoicingState, setChordVoicingState,
     setChordModeState, setChordModeEnabledState, setChordModeRootState,
     setChordModeTypeState, setChordModeLockState,
     // State Getters
@@ -516,6 +518,8 @@ const appServices = {
     setChordModeType: setChordModeTypeState,
     getChordModeLock: getChordModeLockState,
     setChordModeLock: setChordModeLockState,
+    getChordVoicing: getChordVoicingState,
+    setChordVoicing: setChordVoicingState,
 
     // Send Bus Audio - audio engine-level functions for send bus management
     createSendBusInAudio: createSendBusInAudio,
@@ -765,6 +769,7 @@ const appServices = {
     openMidiCCMappingsWindow,
     openProjectNotesWindow,
     openScaleModeWindow,
+    openChordModeWindow,
 
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,
