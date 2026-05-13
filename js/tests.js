@@ -106,6 +106,8 @@ import {
     rebuildMasterEffectChain,
     updateMasterEffectParamInAudio,
     reorderMasterEffectInAudio,
+    addMasterEffectToAudio,
+    removeMasterEffectFromAudio,
     updateMeters,
     getTransportPosition,
     getTransportSeconds,
@@ -8241,5 +8243,119 @@ TestRunner.test('Day 484 - Note Length Custom Prompt - APP_VERSION validation fo
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 484');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 154, 'Minor version should be >= 154 for Day 484');
+    }
+});
+
+// ============================================
+// Day 485: Master Effects Audio Functions Tests
+// ============================================
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio is a function export', (t) => {
+    t.assertEqual(typeof addMasterEffectToAudio, 'function', 'addMasterEffectToAudio should be a function');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio is async', (t) => {
+    const result = addMasterEffectToAudio();
+    t.assertTruthy(result instanceof Promise, 'addMasterEffectToAudio should return a Promise');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio accepts 3 parameters', (t) => {
+    const paramCount = addMasterEffectToAudio.length;
+    t.assertEqual(paramCount, 3, 'addMasterEffectToAudio should accept 3 parameters (effectIdInState, effectType, initialParams)');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio references effectIdInState parameter', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('effectIdInState'), 'addMasterEffectToAudio should reference effectIdInState parameter');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio references effectType parameter', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'addMasterEffectToAudio should reference effectType parameter');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio references initialParams parameter', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('initialParams'), 'addMasterEffectToAudio should reference initialParams parameter');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio calls createEffectInstance', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('createEffectInstance'), 'addMasterEffectToAudio should call createEffectInstance');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio adds to activeMasterEffectNodes', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'addMasterEffectToAudio should reference activeMasterEffectNodes');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio calls rebuildMasterEffectChain', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'addMasterEffectToAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio has error handling', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch') || funcStr.includes('console.error'), 'addMasterEffectToAudio should have error handling');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - addMasterEffectToAudio calls showNotification on failure', (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'addMasterEffectToAudio should call showNotification on failure');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio is a function export', (t) => {
+    t.assertEqual(typeof removeMasterEffectFromAudio, 'function', 'removeMasterEffectFromAudio should be a function');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio is async', (t) => {
+    const result = removeMasterEffectFromAudio();
+    t.assertTruthy(result instanceof Promise, 'removeMasterEffectFromAudio should return a Promise');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio accepts 1 parameter', (t) => {
+    const paramCount = removeMasterEffectFromAudio.length;
+    t.assertEqual(paramCount, 1, 'removeMasterEffectFromAudio should accept 1 parameter (effectId)');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio references effectId parameter', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'removeMasterEffectFromAudio should reference effectId parameter');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio gets node from activeMasterEffectNodes', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'removeMasterEffectFromAudio should reference activeMasterEffectNodes');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio calls disconnect', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('disconnect'), 'removeMasterEffectFromAudio should call disconnect on the node');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio calls dispose', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'removeMasterEffectFromAudio should call dispose on the node');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio deletes from activeMasterEffectNodes', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes.delete') || funcStr.includes('delete'), 'removeMasterEffectFromAudio should delete from activeMasterEffectNodes');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio calls rebuildMasterEffectChain', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'removeMasterEffectFromAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - removeMasterEffectFromAudio has error handling', (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch') || funcStr.includes('console.warn'), 'removeMasterEffectFromAudio should have error handling');
+});
+
+TestRunner.test('Day 485 - Master Effects Audio - APP_VERSION validation for Day 485', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 485');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 155, 'Minor version should be >= 155 for Day 485');
     }
 });

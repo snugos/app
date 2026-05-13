@@ -2670,7 +2670,9 @@ export function openTimelineWindow(savedState = null) {
                     <button id="timeline-zoom-in" class="transport-btn" style="padding: 2px 6px; font-size: 10px;" title="Zoom in (+)">+</button>
                     <button id="timeline-zoom-reset" class="transport-btn" style="padding: 2px 6px; font-size: 9px;" title="Reset zoom">1:1</button>
                 </div>
-                <div id="timeline-ruler-container" style="flex: 1; overflow: hidden;"></div>
+                <div id="timeline-ruler-container">
+                    <div id="timeline-ruler" style="height: 100%; cursor: pointer;"></div>
+                </div>
             </div>
             <div id="timeline-tracks-container">
                 <div id="timeline-loop-start-marker" class="timeline-region-marker loop-start-marker"></div>
@@ -2781,6 +2783,9 @@ export function renderTimeline() {
         return;
     }
 
+    // Render the ruler first (before tracks area content is overwritten)
+    renderTimelineRuler();
+
     // Get tracks from state
     const tracks = typeof localAppServices.getTracks === 'function' ? localAppServices.getTracks() : [];
     
@@ -2792,7 +2797,6 @@ export function renderTimeline() {
     // Pixels per second - adjust this to scale clips on the timeline
     const PIXELS_PER_SECOND = 50 * timelineZoomLevel;
     const TRACK_NAME_WIDTH = 120; // matches CSS --timeline-track-name-width
-
     // Render each track as a lane
     let tracksHTML = '';
     tracks.forEach(track => {
@@ -2843,6 +2847,102 @@ export function renderTimeline() {
     updatePlayheadPosition();
     
     console.log(`[UI renderTimeline] Rendered ${tracks.length} tracks with clips`);
+}
+
+function renderTimelineRuler() {
+    const rulerEl = document.getElementById('timeline-ruler');
+    if (!rulerEl) return;
+
+    // Pixels per bar: 120 * timelineZoomLevel (matches CSS background-size)
+    const PIXELS_PER_BAR = 120 * timelineZoomLevel;
+    const PIXELS_PER_BEAT = 30 * timelineZoomLevel; // 1/4 of bar (4 beats per bar)
+    const TRACK_NAME_WIDTH = 120;
+    const MAX_BARS_DISPLAY = 128;
+
+    // Get tempo for proper beat/bar rendering
+    const bpm = Tone && Tone.Transport && Tone.Transport.bpm && Tone.Transport.bpm.value ? Tone.Transport.bpm.value : 120;
+    const secondsPerBeat = 60 / bpm;
+    const secondsPerBar = secondsPerBeat * 4; // 4/4 time
+    const totalWidth = TRACK_NAME_WIDTH + (MAX_BARS_DISPLAY * PIXELS_PER_BAR);
+
+    let rulerHTML = '';
+    const markerColor = 'rgba(255,255,255,0.6)';
+    const labelColor = 'rgba(255,255,255,0.8)';
+    const fontSize = Math.max(9, Math.min(12, 10 * timelineZoomLevel));
+
+    for (let bar = 1; bar <= MAX_BARS_DISPLAY; bar++) {
+        const barLeft = TRACK_NAME_WIDTH + ((bar - 1) * PIXELS_PER_BAR);
+        // Bar number label
+        rulerHTML += `<span style="position:absolute;left:${barLeft + 2}px;top:2px;font-size:${fontSize}px;color:${labelColor};pointer-events:none;font-family:monospace;">${bar}</span>`;
+        // Bar tick (tall line)
+        rulerHTML += `<div style="position:absolute;left:${barLeft}px;top:0;width:1px;height:100%;background:${markerColor};"></div>`;
+        // Beat ticks within this bar
+        for (let beat = 1; beat < 4; beat++) {
+            const beatLeft = barLeft + (beat * PIXELS_PER_BEAT);
+            // Smaller tick for beat
+            rulerHTML += `<div style="position:absolute;left:${beatLeft}px;top:50%;width:1px;height:50%;background:${markerColor};opacity:0.5;"></div>`;
+        }
+    }
+
+    // Add marker indicators on the ruler
+    if (localAppServices.getTimelineMarkers) {
+        const markers = localAppServices.getTimelineMarkers();
+        markers.forEach(marker => {
+            const markerLeft = TRACK_NAME_WIDTH + ((marker.bar - 1) * PIXELS_PER_BAR);
+            const markerColorVal = marker.color || '#ff9f43';
+            rulerHTML += `<div style="position:absolute;left:${markerLeft - 4}px;top:0;width:8px;height:100%;background:${markerColorVal};opacity:0.7;border-radius:2px;" title="${marker.name || 'Marker'} (Bar ${marker.bar})"></div>`;
+        });
+    }
+
+    // Playhead indicator on ruler
+    const playheadBar = getPlayheadPositionInBars();
+    if (playheadBar > 0) {
+        const playheadLeft = TRACK_NAME_WIDTH + ((playheadBar - 1) * PIXELS_PER_BAR);
+        rulerHTML += `<div id="timeline-ruler-playhead" style="position:absolute;left:${playheadLeft}px;top:0;width:2px;height:100%;background:#ff6b6b;pointer-events:none;z-index:10;"></div>`;
+    }
+
+    rulerEl.innerHTML = rulerHTML;
+
+    // Double-click to add marker at clicked bar
+    rulerEl.ondblclick = (e) => {
+        const rect = rulerEl.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickedBar = Math.max(1, Math.round((clickX - TRACK_NAME_WIDTH) / PIXELS_PER_BAR) + 1);
+        if (localAppServices.addTimelineMarker) {
+            const newMarkerId = localAppServices.addTimelineMarker({
+                name: `Marker ${Date.now() % 1000}`,
+                bar: clickedBar,
+                color: Constants.DEFAULT_MARKER_COLOR || '#ff9f43'
+            });
+            showNotification(`Marker added at bar ${clickedBar}`, 1500);
+            // Refresh ruler to show new marker
+            renderTimelineRuler();
+            // Also refresh markers window if open
+            const markersWin = localAppServices.getOpenWindows?.()?.get('timelineMarkers');
+            if (markersWin && markersWin.element) {
+                const listContainer = markersWin.element.querySelector('#timelineMarkersList');
+                if (listContainer && typeof buildMarkersListHTML === 'function') {
+                    listContainer.innerHTML = buildMarkersListHTML();
+                }
+            }
+        }
+    };
+}
+
+function getPlayheadPositionInBars() {
+    // Returns current playhead position in bars (1-indexed for ruler display)
+    if (typeof Tone !== 'undefined' && Tone.Transport) {
+        const position = Tone.Transport.position || '0:0:0';
+        const parts = position.split(':');
+        if (parts.length >= 3) {
+            const bars = parseInt(parts[0], 10);
+            const beats = parseInt(parts[1], 10);
+            const sixteenths = parseInt(parts[2], 10);
+            const totalBeats = (bars * 4) + beats + (sixteenths / 4);
+            return totalBeats / 4 + 1; // Convert to 1-indexed bars
+        }
+    }
+    return 0;
 }
 
 function attachClipEventHandlers() {
