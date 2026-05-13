@@ -20,6 +20,17 @@ export function setProjectNameState(name) {
     projectNameState = nextName;
 }
 
+// --- Project Notes ---
+let projectNotesState = '';
+export function getProjectNotesState() { return projectNotesState; }
+export function setProjectNotesState(notes) {
+    const nextNotes = typeof notes === 'string' ? notes : '';
+    if (!Object.is(projectNotesState, nextNotes)) {
+        captureStateForUndoIfAllowed(`Update Project Notes`);
+    }
+    projectNotesState = nextNotes;
+}
+
 // --- Centralized State Variables ---
 let tracks = [];
 let trackIdCounter = 0;
@@ -1126,13 +1137,8 @@ export function setCurrentSoundFileTreeState(tree) {
     currentSoundFileTreeGlobal = tree;
 }
 export function setCurrentSoundBrowserPathState(path) {
-<<<<<<< HEAD
     const nextPath = Array.isArray(path) ? [...path] : [];
     if (!areSoundBrowserPathsEqual(currentSoundBrowserPathGlobal, nextPath)) {
-=======
-    const nextPath = Array.isArray(path) ? path : [];
-    if (!Object.is(currentSoundBrowserPathGlobal, nextPath)) {
->>>>>>> main
         captureStateForUndoIfAllowed('Set Sound Browser Path');
     }
     currentSoundBrowserPathGlobal = nextPath;
@@ -1551,6 +1557,7 @@ export function gatherProjectDataInternal() {
         const projectData = {
             version: Constants.APP_VERSION || "5.9.1", // Use a constant for app version
             projectName: getProjectNameState(),
+            projectNotes: getProjectNotesState(),
             globalSettings: {
                 tempo: Tone.Transport.bpm.value,
                 masterVolume: getMasterGainValueState(),
@@ -1701,6 +1708,9 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         if (projectData.projectName) {
             setProjectNameState(projectData.projectName);
             if (appServices.updateProjectNameDisplay) appServices.updateProjectNameDisplay(projectData.projectName);
+        }
+        if (projectData.projectNotes !== undefined) {
+            setProjectNotesState(projectData.projectNotes);
         }
         Tone.Transport.bpm.value = Number.isFinite(gs.tempo) ? gs.tempo : 120;
         setMasterGainValueState(Number.isFinite(gs.masterVolume) ? gs.masterVolume : Tone.dbToGain(0));

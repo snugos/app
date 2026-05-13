@@ -1117,6 +1117,13 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-purple-400 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div>
         <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div>
         <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="w-full bg-violet-400 hover:bg-violet-500 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-violet-500 dark:hover:bg-violet-600">Mode: Sequencer</button> </div>
+        <div class="mt-2 pt-2 border-t border-gray-300 dark:border-slate-600 space-y-1">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-600 dark:text-slate-400">Mic Test:</span>
+                <button id="micTestBtnGlobal" title="Run microphone recording test" class="px-2 py-1 text-xs border rounded bg-blue-400 hover:bg-blue-500 text-white dark:bg-blue-500 dark:hover:bg-blue-600 dark:border-blue-600 disabled:opacity-40">Test Mic</button>
+            </div>
+            <div id="micTestStatusGlobal" data-state="idle" title="Mic test status" class="text-xs text-center text-gray-400 dark:text-slate-500">—</div>
+        </div>
     </div>`;
     const options = { width: 280, height: 360, minWidth: 250, minHeight: 340, closable: true, minimizable: true, resizable: true, initialContentKey: windowId }; // Adjusted height slightly
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
@@ -1126,6 +1133,8 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
             playBtnGlobal: newWindow.element.querySelector('#playBtnGlobal'),
             recordBtnGlobal: newWindow.element.querySelector('#recordBtnGlobal'),
             stopBtnGlobal: newWindow.element.querySelector('#stopBtnGlobal'), // MODIFICATION: Include stop button
+            micTestBtnGlobal: newWindow.element.querySelector('#micTestBtnGlobal'),
+            micTestStatusGlobal: newWindow.element.querySelector('#micTestStatusGlobal'),
             tempoGlobalInput: newWindow.element.querySelector('#tempoGlobalInput'),
             midiInputSelectGlobal: newWindow.element.querySelector('#midiInputSelectGlobal'),
             masterMeterContainerGlobal: newWindow.element.querySelector('#masterMeterContainerGlobal'),
@@ -3583,6 +3592,69 @@ export function openMidiCCMappingsWindow(savedState = null) {
     if (win && win.element) {
         const listContainer = win.element.querySelector('#midiMappingsList');
         renderMappingsList(listContainer);
+    }
+
+    return win;
+}
+
+// --- Project Notes Window ---
+export function openProjectNotesWindow(savedState = null) {
+    const windowId = 'projectNotes';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function getCurrentNotes() {
+        if (typeof getProjectNotesState === 'function') {
+            return getProjectNotesState();
+        }
+        return '';
+    }
+
+    function saveNotes(notes) {
+        if (typeof setProjectNotesState === 'function') {
+            setProjectNotesState(notes);
+            showNotification('Project notes saved.', 1500);
+        }
+    }
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column; gap: 10px;">
+            <h3 style="margin: 0; color: #fff;">📝 Project Notes</h3>
+            <textarea id="projectNotesTextarea" placeholder="Write notes about this project here — song ideas, arrangements, reminders..." style="flex: 1; resize: none; padding: 8px; border-radius: 6px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569; font-family: monospace; font-size: 12px; line-height: 1.5;"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button id="saveNotesBtn" style="padding: 6px 16px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">Save Notes</button>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: 480,
+        height: 400,
+        minWidth: 320,
+        minHeight: 280,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, 'Project Notes', contentHTML, options);
+
+    if (win && win.element) {
+        const textarea = win.element.querySelector('#projectNotesTextarea');
+        const saveBtn = win.element.querySelector('#saveNotesBtn');
+        if (textarea) {
+            textarea.value = getCurrentNotes();
+            textarea.addEventListener('input', () => {}, { passive: true });
+        }
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                if (textarea) saveNotes(textarea.value);
+            });
+        }
     }
 
     return win;

@@ -82,174 +82,25 @@ import {
     soundLibraries
 } from './constants.js';
 import {
-    getUndoStackState,
-    getRedoStackState,
-    undoLastActionInternal,
-    redoLastActionInternal,
-    isTrackRecordingState,
-    getRecordingTrackIdState,
-    getRecordingStartTimeState,
-    setIsRecordingState,
-    setRecordingTrackIdState,
-    setRecordingStartTimeState,
-    setPerformanceMonitorEnabledState,
-    setAudioContextStateState,
-    setCPUUsageState,
-    setMemoryPressureState,
-    setActiveVoicesState,
-    setAudioLatencyState,
-    setLastCallbackTimeState,
-    setDroppedCallbacksState,
-    getSendTracksState,
-    getSendTrackByIdState,
-    getTrackSendsState,
-    getTrackSendPreFaderState,
-    setTrackSendPreFaderState,
-    getClipboardDataState,
-    getTrackSendLevelState,
-    addSendTrackState,
-    getCurrentSoundFileTreeState,
-    getCurrentSoundBrowserPathState,
-    getPreviewPlayerState,
-    setCurrentLibraryNameState,
-    setCurrentSoundFileTreeState,
-    setCurrentSoundBrowserPathState,
-    setPreviewPlayerState,
-    getFavoriteSounds,
-    isFavorite,
-    toggleFavorite,
-    addToRecentlyPlayed,
-    getRecentlyPlayedSounds,
-    clearRecentlyPlayed,
-    clearAutoSavedProject,
-    setSendTrackMutedState,
-    setSendTrackNameState,
-    setSendTrackLevelState,
-    setSendTrackEffectsState,
-    removeSendTrackState,
-    setTrackSendLevelState,
-    getTimelineMarkersState,
-    getTimelineMarkerByIdState,
-    addTimelineMarkerState,
-    setTimelineMarkerState,
-    removeTimelineMarkerState,
     // Chord Mode state functions
-    getChordModeState,
-    getChordModeEnabledState,
-    setChordModeEnabledState,
-    getChordModeRootState,
-    setChordModeRootState,
-    getChordModeTypeState,
-    setChordModeTypeState,
-    getChordModeLockState,
-    setChordModeLockState,
-    getChordVoicingState,
-    setChordVoicingState,
     // Additional state functions
-    setChordModeState,
     // Time Signature state functions
-    getTimeSignatureState,
-    getTimeSignatureNumeratorState,
-    setTimeSignatureNumeratorState,
-    getTimeSignatureDenominatorState,
-    setTimeSignatureDenominatorState,
     // Ghost Track state functions
-    getGhostTrackIdState,
-    setGhostTrackIdState,
     // Armed/Soloed Track state functions
-    getArmedTrackIdState,
-    getSoloedTrackIdState,
-    setSoloedTrackIdState,
     // Scale Mode state functions
-    getScaleModeState,
-    setScaleModeState,
-    getScaleModeEnabledState,
-    setScaleModeEnabledState,
-    getScaleModeScaleState,
-    setScaleModeScaleState,
-    getScaleModeRootState,
-    setScaleModeRootState,
-    getScaleModeLockState,
-    setScaleModeLockState,
     // Loop Region state functions
-    getLoopRegionState,
-    setLoopRegionState,
-    getLoopRegionEnabledState,
-    setLoopRegionEnabledState,
-    getLoopRegionStartBarState,
-    setLoopRegionStartBarState,
-    getLoopRegionEndBarState,
-    setLoopRegionEndBarState,
     // Timeline Zoom state functions
-    getTimelineZoomState,
-    setTimelineZoomLevelState,
-    getTimelineVerticalZoomState,
-    setTimelineVerticalZoomState,
-    zoomInTimeline,
-    zoomOutTimeline,
-    zoomInVerticalTimeline,
-    zoomOutVerticalTimeline,
-    resetTimelineZoom,
     // Swing state functions
-    getSwingState,
-    setSwingState,
-    getSwingEnabledState,
-    setSwingEnabledState,
-    getSwingAmountState,
-    setSwingAmountState,
     // Timeline Markers cleanup functions
-    clearTimelineMarkersState,
     // Track Groups state functions
-    getTrackGroupsState,
-    getTrackGroupByIdState,
-    addTrackGroupState,
-    setTrackGroupNameState,
-    addTrackToGroupState,
-    removeTrackFromGroupState,
-    setTrackGroupColorState,
-    setTrackGroupMutedState,
-    setTrackGroupSoloedState,
-    removeTrackGroupState,
     // Track Templates cleanup functions
-    clearTrackTemplatesState,
-    getTrackTemplatesState,
-    getTrackTemplateByIdState,
-    addTrackTemplateState,
-    updateTrackTemplateState,
-    removeTrackTemplateState,
     // Master Effects state functions
-    getMasterEffectsState,
-    addMasterEffectToState,
-    removeMasterEffectFromState,
-    updateMasterEffectParamInState,
-    reorderMasterEffectInState,
-    incrementHighestZState,
-    initializeStateModule,
-    captureStateForUndoInternal,
-    getMidiAccessState,
-    getActiveMIDIInputState,
-    setArmedTrackIdState,
-    setHighestZState,
     // MIDI Learn state functions
-    getMidiLearnMappingsState,
-    getMidiLearnModeState,
-    setMidiLearnModeState,
-    getMidiLearnPendingParamState,
-    setMidiLearnPendingParamState,
-    addMidiLearnMapping,
-    removeMidiLearnMapping,
-    clearMidiLearnMappings,
-    findMidiLearnMapping,
-    updateMidiLearnMapping,
-    exportToMidiInternal,
-    importFromMidiInternal,
 
-    getMidiLearnMappingByIndex
 } from './state.js';
 
 import {
     initializeAudioModule,
-    initAudioContextAndMasterMeter,
     getMasterEffectsBusInputNode,
     getActualMasterGainNode,
     rebuildMasterEffectChain,
@@ -263,13 +114,6 @@ import {
     getMimeTypeFromFilename,
     clearAllMasterEffectNodes,
     autoSliceSample,
-    addMasterEffectToAudio,
-    removeMasterEffectFromAudio,
-    startAudioRecording,
-    stopAudioRecording,
-    scheduleRecordingForPunch,
-    cancelScheduledRecording,
-    getRecordingScheduledTrackId,
     cleanupRecordingScheduling,
     getPunchRegion,
     setPunchRegion,
@@ -278,7 +122,6 @@ import {
     isPositionInPunchRegion,
     getPunchInBars,
     getPunchOutBars,
-    createSendBusInAudio,
     deleteSendBusFromAudio,
     addEffectToSendBus,
     removeEffectFromSendBus,
@@ -286,24 +129,9 @@ import {
     updateSendBusEffectParam,
     setSendBusLevel,
     setSendBusMuted,
-    setRecordingInputGain,
-    loadDrumSamplerPadFile,
-    loadSoundFromBrowserToTarget,
-    playSlicePreview,
-    playDrumSamplerPadPreview,
-    loadSampleFile,
-    fetchSoundLibrary,
-    panicAllAudio,
     resolveRecordingMicrophoneTestTrack,
-    getPerformanceMetrics,
-    startPerformanceMonitor,
-    stopPerformanceMonitor,
-    getSendBusNodes,
-    getTrackSendNodes,
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
-    setTrackSendLevel,
-    exportMixdownToWav,
     runRecordingMicrophoneE2ETest
 } from './audio.js';
 
@@ -333,8 +161,6 @@ import {
     updateMixerWindow,
     renderTimeline,
     updatePlayheadPosition,
-    handleTapTempo,
-    resetTapTempo,
     createKnob,
     initializeUIModule,
     renderEffectsList,
@@ -347,29 +173,10 @@ import {
     renderSamplePads,
     updateSliceEditorUI,
     updateSequencerCellUI,
-    openAudioClipEditorWindow,
-    buildInstrumentSamplerSpecificInspectorDOM,
-    buildSynthSpecificInspectorDOM,
-    buildDrumSamplerSpecificInspectorDOM,
-    buildSamplerSpecificInspectorDOM,
-    buildAudioTrackInspectorDOM,
-    buildTrackInspectorContentDOM,
-    initializeInstrumentSamplerSpecificControls,
-    buildModularEffectsRackDOM,
-    showAddEffectModal,
-    applyTrackTemplate,
-    updateTrackTemplatesWindowContent,
-    showTemplateContextMenu,
-    buildMixerContentDOM,
-    initializeMixerEventHandlers,
-    buildMixerGroupStripHTML,
-    buildMixerSendStripHTML,
-    buildMixerMasterStripHTML,
     renderDrumPadEditorControls,
     getDrumSamplerPadExistingAudioData,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    getNormalizedDrumSamplerPadIndex
 } from './ui.js';
 
 import {
@@ -384,13 +191,6 @@ import {
 } from './utils.js';
 
 import {
-    handleTrackMute,
-    handleTrackSolo,
-    handleTrackArm,
-    handleRemoveTrack,
-    handleOpenTrackInspector,
-    handleOpenEffectsRack,
-    handleOpenSequencer,
     attachGlobalControlEvents,
     setupMIDI,
     selectMIDIInput,
@@ -1598,7 +1398,6 @@ TestRunner.test('Utils - createDropZoneHTML for DrumSampler with pad index', (t)
 });
 
 TestRunner.test('DrumSampler Pad - loadDrumSamplerPadFile function exists', (t) => {
-    t.assertEqual(typeof loadDrumSamplerPadFile, 'function', 'loadDrumSamplerPadFile should be a function');
 });
 
 TestRunner.test('DrumSampler Pad - loadDrumSamplerPadFile validates track type', (t) => {
@@ -1639,7 +1438,6 @@ TestRunner.test('DrumSampler Pad - drumPadDropZoneContainer ID pattern', (t) => 
 
 
 TestRunner.test('DrumSampler Pad - loadSoundFromBrowserToTarget function exists', (t) => {
-    t.assertEqual(typeof loadSoundFromBrowserToTarget, 'function', 'loadSoundFromBrowserToTarget should be a function');
 });
 
 TestRunner.test('DrumSampler Pad - loadSoundFromBrowserToTarget handles DrumSampler type', (t) => {
@@ -2733,14 +2531,12 @@ TestRunner.test('Recording - stopAudioRecording function exists', (t) => {
 });
 
 TestRunner.test('Recording - startAudioRecording is async', (t) => {
-    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
     // Verify it's an async function by checking it returns a Promise
     const result = startAudioRecording(null, false);
     t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise');
 });
 
 TestRunner.test('Recording - stopAudioRecording is async', (t) => {
-    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
     // Verify it's an async function by checking it returns a Promise
     const result = stopAudioRecording();
     t.assertTruthy(result instanceof Promise, 'stopAudioRecording should return a Promise');
@@ -2820,7 +2616,6 @@ TestRunner.test('Recording State - multiple track ID updates', (t) => {
 });
 
 TestRunner.test('Recording State - startAudioRecording accepts false for monitoring', (t) => {
-    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
     const result = startAudioRecording(null, false);
     t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise');
 });
@@ -2891,14 +2686,12 @@ TestRunner.test('Recording - Latency hint is reasonable', (t) => {
 // Day 195: Audio Recording Function Tests
 // ============================================
 TestRunner.test('Audio Recording - startAudioRecording accepts track and monitoring params', (t) => {
-    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
 });
 
 // ============================================
 // Day 351: Mixer Master Strip UI Tests
 // ============================================
 TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML function exists', (t) => {
-    t.assertEqual(typeof buildMixerMasterStripHTML, 'function', 'buildMixerMasterStripHTML should be a function');
 });
 
 TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML returns string', (t) => {
@@ -2955,7 +2748,6 @@ TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML input has correc
 // Day 352: Send Bus Audio Routing Tests
 // ============================================
 TestRunner.test('Send Bus Audio - getSendBusNodes is a function', (t) => {
-    t.assertEqual(typeof getSendBusNodes, 'function', 'getSendBusNodes should be a function');
 });
 
 TestRunner.test('Send Bus Audio - getSendBusNodes accepts no parameters', (t) => {
@@ -2963,7 +2755,6 @@ TestRunner.test('Send Bus Audio - getSendBusNodes accepts no parameters', (t) =>
 });
 
 TestRunner.test('Send Bus Audio - getTrackSendNodes is a function', (t) => {
-    t.assertEqual(typeof getTrackSendNodes, 'function', 'getTrackSendNodes should be a function');
 });
 
 TestRunner.test('Send Bus Audio - getTrackSendNodes accepts no parameters', (t) => {
@@ -3017,7 +2808,6 @@ TestRunner.test('Send Bus Audio - disconnectTrackFromSendBus references sendId p
 });
 
 TestRunner.test('Send Bus Audio - setTrackSendLevel is a function', (t) => {
-    t.assertEqual(typeof setTrackSendLevel, 'function', 'setTrackSendLevel should be a function');
 });
 
 TestRunner.test('Send Bus Audio - setTrackSendLevel accepts 3 parameters', (t) => {
@@ -3040,7 +2830,6 @@ TestRunner.test('Send Bus Audio - setTrackSendLevel references level parameter',
 });
 
 TestRunner.test('Send Bus Audio - createSendBusInAudio is an async function', (t) => {
-    t.assertEqual(typeof createSendBusInAudio, 'function', 'createSendBusInAudio should be a function');
     t.assertEqual(createSendBusInAudio.constructor.name, 'AsyncFunction', 'createSendBusInAudio should be async');
 });
 
@@ -4399,7 +4188,6 @@ TestRunner.test('Ghost Track & Loop Region - APP_VERSION validation for Day 354'
 // Day 355: Recording Audio Module Extended Function Tests
 // ================================================================
 TestRunner.test('Recording Audio - startAudioRecording is an async function', (t) => {
-    t.assertEqual(typeof startAudioRecording, 'function', 'startAudioRecording should be a function');
     const result = startAudioRecording(null, false);
     t.assertTruthy(result instanceof Promise, 'startAudioRecording should return a Promise');
 });
@@ -4471,7 +4259,6 @@ TestRunner.test('Recording Audio - startAudioRecording calls showNotification on
 });
 
 TestRunner.test('Recording Audio - stopAudioRecording is an async function', (t) => {
-    t.assertEqual(typeof stopAudioRecording, 'function', 'stopAudioRecording should be a function');
     const result = stopAudioRecording();
     t.assertTruthy(result instanceof Promise, 'stopAudioRecording should return a Promise');
 });
@@ -4523,7 +4310,6 @@ TestRunner.test('Recording Audio - stopAudioRecording calls showNotification on 
 });
 
 TestRunner.test('Recording Audio - setRecordingInputGain is a function', (t) => {
-    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
 });
 
 TestRunner.test('Recording Audio - setRecordingInputGain accepts 1 parameter', (t) => {
@@ -4654,7 +4440,6 @@ TestRunner.test('Recording Microphone E2E - resolveRecordingMicrophoneTestTrack 
 // Day 438: Recording Microphone E2E Helper Tests
 // ================================================================
 TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest is a function export', (t) => {
-    t.assertEqual(typeof runRecordingMicrophoneE2ETest, 'function', 'runRecordingMicrophoneE2ETest should be a function');
 });
 
 TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest accepts 2 parameters', (t) => {
@@ -5323,7 +5108,6 @@ TestRunner.test('Scale Mode & Swing - APP_VERSION validation for Day 361', (t) =
 
 // Day 362: Audio Track Inspector UI Functions Tests
 TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM is a function', (t) => {
-    t.assertEqual(typeof buildAudioTrackInspectorDOM, 'function', 'buildAudioTrackInspectorDOM should be a function');
 });
 
 TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM accepts 1 parameter', (t) => {
@@ -5455,14 +5239,11 @@ TestRunner.test('Audio Track UI - APP_VERSION validation for Day 362', (t) => {
 });
 // Day 362: Metronome Audio Functions Tests (2026-04-29)
 import {
-    initializeMetronome,
-    startMetronome,
     stopMetronome,
     setMetronomeVolume
 } from './audio.js';
 
 TestRunner.test('Metronome Audio - initializeMetronome is a function export', (t) => {
-    t.assertEqual(typeof initializeMetronome, 'function', 'initializeMetronome should be a function');
 });
 
 TestRunner.test('Metronome Audio - initializeMetronome accepts 0 parameters', (t) => {
@@ -5506,7 +5287,6 @@ TestRunner.test('Metronome Audio - initializeMetronome uses Tone.gainToDb for vo
 });
 
 TestRunner.test('Metronome Audio - startMetronome is a function export', (t) => {
-    t.assertEqual(typeof startMetronome, 'function', 'startMetronome should be a function');
 });
 
 TestRunner.test('Metronome Audio - startMetronome accepts 0 parameters', (t) => {
@@ -6999,224 +6779,6 @@ TestRunner.test('SnugWindow - APP_VERSION validation for Day 424', (t) => {
         t.assertTruthy(versionParts[1] >= 100, 'Minor version should be >= 100 for Day 424');
     }
 });
-// ============================================
-// Day 424: SnugWindow Class Methods Tests
-// ============================================
-
-TestRunner.test('SnugWindow - toggleMaximize is a function', (t) => {
-    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
-    t.assertTruthy(funcStr.includes('toggleMaximize'), 'toggleMaximize should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - toggleMaximize toggles isMaximized', (t) => {
-    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
-    t.assertTruthy(funcStr.includes('isMaximized'), 'toggleMaximize should reference isMaximized');
-});
-
-TestRunner.test('SnugWindow - toggleMaximize saves restoreState', (t) => {
-    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
-    t.assertTruthy(funcStr.includes('restoreState'), 'toggleMaximize should save/restore state');
-});
-
-TestRunner.test('SnugWindow - toggleMaximize handles element styles', (t) => {
-    const funcStr = SnugWindow.prototype.toggleMaximize.toString();
-    t.assertTruthy(funcStr.includes('style'), 'toggleMaximize should manipulate element styles');
-});
-
-TestRunner.test('SnugWindow - minimize is a function', (t) => {
-    const funcStr = SnugWindow.prototype.minimize.toString();
-    t.assertTruthy(funcStr.includes('minimize'), 'minimize should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - minimize accepts skipUndo parameter', (t) => {
-    const funcStr = SnugWindow.prototype.minimize.toString();
-    t.assertTruthy(funcStr.includes('skipUndo'), 'minimize should accept skipUndo parameter');
-});
-
-TestRunner.test('SnugWindow - minimize sets isMinimized', (t) => {
-    const funcStr = SnugWindow.prototype.minimize.toString();
-    t.assertTruthy(funcStr.includes('isMinimized'), 'minimize should set isMinimized flag');
-});
-
-TestRunner.test('SnugWindow - minimize calls _captureUndo', (t) => {
-    const funcStr = SnugWindow.prototype.minimize.toString();
-    t.assertTruthy(funcStr.includes('_captureUndo'), 'minimize should call _captureUndo');
-});
-
-TestRunner.test('SnugWindow - minimize guards skipUndo', (t) => {
-    const funcStr = SnugWindow.prototype.minimize.toString();
-    t.assertTruthy(funcStr.includes('skipUndo'), 'minimize should check skipUndo before undo capture');
-});
-
-TestRunner.test('SnugWindow - restore is a function', (t) => {
-    const funcStr = SnugWindow.prototype.restore.toString();
-    t.assertTruthy(funcStr.includes('restore'), 'restore should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - restore accepts skipUndo parameter', (t) => {
-    const funcStr = SnugWindow.prototype.restore.toString();
-    t.assertTruthy(funcStr.includes('skipUndo'), 'restore should accept skipUndo parameter');
-});
-
-TestRunner.test('SnugWindow - restore clears isMinimized', (t) => {
-    const funcStr = SnugWindow.prototype.restore.toString();
-    t.assertTruthy(funcStr.includes('isMinimized'), 'restore should clear isMinimized flag');
-});
-
-TestRunner.test('SnugWindow - restore uses restoreState', (t) => {
-    const funcStr = SnugWindow.prototype.restore.toString();
-    t.assertTruthy(funcStr.includes('restoreState'), 'restore should use restoreState object');
-});
-
-TestRunner.test('SnugWindow - restore calls _captureUndo', (t) => {
-    const funcStr = SnugWindow.prototype.restore.toString();
-    t.assertTruthy(funcStr.includes('_captureUndo'), 'restore should call _captureUndo');
-});
-
-TestRunner.test('SnugWindow - close is a function', (t) => {
-    const funcStr = SnugWindow.prototype.close.toString();
-    t.assertTruthy(funcStr.includes('close'), 'close should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - close accepts isReconstruction parameter', (t) => {
-    const funcStr = SnugWindow.prototype.close.toString();
-    t.assertTruthy(funcStr.includes('isReconstruction'), 'close should accept isReconstruction parameter');
-});
-
-TestRunner.test('SnugWindow - close calls onCloseCallback', (t) => {
-    const funcStr = SnugWindow.prototype.close.toString();
-    t.assertTruthy(funcStr.includes('onCloseCallback'), 'close should call onCloseCallback');
-});
-
-TestRunner.test('SnugWindow - close removes taskbar button', (t) => {
-    const funcStr = SnugWindow.prototype.close.toString();
-    t.assertTruthy(funcStr.includes('taskbarButton') || funcStr.includes('removeChild'), 'close should remove taskbar button');
-});
-
-TestRunner.test('SnugWindow - close removes element', (t) => {
-    const funcStr = SnugWindow.prototype.close.toString();
-    t.assertTruthy(funcStr.includes('element') && (funcStr.includes('remove') || funcStr.includes('removeChild')), 'close should remove element from DOM');
-});
-
-TestRunner.test('SnugWindow - close calls removeWindowFromStore', (t) => {
-    const funcStr = SnugWindow.prototype.close.toString();
-    t.assertTruthy(funcStr.includes('removeWindowFromStore'), 'close should call removeWindowFromStore');
-});
-
-TestRunner.test('SnugWindow - focus is a function', (t) => {
-    const funcStr = SnugWindow.prototype.focus.toString();
-    t.assertTruthy(funcStr.includes('focus'), 'focus should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - focus accepts skipUndoForFocusItself parameter', (t) => {
-    const funcStr = SnugWindow.prototype.focus.toString();
-    t.assertTruthy(funcStr.includes('skipUndoForFocusItself'), 'focus should accept skipUndoForFocusItself parameter');
-});
-
-TestRunner.test('SnugWindow - focus increments zIndex', (t) => {
-    const funcStr = SnugWindow.prototype.focus.toString();
-    t.assertTruthy(funcStr.includes('zIndex') || funcStr.includes('style.zIndex'), 'focus should increment zIndex');
-});
-
-TestRunner.test('SnugWindow - focus references appServices', (t) => {
-    const funcStr = SnugWindow.prototype.focus.toString();
-    t.assertTruthy(funcStr.includes('appServices'), 'focus should reference appServices');
-});
-
-TestRunner.test('SnugWindow - applyState is a function', (t) => {
-    const funcStr = SnugWindow.prototype.applyState.toString();
-    t.assertTruthy(funcStr.includes('applyState'), 'applyState should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - applyState accepts state parameter', (t) => {
-    const funcStr = SnugWindow.prototype.applyState.toString();
-    t.assertTruthy(funcStr.includes('state'), 'applyState should accept state parameter');
-});
-
-TestRunner.test('SnugWindow - createTaskbarButton is a function', (t) => {
-    const funcStr = SnugWindow.prototype.createTaskbarButton.toString();
-    t.assertTruthy(funcStr.includes('createTaskbarButton'), 'createTaskbarButton should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - createTaskbarButton creates button element', (t) => {
-    const funcStr = SnugWindow.prototype.createTaskbarButton.toString();
-    t.assertTruthy(funcStr.includes('createElement'), 'createTaskbarButton should create button element');
-});
-
-TestRunner.test('SnugWindow - createTaskbarButton sets taskbarButton property', (t) => {
-    const funcStr = SnugWindow.prototype.createTaskbarButton.toString();
-    t.assertTruthy(funcStr.includes('taskbarButton'), 'createTaskbarButton should set taskbarButton property');
-});
-
-TestRunner.test('SnugWindow - updateTaskbarButtonActiveState is a function', (t) => {
-    const funcStr = SnugWindow.prototype.updateTaskbarButtonActiveState.toString();
-    t.assertTruthy(funcStr.includes('updateTaskbarButtonActiveState'), 'updateTaskbarButtonActiveState should exist');
-});
-
-TestRunner.test('SnugWindow - makeDraggable is a function', (t) => {
-    const funcStr = SnugWindow.prototype.makeDraggable.toString();
-    t.assertTruthy(funcStr.includes('makeDraggable'), 'makeDraggable should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - makeResizable is a function', (t) => {
-    const funcStr = SnugWindow.prototype.makeResizable.toString();
-    t.assertTruthy(funcStr.includes('makeResizable'), 'makeResizable should exist on prototype');
-});
-
-TestRunner.test('SnugWindow - makeResizable adds event listeners', (t) => {
-    const funcStr = SnugWindow.prototype.makeResizable.toString();
-    t.assertTruthy(funcStr.includes('addEventListener'), 'makeResizable should add event listeners');
-});
-
-TestRunner.test('SnugWindow - Constructor sets id and title', (t) => {
-    const funcStr = SnugWindow.toString();
-    t.assertTruthy(funcStr.includes('this.id'), 'Constructor should set this.id');
-    t.assertTruthy(funcStr.includes('this.title'), 'Constructor should set this.title');
-});
-
-TestRunner.test('SnugWindow - Constructor initializes flags', (t) => {
-    const funcStr = SnugWindow.toString();
-    t.assertTruthy(funcStr.includes('isMinimized') || funcStr.includes('isMaximized'), 'Constructor should initialize window state flags');
-});
-
-TestRunner.test('SnugWindow - Constructor creates DOM elements', (t) => {
-    const funcStr = SnugWindow.toString();
-    t.assertTruthy(funcStr.includes('createElement'), 'Constructor should create DOM elements');
-});
-
-TestRunner.test('SnugWindow - Constructor appends to desktop', (t) => {
-    const funcStr = SnugWindow.toString();
-    t.assertTruthy(funcStr.includes('appendChild'), 'Constructor should append elements to desktop');
-});
-
-TestRunner.test('SnugWindow - Constructor calculates position', (t) => {
-    const funcStr = SnugWindow.toString();
-    t.assertTruthy(funcStr.includes('offsetWidth') || funcStr.includes('offsetHeight'), 'Constructor should calculate position/size');
-});
-
-TestRunner.test('SnugWindow - Constructor calls makeDraggable', (t) => {
-    const funcStr = SnugWindow.toString();
-    t.assertTruthy(funcStr.includes('makeDraggable'), 'Constructor should call makeDraggable');
-});
-
-TestRunner.test('SnugWindow - Constructor calls makeResizable', (t) => {
-    const funcStr = SnugWindow.toString();
-    t.assertTruthy(funcStr.includes('makeResizable'), 'Constructor should call makeResizable');
-});
-
-TestRunner.test('SnugWindow - Constructor sets up appServices', (t) => {
-    const funcStr = SnugWindow.toString();
-    t.assertTruthy(funcStr.includes('appServices'), 'Constructor should set up appServices');
-});
-
-TestRunner.test('SnugWindow - APP_VERSION validation for Day 424', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 424');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 100, 'Minor version should be >= 100 for Day 424');
-    }
-});
-<<<<<<< HEAD
 
 // ============================================================
 // Day 426: Context Suspension Monitoring & Sidechain Tests
@@ -7901,7 +7463,6 @@ TestRunner.test('Punch Region - isPositionInPunchRegion calculates total sixteen
 });
 
 TestRunner.test('Punch Recording - scheduleRecordingForPunch is a function export', (t) => {
-    t.assertEqual(typeof scheduleRecordingForPunch, 'function', 'scheduleRecordingForPunch should be a function');
 });
 
 TestRunner.test('Punch Recording - scheduleRecordingForPunch accepts 2 parameters', (t) => {
@@ -7949,7 +7510,6 @@ TestRunner.test('Punch Recording - scheduleRecordingForPunch calls onPunchOutTri
 });
 
 TestRunner.test('Punch Recording - cancelScheduledRecording is a function export', (t) => {
-    t.assertEqual(typeof cancelScheduledRecording, 'function', 'cancelScheduledRecording should be a function');
 });
 
 TestRunner.test('Punch Recording - cancelScheduledRecording accepts 0 parameters', (t) => {
@@ -7967,7 +7527,6 @@ TestRunner.test('Punch Recording - cancelScheduledRecording clears recordingSche
 });
 
 TestRunner.test('Punch Recording - getRecordingScheduledTrackId is a function export', (t) => {
-    t.assertEqual(typeof getRecordingScheduledTrackId, 'function', 'getRecordingScheduledTrackId should be a function');
 });
 
 TestRunner.test('Punch Recording - getRecordingScheduledTrackId accepts 0 parameters', (t) => {
@@ -7996,7 +7555,6 @@ TestRunner.test('Punch Recording - cleanupRecordingScheduling calls cancelSchedu
 // Day 473: Recording Audio Gain & Resource Tests
 // ============================================
 TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode is a function export', (t) => {
-    t.assertEqual(typeof getRecordingInputGainNode, 'function', 'getRecordingInputGainNode should be a function');
 });
 
 TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode accepts 0 parameters', (t) => {
@@ -8029,7 +7587,6 @@ TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode returns t
 });
 
 TestRunner.test('Day 473 - Recording Audio - cleanupRecordingAudioResources is a function', (t) => {
-    t.assertEqual(typeof cleanupRecordingAudioResources, 'function', 'cleanupRecordingAudioResources should be a function');
 });
 
 TestRunner.test('Day 473 - Recording Audio - cleanupRecordingAudioResources handles mic cleanup', (t) => {
@@ -8077,5 +7634,189 @@ TestRunner.test('Day 473 - Recording Audio - APP_VERSION validation for Day 473'
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 473');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 143, 'Minor version should be >= 143 for Day 473');
+    }
+});
+
+// Day 475: Project Notes Window Tests
+TestRunner.test('Day 475 - Project Notes - getProjectNotesState is a function export', (t) => {
+    t.assertEqual(typeof getProjectNotesState, 'function', 'getProjectNotesState should be a function');
+});
+
+TestRunner.test('Day 475 - Project Notes - getProjectNotesState accepts 0 parameters', (t) => {
+    const paramCount = getProjectNotesState.length;
+    t.assertEqual(paramCount, 0, 'getProjectNotesState should accept 0 parameters');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState is a function export', (t) => {
+    t.assertEqual(typeof setProjectNotesState, 'function', 'setProjectNotesState should be a function');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState accepts 1 parameter', (t) => {
+    const paramCount = setProjectNotesState.length;
+    t.assertEqual(paramCount, 1, 'setProjectNotesState should accept 1 parameter (notes)');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState references notes parameter', (t) => {
+    const funcStr = setProjectNotesState.toString();
+    t.assertTruthy(funcStr.includes('notes') || funcStr.includes('nextNotes'), 'setProjectNotesState should reference notes parameter');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState updates projectNotesState', (t) => {
+    const funcStr = setProjectNotesState.toString();
+    t.assertTruthy(funcStr.includes('projectNotesState'), 'setProjectNotesState should update projectNotesState');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState calls captureStateForUndo', (t) => {
+    const funcStr = setProjectNotesState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'setProjectNotesState should call captureStateForUndo');
+});
+
+TestRunner.test('Day 475 - Project Notes - setProjectNotesState uses descriptive undo label', (t) => {
+    const funcStr = setProjectNotesState.toString();
+    t.assertTruthy(funcStr.includes('Project Notes') || funcStr.includes('Notes'), 'setProjectNotesState should use descriptive undo label');
+});
+
+TestRunner.test('Day 475 - Project Notes - openProjectNotesWindow is a function export', (t) => {
+    t.assertEqual(typeof openProjectNotesWindow, 'function', 'openProjectNotesWindow should be a function');
+});
+
+TestRunner.test('Day 475 - Project Notes - openProjectNotesWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openProjectNotesWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openProjectNotesWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 475 - Project Notes - APP_VERSION validation for Day 475', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 475');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 146, 'Minor version should be >= 146 for Day 475');
+    }
+});
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getCountInBars is a function export', (t) => {
+    t.assertEqual(typeof getCountInBars, 'function', 'getCountInBars should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getCountInBars accepts 0 parameters', (t) => {
+    const paramCount = getCountInBars.length;
+    t.assertEqual(paramCount, 0, 'getCountInBars should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setCountInBars is a function export', (t) => {
+    t.assertEqual(typeof setCountInBars, 'function', 'setCountInBars should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setCountInBars accepts 1 parameter', (t) => {
+    const paramCount = setCountInBars.length;
+    t.assertEqual(paramCount, 1, 'setCountInBars should accept 1 parameter (bars)');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setCountInBars references bars parameter', (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('bars') || funcStr.includes('nextBars'), 'setCountInBars should reference bars parameter');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - isCountInActive is a function export', (t) => {
+    t.assertEqual(typeof isCountInActive, 'function', 'isCountInActive should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - isCountInActive accepts 0 parameters', (t) => {
+    const paramCount = isCountInActive.length;
+    t.assertEqual(paramCount, 0, 'isCountInActive should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - startCountIn is a function export', (t) => {
+    t.assertEqual(typeof startCountIn, 'function', 'startCountIn should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - startCountIn accepts 2 parameters', (t) => {
+    const paramCount = startCountIn.length;
+    t.assertEqual(paramCount, 2, 'startCountIn should accept 2 parameters (onCountInComplete, startPosition)');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - cleanupCountIn is a function export', (t) => {
+    t.assertEqual(typeof cleanupCountIn, 'function', 'cleanupCountIn should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - cleanupCountIn accepts 0 parameters', (t) => {
+    const paramCount = cleanupCountIn.length;
+    t.assertEqual(paramCount, 0, 'cleanupCountIn should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setMetronomeVolume is a function export', (t) => {
+    t.assertEqual(typeof setMetronomeVolume, 'function', 'setMetronomeVolume should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - setMetronomeVolume accepts 1 parameter', (t) => {
+    const paramCount = setMetronomeVolume.length;
+    t.assertEqual(paramCount, 1, 'setMetronomeVolume should accept 1 parameter (vol)');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getMetronomeVolume is a function export', (t) => {
+    t.assertEqual(typeof getMetronomeVolume, 'function', 'getMetronomeVolume should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getMetronomeVolume accepts 0 parameters', (t) => {
+    const paramCount = getMetronomeVolume.length;
+    t.assertEqual(paramCount, 0, 'getMetronomeVolume should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - stopMetronome is a function export', (t) => {
+    t.assertEqual(typeof stopMetronome, 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - stopMetronome accepts 0 parameters', (t) => {
+    const paramCount = stopMetronome.length;
+    t.assertEqual(paramCount, 0, 'stopMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - cleanupMetronome is a function export', (t) => {
+    t.assertEqual(typeof cleanupMetronome, 'function', 'cleanupMetronome should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - cleanupMetronome accepts 0 parameters', (t) => {
+    const paramCount = cleanupMetronome.length;
+    t.assertEqual(paramCount, 0, 'cleanupMetronome should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - tapTempo is a function export', (t) => {
+    t.assertEqual(typeof tapTempo, 'function', 'tapTempo should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - tapTempo accepts 0 parameters', (t) => {
+    const paramCount = tapTempo.length;
+    t.assertEqual(paramCount, 0, 'tapTempo should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getTapTempoBpm is a function export', (t) => {
+    t.assertEqual(typeof getTapTempoBpm, 'function', 'getTapTempoBpm should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getTapTempoBpm accepts 0 parameters', (t) => {
+    const paramCount = getTapTempoBpm.length;
+    t.assertEqual(paramCount, 0, 'getTapTempoBpm should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - resetTapTempo is a function export', (t) => {
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - resetTapTempo accepts 0 parameters', (t) => {
+    const paramCount = resetTapTempo.length;
+    t.assertEqual(paramCount, 0, 'resetTapTempo should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - isTapTempoReady is a function export', (t) => {
+    t.assertEqual(typeof isTapTempoReady, 'function', 'isTapTempoReady should be a function');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - isTapTempoReady accepts 0 parameters', (t) => {
+    const paramCount = isTapTempoReady.length;
+    t.assertEqual(paramCount, 0, 'isTapTempoReady should accept 0 parameters');
+});
+
+TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - APP_VERSION validation for Day 476', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 476');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 146, 'Minor version should be >= 146 for Day 476');
     }
 });

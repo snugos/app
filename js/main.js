@@ -6,7 +6,7 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
-import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, playDrumSamplerPadPreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, resolveRecordingMicrophoneTestTrack, getRecordingInputGainNode, getPunchInBars, getPunchOutBars, createSendBusInAudio, deleteSendBusFromAudio, getSendBusNodes, connectTrackToSendBus, disconnectTrackFromSendBus, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted } from './audio.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, playDrumSamplerPadPreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, resolveRecordingMicrophoneTestTrack, getRecordingInputGainNode, getPunchInBars, getPunchOutBars, createSendBusInAudio, deleteSendBusFromAudio, getSendBusNodes, connectTrackToSendBus, disconnectTrackFromSendBus, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted, getCountInBars, setCountInBars, isCountInActive, startCountIn, cleanupCountIn, setMetronomeVolume, getMetronomeVolume, stopMetronome, cleanupMetronome, tapTempo, getTapTempoBpm, resetTapTempo, isTapTempoReady } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTimelineLaneDrop,
@@ -30,7 +30,8 @@ import {
     openTrackTemplatesWindow,
     openTrackGroupsWindow,
     openSendEffectsWindow,
-    openMidiCCMappingsWindow
+    openMidiCCMappingsWindow,
+    openProjectNotesWindow
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -116,6 +117,8 @@ import {
     // setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars,
     // Project Name
     getProjectNameState, setProjectNameState,
+    // Project Notes
+    getProjectNotesState, setProjectNotesState,
     // Synth Presets
     getSynthPresets, saveSynthPreset, deleteSynthPreset,
     // Muted Track Ids
@@ -759,6 +762,7 @@ const appServices = {
     openTrackGroupsWindow,
     openSendEffectsWindow,
     openMidiCCMappingsWindow,
+    openProjectNotesWindow,
 
     // Punch-in/out recording scheduling
     scheduleRecordingForPunch,
