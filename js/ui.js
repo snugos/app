@@ -2946,6 +2946,66 @@ function getPlayheadPositionInBars() {
 }
 
 function attachClipEventHandlers() {
+    // Clip right-click context menu
+    document.querySelectorAll('.audio-clip, .sequence-clip').forEach(clipEl => {
+        clipEl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const clipId = clipEl.dataset.clipId;
+            const trackId = clipEl.dataset.trackId;
+            const tracks = typeof localAppServices.getTracks === 'function' ? localAppServices.getTracks() : [];
+            const track = tracks.find(t => t.id === trackId);
+            if (!track) return;
+            const clip = track.timelineClips ? track.timelineClips.find(c => c.id === clipId) : null;
+            if (!clip) return;
+            const clipName = clip.name || 'Untitled';
+
+            const menuItems = [
+                { label: `Rename Clip...`, action: () => {
+                    const newName = window.prompt(`Rename "${clipName}":`, clipName);
+                    if (newName !== null && newName.trim() !== '' && newName.trim() !== clipName) {
+                        if (track.setAudioClipName) { track.setAudioClipName(clip.id, newName.trim()); showNotification(`Renamed to "${newName.trim()}"`, 1500); }
+                    }
+                }},
+                { label: `Change Color...`, action: () => {
+                    const colors = Constants.CLIP_COLORS || ['#4a9eff', '#ff4a4a', '#4aff4a', '#ff4aff', '#ffff4a', '#4affff', '#ff9f43', '#a855f7'];
+                    const currentColor = clip.color || Constants.DEFAULT_CLIP_COLOR || '#4a9eff';
+                    const colorHex = window.prompt(`Enter hex color for "${clipName}" (e.g. #ff4a4a):`, currentColor);
+                    if (colorHex && /^#[0-9A-Fa-f]{6}$/.test(colorHex)) {
+                        if (track.setAudioClipColor) { track.setAudioClipColor(clip.id, colorHex); clipEl.style.borderColor = colorHex; showNotification(`Color set to ${colorHex}`, 1500); }
+                        else { clip.color = colorHex; clipEl.style.borderColor = colorHex; showNotification(`Color set to ${colorHex}`, 1500); }
+                    } else if (colorHex !== null) { showNotification('Invalid hex color format. Use #rrggbb.', 2000); }
+                }},
+                { separator: true },
+                { label: `Duplicate Clip`, action: () => {
+                    if (track.duplicateTimelineClip) { const newClip = track.duplicateTimelineClip(clip.id); if (newClip && localAppServices.renderTimeline) { localAppServices.renderTimeline(); showNotification(`Duplicated "${clipName}"`, 1500); } else { showNotification('Failed to duplicate clip', 2000); } }
+                    else { showNotification('Duplicate not available', 1500); }
+                }},
+                { label: `Split Clip at Playhead...`, action: () => {
+                    try { const pos = Tone.Transport.position; const [bars, beats, sixteenths] = pos.split(':').map(Number); const secondsPerBeat = 60 / Tone.Transport.bpm.value; const splitTime = (bars * 4 * secondsPerBeat) + (beats * secondsPerBeat) + (sixteenths * secondsPerBeat / 4); if (splitTime <= clip.startTime || splitTime >= clip.startTime + clip.duration) { showNotification('Playhead must be within clip to split.', 2500); return; } if (track.splitAudioClip) { const newClip = track.splitAudioClip(clip.id, splitTime); if (newClip && localAppServices.renderTimeline) { localAppServices.renderTimeline(); showNotification(`Split "${clipName}" at ${bars}:${beats}:${sixteenths}`, 1500); } else { showNotification('Failed to split clip', 2000); } } else { showNotification('Split not available', 1500); } } catch (e) { showNotification('Cannot get transport position.', 2000); }
+                }},
+                { separator: true },
+                { label: `Fade In (0.1s)`, action: () => {
+                    if (track.setAudioClipFadeIn) { track.setAudioClipFadeIn(clip.id, 0.1); showNotification(`Fade in set to 0.1s for "${clipName}"`, 1500); } else { showNotification('Fade not available', 1500); }
+                }},
+                { label: `Fade Out (0.1s)`, action: () => {
+                    if (track.setAudioClipFadeOut) { track.setAudioClipFadeOut(clip.id, 0.1); showNotification(`Fade out set to 0.1s for "${clipName}"`, 1500); } else { showNotification('Fade not available', 1500); }
+                }},
+                { label: `Reverse`, action: () => {
+                    if (track.setAudioClipReverse) { track.setAudioClipReverse(clip.id, true); showNotification(`Reversed "${clipName}"`, 1500); } else { showNotification('Reverse not available', 1500); }
+                }},
+                { separator: true },
+                { label: `Delete Clip`, action: () => {
+                    showConfirmationDialog(`Delete Clip "${clipName}"?`, 'This will remove the clip from the timeline. This can be undone.', () => {
+                        if (track.deleteTimelineClip) { track.deleteTimelineClip(clip.id); if (localAppServices.renderTimeline) localAppServices.renderTimeline(); showNotification(`Deleted "${clipName}"`, 1500); }
+                        else { showNotification('Delete not available', 1500); }
+                    });
+                }}
+            ];
+            createContextMenu(e, menuItems, localAppServices);
+        });
+    });
+
     // Clip click (select)
     document.querySelectorAll('.audio-clip, .sequence-clip').forEach(clipEl => {
         clipEl.addEventListener('click', (e) => {

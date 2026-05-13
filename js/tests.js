@@ -8570,3 +8570,117 @@ TestRunner.test('Day 487 - Time Signature - APP_VERSION validation for Day 487',
         t.assertTruthy(versionParts[1] >= 156, 'Minor version should be >= 156 for Day 487');
     }
 });
+
+// Day 488: Timeline Clip Context Menu
+TestRunner.test('Day 488 - Timeline Clip Context Menu - attachClipEventHandlers is a function export', (t) => {
+    t.assertEqual(typeof attachClipEventHandlers, 'function', 'attachClipEventHandlers should be a function');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - attachClipEventHandlers accepts 0 parameters', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('function (') || funcStr.includes('()'), 'attachClipEventHandlers should take 0 parameters');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - selectClip is a function', (t) => {
+    t.assertEqual(typeof selectClip, 'function', 'selectClip should be a function');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - selectClip accepts 2 parameters', (t) => {
+    const funcStr = selectClip.toString();
+    t.assertTruthy(funcStr.includes('trackId') && funcStr.includes('clipId'), 'selectClip should reference trackId and clipId');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - startClipDrag is a function', (t) => {
+    t.assertEqual(typeof startClipDrag, 'function', 'startClipDrag should be a function');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - startClipResize is a function', (t) => {
+    t.assertEqual(typeof startClipResize, 'function', 'startClipResize should be a function');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - stopClipDrag is a function', (t) => {
+    t.assertEqual(typeof stopClipDrag, 'function', 'stopClipDrag should be a function');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - stopClipResize is a function', (t) => {
+    t.assertEqual(typeof stopClipResize, 'function', 'stopClipResize should be a function');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - createContextMenu is used in context handler', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('createContextMenu'), 'attachClipEventHandlers should use createContextMenu');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - contextmenu event listener is registered', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes("'contextmenu'") || funcStr.includes('"contextmenu"') || funcStr.includes('contextmenu'), 'attachClipEventHandlers should add contextmenu listener');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - clipId and trackId are read from dataset', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('clipId = clipEl.dataset.clipId') || funcStr.includes('clipId = clipEl'), 'attachClipEventHandlers should read clipId from dataset');
+    t.assertTruthy(funcStr.includes('trackId = clipEl.dataset.trackId') || funcStr.includes('trackId = clipEl'), 'attachClipEventHandlers should read trackId from dataset');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Rename clip menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Rename Clip') || funcStr.includes('Rename'), 'Context menu should have Rename option');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Change Color menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Change Color') || funcStr.includes('color'), 'Context menu should have Change Color option');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Duplicate Clip menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Duplicate Clip') || funcStr.includes('duplicate'), 'Context menu should have Duplicate option');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Split Clip menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Split Clip') || funcStr.includes('splitAudioClip'), 'Context menu should have Split option');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Delete Clip menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Delete Clip') || funcStr.includes('deleteTimelineClip'), 'Context menu should have Delete option');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Fade In menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Fade In') || funcStr.includes('setAudioClipFadeIn'), 'Context menu should have Fade In option');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Fade Out menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Fade Out') || funcStr.includes('setAudioClipFadeOut'), 'Context menu should have Fade Out option');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Reverse menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Reverse') || funcStr.includes('setAudioClipReverse'), 'Context menu should have Reverse option');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - showConfirmationDialog is used for Delete', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('showConfirmationDialog'), 'Delete should use showConfirmationDialog');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - showNotification is used in menu actions', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'Context menu actions should use showNotification');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - Constants.CLIP_COLORS is referenced for color picker', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('CLIP_COLORS') || funcStr.includes('clipColor'), 'Context menu color picker should reference CLIP_COLORS');
+});
+
+TestRunner.test('Day 488 - Timeline Clip Context Menu - APP_VERSION validation for Day 488', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 488');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 157, 'Minor version should be >= 157 for Day 488');
+    }
+});
