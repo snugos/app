@@ -246,6 +246,9 @@ export function getAudioContextStateState() {
 export function setAudioContextStateState(value) {
     const validValues = ['running', 'suspended', 'closed', 'unavailable'];
     if (validValues.includes(value)) {
+        if (performanceMonitorState.audioContextState !== value) {
+            captureStateForUndoIfAllowed(`Set Audio Context State to ${value}`);
+        }
         performanceMonitorState.audioContextState = value;
     }
 }
@@ -257,7 +260,11 @@ export function getCPUUsageState() {
 export function setCPUUsageState(value) {
     const num = parseFloat(value);
     if (Number.isFinite(num)) {
-        performanceMonitorState.cpuUsage = Math.max(0, Math.min(100, num));
+        const clamped = Math.max(0, Math.min(100, num));
+        if (performanceMonitorState.cpuUsage !== clamped) {
+            captureStateForUndoIfAllowed(`Set CPU Usage to ${clamped}%`);
+        }
+        performanceMonitorState.cpuUsage = clamped;
     }
 }
 
@@ -268,6 +275,9 @@ export function getMemoryPressureState() {
 export function setMemoryPressureState(value) {
     const validValues = ['none', 'low', 'medium', 'high'];
     if (validValues.includes(value)) {
+        if (performanceMonitorState.memoryPressure !== value) {
+            captureStateForUndoIfAllowed(`Set Memory Pressure to ${value}`);
+        }
         performanceMonitorState.memoryPressure = value;
     }
 }
@@ -279,7 +289,11 @@ export function getActiveVoicesState() {
 export function setActiveVoicesState(value) {
     const num = parseInt(value);
     if (Number.isFinite(num)) {
-        performanceMonitorState.activeVoices = Math.max(0, num);
+        const clamped = Math.max(0, num);
+        if (performanceMonitorState.activeVoices !== clamped) {
+            captureStateForUndoIfAllowed(`Set Active Voices to ${clamped}`);
+        }
+        performanceMonitorState.activeVoices = clamped;
     }
 }
 
@@ -290,7 +304,11 @@ export function getAudioLatencyState() {
 export function setAudioLatencyState(value) {
     const num = parseFloat(value);
     if (Number.isFinite(num)) {
-        performanceMonitorState.audioLatency = Math.max(0, num);
+        const clamped = Math.max(0, num);
+        if (performanceMonitorState.audioLatency !== clamped) {
+            captureStateForUndoIfAllowed(`Set Audio Latency to ${clamped}ms`);
+        }
+        performanceMonitorState.audioLatency = clamped;
     }
 }
 
@@ -301,7 +319,11 @@ export function getLastCallbackTimeState() {
 export function setLastCallbackTimeState(value) {
     const num = parseFloat(value);
     if (Number.isFinite(num)) {
-        performanceMonitorState.lastCallbackTime = Math.max(0, num);
+        const clamped = Math.max(0, num);
+        if (performanceMonitorState.lastCallbackTime !== clamped) {
+            captureStateForUndoIfAllowed(`Set Last Callback Time to ${clamped}ms`);
+        }
+        performanceMonitorState.lastCallbackTime = clamped;
     }
 }
 
@@ -312,7 +334,11 @@ export function getDroppedCallbacksState() {
 export function setDroppedCallbacksState(value) {
     const num = parseInt(value);
     if (Number.isFinite(num)) {
-        performanceMonitorState.droppedCallbacks = Math.max(0, num);
+        const clamped = Math.max(0, num);
+        if (performanceMonitorState.droppedCallbacks !== clamped) {
+            captureStateForUndoIfAllowed(`Set Dropped Callbacks to ${clamped}`);
+        }
+        performanceMonitorState.droppedCallbacks = clamped;
     }
 }
 
