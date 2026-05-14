@@ -1423,6 +1423,7 @@ TestRunner.test('Utils - createDropZoneHTML for DrumSampler with pad index', (t)
 });
 
 TestRunner.test('DrumSampler Pad - loadDrumSamplerPadFile function exists', (t) => {
+    t.assertEqual(typeof loadDrumSamplerPadFile, 'function', 'loadDrumSamplerPadFile should be a function');
 });
 
 TestRunner.test('DrumSampler Pad - loadDrumSamplerPadFile validates track type', (t) => {
@@ -1463,6 +1464,7 @@ TestRunner.test('DrumSampler Pad - drumPadDropZoneContainer ID pattern', (t) => 
 
 
 TestRunner.test('DrumSampler Pad - loadSoundFromBrowserToTarget function exists', (t) => {
+    t.assertEqual(typeof loadSoundFromBrowserToTarget, 'function', 'loadSoundFromBrowserToTarget should be a function');
 });
 
 TestRunner.test('DrumSampler Pad - loadSoundFromBrowserToTarget handles DrumSampler type', (t) => {
@@ -2711,12 +2713,14 @@ TestRunner.test('Recording - Latency hint is reasonable', (t) => {
 // Day 195: Audio Recording Function Tests
 // ============================================
 TestRunner.test('Audio Recording - startAudioRecording accepts track and monitoring params', (t) => {
+    t.assertEqual(startAudioRecording.length, 2, 'startAudioRecording should accept 2 parameters');
 });
 
 // ============================================
 // Day 351: Mixer Master Strip UI Tests
 // ============================================
 TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML function exists', (t) => {
+    t.assertEqual(typeof buildMixerMasterStripHTML, 'function', 'buildMixerMasterStripHTML should be a function');
 });
 
 TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML returns string', (t) => {
@@ -2773,6 +2777,7 @@ TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML input has correc
 // Day 352: Send Bus Audio Routing Tests
 // ============================================
 TestRunner.test('Send Bus Audio - getSendBusNodes is a function', (t) => {
+    t.assertEqual(typeof getSendBusNodes, 'function', 'getSendBusNodes should be a function');
 });
 
 TestRunner.test('Send Bus Audio - getSendBusNodes accepts no parameters', (t) => {
@@ -2780,6 +2785,7 @@ TestRunner.test('Send Bus Audio - getSendBusNodes accepts no parameters', (t) =>
 });
 
 TestRunner.test('Send Bus Audio - getTrackSendNodes is a function', (t) => {
+    t.assertEqual(typeof getTrackSendNodes, 'function', 'getTrackSendNodes should be a function');
 });
 
 TestRunner.test('Send Bus Audio - getTrackSendNodes accepts no parameters', (t) => {
@@ -2833,6 +2839,7 @@ TestRunner.test('Send Bus Audio - disconnectTrackFromSendBus references sendId p
 });
 
 TestRunner.test('Send Bus Audio - setTrackSendLevel is a function', (t) => {
+    t.assertEqual(typeof setTrackSendLevel, 'function', 'setTrackSendLevel should be a function');
 });
 
 TestRunner.test('Send Bus Audio - setTrackSendLevel accepts 3 parameters', (t) => {
@@ -4335,6 +4342,7 @@ TestRunner.test('Recording Audio - stopAudioRecording calls showNotification on 
 });
 
 TestRunner.test('Recording Audio - setRecordingInputGain is a function', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
 });
 
 TestRunner.test('Recording Audio - setRecordingInputGain accepts 1 parameter', (t) => {
@@ -4465,6 +4473,7 @@ TestRunner.test('Recording Microphone E2E - resolveRecordingMicrophoneTestTrack 
 // Day 438: Recording Microphone E2E Helper Tests
 // ================================================================
 TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest is a function export', (t) => {
+    t.assertEqual(typeof runRecordingMicrophoneE2ETest, 'function', 'runRecordingMicrophoneE2ETest should be a function');
 });
 
 TestRunner.test('Recording Microphone E2E - runRecordingMicrophoneE2ETest accepts 2 parameters', (t) => {
@@ -5133,6 +5142,7 @@ TestRunner.test('Scale Mode & Swing - APP_VERSION validation for Day 361', (t) =
 
 // Day 362: Audio Track Inspector UI Functions Tests
 TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM is a function', (t) => {
+    t.assertEqual(typeof buildAudioTrackInspectorDOM, 'function', 'buildAudioTrackInspectorDOM should be a function');
 });
 
 TestRunner.test('Audio Track UI - buildAudioTrackInspectorDOM accepts 1 parameter', (t) => {
@@ -5269,6 +5279,7 @@ import {
 } from './audio.js';
 
 TestRunner.test('Metronome Audio - initializeMetronome is a function export', (t) => {
+    t.assertEqual(typeof initializeMetronome, 'function', 'initializeMetronome should be a function');
 });
 
 TestRunner.test('Metronome Audio - initializeMetronome accepts 0 parameters', (t) => {
@@ -5312,6 +5323,7 @@ TestRunner.test('Metronome Audio - initializeMetronome uses Tone.gainToDb for vo
 });
 
 TestRunner.test('Metronome Audio - startMetronome is a function export', (t) => {
+    t.assertEqual(typeof startMetronome, 'function', 'startMetronome should be a function');
 });
 
 TestRunner.test('Metronome Audio - startMetronome accepts 0 parameters', (t) => {
@@ -7488,6 +7500,7 @@ TestRunner.test('Punch Region - isPositionInPunchRegion calculates total sixteen
 });
 
 TestRunner.test('Punch Recording - scheduleRecordingForPunch is a function export', (t) => {
+    t.assertEqual(typeof scheduleRecordingForPunch, 'function', 'scheduleRecordingForPunch should be a function');
 });
 
 TestRunner.test('Punch Recording - scheduleRecordingForPunch accepts 2 parameters', (t) => {
@@ -7535,6 +7548,7 @@ TestRunner.test('Punch Recording - scheduleRecordingForPunch calls onPunchOutTri
 });
 
 TestRunner.test('Punch Recording - cancelScheduledRecording is a function export', (t) => {
+    t.assertEqual(typeof cancelScheduledRecording, 'function', 'cancelScheduledRecording should be a function');
 });
 
 TestRunner.test('Punch Recording - cancelScheduledRecording accepts 0 parameters', (t) => {
@@ -7552,6 +7566,7 @@ TestRunner.test('Punch Recording - cancelScheduledRecording clears recordingSche
 });
 
 TestRunner.test('Punch Recording - getRecordingScheduledTrackId is a function export', (t) => {
+    t.assertEqual(typeof getRecordingScheduledTrackId, 'function', 'getRecordingScheduledTrackId should be a function');
 });
 
 TestRunner.test('Punch Recording - getRecordingScheduledTrackId accepts 0 parameters', (t) => {
@@ -7580,6 +7595,7 @@ TestRunner.test('Punch Recording - cleanupRecordingScheduling calls cancelSchedu
 // Day 473: Recording Audio Gain & Resource Tests
 // ============================================
 TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode is a function export', (t) => {
+    t.assertEqual(typeof getRecordingInputGainNode, 'function', 'getRecordingInputGainNode should be a function');
 });
 
 TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode accepts 0 parameters', (t) => {
@@ -7612,6 +7628,7 @@ TestRunner.test('Day 473 - Recording Audio - getRecordingInputGainNode returns t
 });
 
 TestRunner.test('Day 473 - Recording Audio - cleanupRecordingAudioResources is a function', (t) => {
+    t.assertEqual(typeof cleanupRecordingAudioResources, 'function', 'cleanupRecordingAudioResources should be a function');
 });
 
 TestRunner.test('Day 473 - Recording Audio - cleanupRecordingAudioResources handles mic cleanup', (t) => {
@@ -7822,6 +7839,7 @@ TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - getTapTempoBpm ac
 });
 
 TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - resetTapTempo is a function export', (t) => {
+    t.assertEqual(typeof resetTapTempo, 'function', 'resetTapTempo should be a function');
 });
 
 TestRunner.test('Day 476 - Metronome/CountIn/TapTempo Wiring - resetTapTempo accepts 0 parameters', (t) => {
