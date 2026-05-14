@@ -96,6 +96,26 @@ import {
     // Track Templates cleanup functions
     // Master Effects state functions
     // MIDI Learn state functions
+    // Performance Monitor state functions
+    getPerformanceMonitorState,
+    getPerformanceMonitorEnabledState,
+    setPerformanceMonitorEnabledState,
+    getAudioContextStateState,
+    setAudioContextStateState,
+    getCPUUsageState,
+    setCPUUsageState,
+    getMemoryPressureState,
+    setMemoryPressureState,
+    getActiveVoicesState,
+    setActiveVoicesState,
+    getAudioLatencyState,
+    setAudioLatencyState,
+    getLastCallbackTimeState,
+    setLastCallbackTimeState,
+    getDroppedCallbacksState,
+    setDroppedCallbacksState,
+    incrementDroppedCallbacksState,
+    resetPerformanceMonitorState
 
 } from './state.js';
 

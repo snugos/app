@@ -211,6 +211,127 @@ export function setMasterAutomationArmedState(value) {
     masterAutomationArmedState = nextValue;
 }
 
+// --- Performance Monitor State ---
+let performanceMonitorState = {
+    enabled: false,
+    audioContextState: 'running',
+    cpuUsage: 0,
+    memoryPressure: 'none',
+    activeVoices: 0,
+    audioLatency: 0,
+    lastCallbackTime: 0,
+    droppedCallbacks: 0
+};
+
+export function getPerformanceMonitorState() {
+    return { ...performanceMonitorState };
+}
+
+export function getPerformanceMonitorEnabledState() {
+    return !!performanceMonitorState.enabled;
+}
+
+export function setPerformanceMonitorEnabledState(value) {
+    const nextValue = !!value;
+    if (performanceMonitorState.enabled !== nextValue) {
+        captureStateForUndoIfAllowed(`Toggle Performance Monitor ${nextValue ? 'On' : 'Off'}`);
+    }
+    performanceMonitorState.enabled = nextValue;
+}
+
+export function getAudioContextStateState() {
+    return performanceMonitorState.audioContextState;
+}
+
+export function setAudioContextStateState(value) {
+    const validValues = ['running', 'suspended', 'closed', 'unavailable'];
+    if (validValues.includes(value)) {
+        performanceMonitorState.audioContextState = value;
+    }
+}
+
+export function getCPUUsageState() {
+    return performanceMonitorState.cpuUsage;
+}
+
+export function setCPUUsageState(value) {
+    const num = parseFloat(value);
+    if (Number.isFinite(num)) {
+        performanceMonitorState.cpuUsage = Math.max(0, Math.min(100, num));
+    }
+}
+
+export function getMemoryPressureState() {
+    return performanceMonitorState.memoryPressure;
+}
+
+export function setMemoryPressureState(value) {
+    const validValues = ['none', 'low', 'medium', 'high'];
+    if (validValues.includes(value)) {
+        performanceMonitorState.memoryPressure = value;
+    }
+}
+
+export function getActiveVoicesState() {
+    return performanceMonitorState.activeVoices;
+}
+
+export function setActiveVoicesState(value) {
+    const num = parseInt(value);
+    if (Number.isFinite(num)) {
+        performanceMonitorState.activeVoices = Math.max(0, num);
+    }
+}
+
+export function getAudioLatencyState() {
+    return performanceMonitorState.audioLatency;
+}
+
+export function setAudioLatencyState(value) {
+    const num = parseFloat(value);
+    if (Number.isFinite(num)) {
+        performanceMonitorState.audioLatency = Math.max(0, num);
+    }
+}
+
+export function getLastCallbackTimeState() {
+    return performanceMonitorState.lastCallbackTime;
+}
+
+export function setLastCallbackTimeState(value) {
+    const num = parseFloat(value);
+    if (Number.isFinite(num)) {
+        performanceMonitorState.lastCallbackTime = Math.max(0, num);
+    }
+}
+
+export function getDroppedCallbacksState() {
+    return performanceMonitorState.droppedCallbacks;
+}
+
+export function setDroppedCallbacksState(value) {
+    const num = parseInt(value);
+    if (Number.isFinite(num)) {
+        performanceMonitorState.droppedCallbacks = Math.max(0, num);
+    }
+}
+
+export function incrementDroppedCallbacksState() {
+    performanceMonitorState.droppedCallbacks++;
+}
+
+export function resetPerformanceMonitorState() {
+    captureStateForUndoIfAllowed('Reset Performance Monitor');
+    performanceMonitorState.enabled = false;
+    performanceMonitorState.audioContextState = 'running';
+    performanceMonitorState.cpuUsage = 0;
+    performanceMonitorState.memoryPressure = 'none';
+    performanceMonitorState.activeVoices = 0;
+    performanceMonitorState.audioLatency = 0;
+    performanceMonitorState.lastCallbackTime = 0;
+    performanceMonitorState.droppedCallbacks = 0;
+}
+
 // --- Synth Presets Storage ---
 let synthPresetsGlobal = {};
 
