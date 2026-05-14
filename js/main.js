@@ -128,6 +128,8 @@ import {
     getSynthPresets, saveSynthPreset, deleteSynthPreset,
     // Muted Track Ids
     getMutedTrackIdsState, setMutedTrackIdsState,
+    isTrackMutedState, setTrackMutedState,
+    getMidiLearnModeState, setMidiLearnModeState,
     // Master Automation Arm
     getMasterAutomationArmedState, setMasterAutomationArmedState,
     // MIDI Export
@@ -742,6 +744,10 @@ const appServices = {
     redoLastAction: redoLastActionInternal,
     getMutedTrackIds: getMutedTrackIdsState,
     setMutedTrackIds: setMutedTrackIdsState,
+    isTrackMuted: isTrackMutedState,
+    setTrackMuted: setTrackMutedState,
+    getMidiLearnMode: getMidiLearnModeState,
+    setMidiLearnMode: setMidiLearnModeState,
 
     handleOpenTrackInspector: (trackId) => {
         if (typeof openTrackInspectorWindow === 'function') openTrackInspectorWindow(trackId);
