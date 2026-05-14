@@ -8717,3 +8717,54 @@ TestRunner.test('Day 491 - Audio Clip Custom Fade Duration - APP_VERSION validat
         t.assertTruthy(versionParts[1] >= 158, 'Minor version should be >= 158 for Day 491');
     }
 });
+
+// Day 492: Keyboard Shortcut Handler Wiring Tests
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleMidiLearnMode function exists', (t) => {
+    t.assertTruthy(typeof toggleMidiLearnMode === 'function', 'toggleMidiLearnMode should be a function');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleMidiLearnMode accepts 0 parameters', (t) => {
+    t.assertEqual(toggleMidiLearnMode.length, 0, 'toggleMidiLearnMode should accept 0 parameters');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleScaleModeShortcut function exists', (t) => {
+    t.assertTruthy(typeof toggleScaleModeShortcut === 'function', 'toggleScaleModeShortcut should be a function');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleScaleModeShortcut accepts 0 parameters', (t) => {
+    t.assertEqual(toggleScaleModeShortcut.length, 0, 'toggleScaleModeShortcut should accept 0 parameters');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleChordModeShortcut function exists', (t) => {
+    t.assertTruthy(typeof toggleChordModeShortcut === 'function', 'toggleChordModeShortcut should be a function');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleChordModeShortcut accepts 0 parameters', (t) => {
+    t.assertEqual(toggleChordModeShortcut.length, 0, 'toggleChordModeShortcut should accept 0 parameters');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleMetronomeShortcut function exists', (t) => {
+    t.assertTruthy(typeof toggleMetronomeShortcut === 'function', 'toggleMetronomeShortcut should be a function');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleMetronomeShortcut accepts 0 parameters', (t) => {
+    t.assertEqual(toggleMetronomeShortcut.length, 0, 'toggleMetronomeShortcut should accept 0 parameters');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - openTransportSettingsShortcut function exists', (t) => {
+    t.assertTruthy(typeof openTransportSettingsShortcut === 'function', 'openTransportSettingsShortcut should be a function');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - openTransportSettingsShortcut accepts 0 parameters', (t) => {
+    t.assertEqual(openTransportSettingsShortcut.length, 0, 'openTransportSettingsShortcut should accept 0 parameters');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleMuteShortcut function exists', (t) => {
+    t.assertTruthy(typeof toggleMuteShortcut === 'function', 'toggleMuteShortcut should be a function');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleMuteShortcut accepts 0 parameters', (t) => {
+    t.assertEqual(toggleMuteShortcut.length, 0, 'toggleMuteShortcut should accept 0 parameters');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleSoloShortcut function exists', (t) => {
+    t.assertTruthy(typeof toggleSoloShortcut === 'function', 'toggleSoloShortcut should be a function');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - toggleSoloShortcut accepts 0 parameters', (t) => {
+    t.assertEqual(toggleSoloShortcut.length, 0, 'toggleSoloShortcut should accept 0 parameters');
+});
+TestRunner.test('Day 492 - Keyboard Shortcuts - APP_VERSION validation for Day 492', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 492');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 159, 'Minor version should be >= 159 for Day 492');
+    }
+});

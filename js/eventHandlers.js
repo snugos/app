@@ -1319,6 +1319,106 @@ document.addEventListener('keyup', (event) => {
 
 // --- Keyboard Shortcuts Overlay ---
 
+// --- Keyboard Shortcut Handler Functions ---
+// These are exported as named functions for testability and keyboard shortcut system access
+
+export function toggleMidiLearnMode() {
+    if (localAppServices.getMidiLearnMode && localAppServices.setMidiLearnMode) {
+        const newMode = !localAppServices.getMidiLearnMode();
+        localAppServices.setMidiLearnMode(newMode);
+        if (localAppServices.showNotification) localAppServices.showNotification(newMode ? "MIDI Learn ON" : "MIDI Learn OFF", 1500);
+        return newMode;
+    }
+    return null;
+}
+
+export function toggleScaleModeShortcut() {
+    const armedTrackId = getArmedTrackId ? getArmedTrackId() : null;
+    if (armedTrackId !== null && localAppServices.getTrackById) {
+        const track = localAppServices.getTrackById(armedTrackId);
+        if (track && (track.type === 'Synth' || track.type === 'Sampler' || track.type === 'DrumSampler' || track.type === 'InstrumentSampler')) {
+            if (localAppServices.openScaleModeWindow) {
+                localAppServices.openScaleModeWindow();
+                return true;
+            } else if (localAppServices.setScaleModeEnabled && localAppServices.getScaleModeEnabled) {
+                const newEnabled = !localAppServices.getScaleModeEnabled();
+                localAppServices.setScaleModeEnabled(newEnabled);
+                if (localAppServices.showNotification) localAppServices.showNotification(newEnabled ? "Scale Mode ON" : "Scale Mode OFF", 1500);
+                return newEnabled;
+            }
+        }
+    }
+    return false;
+}
+
+export function toggleChordModeShortcut() {
+    const armedTrackId = getArmedTrackId ? getArmedTrackId() : null;
+    if (armedTrackId !== null && localAppServices.getTrackById) {
+        const track = localAppServices.getTrackById(armedTrackId);
+        if (track && (track.type === 'Synth' || track.type === 'Sampler' || track.type === 'DrumSampler' || track.type === 'InstrumentSampler')) {
+            if (localAppServices.openChordModeWindow) {
+                localAppServices.openChordModeWindow();
+                return true;
+            } else if (localAppServices.setChordModeEnabled && localAppServices.getChordModeEnabled) {
+                const newEnabled = !localAppServices.getChordModeEnabled();
+                localAppServices.setChordModeEnabled(newEnabled);
+                if (localAppServices.showNotification) localAppServices.showNotification(newEnabled ? "Chord Mode ON" : "Chord Mode OFF", 1500);
+                return newEnabled;
+            }
+        }
+    }
+    return false;
+}
+
+export function toggleMetronomeShortcut() {
+    if (localAppServices.setMetronomeEnabled && localAppServices.isMetronomeEnabled) {
+        const newState = !localAppServices.isMetronomeEnabled();
+        localAppServices.setMetronomeEnabled(newState);
+        if (localAppServices.showNotification) localAppServices.showNotification(newState ? "Metronome ON" : "Metronome OFF", 1500);
+        return newState;
+    }
+    return null;
+}
+
+export function openTransportSettingsShortcut() {
+    if (localAppServices.openTransportSettingsWindow) {
+        localAppServices.openTransportSettingsWindow();
+        return true;
+    }
+    return false;
+}
+
+export function toggleMuteShortcut() {
+    const armedTrackId = getArmedTrackId ? getArmedTrackId() : null;
+    if (armedTrackId !== null && localAppServices.getTrackById) {
+        const track = localAppServices.getTrackById(armedTrackId);
+        if (track) {
+            const isMuted = localAppServices.isTrackMuted ? localAppServices.isTrackMuted(armedTrackId) : track.isMuted;
+            if (localAppServices.setTrackMuted) {
+                localAppServices.setTrackMuted(armedTrackId, !isMuted);
+                if (localAppServices.showNotification) localAppServices.showNotification(isMuted ? `Unmuted: ${track.name}` : `Muted: ${track.name}`, 1500);
+                return !isMuted;
+            }
+        }
+    }
+    return null;
+}
+
+export function toggleSoloShortcut() {
+    const armedTrackId = getArmedTrackId ? getArmedTrackId() : null;
+    if (armedTrackId !== null && localAppServices.getTrackById) {
+        const track = localAppServices.getTrackById(armedTrackId);
+        if (track && localAppServices.getSoloedTrackId && localAppServices.setSoloedTrackId) {
+            const soloedTrackId = localAppServices.getSoloedTrackId();
+            const isSoloed = soloedTrackId === armedTrackId;
+            localAppServices.setSoloedTrackId(isSoloed ? null : armedTrackId);
+            if (localAppServices.showNotification) localAppServices.showNotification(isSoloed ? `Unsoloed: ${track.name}` : `Soloed: ${track.name}`, 1500);
+            return !isSoloed;
+        }
+    }
+    return null;
+}
+
 // --- Track Control Handlers ---
 
 
