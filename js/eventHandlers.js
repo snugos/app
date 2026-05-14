@@ -20,7 +20,11 @@ import {
     getPlaybackModeState,
     setPlaybackModeState,
     getMidiAccessState, 
-    getActiveMIDIInputState
+    getActiveMIDIInputState,
+    getMidiLearnModeState,
+    setMidiLearnModeState,
+    isTrackMutedState,
+    setTrackMutedState
 } from './state.js';
 
 import { isMetronomeEnabled, getCountInBars, isCountInActive, startCountIn, getPunchRegion, setPunchRegion, setPunchRegionEnabled, isPunchRegionEnabled, isPositionInPunchRegion,
