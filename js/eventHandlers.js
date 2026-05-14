@@ -1019,6 +1019,103 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // K - Toggle MIDI Learn mode
+        if (key === 'k') {
+            const newMode = !localAppServices.getMidiLearnMode();
+            if (localAppServices.setMidiLearnMode) {
+                localAppServices.setMidiLearnMode(newMode);
+                showNotification(newMode ? "MIDI Learn ON" : "MIDI Learn OFF", 1500);
+            }
+            return;
+        }
+
+        // Q - Toggle Scale Mode (when not in an input field and not using Q for quantize)
+        if (key === 'q' && !event.ctrlKey && !event.metaKey) {
+            const armedTrackId = getArmedTrackId();
+            if (armedTrackId !== null) {
+                const track = getTrackById(armedTrackId);
+                if (track && (track.type === 'Synth' || track.type === 'Sampler' || track.type === 'DrumSampler' || track.type === 'InstrumentSampler')) {
+                    if (localAppServices.openScaleModeWindow) {
+                        localAppServices.openScaleModeWindow();
+                    } else if (localAppServices.setScaleModeEnabled) {
+                        const newEnabled = !localAppServices.getScaleModeEnabled();
+                        localAppServices.setScaleModeEnabled(newEnabled);
+                        showNotification(newEnabled ? "Scale Mode ON" : "Scale Mode OFF", 1500);
+                    }
+                }
+            }
+            return;
+        }
+
+        // C - Toggle Chord Mode (when not in an input field and not using C for copy)
+        if (key === 'c' && !event.ctrlKey && !event.metaKey) {
+            const armedTrackId = getArmedTrackId();
+            if (armedTrackId !== null) {
+                const track = getTrackById(armedTrackId);
+                if (track && (track.type === 'Synth' || track.type === 'Sampler' || track.type === 'DrumSampler' || track.type === 'InstrumentSampler')) {
+                    if (localAppServices.openChordModeWindow) {
+                        localAppServices.openChordModeWindow();
+                    } else if (localAppServices.setChordModeEnabled) {
+                        const newEnabled = !localAppServices.getChordModeEnabled();
+                        localAppServices.setChordModeEnabled(newEnabled);
+                        showNotification(newEnabled ? "Chord Mode ON" : "Chord Mode OFF", 1500);
+                    }
+                }
+            }
+            return;
+        }
+
+        // T - Toggle Metronome (already handled for tap tempo, but also enable direct toggle)
+        if (key === 't' && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+            if (localAppServices.setMetronomeEnabled) {
+                const newState = !localAppServices.isMetronomeEnabled();
+                localAppServices.setMetronomeEnabled(newState);
+                showNotification(newState ? "Metronome ON" : "Metronome OFF", 1500);
+                return;
+            }
+        }
+
+        // Y - Open Transport Settings window (Y for sYng settings)
+        if (key === 'y' && !event.ctrlKey && !event.metaKey) {
+            if (localAppServices.openTransportSettingsWindow) {
+                localAppServices.openTransportSettingsWindow();
+            }
+            return;
+        }
+
+        // M - Toggle Mute for armed track
+        if (key === 'm' && !event.ctrlKey && !event.metaKey) {
+            const armedTrackId = getArmedTrackId();
+            if (armedTrackId !== null) {
+                const track = getTrackById(armedTrackId);
+                if (track) {
+                    const isMuted = localAppServices.isTrackMuted ? localAppServices.isTrackMuted(armedTrackId) : track.isMuted;
+                    if (localAppServices.setTrackMuted) {
+                        localAppServices.setTrackMuted(armedTrackId, !isMuted);
+                        showNotification(isMuted ? `Unmuted: ${track.name}` : `Muted: ${track.name}`, 1500);
+                    }
+                }
+            }
+            return;
+        }
+
+        // S - Toggle Solo for armed track (when not using S for snap-to-grid and not Ctrl+S for save)
+        if (key === 's' && !event.ctrlKey && !event.metaKey) {
+            const armedTrackId = getArmedTrackId();
+            if (armedTrackId !== null) {
+                const track = getTrackById(armedTrackId);
+                if (track) {
+                    const soloedTrackId = localAppServices.getSoloedTrackId ? localAppServices.getSoloedTrackId() : null;
+                    const isSoloed = soloedTrackId === armedTrackId;
+                    if (localAppServices.setSoloedTrackId) {
+                        localAppServices.setSoloedTrackId(isSoloed ? null : armedTrackId);
+                        showNotification(isSoloed ? `Unsoloed: ${track.name}` : `Soloed: ${track.name}`, 1500);
+                    }
+                }
+            }
+            return;
+        }
+
         // Ctrl/Cmd+C - Copy sequencer selection to clipboard
         if ((event.ctrlKey || event.metaKey) && key === 'c') {
             const armedTrackId = getArmedTrackId();

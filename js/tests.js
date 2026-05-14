@@ -8684,3 +8684,36 @@ TestRunner.test('Day 488 - Timeline Clip Context Menu - APP_VERSION validation f
         t.assertTruthy(versionParts[1] >= 157, 'Minor version should be >= 157 for Day 488');
     }
 });
+
+TestRunner.test('Day 491 - Audio Clip Custom Fade Duration - Fade In menu uses window.prompt for custom duration', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('window.prompt') && (funcStr.includes('fade in') || funcStr.includes('Fade In') || funcStr.includes('fadeIn') || funcStr.includes('fadeOut')), 'Fade menu should use window.prompt for custom duration');
+});
+
+TestRunner.test('Day 491 - Audio Clip Custom Fade Duration - Fade Out menu uses window.prompt for custom duration', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('window.prompt') && (funcStr.includes('fade out') || funcStr.includes('Fade Out') || funcStr.includes('fadeOut')), 'Fade Out should use window.prompt for custom duration');
+});
+
+TestRunner.test('Day 491 - Audio Clip Custom Fade Duration - Fade menus use parseFloat for duration parsing', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('parseFloat') || funcStr.includes('parseInt'), 'Custom fade duration should parse the input value');
+});
+
+TestRunner.test('Day 491 - Audio Clip Custom Fade Duration - Fade menus validate for NaN input', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('isNaN') || funcStr.includes('isNaN('), 'Custom fade duration should validate input is not NaN');
+});
+
+TestRunner.test('Day 491 - Audio Clip Custom Fade Duration - Fade menus clamp negative values', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('parsed < 0') || funcStr.includes('parsed < 0') || funcStr.includes('Math.max'), 'Custom fade duration should handle negative input');
+});
+
+TestRunner.test('Day 491 - Audio Clip Custom Fade Duration - APP_VERSION validation for Day 491', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 491');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 158, 'Minor version should be >= 158 for Day 491');
+    }
+});
