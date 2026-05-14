@@ -2642,6 +2642,57 @@ export class Track {
         const clip = this._getAudioClip(clipId);
         return clip ? clip.duration : 0;
     }
+    async normalizeAudioClip(clipId) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        if (clip.type !== 'audio') { console.warn(`[${this.id}] normalizeAudioClip called on non-audio clip`); return false; }
+        if (!clip.sourceId) { console.warn(`[${this.id}] normalizeAudioClip: clip has no sourceId`); return false; }
+
+        try {
+            const audioBlob = await getAudio(clip.sourceId);
+            if (!audioBlob) { console.warn(`[${this.id}] normalizeAudioClip: audio not found for sourceId ${clip.sourceId}`); return false; }
+
+            const tempUrl = URL.createObjectURL(audioBlob);
+            const audioContext = ((Tone.context) && (Tone.context).rawContext);
+            if (!audioContext) {
+                console.warn(`[${this.id}] normalizeAudioClip: No raw AudioContext available from Tone.`);
+                URL.revokeObjectURL(tempUrl);
+                return false;
+            }
+
+            const arrayBuffer = await fetch(tempUrl).then(res => res.arrayBuffer());
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            URL.revokeObjectURL(tempUrl);
+
+            const data = audioBuffer.getChannelData(0);
+            let peakAmplitude = 0;
+            for (let i = 0; i < data.length; i++) {
+                const abs = Math.abs(data[i];
+                if (abs > peakAmplitude) peakAmplitude = abs;
+            }
+
+            if (peakAmplitude === 0) {
+                peakAmplitude = 1;
+            }
+
+            let gain = 1.0 / peakAmplitude;
+            gain = Math.max(Constants.MIN_AUDIO_CLIP_GAIN, Math.min(Constants.MAX_AUDIO_CLIP_GAIN, gain));
+
+            this._captureUndoState(`Normalize "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
+            clip.gain = gain;
+
+            if (this.appServices && this.appServices.showNotification) {
+                this.appServices.showNotification(`Normalized "${clip.name || clip.id.slice(-4)}" (gain: ${gain.toFixed(3)})`, 2000);
+            }
+            return true;
+        } catch (err) {
+            console.error(`[${this.id}] normalizeAudioClip error:`, err);
+            if (this.appServices && this.appServices.showNotification) {
+                this.appServices.showNotification(`Failed to normalize "${clip.name || clip.id.slice(-4)}"`, 2000);
+            }
+            return false;
+        }
+    }
     dispose() {
         const trackNameForLog = this.name || `Track ${this.id}`; 
         console.log(`[Track Dispose START ${this.id}] Starting disposal for track: "${trackNameForLog}"`);

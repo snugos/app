@@ -8806,3 +8806,77 @@ TestRunner.test('Day 492 - Keyboard Shortcuts - APP_VERSION validation for Day 4
         t.assertTruthy(versionParts[1] >= 159, 'Minor version should be >= 159 for Day 492');
     }
 });
+
+// ============================================
+// Day 495: Audio Clip Normalize Feature
+// ============================================
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip function reference check', (t) => {
+    t.assertEqual(typeof Track.prototype.normalizeAudioClip, 'function', 'normalizeAudioClip should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip is async', (t) => {
+    t.assertEqual(Track.prototype.normalizeAudioClip.constructor.name, 'AsyncFunction', 'normalizeAudioClip should be async');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip accepts clipId parameter', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'normalizeAudioClip should accept clipId parameter');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'normalizeAudioClip should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('Normalize'), 'normalizeAudioClip undo label should reference Normalize');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip references clip.name', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clip.name'), 'normalizeAudioClip should reference clip.name in undo label');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip handles audio type check', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clip.type') && funcStr.includes('audio'), 'normalizeAudioClip should check for audio clip type');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip clamps gain to valid range', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('MAX_AUDIO_CLIP_GAIN') || funcStr.includes('MIN_AUDIO_CLIP_GAIN'), 'normalizeAudioClip should clamp gain to valid range');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip updates clip.gain', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('clip.gain'), 'normalizeAudioClip should update clip.gain property');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip calculates peak amplitude', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('peakAmplitude') || funcStr.includes('abs'), 'normalizeAudioClip should calculate peak amplitude');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip handles silent audio case', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('silent') || funcStr.includes('peakAmplitude'), 'normalizeAudioClip should handle silent audio edge case');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip shows notification on success', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('Normalized'), 'normalizeAudioClip should show notification on success');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip returns boolean', (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'normalizeAudioClip should return boolean');
+});
+
+TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip APP_VERSION validation for Day 495', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 495');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 161, 'Minor version should be >= 161 for Day 495');
+    }
+});

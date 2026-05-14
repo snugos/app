@@ -3004,6 +3004,13 @@ function attachClipEventHandlers() {
                 { label: `Reverse`, action: () => {
                     if (track.setAudioClipReverse) { track.setAudioClipReverse(clip.id, true); showNotification(`Reversed "${clipName}"`, 1500); } else { showNotification('Reverse not available', 1500); }
                 }},
+                { label: `Normalize`, action: () => {
+                    if (track.normalizeAudioClip) {
+                        track.normalizeAudioClip(clip.id).then(success => {
+                            if (success && localAppServices.renderTimeline) localAppServices.renderTimeline();
+                        });
+                    } else { showNotification('Normalize not available', 1500); }
+                }},
                 { separator: true },
                 { label: `Delete Clip`, action: () => {
                     showConfirmationDialog(`Delete Clip "${clipName}"?`, 'This will remove the clip from the timeline. This can be undone.', () => {
