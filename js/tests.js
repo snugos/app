@@ -8880,3 +8880,37 @@ TestRunner.test('Day 495 - Audio Clip Editor - normalizeAudioClip APP_VERSION va
         t.assertTruthy(versionParts[1] >= 161, 'Minor version should be >= 161 for Day 495');
     }
 });
+
+// Day 497: Audio Clip Gain Context Menu Item
+TestRunner.test('Day 497 - Timeline Clip Context Menu - Gain menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Gain...') || funcStr.includes('setAudioClipGain'), 'Context menu should have Gain option');
+});
+
+TestRunner.test('Day 497 - Timeline Clip Context Menu - Gain menu prompts for value', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('window.prompt') && funcStr.includes('Gain'), 'Gain menu should use window.prompt for input');
+});
+
+TestRunner.test('Day 497 - Timeline Clip Context Menu - Gain menu clamps value to 0-4 range', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0') && funcStr.includes('Math.min(4'), 'Gain should be clamped to 0-4 range');
+});
+
+TestRunner.test('Day 497 - Timeline Clip Context Menu - Gain menu calls setAudioClipGain', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('setAudioClipGain'), 'Gain menu action should call setAudioClipGain');
+});
+
+TestRunner.test('Day 497 - Timeline Clip Context Menu - Gain menu gets current gain value', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('getAudioClipGain') || funcStr.includes('clip.gain'), 'Gain menu should get current gain value');
+});
+
+TestRunner.test('Day 497 - Timeline Clip Context Menu - Gain menu APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 497');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 162, 'Minor version should be >= 162 for Day 497');
+    }
+});

@@ -3004,6 +3004,33 @@ function attachClipEventHandlers() {
                 { label: `Reverse`, action: () => {
                     if (track.setAudioClipReverse) { track.setAudioClipReverse(clip.id, true); showNotification(`Reversed "${clipName}"`, 1500); } else { showNotification('Reverse not available', 1500); }
                 }},
+                { label: `Playback Rate...`, action: () => {
+                    const currentRate = (track.getAudioClipPlaybackRate ? track.getAudioClipPlaybackRate(clip.id) : (clip.playbackRate || 1));
+                    const val = window.prompt(`Enter playback rate (0.25 - 4.0):`, String(currentRate));
+                    if (val === null) return;
+                    const parsed = parseFloat(val);
+                    if (isNaN(parsed)) { showNotification('Enter a valid number', 2000); return; }
+                    const clamped = Math.max(0.25, Math.min(4, parsed));
+                    if (track.setAudioClipPlaybackRate) { track.setAudioClipPlaybackRate(clip.id, clamped); showNotification(`Playback rate set to ${clamped}x for "${clipName}"`, 1500); } else { showNotification('Playback rate not available', 1500); }
+                }},
+                { label: `Pitch Shift...`, action: () => {
+                    const currentPitch = clip.pitchShift || 0;
+                    const val = window.prompt(`Enter pitch shift in semitones (-24 to +24):`, String(currentPitch));
+                    if (val === null) return;
+                    const parsed = parseInt(val);
+                    if (isNaN(parsed)) { showNotification('Enter a valid integer', 2000); return; }
+                    const clamped = Math.max(-24, Math.min(24, parsed));
+                    if (track.setAudioClipPitchShift) { track.setAudioClipPitchShift(clip.id, clamped); showNotification(`Pitch shift set to ${clamped} semitones for "${clipName}"`, 1500); } else { showNotification('Pitch shift not available', 1500); }
+                }},
+                { label: `Gain...`, action: () => {
+                    const currentGain = track.getAudioClipGain ? track.getAudioClipGain(clip.id) : (clip.gain !== undefined ? clip.gain : 1);
+                    const val = window.prompt(`Enter gain (0.0 - 4.0, 1.0 = 0dB):`, String(currentGain));
+                    if (val === null) return;
+                    const parsed = parseFloat(val);
+                    if (isNaN(parsed)) { showNotification('Enter a valid number', 2000); return; }
+                    const clamped = Math.max(0, Math.min(4, parsed));
+                    if (track.setAudioClipGain) { track.setAudioClipGain(clip.id, clamped); showNotification(`Gain set to ${clamped}x for "${clipName}"`, 1500); } else { showNotification('Gain not available', 1500); }
+                }},
                 { label: `Normalize`, action: () => {
                     if (track.normalizeAudioClip) {
                         track.normalizeAudioClip(clip.id).then(success => {
