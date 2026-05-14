@@ -2667,7 +2667,7 @@ export class Track {
             const data = audioBuffer.getChannelData(0);
             let peakAmplitude = 0;
             for (let i = 0; i < data.length; i++) {
-                const abs = Math.abs(data[i];
+                const abs = Math.abs(data[i]);
                 if (abs > peakAmplitude) peakAmplitude = abs;
             }
 
