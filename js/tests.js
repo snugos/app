@@ -8914,3 +8914,52 @@ TestRunner.test('Day 497 - Timeline Clip Context Menu - Gain menu APP_VERSION va
         t.assertTruthy(versionParts[1] >= 162, 'Minor version should be >= 162 for Day 497');
     }
 });
+
+// Day 498: Audio Clip Start/End Offset Context Menu
+TestRunner.test('Day 498 - Timeline Clip Context Menu - Start Offset menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Start Offset') || funcStr.includes('setAudioClipStartOffset'), 'Context menu should have Start Offset option');
+});
+
+TestRunner.test('Day 498 - Timeline Clip Context Menu - Start Offset menu prompts for value', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('window.prompt') && funcStr.includes('Start Offset'), 'Start Offset menu should use window.prompt for input');
+});
+
+TestRunner.test('Day 498 - Timeline Clip Context Menu - Start Offset menu validates positive number', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('parsed < 0') || funcStr.includes('isNaN(parsed)'), 'Start Offset should validate for valid positive number');
+});
+
+TestRunner.test('Day 498 - Timeline Clip Context Menu - Start Offset menu calls setAudioClipStartOffset', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('setAudioClipStartOffset'), 'Start Offset menu action should call setAudioClipStartOffset');
+});
+
+TestRunner.test('Day 498 - Timeline Clip Context Menu - End Offset menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('End Offset') || funcStr.includes('setAudioClipEndOffset'), 'Context menu should have End Offset option');
+});
+
+TestRunner.test('Day 498 - Timeline Clip Context Menu - End Offset menu prompts for value', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('window.prompt') && funcStr.includes('End Offset'), 'End Offset menu should use window.prompt for input');
+});
+
+TestRunner.test('Day 498 - Timeline Clip Context Menu - End Offset menu validates positive number', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('parsed < 0') || funcStr.includes('isNaN(parsed)'), 'End Offset should validate for valid positive number');
+});
+
+TestRunner.test('Day 498 - Timeline Clip Context Menu - End Offset menu calls setAudioClipEndOffset', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('setAudioClipEndOffset'), 'End Offset menu action should call setAudioClipEndOffset');
+});
+
+TestRunner.test('Day 498 - Timeline Clip Context Menu - Start/End Offset APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 498');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 163, 'Minor version should be >= 163 for Day 498');
+    }
+});

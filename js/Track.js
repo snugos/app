@@ -2480,7 +2480,7 @@ export class Track {
     setAudioClipGain(clipId, gain) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.gain = Math.max(0, Math.min(2, parseFloat(gain) || 1));
+        clip.gain = Math.max(0, Math.min(4, parseFloat(gain) || 1));
         this._captureUndoState(`Set Clip gain on ${this.name}`);
         return true;
     }

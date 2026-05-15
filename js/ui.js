@@ -3013,6 +3013,22 @@ function attachClipEventHandlers() {
                     const clamped = Math.max(0.25, Math.min(4, parsed));
                     if (track.setAudioClipPlaybackRate) { track.setAudioClipPlaybackRate(clip.id, clamped); showNotification(`Playback rate set to ${clamped}x for "${clipName}"`, 1500); } else { showNotification('Playback rate not available', 1500); }
                 }},
+                { label: `Start Offset...`, action: () => {
+                    const currentOffset = (track.getAudioClipStartOffset ? track.getAudioClipStartOffset(clip.id) : (clip.startOffset || 0));
+                    const val = window.prompt(`Enter start offset in seconds (0 = beginning):`, String(currentOffset));
+                    if (val === null) return;
+                    const parsed = parseFloat(val);
+                    if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
+                    if (track.setAudioClipStartOffset) { track.setAudioClipStartOffset(clip.id, parsed); showNotification(`Start offset set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('Start offset not available', 1500); }
+                }},
+                { label: `End Offset...`, action: () => {
+                    const currentOffset = (track.getAudioClipEndOffset ? track.getAudioClipEndOffset(clip.id) : (clip.endOffset || 0));
+                    const val = window.prompt(`Enter end offset in seconds (0 = end):`, String(currentOffset));
+                    if (val === null) return;
+                    const parsed = parseFloat(val);
+                    if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
+                    if (track.setAudioClipEndOffset) { track.setAudioClipEndOffset(clip.id, parsed); showNotification(`End offset set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('End offset not available', 1500); }
+                }},
                 { label: `Pitch Shift...`, action: () => {
                     const currentPitch = clip.pitchShift || 0;
                     const val = window.prompt(`Enter pitch shift in semitones (-24 to +24):`, String(currentPitch));
