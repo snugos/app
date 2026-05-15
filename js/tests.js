@@ -9044,3 +9044,28 @@ TestRunner.test('Day 500 - Track setAudioClipPitchShift APP_VERSION validation',
         t.assertTruthy(versionParts[1] >= 165, 'Minor version should be >= 165 for Day 500');
     }
 });
+
+// Day 501: Reverse Sequence Feature
+TestRunner.test('Day 501 - Track.reverseSequence is a function', (t) => {
+    const track = new Track('test-track-1', 'Synth');
+    t.assertEqual(typeof track.reverseSequence, 'function', 'reverseSequence should be a function');
+});
+
+TestRunner.test('Day 501 - Track.reverseSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'reverseSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 501 - Track.reverseSequence returns 0 for Audio tracks', (t) => {
+    const track = new Track('test-track-1', 'Audio');
+    const result = track.reverseSequence();
+    t.assertEqual(result, 0, 'Audio tracks should return 0');
+});
+
+TestRunner.test('Day 501 - Track.reverseSequence APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 501');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 166, 'Minor version should be >= 166 for Day 501');
+    }
+});

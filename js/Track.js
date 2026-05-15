@@ -1520,6 +1520,38 @@ export class Track {
         return scaledCount;
     }
 
+    reverseSequence() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} reverseSequence] No active sequence found.`);
+            return 0;
+        }
+
+        let reversedCount = 0;
+        const totalSteps = activeSeq.length;
+
+        activeSeq.data.forEach(row => {
+            if (!row) return;
+            const newRow = Array(totalSteps).fill(null);
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    const mirroredCol = totalSteps - 1 - col;
+                    newRow[mirroredCol] = { ...stepData };
+                    reversedCount++;
+                }
+            }
+            row.length = 0;
+            for (let i = 0; i < totalSteps; i++) {
+                row.push(newRow[i]);
+            }
+        });
+
+        this._captureUndoState(`Reverse Sequence ${activeSeq.name}`);
+        return reversedCount;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         if (this.type === 'Audio') return;
