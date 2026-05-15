@@ -9160,3 +9160,37 @@ TestRunner.test('Day 502 - APP_VERSION validation for Day 502', (t) => {
         t.assertTruthy(versionParts[1] >= 166, 'Minor version should be >= 166 for Day 502');
     }
 });
+
+// Day 503: Set Sequence Length Menu Item Tests
+TestRunner.test('Day 503 - Set Length menu item exists in sequencer context menu', (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('Set Length'), 'Set Length menu item should exist in context menu');
+});
+
+TestRunner.test('Day 503 - Set Length uses window.prompt for input', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('window.prompt') && funcStr.includes('Set sequence length'), 'Set Length should use window.prompt for user input');
+});
+
+TestRunner.test('Day 503 - Set Length calls track.setSequenceLength', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('setSequenceLength'), 'Set Length should call track.setSequenceLength method');
+});
+
+TestRunner.test('Day 503 - Set Length validates bar count (rejects invalid)', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('isNaN') || funcStr.includes('bars < 1'), 'Set Length should validate bar count and reject invalid input');
+});
+
+TestRunner.test('Day 503 - Set Length validates against MAX_BARS', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'Set Length should check against MAX_BARS limit');
+});
+
+TestRunner.test('Day 503 - Set Length APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 503');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 168, 'Minor version should be >= 168 for Day 503');
+    }
+});
