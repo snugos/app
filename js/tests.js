@@ -5688,6 +5688,25 @@ TestRunner.test('Sequence Methods - Track.humanizeVelocity is a function', (t) =
     t.assertEqual(typeof Track.prototype.humanizeVelocity, 'function', 'humanizeVelocity should be a function');
 });
 
+TestRunner.test('Sequence Methods - Track.scaleVelocities is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.scaleVelocities, 'function', 'scaleVelocities should be a function');
+});
+
+TestRunner.test('Sequence Methods - scaleVelocities calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.scaleVelocities.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'scaleVelocities should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Sequence Methods - scaleVelocities scales velocities by factor', (t) => {
+    const funcStr = Track.prototype.scaleVelocities.toString();
+    t.assertTruthy(funcStr.includes('velocity') && funcStr.includes('factor'), 'scaleVelocities should reference velocity and factor');
+});
+
+TestRunner.test('Sequence Methods - scaleVelocities clamps to valid range', (t) => {
+    const funcStr = Track.prototype.scaleVelocities.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'scaleVelocities should clamp values to 0.05-1.0 range');
+});
+
 TestRunner.test('Sequence Methods - Track.arpeggiatePattern is a function', (t) => {
     t.assertEqual(typeof Track.prototype.arpeggiatePattern, 'function', 'arpeggiatePattern should be a function');
 });

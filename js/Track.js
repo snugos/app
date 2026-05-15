@@ -1493,6 +1493,33 @@ export class Track {
         return humanizedCount;
     }
 
+    scaleVelocities(factor = 1.0) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} scaleVelocities] No active sequence found.`);
+            return 0;
+        }
+
+        let scaledCount = 0;
+        const totalSteps = activeSeq.length;
+
+        activeSeq.data.forEach(row => {
+            if (!row) return;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.velocity !== undefined) {
+                    const newVelocity = Math.max(0.05, Math.min(1.0, stepData.velocity * factor));
+                    row[col].velocity = Math.round(newVelocity * 100) / 100;
+                    scaledCount++;
+                }
+            }
+        });
+
+        this._captureUndoState(`Scale velocities by ${Math.round(factor * 100)}% on ${activeSeq.name}`);
+        return scaledCount;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         if (this.type === 'Audio') return;
