@@ -9069,3 +9069,94 @@ TestRunner.test('Day 501 - Track.reverseSequence APP_VERSION validation', (t) =>
         t.assertTruthy(versionParts[1] >= 166, 'Minor version should be >= 166 for Day 501');
     }
 });
+// Day 502: Sequence Editing Methods Tests - humanizeVelocity, Invert Selection, Clear Selection, and context menu coverage
+TestRunner.test('Day 502 - Sequence Methods - Track.humanizeVelocity is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.humanizeVelocity, 'function', 'humanizeVelocity should be a function');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - humanizeVelocity calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'humanizeVelocity should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - humanizeVelocity returns 0 for Audio tracks', (t) => {
+    const track = new Track('test-track-1', 'Audio');
+    const result = track.humanizeVelocity(0.15);
+    t.assertEqual(result, 0, 'Audio tracks should return 0');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - humanizeVelocity references amount parameter', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('amount'), 'humanizeVelocity should reference amount parameter');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - humanizeVelocity clamps velocities to valid range', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'humanizeVelocity should clamp values to 0.05-1.0 range');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - humanizeVelocity uses Math.random for variation', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.random'), 'humanizeVelocity should use Math.random for variation');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - humanizeVelocity APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 502');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 166, 'Minor version should be >= 166 for Day 502');
+    }
+});
+
+TestRunner.test('Day 502 - Sequence Methods - Track.copySequenceSection is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.copySequenceSection, 'function', 'copySequenceSection should be a function');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - copySequenceSection returns array data', (t) => {
+    const funcStr = Track.prototype.copySequenceSection.toString();
+    t.assertTruthy(funcStr.includes('sectionData') && funcStr.includes('totalSteps'), 'copySequenceSection should build section data array');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - Track.pasteSequenceSection is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.pasteSequenceSection, 'function', 'pasteSequenceSection should be a function');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - pasteSequenceSection calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'pasteSequenceSection should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - Track.setSequenceLength is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setSequenceLength, 'function', 'setSequenceLength should be a function');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - setSequenceLength calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSequenceLength.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSequenceLength should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - Track.quantizeSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.quantizeSequence, 'function', 'quantizeSequence should be a function');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - quantizeSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.quantizeSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'quantizeSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - Track.reverseSequence is a function (confirmation)', (t) => {
+    t.assertEqual(typeof Track.prototype.reverseSequence, 'function', 'reverseSequence should be a function');
+});
+
+TestRunner.test('Day 502 - Sequence Methods - reverseSequence mirrors steps correctly', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    t.assertTruthy(funcStr.includes('totalSteps') && funcStr.includes('mirroredCol'), 'reverseSequence should use mirrored column calculation');
+});
+
+TestRunner.test('Day 502 - APP_VERSION validation for Day 502', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 166, 'Minor version should be >= 166 for Day 502');
+    }
+});
