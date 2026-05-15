@@ -8963,3 +8963,22 @@ TestRunner.test('Day 498 - Timeline Clip Context Menu - Start/End Offset APP_VER
         t.assertTruthy(versionParts[1] >= 163, 'Minor version should be >= 163 for Day 498');
     }
 });
+
+// Day 499: Sequencer Context Menu Stop All Audio
+TestRunner.test('Day 499 - Sequencer Context Menu - Stop All Audio menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Stop All Audio'), 'Context menu should have Stop All Audio option');
+});
+
+TestRunner.test('Day 499 - Sequencer Context Menu - Stop All Audio calls panicStopAllAudio', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('panicStopAllAudio'), 'Stop All Audio should call panicStopAllAudio');
+});
+
+TestRunner.test('Day 499 - Sequencer Context Menu - Stop All Audio APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 499');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 164, 'Minor version should be >= 164 for Day 499');
+    }
+});
