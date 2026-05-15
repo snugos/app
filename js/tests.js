@@ -8982,3 +8982,46 @@ TestRunner.test('Day 499 - Sequencer Context Menu - Stop All Audio APP_VERSION v
         t.assertTruthy(versionParts[1] >= 164, 'Minor version should be >= 164 for Day 499');
     }
 });
+
+// Day 500: Audio Clip Pitch Shift Methods
+TestRunner.test('Day 500 - Track setAudioClipPitchShift is a function', (t) => {
+    const track = new Track('test-track-1', 'Audio');
+    t.assertTruthy(typeof track.setAudioClipPitchShift === 'function', 'setAudioClipPitchShift should be a function');
+});
+
+TestRunner.test('Day 500 - Track getAudioClipPitchShift is a function', (t) => {
+    const track = new Track('test-track-1', 'Audio');
+    t.assertTruthy(typeof track.getAudioClipPitchShift === 'function', 'getAudioClipPitchShift should be a function');
+});
+
+TestRunner.test('Day 500 - Track setAudioClipPitchShift clamps to -24 to +24', (t) => {
+    const track = new Track('test-track-1', 'Audio');
+    track.timelineClips = [{ id: 'clip-1', type: 'audio', name: 'Test Clip', pitchShift: 0 }];
+    track.setAudioClipPitchShift('clip-1', 50);
+    t.assertEqual(track.timelineClips[0].pitchShift, 24, 'Should clamp to +24');
+    track.setAudioClipPitchShift('clip-1', -50);
+    t.assertEqual(track.timelineClips[0].pitchShift, -24, 'Should clamp to -24');
+});
+
+TestRunner.test('Day 500 - Track getAudioClipPitchShift returns default 0', (t) => {
+    const track = new Track('test-track-1', 'Audio');
+    const result = track.getAudioClipPitchShift('non-existent');
+    t.assertEqual(result, 0, 'Should return 0 for non-existent clip');
+});
+
+TestRunner.test('Day 500 - Track setAudioClipPitchShift calls _captureUndoState', (t) => {
+    const track = new Track('test-track-1', 'Audio');
+    track.timelineClips = [{ id: 'clip-1', type: 'audio', name: 'Test Clip', pitchShift: 0 }];
+    let captured = false;
+    track._captureUndoState = (label) => { captured = true; };
+    track.setAudioClipPitchShift('clip-1', 12);
+    t.assertTruthy(captured, 'Should call _captureUndoState');
+});
+
+TestRunner.test('Day 500 - Track setAudioClipPitchShift APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 500');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 165, 'Minor version should be >= 165 for Day 500');
+    }
+});

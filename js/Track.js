@@ -2529,6 +2529,19 @@ export class Track {
         return clip ? (clip.endOffset || 0) : 0;
     }
 
+    setAudioClipPitchShift(clipId, semitones) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        clip.pitchShift = Math.max(-24, Math.min(24, parseInt(semitones) || 0));
+        this._captureUndoState(`Set Clip pitch shift on ${this.name}`);
+        return true;
+    }
+
+    getAudioClipPitchShift(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.pitchShift || 0) : 0;
+    }
+
     setAudioClipCrossfade(clipId, crossfade) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
