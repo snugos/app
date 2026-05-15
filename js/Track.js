@@ -1422,6 +1422,39 @@ export class Track {
         console.log(`[Track ${this.id}] Doubled length of sequence "${activeSeq.name}" to ${newLength} steps.`);
     }
 
+    halveSequence() {
+        if (this.type === 'Audio') return;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq) {
+            console.warn(`[Track ${this.id} halveSequence] No active sequence found.`);
+            return;
+        }
+
+        const oldLength = activeSeq.length;
+        const newLength = oldLength / 2;
+        if (newLength < Constants.STEPS_PER_BAR) {
+            if (this.appServices.showNotification) this.appServices.showNotification(`Cannot halve length, minimum is 1 bar.`, 3000);
+            return;
+        }
+        this._captureUndoState(`Halve Sequence Length for "${activeSeq.name}" on ${this.name}`);
+
+        activeSeq.data = activeSeq.data || [];
+        activeSeq.data.forEach(row => {
+            if (row && Array.isArray(row)) {
+                const newRow = new Array(newLength).fill(null);
+                for (let i = 0; i < newLength; i++) {
+                    newRow[i] = row[i] ? JSON.parse(JSON.stringify(row[i])) : null;
+                }
+                row.length = newLength;
+                for (let i = 0; i < newLength; i++) row[i] = newRow[i];
+            }
+        });
+        activeSeq.length = newLength;
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        console.log(`[Track ${this.id}] Halved length of sequence "${activeSeq.name}" to ${newLength} steps.`);
+    }
+
     shiftSequenceNotes(semitones) {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();

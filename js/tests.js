@@ -9194,3 +9194,35 @@ TestRunner.test('Day 503 - Set Length APP_VERSION validation', (t) => {
         t.assertTruthy(versionParts[1] >= 168, 'Minor version should be >= 168 for Day 503');
     }
 });
+
+// Day 504: Halve Sequence Length Feature Tests
+TestRunner.test('Day 504 - Halve Length menu item exists in sequencer context menu', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Halve Length'), 'Halve Length menu item should exist in sequencer context menu');
+});
+
+TestRunner.test('Day 504 - Halve Length calls track.halveSequence', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('halveSequence'), 'Halve Length should call track.halveSequence');
+});
+
+TestRunner.test('Day 504 - Halve Length APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 504');
+    t.assertTruthy(versionParts[1] >= 169, 'Minor version should be >= 169 for Day 504');
+});
+
+TestRunner.test('Day 504 - Track.halveSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.halveSequence, 'function', 'halveSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 504 - halveSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.halveSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'halveSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 504 - halveSequence validates minimum 1 bar', (t) => {
+    const funcStr = Track.prototype.halveSequence.toString();
+    t.assertTruthy(funcStr.includes('STEPS_PER_BAR') || funcStr.includes('minimum'), 'halveSequence should validate minimum 1 bar');
+});
