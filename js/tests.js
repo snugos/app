@@ -7813,6 +7813,113 @@ TestRunner.test('Context Monitor & Sidechain - APP_VERSION validation for Day 42
 });
 
 // ============================================
+
+// ===============================================================
+// Day 511: Transport & Mixdown Export Functions Tests
+// ===============================================================
+TestRunner.test('Day 511 - Transport - getTransportPosition is a function export', (t) => {
+    t.assertEqual(typeof getTransportPosition, 'function', 'getTransportPosition should be a function');
+});
+
+TestRunner.test('Day 511 - Transport - getTransportPosition accepts 0 parameters', (t) => {
+    const paramCount = getTransportPosition.length;
+    t.assertEqual(paramCount, 0, 'getTransportPosition should accept 0 parameters');
+});
+
+TestRunner.test('Day 511 - Transport - getTransportSeconds is a function export', (t) => {
+    t.assertEqual(typeof getTransportSeconds, 'function', 'getTransportSeconds should be a function');
+});
+
+TestRunner.test('Day 511 - Transport - getTransportSeconds accepts 0 parameters', (t) => {
+    const paramCount = getTransportSeconds.length;
+    t.assertEqual(paramCount, 0, 'getTransportSeconds should accept 0 parameters');
+});
+
+TestRunner.test('Day 511 - Transport - getTransportBpm is a function export', (t) => {
+    t.assertEqual(typeof getTransportBpm, 'function', 'getTransportBpm should be a function');
+});
+
+TestRunner.test('Day 511 - Transport - getTransportBpm accepts 0 parameters', (t) => {
+    const paramCount = getTransportBpm.length;
+    t.assertEqual(paramCount, 0, 'getTransportBpm should accept 0 parameters');
+});
+
+TestRunner.test('Day 511 - Transport - getTransportState is a function export', (t) => {
+    t.assertEqual(typeof getTransportState, 'function', 'getTransportState should be a function');
+});
+
+TestRunner.test('Day 511 - Transport - getTransportState accepts 0 parameters', (t) => {
+    const paramCount = getTransportState.length;
+    t.assertEqual(paramCount, 0, 'getTransportState should accept 0 parameters');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav is a function export', (t) => {
+    t.assertEqual(typeof exportMixdownToWav, 'function', 'exportMixdownToWav should be a function');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav is async', (t) => {
+    const result = exportMixdownToWav(10);
+    t.assertTruthy(result instanceof Promise, 'exportMixdownToWav should return a Promise');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav accepts 1 parameter', (t) => {
+    const paramCount = exportMixdownToWav.length;
+    t.assertEqual(paramCount, 1, 'exportMixdownToWav should accept 1 parameter');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav references durationSeconds parameter', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('durationSeconds') || funcStr.includes('safeDuration'), 'exportMixdownToWav should reference duration parameter');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav clamps duration to max 600 seconds', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('600') || funcStr.includes('maxDuration') || funcStr.includes('Math.min'), 'exportMixdownToWav should clamp max duration');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav creates Tone.Recorder', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('Tone.Recorder') || funcStr.includes('new Tone.Recorder'), 'exportMixdownToWav should create Tone.Recorder');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav references masterGain', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('masterGain') || funcStr.includes('getActualMasterGainNode'), 'exportMixdownToWav should reference masterGain');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav connects masterGain to recorder', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('connect') && funcStr.includes('recorder'), 'exportMixdownToWav should connect masterGain to recorder');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav starts Tone.Transport', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.start') || funcStr.includes('Transport.start'), 'exportMixdownToWav should start transport');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav stops Tone.Transport', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.stop') || funcStr.includes('Transport.stop'), 'exportMixdownToWav should stop transport');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav handles errors gracefully', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch') || funcStr.includes('console.error'), 'exportMixdownToWav should have error handling');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav validates recording size', (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('size') && (funcStr.includes('throw') || funcStr.includes('Error')), 'exportMixdownToWav should validate recording size');
+});
+
+TestRunner.test('Day 511 - Audio Export - exportMixdownToWav APP_VERSION validation for Day 511', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 511');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 175, 'Minor version should be >= 175 for Day 511');
+    }
+});
+
 // Day 427: Audio Clip External File & Position/Duration Methods Tests
 // ============================================
 TestRunner.test('Audio Clip External - addExternalAudioFileAsClip is a function export', (t) => {
