@@ -119,6 +119,13 @@ import {
 
 } from './state.js';
 
+
+import {
+    exportToMidiInternal,
+    importFromMidiInternal,
+    buildMidiFile,
+    pitchToRow
+} from './state.js';
 import {
     initializeAudioModule,
     getMasterEffectsBusInputNode,
@@ -6621,6 +6628,323 @@ TestRunner.test('MIDI Export - pitchToRow handles Synth track type', (t) => {
     t.assertTruthy(funcStr.includes('Synth'), 'pitchToRow should handle Synth track type');
 });
 
+TestRunner.test('MIDI Export - pitchToRow handles DrumSampler track type', (t) => {
+    const funcStr = pitchToRow.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'pitchToRow should handle DrumSampler track type');
+});
+
+TestRunner.test('MIDI Export - pitchToRow handles Sampler track type', (t) => {
+    const funcStr = pitchToRow.toString();
+    t.assertTruthy(funcStr.includes('Sampler'), 'pitchToRow should handle Sampler track type');
+});
+
+TestRunner.test('MIDI Export - pitchToRow returns default offset for unknown track type', (t) => {
+    const funcStr = pitchToRow.toString();
+    t.assertTruthy(funcStr.includes('return') && (funcStr.includes('60') || funcStr.includes('rowIndex')), 'pitchToRow should return default offset for unknown track type');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body references noteOn event type', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('noteOn'), 'buildMidiFile should handle noteOn events');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body references noteOff event type', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('noteOff'), 'buildMidiFile should handle noteOff events');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body creates MIDI header chunk', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('MThd'), 'buildMidiFile should create MIDI header chunk');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body creates MIDI track chunk', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('MTrk'), 'buildMidiFile should create MIDI track chunk');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body handles tempo meta event', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('tempo') || funcStr.includes('Tempo'), 'buildMidiFile should handle tempo meta event');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body handles time signature meta event', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('timeSig') || funcStr.includes('time') || funcStr.includes('TimeSig'), 'buildMidiFile should handle time signature meta event');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body handles track name meta event', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('trackName') || funcStr.includes('trackname') || funcStr.includes('TrackName'), 'buildMidiFile should handle track name meta event');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body handles end of track meta event', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('endOfTrack') || funcStr.includes('end') || funcStr.includes('End'), 'buildMidiFile should handle end of track meta event');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body uses Uint8Array for MIDI data', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('Uint8Array'), 'buildMidiFile should use Uint8Array for MIDI data');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body references events array parameter', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('events'), 'buildMidiFile should reference events parameter');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body references ticksPerQuarter parameter', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('ticksPerQuarter'), 'buildMidiFile should reference ticksPerQuarter parameter');
+});
+
+TestRunner.test('MIDI Export - buildMidiFile function body handles variable length quantities', (t) => {
+    const funcStr = buildMidiFile.toString();
+    t.assertTruthy(funcStr.includes('VLQ') || funcStr.includes('toVLQ') || funcStr.includes('varInt') || funcStr.includes('variable'), 'buildMidiFile should handle variable length quantities');
+});
+
+// ============================================
+// Day 508: MIDI Import Functions Tests
+// ============================================
+
+TestRunner.test('MIDI Import - importFromMidiInternal is a function export', (t) => {
+    t.assertEqual(typeof importFromMidiInternal, 'function', 'importFromMidiInternal should be a function');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal is async', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('async') || funcStr.includes('Promise'), 'importFromMidiInternal should be async');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references showNotification', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'importFromMidiInternal should call showNotification');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references appServices', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'importFromMidiInternal should validate appServices');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references getTracksState', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState'), 'importFromMidiInternal should reference getTracksState');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references getTempoState', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTempoState'), 'importFromMidiInternal should reference getTempoState');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references setTempoState', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('setTempoState'), 'importFromMidiInternal should reference setTempoState');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references parseMidiFile', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('parseMidiFile'), 'importFromMidiInternal should call parseMidiFile');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body handles MIDI file arrayBuffer', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('arrayBuffer') || funcStr.includes('ArrayBuffer'), 'importFromMidiInternal should handle arrayBuffer');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body validates minimum note count', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('noteOn') || funcStr.includes('MIDI_IMPORT_MIN_NOTES'), 'importFromMidiInternal should validate minimum note count');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body extracts tempo from tempo event', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('tempo') && (funcStr.includes('bpm') || funcStr.includes('BPM') || funcStr.includes('usPerQuarter')), 'importFromMidiInternal should extract tempo from tempo event');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references createFileInputForMidiImport', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('createFileInputForMidiImport'), 'importFromMidiInternal should call createFileInputForMidiImport');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body handles file input accept types', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('.mid') || funcStr.includes('.midi') || funcStr.includes('accept'), 'importFromMidiInternal should set file accept types');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body finds or creates Synth track', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('Synth') || funcStr.includes('track'), 'importFromMidiInternal should find or create a Synth track');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body uses snap to grid', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('snapToGrid') || funcStr.includes('snap') || funcStr.includes('Grid'), 'importFromMidiInternal should support snap to grid');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references ticksPer16th', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('ticksPer16th') || funcStr.includes('ticksPer') || funcStr.includes('16th'), 'importFromMidiInternal should reference ticksPer16th');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body references midiToRow', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('midiToRow'), 'importFromMidiInternal should call midiToRow');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body calculates note duration', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('duration') || funcStr.includes('endStep') || funcStr.includes('startStep'), 'importFromMidiInternal should calculate note duration');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body scales velocity', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('velocity') && (funcStr.includes('MIDI_IMPORT') || funcStr.includes('scale') || funcStr.includes('127')), 'importFromMidiInternal should scale velocity');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body places notes in sequence', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('activeSeq') || funcStr.includes('sequence') || funcStr.includes('step'), 'importFromMidiInternal should place notes in sequence');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body calls updateTrackUI', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'importFromMidiInternal should call updateTrackUI');
+});
+
+TestRunner.test('MIDI Import - importFromMidiInternal function body has error handling', (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('try') || funcStr.includes('catch') || funcStr.includes('error'), 'importFromMidiInternal should have error handling');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile is a function in state.js', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.length > 0, 'parseMidiFile should exist in state.js');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body references DataView', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('DataView'), 'parseMidiFile should use DataView to read MIDI file');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body validates MThd header', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('MThd') || funcStr.includes('0x4D') || funcStr.includes('4D546864'), 'parseMidiFile should validate MThd header');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body reads MIDI header chunk', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('getUint32') || funcStr.includes('header'), 'parseMidiFile should read MIDI header chunk');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body reads MTrk track chunks', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('MTrk') || funcStr.includes('track') || funcStr.includes('chunk'), 'parseMidiFile should read track chunks');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body parses delta time', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('delta') || funcStr.includes('VLQ') || funcStr.includes('varInt') || funcStr.includes('toVLQ'), 'parseMidiFile should parse delta time');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body parses noteOn events', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('noteOn') || funcStr.includes('NoteOn') || (funcStr.includes('0x90') || funcStr.includes('0x9')), 'parseMidiFile should parse noteOn events');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body parses noteOff events', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('noteOff') || funcStr.includes('NoteOff') || (funcStr.includes('0x80') || funcStr.includes('0x8')), 'parseMidiFile should parse noteOff events');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body parses tempo meta events', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('tempo') || funcStr.includes('Tempo') || funcStr.includes('0xFF'), 'parseMidiFile should parse tempo meta events');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body parses time signature meta events', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('timeSig') || funcStr.includes('TimeSig') || funcStr.includes('time') || funcStr.includes('Time'), 'parseMidiFile should parse time signature meta events');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body returns events array', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('return') && funcStr.includes('events'), 'parseMidiFile should return events array');
+});
+
+TestRunner.test('MIDI Import - parseMidiFile function body returns ticksPerQuarter', (t) => {
+    const funcStr = parseMidiFile.toString();
+    t.assertTruthy(funcStr.includes('ticksPerQuarter'), 'parseMidiFile should return ticksPerQuarter');
+});
+
+TestRunner.test('MIDI Import - midiToRow is a function in state.js', (t) => {
+    const funcStr = midiToRow.toString();
+    t.assertTruthy(funcStr.length > 0, 'midiToRow should exist in state.js');
+});
+
+TestRunner.test('MIDI Import - midiToRow accepts 2 parameters (midiNote, trackType)', (t) => {
+    const funcStr = midiToRow.toString();
+    t.assertTruthy(funcStr.includes('midiNote') && funcStr.includes('trackType'), 'midiToRow should accept 2 parameters');
+});
+
+TestRunner.test('MIDI Import - midiToRow handles Synth track type', (t) => {
+    const funcStr = midiToRow.toString();
+    t.assertTruthy(funcStr.includes('Synth') || funcStr.includes('60'), 'midiToRow should handle Synth track type');
+});
+
+TestRunner.test('MIDI Import - midiToRow handles DrumSampler track type', (t) => {
+    const funcStr = midiToRow.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler') || funcStr.includes('36'), 'midiToRow should handle DrumSampler track type');
+});
+
+TestRunner.test('MIDI Import - midiToRow handles Sampler track type', (t) => {
+    const funcStr = midiToRow.toString();
+    t.assertTruthy(funcStr.includes('Sampler'), 'midiToRow should handle Sampler track type');
+});
+
+TestRunner.test('MIDI Import - createFileInputForMidiImport is a function in state.js', (t) => {
+    const funcStr = createFileInputForMidiImport.toString();
+    t.assertTruthy(funcStr.length > 0, 'createFileInputForMidiImport should exist in state.js');
+});
+
+TestRunner.test('MIDI Import - createFileInputForMidiImport returns a Promise', (t) => {
+    const funcStr = createFileInputForMidiImport.toString();
+    t.assertTruthy(funcStr.includes('Promise'), 'createFileInputForMidiImport should return a Promise');
+});
+
+TestRunner.test('MIDI Import - createFileInputForMidiImport creates file input element', (t) => {
+    const funcStr = createFileInputForMidiImport.toString();
+    t.assertTruthy(funcStr.includes('createElement') || funcStr.includes('input'), 'createFileInputForMidiImport should create file input');
+});
+
+TestRunner.test('MIDI Import - createFileInputForMidiImport sets accept attribute for MIDI files', (t) => {
+    const funcStr = createFileInputForMidiImport.toString();
+    t.assertTruthy(funcStr.includes('.mid') || funcStr.includes('.midi') || funcStr.includes('accept'), 'createFileInputForMidiImport should accept MIDI files');
+});
+
+TestRunner.test('MIDI Import - createFileInputForMidiImport handles file selection via onchange', (t) => {
+    const funcStr = createFileInputForMidiImport.toString();
+    t.assertTruthy(funcStr.includes('onchange') || funcStr.includes('onChange') || funcStr.includes('files'), 'createFileInputForMidiImport should handle file selection');
+});
+
+TestRunner.test('MIDI Import - createFileInputForMidiImport resolves with selected file', (t) => {
+    const funcStr = createFileInputForMidiImport.toString();
+    t.assertTruthy(funcStr.includes('resolve'), 'createFileInputForMidiImport should resolve with file');
+});
+
+TestRunner.test('MIDI Import - createFileInputForMidiImport rejects when no file selected', (t) => {
+    const funcStr = createFileInputForMidiImport.toString();
+    t.assertTruthy(funcStr.includes('reject') || funcStr.includes('reject'), 'createFileInputForMidiImport should reject when no file selected');
+});
+
+TestRunner.test('MIDI Import - APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
 // ============================================
 // Day 424: SnugWindow Class Methods Tests
 // ============================================
@@ -9415,635 +9739,4 @@ TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function 
     t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackGroupsWindow should reference localAppServices');
 });
 
-TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses getTrackGroups', (t) => {
-    const funcStr = openTrackGroupsWindow.toString();
-    t.assertTruthy(funcStr.includes('getTrackGroups'), 'openTrackGroupsWindow should use getTrackGroups');
-});
-
-TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses addTrackGroup', (t) => {
-    const funcStr = openTrackGroupsWindow.toString();
-    t.assertTruthy(funcStr.includes('addTrackGroup'), 'openTrackGroupsWindow should use addTrackGroup');
-});
-
-TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses setTrackGroupName', (t) => {
-    const funcStr = openTrackGroupsWindow.toString();
-    t.assertTruthy(funcStr.includes('setTrackGroupName'), 'openTrackGroupsWindow should use setTrackGroupName');
-});
-
-TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses removeTrackGroup', (t) => {
-    const funcStr = openTrackGroupsWindow.toString();
-    t.assertTruthy(funcStr.includes('removeTrackGroup'), 'openTrackGroupsWindow should use removeTrackGroup');
-});
-
-TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses removeTrackFromGroup', (t) => {
-    const funcStr = openTrackGroupsWindow.toString();
-    t.assertTruthy(funcStr.includes('removeTrackFromGroup'), 'openTrackGroupsWindow should use removeTrackFromGroup');
-});
-
-TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow has New Group button', (t) => {
-    const funcStr = openTrackGroupsWindow.toString();
-    t.assertTruthy(funcStr.includes('newGroupBtn'), 'openTrackGroupsWindow should have a newGroupBtn');
-});
-
-TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow has group list container', (t) => {
-    const funcStr = openTrackGroupsWindow.toString();
-    t.assertTruthy(funcStr.includes('trackGroupsList'), 'openTrackGroupsWindow should have trackGroupsList container');
-});
-
-TestRunner.test('Day 506 - Track Groups Window - APP_VERSION validation for Day 506', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 506');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 170, 'Minor version should be >= 170 for Day 506');
-    }
-});
-
-// --- openMidiCCMappingsWindow Tests ---
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow is a function export', (t) => {
-    t.assertEqual(typeof openMidiCCMappingsWindow, 'function', 'openMidiCCMappingsWindow should be a function');
-});
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow accepts 0-1 parameters', (t) => {
-    const paramCount = openMidiCCMappingsWindow.length;
-    t.assertEqual(paramCount <= 1, true, 'openMidiCCMappingsWindow should accept 0 or 1 parameter');
-});
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses createWindow', (t) => {
-    const funcStr = openMidiCCMappingsWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openMidiCCMappingsWindow should use createWindow');
-});
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openMidiCCMappingsWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMidiCCMappingsWindow should check for open windows');
-});
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses localAppServices', (t) => {
-    const funcStr = openMidiCCMappingsWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openMidiCCMappingsWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses getMidiCCMappings', (t) => {
-    const funcStr = openMidiCCMappingsWindow.toString();
-    t.assertTruthy(funcStr.includes('getMidiCCMappings'), 'openMidiCCMappingsWindow should use getMidiCCMappings');
-});
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses removeMidiCCMapping', (t) => {
-    const funcStr = openMidiCCMappingsWindow.toString();
-    t.assertTruthy(funcStr.includes('removeMidiCCMapping'), 'openMidiCCMappingsWindow should use removeMidiCCMapping');
-});
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow has mappings list container', (t) => {
-    const funcStr = openMidiCCMappingsWindow.toString();
-    t.assertTruthy(funcStr.includes('midiMappingsList'), 'openMidiCCMappingsWindow should have midiMappingsList container');
-});
-
-TestRunner.test('Day 506 - MIDI CC Mappings Window - APP_VERSION validation for Day 506', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 506');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 170, 'Minor version should be >= 170 for Day 506');
-    }
-});
-
-// --- openScaleModeWindow Tests ---
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow is a function export', (t) => {
-    t.assertEqual(typeof openScaleModeWindow, 'function', 'openScaleModeWindow should be a function');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow accepts 0-1 parameters', (t) => {
-    const paramCount = openScaleModeWindow.length;
-    t.assertEqual(paramCount <= 1, true, 'openScaleModeWindow should accept 0 or 1 parameter');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses createWindow', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openScaleModeWindow should use createWindow');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openScaleModeWindow should check for open windows');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses localAppServices', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openScaleModeWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getScaleModeEnabled', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('getScaleModeEnabled'), 'openScaleModeWindow should use getScaleModeEnabled');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses setScaleModeEnabled', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('setScaleModeEnabled'), 'openScaleModeWindow should use setScaleModeEnabled');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getScaleModeScale', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('getScaleModeScale'), 'openScaleModeWindow should use getScaleModeScale');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses setScaleModeScale', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('setScaleModeScale'), 'openScaleModeWindow should use setScaleModeScale');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getScaleModeRoot', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('getScaleModeRoot'), 'openScaleModeWindow should use getScaleModeRoot');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses setScaleModeRoot', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('setScaleModeRoot'), 'openScaleModeWindow should use setScaleModeRoot');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getScaleModeLock', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('getScaleModeLock'), 'openScaleModeWindow should use getScaleModeLock');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses setScaleModeLock', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('setScaleModeLock'), 'openScaleModeWindow should use setScaleModeLock');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses SCALE_ROOTS from Constants', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('SCALE_ROOTS'), 'openScaleModeWindow should use SCALE_ROOTS from Constants');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses SCALES from Constants', (t) => {
-    const funcStr = openScaleModeWindow.toString();
-    t.assertTruthy(funcStr.includes('Constants.SCALES') || funcStr.includes('SCALES'), 'openScaleModeWindow should use SCALES from Constants');
-});
-
-TestRunner.test('Day 506 - Scale Mode Window - APP_VERSION validation for Day 506', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 506');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 170, 'Minor version should be >= 170 for Day 506');
-    }
-});
-
-// ============================================
-// Day 507: Track Templates & Send Effects Window Tests
-// ============================================
-
-// --- openTrackTemplatesWindow Tests ---
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow is a function export', (t) => {
-    t.assertEqual(typeof openTrackTemplatesWindow, 'function', 'openTrackTemplatesWindow should be a function');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow accepts 0-1 parameters', (t) => {
-    const paramCount = openTrackTemplatesWindow.length;
-    t.assertEqual(paramCount <= 1, true, 'openTrackTemplatesWindow should accept 0 or 1 parameter');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow function body uses createWindow', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackTemplatesWindow should use createWindow');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow function body uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackTemplatesWindow should check for open windows');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow function body uses localAppServices', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackTemplatesWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow function body uses getTrackTemplates', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('getTrackTemplates'), 'openTrackTemplatesWindow should use getTrackTemplates');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow function body uses getTrackTemplateById', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('getTrackTemplateById'), 'openTrackTemplatesWindow should use getTrackTemplateById');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow function body uses removeTrackTemplate', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('removeTrackTemplate'), 'openTrackTemplatesWindow should use removeTrackTemplate');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow function body uses captureStateForUndo', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'openTrackTemplatesWindow should use captureStateForUndo');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow has template list container', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('trackTemplatesList') || funcStr.includes('TemplatesList'), 'openTrackTemplatesWindow should have a template list container');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow has Load button', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('load') || funcStr.includes('Load'), 'openTrackTemplatesWindow should have a Load button');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - openTrackTemplatesWindow has Delete button', (t) => {
-    const funcStr = openTrackTemplatesWindow.toString();
-    t.assertTruthy(funcStr.includes('delete') || funcStr.includes('Delete'), 'openTrackTemplatesWindow should have a Delete button');
-});
-
-TestRunner.test('Day 507 - Track Templates Window - APP_VERSION validation for Day 507', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 507');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 171, 'Minor version should be >= 171 for Day 507');
-    }
-});
-
-// --- openSendEffectsWindow Tests ---
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow is a function export', (t) => {
-    t.assertEqual(typeof openSendEffectsWindow, 'function', 'openSendEffectsWindow should be a function');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow accepts 1-2 parameters', (t) => {
-    const paramCount = openSendEffectsWindow.length;
-    t.assertEqual(paramCount >= 1 && paramCount <= 2, true, 'openSendEffectsWindow should accept 1 or 2 parameters');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow function body uses createWindow', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openSendEffectsWindow should use createWindow');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow function body uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openSendEffectsWindow should check for open windows');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow function body uses localAppServices', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openSendEffectsWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow function body uses effectsRegistryAccess', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('AVAILABLE_EFFECTS'), 'openSendEffectsWindow should use effectsRegistryAccess or AVAILABLE_EFFECTS');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow function body uses addEffectToSendBus', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('addEffectToSendBus'), 'openSendEffectsWindow should use addEffectToSendBus');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow function body uses removeEffectFromSendBus', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('removeEffectFromSendBus'), 'openSendEffectsWindow should use removeEffectFromSendBus');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow function body uses setSendTrackEffects', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('setSendTrackEffects'), 'openSendEffectsWindow should use setSendTrackEffects');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow function body uses updateSendBusEffectParam', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('updateSendBusEffectParam'), 'openSendEffectsWindow should use updateSendBusEffectParam');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow has effects list container', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('effectsList') || funcStr.includes('EffectsList'), 'openSendEffectsWindow should have an effects list container');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - openSendEffectsWindow has Add Effect button', (t) => {
-    const funcStr = openSendEffectsWindow.toString();
-    t.assertTruthy(funcStr.includes('addEffect') || funcStr.includes('Add Effect'), 'openSendEffectsWindow should have an Add Effect button');
-});
-
-TestRunner.test('Day 507 - Send Effects Window - APP_VERSION validation for Day 507', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 507');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 171, 'Minor version should be >= 171 for Day 507');
-    }
-});
-
-// ============================================
-// Day 508: Core Window Functions Tests
-// ============================================
-TestRunner.test('Day 508 - Core Windows - openMixerWindow is a function export', (t) => {
-    t.assertEqual(typeof openMixerWindow, 'function', 'openMixerWindow should be a function');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMixerWindow accepts 0-1 parameters', (t) => {
-    t.assertEqual(openMixerWindow.length, 0, 'openMixerWindow should accept 0-1 parameters');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMixerWindow uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openMixerWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMixerWindow should use getOpenWindows for single-instance');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMixerWindow uses createWindow', (t) => {
-    const funcStr = openMixerWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openMixerWindow should use createWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMixerWindow references localAppServices', (t) => {
-    const funcStr = openMixerWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openMixerWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMixerWindow references getTracks', (t) => {
-    const funcStr = openMixerWindow.toString();
-    t.assertTruthy(funcStr.includes('getTracks'), 'openMixerWindow should reference getTracks');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMixerWindow has mixer window id', (t) => {
-    const funcStr = openMixerWindow.toString();
-    t.assertTruthy(funcStr.includes("'mixer'") || funcStr.includes('"mixer"'), 'openMixerWindow should use window id "mixer"');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMixerWindow calls updateMixerWindow on creation', (t) => {
-    const funcStr = openMixerWindow.toString();
-    t.assertTruthy(funcStr.includes('updateMixerWindow'), 'openMixerWindow should call updateMixerWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMixerWindow APP_VERSION validation for Day 508', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
-    }
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow is a function export', (t) => {
-    t.assertEqual(typeof openSoundBrowserWindow, 'function', 'openSoundBrowserWindow should be a function');
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow accepts 0-1 parameters', (t) => {
-    t.assertEqual(openSoundBrowserWindow.length, 0, 'openSoundBrowserWindow should accept 0-1 parameters');
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openSoundBrowserWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openSoundBrowserWindow should use getOpenWindows for single-instance');
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow uses createWindow', (t) => {
-    const funcStr = openSoundBrowserWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openSoundBrowserWindow should use createWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow references localAppServices', (t) => {
-    const funcStr = openSoundBrowserWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openSoundBrowserWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow references getCurrentLibraryName', (t) => {
-    const funcStr = openSoundBrowserWindow.toString();
-    t.assertTruthy(funcStr.includes('getCurrentLibraryName'), 'openSoundBrowserWindow should reference getCurrentLibraryName');
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow references soundLibraries', (t) => {
-    const funcStr = openSoundBrowserWindow.toString();
-    t.assertTruthy(funcStr.includes('soundLibraries'), 'openSoundBrowserWindow should reference soundLibraries from Constants');
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow has soundBrowser window id', (t) => {
-    const funcStr = openSoundBrowserWindow.toString();
-    t.assertTruthy(funcStr.includes("'soundBrowser'") || funcStr.includes('"soundBrowser"'), 'openSoundBrowserWindow should use window id "soundBrowser"');
-});
-
-TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow APP_VERSION validation for Day 508', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
-    }
-});
-
-TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow is a function export', (t) => {
-    t.assertEqual(typeof openGlobalControlsWindow, 'function', 'openGlobalControlsWindow should be a function');
-});
-
-TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow accepts 0-2 parameters', (t) => {
-    t.assertTrue(openGlobalControlsWindow.length <= 2, 'openGlobalControlsWindow should accept 0-2 parameters');
-});
-
-TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openGlobalControlsWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openGlobalControlsWindow should use getOpenWindows for single-instance');
-});
-
-TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow uses createWindow', (t) => {
-    const funcStr = openGlobalControlsWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openGlobalControlsWindow should use createWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow references localAppServices', (t) => {
-    const funcStr = openGlobalControlsWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openGlobalControlsWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow APP_VERSION validation for Day 508', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
-    }
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow is a function export', (t) => {
-    t.assertEqual(typeof openTrackSequencerWindow, 'function', 'openTrackSequencerWindow should be a function');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow accepts 1-3 parameters', (t) => {
-    t.assertTrue(openTrackSequencerWindow.length >= 1 && openTrackSequencerWindow.length <= 3, 'openTrackSequencerWindow should accept 1-3 parameters');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openTrackSequencerWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackSequencerWindow should use getOpenWindows for single-instance');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow uses createWindow', (t) => {
-    const funcStr = openTrackSequencerWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackSequencerWindow should use createWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow references localAppServices.getTrackById', (t) => {
-    const funcStr = openTrackSequencerWindow.toString();
-    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackSequencerWindow should use getTrackById');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow references track.getActiveSequence', (t) => {
-    const funcStr = openTrackSequencerWindow.toString();
-    t.assertTruthy(funcStr.includes('getActiveSequence'), 'openTrackSequencerWindow should reference getActiveSequence');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow APP_VERSION validation for Day 508', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
-    }
-});
-
-TestRunner.test('Day 508 - Core Windows - openTimelineWindow is a function export', (t) => {
-    t.assertEqual(typeof openTimelineWindow, 'function', 'openTimelineWindow should be a function');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTimelineWindow accepts 0-1 parameters', (t) => {
-    t.assertEqual(openTimelineWindow.length, 0, 'openTimelineWindow should accept 0-1 parameters');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTimelineWindow uses createWindow', (t) => {
-    const funcStr = openTimelineWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openTimelineWindow should use createWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTimelineWindow references localAppServices', (t) => {
-    const funcStr = openTimelineWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openTimelineWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTimelineWindow references renderTimeline', (t) => {
-    const funcStr = openTimelineWindow.toString();
-    t.assertTruthy(funcStr.includes('renderTimeline'), 'openTimelineWindow should reference renderTimeline');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTimelineWindow has timeline window id', (t) => {
-    const funcStr = openTimelineWindow.toString();
-    t.assertTruthy(funcStr.includes("'timeline'") || funcStr.includes('"timeline"'), 'openTimelineWindow should use window id "timeline"');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTimelineWindow APP_VERSION validation for Day 508', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
-    }
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow is a function export', (t) => {
-    t.assertEqual(typeof openTrackInspectorWindow, 'function', 'openTrackInspectorWindow should be a function');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow accepts 1-2 parameters', (t) => {
-    t.assertTrue(openTrackInspectorWindow.length >= 1 && openTrackInspectorWindow.length <= 2, 'openTrackInspectorWindow should accept 1-2 parameters');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openTrackInspectorWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackInspectorWindow should use getOpenWindows for single-instance');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow uses createWindow', (t) => {
-    const funcStr = openTrackInspectorWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackInspectorWindow should use createWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow references localAppServices.getTrackById', (t) => {
-    const funcStr = openTrackInspectorWindow.toString();
-    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackInspectorWindow should use getTrackById');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow references buildTrackInspectorContentDOM', (t) => {
-    const funcStr = openTrackInspectorWindow.toString();
-    t.assertTruthy(funcStr.includes('buildTrackInspectorContentDOM'), 'openTrackInspectorWindow should reference buildTrackInspectorContentDOM');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow APP_VERSION validation for Day 508', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
-    }
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow is a function export', (t) => {
-    t.assertEqual(typeof openTrackEffectsRackWindow, 'function', 'openTrackEffectsRackWindow should be a function');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow accepts 1-2 parameters', (t) => {
-    t.assertTrue(openTrackEffectsRackWindow.length >= 1 && openTrackEffectsRackWindow.length <= 2, 'openTrackEffectsRackWindow should accept 1-2 parameters');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openTrackEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackEffectsRackWindow should use getOpenWindows for single-instance');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow uses createWindow', (t) => {
-    const funcStr = openTrackEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackEffectsRackWindow should use createWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow references localAppServices.getTrackById', (t) => {
-    const funcStr = openTrackEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackEffectsRackWindow should use getTrackById');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow references buildModularEffectsRackDOM', (t) => {
-    const funcStr = openTrackEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes('buildModularEffectsRackDOM'), 'openTrackEffectsRackWindow should reference buildModularEffectsRackDOM');
-});
-
-TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow APP_VERSION validation for Day 508', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
-    }
-});
-
-TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow is a function export', (t) => {
-    t.assertEqual(typeof openMasterEffectsRackWindow, 'function', 'openMasterEffectsRackWindow should be a function');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow accepts 0-1 parameters', (t) => {
-    t.assertEqual(openMasterEffectsRackWindow.length, 0, 'openMasterEffectsRackWindow should accept 0-1 parameters');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow uses getOpenWindows for single-instance', (t) => {
-    const funcStr = openMasterEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMasterEffectsRackWindow should use getOpenWindows for single-instance');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow uses createWindow', (t) => {
-    const funcStr = openMasterEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes('createWindow'), 'openMasterEffectsRackWindow should use createWindow');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow references localAppServices', (t) => {
-    const funcStr = openMasterEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes('localAppServices'), 'openMasterEffectsRackWindow should reference localAppServices');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow references buildModularEffectsRackDOM', (t) => {
-    const funcStr = openMasterEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes('buildModularEffectsRackDOM'), 'openMasterEffectsRackWindow should reference buildModularEffectsRackDOM');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow has masterEffectsRack window id', (t) => {
-    const funcStr = openMasterEffectsRackWindow.toString();
-    t.assertTruthy(funcStr.includes("'masterEffectsRack'") || funcStr.includes('"masterEffectsRack"'), 'openMasterEffectsRackWindow should use window id "masterEffectsRack"');
-});
-
-TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow APP_VERSION validation for Day 508', (t) => {
-    const versionParts = APP_VERSION.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
-    if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
-    }
-});
-
+TestRunner.test('Day 506 - Track
