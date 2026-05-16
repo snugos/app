@@ -1,3 +1,15 @@
+#### Day 507: Track Templates & Send Effects Window Tests (2026-05-16)
+- **Feature**: Added 26 unit tests for openTrackTemplatesWindow and openSendEffectsWindow functions
+- **Files Modified**:
+  - `js/tests.js`: Added Day 507 test block with 26 tests for window function coverage
+  - `js/constants.js`: Bumped APP_VERSION to 2.173.0
+- **Feature Details**:
+  - **openTrackTemplatesWindow** (13 tests): Tests for function export, 0-1 parameter count, createWindow usage, getOpenWindows for single-instance, localAppServices references, getTrackTemplates, getTrackTemplateById, removeTrackTemplate, captureStateForUndo, template list container, Load/Delete buttons
+  - **openSendEffectsWindow** (13 tests): Tests for function export, 1-2 parameter count, createWindow usage, getOpenWindows for single-instance, localAppServices references, effectsRegistryAccess/AVAILABLE_EFFECTS, addEffectToSendBus, removeEffectFromSendBus, setSendTrackEffects, updateSendBusEffectParam, effects list container, Add Effect button
+- **Version**: Bumped to 2.173.0
+- **Test Count**: Increased from 1757 to 1783
+
+
 #### Day 506: Missing Window Function Tests (2026-05-16)
 - **Feature**: Added 38 unit tests for three missing window function tests in `js/tests.js`
 - **Files Modified**:
