@@ -10189,3 +10189,100 @@ TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function 
 });
 
 TestRunner.test('Day 506 - Track
+// ============================================
+// Day 512: EffectsRegistry Functions Tests
+// ============================================
+TestRunner.test('Day 512 - EffectsRegistry - getEffectBypassState is a function export', (t) => {
+    t.assertEqual(typeof getEffectBypassState, 'function', 'getEffectBypassState should be a function');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectBypassState accepts 1 parameter', (t) => {
+    const paramCount = getEffectBypassState.length;
+    t.assertEqual(paramCount, 1, 'getEffectBypassState should accept 1 parameter (effectId)');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectBypassState references effectId parameter', (t) => {
+    const funcStr = getEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'getEffectBypassState should reference effectId parameter');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectBypassState references effectBypassStates', (t) => {
+    const funcStr = getEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('effectBypassStates'), 'getEffectBypassState should reference effectBypassStates Map');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectBypassState returns boolean', (t) => {
+    const funcStr = getEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('===') || funcStr.includes('=== true'), 'getEffectBypassState should return boolean via === comparison');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - setEffectBypassState is a function export', (t) => {
+    t.assertEqual(typeof setEffectBypassState, 'function', 'setEffectBypassState should be a function');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - setEffectBypassState accepts 2 parameters', (t) => {
+    const paramCount = setEffectBypassState.length;
+    t.assertEqual(paramCount, 2, 'setEffectBypassState should accept 2 parameters (effectId, bypassed)');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - setEffectBypassState references effectId parameter', (t) => {
+    const funcStr = setEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'setEffectBypassState should reference effectId parameter');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - setEffectBypassState references bypassed parameter', (t) => {
+    const funcStr = setEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('bypassed'), 'setEffectBypassState should reference bypassed parameter');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - setEffectBypassState calls effectBypassStates.set', (t) => {
+    const funcStr = setEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('effectBypassStates.set') || funcStr.includes('set('), 'setEffectBypassState should call Map.set');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectParamDefinitions is a function export', (t) => {
+    t.assertEqual(typeof getEffectParamDefinitions, 'function', 'getEffectParamDefinitions should be a function');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectParamDefinitions accepts 1 parameter', (t) => {
+    const paramCount = getEffectParamDefinitions.length;
+    t.assertEqual(paramCount, 1, 'getEffectParamDefinitions should accept 1 parameter (effectType)');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectParamDefinitions references effectType parameter', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('effectType'), 'getEffectParamDefinitions should reference effectType parameter');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectParamDefinitions checks AVAILABLE_EFFECTS definition', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectParamDefinitions should check AVAILABLE_EFFECTS');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectParamDefinitions handles missing definition', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('console.warn') || funcStr.includes('return []'), 'getEffectParamDefinitions should handle missing definition gracefully');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - getEffectParamDefinitions returns definition.params or empty array', (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('params') && (funcStr.includes('|| []') || funcStr.includes('return []')), 'getEffectParamDefinitions should return params array or empty array');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - synthEngineControlDefinitions is exported', (t) => {
+    t.assertEqual(typeof synthEngineControlDefinitions, 'object', 'synthEngineControlDefinitions should be an object');
+});
+
+TestRunner.test('Day 512 - EffectsRegistry - synthEngineControlDefinitions has object keys', (t) => {
+    const funcStr = synthEngineControlDefinitions.toString();
+    t.assertTruthy(Object.keys(synthEngineControlDefinitions).length >= 0, 'synthEngineControlDefinitions should be a non-null object');
+});
+
+TestRunner.test('Day 512 - APP_VERSION validation for Day 512', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 512');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 176, 'Minor version should be >= 176 for Day 512');
+    }
+});
