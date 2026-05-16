@@ -9735,3 +9735,315 @@ TestRunner.test('Day 507 - Send Effects Window - APP_VERSION validation for Day 
         t.assertTruthy(versionParts[1] >= 171, 'Minor version should be >= 171 for Day 507');
     }
 });
+
+// ============================================
+// Day 508: Core Window Functions Tests
+// ============================================
+TestRunner.test('Day 508 - Core Windows - openMixerWindow is a function export', (t) => {
+    t.assertEqual(typeof openMixerWindow, 'function', 'openMixerWindow should be a function');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMixerWindow accepts 0-1 parameters', (t) => {
+    t.assertEqual(openMixerWindow.length, 0, 'openMixerWindow should accept 0-1 parameters');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMixerWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMixerWindow should use getOpenWindows for single-instance');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMixerWindow uses createWindow', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMixerWindow should use createWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMixerWindow references localAppServices', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openMixerWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMixerWindow references getTracks', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'openMixerWindow should reference getTracks');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMixerWindow has mixer window id', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes("'mixer'") || funcStr.includes('"mixer"'), 'openMixerWindow should use window id "mixer"');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMixerWindow calls updateMixerWindow on creation', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('updateMixerWindow'), 'openMixerWindow should call updateMixerWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMixerWindow APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow is a function export', (t) => {
+    t.assertEqual(typeof openSoundBrowserWindow, 'function', 'openSoundBrowserWindow should be a function');
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow accepts 0-1 parameters', (t) => {
+    t.assertEqual(openSoundBrowserWindow.length, 0, 'openSoundBrowserWindow should accept 0-1 parameters');
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openSoundBrowserWindow should use getOpenWindows for single-instance');
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow uses createWindow', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openSoundBrowserWindow should use createWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow references localAppServices', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openSoundBrowserWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow references getCurrentLibraryName', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getCurrentLibraryName'), 'openSoundBrowserWindow should reference getCurrentLibraryName');
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow references soundLibraries', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('soundLibraries'), 'openSoundBrowserWindow should reference soundLibraries from Constants');
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow has soundBrowser window id', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes("'soundBrowser'") || funcStr.includes('"soundBrowser"'), 'openSoundBrowserWindow should use window id "soundBrowser"');
+});
+
+TestRunner.test('Day 508 - Core Windows - openSoundBrowserWindow APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
+TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow is a function export', (t) => {
+    t.assertEqual(typeof openGlobalControlsWindow, 'function', 'openGlobalControlsWindow should be a function');
+});
+
+TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow accepts 0-2 parameters', (t) => {
+    t.assertTrue(openGlobalControlsWindow.length <= 2, 'openGlobalControlsWindow should accept 0-2 parameters');
+});
+
+TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openGlobalControlsWindow should use getOpenWindows for single-instance');
+});
+
+TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow uses createWindow', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openGlobalControlsWindow should use createWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow references localAppServices', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openGlobalControlsWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 508 - Core Windows - openGlobalControlsWindow APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackSequencerWindow, 'function', 'openTrackSequencerWindow should be a function');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow accepts 1-3 parameters', (t) => {
+    t.assertTrue(openTrackSequencerWindow.length >= 1 && openTrackSequencerWindow.length <= 3, 'openTrackSequencerWindow should accept 1-3 parameters');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackSequencerWindow should use getOpenWindows for single-instance');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow uses createWindow', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackSequencerWindow should use createWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow references localAppServices.getTrackById', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackSequencerWindow should use getTrackById');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow references track.getActiveSequence', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'openTrackSequencerWindow should reference getActiveSequence');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackSequencerWindow APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
+TestRunner.test('Day 508 - Core Windows - openTimelineWindow is a function export', (t) => {
+    t.assertEqual(typeof openTimelineWindow, 'function', 'openTimelineWindow should be a function');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTimelineWindow accepts 0-1 parameters', (t) => {
+    t.assertEqual(openTimelineWindow.length, 0, 'openTimelineWindow should accept 0-1 parameters');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTimelineWindow uses createWindow', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTimelineWindow should use createWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTimelineWindow references localAppServices', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTimelineWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTimelineWindow references renderTimeline', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('renderTimeline'), 'openTimelineWindow should reference renderTimeline');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTimelineWindow has timeline window id', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes("'timeline'") || funcStr.includes('"timeline"'), 'openTimelineWindow should use window id "timeline"');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTimelineWindow APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackInspectorWindow, 'function', 'openTrackInspectorWindow should be a function');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow accepts 1-2 parameters', (t) => {
+    t.assertTrue(openTrackInspectorWindow.length >= 1 && openTrackInspectorWindow.length <= 2, 'openTrackInspectorWindow should accept 1-2 parameters');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackInspectorWindow should use getOpenWindows for single-instance');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow uses createWindow', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackInspectorWindow should use createWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow references localAppServices.getTrackById', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackInspectorWindow should use getTrackById');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow references buildTrackInspectorContentDOM', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('buildTrackInspectorContentDOM'), 'openTrackInspectorWindow should reference buildTrackInspectorContentDOM');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackInspectorWindow APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackEffectsRackWindow, 'function', 'openTrackEffectsRackWindow should be a function');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow accepts 1-2 parameters', (t) => {
+    t.assertTrue(openTrackEffectsRackWindow.length >= 1 && openTrackEffectsRackWindow.length <= 2, 'openTrackEffectsRackWindow should accept 1-2 parameters');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackEffectsRackWindow should use getOpenWindows for single-instance');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow uses createWindow', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackEffectsRackWindow should use createWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow references localAppServices.getTrackById', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackEffectsRackWindow should use getTrackById');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow references buildModularEffectsRackDOM', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('buildModularEffectsRackDOM'), 'openTrackEffectsRackWindow should reference buildModularEffectsRackDOM');
+});
+
+TestRunner.test('Day 508 - Core Windows - openTrackEffectsRackWindow APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
+TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow is a function export', (t) => {
+    t.assertEqual(typeof openMasterEffectsRackWindow, 'function', 'openMasterEffectsRackWindow should be a function');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow accepts 0-1 parameters', (t) => {
+    t.assertEqual(openMasterEffectsRackWindow.length, 0, 'openMasterEffectsRackWindow should accept 0-1 parameters');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMasterEffectsRackWindow should use getOpenWindows for single-instance');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow uses createWindow', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMasterEffectsRackWindow should use createWindow');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow references localAppServices', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openMasterEffectsRackWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow references buildModularEffectsRackDOM', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('buildModularEffectsRackDOM'), 'openMasterEffectsRackWindow should reference buildModularEffectsRackDOM');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow has masterEffectsRack window id', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes("'masterEffectsRack'") || funcStr.includes('"masterEffectsRack"'), 'openMasterEffectsRackWindow should use window id "masterEffectsRack"');
+});
+
+TestRunner.test('Day 508 - Core Windows - openMasterEffectsRackWindow APP_VERSION validation for Day 508', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 508');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 508');
+    }
+});
+
