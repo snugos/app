@@ -1,3 +1,20 @@
+#### Day 508: Core Window Functions Tests (2026-05-16)
+- **Feature**: Added 60 unit tests for 8 core window functions to expand test coverage for the main window openers
+- **Files Modified**:
+  - `js/tests.js`: Added Day 508 test block with 60 tests for 8 core window functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.174.0
+- **Feature Details**:
+  - **openMixerWindow** (9 tests): Tests for function export, 0-1 parameter count, getOpenWindows for single-instance, createWindow usage, localAppServices references, getTracks, mixer window id, updateMixerWindow call
+  - **openSoundBrowserWindow** (9 tests): Tests for function export, 0-1 parameter count, getOpenWindows for single-instance, createWindow usage, localAppServices references, getCurrentLibraryName, soundLibraries, soundBrowser window id
+  - **openGlobalControlsWindow** (6 tests): Tests for function export, 0-2 parameter count, getOpenWindows for single-instance, createWindow usage, localAppServices references
+  - **openTrackSequencerWindow** (7 tests): Tests for function export, 1-3 parameter count, getOpenWindows for single-instance, createWindow usage, getTrackById, getActiveSequence
+  - **openTimelineWindow** (7 tests): Tests for function export, 0-1 parameter count, createWindow usage, localAppServices references, renderTimeline, timeline window id
+  - **openTrackInspectorWindow** (7 tests): Tests for function export, 1-2 parameter count, getOpenWindows for single-instance, createWindow usage, getTrackById, buildTrackInspectorContentDOM
+  - **openTrackEffectsRackWindow** (7 tests): Tests for function export, 1-2 parameter count, getOpenWindows for single-instance, createWindow usage, getTrackById, buildModularEffectsRackDOM
+  - **openMasterEffectsRackWindow** (8 tests): Tests for function export, 0-1 parameter count, getOpenWindows for single-instance, createWindow usage, localAppServices, buildModularEffectsRackDOM, masterEffectsRack window id
+- **Version**: Bumped to 2.174.0
+- **Test Count**: Increased from 1783 to 1843
+
 #### Day 507: Track Templates & Send Effects Window Tests (2026-05-16)
 - **Feature**: Added 26 unit tests for openTrackTemplatesWindow and openSendEffectsWindow functions
 - **Files Modified**:
