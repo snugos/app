@@ -9381,3 +9381,72 @@ TestRunner.test('Day 505 - Sequencer Context Menu - APP_VERSION validation for D
         t.assertTruthy(versionParts[1] >= 169, 'Minor version should be >= 169 for Day 505');
     }
 });
+
+// Day 506: Audio Clip Fade Curve Submenu
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu exists with curve options', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Fade In'), 'Context menu should have Fade In submenu');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu exists with curve options', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Fade Out'), 'Context menu should have Fade Out submenu');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu has Duration option', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Duration') && funcStr.includes('setAudioClipFadeIn'), 'Fade In submenu should have Duration option that calls setAudioClipFadeIn');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu has Duration option', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Duration') && funcStr.includes('setAudioClipFadeOut'), 'Fade Out submenu should have Duration option that calls setAudioClipFadeOut');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu has Linear curve option', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('setAudioClipFadeInCurve') && funcStr.includes('linear'), 'Fade In submenu should have Linear curve option');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu has Exponential curve option', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('setAudioClipFadeInCurve') && funcStr.includes('exponential'), 'Fade In submenu should have Exponential curve option');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu has Linear curve option', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('setAudioClipFadeOutCurve') && funcStr.includes('linear'), 'Fade Out submenu should have Linear curve option');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu has Exponential curve option', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('setAudioClipFadeOutCurve') && funcStr.includes('exponential'), 'Fade Out submenu should have Exponential curve option');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu shows current curve checkmark', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('currentCurve') && funcStr.includes('✓'), 'Fade In submenu should show checkmark next to current curve');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu shows current curve checkmark', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('currentCurve') && funcStr.includes('✓'), 'Fade Out submenu should show checkmark next to current curve');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In uses getAudioClipFadeInCurve for current value', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('getAudioClipFadeInCurve'), 'Fade In submenu should get current curve via getAudioClipFadeInCurve');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out uses getAudioClipFadeOutCurve for current value', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('getAudioClipFadeOutCurve'), 'Fade Out submenu should get current curve via getAudioClipFadeOutCurve');
+});
+
+TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Curve APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 506');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 170, 'Minor version should be >= 170 for Day 506');
+    }
+});

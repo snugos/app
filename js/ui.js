@@ -2994,21 +2994,45 @@ function attachClipEventHandlers() {
                     try { const pos = Tone.Transport.position; const [bars, beats, sixteenths] = pos.split(':').map(Number); const secondsPerBeat = 60 / Tone.Transport.bpm.value; const splitTime = (bars * 4 * secondsPerBeat) + (beats * secondsPerBeat) + (sixteenths * secondsPerBeat / 4); if (splitTime <= clip.startTime || splitTime >= clip.startTime + clip.duration) { showNotification('Playhead must be within clip to split.', 2500); return; } if (track.splitAudioClip) { const newClip = track.splitAudioClip(clip.id, splitTime); if (newClip && localAppServices.renderTimeline) { localAppServices.renderTimeline(); showNotification(`Split "${clipName}" at ${bars}:${beats}:${sixteenths}`, 1500); } else { showNotification('Failed to split clip', 2000); } } else { showNotification('Split not available', 1500); } } catch (e) { showNotification('Cannot get transport position.', 2000); }
                 }},
                 { separator: true },
-                { label: `Fade In...`, action: () => {
+                { label: `Fade In`, submenu: () => {
                     const currentFade = clip.fadeIn || 0;
-                    const val = window.prompt(`Enter fade in duration (seconds):`, String(currentFade));
-                    if (val === null) return;
-                    const parsed = parseFloat(val);
-                    if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
-                    if (track.setAudioClipFadeIn) { track.setAudioClipFadeIn(clip.id, parsed); showNotification(`Fade in set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('Fade not available', 1500); }
+                    const currentCurve = track.getAudioClipFadeInCurve ? track.getAudioClipFadeInCurve(clip.id) : (clip.fadeInCurve || 'linear');
+                    return [
+                        { label: `Duration...`, action: () => {
+                            const val = window.prompt(`Enter fade in duration (seconds):`, String(currentFade));
+                            if (val === null) return;
+                            const parsed = parseFloat(val);
+                            if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
+                            if (track.setAudioClipFadeIn) { track.setAudioClipFadeIn(clip.id, parsed); showNotification(`Fade in set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('Fade not available', 1500); }
+                        }},
+                        { separator: true },
+                        { label: `Linear${currentCurve === 'linear' ? ' ✓' : ''}`, action: () => {
+                            if (track.setAudioClipFadeInCurve) { track.setAudioClipFadeInCurve(clip.id, 'linear'); showNotification(`Fade in curve set to linear for "${clipName}"`, 1500); }
+                        }},
+                        { label: `Exponential${currentCurve === 'exponential' ? ' ✓' : ''}`, action: () => {
+                            if (track.setAudioClipFadeInCurve) { track.setAudioClipFadeInCurve(clip.id, 'exponential'); showNotification(`Fade in curve set to exponential for "${clipName}"`, 1500); }
+                        }}
+                    ];
                 }},
-                { label: `Fade Out...`, action: () => {
+                { label: `Fade Out`, submenu: () => {
                     const currentFade = clip.fadeOut || 0;
-                    const val = window.prompt(`Enter fade out duration (seconds):`, String(currentFade));
-                    if (val === null) return;
-                    const parsed = parseFloat(val);
-                    if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
-                    if (track.setAudioClipFadeOut) { track.setAudioClipFadeOut(clip.id, parsed); showNotification(`Fade out set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('Fade not available', 1500); }
+                    const currentCurve = track.getAudioClipFadeOutCurve ? track.getAudioClipFadeOutCurve(clip.id) : (clip.fadeOutCurve || 'linear');
+                    return [
+                        { label: `Duration...`, action: () => {
+                            const val = window.prompt(`Enter fade out duration (seconds):`, String(currentFade));
+                            if (val === null) return;
+                            const parsed = parseFloat(val);
+                            if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
+                            if (track.setAudioClipFadeOut) { track.setAudioClipFadeOut(clip.id, parsed); showNotification(`Fade out set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('Fade not available', 1500); }
+                        }},
+                        { separator: true },
+                        { label: `Linear${currentCurve === 'linear' ? ' ✓' : ''}`, action: () => {
+                            if (track.setAudioClipFadeOutCurve) { track.setAudioClipFadeOutCurve(clip.id, 'linear'); showNotification(`Fade out curve set to linear for "${clipName}"`, 1500); }
+                        }},
+                        { label: `Exponential${currentCurve === 'exponential' ? ' ✓' : ''}`, action: () => {
+                            if (track.setAudioClipFadeOutCurve) { track.setAudioClipFadeOutCurve(clip.id, 'exponential'); showNotification(`Fade out curve set to exponential for "${clipName}"`, 1500); }
+                        }}
+                    ];
                 }},
                 { label: `Reverse`, action: () => {
                     if (track.setAudioClipReverse) { track.setAudioClipReverse(clip.id, true); showNotification(`Reversed "${clipName}"`, 1500); } else { showNotification('Reverse not available', 1500); }
