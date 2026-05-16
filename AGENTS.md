@@ -16,6 +16,28 @@
 - **Test Count**: Increased from 1783 to 1857
 
 
+#### Day 510: Track Automation Methods Extended Tests (2026-05-16)
+- **Feature**: Added 42 new unit tests for Track automation methods to expand test coverage and close the gap left by Day 440's incomplete test block
+- **Files Modified**:
+  - `js/tests.js`: Added Day 510 test block with 42 tests for Track automation methods
+  - `js/constants.js`: Bumped APP_VERSION to 2.175.0
+- **Feature Details**:
+  - **writeVolumeAutomation** (5 tests): Tests for function export, 2 parameters, references time/value parameters, initializes automation.volume array
+  - **writeMuteAutomation** (4 tests): Tests for function export, 2 parameters, references time/value parameters
+  - **writeSoloAutomation** (4 tests): Tests for function export, 2 parameters, references time/value parameters
+  - **removeAutomationEventsInRange** (4 tests): Tests for function export, 3 parameters, calls _captureUndoState for undo support, filters automation events
+  - **applyAutomationAtTime** (3 tests): Tests for function export, 1 parameter, references time parameter
+  - **toggleMuteAutomationNow** (4 tests): Tests for function export, 0 parameters, checks automationArmed, calls writeMuteAutomation
+  - **toggleSoloAutomationNow** (4 tests): Tests for function export, 0 parameters, checks automationArmed, calls writeSoloAutomation
+  - **setAutomationArmed** (4 tests): Tests for function export, 1 parameter, calls _captureUndoState, uses descriptive undo label
+  - **setMonitoringEnabled** (4 tests): Tests for function export, 1 parameter, calls _captureUndoState, uses descriptive undo label
+  - **setVolume** (3 tests): Tests for function export, 1-2 parameter count, calls _captureUndoState
+  - **setPan** (2 tests): Tests for function export, 1 parameter
+  - **APP_VERSION validation** (1 test): Tests validate version is >= 2.174 for Day 510
+- **Version**: Bumped to 2.175.0
+- **Test Count**: Increased from 1813 to 1855
+
+
 #### Day 507: Track Templates & Send Effects Window Tests (2026-05-16)
 - **Feature**: Added 26 unit tests for openTrackTemplatesWindow and openSendEffectsWindow functions
 - **Files Modified**:

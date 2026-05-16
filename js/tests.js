@@ -6945,6 +6945,348 @@ TestRunner.test('MIDI Import - APP_VERSION validation for Day 508', (t) => {
     }
 });
 
+
+// ============================================
+
+// ============================================
+// Day 510: Track Automation Methods Extended Tests
+// ============================================
+
+TestRunner.test('Day 510 - Track.writeVolumeAutomation is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.writeVolumeAutomation, 'function', 'writeVolumeAutomation should be a function');
+});
+
+TestRunner.test('Day 510 - Track.writeVolumeAutomation accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.writeVolumeAutomation.length, 2, 'writeVolumeAutomation should accept 2 parameters');
+});
+
+TestRunner.test('Day 510 - Track.writeVolumeAutomation references time parameter', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('time'), 'writeVolumeAutomation should reference time parameter');
+});
+
+TestRunner.test('Day 510 - Track.writeVolumeAutomation references value parameter', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('value'), 'writeVolumeAutomation should reference value parameter');
+});
+
+TestRunner.test('Day 510 - Track.writeVolumeAutomation initializes automation.volume array', (t) => {
+    const funcStr = Track.prototype.writeVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('automation.volume') || funcStr.includes("automation['volume']"), 'writeVolumeAutomation should initialize automation.volume array');
+});
+
+TestRunner.test('Day 510 - Track.writeMuteAutomation is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.writeMuteAutomation, 'function', 'writeMuteAutomation should be a function');
+});
+
+TestRunner.test('Day 510 - Track.writeMuteAutomation accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.writeMuteAutomation.length, 2, 'writeMuteAutomation should accept 2 parameters');
+});
+
+TestRunner.test('Day 510 - Track.writeMuteAutomation references time parameter', (t) => {
+    const funcStr = Track.prototype.writeMuteAutomation.toString();
+    t.assertTruthy(funcStr.includes('time'), 'writeMuteAutomation should reference time parameter');
+});
+
+TestRunner.test('Day 510 - Track.writeMuteAutomation references value parameter', (t) => {
+    const funcStr = Track.prototype.writeMuteAutomation.toString();
+    t.assertTruthy(funcStr.includes('value'), 'writeMuteAutomation should reference value parameter');
+});
+
+TestRunner.test('Day 510 - Track.writeSoloAutomation is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.writeSoloAutomation, 'function', 'writeSoloAutomation should be a function');
+});
+
+TestRunner.test('Day 510 - Track.writeSoloAutomation accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.writeSoloAutomation.length, 2, 'writeSoloAutomation should accept 2 parameters');
+});
+
+TestRunner.test('Day 510 - Track.writeSoloAutomation references time parameter', (t) => {
+    const funcStr = Track.prototype.writeSoloAutomation.toString();
+    t.assertTruthy(funcStr.includes('time'), 'writeSoloAutomation should reference time parameter');
+});
+
+TestRunner.test('Day 510 - Track.writeSoloAutomation references value parameter', (t) => {
+    const funcStr = Track.prototype.writeSoloAutomation.toString();
+    t.assertTruthy(funcStr.includes('value'), 'writeSoloAutomation should reference value parameter');
+});
+
+TestRunner.test('Day 510 - Track.removeAutomationEventsInRange is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.removeAutomationEventsInRange, 'function', 'removeAutomationEventsInRange should be a function');
+});
+
+TestRunner.test('Day 510 - Track.removeAutomationEventsInRange accepts 3 parameters', (t) => {
+    t.assertEqual(Track.prototype.removeAutomationEventsInRange.length, 3, 'removeAutomationEventsInRange should accept 3 parameters');
+});
+
+TestRunner.test('Day 510 - Track.removeAutomationEventsInRange calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.removeAutomationEventsInRange.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'removeAutomationEventsInRange should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 510 - Track.removeAutomationEventsInRange filters automation events', (t) => {
+    const funcStr = Track.prototype.removeAutomationEventsInRange.toString();
+    t.assertTruthy(funcStr.includes('filter'), 'removeAutomationEventsInRange should filter automation events');
+});
+
+TestRunner.test('Day 510 - Track.applyAutomationAtTime is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.applyAutomationAtTime, 'function', 'applyAutomationAtTime should be a function');
+});
+
+TestRunner.test('Day 510 - Track.applyAutomationAtTime accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.applyAutomationAtTime.length, 1, 'applyAutomationAtTime should accept 1 parameter');
+});
+
+TestRunner.test('Day 510 - Track.applyAutomationAtTime references time parameter', (t) => {
+    const funcStr = Track.prototype.applyAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('time'), 'applyAutomationAtTime should reference time parameter');
+});
+
+TestRunner.test('Day 510 - Track.toggleMuteAutomationNow is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.toggleMuteAutomationNow, 'function', 'toggleMuteAutomationNow should be a function');
+});
+
+TestRunner.test('Day 510 - Track.toggleMuteAutomationNow accepts 0 parameters', (t) => {
+    t.assertEqual(Track.prototype.toggleMuteAutomationNow.length, 0, 'toggleMuteAutomationNow should accept 0 parameters');
+});
+
+TestRunner.test('Day 510 - Track.toggleMuteAutomationNow checks automationArmed', (t) => {
+    const funcStr = Track.prototype.toggleMuteAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('automationArmed'), 'toggleMuteAutomationNow should check automationArmed');
+});
+
+TestRunner.test('Day 510 - Track.toggleMuteAutomationNow calls writeMuteAutomation', (t) => {
+    const funcStr = Track.prototype.toggleMuteAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('writeMuteAutomation'), 'toggleMuteAutomationNow should call writeMuteAutomation');
+});
+
+TestRunner.test('Day 510 - Track.toggleSoloAutomationNow is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.toggleSoloAutomationNow, 'function', 'toggleSoloAutomationNow should be a function');
+});
+
+TestRunner.test('Day 510 - Track.toggleSoloAutomationNow accepts 0 parameters', (t) => {
+    t.assertEqual(Track.prototype.toggleSoloAutomationNow.length, 0, 'toggleSoloAutomationNow should accept 0 parameters');
+});
+
+TestRunner.test('Day 510 - Track.toggleSoloAutomationNow checks automationArmed', (t) => {
+    const funcStr = Track.prototype.toggleSoloAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('automationArmed'), 'toggleSoloAutomationNow should check automationArmed');
+});
+
+TestRunner.test('Day 510 - Track.toggleSoloAutomationNow calls writeSoloAutomation', (t) => {
+    const funcStr = Track.prototype.toggleSoloAutomationNow.toString();
+    t.assertTruthy(funcStr.includes('writeSoloAutomation'), 'toggleSoloAutomationNow should call writeSoloAutomation');
+});
+
+TestRunner.test('Day 510 - Track.setAutomationArmed is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setAutomationArmed, 'function', 'setAutomationArmed should be a function');
+});
+
+TestRunner.test('Day 510 - Track.setAutomationArmed accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setAutomationArmed.length, 1, 'setAutomationArmed should accept 1 parameter');
+});
+
+TestRunner.test('Day 510 - Track.setAutomationArmed calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAutomationArmed.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAutomationArmed should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 510 - Track.setAutomationArmed uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setAutomationArmed.toString();
+    t.assertTruthy(funcStr.includes('Automation Arm') || funcStr.includes('Toggle Automation'), 'setAutomationArmed should use descriptive undo label');
+});
+
+TestRunner.test('Day 510 - Track.setMonitoringEnabled is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setMonitoringEnabled, 'function', 'setMonitoringEnabled should be a function');
+});
+
+TestRunner.test('Day 510 - Track.setMonitoringEnabled accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setMonitoringEnabled.length, 1, 'setMonitoringEnabled should accept 1 parameter');
+});
+
+TestRunner.test('Day 510 - Track.setMonitoringEnabled calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setMonitoringEnabled.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setMonitoringEnabled should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 510 - Track.setMonitoringEnabled uses descriptive undo label', (t) => {
+    const funcStr = Track.prototype.setMonitoringEnabled.toString();
+    t.assertTruthy(funcStr.includes('Input Monitoring') || funcStr.includes('Monitoring'), 'setMonitoringEnabled should use descriptive undo label');
+});
+
+TestRunner.test('Day 510 - Track.setVolume is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setVolume, 'function', 'setVolume should be a function');
+});
+
+TestRunner.test('Day 510 - Track.setVolume accepts 1-2 parameters', (t) => {
+    const paramCount = Track.prototype.setVolume.length;
+    t.assertEqual(paramCount === 1 || paramCount === 2, true, 'setVolume should accept 1 or 2 parameters');
+});
+
+TestRunner.test('Day 510 - Track.setVolume calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setVolume.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setVolume should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 510 - Track.setPan is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setPan, 'function', 'setPan should be a function');
+});
+
+TestRunner.test('Day 510 - Track.setPan accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setPan.length, 1, 'setPan should accept 1 parameter');
+});
+
+TestRunner.test('Day 510 - APP_VERSION validation for Day 510', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 510');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 173, 'Minor version should be >= 173 for Day 510');
+    }
+});
+
+// Day 509: Track Templates & Send Effects Window Tests
+// ============================================
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackTemplatesWindow, 'function', 'openTrackTemplatesWindow should be a function');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openTrackTemplatesWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openTrackTemplatesWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body uses createWindow', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackTemplatesWindow should use createWindow');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackTemplatesWindow should check for open windows');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body references localAppServices', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackTemplatesWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body references getTrackTemplates', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackTemplates'), 'openTrackTemplatesWindow should call getTrackTemplates');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body references getTrackTemplateById', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackTemplateById'), 'openTrackTemplatesWindow should reference getTrackTemplateById');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body references removeTrackTemplate', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('removeTrackTemplate'), 'openTrackTemplatesWindow should call removeTrackTemplate');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body calls captureStateForUndo', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'openTrackTemplatesWindow should call captureStateForUndo for template operations');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body creates template list container', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('trackTemplatesList') || funcStr.includes('templatesList') || funcStr.includes('template-item'), 'openTrackTemplatesWindow should create a template list container');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body has Load button', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('load') || funcStr.includes('Load'), 'openTrackTemplatesWindow should have a Load button');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow function body has Delete button', (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('delete') || funcStr.includes('Delete'), 'openTrackTemplatesWindow should have a Delete button');
+});
+
+TestRunner.test('Day 509 - openTrackTemplatesWindow APP_VERSION validation for Day 509', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 509');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 172, 'Minor version should be >= 172 for Day 509');
+    }
+});
+
+// --- openSendEffectsWindow Tests ---
+
+TestRunner.test('Day 509 - openSendEffectsWindow is a function export', (t) => {
+    t.assertEqual(typeof openSendEffectsWindow, 'function', 'openSendEffectsWindow should be a function');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow accepts 1-2 parameters', (t) => {
+    const paramCount = openSendEffectsWindow.length;
+    t.assertEqual(paramCount >= 1 && paramCount <= 2, true, 'openSendEffectsWindow should accept 1 or 2 parameters');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body uses createWindow', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openSendEffectsWindow should use createWindow');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openSendEffectsWindow should check for open windows');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body references localAppServices', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openSendEffectsWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body references effectsRegistryAccess', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess') || funcStr.includes('AVAILABLE_EFFECTS'), 'openSendEffectsWindow should reference effectsRegistryAccess or AVAILABLE_EFFECTS');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body calls addEffectToSendBus', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('addEffectToSendBus'), 'openSendEffectsWindow should call addEffectToSendBus');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body calls removeEffectFromSendBus', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('removeEffectFromSendBus'), 'openSendEffectsWindow should call removeEffectFromSendBus');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body calls setSendTrackEffects', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('setSendTrackEffects'), 'openSendEffectsWindow should call setSendTrackEffects');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body calls updateSendBusEffectParam', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('updateSendBusEffectParam'), 'openSendEffectsWindow should call updateSendBusEffectParam');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body creates effects list container', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('effectsList') || funcStr.includes('effect-item'), 'openSendEffectsWindow should create an effects list container');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow function body has Add Effect button', (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('addEffect') || funcStr.includes('Add Effect'), 'openSendEffectsWindow should have an Add Effect button');
+});
+
+TestRunner.test('Day 509 - openSendEffectsWindow APP_VERSION validation for Day 509', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 509');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 172, 'Minor version should be >= 172 for Day 509');
+    }
+});
+
+
 // ============================================
 // Day 424: SnugWindow Class Methods Tests
 // ============================================
