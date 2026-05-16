@@ -1,3 +1,26 @@
+#### Day 506: Audio Clip Fade Curve Submenu (2026-05-16)
+- **Feature**: Replaced Fade In... and Fade Out... menu items in timeline clip context menu with submenus that include both Duration and Fade Curve options
+- **Files Modified**:
+  - `js/ui.js`: Replaced flat menu items with `Fade In` and `Fade Out` submenus in `attachClipEventHandlers`
+  - `js/tests.js`: Added Day 506 test block with 14 tests for fade curve submenu functionality
+  - `js/constants.js`: Bumped APP_VERSION to 2.171.0
+- **Feature Details**:
+  - **Fade In submenu**: Contains Duration... (calls `setAudioClipFadeIn`) and separator, Linear ✓ / Exponential ✓ curve options (calls `setAudioClipFadeInCurve`)
+  - **Fade Out submenu**: Contains Duration... (calls `setAudioClipFadeOut`) and separator, Linear ✓ / Exponential ✓ curve options (calls `setAudioClipFadeOutCurve`)
+  - Shows checkmark next to current curve via `getAudioClipFadeInCurve(clip.id)` and `getAudioClipFadeOutCurve(clip.id)`
+  - Falls back to `clip.fadeInCurve` or `clip.fadeOutCurve` or 'linear' if getter not available
+  - All submenu items use showNotification for user feedback
+  - **Tests Added** (`js/tests.js`): 14 tests covering:
+    - Fade In/Fade Out submenus exist
+    - Duration option calls correct setAudioClipFadeIn/FadeOut
+    - Linear/Exponential curve options exist for both fade in and fade out
+    - Checkmark display logic (currentCurve + ✓)
+    - getAudioClipFadeInCurve/getAudioClipFadeOutCurve usage for current value
+    - APP_VERSION validation (>= 2.170 for Day 506)
+- **Version**: Bumped to 2.171.0
+- **Test Count**: Increased from 1719 to 1733
+
+
 #### Day 505: Sequencer Context Menu Comprehensive Tests (2026-05-15)
 - **Feature**: Added 31 comprehensive unit tests for the sequencer right-click context menu menu items
 - **Files Modified**:
