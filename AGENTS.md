@@ -1,24 +1,15 @@
-#### Day 506: Audio Clip Fade Curve Submenu (2026-05-16)
-- **Feature**: Replaced Fade In... and Fade Out... menu items in timeline clip context menu with submenus that include both Duration and Fade Curve options
+#### Day 506: Missing Window Function Tests (2026-05-16)
+- **Feature**: Added 38 unit tests for three missing window function tests in `js/tests.js`
 - **Files Modified**:
-  - `js/ui.js`: Replaced flat menu items with `Fade In` and `Fade Out` submenus in `attachClipEventHandlers`
-  - `js/tests.js`: Added Day 506 test block with 14 tests for fade curve submenu functionality
-  - `js/constants.js`: Bumped APP_VERSION to 2.171.0
+  - `js/tests.js`: Added Day 506 test block with 38 tests for openTrackGroupsWindow, openMidiCCMappingsWindow, and openScaleModeWindow
+  - `js/constants.js`: Bumped APP_VERSION to 2.172.0
 - **Feature Details**:
-  - **Fade In submenu**: Contains Duration... (calls `setAudioClipFadeIn`) and separator, Linear ✓ / Exponential ✓ curve options (calls `setAudioClipFadeInCurve`)
-  - **Fade Out submenu**: Contains Duration... (calls `setAudioClipFadeOut`) and separator, Linear ✓ / Exponential ✓ curve options (calls `setAudioClipFadeOutCurve`)
-  - Shows checkmark next to current curve via `getAudioClipFadeInCurve(clip.id)` and `getAudioClipFadeOutCurve(clip.id)`
-  - Falls back to `clip.fadeInCurve` or `clip.fadeOutCurve` or 'linear' if getter not available
-  - All submenu items use showNotification for user feedback
-  - **Tests Added** (`js/tests.js`): 14 tests covering:
-    - Fade In/Fade Out submenus exist
-    - Duration option calls correct setAudioClipFadeIn/FadeOut
-    - Linear/Exponential curve options exist for both fade in and fade out
-    - Checkmark display logic (currentCurve + ✓)
-    - getAudioClipFadeInCurve/getAudioClipFadeOutCurve usage for current value
-    - APP_VERSION validation (>= 2.170 for Day 506)
-- **Version**: Bumped to 2.171.0
-- **Test Count**: Increased from 1719 to 1733
+  - **openTrackGroupsWindow** (13 tests): Tests for function export, 0-1 parameter count, createWindow usage, getOpenWindows for single-instance, localAppServices references, getTrackGroups, addTrackGroup, setTrackGroupName, removeTrackGroup, removeTrackFromGroup, newGroupBtn, trackGroupsList container
+  - **openMidiCCMappingsWindow** (9 tests): Tests for function export, 0-1 parameter count, createWindow usage, getOpenWindows for single-instance, localAppServices references, getMidiCCMappings, removeMidiCCMapping, midiMappingsList container
+  - **openScaleModeWindow** (15 tests): Tests for function export, 0-1 parameter count, createWindow usage, getOpenWindows for single-instance, localAppServices references, getScaleModeEnabled, setScaleModeEnabled, getScaleModeScale, setScaleModeScale, getScaleModeRoot, setScaleModeRoot, getScaleModeLock, setScaleModeLock, SCALE_ROOTS from Constants, SCALES from Constants
+  - **Imports Updated**: Added openTrackGroupsWindow, openMidiCCMappingsWindow, openScaleModeWindow to ui.js imports block in tests.js
+- **Version**: Bumped to 2.172.0
+- **Test Count**: Increased from 1719 to 1757
 
 
 #### Day 505: Sequencer Context Menu Comprehensive Tests (2026-05-15)
