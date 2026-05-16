@@ -1,3 +1,31 @@
+#### Day 505: Sequencer Context Menu Comprehensive Tests (2026-05-15)
+- **Feature**: Added 31 comprehensive unit tests for the sequencer right-click context menu menu items
+- **Files Modified**:
+  - `js/tests.js`: Added Day 505 test block with 31 tests for sequencer context menu coverage
+  - `js/constants.js`: Bumped APP_VERSION to 2.170.0
+- **Feature Details**:
+  - **Tests Added** (`js/tests.js`): 31 tests covering all sequencer context menu items:
+    - Shift Notes Up (verifies `shiftSequenceNotes(1)` call)
+    - Shift Notes Down (verifies `shiftSequenceNotes(-1)` call)
+    - Clear Selection (verifies cells set to null in selection)
+    - Invert Selection (verifies active state toggle)
+    - Scale Velocities 50%, 75%, 125% (verifies `scaleVelocities` calls)
+    - Quantize to 1/16 and 1/8 (verifies quantize options exist)
+    - Reverse Sequence (verifies `reverseSequence` call)
+    - Erase sequence (verifies erase option exists)
+    - Set Length (verifies `window.prompt` usage for input)
+    - Double Length (verifies `doubleSequence` call)
+    - Halve Length (verifies `halveSequence` call)
+    - Humanize Velocities (verifies `humanizeVelocity` call)
+    - Copy/Paste Selection (verifies clipboard operations)
+    - Duplicate Sequence (verifies duplicate option exists)
+    - Rename Sequence (verifies rename option exists)
+    - Copy/Paste Full Sequence (verifies full sequence clipboard ops)
+    - Stop All Audio (verifies `panicStopAllAudio` call)
+  - **Version**: Bumped to 2.170.0
+  - **Test Count**: Increased from 1689 to 1720
+
+
 #### Day 504: Halve Sequence Length Feature (2026-05-15)
 - **Feature**: Added `halveSequence()` method to Track class and "Halve Length" menu item to sequencer context menu
 - **Files Modified**:
