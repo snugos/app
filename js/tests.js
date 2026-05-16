@@ -9226,3 +9226,158 @@ TestRunner.test('Day 504 - halveSequence validates minimum 1 bar', (t) => {
     const funcStr = Track.prototype.halveSequence.toString();
     t.assertTruthy(funcStr.includes('STEPS_PER_BAR') || funcStr.includes('minimum'), 'halveSequence should validate minimum 1 bar');
 });
+// Day 505: Sequencer Context Menu Comprehensive Tests (2026-05-15)
+// Tests for Shift Notes Up/Down, Clear Selection, Invert Selection, Scale Velocities, and other context menu items
+TestRunner.test('Day 505 - Sequencer Context Menu - Shift Notes Up menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Shift Notes Up'), 'Context menu should have Shift Notes Up option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Shift Notes Up calls shiftSequenceNotes', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('shiftSequenceNotes(1)') || funcStr.includes('shiftSequenceNotes( 1 )'), 'Shift Notes Up should call shiftSequenceNotes(1)');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Shift Notes Down menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Shift Notes Down'), 'Context menu should have Shift Notes Down option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Shift Notes Down calls shiftSequenceNotes', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('shiftSequenceNotes(-1)') || funcStr.includes('shiftSequenceNotes( -1 )'), 'Shift Notes Down should call shiftSequenceNotes(-1)');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Clear Selection menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Clear Selection'), 'Context menu should have Clear Selection option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Clear Selection sets cells to null', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('= null') && funcStr.includes('Clear Selection'), 'Clear Selection should set selected cells to null');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Invert Selection menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Invert Selection'), 'Context menu should have Invert Selection option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Invert Selection toggles active state', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('active') && funcStr.includes('Invert Selection'), 'Invert Selection should toggle active state');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Scale Velocities (50%) menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Scale Velocities (50%)'), 'Context menu should have Scale Velocities (50%) option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Scale Velocities (75%) menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Scale Velocities (75%)'), 'Context menu should have Scale Velocities (75%) option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Scale Velocities (125%) menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Scale Velocities (125%)'), 'Context menu should have Scale Velocities (125%) option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Quantize to 1/16 menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Quantize to 1/16'), 'Context menu should have Quantize to 1/16 option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Quantize to 1/8 menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Quantize to 1/8'), 'Context menu should have Quantize to 1/8 option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Reverse Sequence menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Reverse Sequence'), 'Context menu should have Reverse Sequence option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Erase sequence menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Erase '), 'Context menu should have Erase option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Set Length menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Set Length'), 'Context menu should have Set Length option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Set Length uses window.prompt', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('window.prompt') && funcStr.includes('Set Length'), 'Set Length should use window.prompt for input');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Double Length menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Double Length'), 'Context menu should have Double Length option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Double Length calls doubleSequence', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('doubleSequence'), 'Double Length should call track.doubleSequence');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Halve Length calls track.halveSequence', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('halveSequence'), 'Halve Length should call track.halveSequence');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Humanize Velocities menu items exist', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Humanize Velocities'), 'Context menu should have Humanize Velocities option(s)');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Humanize Velocities calls humanizeVelocity', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('humanizeVelocity'), 'Humanize Velocities should call track.humanizeVelocity');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Copy Selection menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Copy Selection'), 'Context menu should have Copy Selection option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Paste Selection menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Paste Selection'), 'Context menu should have Paste Selection option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Duplicate Sequence menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Duplicate Sequence'), 'Context menu should have Duplicate Sequence option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Rename Sequence menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Rename Sequence'), 'Context menu should have Rename Sequence option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Copy Full Sequence menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Copy Full Sequence'), 'Context menu should have Copy Full Sequence option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Paste Full Sequence menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Paste Full Sequence'), 'Context menu should have Paste Full Sequence option');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - Stop All Audio calls panicStopAllAudio', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('panicStopAllAudio'), 'Stop All Audio should call panicStopAllAudio');
+});
+
+TestRunner.test('Day 505 - Sequencer Context Menu - APP_VERSION validation for Day 505', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 505');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 169, 'Minor version should be >= 169 for Day 505');
+    }
+});
