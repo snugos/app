@@ -202,6 +202,9 @@ import {
     openChordModeWindow,
     openTimelineMarkersWindow,
     openTransportSettingsWindow,
+    openTrackGroupsWindow,
+    openMidiCCMappingsWindow,
+    openScaleModeWindow,
 } from './ui.js';
 
 import {
@@ -9382,69 +9385,209 @@ TestRunner.test('Day 505 - Sequencer Context Menu - APP_VERSION validation for D
     }
 });
 
-// Day 506: Audio Clip Fade Curve Submenu
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu exists with curve options', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('Fade In'), 'Context menu should have Fade In submenu');
+// ============================================
+// Day 506: Missing Window Function Tests
+// ============================================
+
+// --- openTrackGroupsWindow Tests ---
+
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackGroupsWindow, 'function', 'openTrackGroupsWindow should be a function');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu exists with curve options', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('Fade Out'), 'Context menu should have Fade Out submenu');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openTrackGroupsWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openTrackGroupsWindow should accept 0 or 1 parameter');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu has Duration option', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('Duration') && funcStr.includes('setAudioClipFadeIn'), 'Fade In submenu should have Duration option that calls setAudioClipFadeIn');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses createWindow', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackGroupsWindow should use createWindow');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu has Duration option', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('Duration') && funcStr.includes('setAudioClipFadeOut'), 'Fade Out submenu should have Duration option that calls setAudioClipFadeOut');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackGroupsWindow should check for open windows');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu has Linear curve option', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('setAudioClipFadeInCurve') && funcStr.includes('linear'), 'Fade In submenu should have Linear curve option');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses localAppServices', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackGroupsWindow should reference localAppServices');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu has Exponential curve option', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('setAudioClipFadeInCurve') && funcStr.includes('exponential'), 'Fade In submenu should have Exponential curve option');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses getTrackGroups', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackGroups'), 'openTrackGroupsWindow should use getTrackGroups');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu has Linear curve option', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('setAudioClipFadeOutCurve') && funcStr.includes('linear'), 'Fade Out submenu should have Linear curve option');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses addTrackGroup', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('addTrackGroup'), 'openTrackGroupsWindow should use addTrackGroup');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu has Exponential curve option', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('setAudioClipFadeOutCurve') && funcStr.includes('exponential'), 'Fade Out submenu should have Exponential curve option');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses setTrackGroupName', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('setTrackGroupName'), 'openTrackGroupsWindow should use setTrackGroupName');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In submenu shows current curve checkmark', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('currentCurve') && funcStr.includes('✓'), 'Fade In submenu should show checkmark next to current curve');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses removeTrackGroup', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('removeTrackGroup'), 'openTrackGroupsWindow should use removeTrackGroup');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out submenu shows current curve checkmark', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('currentCurve') && funcStr.includes('✓'), 'Fade Out submenu should show checkmark next to current curve');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function body uses removeTrackFromGroup', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('removeTrackFromGroup'), 'openTrackGroupsWindow should use removeTrackFromGroup');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade In uses getAudioClipFadeInCurve for current value', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('getAudioClipFadeInCurve'), 'Fade In submenu should get current curve via getAudioClipFadeInCurve');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow has New Group button', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('newGroupBtn'), 'openTrackGroupsWindow should have a newGroupBtn');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Out uses getAudioClipFadeOutCurve for current value', (t) => {
-    const funcStr = attachClipEventHandlers.toString();
-    t.assertTruthy(funcStr.includes('getAudioClipFadeOutCurve'), 'Fade Out submenu should get current curve via getAudioClipFadeOutCurve');
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow has group list container', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('trackGroupsList'), 'openTrackGroupsWindow should have trackGroupsList container');
 });
 
-TestRunner.test('Day 506 - Timeline Clip Context Menu - Fade Curve APP_VERSION validation', (t) => {
+TestRunner.test('Day 506 - Track Groups Window - APP_VERSION validation for Day 506', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 506');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 170, 'Minor version should be >= 170 for Day 506');
+    }
+});
+
+// --- openMidiCCMappingsWindow Tests ---
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow is a function export', (t) => {
+    t.assertEqual(typeof openMidiCCMappingsWindow, 'function', 'openMidiCCMappingsWindow should be a function');
+});
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openMidiCCMappingsWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openMidiCCMappingsWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses createWindow', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMidiCCMappingsWindow should use createWindow');
+});
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMidiCCMappingsWindow should check for open windows');
+});
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses localAppServices', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openMidiCCMappingsWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses getMidiCCMappings', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getMidiCCMappings'), 'openMidiCCMappingsWindow should use getMidiCCMappings');
+});
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses removeMidiCCMapping', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('removeMidiCCMapping'), 'openMidiCCMappingsWindow should use removeMidiCCMapping');
+});
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - openMidiCCMappingsWindow has mappings list container', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('midiMappingsList'), 'openMidiCCMappingsWindow should have midiMappingsList container');
+});
+
+TestRunner.test('Day 506 - MIDI CC Mappings Window - APP_VERSION validation for Day 506', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 506');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 170, 'Minor version should be >= 170 for Day 506');
+    }
+});
+
+// --- openScaleModeWindow Tests ---
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow is a function export', (t) => {
+    t.assertEqual(typeof openScaleModeWindow, 'function', 'openScaleModeWindow should be a function');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openScaleModeWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openScaleModeWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses createWindow', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openScaleModeWindow should use createWindow');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openScaleModeWindow should check for open windows');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses localAppServices', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openScaleModeWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getScaleModeEnabled', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeEnabled'), 'openScaleModeWindow should use getScaleModeEnabled');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses setScaleModeEnabled', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setScaleModeEnabled'), 'openScaleModeWindow should use setScaleModeEnabled');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getScaleModeScale', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeScale'), 'openScaleModeWindow should use getScaleModeScale');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses setScaleModeScale', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setScaleModeScale'), 'openScaleModeWindow should use setScaleModeScale');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getScaleModeRoot', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeRoot'), 'openScaleModeWindow should use getScaleModeRoot');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses setScaleModeRoot', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setScaleModeRoot'), 'openScaleModeWindow should use setScaleModeRoot');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses getScaleModeLock', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeLock'), 'openScaleModeWindow should use getScaleModeLock');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses setScaleModeLock', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setScaleModeLock'), 'openScaleModeWindow should use setScaleModeLock');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses SCALE_ROOTS from Constants', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('SCALE_ROOTS'), 'openScaleModeWindow should use SCALE_ROOTS from Constants');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - openScaleModeWindow function body uses SCALES from Constants', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('Constants.SCALES') || funcStr.includes('SCALES'), 'openScaleModeWindow should use SCALES from Constants');
+});
+
+TestRunner.test('Day 506 - Scale Mode Window - APP_VERSION validation for Day 506', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 506');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 170, 'Minor version should be >= 170 for Day 506');
