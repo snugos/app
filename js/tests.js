@@ -10188,7 +10188,10 @@ TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow function 
     t.assertTruthy(funcStr.includes('localAppServices'), 'openTrackGroupsWindow should reference localAppServices');
 });
 
-TestRunner.test('Day 506 - Track
+TestRunner.test('Day 506 - Track Groups Window - openTrackGroupsWindow references trackGroupsList container', (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('trackGroupsList'), 'openTrackGroupsWindow should reference trackGroupsList container');
+});
 // ============================================
 // Day 512: EffectsRegistry Functions Tests
 // ============================================
