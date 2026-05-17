@@ -35,6 +35,9 @@ export function setProjectNotesState(notes) {
 let selectedSoundForPreviewGlobal = null;
 export function getSelectedSoundForPreviewState() { return selectedSoundForPreviewGlobal; }
 export function setSelectedSoundForPreviewState(data) {
+    if (selectedSoundForPreviewGlobal !== data) {
+        captureStateForUndoIfAllowed('Set Preview Sound');
+    }
     selectedSoundForPreviewGlobal = data;
 }
 
