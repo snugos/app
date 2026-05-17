@@ -371,6 +371,29 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     </div>`;
 }
 
+function buildAudioTrackInspectorDOM(track) {
+    return `<div class="audio-track-controls p-1 space-y-2">
+        <div class="audio-input-section p-2 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
+            <h4 class="text-xs font-semibold dark:text-slate-200">Audio Input</h4>
+            <div class="mb-1">
+                <label for="audioInputDevice-${track.id}" class="block text-xs font-medium dark:text-slate-300 mb-0.5">Input Device:</label>
+                <select id="audioInputDevice-${track.id}" class="w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-600">
+                    <option value="">Default Input</option>
+                </select>
+            </div>
+            <div id="inputGain-${track.id}-placeholder" class="my-1"></div>
+        </div>
+        <div class="monitoring-section p-2 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium dark:text-slate-300">Input Monitoring</span>
+                <span id="monitoringVolumeLabel-${track.id}" class="text-xs dark:text-slate-400">50%</span>
+            </div>
+            <input type="range" id="monitoringVolume-${track.id}" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer">
+            <input type="hidden" id="recordingStatus-${track.id}" value="Ready">
+        </div>
+    </div>`;
+}
+
 function getNormalizedDrumSamplerPadIndex(track, fallback = 0) {
     const parsedIndex = Number.parseInt(track?.selectedDrumPadForEdit, 10);
     if (Number.isInteger(parsedIndex) && parsedIndex >= 0) {
@@ -677,6 +700,7 @@ function buildTrackInspectorContentDOM(track) {
     else if (track.type === 'Sampler') specificControlsHTML = buildSamplerSpecificInspectorDOM(track);
     else if (track.type === 'DrumSampler') specificControlsHTML = buildDrumSamplerSpecificInspectorDOM(track);
     else if (track.type === 'InstrumentSampler') specificControlsHTML = buildInstrumentSamplerSpecificInspectorDOM(track);
+    else if (track.type === 'Audio') specificControlsHTML = buildAudioTrackInspectorDOM(track);
 
     const armedTrackId = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null;
     const sequencerButtonHTML = `<button id="openSequencerBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Sequencer</button>`;
@@ -805,6 +829,69 @@ function initializeTypeSpecificInspectorControls(track, winEl) {
         updateDrumPadControlsUI(track);
     }
     else if (track.type === 'InstrumentSampler') initializeInstrumentSamplerSpecificControls(track, winEl);
+    else if (track.type === 'Audio') initializeAudioTrackInspectorControls(track, winEl);
+}
+
+// --- Audio Track Inspector Controls Initialization ---
+function initializeAudioTrackInspectorControls(track, winEl) {
+    if (!track || !winEl) return;
+
+    // Create input gain knob
+    const gainPlaceholder = winEl.querySelector(`#inputGain-${track.id}-placeholder`);
+    if (gainPlaceholder) {
+        const defaultGain = Constants.DEFAULT_RECORDING_INPUT_GAIN;
+        const currentGain = track.recordingInputGainValue || defaultGain;
+        const gainKnob = createKnob({
+            label: 'Input Gain',
+            min: Constants.MIN_RECORDING_INPUT_GAIN,
+            max: Constants.MAX_RECORDING_INPUT_GAIN,
+            step: 0.01,
+            initialValue: currentGain,
+            decimals: 2,
+            trackRef: track,
+            onValueChange: (val) => {
+                if (localAppServices.setRecordingInputGain) {
+                    localAppServices.setRecordingInputGain(val);
+                }
+            }
+        });
+        gainPlaceholder.innerHTML = '';
+        gainPlaceholder.appendChild(gainKnob.element);
+    }
+
+    // Set up monitoring volume slider
+    const monitorSlider = winEl.querySelector(`#monitoringVolume-${track.id}`);
+    const monitorLabel = winEl.querySelector(`#monitoringVolumeLabel-${track.id}`);
+    if (monitorSlider) {
+        const initialVol = track.monitoringVolume !== undefined ? track.monitoringVolume : 0.5;
+        monitorSlider.value = Math.round(initialVol * 100);
+        if (monitorLabel) monitorLabel.textContent = Math.round(initialVol * 100) + '%';
+
+        monitorSlider.addEventListener('input', () => {
+            const val = parseInt(monitorSlider.value, 10) / 100;
+            track.monitoringVolume = val;
+            if (monitorLabel) monitorLabel.textContent = Math.round(val * 100) + '%';
+        });
+    }
+
+    // Enumerate audio input devices and populate select
+    const deviceSelect = winEl.querySelector(`#audioInputDevice-${track.id}`);
+    if (deviceSelect && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                const audioInputs = devices.filter(d => d.kind === 'audioinput');
+                deviceSelect.innerHTML = '<option value="">Default Input</option>';
+                audioInputs.forEach((device, idx) => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.textContent = device.label || `Microphone ${idx + 1}`;
+                    deviceSelect.appendChild(option);
+                });
+            })
+            .catch(err => {
+                console.warn('[UI initializeAudioTrackInspectorControls] enumerateDevices error:', err.message);
+            });
+    }
 }
 
 // --- Modular Effects Rack UI ---
