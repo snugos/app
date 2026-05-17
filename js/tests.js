@@ -10542,3 +10542,163 @@ TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWi
         t.assertTruthy(versionParts[1] >= 180, 'Minor version should be >= 180 for Day 518');
     }
 });
+// ============================================================
+// Day 519: Core Window Function Tests
+// ============================================================
+
+// --- openMixerWindow tests ---
+TestRunner.test('Day 519 - openMixerWindow is a function export', (t) => {
+    t.assertEqual(typeof openMixerWindow, 'function', 'openMixerWindow should be a function');
+});
+
+TestRunner.test('Day 519 - openMixerWindow accepts 0-1 parameters', (t) => {
+    t.assertEqual(openMixerWindow.length <= 1, true, 'openMixerWindow should accept 0 or 1 parameters');
+});
+
+TestRunner.test('Day 519 - openMixerWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openMixerWindow should check existing windows for single-instance behavior');
+});
+
+TestRunner.test('Day 519 - openMixerWindow uses createWindow to create mixer window', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openMixerWindow should use createWindow or SnugWindow');
+});
+
+TestRunner.test('Day 519 - openMixerWindow uses windowId "mixer"', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('"mixer"') || funcStr.includes("'mixer'"), 'openMixerWindow should use "mixer" as the windowId');
+});
+
+TestRunner.test('Day 519 - openMixerWindow creates mixer content container', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('mixerContentContainer') || funcStr.includes('contentContainer'), 'openMixerWindow should create a content container');
+});
+
+TestRunner.test('Day 519 - openMixerWindow references localAppServices', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices') || funcStr.includes('appServices'), 'openMixerWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 519 - openMixerWindow handles savedState for window restoration', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') || funcStr.includes('restore'), 'openMixerWindow should handle savedState for restoration');
+});
+
+// --- openSoundBrowserWindow tests ---
+TestRunner.test('Day 519 - openSoundBrowserWindow is a function export', (t) => {
+    t.assertEqual(typeof openSoundBrowserWindow, 'function', 'openSoundBrowserWindow should be a function');
+});
+
+TestRunner.test('Day 519 - openSoundBrowserWindow accepts 0-1 parameters', (t) => {
+    t.assertEqual(openSoundBrowserWindow.length <= 1, true, 'openSoundBrowserWindow should accept 0 or 1 parameters');
+});
+
+TestRunner.test('Day 519 - openSoundBrowserWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openSoundBrowserWindow should check existing windows for single-instance behavior');
+});
+
+TestRunner.test('Day 519 - openSoundBrowserWindow uses createWindow to create browser window', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openSoundBrowserWindow should use createWindow or SnugWindow');
+});
+
+TestRunner.test('Day 519 - openSoundBrowserWindow uses windowId "soundBrowser"', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('"soundBrowser"') || funcStr.includes("'soundBrowser'"), 'openSoundBrowserWindow should use "soundBrowser" as the windowId');
+});
+
+TestRunner.test('Day 519 - openSoundBrowserWindow creates sound browser HTML content', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('soundBrowserContent') || funcStr.includes('innerHTML') || funcStr.includes('contentHTML'), 'openSoundBrowserWindow should build content');
+});
+
+TestRunner.test('Day 519 - openSoundBrowserWindow references localAppServices', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices') || funcStr.includes('appServices'), 'openSoundBrowserWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 519 - openSoundBrowserWindow handles librarySelect element', (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('librarySelect') || funcStr.includes('librarySelect'), 'openSoundBrowserWindow should work with librarySelect element');
+});
+
+// --- openGlobalControlsWindow tests ---
+TestRunner.test('Day 519 - openGlobalControlsWindow is a function export', (t) => {
+    t.assertEqual(typeof openGlobalControlsWindow, 'function', 'openGlobalControlsWindow should be a function');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow accepts 1-2 parameters', (t) => {
+    const count = openGlobalControlsWindow.length;
+    t.assertTruthy(count >= 1 && count <= 2, 'openGlobalControlsWindow should accept 1-2 parameters (onReadyCallback, savedState)');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openGlobalControlsWindow should check existing windows for single-instance behavior');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow uses createWindow to create controls window', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openGlobalControlsWindow should use createWindow or SnugWindow');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow uses windowId "globalControls"', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('"globalControls"') || funcStr.includes("'globalControls'"), 'openGlobalControlsWindow should use "globalControls" as the windowId');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow creates global controls HTML content', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('contentHTML') || funcStr.includes('global-controls'), 'openGlobalControlsWindow should build content HTML');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow includes play button', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('playBtn') || funcStr.includes('playBtnGlobal') || funcStr.includes('Play'), 'openGlobalControlsWindow should have a play button');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow includes stop button', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('stopBtn') || funcStr.includes('stopBtnGlobal') || funcStr.includes('Stop'), 'openGlobalControlsWindow should have a stop button');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow includes record button', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('recordBtn') || funcStr.includes('recordBtnGlobal') || funcStr.includes('Record'), 'openGlobalControlsWindow should have a record button');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow includes tempo input', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('tempo') || funcStr.includes('Tempo'), 'openGlobalControlsWindow should have tempo controls');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow includes master meter display', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('masterMeter') || funcStr.includes('Master') || funcStr.includes('meter'), 'openGlobalControlsWindow should have master meter display');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow calls onReadyCallback if provided', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('onReadyCallback'), 'openGlobalControlsWindow should call onReadyCallback when provided');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow references localAppServices', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices') || funcStr.includes('appServices'), 'openGlobalControlsWindow should reference localAppServices');
+});
+
+TestRunner.test('Day 519 - openGlobalControlsWindow handles savedState for window restoration', (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') || funcStr.includes('restore'), 'openGlobalControlsWindow should handle savedState for restoration');
+});
+
+TestRunner.test('Day 519 - APP_VERSION validation for Day 519', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 519');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 180, 'Minor version should be >= 180 for Day 519');
+    }
+});
