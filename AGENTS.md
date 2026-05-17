@@ -1,3 +1,17 @@
+#### Day 519: Core Window Function Tests (2026-05-17)
+- **Feature**: Added 31 unit tests for openMixerWindow, openSoundBrowserWindow, and openGlobalControlsWindow functions to expand test coverage for core window functions with savedState support
+- **Files Modified**:
+  - `js/tests.js`: Added Day 519 test block with 31 tests for Core Window Functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.182.0
+- **Feature Details**:
+  - **openMixerWindow** (8 tests): Tests for function export, 0-1 parameter count, getOpenWindows for single-instance, createWindow usage, "mixer" windowId, mixerContentContainer creation, localAppServices reference, savedState for window restoration
+  - **openSoundBrowserWindow** (7 tests): Tests for function export, 0-1 parameter count, getOpenWindows for single-instance, createWindow usage, "soundBrowser" windowId, HTML content building, librarySelect element handling
+  - **openGlobalControlsWindow** (15 tests): Tests for function export, 1-2 parameter count, getOpenWindows for single-instance, createWindow usage, "globalControls" windowId, HTML content building, play/stop/record buttons, tempo input, master meter display, onReadyCallback handling, localAppServices reference, savedState for window restoration
+  - **APP_VERSION validation** (1 test): Tests validate version >= 2.181 for Day 519
+- **Version**: Bumped to 2.182.0
+- **Test Count**: Increased from 1945 to 1976
+
+
 #### Day 518: showKeyboardShortcutsHelpWindow Tests (2026-05-17)
 - **Feature**: Added 14 unit tests for `showKeyboardShortcutsHelpWindow` function to expand test coverage for this window launcher function
 - **Files Modified**:
