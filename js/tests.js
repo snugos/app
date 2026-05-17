@@ -10286,3 +10286,175 @@ TestRunner.test('Day 512 - APP_VERSION validation for Day 512', (t) => {
         t.assertTruthy(versionParts[1] >= 176, 'Minor version should be >= 176 for Day 512');
     }
 });
+
+// ============================================
+// Day 513: Sidechain Audio Functions Tests
+// ============================================
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect is a function export', (t) => {
+    t.assertEqual(typeof handleSidechainParamChangeForEffect, 'function', 'handleSidechainParamChangeForEffect should be a function');
+});
+
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect accepts 3 parameters', (t) => {
+    const paramCount = handleSidechainParamChangeForEffect.length;
+    t.assertEqual(paramCount, 3, 'handleSidechainParamChangeForEffect should accept 3 parameters (effectId, effectNode, sidechainValue)');
+});
+
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect references effectId parameter', (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'handleSidechainParamChangeForEffect should reference effectId parameter');
+});
+
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect references effectNode parameter', (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('effectNode'), 'handleSidechainParamChangeForEffect should reference effectNode parameter');
+});
+
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect references sidechainValue parameter', (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('sidechainValue'), 'handleSidechainParamChangeForEffect should reference sidechainValue parameter');
+});
+
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect checks for disposed effectNode', (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'handleSidechainParamChangeForEffect should check effectNode.disposed');
+});
+
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect checks sidechainTrackAssignments', (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('sidechainTrackAssignments'), 'handleSidechainParamChangeForEffect should check sidechainTrackAssignments');
+});
+
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect uses set method on effectNode', (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('.set(') || funcStr.includes('set({'), 'handleSidechainParamChangeForEffect should call effectNode.set');
+});
+
+TestRunner.test('Day 513 - Sidechain - handleSidechainParamChangeForEffect has error handling with try/catch', (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'handleSidechainParamChangeForEffect should have try/catch error handling');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect is a function export', (t) => {
+    t.assertEqual(typeof enableSidechainFromTrackForEffect, 'function', 'enableSidechainFromTrackForEffect should be a function');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect accepts 2 parameters', (t) => {
+    const paramCount = enableSidechainFromTrackForEffect.length;
+    t.assertEqual(paramCount, 2, 'enableSidechainFromTrackForEffect should accept 2 parameters (effectId, trackId)');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect references effectId parameter', (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'enableSidechainFromTrackForEffect should reference effectId parameter');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect references trackId parameter', (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'enableSidechainFromTrackForEffect should reference trackId parameter');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect gets effect node from activeMasterEffectNodes', (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'enableSidechainFromTrackForEffect should get effect node from activeMasterEffectNodes');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect validates effectNode', (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'enableSidechainFromTrackForEffect should validate effectNode.disposed');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect gets track via localAppServices', (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('localAppServices') && funcStr.includes('getTrackById'), 'enableSidechainFromTrackForEffect should get track via localAppServices.getTrackById');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect calls enableSidechainFromTrackIn', (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('enableSidechainFromTrackIn'), 'enableSidechainFromTrackForEffect should call enableSidechainFromTrackIn');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackForEffect returns boolean', (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'enableSidechainFromTrackForEffect should return boolean');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn is a function export', (t) => {
+    t.assertEqual(typeof enableSidechainFromTrackIn, 'function', 'enableSidechainFromTrackIn should be a function');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn is async', (t) => {
+    t.assertTruthy(enableSidechainFromTrackIn.constructor.name === 'AsyncFunction' || enableSidechainFromTrackIn.toString().includes('async'), 'enableSidechainFromTrackIn should be async');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn accepts 2 parameters', (t) => {
+    const paramCount = enableSidechainFromTrackIn.length;
+    t.assertEqual(paramCount, 2, 'enableSidechainFromTrackIn should accept 2 parameters (trackId, compressorNode)');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn references trackId parameter', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'enableSidechainFromTrackIn should reference trackId parameter');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn references compressorNode parameter', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('compressorNode'), 'enableSidechainFromTrackIn should reference compressorNode parameter');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn validates compressorNode', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'enableSidechainFromTrackIn should validate compressorNode.disposed');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn gets track via localAppServices', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('localAppServices') && funcStr.includes('getTrackById'), 'enableSidechainFromTrackIn should get track via localAppServices.getTrackById');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn checks track.inputChannel', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('inputChannel'), 'enableSidechainFromTrackIn should check track.inputChannel');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn calls getSidechainBusInput', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('getSidechainBusInput'), 'enableSidechainFromTrackIn should call getSidechainBusInput');
+});
+
+TestRunner.test('Day 513 - Sidechain - enableSidechainFromTrackIn connects track to sidechainBus', (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('connect(') || funcStr.includes('connect'), 'enableSidechainFromTrackIn should connect track to sidechain bus');
+});
+
+TestRunner.test('Day 513 - Sidechain - disableSidechainBus is a function export', (t) => {
+    t.assertEqual(typeof disableSidechainBus, 'function', 'disableSidechainBus should be a function');
+});
+
+TestRunner.test('Day 513 - Sidechain - disableSidechainBus accepts 0 parameters', (t) => {
+    const paramCount = disableSidechainBus.length;
+    t.assertEqual(paramCount, 0, 'disableSidechainBus should accept 0 parameters');
+});
+
+TestRunner.test('Day 513 - Sidechain - disableSidechainBus calls disableSidechainFromMic', (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('disableSidechainFromMic'), 'disableSidechainBus should call disableSidechainFromMic');
+});
+
+TestRunner.test('Day 513 - Sidechain - disableSidechainBus disposes sidechainBus', (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'disableSidechainBus should dispose sidechainBus');
+});
+
+TestRunner.test('Day 513 - Sidechain - disableSidechainBus sets sidechainBus to null', (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('= null') && funcStr.includes('sidechainBus'), 'disableSidechainBus should set sidechainBus to null');
+});
+
+TestRunner.test('Day 513 - APP_VERSION validation for Day 513', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 513');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 177, 'Minor version should be >= 177 for Day 513');
+    }
+});
