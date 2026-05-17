@@ -5284,7 +5284,6 @@ TestRunner.test('Audio Track UI - APP_VERSION validation for Day 362', (t) => {
 });
 // Day 362: Metronome Audio Functions Tests (2026-04-29)
 import {
-    stopMetronome,
     setMetronomeVolume
 } from './audio.js';
 
