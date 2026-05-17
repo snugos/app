@@ -10469,3 +10469,76 @@ TestRunner.test('Day 513 - APP_VERSION validation for Day 513', (t) => {
         t.assertTruthy(versionParts[1] >= 177, 'Minor version should be >= 177 for Day 513');
     }
 });
+// Day 518: showKeyboardShortcutsHelpWindow Tests
+// ============================================
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow is a function export', (t) => {
+    t.assertEqual(typeof showKeyboardShortcutsHelpWindow, 'function', 'showKeyboardShortcutsHelpWindow should be a function');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow accepts 0 parameters', (t) => {
+    t.assertEqual(showKeyboardShortcutsHelpWindow.length, 0, 'showKeyboardShortcutsHelpWindow should accept 0 parameters');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow references getOpenWindows', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'showKeyboardShortcutsHelpWindow should reference getOpenWindows');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow uses windowId for single-instance window', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('keyboardShortcutsHelp') || funcStr.includes('windowId'), 'showKeyboardShortcutsHelpWindow should use a windowId for single-instance management');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow builds shortcuts HTML content', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('shortcutsHTML') || funcStr.includes('innerHTML') || funcStr.includes('inner = '), 'showKeyboardShortcutsHelpWindow should build HTML content for the shortcuts window');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes Playback Controls section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Playback') || funcStr.includes('Space') || funcStr.includes('Space') || funcStr.includes('Play'), 'showKeyboardShortcutsHelpWindow should include Playback Controls section');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes Edit Operations section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Edit') || funcStr.includes('Undo') || funcStr.includes('Redo') || funcStr.includes('Ctrl+Z'), 'showKeyboardShortcutsHelpWindow should include Edit Operations section');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes Track Controls section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Track') || funcStr.includes('Mute') || funcStr.includes('Solo') || funcStr.includes('Arm'), 'showKeyboardShortcutsHelpWindow should include Track Controls section');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes Piano Keys section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Piano') || funcStr.includes('Octave') || funcStr.includes('A-L') || funcStr.includes('Z') || funcStr.includes('X'), 'showKeyboardShortcutsHelpWindow should include Piano Keys section');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow includes Snap & Quantize section', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('Snap') || funcStr.includes('Quantize') || funcStr.includes('1/16') || funcStr.includes('1/8'), 'showKeyboardShortcutsHelpWindow should include Snap & Quantize section');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow uses createWindow', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'showKeyboardShortcutsHelpWindow should use createWindow to create the modal');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow references KEYBOARD_SHORTCUTS_HELP_WIDTH', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_WIDTH') || funcStr.includes('width'), 'showKeyboardShortcutsHelpWindow should reference width constant');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow references KEYBOARD_SHORTCUTS_HELP_HEIGHT', (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_HEIGHT') || funcStr.includes('height'), 'showKeyboardShortcutsHelpWindow should reference height constant');
+});
+
+TestRunner.test('Day 518 - Keyboard Shortcuts Help - showKeyboardShortcutsHelpWindow APP_VERSION validation', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 518');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 180, 'Minor version should be >= 180 for Day 518');
+    }
+});
