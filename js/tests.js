@@ -10058,6 +10058,11 @@ TestRunner.test('Day 505 - Sequencer Context Menu - Scale Velocities (125%) menu
     t.assertTruthy(funcStr.includes('Scale Velocities (125%)'), 'Context menu should have Scale Velocities (125%) option');
 });
 
+TestRunner.test('Day 505 - Sequencer Context Menu - Scale Velocities (100%) menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Scale Velocities (100%)'), 'Context menu should have Scale Velocities (100%) option');
+});
+
 TestRunner.test('Day 505 - Sequencer Context Menu - Quantize to 1/16 menu item exists', (t) => {
     const funcStr = attachClipEventHandlers.toString();
     t.assertTruthy(funcStr.includes('Quantize to 1/16'), 'Context menu should have Quantize to 1/16 option');
@@ -10066,6 +10071,10 @@ TestRunner.test('Day 505 - Sequencer Context Menu - Quantize to 1/16 menu item e
 TestRunner.test('Day 505 - Sequencer Context Menu - Quantize to 1/8 menu item exists', (t) => {
     const funcStr = attachClipEventHandlers.toString();
     t.assertTruthy(funcStr.includes('Quantize to 1/8'), 'Context menu should have Quantize to 1/8 option');
+});
+TestRunner.test('Day 505 - Sequencer Context Menu - Quantize to 1/4 menu item exists', (t) => {
+    const funcStr = attachClipEventHandlers.toString();
+    t.assertTruthy(funcStr.includes('Quantize to 1/4'), 'Context menu should have Quantize to 1/4 option');
 });
 
 TestRunner.test('Day 505 - Sequencer Context Menu - Reverse Sequence menu item exists', (t) => {

@@ -1,3 +1,19 @@
+#### Day 517: Fix Missing Sequencer Context Menu Tests (2026-05-17)
+- **Bug Fix**: Added 2 missing tests from the Day 505 sequencer context menu test block
+- **Files Modified**:
+  - `js/tests.js`: Added 2 missing tests at lines 10061 and 10075
+  - `js/constants.js`: Bumped APP_VERSION to 2.180.0
+- **Tests Added**:
+  - **Scale Velocities (100%)** menu item exists (between Scale Velocities 75% and Quantize to 1/16): The Day 505 block tested Scale Velocities at 50%, 75%, and 125% but missed the 100% option which is present in ui.js
+  - **Quantize to 1/4** menu item exists (between Quantize to 1/8 and Reverse Sequence): The Day 505 block tested Quantize to 1/16 and 1/8 but missed 1/4 which is also in ui.js
+- **Verification**:
+  - `node --check js/tests.js` passes
+  - `node --check js/constants.js` passes
+  - `node --check js/main.js` passes
+  - Total tests increased from 1929 to 1931
+- **Version**: Bumped to 2.180.0
+
+
 #### Day 516: Fix tests.js Syntax - Duplicate stopMetronome Import (2026-05-17)
 - **Bug Fix**: Removed duplicate `stopMetronome` import from Day 362 block in `js/tests.js`
 - **Files Modified**:
