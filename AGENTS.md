@@ -1,3 +1,18 @@
+#### Day 513: Sidechain Audio Functions Tests (2026-05-17)
+- **Feature**: Added 34 unit tests for Sidechain audio functions to expand test coverage
+- **Files Modified**:
+  - `/js/tests.js`: Added Day 513 test block with 34 tests for Sidechain audio functions
+  - `/js/constants.js`: Bumped APP_VERSION to 2.178.0
+- **Feature Details**:
+  - **handleSidechainParamChangeForEffect** (9 tests): Tests for function export, 3 parameters, references effectId/effectNode/sidechainValue, checks disposed effectNode, checks sidechainTrackAssignments, uses set method on effectNode, has try/catch error handling
+  - **enableSidechainFromTrackForEffect** (10 tests): Tests for function export, 2 parameters, references effectId/trackId, gets effect node from activeMasterEffectNodes, validates effectNode.disposed, gets track via localAppServices.getTrackById, calls enableSidechainFromTrackIn, returns boolean
+  - **enableSidechainFromTrackIn** (9 tests): Tests for function export, async nature, 2 parameters (trackId, compressorNode), validates compressorNode.disposed, gets track via localAppServices, checks track.inputChannel, calls getSidechainBusInput, connects track to sidechainBus
+  - **disableSidechainBus** (4 tests): Tests for function export, 0 parameters, calls disableSidechainFromMic, disposes sidechainBus, sets sidechainBus to null
+  - **APP_VERSION validation** (1 test): Tests validate version is >= 2.177 for Day 513
+- **Version**: Bumped to 2.178.0
+- **Test Count**: Increased from 1895 to 1929
+
+
 #### Day 508: MIDI Import Functions Tests (2026-05-16)
 - **Feature**: Added 74 unit tests for MIDI Import functions and additional MIDI Export coverage
 - **Files Modified**:
