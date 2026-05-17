@@ -1,3 +1,17 @@
+#### Day 518: showKeyboardShortcutsHelpWindow Tests (2026-05-17)
+- **Feature**: Added 14 unit tests for `showKeyboardShortcutsHelpWindow` function to expand test coverage for this window launcher function
+- **Files Modified**:
+  - `js/tests.js`: Added Day 518 test block with 14 tests for showKeyboardShortcutsHelpWindow
+  - `js/constants.js`: Bumped APP_VERSION to 2.181.0
+- **Feature Details**:
+  - **showKeyboardShortcutsHelpWindow** (14 tests): Tests for function export (typeof === 'function'), 0 parameters, getOpenWindows reference, single-instance window management using 'keyboardShortcutsHelp' windowId, HTML content building, all keyboard shortcut sections (Playback Controls, Edit Operations, Track Controls, Piano Keys, Snap & Quantize), createWindow usage, and KEYBOARD_SHORTCUTS_HELP_WIDTH/HEIGHT constant references
+  - Tests verify function references KEYBOARD_SHORTCUTS_HELP_WIDTH and KEYBOARD_SHORTCUTS_HELP_HEIGHT constants
+  - Tests verify function builds shortcuts HTML content with all major shortcut categories
+  - APP_VERSION validation test requires version >= 2.180 for Day 518
+- **Version**: Bumped to 2.181.0
+- **Test Count**: Increased from 1931 to 1945
+
+
 #### Day 517: Fix Missing Sequencer Context Menu Tests (2026-05-17)
 - **Bug Fix**: Added 2 missing tests from the Day 505 sequencer context menu test block
 - **Files Modified**:
