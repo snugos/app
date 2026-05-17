@@ -1,3 +1,20 @@
+#### Day 516: Fix tests.js Syntax - Duplicate stopMetronome Import (2026-05-17)
+- **Bug Fix**: Removed duplicate `stopMetronome` import from Day 362 block in `js/tests.js`
+- **Files Modified**:
+  - `js/tests.js`: Removed duplicate `stopMetronome` from Day 362 import block
+- **Bug Details**:
+  - The Day 362 Metronome Audio Functions Tests block had its own `import { stopMetronome, setMetronomeVolume } from './audio.js';`
+  - `stopMetronome` was already imported at line 165 in the main audio.js import block
+  - This caused `SyntaxError: Identifier 'stopMetronome' has already been declared` when running tests.js
+  - Fixed by removing `stopMetronome` from the Day 362 block, keeping only `setMetronomeVolume`
+- **Verification**:
+  - `node --check js/tests.js` passes
+  - `node --check js/constants.js` passes
+  - `node --check js/main.js` passes
+  - Merged origin/main to resolve branch divergence
+  - Both branches pushed successfully
+
+
 #### Day 513: Sidechain Audio Functions Tests (2026-05-17)
 - **Feature**: Added 34 unit tests for Sidechain audio functions to expand test coverage
 - **Files Modified**:
