@@ -1,3 +1,20 @@
+#### Day 520: Additional Window Function Tests (2026-05-17)
+- **Feature**: Added 53 unit tests for openTrackSequencerWindow, openTimelineWindow, openTrackInspectorWindow, openMasterEffectsRackWindow, openTrackEffectsRackWindow, and openProjectNotesWindow functions to expand test coverage for additional window functions
+- **Files Modified**:
+  - `js/tests.js`: Added Day 520 test block with 53 tests for Additional Window Functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.183.0
+- **Feature Details**:
+  - **openTrackSequencerWindow** (9 tests): Tests for function export, 1-3 parameter count, getOpenWindows for single-instance, createWindow usage, getTrackById reference, savedState handling, track type checks, forceRedraw parameter, setActiveSequencerTrackId call
+  - **openTimelineWindow** (10 tests): Tests for function export, 0-1 parameter count, createWindow usage, getWindowByIdState for single-instance, timelineContent/innerHTML, zoom controls, ruler, tracks area, renderTimeline reference, savedState handling
+  - **openTrackInspectorWindow** (9 tests): Tests for function export, 1-2 parameter count, getOpenWindows for single-instance, createWindow usage, getTrackById reference, savedState handling, buildTrackInspectorContentDOM reference, initializeCommonInspectorControls reference, track.type for DrumSampler height
+  - **openMasterEffectsRackWindow** (8 tests): Tests for function export, 0-1 parameter count, getOpenWindows for single-instance, createWindow usage, "masterEffectsRack" windowId, buildModularEffectsRackDOM reference, renderEffectsList reference, savedState handling
+  - **openTrackEffectsRackWindow** (7 tests): Tests for function export, 1-2 parameter count, getOpenWindows for single-instance, createWindow usage, getTrackById reference, buildModularEffectsRackDOM reference, savedState handling
+  - **openProjectNotesWindow** (9 tests): Tests for function export, 0-1 parameter count, getOpenWindows for single-instance, createWindow usage, "projectNotes" windowId, getProjectNotesState reference, setProjectNotesState reference, textarea element, savedState handling
+  - **APP_VERSION validation** (1 test): Tests validate version >= 2.181 for Day 520
+- **Version**: Bumped to 2.183.0
+- **Test Count**: Increased from 1976 to 2029
+
+
 #### Day 519: Core Window Function Tests (2026-05-17)
 - **Feature**: Added 31 unit tests for openMixerWindow, openSoundBrowserWindow, and openGlobalControlsWindow functions to expand test coverage for core window functions with savedState support
 - **Files Modified**:
