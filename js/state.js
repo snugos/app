@@ -31,6 +31,13 @@ export function setProjectNotesState(notes) {
     projectNotesState = nextNotes;
 }
 
+// --- Selected Sound for Preview State ---
+let selectedSoundForPreviewGlobal = null;
+export function getSelectedSoundForPreviewState() { return selectedSoundForPreviewGlobal; }
+export function setSelectedSoundForPreviewState(data) {
+    selectedSoundForPreviewGlobal = data;
+}
+
 // --- Centralized State Variables ---
 let tracks = [];
 let trackIdCounter = 0;

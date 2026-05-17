@@ -96,6 +96,8 @@ import {
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
     setPlaybackModeState,
+    // Selected Sound for Preview
+    getSelectedSoundForPreviewState, setSelectedSoundForPreviewState,
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -584,6 +586,10 @@ const appServices = {
     // Audio loading functions - exposed for UI and other modules
     loadSampleFile: loadSampleFile,
     loadSoundFromBrowserToTarget: loadSoundFromBrowserToTarget,
+
+    // Selected Sound for Preview - central state-backed getter/setter
+    getSelectedSoundForPreview: getSelectedSoundForPreviewState,
+    setSelectedSoundForPreview: setSelectedSoundForPreviewState,
 
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,

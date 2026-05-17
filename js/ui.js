@@ -55,16 +55,8 @@ export function toggleSequencerViewMode() {
 export function initializeUIModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
 
-    if (!localAppServices.getSelectedSoundForPreview) {
-        console.log('[UI Init] getSelectedSoundForPreview service not found in appServices, wiring locally.');
-    }
-    if (!localAppServices.setSelectedSoundForPreview) {
-        console.log('[UI Init] setSelectedSoundForPreview service not found in appServices, wiring locally.');
-        localAppServices.setSelectedSoundForPreview = (data) => {
-            console.log('[UI setSelectedSoundForPreview] Setting selected sound data:', JSON.stringify(data));
-            selectedSoundForPreviewData = data;
-        };
-    }
+    // Selected sound for preview now uses central state-backed appServices
+    // No local fallback needed - appServices provides getSelectedSoundForPreview and setSelectedSoundForPreview
 
     if (!localAppServices.effectsRegistryAccess) {
         console.warn("[UI Module] effectsRegistryAccess not found in appServices. Effect-related UI might be limited.");
