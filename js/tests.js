@@ -10702,3 +10702,276 @@ TestRunner.test('Day 519 - APP_VERSION validation for Day 519', (t) => {
         t.assertTruthy(versionParts[1] >= 180, 'Minor version should be >= 180 for Day 519');
     }
 });
+// =============================================================================
+// Day 520: Additional Window Function Tests
+// =============================================================================
+
+// --- openTrackSequencerWindow tests ---
+TestRunner.test('Day 520 - openTrackSequencerWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackSequencerWindow, 'function', 'openTrackSequencerWindow should be a function');
+});
+
+TestRunner.test('Day 520 - openTrackSequencerWindow accepts 1-3 parameters', (t) => {
+    const count = openTrackSequencerWindow.length;
+    t.assertTruthy(count >= 1 && count <= 3, 'openTrackSequencerWindow should accept 1-3 parameters (trackId, forceRedraw, savedState)');
+});
+
+TestRunner.test('Day 520 - openTrackSequencerWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openTrackSequencerWindow should check existing windows for single-instance behavior');
+});
+
+TestRunner.test('Day 520 - openTrackSequencerWindow uses createWindow to create sequencer window', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openTrackSequencerWindow should use createWindow or SnugWindow');
+});
+
+TestRunner.test('Day 520 - openTrackSequencerWindow references localAppServices.getTrackById', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackSequencerWindow should call getTrackById to find track');
+});
+
+TestRunner.test('Day 520 - openTrackSequencerWindow handles savedState for window restoration', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openTrackSequencerWindow should handle savedState for window restoration');
+});
+
+TestRunner.test('Day 520 - openTrackSequencerWindow checks track type is not Audio', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('Audio') || funcStr.includes('track.type'), 'openTrackSequencerWindow should check track type');
+});
+
+TestRunner.test('Day 520 - openTrackSequencerWindow references forceRedraw parameter', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('forceRedraw'), 'openTrackSequencerWindow should handle forceRedraw parameter');
+});
+
+TestRunner.test('Day 520 - openTrackSequencerWindow calls setActiveSequencerTrackId', (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('setActiveSequencerTrackId'), 'openTrackSequencerWindow should call setActiveSequencerTrackId');
+});
+
+// --- openTimelineWindow tests ---
+TestRunner.test('Day 520 - openTimelineWindow is a function export', (t) => {
+    t.assertEqual(typeof openTimelineWindow, 'function', 'openTimelineWindow should be a function');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openTimelineWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openTimelineWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow uses createWindow to create timeline window', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTimelineWindow should use createWindow');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow uses getWindowByIdState for single-instance', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('getWindowByIdState') || funcStr.includes('getOpenWindows'), 'openTimelineWindow should check for existing window');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow references timelineContent or innerHTML', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('timelineContent') || funcStr.includes('innerHTML') || funcStr.includes('content'), 'openTimelineWindow should build content');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow includes timeline-zoom-controls', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('zoom') || funcStr.includes('timeline-zoom'), 'openTimelineWindow should have zoom controls');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow includes timeline-ruler', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('ruler') || funcStr.includes('timeline-ruler'), 'openTimelineWindow should have ruler');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow includes timeline-tracks-area', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('tracks-area') || funcStr.includes('timeline-tracks'), 'openTimelineWindow should have tracks area');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow references renderTimeline', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('renderTimeline'), 'openTimelineWindow should call renderTimeline');
+});
+
+TestRunner.test('Day 520 - openTimelineWindow handles savedState for window restoration', (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openTimelineWindow should handle savedState');
+});
+
+// --- openTrackInspectorWindow tests ---
+TestRunner.test('Day 520 - openTrackInspectorWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackInspectorWindow, 'function', 'openTrackInspectorWindow should be a function');
+});
+
+TestRunner.test('Day 520 - openTrackInspectorWindow accepts 1-2 parameters', (t) => {
+    const count = openTrackInspectorWindow.length;
+    t.assertTruthy(count >= 1 && count <= 2, 'openTrackInspectorWindow should accept 1-2 parameters (trackId, savedState)');
+});
+
+TestRunner.test('Day 520 - openTrackInspectorWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openTrackInspectorWindow should check existing windows');
+});
+
+TestRunner.test('Day 520 - openTrackInspectorWindow uses createWindow to create inspector window', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow') || funcStr.includes('SnugWindow'), 'openTrackInspectorWindow should use createWindow');
+});
+
+TestRunner.test('Day 520 - openTrackInspectorWindow references localAppServices.getTrackById', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackInspectorWindow should call getTrackById');
+});
+
+TestRunner.test('Day 520 - openTrackInspectorWindow handles savedState for window restoration', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openTrackInspectorWindow should handle savedState');
+});
+
+TestRunner.test('Day 520 - openTrackInspectorWindow references buildTrackInspectorContentDOM', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('buildTrackInspectorContentDOM'), 'openTrackInspectorWindow should call buildTrackInspectorContentDOM');
+});
+
+TestRunner.test('Day 520 - openTrackInspectorWindow references initializeCommonInspectorControls', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('initializeCommonInspectorControls') || funcStr.includes('initializeTypeSpecificInspectorControls'), 'openTrackInspectorWindow should initialize controls');
+});
+
+TestRunner.test('Day 520 - openTrackInspectorWindow references track.type for DrumSampler height', (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler') || funcStr.includes('track.type'), 'openTrackInspectorWindow should check track type');
+});
+
+// --- openMasterEffectsRackWindow tests ---
+TestRunner.test('Day 520 - openMasterEffectsRackWindow is a function export', (t) => {
+    t.assertEqual(typeof openMasterEffectsRackWindow, 'function', 'openMasterEffectsRackWindow should be a function');
+});
+
+TestRunner.test('Day 520 - openMasterEffectsRackWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openMasterEffectsRackWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openMasterEffectsRackWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 520 - openMasterEffectsRackWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openMasterEffectsRackWindow should check existing windows');
+});
+
+TestRunner.test('Day 520 - openMasterEffectsRackWindow uses createWindow to create effects rack', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMasterEffectsRackWindow should use createWindow');
+});
+
+TestRunner.test('Day 520 - openMasterEffectsRackWindow uses windowId "masterEffectsRack"', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('"masterEffectsRack"') || funcStr.includes("'masterEffectsRack'"), 'openMasterEffectsRackWindow should use masterEffectsRack windowId');
+});
+
+TestRunner.test('Day 520 - openMasterEffectsRackWindow references buildModularEffectsRackDOM', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('buildModularEffectsRackDOM'), 'openMasterEffectsRackWindow should call buildModularEffectsRackDOM');
+});
+
+TestRunner.test('Day 520 - openMasterEffectsRackWindow references renderEffectsList', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('renderEffectsList'), 'openMasterEffectsRackWindow should call renderEffectsList');
+});
+
+TestRunner.test('Day 520 - openMasterEffectsRackWindow handles savedState for window restoration', (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openMasterEffectsRackWindow should handle savedState');
+});
+
+// --- openTrackEffectsRackWindow tests ---
+TestRunner.test('Day 520 - openTrackEffectsRackWindow is a function export', (t) => {
+    t.assertEqual(typeof openTrackEffectsRackWindow, 'function', 'openTrackEffectsRackWindow should be a function');
+});
+
+TestRunner.test('Day 520 - openTrackEffectsRackWindow accepts 1-2 parameters', (t) => {
+    const count = openTrackEffectsRackWindow.length;
+    t.assertTruthy(count >= 1 && count <= 2, 'openTrackEffectsRackWindow should accept 1-2 parameters (trackId, savedState)');
+});
+
+TestRunner.test('Day 520 - openTrackEffectsRackWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openTrackEffectsRackWindow should check existing windows');
+});
+
+TestRunner.test('Day 520 - openTrackEffectsRackWindow uses createWindow to create effects rack', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackEffectsRackWindow should use createWindow');
+});
+
+TestRunner.test('Day 520 - openTrackEffectsRackWindow references localAppServices.getTrackById', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackEffectsRackWindow should call getTrackById');
+});
+
+TestRunner.test('Day 520 - openTrackEffectsRackWindow references buildModularEffectsRackDOM', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('buildModularEffectsRackDOM'), 'openTrackEffectsRackWindow should call buildModularEffectsRackDOM');
+});
+
+TestRunner.test('Day 520 - openTrackEffectsRackWindow handles savedState for window restoration', (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openTrackEffectsRackWindow should handle savedState');
+});
+
+// --- openProjectNotesWindow tests ---
+TestRunner.test('Day 520 - openProjectNotesWindow is a function export', (t) => {
+    t.assertEqual(typeof openProjectNotesWindow, 'function', 'openProjectNotesWindow should be a function');
+});
+
+TestRunner.test('Day 520 - openProjectNotesWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openProjectNotesWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openProjectNotesWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Day 520 - openProjectNotesWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openProjectNotesWindow should check existing windows');
+});
+
+TestRunner.test('Day 520 - openProjectNotesWindow uses createWindow to create notes window', (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openProjectNotesWindow should use createWindow');
+});
+
+TestRunner.test('Day 520 - openProjectNotesWindow uses windowId "projectNotes"', (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('"projectNotes"') || funcStr.includes("'projectNotes'"), 'openProjectNotesWindow should use projectNotes windowId');
+});
+
+TestRunner.test('Day 520 - openProjectNotesWindow references getProjectNotesState', (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('getProjectNotesState'), 'openProjectNotesWindow should call getProjectNotesState');
+});
+
+TestRunner.test('Day 520 - openProjectNotesWindow references setProjectNotesState', (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('setProjectNotesState'), 'openProjectNotesWindow should call setProjectNotesState');
+});
+
+TestRunner.test('Day 520 - openProjectNotesWindow references textarea element', (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('textarea') || funcStr.includes('projectNotesTextarea'), 'openProjectNotesWindow should have textarea');
+});
+
+TestRunner.test('Day 520 - openProjectNotesWindow handles savedState for window restoration', (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openProjectNotesWindow should handle savedState');
+});
+
+// --- APP_VERSION validation for Day 520 ---
+TestRunner.test('Day 520 - APP_VERSION validation for Day 520', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 520');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 181, 'Minor version should be >= 181 for Day 520');
+    }
+});
