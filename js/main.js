@@ -1116,6 +1116,8 @@ async function initializeSnugOS() {
                 appServices.effectsRegistryAccess.getEffectParamDefinitions = effectsRegistry.getEffectParamDefinitions || (() => []);
                 appServices.effectsRegistryAccess.getEffectDefaultParams = effectsRegistry.getEffectDefaultParams || (() => ({}));
                 appServices.effectsRegistryAccess.synthEngineControlDefinitions = effectsRegistry.synthEngineControlDefinitions || {};
+                appServices.effectsRegistryAccess.getEffectBypassState = effectsRegistry.getEffectBypassState || null;
+                appServices.effectsRegistryAccess.setEffectBypassState = effectsRegistry.setEffectBypassState || null;
                 console.log("[Main initializeSnugOS] Effects registry dynamically imported and assigned.");
             } else {
                 console.error("[Main initializeSnugOS] appServices.effectsRegistryAccess is not defined before assigning registry.");
