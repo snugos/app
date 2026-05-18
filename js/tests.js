@@ -212,6 +212,10 @@ import {
     openTrackGroupsWindow,
     openMidiCCMappingsWindow,
     openScaleModeWindow,
+    renderSoundBrowserDirectoryFiltered,
+    renderSoundBrowserFavorites,
+    renderSoundBrowserRecent,
+    toggleSequencerViewMode,
 } from './ui.js';
 
 import {
@@ -10965,6 +10969,268 @@ TestRunner.test('Day 520 - openProjectNotesWindow handles savedState for window 
     const funcStr = openProjectNotesWindow.toString();
     t.assertTruthy(funcStr.includes('savedState'), 'openProjectNotesWindow should handle savedState');
 });
+
+
+// ============================================================================
+// Day 521: Track State Management & Render Functions Tests
+// ============================================================================
+
+// --- Track State Management Tests ---
+
+TestRunner.test('Day 521 - Track State - addTrackToStateInternal is a function export', (t) => {
+    t.assertEqual(typeof addTrackToStateInternal, 'function', 'addTrackToStateInternal should be a function');
+});
+
+TestRunner.test('Day 521 - Track State - addTrackToStateInternal accepts 2-3 parameters', (t) => {
+    const paramCount = addTrackToStateInternal.length;
+    t.assertEqual(paramCount >= 2 && paramCount <= 3, true, 'addTrackToStateInternal should accept 2-3 parameters');
+});
+
+TestRunner.test('Day 521 - Track State - addTrackToStateInternal is async', (t) => {
+    t.assertEqual(addTrackToStateInternal.constructor.name, 'AsyncFunction', 'addTrackToStateInternal should be async');
+});
+
+TestRunner.test('Day 521 - Track State - addTrackToStateInternal references type parameter', (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('type'), 'addTrackToStateInternal should reference type parameter');
+});
+
+TestRunner.test('Day 521 - Track State - addTrackToStateInternal references initialData parameter', (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('initialData'), 'addTrackToStateInternal should reference initialData parameter');
+});
+
+TestRunner.test('Day 521 - Track State - addTrackToStateInternal creates Track instance', (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('new Track'), 'addTrackToStateInternal should create a new Track instance');
+});
+
+TestRunner.test('Day 521 - Track State - addTrackToStateInternal calls tracks.push', (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('tracks.push'), 'addTrackToStateInternal should push track to tracks array');
+});
+
+TestRunner.test('Day 521 - Track State - addTrackToStateInternal calls captureStateForUndo for user actions', (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('captureStateForUndoInternal'), 'addTrackToStateInternal should capture undo state');
+});
+
+TestRunner.test('Day 521 - Track State - removeTrackFromStateInternal is a function export', (t) => {
+    t.assertEqual(typeof removeTrackFromStateInternal, 'function', 'removeTrackFromStateInternal should be a function');
+});
+
+TestRunner.test('Day 521 - Track State - removeTrackFromStateInternal accepts 1 parameter', (t) => {
+    t.assertEqual(removeTrackFromStateInternal.length, 1, 'removeTrackFromStateInternal should accept 1 parameter');
+});
+
+TestRunner.test('Day 521 - Track State - removeTrackFromStateInternal references trackId parameter', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'removeTrackFromStateInternal should reference trackId parameter');
+});
+
+TestRunner.test('Day 521 - Track State - removeTrackFromStateInternal finds track by id', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('find'), 'removeTrackFromStateInternal should find track by id');
+});
+
+TestRunner.test('Day 521 - Track State - removeTrackFromStateInternal calls captureStateForUndo', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('captureStateForUndoInternal'), 'removeTrackFromStateInternal should capture undo state');
+});
+
+TestRunner.test('Day 521 - Track State - removeTrackFromStateInternal calls track.dispose', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'removeTrackFromStateInternal should call track.dispose');
+});
+
+TestRunner.test('Day 521 - Track State - removeTrackFromStateInternal uses tracks.splice', (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeTrackFromStateInternal should use splice to remove track');
+});
+
+TestRunner.test('Day 521 - Track State - renameTrackInState is a function export', (t) => {
+    t.assertEqual(typeof renameTrackInState, 'function', 'renameTrackInState should be a function');
+});
+
+TestRunner.test('Day 521 - Track State - renameTrackInState accepts 2 parameters', (t) => {
+    t.assertEqual(renameTrackInState.length, 2, 'renameTrackInState should accept 2 parameters');
+});
+
+TestRunner.test('Day 521 - Track State - renameTrackInState references trackId parameter', (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'renameTrackInState should reference trackId parameter');
+});
+
+TestRunner.test('Day 521 - Track State - renameTrackInState references newName parameter', (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('newName'), 'renameTrackInState should reference newName parameter');
+});
+
+TestRunner.test('Day 521 - Track State - renameTrackInState finds track by id', (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('find'), 'renameTrackInState should find track by id');
+});
+
+TestRunner.test('Day 521 - Track State - renameTrackInState validates name is not empty', (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('trim'), 'renameTrackInState should validate name is not empty');
+});
+
+// --- UI Render Function Tests ---
+
+TestRunner.test('Day 521 - UI Render - renderMixer is a function export', (t) => {
+    t.assertEqual(typeof renderMixer, 'function', 'renderMixer should be a function');
+});
+
+TestRunner.test('Day 521 - UI Render - renderMixer accepts 1 parameter', (t) => {
+    t.assertEqual(renderMixer.length, 1, 'renderMixer should accept 1 parameter');
+});
+
+TestRunner.test('Day 521 - UI Render - renderMixer references container parameter', (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('container'), 'renderMixer should reference container parameter');
+});
+
+TestRunner.test('Day 521 - UI Render - renderMixer creates track elements', (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('trackDiv') || funcStr.includes('trackElement') || funcStr.includes('createElement'), 'renderMixer should create track elements');
+});
+
+TestRunner.test('Day 521 - UI Render - renderMixer references getTracks or getTracksState', (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'renderMixer should call getTracks to get tracks');
+});
+
+TestRunner.test('Day 521 - UI Render - renderMixer adds event listeners for track controls', (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('addEventListener'), 'renderMixer should add event listeners');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserFavorites is a function export', (t) => {
+    t.assertEqual(typeof renderSoundBrowserFavorites, 'function', 'renderSoundBrowserFavorites should be a function');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserFavorites accepts 2 parameters', (t) => {
+    const paramCount = renderSoundBrowserFavorites.length;
+    t.assertEqual(paramCount === 2, true, 'renderSoundBrowserFavorites should accept 2 parameters');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserFavorites references listDiv parameter', (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('listDiv'), 'renderSoundBrowserFavorites should reference listDiv parameter');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserFavorites calls getFavoriteSounds', (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('getFavoriteSounds'), 'renderSoundBrowserFavorites should call getFavoriteSounds');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserFavorites handles empty favorites', (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('length === 0') || funcStr.includes('favorites.length'), 'renderSoundBrowserFavorites should handle empty favorites');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserRecent is a function export', (t) => {
+    t.assertEqual(typeof renderSoundBrowserRecent, 'function', 'renderSoundBrowserRecent should be a function');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserRecent accepts 2 parameters', (t) => {
+    const paramCount = renderSoundBrowserRecent.length;
+    t.assertEqual(paramCount === 2, true, 'renderSoundBrowserRecent should accept 2 parameters');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserRecent references listDiv parameter', (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('listDiv'), 'renderSoundBrowserRecent should reference listDiv parameter');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserRecent calls getRecentlyPlayedSounds', (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('getRecentlyPlayedSounds'), 'renderSoundBrowserRecent should call getRecentlyPlayedSounds');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserDirectoryFiltered is a function export', (t) => {
+    t.assertEqual(typeof renderSoundBrowserDirectoryFiltered, 'function', 'renderSoundBrowserDirectoryFiltered should be a function');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserDirectoryFiltered accepts 2-3 parameters', (t) => {
+    const paramCount = renderSoundBrowserDirectoryFiltered.length;
+    t.assertTruthy(paramCount >= 2 && paramCount <= 3, 'renderSoundBrowserDirectoryFiltered should accept 2-3 parameters');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserDirectoryFiltered references pathArray parameter', (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('pathArray'), 'renderSoundBrowserDirectoryFiltered should reference pathArray parameter');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserDirectoryFiltered references treeNode parameter', (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('treeNode'), 'renderSoundBrowserDirectoryFiltered should reference treeNode parameter');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserDirectoryFiltered handles searchQuery filtering', (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('searchQuery') || funcStr.includes('filter'), 'renderSoundBrowserDirectoryFiltered should handle search filtering');
+});
+
+TestRunner.test('Day 521 - UI Render - renderSoundBrowserDirectoryFiltered renders items with click handlers', (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('addEventListener'), 'renderSoundBrowserDirectoryFiltered should add click handlers');
+});
+
+TestRunner.test('Day 521 - UI Render - toggleSequencerViewMode is a function export', (t) => {
+    t.assertEqual(typeof toggleSequencerViewMode, 'function', 'toggleSequencerViewMode should be a function');
+});
+
+TestRunner.test('Day 521 - UI Render - toggleSequencerViewMode accepts 0 parameters', (t) => {
+    t.assertEqual(toggleSequencerViewMode.length, 0, 'toggleSequencerViewMode should accept 0 parameters');
+});
+
+TestRunner.test('Day 521 - UI Render - toggleSequencerViewMode toggles between step and piano view', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('step') || funcStr.includes('piano'), 'toggleSequencerViewMode should toggle view mode');
+});
+
+TestRunner.test('Day 521 - UI Render - toggleSequencerViewMode references sequencerViewMode state', (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('sequencerViewMode'), 'toggleSequencerViewMode should reference sequencerViewMode state');
+});
+
+TestRunner.test('Day 521 - UI Render - openMixerWindow uses createWindow to create mixer', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMixerWindow should use createWindow');
+});
+
+TestRunner.test('Day 521 - UI Render - openMixerWindow calls renderMixer', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('renderMixer'), 'openMixerWindow should call renderMixer');
+});
+
+TestRunner.test('Day 521 - UI Render - openMixerWindow uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows') || funcStr.includes('openWindows'), 'openMixerWindow should check for existing windows');
+});
+
+TestRunner.test('Day 521 - UI Render - openMixerWindow uses "mixer" windowId', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('"mixer"') || funcStr.includes("'mixer'"), 'openMixerWindow should use mixer windowId');
+});
+
+TestRunner.test('Day 521 - UI Render - openMixerWindow handles savedState for window restoration', (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState'), 'openMixerWindow should handle savedState');
+});
+
+// --- APP_VERSION validation for Day 521 ---
+TestRunner.test('Day 521 - APP_VERSION validation for Day 521', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 521');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 183, 'Minor version should be >= 183 for Day 521');
+    }
+});
+
 
 // --- APP_VERSION validation for Day 520 ---
 TestRunner.test('Day 520 - APP_VERSION validation for Day 520', (t) => {

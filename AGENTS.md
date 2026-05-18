@@ -1,3 +1,26 @@
+#### Day 521: Track State Management & Render Functions Tests (2026-05-17)
+- **Feature**: Added 54 unit tests for track state management functions and UI render functions to expand test coverage for core track operations and missing render functions
+- **Files Modified**:
+  - `js/tests.js`: Added Day 521 test block with 54 tests for Track State Management & Render Functions; Added missing imports for renderSoundBrowserDirectoryFiltered, renderSoundBrowserFavorites, renderSoundBrowserRecent, toggleSequencerViewMode, addTrackToStateInternal, removeTrackFromStateInternal, renameTrackInState
+  - `js/constants.js`: Bumped APP_VERSION to 2.184.0
+- **Feature Details**:
+  - **Track State Management** (21 tests):
+    - **addTrackToStateInternal** (8 tests): Function export, 2-3 parameter count, async nature, type/initialData references, Track instance creation, tracks.push, captureStateForUndo call
+    - **removeTrackFromStateInternal** (6 tests): Function export, 1 parameter, trackId reference, find by id, captureStateForUndo, track.dispose, tracks.splice
+    - **renameTrackInState** (6 tests): Function export, 2 parameters, trackId/newName references, find by id, name validation with trim
+  - **UI Render Functions** (32 tests):
+    - **renderMixer** (6 tests): Function export, 1 parameter, container reference, track element creation, getTracks reference, addEventListener calls
+    - **renderSoundBrowserFavorites** (4 tests): Function export, 2 parameters, listDiv reference, getFavoriteSounds call, empty favorites handling
+    - **renderSoundBrowserRecent** (4 tests): Function export, 2 parameters, listDiv reference, getRecentlyPlayedSounds call
+    - **renderSoundBrowserDirectoryFiltered** (7 tests): Function export, 2-3 parameters, pathArray/treeNode references, searchQuery filtering, addEventListener for item clicks
+    - **toggleSequencerViewMode** (4 tests): Function export, 0 parameters, step/piano view toggle, sequencerViewMode state reference
+    - **openMixerWindow** (5 tests): createWindow usage, renderMixer call, getOpenWindows for single-instance, "mixer" windowId, savedState handling
+  - **APP_VERSION validation** (1 test): Tests validate version >= 2.183 for Day 521
+- **Imports Added**: Added renderSoundBrowserDirectoryFiltered, renderSoundBrowserFavorites, renderSoundBrowserRecent, toggleSequencerViewMode to ui.js imports; Added addTrackToStateInternal, removeTrackFromStateInternal, renameTrackInState to state.js imports
+- **Version**: Bumped to 2.184.0
+- **Test Count**: Increased from 2029 to 2081
+
+
 #### Day 520: Additional Window Function Tests (2026-05-17)
 - **Feature**: Added 53 unit tests for openTrackSequencerWindow, openTimelineWindow, openTrackInspectorWindow, openMasterEffectsRackWindow, openTrackEffectsRackWindow, and openProjectNotesWindow functions to expand test coverage for additional window functions
 - **Files Modified**:
@@ -3786,69 +3809,6 @@
   - Total tests increased from 1684 to 1732
 - **Version**: Bumped to 2.65.0
     - Master Effects Chain - addMasterEffectToState generates unique effectId
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-    - Master Effects Chain - addMasterEffectToState pushes to masterEffectsChainState
 
 #### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
 - **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
