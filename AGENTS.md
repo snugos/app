@@ -1,3 +1,24 @@
+#### Day 522: Sequence Editing Methods Tests (2026-05-18)
+- **Feature**: Added 68 unit tests for Track.prototype sequence editing methods to expand test coverage for core sequence manipulation functions
+- **Files Modified**:
+  - `js/tests.js`: Added Day 522 test block with 68 tests for Sequence Editing Methods; Tests inserted after Day 521 APP_VERSION validation block
+  - `js/constants.js`: Bumped APP_VERSION to 2.185.0
+- **Feature Details**:
+  - **reverseSequence** (7 tests): Function export, 0 parameters, activeSeq/totalSteps references, column mirroring using `totalSteps - 1 - col`, row.length=0 + row.push pattern, _captureUndoState call, reversedCount return
+  - **humanizeVelocity** (5 tests): Function export, 1 parameter (amount), Audio track returns 0, uses Math.random for velocity variation, clamps to 0.05-1.0 range using Math.max/Math.min, _captureUndoState call, returns humanizedCount
+  - **scaleVelocities** (5 tests): Function export, 1 parameter (factor), velocity clamping to 0.05-1.0, _captureUndoState call, returns scaledCount
+  - **createNewSequence** (8 tests): Function export, 3 parameters (name/initialLengthSteps/skipUndo), handles Audio track type (returns null), uses Constants.defaultStepsPerBar, uses Math.max for STEPS_PER_BAR minimum, pushes to this.sequences, sets this.activeSequenceId, calls recreateToneSequence, calls _captureUndoState when skipUndo is false
+  - **deleteSequence** (6 tests): Function export, 1 parameter (sequenceId), prevents deleting last sequence, finds sequence by id using findIndex/find, calls _captureUndoState, splices from this.sequences, calls recreateToneSequence
+  - **duplicateSequence** (5 tests): Function export, 1 parameter (sequenceId), returns null for Audio tracks, creates deep copy using JSON.parse/stringify, pushes to this.sequences, calls _captureUndoState
+  - **renameSequence** (5 tests): Function export, 2 parameters (sequenceId, newName), validates newName with trim(), finds sequence by id, calls _captureUndoState, returns early if name unchanged
+  - **setActiveSequence** (5 tests): Function export, 1 parameter (sequenceId), finds sequence by id, calls _captureUndoState, sets this.activeSequenceId, calls recreateToneSequence
+  - **doubleSequence** (5 tests): Function export, 0 parameters, checks MAX_BARS limit, calls _captureUndoState, doubles activeSeq.length, calls recreateToneSequence
+  - **halveSequence** (5 tests): Function export, 0 parameters, validates minimum STEPS_PER_BAR, calls _captureUndoState, halves activeSeq.data, calls recreateToneSequence
+  - **APP_VERSION validation** (1 test): Tests validate version >= 2.184 for Day 522
+- **Version**: Bumped to 2.185.0
+- **Test Count**: Increased from 2081 to 2149
+
+
 #### Day 521: Track State Management & Render Functions Tests (2026-05-17)
 - **Feature**: Added 54 unit tests for track state management functions and UI render functions to expand test coverage for core track operations and missing render functions
 - **Files Modified**:
