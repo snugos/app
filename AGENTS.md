@@ -1,3 +1,16 @@
+#### Day 523: Scale Mode & MIDI CC Window Function Tests (2026-05-18)
+- **Feature**: Added 21 unit tests for `openScaleModeWindow` and `openMidiCCMappingsWindow` functions to fill the testing gap identified in Day 506 where these functions were imported but never tested
+- **Files Modified**:
+  - `js/tests.js`: Added Day 523 test block with 21 tests for Scale Mode and MIDI CC Window functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.186.0
+- **Feature Details**:
+  - **openScaleModeWindow** (13 tests): Function export, 0-1 parameter count, createWindow usage, getOpenWindows single-instance management, localAppServices references, getScaleModeEnabled/setScaleModeEnabled references, SCALE_ROOTS/SCALES Constants references, setScaleModeScale/setScaleModeRoot/setScaleModeLock references
+  - **openMidiCCMappingsWindow** (7 tests): Function export, 0-1 parameter count, createWindow usage, getOpenWindows single-instance management, localAppServices references, getMidiCCMappings reference, midiMappingsList container reference
+  - **Bug Fix**: Removed orphaned `if (versionParts[0] === 2)` block at end of tests.js that was not wrapped in a `TestRunner.test` call (belonged to a missing Day 521 test block)
+- **Version**: Bumped to 2.186.0
+- **Test Count**: Increased from 2149 to 2170
+
+
 #### Day 522: Sequence Editing Methods Tests (2026-05-18)
 - **Feature**: Added 68 unit tests for Track.prototype sequence editing methods to expand test coverage for core sequence manipulation functions
 - **Files Modified**:
