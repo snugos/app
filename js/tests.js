@@ -11226,6 +11226,329 @@ TestRunner.test('Day 521 - APP_VERSION validation for Day 521', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
     t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 521');
+// Day 522: Sequence Editing Methods Tests
+// Tests for Track.prototype sequence editing methods: reverseSequence, humanizeVelocity, scaleVelocities, createNewSequence, deleteSequence, duplicateSequence, renameSequence, setActiveSequence, doubleSequence, halveSequence
+
+TestRunner.test('Day 522 - Sequence Methods - Track.reverseSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.reverseSequence, 'function', 'reverseSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - reverseSequence accepts 0 parameters', (t) => {
+    t.assertEqual(Track.prototype.reverseSequence.length, 0, 'reverseSequence should accept 0 parameters');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - reverseSequence references activeSeq and totalSteps', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    t.assertTruthy(funcStr.includes('activeSeq') && funcStr.includes('totalSteps'), 'reverseSequence should reference activeSeq and totalSteps');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - reverseSequence mirrors columns correctly', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    t.assertTruthy(funcStr.includes('totalSteps - 1 - col') || funcStr.includes('totalSteps-1-col'), 'reverseSequence should mirror columns using totalSteps - 1 - col');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - reverseSequence handles row push', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    t.assertTruthy(funcStr.includes('row.length = 0') && funcStr.includes('row.push'), 'reverseSequence should reset row.length to 0 and push mirrored steps');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - reverseSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'reverseSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - reverseSequence returns reversedCount', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    t.assertTruthy(funcStr.includes('reversedCount'), 'reverseSequence should return reversedCount');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.humanizeVelocity is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.humanizeVelocity, 'function', 'humanizeVelocity should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - humanizeVelocity accepts 0-1 parameters', (t) => {
+    t.assertEqual(Track.prototype.humanizeVelocity.length, 1, 'humanizeVelocity should accept 1 parameter (with default)');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - humanizeVelocity references amount parameter', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('amount'), 'humanizeVelocity should reference amount parameter');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - humanizeVelocity returns 0 for Audio tracks', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") && funcStr.includes('return 0'), 'humanizeVelocity should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - humanizeVelocity uses Math.random for variation', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.random'), 'humanizeVelocity should use Math.random for velocity variation');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - humanizeVelocity clamps velocities to valid range', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'humanizeVelocity should clamp velocities to 0.05-1.0 range');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - humanizeVelocity calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'humanizeVelocity should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - humanizeVelocity returns humanizedCount', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('humanizedCount'), 'humanizeVelocity should return humanizedCount');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.scaleVelocities is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.scaleVelocities, 'function', 'scaleVelocities should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - scaleVelocities accepts 0-1 parameters', (t) => {
+    t.assertEqual(Track.prototype.scaleVelocities.length, 1, 'scaleVelocities should accept 1 parameter (with default)');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - scaleVelocities references factor parameter', (t) => {
+    const funcStr = Track.prototype.scaleVelocities.toString();
+    t.assertTruthy(funcStr.includes('factor'), 'scaleVelocities should reference factor parameter');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - scaleVelocities clamps to valid range', (t) => {
+    const funcStr = Track.prototype.scaleVelocities.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'scaleVelocities should clamp velocities to 0.05-1.0 range');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - scaleVelocities calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.scaleVelocities.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'scaleVelocities should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - scaleVelocities returns scaledCount', (t) => {
+    const funcStr = Track.prototype.scaleVelocities.toString();
+    t.assertTruthy(funcStr.includes('scaledCount'), 'scaleVelocities should return scaledCount');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.createNewSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.createNewSequence, 'function', 'createNewSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - createNewSequence accepts 0-3 parameters', (t) => {
+    t.assertEqual(Track.prototype.createNewSequence.length, 3, 'createNewSequence should accept 3 parameters');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - createNewSequence handles Audio track type', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes("type === \"Audio\""), 'createNewSequence should return null for Audio tracks');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - createNewSequence uses Constants.defaultStepsPerBar', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('defaultStepsPerBar') || funcStr.includes('Constants.defaultStepsPerBar'), 'createNewSequence should use defaultStepsPerBar constant');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - createNewSequence uses Math.max for actualLength', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('STEPS_PER_BAR'), 'createNewSequence should use Math.max to ensure minimum STEPS_PER_BAR');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - createNewSequence pushes to this.sequences', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('this.sequences.push'), 'createNewSequence should push new sequence to this.sequences');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - createNewSequence sets this.activeSequenceId', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('this.activeSequenceId'), 'createNewSequence should set this.activeSequenceId');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - createNewSequence calls recreateToneSequence', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('recreateToneSequence'), 'createNewSequence should call recreateToneSequence');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - createNewSequence calls _captureUndoState when skipUndo is false', (t) => {
+    const funcStr = Track.prototype.createNewSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState') && funcStr.includes('skipUndo'), 'createNewSequence should call _captureUndoState when skipUndo is false');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.deleteSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.deleteSequence, 'function', 'deleteSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - deleteSequence accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.deleteSequence.length, 1, 'deleteSequence should accept 1 parameter');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - deleteSequence prevents deleting last sequence', (t) => {
+    const funcStr = Track.prototype.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('Cannot delete the last sequence') || funcStr.includes('sequences.length'), 'deleteSequence should prevent deleting the last sequence');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - deleteSequence finds sequence by id', (t) => {
+    const funcStr = Track.prototype.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('find'), 'deleteSequence should find sequence by id');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - deleteSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'deleteSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - deleteSequence splices from this.sequences', (t) => {
+    const funcStr = Track.prototype.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('this.sequences.splice'), 'deleteSequence should splice from this.sequences');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - deleteSequence calls recreateToneSequence', (t) => {
+    const funcStr = Track.prototype.deleteSequence.toString();
+    t.assertTruthy(funcStr.includes('recreateToneSequence'), 'deleteSequence should call recreateToneSequence');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.duplicateSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.duplicateSequence, 'function', 'duplicateSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - duplicateSequence accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.duplicateSequence.length, 1, 'duplicateSequence should accept 1 parameter');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - duplicateSequence returns null for Audio tracks', (t) => {
+    const funcStr = Track.prototype.duplicateSequence.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") && funcStr.includes('return null'), 'duplicateSequence should return null for Audio tracks');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - duplicateSequence creates deep copy of data', (t) => {
+    const funcStr = Track.prototype.duplicateSequence.toString();
+    t.assertTruthy(funcStr.includes('JSON.parse') && funcStr.includes('JSON.stringify'), 'duplicateSequence should create deep copy using JSON.parse/stringify');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - duplicateSequence pushes to this.sequences', (t) => {
+    const funcStr = Track.prototype.duplicateSequence.toString();
+    t.assertTruthy(funcStr.includes('this.sequences.push'), 'duplicateSequence should push new sequence to this.sequences');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - duplicateSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.duplicateSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'duplicateSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.renameSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.renameSequence, 'function', 'renameSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - renameSequence accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.renameSequence.length, 2, 'renameSequence should accept 2 parameters');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - renameSequence validates newName with trim', (t) => {
+    const funcStr = Track.prototype.renameSequence.toString();
+    t.assertTruthy(funcStr.includes('trim') && funcStr.includes('newName'), 'renameSequence should validate newName with trim');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - renameSequence finds sequence by id', (t) => {
+    const funcStr = Track.prototype.renameSequence.toString();
+    t.assertTruthy(funcStr.includes('find'), 'renameSequence should find sequence by id');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - renameSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.renameSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'renameSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - renameSequence returns early if name unchanged', (t) => {
+    const funcStr = Track.prototype.renameSequence.toString();
+    t.assertTruthy(funcStr.includes('oldName === newName.trim()') || funcStr.includes('oldName === newName'), 'renameSequence should return early if name is unchanged');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.setActiveSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.setActiveSequence, 'function', 'setActiveSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - setActiveSequence accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setActiveSequence.length, 1, 'setActiveSequence should accept 1 parameter');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - setActiveSequence finds sequence by id', (t) => {
+    const funcStr = Track.prototype.setActiveSequence.toString();
+    t.assertTruthy(funcStr.includes('find'), 'setActiveSequence should find sequence by id');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - setActiveSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setActiveSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setActiveSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - setActiveSequence sets this.activeSequenceId', (t) => {
+    const funcStr = Track.prototype.setActiveSequence.toString();
+    t.assertTruthy(funcStr.includes('this.activeSequenceId'), 'setActiveSequence should set this.activeSequenceId');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - setActiveSequence calls recreateToneSequence', (t) => {
+    const funcStr = Track.prototype.setActiveSequence.toString();
+    t.assertTruthy(funcStr.includes('recreateToneSequence'), 'setActiveSequence should call recreateToneSequence');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.doubleSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.doubleSequence, 'function', 'doubleSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - doubleSequence accepts 0 parameters', (t) => {
+    t.assertEqual(Track.prototype.doubleSequence.length, 0, 'doubleSequence should accept 0 parameters');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - doubleSequence checks MAX_BARS limit', (t) => {
+    const funcStr = Track.prototype.doubleSequence.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'doubleSequence should check MAX_BARS limit');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - doubleSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.doubleSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'doubleSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - doubleSequence doubles activeSeq.length', (t) => {
+    const funcStr = Track.prototype.doubleSequence.toString();
+    t.assertTruthy(funcStr.includes('oldLength * 2') || funcStr.includes('length * 2') || funcStr.includes('newLength'), 'doubleSequence should double the length');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - doubleSequence calls recreateToneSequence', (t) => {
+    const funcStr = Track.prototype.doubleSequence.toString();
+    t.assertTruthy(funcStr.includes('recreateToneSequence'), 'doubleSequence should call recreateToneSequence');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - Track.halveSequence is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.halveSequence, 'function', 'halveSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - halveSequence accepts 0 parameters', (t) => {
+    t.assertEqual(Track.prototype.halveSequence.length, 0, 'halveSequence should accept 0 parameters');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - halveSequence validates minimum STEPS_PER_BAR', (t) => {
+    const funcStr = Track.prototype.halveSequence.toString();
+    t.assertTruthy(funcStr.includes('STEPS_PER_BAR'), 'halveSequence should validate minimum STEPS_PER_BAR');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - halveSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.halveSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'halveSequence should call _captureUndoState for undo support');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - halveSequence halves activeSeq.data', (t) => {
+    const funcStr = Track.prototype.halveSequence.toString();
+    t.assertTruthy(funcStr.includes('newLength') && funcStr.includes('oldLength / 2'), 'halveSequence should halve the sequence data');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - halveSequence calls recreateToneSequence', (t) => {
+    const funcStr = Track.prototype.halveSequence.toString();
+    t.assertTruthy(funcStr.includes('recreateToneSequence'), 'halveSequence should call recreateToneSequence');
+});
+
+TestRunner.test('Day 522 - Sequence Methods - APP_VERSION validation for Day 522', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 522');
+    t.assertTruthy(versionParts[1] >= 184, 'Minor version should be >= 184 for Day 522');
+});
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 183, 'Minor version should be >= 183 for Day 521');
     }
