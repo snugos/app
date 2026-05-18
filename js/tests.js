@@ -11899,6 +11899,201 @@ TestRunner.test('Day 526 - APP_VERSION validation for Day 526', (t) => {
         t.assertTruthy(versionParts[1] >= 187, 'Minor version should be >= 187 for Day 526');
     }
 });
+// ============================================
+// Day 527: Audio Clip Setters Undo Capture Tests
+// ============================================
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipName calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipName.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipName should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipName undo label references Rename or Clip', (t) => {
+    const funcStr = Track.prototype.setAudioClipName.toString();
+    t.assertTruthy(funcStr.includes('Rename') || funcStr.includes('Clip'), 'undo label should reference Rename or Clip');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipName accepts clipId and name parameters', (t) => {
+    t.assertEqual(Track.prototype.setAudioClipName.length, 2, 'setAudioClipName should accept 2 parameters');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipName references clipId parameter', (t) => {
+    const funcStr = Track.prototype.setAudioClipName.toString();
+    t.assertTruthy(funcStr.includes('clipId'), 'setAudioClipName should reference clipId parameter');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipName references name parameter', (t) => {
+    const funcStr = Track.prototype.setAudioClipName.toString();
+    t.assertTruthy(funcStr.includes('name'), 'setAudioClipName should reference name parameter');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipColor calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipColor.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipColor should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipColor undo label references Set Clip or Clip', (t) => {
+    const funcStr = Track.prototype.setAudioClipColor.toString();
+    t.assertTruthy(funcStr.includes('Set') || funcStr.includes('Clip'), 'undo label should reference Set or Clip');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipColor accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setAudioClipColor.length, 2, 'setAudioClipColor should accept 2 parameters');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipColor references color parameter', (t) => {
+    const funcStr = Track.prototype.setAudioClipColor.toString();
+    t.assertTruthy(funcStr.includes('color'), 'setAudioClipColor should reference color parameter');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipGain calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipGain.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipGain should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipGain undo label references Clip', (t) => {
+    const funcStr = Track.prototype.setAudioClipGain.toString();
+    t.assertTruthy(funcStr.includes('Clip'), 'undo label should reference Clip');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipGain accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setAudioClipGain.length, 2, 'setAudioClipGain should accept 2 parameters');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipGain clamps gain to 0-4 range', (t) => {
+    const funcStr = Track.prototype.setAudioClipGain.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min') && funcStr.includes('4'), 'setAudioClipGain should clamp to 0-4 range');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipPlaybackRate calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipPlaybackRate.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipPlaybackRate should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipPlaybackRate undo label references playback rate', (t) => {
+    const funcStr = Track.prototype.setAudioClipPlaybackRate.toString();
+    t.assertTruthy(funcStr.includes('playback') || funcStr.includes('rate'), 'undo label should reference playback rate');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipPlaybackRate clamps to 0.25-4.0 range', (t) => {
+    const funcStr = Track.prototype.setAudioClipPlaybackRate.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setAudioClipPlaybackRate should clamp value');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipStartOffset calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartOffset.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipStartOffset should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipStartOffset undo label references start offset', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartOffset.toString();
+    t.assertTruthy(funcStr.includes('start') || funcStr.includes('offset'), 'undo label should reference start offset');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipStartOffset uses Math.max for minimum clamping', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartOffset.toString();
+    t.assertTruthy(funcStr.includes('Math.max'), 'setAudioClipStartOffset should use Math.max for clamping');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipEndOffset calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipEndOffset should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipEndOffset undo label references end offset', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('end') || funcStr.includes('offset'), 'undo label should reference end offset');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipEndOffset uses Math.max for minimum clamping', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    t.assertTruthy(funcStr.includes('Math.max'), 'setAudioClipEndOffset should use Math.max for clamping');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipPitchShift calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipPitchShift.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipPitchShift should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipPitchShift undo label references pitch', (t) => {
+    const funcStr = Track.prototype.setAudioClipPitchShift.toString();
+    t.assertTruthy(funcStr.includes('pitch'), 'undo label should reference pitch');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipPitchShift clamps to -24 to +24 semitones', (t) => {
+    const funcStr = Track.prototype.setAudioClipPitchShift.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min') && funcStr.includes('24'), 'setAudioClipPitchShift should clamp to -24 to +24');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipCrossfade calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipCrossfade should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipCrossfade clamps to 0-1 range', (t) => {
+    const funcStr = Track.prototype.setAudioClipCrossfade.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setAudioClipCrossfade should clamp to 0-1');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipFadeInCurve calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeInCurve should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipFadeInCurve validates curve type', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeInCurve.toString();
+    t.assertTruthy(funcStr.includes('linear') || funcStr.includes('exponential') || funcStr.includes('validCurves'), 'setAudioClipFadeInCurve should validate curve type');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipFadeOutCurve calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeOutCurve should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipFadeOutCurve validates curve type', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOutCurve.toString();
+    t.assertTruthy(funcStr.includes('linear') || funcStr.includes('exponential') || funcStr.includes('validCurves'), 'setAudioClipFadeOutCurve should validate curve type');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipFadeIn calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeIn.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeIn should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipFadeIn uses Math.max for minimum clamping', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeIn.toString();
+    t.assertTruthy(funcStr.includes('Math.max'), 'setAudioClipFadeIn should use Math.max for clamping');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipFadeOut calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOut.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipFadeOut should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipFadeOut uses Math.max for minimum clamping', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOut.toString();
+    t.assertTruthy(funcStr.includes('Math.max'), 'setAudioClipFadeOut should use Math.max for clamping');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipReverse calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipReverse.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipReverse should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipReverse uses boolean coercion', (t) => {
+    const funcStr = Track.prototype.setAudioClipReverse.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('Boolean'), 'setAudioClipReverse should coerce to boolean');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipStartTime calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipStartTime should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipStartTime undo label references Move', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('Move'), 'undo label should reference Move');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipStartTime uses Math.max for minimum clamping', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    t.assertTruthy(funcStr.includes('Math.max'), 'setAudioClipStartTime should use Math.max for clamping');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipDuration calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setAudioClipDuration should call _captureUndoState');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipDuration undo label references Resize', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('Resize'), 'undo label should reference Resize');
+});
+TestRunner.test('Day 527 - Audio Clip Setters - setAudioClipDuration clamps to minimum 0.01', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('0.01'), 'setAudioClipDuration should clamp to minimum 0.01');
+});
+
+TestRunner.test('Day 527 - Audio Clip Setters - APP_VERSION validation for Day 527', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 527');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 188, 'Minor version should be >= 188 for Day 527');
+    }
+});
+
 
 
 

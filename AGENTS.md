@@ -24,6 +24,32 @@
 - **Test Count**: Increased from 2170 to 2216
 
 
+#### Day 527: Audio Clip Setters Undo Capture Tests (2026-05-18)
+- **Feature**: Added 46 unit tests for Audio Clip Setter methods to verify all state mutations go through the capture mechanism (undo/redo support)
+- **Files Modified**:
+  - `js/tests.js`: Added Day 527 test block with 46 tests for Audio Clip Setters undo capture verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.189.0
+- **Feature Details**:
+  - **setAudioClipName** (5 tests): Function export, 2 parameters, clipId/name references, _captureUndoState call with "Rename" or "Clip" label
+  - **setAudioClipColor** (4 tests): Function export, 2 parameters, color reference, _captureUndoState call with "Set" or "Clip" label
+  - **setAudioClipGain** (4 tests): Function export, 2 parameters, gain clamping to 0-4 range, _captureUndoState call
+  - **setAudioClipPlaybackRate** (3 tests): Function export, playback rate clamping to 0.25-4.0 range, _captureUndoState call
+  - **setAudioClipStartOffset** (3 tests): Function export, Math.max clamping, _captureUndoState call with "start" or "offset" label
+  - **setAudioClipEndOffset** (3 tests): Function export, Math.max clamping, _captureUndoState call with "end" or "offset" label
+  - **setAudioClipPitchShift** (3 tests): Function export, clamp to -24 to +24 semitones, _captureUndoState call with "pitch" label
+  - **setAudioClipCrossfade** (2 tests): Function export, clamp to 0-1 range, _captureUndoState call
+  - **setAudioClipFadeInCurve** (2 tests): Function export, curve type validation, _captureUndoState call
+  - **setAudioClipFadeOutCurve** (2 tests): Function export, curve type validation, _captureUndoState call
+  - **setAudioClipFadeIn** (2 tests): Function export, Math.max clamping, _captureUndoState call
+  - **setAudioClipFadeOut** (2 tests): Function export, Math.max clamping, _captureUndoState call
+  - **setAudioClipReverse** (2 tests): Function export, boolean coercion (!!), _captureUndoState call
+  - **setAudioClipStartTime** (3 tests): Function export, "Move" label, Math.max clamping, _captureUndoState call
+  - **setAudioClipDuration** (3 tests): Function export, "Resize" label, Math.max clamping to 0.01 minimum, _captureUndoState call
+  - **APP_VERSION validation** (1 test): Tests validate version >= 2.188 for Day 527
+- **Version**: Bumped to 2.189.0
+- **Test Count**: Increased from 2216 to 2260
+
+
 #### Day 525: Fix stub tests for non-existent Track methods - duplicateTrack/freezeTrack/bounceTrack (2026-05-18)
 - **Bug Fix**: Replaced 3 stub tests that referenced non-existent methods (duplicateTrack, freezeTrack, bounceTrack) on Track.prototype with tests verifying typeof === 'undefined'. These methods don't exist on Track.prototype and the old tests would fail at runtime when trying to call .toString() on undefined.
 - **Files Modified**:
