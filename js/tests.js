@@ -11226,6 +11226,7 @@ TestRunner.test('Day 521 - APP_VERSION validation for Day 521', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
     t.assertTruthy(versionParts.length >= 3, 'APP_VERSION should have at least 3 parts');
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 521');
+});
 // Day 522: Sequence Editing Methods Tests
 // Tests for Track.prototype sequence editing methods: reverseSequence, humanizeVelocity, scaleVelocities, createNewSequence, deleteSequence, duplicateSequence, renameSequence, setActiveSequence, doubleSequence, halveSequence
 
@@ -11550,9 +11551,6 @@ TestRunner.test('Day 522 - Sequence Methods - APP_VERSION validation for Day 522
     t.assertTruthy(versionParts[1] >= 184, 'Minor version should be >= 184 for Day 522');
 });
         t.assertTruthy(versionParts[1] >= 183, 'Minor version should be >= 183 for Day 521');
-    }
-});
-
 
 // Day 523: Scale Mode & MIDI CC Window Function Tests
 
