@@ -11670,6 +11670,238 @@ TestRunner.test('Day 523 - Scale Mode & MIDI CC Windows - APP_VERSION validation
 });
 
 
+
+// --- Day 526: Remaining UI Render Functions Tests ---
+TestRunner.test('Day 526 - drawWaveform is a function export', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('function'), 'drawWaveform should be a function');
+});
+
+TestRunner.test('Day 526 - drawWaveform accepts 1 parameter', (t) => {
+    const paramCount = drawWaveform.length;
+    t.assertEqual(paramCount, 1, 'drawWaveform should accept 1 parameter');
+});
+
+TestRunner.test('Day 526 - drawWaveform references track parameter', (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('track'), 'drawWaveform should reference track parameter');
+});
+
+TestRunner.test('Day 526 - drawInstrumentWaveform is a function export', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('function'), 'drawInstrumentWaveform should be a function');
+});
+
+TestRunner.test('Day 526 - drawInstrumentWaveform accepts 1 parameter', (t) => {
+    const paramCount = drawInstrumentWaveform.length;
+    t.assertEqual(paramCount, 1, 'drawInstrumentWaveform should accept 1 parameter');
+});
+
+TestRunner.test('Day 526 - drawInstrumentWaveform references track parameter', (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('track'), 'drawInstrumentWaveform should reference track parameter');
+});
+
+TestRunner.test('Day 526 - highlightPlayingStep is a function export', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('function'), 'highlightPlayingStep should be a function');
+});
+
+TestRunner.test('Day 526 - highlightPlayingStep accepts 3 parameters', (t) => {
+    const paramCount = highlightPlayingStep.length;
+    t.assertEqual(paramCount, 3, 'highlightPlayingStep should accept 3 parameters (trackId, stepIndex, isPlaying)');
+});
+
+TestRunner.test('Day 526 - highlightPlayingStep references trackId parameter', (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'highlightPlayingStep should reference trackId parameter');
+});
+
+TestRunner.test('Day 526 - renderSamplePads is a function export', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('function'), 'renderSamplePads should be a function');
+});
+
+TestRunner.test('Day 526 - renderSamplePads accepts 1 parameter', (t) => {
+    const paramCount = renderSamplePads.length;
+    t.assertEqual(paramCount, 1, 'renderSamplePads should accept 1 parameter');
+});
+
+TestRunner.test('Day 526 - renderSamplePads references track parameter', (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('track'), 'renderSamplePads should reference track parameter');
+});
+
+TestRunner.test('Day 526 - updateSliceEditorUI is a function export', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('function'), 'updateSliceEditorUI should be a function');
+});
+
+TestRunner.test('Day 526 - updateSliceEditorUI accepts 1 parameter', (t) => {
+    const paramCount = updateSliceEditorUI.length;
+    t.assertEqual(paramCount, 1, 'updateSliceEditorUI should accept 1 parameter');
+});
+
+TestRunner.test('Day 526 - updateSliceEditorUI references track parameter', (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('track'), 'updateSliceEditorUI should reference track parameter');
+});
+
+TestRunner.test('Day 526 - updateSequencerCellUI is a function export', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('function'), 'updateSequencerCellUI should be a function');
+});
+
+TestRunner.test('Day 526 - updateSequencerCellUI accepts 5-6 parameters', (t) => {
+    const paramCount = updateSequencerCellUI.length;
+    t.assertEqual(paramCount >= 5 && paramCount <= 6, true, 'updateSequencerCellUI should accept 5 or 6 parameters');
+});
+
+TestRunner.test('Day 526 - updateSequencerCellUI references windowElement parameter', (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('windowElement'), 'updateSequencerCellUI should reference windowElement parameter');
+});
+
+TestRunner.test('Day 526 - updateDrumPadControlsUI is a function export', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('function'), 'updateDrumPadControlsUI should be a function');
+});
+
+TestRunner.test('Day 526 - updateDrumPadControlsUI accepts 1 parameter', (t) => {
+    const paramCount = updateDrumPadControlsUI.length;
+    t.assertEqual(paramCount, 1, 'updateDrumPadControlsUI should accept 1 parameter');
+});
+
+TestRunner.test('Day 526 - updateDrumPadControlsUI references track parameter', (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('track'), 'updateDrumPadControlsUI should reference track parameter');
+});
+
+TestRunner.test('Day 526 - renderDrumSamplerPads is a function export', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('function'), 'renderDrumSamplerPads should be a function');
+});
+
+TestRunner.test('Day 526 - renderDrumSamplerPads accepts 1 parameter', (t) => {
+    const paramCount = renderDrumSamplerPads.length;
+    t.assertEqual(paramCount, 1, 'renderDrumSamplerPads should accept 1 parameter');
+});
+
+TestRunner.test('Day 526 - renderDrumSamplerPads references track parameter', (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('track'), 'renderDrumSamplerPads should reference track parameter');
+});
+
+TestRunner.test('Day 526 - updateMixerWindow is a function export', (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('function'), 'updateMixerWindow should be a function');
+});
+
+TestRunner.test('Day 526 - updateMixerWindow accepts 0 parameters', (t) => {
+    const paramCount = updateMixerWindow.length;
+    t.assertEqual(paramCount, 0, 'updateMixerWindow should accept 0 parameters');
+});
+
+TestRunner.test('Day 526 - updateMixerWindow references renderMixer or localAppServices', (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('renderMixer') || funcStr.includes('localAppServices'), 'updateMixerWindow should reference renderMixer or localAppServices');
+});
+
+TestRunner.test('Day 526 - updateSoundBrowserDisplayForLibrary is a function export', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('function'), 'updateSoundBrowserDisplayForLibrary should be a function');
+});
+
+TestRunner.test('Day 526 - updateSoundBrowserDisplayForLibrary accepts 1-3 parameters', (t) => {
+    const paramCount = updateSoundBrowserDisplayForLibrary.length;
+    t.assertEqual(paramCount >= 1 && paramCount <= 3, true, 'updateSoundBrowserDisplayForLibrary should accept 1-3 parameters');
+});
+
+TestRunner.test('Day 526 - updateSoundBrowserDisplayForLibrary references libraryName parameter', (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName'), 'updateSoundBrowserDisplayForLibrary should reference libraryName parameter');
+});
+
+TestRunner.test('Day 526 - renderSoundBrowserDirectory is a function export', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('function'), 'renderSoundBrowserDirectory should be a function');
+});
+
+TestRunner.test('Day 526 - renderSoundBrowserDirectory accepts 2 parameters', (t) => {
+    const paramCount = renderSoundBrowserDirectory.length;
+    t.assertEqual(paramCount, 2, 'renderSoundBrowserDirectory should accept 2 parameters');
+});
+
+TestRunner.test('Day 526 - renderSoundBrowserDirectory references pathArray parameter', (t) => {
+    const funcStr = renderSoundBrowserDirectory.toString();
+    t.assertTruthy(funcStr.includes('pathArray'), 'renderSoundBrowserDirectory should reference pathArray parameter');
+});
+
+TestRunner.test('Day 526 - renderEffectControls is a function export', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('function'), 'renderEffectControls should be a function');
+});
+
+TestRunner.test('Day 526 - renderEffectControls accepts 4 parameters', (t) => {
+    const paramCount = renderEffectControls.length;
+    t.assertEqual(paramCount, 4, 'renderEffectControls should accept 4 parameters');
+});
+
+TestRunner.test('Day 526 - renderEffectControls references owner parameter', (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('owner'), 'renderEffectControls should reference owner parameter');
+});
+
+TestRunner.test('Day 526 - getDrumSamplerPadExistingAudioData is a function export', (t) => {
+    const funcStr = getDrumSamplerPadExistingAudioData.toString();
+    t.assertTruthy(funcStr.includes('function'), 'getDrumSamplerPadExistingAudioData should be a function');
+});
+
+TestRunner.test('Day 526 - getDrumSamplerPadExistingAudioData accepts 2 parameters', (t) => {
+    const paramCount = getDrumSamplerPadExistingAudioData.length;
+    t.assertEqual(paramCount, 2, 'getDrumSamplerPadExistingAudioData should accept 2 parameters');
+});
+
+TestRunner.test('Day 526 - getDrumSamplerPadExistingAudioData references track parameter', (t) => {
+    const funcStr = getDrumSamplerPadExistingAudioData.toString();
+    t.assertTruthy(funcStr.includes('track'), 'getDrumSamplerPadExistingAudioData should reference track parameter');
+});
+
+TestRunner.test('Day 526 - renderDrumPadEditorControls is a function export', (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('function'), 'renderDrumPadEditorControls should be a function');
+});
+
+TestRunner.test('Day 526 - renderDrumPadEditorControls accepts 1 parameter', (t) => {
+    const paramCount = renderDrumPadEditorControls.length;
+    t.assertEqual(paramCount, 1, 'renderDrumPadEditorControls should accept 1 parameter');
+});
+
+TestRunner.test('Day 526 - renderDrumPadEditorControls references track parameter', (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('track'), 'renderDrumPadEditorControls should reference track parameter');
+});
+
+TestRunner.test('Day 526 - createKnob references localAppServices or captureStateForUndo', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('localAppServices') || funcStr.includes('captureStateForUndo'), 'createKnob should reference localAppServices or captureStateForUndo');
+});
+
+TestRunner.test('Day 526 - createKnob references options parameter', (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options'), 'createKnob should reference options parameter');
+});
+
+TestRunner.test('Day 526 - APP_VERSION validation for Day 526', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 526');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 187, 'Minor version should be >= 187 for Day 526');
+    }
+});
+
+
+
 // --- APP_VERSION validation for Day 520 ---
 TestRunner.test('Day 520 - APP_VERSION validation for Day 520', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
