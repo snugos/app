@@ -11549,8 +11549,119 @@ TestRunner.test('Day 522 - Sequence Methods - APP_VERSION validation for Day 522
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 522');
     t.assertTruthy(versionParts[1] >= 184, 'Minor version should be >= 184 for Day 522');
 });
-    if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 183, 'Minor version should be >= 183 for Day 521');
+    }
+});
+
+
+// Day 523: Scale Mode & MIDI CC Window Function Tests
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow is a function export', (t) => {
+    t.assertEqual(typeof openScaleModeWindow, 'function', 'openScaleModeWindow should be a function');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openScaleModeWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openScaleModeWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow function body uses createWindow', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openScaleModeWindow should use createWindow');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow function body uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openScaleModeWindow should check for open windows');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow function body uses localAppServices', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openScaleModeWindow should reference localAppServices');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow references getScaleModeEnabled', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeEnabled'), 'openScaleModeWindow should reference getScaleModeEnabled');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow references setScaleModeEnabled', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setScaleModeEnabled'), 'openScaleModeWindow should reference setScaleModeEnabled');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow references SCALE_ROOTS from Constants', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('SCALE_ROOTS') || funcStr.includes('rootsList'), 'openScaleModeWindow should reference SCALE_ROOTS');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow references SCALES from Constants', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('SCALES') || funcStr.includes('scalesList'), 'openScaleModeWindow should reference SCALES');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow references setScaleModeScale', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setScaleModeScale'), 'openScaleModeWindow should reference setScaleModeScale');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow references setScaleModeRoot', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setScaleModeRoot'), 'openScaleModeWindow should reference setScaleModeRoot');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow references setScaleModeLock', (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('setScaleModeLock'), 'openScaleModeWindow should reference setScaleModeLock');
+});
+
+TestRunner.test('Scale Mode Window - openScaleModeWindow APP_VERSION validation for Day 523', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 523');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 185, 'Minor version should be >= 185 for Day 523');
+    }
+});
+
+TestRunner.test('MIDI CC Mappings Window - openMidiCCMappingsWindow is a function export', (t) => {
+    t.assertEqual(typeof openMidiCCMappingsWindow, 'function', 'openMidiCCMappingsWindow should be a function');
+});
+
+TestRunner.test('MIDI CC Mappings Window - openMidiCCMappingsWindow accepts 0-1 parameters', (t) => {
+    const paramCount = openMidiCCMappingsWindow.length;
+    t.assertEqual(paramCount <= 1, true, 'openMidiCCMappingsWindow should accept 0 or 1 parameter');
+});
+
+TestRunner.test('MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses createWindow', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMidiCCMappingsWindow should use createWindow');
+});
+
+TestRunner.test('MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses getOpenWindows for single-instance', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMidiCCMappingsWindow should check for open windows');
+});
+
+TestRunner.test('MIDI CC Mappings Window - openMidiCCMappingsWindow function body uses localAppServices', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'openMidiCCMappingsWindow should reference localAppServices');
+});
+
+TestRunner.test('MIDI CC Mappings Window - openMidiCCMappingsWindow references getMidiCCMappings', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getMidiCCMappings'), 'openMidiCCMappingsWindow should reference getMidiCCMappings');
+});
+
+TestRunner.test('MIDI CC Mappings Window - openMidiCCMappingsWindow references midiMappingsList container', (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('midiMappingsList'), 'openMidiCCMappingsWindow should reference midiMappingsList container');
+});
+
+TestRunner.test('Day 523 - Scale Mode & MIDI CC Windows - APP_VERSION validation for Day 523', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 523');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 185, 'Minor version should be >= 185 for Day 523');
     }
 });
 
