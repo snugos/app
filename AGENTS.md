@@ -1,3 +1,27 @@
+#### Day 529: Fix testRunner stub() Method and assertEquals Typo (2026-05-19)
+- **Bug Fix**: Added stub() method to TestRunner for mocking support in drop zone tests. Fixed 42 assertEquals typos (should be assertEqual) that were silently passing incorrect parameter order values to tests.
+- **Files Modified**:
+  - `js/testRunner.js`: Added stub() method for creating mock objects in tests
+  - `js/tests.js`: Fixed 42 assertEquals typos and added 7 new tests for stub() functionality
+  - `js/constants.js`: Bumped APP_VERSION to 2.191.0
+- **Bug Details**:
+  - **stub() method**: TestRunner lacked a stub() method for creating mock objects. The drop zone tests in Day 472/428 used t.stub() to mock DOM elements and track calls, but the method did not exist, causing failures when tests tried to use it.
+  - **assertEquals typo**: 42 instances of assertEquals (wrong, non-existent method name) were found in tests.js throughout Context Monitor and Sidechain test blocks. The method should be assertEqual. This caused tests to silently pass incorrect values because the typo was never caught - the test framework simply ignored the unknown method and passed.
+- **Feature Details**:
+  - **stub()**: Creates a callable function that tracks all calls in a .calls array. Supports .returns(value) for configuring return values. Returns the same value on every call when configured. Can be used to mock object methods with proper call tracking.
+  - **assertEquals → assertEqual**: Fixed 42 typos where tests called t.assertEquals(actual, expected, msg) but the method is t.assertEqual(actual, expected, msg). The typo caused the call to silently fail (unknown method), so the test framework skipped the assertion and tests passed even when they should have failed.
+- **Tests Added**:
+  - stub() is a function (verifies TestRunner has stub method)
+  - stub() creates a callable function
+  - stub() tracks calls with calls array
+  - stub() returns configured value
+  - stub() returns object when configured
+  - stub() can be used for object method mocking
+  - APP_VERSION validation for Day 529 (requires >= 2.190)
+- **Version**: Bumped to 2.191.0
+- **Test Count**: Increased from 2324 to 2331
+
+
 #### Day 528: Track Slice & Pad Setters Undo Capture Tests (2026-05-18)
 - **Feature**: Added 59 unit tests for Track Slice, Pad, and Instrument Sampler setter methods to verify all state mutations go through the capture mechanism (undo/redo support)
 - **Files Modified**:
@@ -4406,69 +4430,6 @@
   - Total tests increased from 1684 to 1732
 - **Version**: Bumped to 2.65.0
     - Master Effects Chain - reorderMasterEffectInState uses splice to move effect
-
-#### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
-- **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
-- **Files Modified**:
-  - `js/tests.js`: Added 48 new tests in Day 387 section:
-    - State Utility - resetPerformanceMonitorState is a function export
-    - State Utility - resetPerformanceMonitorState accepts 0 parameters
-    - State Utility - resetPerformanceMonitorState resets all properties
-    - State Utility - resetTimelineZoom is a function export
-    - State Utility - resetTimelineZoom accepts 0 parameters
-    - State Utility - resetTimelineZoom calls captureStateForUndo
-    - State Utility - resetTimelineZoom uses descriptive undo label
-    - State Utility - resetTimelineZoom resets horizontal zoom
-    - State Utility - resetTimelineZoom resets vertical zoom
-    - State Utility - setHighestZState is a function export
-    - State Utility - setHighestZState accepts 1 parameter
-    - State Utility - setHighestZState calls captureStateForUndo
-    - State Utility - setHighestZState uses descriptive undo label
-    - State Utility - getHighestZState is a function export
-    - State Utility - getHighestZState accepts 0 parameters
-    - Send Bus Audio - addEffectToSendBus is a function
-    - Send Bus Audio - addEffectToSendBus accepts 3 parameters (sendId, effectType, params)
-    - Send Bus Audio - addEffectToSendBus references sendId parameter
-    - Send Bus Audio - addEffectToSendBus references effectType parameter
-    - Send Bus Audio - addEffectToSendBus references params parameter
-    - Send Bus Audio - addEffectToSendBus checks sendBusNodes
-    - Send Bus Audio - addEffectToSendBus creates effect instance
-    - Send Bus Audio - removeEffectFromSendBus is a function
-    - Send Bus Audio - removeEffectFromSendBus accepts 2 parameters (sendId, effectId)
-    - Send Bus Audio - removeEffectFromSendBus references sendId parameter
-    - Send Bus Audio - removeEffectFromSendBus references effectId parameter
-    - Send Bus Audio - removeEffectFromSendBus disposes effect node
-    - Send Bus Audio - updateSendBusEffectParam is a function
-    - Send Bus Audio - updateSendBusEffectParam accepts 4 parameters (sendId, effectId, paramPath, value)
-    - Send Bus Audio - updateSendBusEffectParam references all parameters
-    - Send Bus Audio - reorderEffectInSendBus is a function
-    - Send Bus Audio - reorderEffectInSendBus accepts 3 parameters
-    - Send Bus Audio - reorderEffectInSendBus references all parameters
-    - Send Bus Audio - setSendBusLevel is a function
-    - Send Bus Audio - setSendBusLevel accepts 2 parameters (sendId, level)
-    - Send Bus Audio - setSendBusLevel references sendId parameter
-    - Send Bus Audio - setSendBusLevel references level parameter
-    - Send Bus Audio - setSendBusLevel clamps level value
-    - Send Bus Audio - setSendBusMuted is a function
-    - Send Bus Audio - setSendBusMuted accepts 2 parameters (sendId, muted)
-    - Send Bus Audio - setSendBusMuted references sendId parameter
-    - Send Bus Audio - setSendBusMuted references muted parameter
-    - State Utility - APP_VERSION validation for Day 387
-  - `js/constants.js`: Bumped APP_VERSION to 2.65.0
-- **Feature Details**:
-  - Tests validate resetPerformanceMonitorState function (function export, 0 params, resets all 8 properties)
-  - Tests validate resetTimelineZoom function (function export, 0 params, calls captureStateForUndo with Reset Timeline Zoom label, resets both horizontal and vertical zoom)
-  - Tests validate setHighestZState function (function export, 1 param, calls captureStateForUndo, uses descriptive undo label)
-  - Tests validate getHighestZState function (function export, 0 params)
-  - Tests validate addEffectToSendBus function (3 params: sendId, effectType, params, checks sendBusNodes Map, creates effect instance with createEffectInstance)
-  - Tests validate removeEffectFromSendBus function (2 params: sendId, effectId, disposes Tone.js nodes, removes from effects array)
-  - Tests validate updateSendBusEffectParam function (4 params: sendId, effectId, paramPath, value, navigates nested param path)
-  - Tests validate reorderEffectInSendBus function (3 params: sendId, effectId, newIndex, uses splice to move effect)
-  - Tests validate setSendBusLevel function (2 params: sendId, level, clamps using Math.max/Math.min)
-  - Tests validate setSendBusMuted function (2 params: sendId, muted, updates busData.muted state)
-  - Total tests increased from 1684 to 1732
-- **Version**: Bumped to 2.65.0
-    - Master Effects Chain - reorderMasterEffectInState has warning for not found
 
 #### Day 387: State Utility & Send Bus Audio Tests (2026-04-30)
 - **Feature**: Added 48 new unit tests for State Utility and Send Bus Audio functions to expand test coverage
