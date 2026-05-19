@@ -53,6 +53,44 @@ const TestRunner = {
         }
     },
     
+    // Stub factory for mocking
+    stub() {
+        const stubFn = (...args) => stubFn;
+        stubFn.calls = [];
+        stubFn.returns = (val) => { stubFn._returnValue = val; return stubFn; };
+        stubFn._returnValue = undefined;
+        const handler = {
+            get(target, prop) {
+                if (prop === 'calls') {
+                    return stubFn.calls;
+                }
+                if (prop === 'arguments') {
+                    return stubFn._lastCallArgs;
+                }
+                const value = target[prop];
+                if (typeof value === 'function') {
+                    return (...args) => {
+                        stubFn.calls.push({ arguments: args });
+                        stubFn._lastCallArgs = args;
+                        if (stubFn._returnValue !== undefined) {
+                            if (typeof stubFn._returnValue === 'object' && stubFn._returnValue !== null) {
+                                return stubFn._returnValue;
+                            }
+                            return stubFn._returnValue;
+                        }
+                        return value.apply(target, args);
+                    };
+                }
+                return value;
+            },
+            set(target, prop, value) {
+                target[prop] = value;
+                return true;
+            }
+        };
+        return new Proxy(stubFn, handler);
+    },
+    
     // Run all tests
     async runAll(showNotification = null) {
         this.results = { passed: 0, failed: 0, errors: [] };

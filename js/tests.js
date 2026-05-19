@@ -1736,7 +1736,7 @@ TestRunner.test('Utils - showNotification is a function export', (t) => {
 
 TestRunner.test('Utils - showNotification accepts 1 parameter', (t) => {
     const paramCount = showNotification.length;
-    t.assertEquals(paramCount, 1, 'showNotification should accept 1 parameter (message)');
+    t.assertEqual(paramCount, 1, 'showNotification should accept 1 parameter (message)');
 });
 
 TestRunner.test('Utils - showNotification accepts optional duration parameter', (t) => {
@@ -1751,7 +1751,7 @@ TestRunner.test('Utils - showCustomModal is a function export', (t) => {
 
 TestRunner.test('Utils - showCustomModal accepts 4 parameters', (t) => {
     const paramCount = showCustomModal.length;
-    t.assertEquals(paramCount, 4, 'showCustomModal should accept 4 parameters');
+    t.assertEqual(paramCount, 4, 'showCustomModal should accept 4 parameters');
 });
 
 TestRunner.test('Utils - showCustomModal references title parameter', (t) => {
@@ -1781,7 +1781,7 @@ TestRunner.test('Utils - showConfirmationDialog is a function export', (t) => {
 
 TestRunner.test('Utils - showConfirmationDialog accepts 4 parameters', (t) => {
     const paramCount = showConfirmationDialog.length;
-    t.assertEquals(paramCount, 4, 'showConfirmationDialog should accept 4 parameters');
+    t.assertEqual(paramCount, 4, 'showConfirmationDialog should accept 4 parameters');
 });
 
 TestRunner.test('Utils - showConfirmationDialog references title parameter', (t) => {
@@ -1811,7 +1811,7 @@ TestRunner.test('Utils - secondsToBBSTime is a function export', (t) => {
 
 TestRunner.test('Utils - secondsToBBSTime accepts 1 parameter', (t) => {
     const paramCount = secondsToBBSTime.length;
-    t.assertEquals(paramCount, 1, 'secondsToBBSTime should accept 1 parameter');
+    t.assertEqual(paramCount, 1, 'secondsToBBSTime should accept 1 parameter');
 });
 
 TestRunner.test('Utils - secondsToBBSTime references seconds parameter', (t) => {
@@ -1836,7 +1836,7 @@ TestRunner.test('Utils - bbsTimeToSeconds is a function export', (t) => {
 
 TestRunner.test('Utils - bbsTimeToSeconds accepts 1 parameter', (t) => {
     const paramCount = bbsTimeToSeconds.length;
-    t.assertEquals(paramCount, 1, 'bbsTimeToSeconds should accept 1 parameter');
+    t.assertEqual(paramCount, 1, 'bbsTimeToSeconds should accept 1 parameter');
 });
 
 TestRunner.test('Utils - bbsTimeToSeconds references bbsString parameter', (t) => {
@@ -1866,7 +1866,7 @@ TestRunner.test('Utils - createContextMenu is a function export', (t) => {
 
 TestRunner.test('Utils - createContextMenu accepts 3 parameters', (t) => {
     const paramCount = createContextMenu.length;
-    t.assertEquals(paramCount, 3, 'createContextMenu should accept 3 parameters');
+    t.assertEqual(paramCount, 3, 'createContextMenu should accept 3 parameters');
 });
 
 TestRunner.test('Utils - createContextMenu references event parameter', (t) => {
@@ -1936,7 +1936,7 @@ TestRunner.test('Utils - createDropZoneHTML is a function export', (t) => {
 
 TestRunner.test('Utils - createDropZoneHTML accepts 5 parameters', (t) => {
     const paramCount = createDropZoneHTML.length;
-    t.assertEquals(paramCount, 5, 'createDropZoneHTML should accept 5 parameters');
+    t.assertEqual(paramCount, 5, 'createDropZoneHTML should accept 5 parameters');
 });
 
 TestRunner.test('Utils - createDropZoneHTML references trackId parameter', (t) => {
@@ -1971,7 +1971,7 @@ TestRunner.test('Utils - setupGenericDropZoneListeners is a function export', (t
 
 TestRunner.test('Utils - setupGenericDropZoneListeners accepts 7 parameters', (t) => {
     const paramCount = setupGenericDropZoneListeners.length;
-    t.assertEquals(paramCount, 7, 'setupGenericDropZoneListeners should accept 7 parameters');
+    t.assertEqual(paramCount, 7, 'setupGenericDropZoneListeners should accept 7 parameters');
 });
 
 TestRunner.test('Utils - setupGenericDropZoneListeners references dropZoneElement parameter', (t) => {
@@ -7519,12 +7519,12 @@ TestRunner.test('SnugWindow - APP_VERSION validation for Day 424', (t) => {
 // ============================================================
 
 TestRunner.test('Context Monitor - startContextSuspensionMonitoring is a function export', (t) => {
-    t.assertEquals(typeof startContextSuspensionMonitoring, 'function', 'startContextSuspensionMonitoring should be a function');
+    t.assertEqual(typeof startContextSuspensionMonitoring, 'function', 'startContextSuspensionMonitoring should be a function');
 });
 
 TestRunner.test('Context Monitor - startContextSuspensionMonitoring accepts 1 parameter', (t) => {
     const paramCount = startContextSuspensionMonitoring.length;
-    t.assertEquals(paramCount, 1, 'startContextSuspensionMonitoring should accept 1 parameter');
+    t.assertEqual(paramCount, 1, 'startContextSuspensionMonitoring should accept 1 parameter');
 });
 
 TestRunner.test('Context Monitor - startContextSuspensionMonitoring references intervalMs parameter', (t) => {
@@ -7563,12 +7563,12 @@ TestRunner.test('Context Monitor - startContextSuspensionMonitoring increments c
 });
 
 TestRunner.test('Context Monitor - stopContextSuspensionMonitoring is a function export', (t) => {
-    t.assertEquals(typeof stopContextSuspensionMonitoring, 'function', 'stopContextSuspensionMonitoring should be a function');
+    t.assertEqual(typeof stopContextSuspensionMonitoring, 'function', 'stopContextSuspensionMonitoring should be a function');
 });
 
 TestRunner.test('Context Monitor - stopContextSuspensionMonitoring accepts 0 parameters', (t) => {
     const paramCount = stopContextSuspensionMonitoring.length;
-    t.assertEquals(paramCount, 0, 'stopContextSuspensionMonitoring should accept 0 parameters');
+    t.assertEqual(paramCount, 0, 'stopContextSuspensionMonitoring should accept 0 parameters');
 });
 
 TestRunner.test('Context Monitor - stopContextSuspensionMonitoring resets resumeAttemptScheduled', (t) => {
@@ -7582,12 +7582,12 @@ TestRunner.test('Context Monitor - stopContextSuspensionMonitoring resets contex
 });
 
 TestRunner.test('Context Monitor - getContextSuspensionCount is a function export', (t) => {
-    t.assertEquals(typeof getContextSuspensionCount, 'function', 'getContextSuspensionCount should be a function');
+    t.assertEqual(typeof getContextSuspensionCount, 'function', 'getContextSuspensionCount should be a function');
 });
 
 TestRunner.test('Context Monitor - getContextSuspensionCount accepts 0 parameters', (t) => {
     const paramCount = getContextSuspensionCount.length;
-    t.assertEquals(paramCount, 0, 'getContextSuspensionCount should accept 0 parameters');
+    t.assertEqual(paramCount, 0, 'getContextSuspensionCount should accept 0 parameters');
 });
 
 TestRunner.test('Context Monitor - getContextSuspensionCount returns contextSuspendedCount', (t) => {
@@ -7596,12 +7596,12 @@ TestRunner.test('Context Monitor - getContextSuspensionCount returns contextSusp
 });
 
 TestRunner.test('Context Monitor - getContextState is a function export', (t) => {
-    t.assertEquals(typeof getContextState, 'function', 'getContextState should be a function');
+    t.assertEqual(typeof getContextState, 'function', 'getContextState should be a function');
 });
 
 TestRunner.test('Context Monitor - getContextState accepts 0 parameters', (t) => {
     const paramCount = getContextState.length;
-    t.assertEquals(paramCount, 0, 'getContextState should accept 0 parameters');
+    t.assertEqual(paramCount, 0, 'getContextState should accept 0 parameters');
 });
 
 TestRunner.test('Context Monitor - getContextState references Tone.context.state', (t) => {
@@ -7610,12 +7610,12 @@ TestRunner.test('Context Monitor - getContextState references Tone.context.state
 });
 
 TestRunner.test('Sidechain - getSidechainBusInput is a function export', (t) => {
-    t.assertEquals(typeof getSidechainBusInput, 'function', 'getSidechainBusInput should be a function');
+    t.assertEqual(typeof getSidechainBusInput, 'function', 'getSidechainBusInput should be a function');
 });
 
 TestRunner.test('Sidechain - getSidechainBusInput accepts 0 parameters', (t) => {
     const paramCount = getSidechainBusInput.length;
-    t.assertEquals(paramCount, 0, 'getSidechainBusInput should accept 0 parameters');
+    t.assertEqual(paramCount, 0, 'getSidechainBusInput should accept 0 parameters');
 });
 
 TestRunner.test('Sidechain - getSidechainBusInput checks sidechainBus state', (t) => {
@@ -7634,7 +7634,7 @@ TestRunner.test('Sidechain - getSidechainBusInput disposes existing node if disp
 });
 
 TestRunner.test('Sidechain - enableSidechainFromMic is a function export', (t) => {
-    t.assertEquals(typeof enableSidechainFromMic, 'function', 'enableSidechainFromMic should be a function');
+    t.assertEqual(typeof enableSidechainFromMic, 'function', 'enableSidechainFromMic should be a function');
 });
 
 TestRunner.test('Sidechain - enableSidechainFromMic is async', (t) => {
@@ -7644,7 +7644,7 @@ TestRunner.test('Sidechain - enableSidechainFromMic is async', (t) => {
 
 TestRunner.test('Sidechain - enableSidechainFromMic accepts 1 parameter', (t) => {
     const paramCount = enableSidechainFromMic.length;
-    t.assertEquals(paramCount, 1, 'enableSidechainFromMic should accept 1 parameter');
+    t.assertEqual(paramCount, 1, 'enableSidechainFromMic should accept 1 parameter');
 });
 
 TestRunner.test('Sidechain - enableSidechainFromMic references compressorNode parameter', (t) => {
@@ -7698,12 +7698,12 @@ TestRunner.test('Sidechain - enableSidechainFromMic returns boolean', (t) => {
 });
 
 TestRunner.test('Sidechain - disableSidechainFromMic is a function export', (t) => {
-    t.assertEquals(typeof disableSidechainFromMic, 'function', 'disableSidechainFromMic should be a function');
+    t.assertEqual(typeof disableSidechainFromMic, 'function', 'disableSidechainFromMic should be a function');
 });
 
 TestRunner.test('Sidechain - disableSidechainFromMic accepts 0 parameters', (t) => {
     const paramCount = disableSidechainFromMic.length;
-    t.assertEquals(paramCount, 0, 'disableSidechainFromMic should accept 0 parameters');
+    t.assertEqual(paramCount, 0, 'disableSidechainFromMic should accept 0 parameters');
 });
 
 TestRunner.test('Sidechain - disableSidechainFromMic checks micForSidechain', (t) => {
@@ -7727,7 +7727,7 @@ TestRunner.test('Sidechain - disableSidechainFromMic sets micForSidechain to nul
 });
 
 TestRunner.test('Sidechain - enableSidechainFromTrackIn is a function export', (t) => {
-    t.assertEquals(typeof enableSidechainFromTrackIn, 'function', 'enableSidechainFromTrackIn should be a function');
+    t.assertEqual(typeof enableSidechainFromTrackIn, 'function', 'enableSidechainFromTrackIn should be a function');
 });
 
 TestRunner.test('Sidechain - enableSidechainFromTrackIn is async', (t) => {
@@ -7737,7 +7737,7 @@ TestRunner.test('Sidechain - enableSidechainFromTrackIn is async', (t) => {
 
 TestRunner.test('Sidechain - enableSidechainFromTrackIn accepts 2 parameters', (t) => {
     const paramCount = enableSidechainFromTrackIn.length;
-    t.assertEquals(paramCount, 2, 'enableSidechainFromTrackIn should accept 2 parameters');
+    t.assertEqual(paramCount, 2, 'enableSidechainFromTrackIn should accept 2 parameters');
 });
 
 TestRunner.test('Sidechain - enableSidechainFromTrackIn references trackId parameter', (t) => {
@@ -7771,12 +7771,12 @@ TestRunner.test('Sidechain - enableSidechainFromTrackIn connects track to sidech
 });
 
 TestRunner.test('Sidechain - disableSidechainBus is a function export', (t) => {
-    t.assertEquals(typeof disableSidechainBus, 'function', 'disableSidechainBus should be a function');
+    t.assertEqual(typeof disableSidechainBus, 'function', 'disableSidechainBus should be a function');
 });
 
 TestRunner.test('Sidechain - disableSidechainBus accepts 0 parameters', (t) => {
     const paramCount = disableSidechainBus.length;
-    t.assertEquals(paramCount, 0, 'disableSidechainBus should accept 0 parameters');
+    t.assertEqual(paramCount, 0, 'disableSidechainBus should accept 0 parameters');
 });
 
 TestRunner.test('Sidechain - disableSidechainBus calls disableSidechainFromMic', (t) => {
@@ -7795,12 +7795,12 @@ TestRunner.test('Sidechain - disableSidechainBus sets sidechainBus to null', (t)
 });
 
 TestRunner.test('Sidechain - isMicOpenForSidechain is a function export', (t) => {
-    t.assertEquals(typeof isMicOpenForSidechain, 'function', 'isMicOpenForSidechain should be a function');
+    t.assertEqual(typeof isMicOpenForSidechain, 'function', 'isMicOpenForSidechain should be a function');
 });
 
 TestRunner.test('Sidechain - isMicOpenForSidechain accepts 0 parameters', (t) => {
     const paramCount = isMicOpenForSidechain.length;
-    t.assertEquals(paramCount, 0, 'isMicOpenForSidechain should accept 0 parameters');
+    t.assertEqual(paramCount, 0, 'isMicOpenForSidechain should accept 0 parameters');
 });
 
 TestRunner.test('Sidechain - isMicOpenForSidechain references micForSidechain', (t) => {
@@ -7942,7 +7942,7 @@ TestRunner.test('Audio Clip External - addExternalAudioFileAsClip is async', (t)
 
 TestRunner.test('Audio Clip External - addExternalAudioFileAsClip accepts 3 parameters', (t) => {
     const paramCount = Track.prototype.addExternalAudioFileAsClip.length;
-    t.assertEquals(paramCount, 3, 'addExternalAudioFileAsClip should accept 3 parameters');
+    t.assertEqual(paramCount, 3, 'addExternalAudioFileAsClip should accept 3 parameters');
 });
 
 TestRunner.test('Audio Clip External - addExternalAudioFileAsClip references audioFileBlob parameter', (t) => {
@@ -8041,7 +8041,7 @@ TestRunner.test('Audio Clip Position - updateAudioClipPosition is a function exp
 
 TestRunner.test('Audio Clip Position - updateAudioClipPosition accepts 2 parameters', (t) => {
     const paramCount = Track.prototype.updateAudioClipPosition.length;
-    t.assertEquals(paramCount, 2, 'updateAudioClipPosition should accept 2 parameters');
+    t.assertEqual(paramCount, 2, 'updateAudioClipPosition should accept 2 parameters');
 });
 
 TestRunner.test('Audio Clip Position - updateAudioClipPosition is async', (t) => {
@@ -8100,7 +8100,7 @@ TestRunner.test('Audio Clip Duration - updateAudioClipDuration is a function exp
 
 TestRunner.test('Audio Clip Duration - updateAudioClipDuration accepts 2 parameters', (t) => {
     const paramCount = Track.prototype.updateAudioClipDuration.length;
-    t.assertEquals(paramCount, 2, 'updateAudioClipDuration should accept 2 parameters');
+    t.assertEqual(paramCount, 2, 'updateAudioClipDuration should accept 2 parameters');
 });
 
 TestRunner.test('Audio Clip Duration - updateAudioClipDuration is async', (t) => {
@@ -8166,7 +8166,7 @@ TestRunner.test('Punch Region - getPunchRegion is a function export', (t) => {
 });
 
 TestRunner.test('Punch Region - getPunchRegion accepts 0 parameters', (t) => {
-    t.assertEquals(getPunchRegion.length, 0, 'getPunchRegion should accept 0 parameters');
+    t.assertEqual(getPunchRegion.length, 0, 'getPunchRegion should accept 0 parameters');
 });
 
 TestRunner.test('Punch Region - getPunchRegion returns an object', (t) => {
@@ -8190,7 +8190,7 @@ TestRunner.test('Punch Region - setPunchRegion is a function export', (t) => {
 });
 
 TestRunner.test('Punch Region - setPunchRegion accepts 2 parameters', (t) => {
-    t.assertEquals(setPunchRegion.length, 2, 'setPunchRegion should accept 2 parameters');
+    t.assertEqual(setPunchRegion.length, 2, 'setPunchRegion should accept 2 parameters');
 });
 
 TestRunner.test('Punch Region - setPunchRegion references inBars parameter', (t) => {
@@ -8233,7 +8233,7 @@ TestRunner.test('Punch Region - setPunchRegionEnabled is a function export', (t)
 });
 
 TestRunner.test('Punch Region - setPunchRegionEnabled accepts 1 parameter', (t) => {
-    t.assertEquals(setPunchRegionEnabled.length, 1, 'setPunchRegionEnabled should accept 1 parameter');
+    t.assertEqual(setPunchRegionEnabled.length, 1, 'setPunchRegionEnabled should accept 1 parameter');
 });
 
 TestRunner.test('Punch Region - setPunchRegionEnabled coerces to boolean', (t) => {
@@ -8251,7 +8251,7 @@ TestRunner.test('Punch Region - isPunchRegionEnabled is a function export', (t) 
 });
 
 TestRunner.test('Punch Region - isPunchRegionEnabled accepts 0 parameters', (t) => {
-    t.assertEquals(isPunchRegionEnabled.length, 0, 'isPunchRegionEnabled should accept 0 parameters');
+    t.assertEqual(isPunchRegionEnabled.length, 0, 'isPunchRegionEnabled should accept 0 parameters');
 });
 
 TestRunner.test('Punch Region - isPunchRegionEnabled returns boolean', (t) => {
@@ -8264,7 +8264,7 @@ TestRunner.test('Punch Region - getPunchInBars is a function export', (t) => {
 });
 
 TestRunner.test('Punch Region - getPunchInBars accepts 0 parameters', (t) => {
-    t.assertEquals(getPunchInBars.length, 0, 'getPunchInBars should accept 0 parameters');
+    t.assertEqual(getPunchInBars.length, 0, 'getPunchInBars should accept 0 parameters');
 });
 
 TestRunner.test('Punch Region - getPunchOutBars is a function export', (t) => {
@@ -8272,7 +8272,7 @@ TestRunner.test('Punch Region - getPunchOutBars is a function export', (t) => {
 });
 
 TestRunner.test('Punch Region - getPunchOutBars accepts 0 parameters', (t) => {
-    t.assertEquals(getPunchOutBars.length, 0, 'getPunchOutBars should accept 0 parameters');
+    t.assertEqual(getPunchOutBars.length, 0, 'getPunchOutBars should accept 0 parameters');
 });
 
 TestRunner.test('Punch Region - isPositionInPunchRegion is a function export', (t) => {
@@ -8280,7 +8280,7 @@ TestRunner.test('Punch Region - isPositionInPunchRegion is a function export', (
 });
 
 TestRunner.test('Punch Region - isPositionInPunchRegion accepts 1 parameter', (t) => {
-    t.assertEquals(isPositionInPunchRegion.length, 1, 'isPositionInPunchRegion should accept 1 parameter');
+    t.assertEqual(isPositionInPunchRegion.length, 1, 'isPositionInPunchRegion should accept 1 parameter');
 });
 
 TestRunner.test('Punch Region - isPositionInPunchRegion references positionString parameter', (t) => {
@@ -8308,7 +8308,7 @@ TestRunner.test('Punch Recording - scheduleRecordingForPunch is a function expor
 });
 
 TestRunner.test('Punch Recording - scheduleRecordingForPunch accepts 2 parameters', (t) => {
-    t.assertEquals(scheduleRecordingForPunch.length, 2, 'scheduleRecordingForPunch should accept 2 parameters');
+    t.assertEqual(scheduleRecordingForPunch.length, 2, 'scheduleRecordingForPunch should accept 2 parameters');
 });
 
 TestRunner.test('Punch Recording - scheduleRecordingForPunch references trackId parameter', (t) => {
@@ -8356,7 +8356,7 @@ TestRunner.test('Punch Recording - cancelScheduledRecording is a function export
 });
 
 TestRunner.test('Punch Recording - cancelScheduledRecording accepts 0 parameters', (t) => {
-    t.assertEquals(cancelScheduledRecording.length, 0, 'cancelScheduledRecording should accept 0 parameters');
+    t.assertEqual(cancelScheduledRecording.length, 0, 'cancelScheduledRecording should accept 0 parameters');
 });
 
 TestRunner.test('Punch Recording - cancelScheduledRecording clears recordingScheduledId', (t) => {
@@ -8374,7 +8374,7 @@ TestRunner.test('Punch Recording - getRecordingScheduledTrackId is a function ex
 });
 
 TestRunner.test('Punch Recording - getRecordingScheduledTrackId accepts 0 parameters', (t) => {
-    t.assertEquals(getRecordingScheduledTrackId.length, 0, 'getRecordingScheduledTrackId should accept 0 parameters');
+    t.assertEqual(getRecordingScheduledTrackId.length, 0, 'getRecordingScheduledTrackId should accept 0 parameters');
 });
 
 TestRunner.test('Punch Recording - getRecordingScheduledTrackId returns recordingScheduledTrackId', (t) => {
@@ -8387,7 +8387,7 @@ TestRunner.test('Punch Recording - cleanupRecordingScheduling is a function expo
 });
 
 TestRunner.test('Punch Recording - cleanupRecordingScheduling accepts 0 parameters', (t) => {
-    t.assertEquals(cleanupRecordingScheduling.length, 0, 'cleanupRecordingScheduling should accept 0 parameters');
+    t.assertEqual(cleanupRecordingScheduling.length, 0, 'cleanupRecordingScheduling should accept 0 parameters');
 });
 
 TestRunner.test('Punch Recording - cleanupRecordingScheduling calls cancelScheduledRecording', (t) => {
@@ -12404,5 +12404,58 @@ TestRunner.test('Day 520 - APP_VERSION validation for Day 520', (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 520');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 181, 'Minor version should be >= 181 for Day 520');
+    }
+});
+// Day 529: Fix testRunner stub() method and assertEquals typo (2026-05-19)
+// Add stub() method to TestRunner and fix 42 assertEquals typos
+TestRunner.test('Day 529 - TestRunner has stub() method', (t) => {
+    t.assertEqual(typeof t.stub, 'function', 'TestRunner should have stub() method');
+});
+
+TestRunner.test('Day 529 - stub() creates a callable function', (t) => {
+    const s = t.stub();
+    t.assertEqual(typeof s, 'function', 'stub() should return a function');
+});
+
+TestRunner.test('Day 529 - stub() tracks calls with calls array', (t) => {
+    const s = t.stub();
+    s('arg1', 'arg2');
+    s('arg3');
+    t.assertEqual(s.calls.length, 2, 'stub should track 2 calls');
+    t.assertEqual(s.calls[0].arguments[0], 'arg1', 'first call first arg');
+    t.assertEqual(s.calls[1].arguments[0], 'arg3', 'second call first arg');
+});
+
+TestRunner.test('Day 529 - stub() returns configured value', (t) => {
+    const s = t.stub();
+    s.returns('mockValue');
+    t.assertEqual(s(), 'mockValue', 'stub should return mockValue');
+    t.assertEqual(s(), 'mockValue', 'stub should always return mockValue');
+});
+
+TestRunner.test('Day 529 - stub() returns object when configured', (t) => {
+    const s = t.stub();
+    const mockObj = { foo: 'bar' };
+    s.returns(mockObj);
+    const result = s();
+    t.assertEqual(result.foo, 'bar', 'stub should return the object');
+});
+
+TestRunner.test('Day 529 - stub() can be used for object method mocking', (t) => {
+    const mockObj = {
+        addEventListener: t.stub(),
+        classList: { add: t.stub(), remove: t.stub() },
+        querySelector: t.stub().returns(null)
+    };
+    mockObj.addEventListener('click', () => {});
+    t.assertEqual(mockObj.addEventListener.calls.length, 1, 'addEventListener should track calls');
+    t.assertEqual(mockObj.classList.add.calls.length, 0, 'add should not have calls yet');
+});
+
+TestRunner.test('Day 529 - APP_VERSION validation for Day 529', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 529');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 190, 'Minor version should be >= 190 for Day 529');
     }
 });
