@@ -338,7 +338,7 @@ export function getRecordingInputGainNode() {
     return recordingInputGainNode;
 }
 
-function cleanupRecordingAudioResources() {
+export function cleanupRecordingAudioResources() {
     if (mic) {
         try { mic.disconnect(); } catch (e) {}
         try { mic.close(); } catch (e) {}
