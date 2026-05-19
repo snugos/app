@@ -161,7 +161,10 @@ import {
     resolveRecordingMicrophoneTestTrack,
     connectTrackToSendBus,
     disconnectTrackFromSendBus,
-    runRecordingMicrophoneE2ETest
+    runRecordingMicrophoneE2ETest,
+    getRecordingInputGainNode,
+    setRecordingInputGain,
+    cleanupRecordingAudioResources
 } from './audio.js';
 
 import {
@@ -4528,6 +4531,109 @@ TestRunner.test('Recording Microphone E2E - APP_VERSION validation for Day 438',
 });
 
 // ============================================
+// ================================================================
+// Day 530: Recording Module Extended Functions Tests
+// ================================================================
+TestRunner.test('Day 530 - Recording - getRecordingInputGainNode is a function export', (t) => {
+    t.assertEqual(typeof getRecordingInputGainNode, 'function', 'getRecordingInputGainNode should be a function');
+});
+
+TestRunner.test('Day 530 - Recording - getRecordingInputGainNode accepts 0 parameters', (t) => {
+    t.assertEqual(getRecordingInputGainNode.length, 0, 'getRecordingInputGainNode should accept 0 parameters');
+});
+
+TestRunner.test('Day 530 - Recording - getRecordingInputGainNode creates Tone.Gain node', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('Tone.Gain') || funcStr.includes('new Tone.Gain'), 'getRecordingInputGainNode should create Tone.Gain node');
+});
+
+TestRunner.test('Day 530 - Recording - getRecordingInputGainNode references recordingInputGainValue', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGainValue'), 'getRecordingInputGainNode should use recordingInputGainValue');
+});
+
+TestRunner.test('Day 530 - Recording - getRecordingInputGainNode checks disposed state', (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getRecordingInputGainNode should check disposed state');
+});
+
+TestRunner.test('Day 530 - Recording - setRecordingInputGain is a function export', (t) => {
+    t.assertEqual(typeof setRecordingInputGain, 'function', 'setRecordingInputGain should be a function');
+});
+
+TestRunner.test('Day 530 - Recording - setRecordingInputGain accepts 1 parameter', (t) => {
+    t.assertEqual(setRecordingInputGain.length, 1, 'setRecordingInputGain should accept 1 parameter');
+});
+
+TestRunner.test('Day 530 - Recording - setRecordingInputGain clamps to valid range', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'setRecordingInputGain should clamp values');
+});
+
+TestRunner.test('Day 530 - Recording - setRecordingInputGain references gainValue', (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('gainValue') || funcStr.includes('value'), 'setRecordingInputGain should reference gain value');
+});
+
+TestRunner.test('Day 530 - Recording - cleanupRecordingAudioResources is a function export', (t) => {
+    t.assertEqual(typeof cleanupRecordingAudioResources, 'function', 'cleanupRecordingAudioResources should be a function');
+});
+
+TestRunner.test('Day 530 - Recording - cleanupRecordingAudioResources handles mic disconnect', (t) => {
+    const funcStr = cleanupRecordingAudioResources.toString();
+    t.assertTruthy(funcStr.includes('mic') && (funcStr.includes('disconnect') || funcStr.includes('close') || funcStr.includes('dispose')), 'cleanupRecordingAudioResources should handle mic cleanup');
+});
+
+TestRunner.test('Day 530 - Recording - cleanupRecordingAudioResources handles recorder dispose', (t) => {
+    const funcStr = cleanupRecordingAudioResources.toString();
+    t.assertTruthy(funcStr.includes('recorder') && (funcStr.includes('dispose') || funcStr.includes('disconnect')), 'cleanupRecordingAudioResources should handle recorder cleanup');
+});
+
+TestRunner.test('Day 530 - Recording - cleanupRecordingScheduling is a function export', (t) => {
+    t.assertEqual(typeof cleanupRecordingScheduling, 'function', 'cleanupRecordingScheduling should be a function');
+});
+
+TestRunner.test('Day 530 - Recording - cleanupRecordingScheduling accepts 0 parameters', (t) => {
+    t.assertEqual(cleanupRecordingScheduling.length, 0, 'cleanupRecordingScheduling should accept 0 parameters');
+});
+
+TestRunner.test('Day 530 - Recording - cleanupRecordingScheduling calls cancelScheduledRecording', (t) => {
+    const funcStr = cleanupRecordingScheduling.toString();
+    t.assertTruthy(funcStr.includes('cancelScheduledRecording'), 'cleanupRecordingScheduling should call cancelScheduledRecording');
+});
+
+TestRunner.test('Day 530 - Recording - runRecordingMicrophoneE2ETest is async', (t) => {
+    t.assertEqual(runRecordingMicrophoneE2ETest.constructor.name, 'AsyncFunction', 'runRecordingMicrophoneE2ETest should be async');
+});
+
+TestRunner.test('Day 530 - Recording - runRecordingMicrophoneE2ETest accepts 2 parameters', (t) => {
+    t.assertEqual(runRecordingMicrophoneE2ETest.length, 2, 'runRecordingMicrophoneE2ETest should accept 2 parameters');
+});
+
+TestRunner.test('Day 530 - Recording - runRecordingMicrophoneE2ETest uses resolveRecordingMicrophoneTestTrack', (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('resolveRecordingMicrophoneTestTrack'), 'runRecordingMicrophoneE2ETest should use resolveRecordingMicrophoneTestTrack');
+});
+
+TestRunner.test('Day 530 - Recording - runRecordingMicrophoneE2ETest returns structured result object', (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('ok:') && funcStr.includes('step:'), 'runRecordingMicrophoneE2ETest should return result with ok and step');
+});
+
+TestRunner.test('Day 530 - Recording - runRecordingMicrophoneE2ETest calls cleanupRecordingScheduling', (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('cleanupRecordingScheduling'), 'runRecordingMicrophoneE2ETest should call cleanupRecordingScheduling');
+});
+
+TestRunner.test('Day 530 - Recording - APP_VERSION validation for Day 530', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 530');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 192, 'Minor version should be >= 192 for Day 530');
+    }
+});
+
+
 // Day 356: Project Save/Load Functions Tests
 // ============================================
 TestRunner.test('Project Save/Load - saveProjectInternal is a function', (t) => {

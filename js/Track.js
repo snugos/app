@@ -1478,6 +1478,13 @@ export class Track {
 
         if (rowShift === 0) return 0;
 
+        // Ensure all rows exist before mapping
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+            }
+        }
+
         const newData = activeSeq.data.map((row, rowIndex) => {
             const newRow = Array(totalSteps).fill(null);
             for (let col = 0; col < totalSteps; col++) {
@@ -2772,7 +2779,7 @@ export class Track {
             const data = audioBuffer.getChannelData(0);
             let peakAmplitude = 0;
             for (let i = 0; i < data.length; i++) {
-                const abs = Math.abs(data[i]);
+                const abs = Math.abs(data[i];
                 if (abs > peakAmplitude) peakAmplitude = abs;
             }
 
