@@ -1,27 +1,26 @@
-#### Day 526: Remaining UI Render Functions Tests (2026-05-18)
-- **Feature**: Added 45 unit tests for remaining UI render functions (drawWaveform, drawInstrumentWaveform, highlightPlayingStep, renderSamplePads, updateSliceEditorUI, updateSequencerCellUI, updateDrumPadControlsUI, renderDrumSamplerPads, updateMixerWindow, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory, renderEffectControls, getDrumSamplerPadExistingAudioData, renderDrumPadEditorControls, createKnob) to expand test coverage
+#### Day 528: Track Slice & Pad Setters Undo Capture Tests (2026-05-18)
+- **Feature**: Added 59 unit tests for Track Slice, Pad, and Instrument Sampler setter methods to verify all state mutations go through the capture mechanism (undo/redo support)
 - **Files Modified**:
-  - `js/tests.js`: Added Day 526 test block with 45 tests covering function exports, parameter counts, and parameter references
-  - `js/constants.js`: Bumped APP_VERSION to 2.188.0
+  - `js/tests.js`: Added Day 528 test block with 59 tests for Track Slice & Pad Setters undo capture verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.190.0
 - **Feature Details**:
-  - **drawWaveform** (3 tests): Function export, 1 parameter, track parameter reference
-  - **drawInstrumentWaveform** (3 tests): Function export, 1 parameter, track parameter reference
-  - **highlightPlayingStep** (3 tests): Function export, 3 parameters (trackId, stepIndex, isPlaying), trackId reference
-  - **renderSamplePads** (3 tests): Function export, 1 parameter, track parameter reference
-  - **updateSliceEditorUI** (3 tests): Function export, 1 parameter, track parameter reference
-  - **updateSequencerCellUI** (3 tests): Function export, 5-6 parameters, windowElement reference
-  - **updateDrumPadControlsUI** (3 tests): Function export, 1 parameter, track parameter reference
-  - **renderDrumSamplerPads** (3 tests): Function export, 1 parameter, track parameter reference
-  - **updateMixerWindow** (3 tests): Function export, 0 parameters, renderMixer/localAppServices reference
-  - **updateSoundBrowserDisplayForLibrary** (3 tests): Function export, 1-3 parameters, libraryName reference
-  - **renderSoundBrowserDirectory** (3 tests): Function export, 2 parameters, pathArray reference
-  - **renderEffectControls** (3 tests): Function export, 4 parameters, owner reference
-  - **getDrumSamplerPadExistingAudioData** (3 tests): Function export, 2 parameters, track reference
-  - **renderDrumPadEditorControls** (3 tests): Function export, 1 parameter, track reference
-  - **createKnob** (2 tests): References localAppServices/captureStateForUndo, options parameter reference
-  - **APP_VERSION validation** (1 test): Tests validate version >= 2.187 for Day 526
-- **Version**: Bumped to 2.188.0
-- **Test Count**: Increased from 2170 to 2216
+  - **setSliceVolume** (4 tests): Function export, 2 parameters, sliceIndex reference, _captureUndoState call
+  - **setSlicePitchShift** (5 tests): Function export, 2 parameters, sliceIndex reference, _captureUndoState call, parseInt for semitones
+  - **setSliceLoop** (4 tests): Function export, 2 parameters, _captureUndoState call, !! boolean coercion
+  - **setSliceReverse** (4 tests): Function export, 2 parameters, _captureUndoState call, !! boolean coercion
+  - **setSliceEnvelopeParam** (5 tests): Function export, 3 parameters, param/value references, _captureUndoState call, parseFloat for value
+  - **setDrumSamplerPadVolume** (5 tests): Function export, 2 parameters, padIndex reference, _captureUndoState call, parseFloat for volume
+  - **setDrumSamplerPadPitch** (5 tests): Function export, 2 parameters, padIndex reference, _captureUndoState call, parseInt for pitch
+  - **setDrumSamplerPadEnv** (5 tests): Function export, 3 parameters, padIndex/param/value references, _captureUndoState call, parseFloat for value
+  - **setTrackColor** (5 tests): Function export, 1 parameter, color reference, _captureUndoState call, updateTrackUI call
+  - **setInstrumentSamplerRootNote** (4 tests): Function export, 1 parameter, _captureUndoState call, setupToneSampler call
+  - **setInstrumentSamplerLoop** (4 tests): Function export, 1 parameter, _captureUndoState call, !! boolean coercion
+  - **setInstrumentSamplerLoopStart** (4 tests): Function export, 1 parameter, _captureUndoState call, parseFloat for time
+  - **setInstrumentSamplerLoopEnd** (4 tests): Function export, 1 parameter, _captureUndoState call, parseFloat for time
+  - **setInstrumentSamplerEnv** (4 tests): Function export, 2 parameters, param/value references, _captureUndoState call, parseFloat for value
+  - **APP_VERSION validation** (1 test): Tests validate version >= 2.189 for Day 528
+- **Version**: Bumped to 2.190.0
+- **Test Count**: Increased from 2260 to 2319
 
 
 #### Day 527: Audio Clip Setters Undo Capture Tests (2026-05-18)

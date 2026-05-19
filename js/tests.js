@@ -12097,6 +12097,306 @@ TestRunner.test('Day 527 - Audio Clip Setters - APP_VERSION validation for Day 5
 
 
 
+
+
+// --- Day 528: Track Slice & Pad Setters Undo Capture Tests ---
+
+TestRunner.test('Day 528 - Track Setters - setSliceVolume is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceVolume, 'function', 'setSliceVolume should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceVolume accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSliceVolume.length, 2, 'setSliceVolume should accept 2 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceVolume references sliceIndex parameter', (t) => {
+    const funcStr = Track.prototype.setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('sliceIndex'), 'setSliceVolume should reference sliceIndex parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceVolume calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceVolume should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSlicePitchShift is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setSlicePitchShift, 'function', 'setSlicePitchShift should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSlicePitchShift accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSlicePitchShift.length, 2, 'setSlicePitchShift should accept 2 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSlicePitchShift references sliceIndex parameter', (t) => {
+    const funcStr = Track.prototype.setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('sliceIndex'), 'setSlicePitchShift should reference sliceIndex parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSlicePitchShift calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSlicePitchShift should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSlicePitchShift uses parseInt for semitones', (t) => {
+    const funcStr = Track.prototype.setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setSlicePitchShift should use parseInt for semitones');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceLoop is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceLoop, 'function', 'setSliceLoop should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceLoop accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSliceLoop.length, 2, 'setSliceLoop should accept 2 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceLoop calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSliceLoop.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceLoop should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceLoop uses boolean coercion', (t) => {
+    const funcStr = Track.prototype.setSliceLoop.toString();
+    t.assertTruthy(funcStr.includes('!!'), 'setSliceLoop should use !! boolean coercion');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceReverse is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceReverse, 'function', 'setSliceReverse should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceReverse accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSliceReverse.length, 2, 'setSliceReverse should accept 2 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceReverse calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSliceReverse.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceReverse should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceReverse uses boolean coercion', (t) => {
+    const funcStr = Track.prototype.setSliceReverse.toString();
+    t.assertTruthy(funcStr.includes('!!'), 'setSliceReverse should use !! boolean coercion');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceEnvelopeParam is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceEnvelopeParam, 'function', 'setSliceEnvelopeParam should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceEnvelopeParam accepts 3 parameters', (t) => {
+    t.assertEqual(Track.prototype.setSliceEnvelopeParam.length, 3, 'setSliceEnvelopeParam should accept 3 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceEnvelopeParam calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setSliceEnvelopeParam should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceEnvelopeParam references param and value', (t) => {
+    const funcStr = Track.prototype.setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('param') && funcStr.includes('value'), 'setSliceEnvelopeParam should reference param and value');
+});
+
+TestRunner.test('Day 528 - Track Setters - setSliceEnvelopeParam uses parseFloat for value', (t) => {
+    const funcStr = Track.prototype.setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setSliceEnvelopeParam should use parseFloat for value');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadVolume is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadVolume, 'function', 'setDrumSamplerPadVolume should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadVolume accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setDrumSamplerPadVolume.length, 2, 'setDrumSamplerPadVolume should accept 2 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadVolume calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadVolume should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadVolume references padIndex parameter', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('padIndex'), 'setDrumSamplerPadVolume should reference padIndex parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadVolume uses parseFloat for volume', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setDrumSamplerPadVolume should use parseFloat for volume');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadPitch is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadPitch, 'function', 'setDrumSamplerPadPitch should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadPitch accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setDrumSamplerPadPitch.length, 2, 'setDrumSamplerPadPitch should accept 2 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadPitch calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadPitch should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadPitch references padIndex parameter', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('padIndex'), 'setDrumSamplerPadPitch should reference padIndex parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadPitch uses parseInt for pitch', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setDrumSamplerPadPitch should use parseInt for pitch');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadEnv is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadEnv, 'function', 'setDrumSamplerPadEnv should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadEnv accepts 3 parameters', (t) => {
+    t.assertEqual(Track.prototype.setDrumSamplerPadEnv.length, 3, 'setDrumSamplerPadEnv should accept 3 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadEnv calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setDrumSamplerPadEnv should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadEnv references padIndex, param, and value', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('padIndex') && funcStr.includes('param') && funcStr.includes('value'), 'setDrumSamplerPadEnv should reference padIndex, param, and value');
+});
+
+TestRunner.test('Day 528 - Track Setters - setDrumSamplerPadEnv uses parseFloat for value', (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setDrumSamplerPadEnv should use parseFloat for value');
+});
+
+TestRunner.test('Day 528 - Track Setters - setTrackColor is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setTrackColor, 'function', 'setTrackColor should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setTrackColor accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setTrackColor.length, 1, 'setTrackColor should accept 1 parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setTrackColor calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setTrackColor should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setTrackColor references color parameter', (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('color'), 'setTrackColor should reference color parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setTrackColor calls updateTrackUI', (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'setTrackColor should call updateTrackUI');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerRootNote is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerRootNote, 'function', 'setInstrumentSamplerRootNote should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerRootNote accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerRootNote.length, 1, 'setInstrumentSamplerRootNote should accept 1 parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerRootNote calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerRootNote.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerRootNote should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerRootNote calls setupToneSampler', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerRootNote.toString();
+    t.assertTruthy(funcStr.includes('setupToneSampler'), 'setInstrumentSamplerRootNote should call setupToneSampler');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoop is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerLoop, 'function', 'setInstrumentSamplerLoop should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoop accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerLoop.length, 1, 'setInstrumentSamplerLoop should accept 1 parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoop calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoop.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerLoop should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoop uses boolean coercion', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoop.toString();
+    t.assertTruthy(funcStr.includes('!!'), 'setInstrumentSamplerLoop should use !! boolean coercion');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoopStart is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerLoopStart, 'function', 'setInstrumentSamplerLoopStart should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoopStart accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerLoopStart.length, 1, 'setInstrumentSamplerLoopStart should accept 1 parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoopStart calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoopStart.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerLoopStart should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoopStart uses parseFloat for time', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoopStart.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setInstrumentSamplerLoopStart should use parseFloat for time');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoopEnd is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerLoopEnd, 'function', 'setInstrumentSamplerLoopEnd should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoopEnd accepts 1 parameter', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerLoopEnd.length, 1, 'setInstrumentSamplerLoopEnd should accept 1 parameter');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoopEnd calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoopEnd.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerLoopEnd should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerLoopEnd uses parseFloat for time', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerLoopEnd.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setInstrumentSamplerLoopEnd should use parseFloat for time');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerEnv is a function export', (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerEnv, 'function', 'setInstrumentSamplerEnv should be a function');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerEnv accepts 2 parameters', (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerEnv.length, 2, 'setInstrumentSamplerEnv should accept 2 parameters');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerEnv calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'setInstrumentSamplerEnv should call _captureUndoState');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerEnv references param and value', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('param') && funcStr.includes('value'), 'setInstrumentSamplerEnv should reference param and value');
+});
+
+TestRunner.test('Day 528 - Track Setters - setInstrumentSamplerEnv uses parseFloat for value', (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerEnv.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setInstrumentSamplerEnv should use parseFloat for value');
+});
+
+TestRunner.test('Day 528 - APP_VERSION validation for Day 528', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 528');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 189, 'Minor version should be >= 189 for Day 528');
+    }
+});
+
+
 // --- APP_VERSION validation for Day 520 ---
 TestRunner.test('Day 520 - APP_VERSION validation for Day 520', (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
