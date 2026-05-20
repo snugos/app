@@ -987,6 +987,42 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Delete key - Clear selected sequencer notes
+        if (key === 'delete' || key === 'backspace') {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track) {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const seqWinId = `sequencerWin-${activeSeqTrackId}`;
+                        const sequencerWindow = getWindowByIdState ? getWindowByIdState(seqWinId) : null;
+                        if (sequencerWindow && sequencerWindow.element) {
+                            const selectedCells = sequencerWindow.element.querySelectorAll('.sequencer-step-cell.selected-cell');
+                            if (selectedCells.length > 0) {
+                                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Delete Selection on ${track.name} (${currentActiveSeq.name})`);
+                                let clearedCount = 0;
+                                selectedCells.forEach(cell => {
+                                    const r = parseInt(cell.dataset.row);
+                                    const c = parseInt(cell.dataset.col);
+                                    if (currentActiveSeq.data[r] && currentActiveSeq.data[r][c]) {
+                                        currentActiveSeq.data[r][c] = null;
+                                        clearedCount++;
+                                    }
+                                    cell.classList.remove('selected-cell');
+                                });
+                                track.recreateToneSequence(true);
+                                showNotification(`Deleted ${clearedCount} note(s).`, 1500);
+                                if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // V - Toggle sequencer piano roll / step view
         if (key === 'v') {
             if (typeof toggleSequencerViewMode === 'function') {

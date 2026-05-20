@@ -1,3 +1,36 @@
+#### Day 533: Delete Key - Delete Selected Sequencer Notes (2026-05-20)
+- **Feature**: Added Delete/Backspace key handler to delete selected sequencer notes
+- **Files Modified**:
+  - `js/eventHandlers.js`: Added Delete key handler to clear selected sequencer cells
+  - `js/ui.js`: Added Delete key row to keyboard shortcuts help window Edit Operations section
+  - `js/tests.js`: Added 10 tests for Delete key functionality
+  - `js/constants.js`: Bumped APP_VERSION to 2.194.0
+- **Feature Details**:
+  - **Delete key handler** (`js/eventHandlers.js`): Added after Ctrl+A block to handle Delete/Backspace key presses
+    - Gets armed track via `getArmedTrackId()`
+    - Gets active sequence via `track.getActiveSequence()`
+    - Finds selected cells via `querySelectorAll('.sequencer-step-cell.selected-cell')`
+    - Captures undo state before deletion using `captureStateForUndo`
+    - Clears note data (sets to null) for selected cells and removes `selected-cell` class
+    - Calls `track.recreateToneSequence(true)` to refresh audio
+    - Shows notification with count of deleted notes
+    - Prevents default browser behavior and returns early
+  - **Keyboard shortcuts help** (`js/ui.js`): Added Delete key row showing "Delete Selection"
+- **Tests Added** (10 tests):
+  - Delete Key handler function exists and checks for delete/backspace key
+  - Delete Key handler gets armed track via getArmedTrackId/getTrackById
+  - Delete Key handler gets active sequence
+  - Delete Key handler finds selected cells via querySelectorAll
+  - Delete Key handler captures undo state before deletion
+  - Delete Key handler clears notes and removes selected-cell class
+  - Delete Key handler prevents default and returns early
+  - Delete Key handler shows notification with deleted count
+  - Keyboard shortcuts help shows Delete row for Delete Selection
+  - APP_VERSION validation for Day 533
+- **Version**: Bumped to 2.194.0
+- **Test Count**: Increased from 12474 to 12484
+
+
 #### Day 532: Ctrl+A Select All Notes in Sequencer (2026-05-20)
 - **Feature**: Added Ctrl+A keyboard shortcut to select all notes in the active sequencer
 - **Files Modified**:
