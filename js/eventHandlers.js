@@ -10,6 +10,7 @@ import {
     getSoloedTrackIdState as getSoloedTrackId,
     setArmedTrackIdState as setArmedTrackId,
     getArmedTrackIdState as getArmedTrackId,
+    getActiveSequencerTrackIdState as getActiveSequencerTrackId,
     setActiveSequencerTrackIdState as setActiveSequencerTrackId,
     setIsRecordingState as setIsRecording,
     isTrackRecordingState as isTrackRecording,
