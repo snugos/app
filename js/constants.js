@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.194.0'; // Day 534: Ctrl+Q - Quantize Selected Sequencer Notes
+export const APP_VERSION = '2.195.0'; // Day 536: Ctrl+X - Cut Selected Sequencer Notes
 // Added Ctrl+Q keyboard shortcut to quantize only the selected sequencer cells to the current snap grid.
 // Uses selected-cell class to identify selected notes, snaps each note's column to the nearest snapValue grid point.
 // Prevents collision by checking if target slot is empty before moving.

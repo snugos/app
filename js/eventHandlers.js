@@ -1292,6 +1292,65 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl/Cmd+X - Cut sequencer selection (copy then delete)
+        if ((event.ctrlKey || event.metaKey) && key === 'x') {
+            const armedTrackId = getArmedTrackId();
+            if (armedTrackId !== null) {
+                const track = getTrackById(armedTrackId);
+                if (track && localAppServices.getClipboardData && localAppServices.setClipboardData) {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const sequencerWindow = track._lastOpenedSequencerWindow;
+                        if (sequencerWindow && sequencerWindow.element) {
+                            const selectedCells = sequencerWindow.element.querySelectorAll('.sequencer-step-cell.selected-cell');
+                            if (selectedCells.length > 0) {
+                                // Copy selection first (same logic as Ctrl+C)
+                                let minRow = Infinity, maxRow = -Infinity, minCol = Infinity, maxCol = -Infinity;
+                                selectedCells.forEach(cell => {
+                                    const r = parseInt(cell.dataset.row);
+                                    const c = parseInt(cell.dataset.col);
+                                    if (r < minRow) minRow = r;
+                                    if (r > maxRow) maxRow = r;
+                                    if (c < minCol) minCol = c;
+                                    if (c > maxCol) maxCol = c;
+                                });
+                                const selData = [];
+                                for (let r = minRow; r <= maxRow; r++) {
+                                    const row = [];
+                                    for (let c = minCol; c <= maxCol; c++) {
+                                        row.push(currentActiveSeq.data && currentActiveSeq.data[r] ? (currentActiveSeq.data[r][c] || null) : null);
+                                    }
+                                    selData.push(row);
+                                }
+                                localAppServices.setClipboardData({ type: 'selection', sourceTrackType: track.type, data: selData, selectionRows: maxRow-minRow+1, selectionCols: maxCol-minCol+1, originalRow: minRow, originalCol: minCol });
+
+                                // Then delete the selected cells (same logic as Delete key)
+                                if (localAppServices.captureStateForUndo) {
+                                    localAppServices.captureStateForUndo(`Cut Selection on ${track.name}`);
+                                }
+                                let deletedCount = 0;
+                                selectedCells.forEach(cell => {
+                                    const r = parseInt(cell.dataset.row);
+                                    const c = parseInt(cell.dataset.col);
+                                    if (currentActiveSeq.data && currentActiveSeq.data[r] && currentActiveSeq.data[r][c]) {
+                                        currentActiveSeq.data[r][c] = null;
+                                        deletedCount++;
+                                    }
+                                    cell.classList.remove('selected-cell');
+                                });
+                                track.recreateToneSequence(true);
+                                showNotification(`Selection (${maxRow-minRow+1}x${maxCol-minCol+1}) cut.`, 2000);
+                                return;
+                            }
+                        }
+                        // No selection - no cut possible
+                        showNotification("No selection to cut.", 2000);
+                    }
+                }
+            }
+            return;
+        }
+
         // Ctrl/Cmd+V - Paste sequencer clipboard to selection or full paste
         if ((event.ctrlKey || event.metaKey) && key === 'v') {
             const armedTrackId = getArmedTrackId();
