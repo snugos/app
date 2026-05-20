@@ -12763,3 +12763,91 @@ TestRunner.test('Day 534 - APP_VERSION validation for Day 534', (t) => {
         t.assertTruthy(versionParts[1] >= 193, 'Minor version should be >= 193 for Day 534');
     }
 });
+
+// ============================================
+// Day 536: Ctrl+X - Cut Selected Sequencer Notes Tests
+// ============================================
+
+TestRunner.test('Day 536 - Ctrl+X Cut selection handler exists', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes("key === 'x'") || funcStr.includes('key === "x"'), 'Ctrl+X should check for x key');
+    t.assertTruthy(funcStr.includes('event.ctrlKey') || funcStr.includes('event.metaKey'), 'Ctrl+X should check for ctrl/meta key');
+    t.assertTruthy(funcStr.includes('// Ctrl/Cmd+X - Cut sequencer'), 'Ctrl+X should have a comment explaining the handler');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut gets armed track via getArmedTrackId', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('getArmedTrackId'), 'Ctrl+X cut should reference getArmedTrackId');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut gets active sequence', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('getActiveSequence'), 'Ctrl+X cut should use getActiveSequence');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut finds selected cells via querySelectorAll', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('.sequencer-step-cell.selected-cell'), 'Ctrl+X cut should target selected-cell elements');
+    t.assertTruthy(cutBlock.includes('querySelectorAll'), 'Ctrl+X cut should use querySelectorAll');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut captures undo state before cut', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('captureStateForUndo'), 'Ctrl+X cut should capture undo state');
+    t.assertTruthy(cutBlock.includes('Cut Selection on') || cutBlock.includes('cut'), 'Ctrl+X cut should use descriptive undo label');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut copies selection to clipboard first', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('setClipboardData'), 'Ctrl+X cut should copy to clipboard using setClipboardData');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut clears notes and removes selected-cell class', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('classList.remove') || cutBlock.includes("'selected-cell'"), 'Ctrl+X cut should remove selected-cell class');
+    t.assertTruthy(cutBlock.includes('null') || cutBlock.includes('= null'), 'Ctrl+X cut should clear note data');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut prevents default browser behavior', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('preventDefault'), 'Ctrl+X cut should call event.preventDefault');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut returns early after handling', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('return;'), 'Ctrl+X cut should return after handling');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut shows notification with dimensions', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('showNotification'), 'Ctrl+X cut should show notification');
+    t.assertTruthy(cutBlock.includes('cut') || cutBlock.includes('Cut'), 'Ctrl+X cut notification should mention cut');
+});
+
+TestRunner.test('Day 536 - Ctrl+X Cut calls recreateToneSequence after cut', (t) => {
+    const funcStr = eventHandlersCode;
+    const cutBlock = funcStr.substring(funcStr.indexOf('// Ctrl/Cmd+X - Cut'));
+    t.assertTruthy(cutBlock.includes('recreateToneSequence'), 'Ctrl+X cut should call recreateToneSequence');
+});
+
+TestRunner.test('Day 536 - Keyboard shortcuts help shows Ctrl+X row for Cut Selection', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Ctrl+X') && uiStr.includes('Cut Selection'), 'Keyboard shortcuts help should show Ctrl+X = Cut Selection');
+});
+
+TestRunner.test('Day 536 - APP_VERSION validation for Day 536', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 536');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 195, 'Minor version should be >= 195 for Day 536');
+    }
+});
