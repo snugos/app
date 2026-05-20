@@ -964,6 +964,28 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl/Cmd+A - Select All Notes in sequencer
+        if ((key === 'a') && (event.ctrlKey || event.metaKey)) {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track) {
+                    const seqWinId = `sequencerWin-${activeSeqTrackId}`;
+                    const seqWinInstance = getWindowByIdState ? getWindowByIdState(seqWinId) : null;
+                    if (seqWinInstance && seqWinInstance.element) {
+                        const allCells = Array.from(seqWinInstance.element.querySelectorAll('.sequencer-step-cell'));
+                        allCells.forEach(cell => cell.classList.add('selected-cell'));
+                        const activeSeq = track.getActiveSequence();
+                        if (activeSeq) {
+                            showNotification(`Selected all notes in "${activeSeq.name}"`, 1500);
+                        }
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
         // V - Toggle sequencer piano roll / step view
         if (key === 'v') {
             if (typeof toggleSequencerViewMode === 'function') {

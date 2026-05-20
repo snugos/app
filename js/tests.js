@@ -12565,3 +12565,50 @@ TestRunner.test('Day 529 - APP_VERSION validation for Day 529', (t) => {
         t.assertTruthy(versionParts[1] >= 190, 'Minor version should be >= 190 for Day 529');
     }
 });
+
+TestRunner.test('Day 531 - Ctrl+A Select All uses selected-cell class for copy/paste compatibility', (t) => {
+    const funcStr = eventHandlersCtrlACode.toString();
+    t.assertTruthy(funcStr.includes('selected-cell'), 'Ctrl+A should add selected-cell class for copy/paste compatibility');
+    t.assertTruthy(funcStr.includes('.selected-cell'), 'Ctrl+A should use selected-cell class name');
+    t.assertTruthy(funcStr.includes('classList.add'), 'Ctrl+A should use classList.add');
+});
+
+TestRunner.test('Day 531 - Ctrl+A Select All gets active sequencer track', (t) => {
+    const funcStr = eventHandlersCtrlACode.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequencerTrackId'), 'Ctrl+A should reference getActiveSequencerTrackId');
+    t.assertTruthy(funcStr.includes('getTrackById'), 'Ctrl+A should reference getTrackById');
+});
+
+TestRunner.test('Day 531 - Ctrl+A Select All gets sequencer window element', (t) => {
+    const funcStr = eventHandlersCtrlACode.toString();
+    t.assertTruthy(funcStr.includes('sequencerWin-') || funcStr.includes('seqWinId'), 'Ctrl+A should reference sequencer window ID');
+    t.assertTruthy(funcStr.includes('getWindowByIdState'), 'Ctrl+A should use getWindowByIdState');
+    t.assertTruthy(funcStr.includes('.element'), 'Ctrl+A should access window element');
+});
+
+TestRunner.test('Day 531 - Ctrl+A Select All selects all sequencer cells', (t) => {
+    const funcStr = eventHandlersCtrlACode.toString();
+    t.assertTruthy(funcStr.includes('.sequencer-step-cell'), 'Ctrl+A should target sequencer-step-cell elements');
+    t.assertTruthy(funcStr.includes('querySelectorAll'), 'Ctrl+A should use querySelectorAll to find cells');
+    t.assertTruthy(funcStr.includes('forEach'), 'Ctrl+A should iterate over cells with forEach');
+});
+
+TestRunner.test('Day 531 - Ctrl+A Select All prevents default and returns early', (t) => {
+    const funcStr = eventHandlersCtrlACode.toString();
+    t.assertTruthy(funcStr.includes('preventDefault'), 'Ctrl+A should call event.preventDefault');
+    t.assertTruthy(funcStr.includes('return'), 'Ctrl+A should return after handling');
+});
+
+TestRunner.test('Day 531 - Ctrl+A Select All shows notification with sequence name', (t) => {
+    const funcStr = eventHandlersCtrlACode.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'Ctrl+A should show notification');
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'Ctrl+A should get active sequence for notification');
+});
+
+TestRunner.test('Day 531 - APP_VERSION validation for Day 531', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 531');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 192, 'Minor version should be >= 192 for Day 531');
+    }
+});
