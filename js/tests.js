@@ -12612,3 +12612,89 @@ TestRunner.test('Day 531 - APP_VERSION validation for Day 531', (t) => {
         t.assertTruthy(versionParts[1] >= 192, 'Minor version should be >= 192 for Day 531');
     }
 });
+
+// ============================================
+// Day 533: Delete Key - Delete Selected Sequencer Notes
+// ============================================
+TestRunner.test('Day 533 - Delete Key uses active sequencer track via getActiveSequencerTrackId', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequencerTrackId'), 'Delete key should use getActiveSequencerTrackId');
+});
+
+TestRunner.test('Day 533 - Delete Key handles delete and backspace keys', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes("key === 'delete'") || funcStr.includes('key === "delete"'), 'Delete key should check for delete key');
+    t.assertTruthy(funcStr.includes("key === 'backspace'") || funcStr.includes('key === "backspace"'), 'Delete key should check for backspace key');
+});
+
+TestRunner.test('Day 533 - Delete Key uses getTrackById to get the track', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'Delete key should use getTrackById');
+});
+
+TestRunner.test('Day 533 - Delete Key uses getActiveSequence to get the active sequence', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'Delete key should use getActiveSequence');
+});
+
+TestRunner.test('Day 533 - Delete Key uses getWindowByIdState to access sequencer window', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('getWindowByIdState'), 'Delete key should use getWindowByIdState');
+});
+
+TestRunner.test('Day 533 - Delete Key targets .selected-cell elements', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('.selected-cell'), 'Delete key should target .selected-cell elements');
+    t.assertTruthy(funcStr.includes('querySelectorAll'), 'Delete key should use querySelectorAll');
+});
+
+TestRunner.test('Day 533 - Delete Key sets selected cells to null to clear notes', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('= null') || funcStr.includes('= null'), 'Delete key should set cells to null');
+    t.assertTruthy(funcStr.includes('clearedCount'), 'Delete key should count cleared notes');
+});
+
+TestRunner.test('Day 533 - Delete Key calls captureStateForUndo for undo support', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'Delete key should call captureStateForUndo');
+});
+
+TestRunner.test('Day 533 - Delete Key calls recreateToneSequence to refresh playback', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('recreateToneSequence'), 'Delete key should call recreateToneSequence');
+});
+
+TestRunner.test('Day 533 - Delete Key removes selected-cell class from cleared cells', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('classList.remove'), 'Delete key should remove selected-cell class');
+    t.assertTruthy(funcStr.includes("'selected-cell'") || funcStr.includes('"selected-cell"'), 'Delete key should remove selected-cell class name');
+});
+
+TestRunner.test('Day 533 - Delete Key shows notification with count of deleted notes', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'Delete key should show notification');
+    t.assertTruthy(funcStr.includes('clearedCount'), 'Delete key notification should include cleared count');
+});
+
+TestRunner.test('Day 533 - Delete Key calls updateTrackUI to refresh UI', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'Delete key should call updateTrackUI');
+});
+
+TestRunner.test('Day 533 - Delete Key prevents default browser behavior', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('preventDefault'), 'Delete key should call event.preventDefault');
+});
+
+TestRunner.test('Day 533 - Delete Key returns early after handling', (t) => {
+    const funcStr = deleteKeyHandler.toString();
+    t.assertTruthy(funcStr.includes('return'), 'Delete key should return after handling');
+});
+
+TestRunner.test('Day 533 - APP_VERSION validation for Day 533', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 533');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 193, 'Minor version should be >= 193 for Day 533');
+    }
+});
