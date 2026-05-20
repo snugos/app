@@ -1018,9 +1018,25 @@ document.addEventListener('keydown', (event) => {
                                 return;
                             }
                         }
+                        // No selection - nothing to delete
+                        showNotification("No selection to delete.", 1500);
+                        event.preventDefault();
+                        return;
                     }
                 }
             }
+            // Track has no active sequence or doesn't support sequencer
+            const armedTrackIdForDel = getArmedTrackId();
+            if (armedTrackIdForDel) {
+                const trackForDel = getTrackById(armedTrackIdForDel);
+                if (trackForDel && trackForDel.type !== 'Audio' && trackForDel.type !== 'DrumSampler') {
+                    // Non-Audio, non-DrumSampler tracks should have a sequencer
+                    // But if we're here, the track doesn't have an active sequence
+                    // Silently ignore - this is normal behavior
+                }
+            }
+            event.preventDefault();
+            return;
         }
 
         // Ctrl+Q - Quantize selection (selected cells only, with current snap value)
