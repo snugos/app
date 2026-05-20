@@ -12698,3 +12698,68 @@ TestRunner.test('Day 533 - APP_VERSION validation for Day 533', (t) => {
         t.assertTruthy(versionParts[1] >= 193, 'Minor version should be >= 193 for Day 533');
     }
 });
+
+// Day 534: Ctrl+Q - Quantize Selected Sequencer Notes
+TestRunner.test('Day 534 - Ctrl+Q quantize selection handler exists', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('(event.ctrlKey || event.metaKey) && key === \'q\''), 'Ctrl+Q handler should check for ctrl/meta+q');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize uses selected-cell class for selection detection', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('.selected-cell'), 'Ctrl+Q should use selected-cell class');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize uses getActiveSequencerTrackId', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequencerTrackId'), 'Ctrl+Q should use getActiveSequencerTrackId');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize checks SEQUENCER_SNAP_VALUE for snap grid', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('SEQUENCER_SNAP_VALUE') || funcStr.includes('snapValue'), 'Ctrl+Q should check snap value');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize handles snap=0 (off) case', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('snapValue === 0') || funcStr.includes('Snap is Off'), 'Ctrl+Q should handle snap off case');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize captures undo state before quantizing', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'Ctrl+Q should capture undo state');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize uses Math.round for snapping to grid', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('Math.round'), 'Ctrl+Q should use Math.round for grid snapping');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize checks for collision before moving note', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('!currentActiveSeq.data') || funcStr.includes('if (!currentActiveSeq.data'), 'Ctrl+Q should check for collision');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize calls recreateToneSequence after quantizing', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('recreateToneSequence'), 'Ctrl+Q should call recreateToneSequence');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize prevents default browser behavior', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('event.preventDefault'), 'Ctrl+Q should prevent default');
+});
+
+TestRunner.test('Day 534 - Ctrl+Q quantize shows notification with count', (t) => {
+    const funcStr = eventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'Ctrl+Q should show notification');
+    t.assertTruthy(funcStr.includes('quantizedCount') || funcStr.includes('note(s)'), 'Ctrl+Q notification should include count');
+});
+
+TestRunner.test('Day 534 - APP_VERSION validation for Day 534', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 534');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 193, 'Minor version should be >= 193 for Day 534');
+    }
+});

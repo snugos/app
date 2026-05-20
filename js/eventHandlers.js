@@ -1023,6 +1023,57 @@ document.addEventListener('keydown', (event) => {
             }
         }
 
+        // Ctrl+Q - Quantize selection (selected cells only, with current snap value)
+        if ((event.ctrlKey || event.metaKey) && key === 'q') {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.quantizeSequence === 'function') {
+                    const seqWinId = `sequencerWin-${activeSeqTrackId}`;
+                    const sequencerWindow = getWindowByIdState ? getWindowByIdState(seqWinId) : null;
+                    if (sequencerWindow && sequencerWindow.element) {
+                        const selectedCells = sequencerWindow.element.querySelectorAll('.sequencer-step-cell.selected-cell');
+                        if (selectedCells.length > 0) {
+                            const snapValue = window.SEQUENCER_SNAP_VALUE || 16;
+                            if (snapValue === 0) {
+                                showNotification("Quantize: Snap is Off. Set a snap value first (S key).", 2000);
+                                return;
+                            }
+                            const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                            if (currentActiveSeq && localAppServices.captureStateForUndo) {
+                                localAppServices.captureStateForUndo(`Quantize Selection on ${track.name} (${currentActiveSeq.name})`);
+                            }
+                            let quantizedCount = 0;
+                            selectedCells.forEach(cell => {
+                                const r = parseInt(cell.dataset.row);
+                                const c = parseInt(cell.dataset.col);
+                                if (currentActiveSeq && currentActiveSeq.data && currentActiveSeq.data[r] && currentActiveSeq.data[r][c] && currentActiveSeq.data[r][c].active) {
+                                    const currentCol = c;
+                                    const snappedCol = Math.round(currentCol / snapValue) * snapValue;
+                                    if (snappedCol !== currentCol && snappedCol >= 0 && snappedCol < currentActiveSeq.length) {
+                                        if (!currentActiveSeq.data[r][snappedCol]) {
+                                            currentActiveSeq.data[r][snappedCol] = { ...currentActiveSeq.data[r][c] };
+                                            currentActiveSeq.data[r][c] = null;
+                                            quantizedCount++;
+                                        }
+                                    }
+                                }
+                            });
+                            if (quantizedCount > 0) {
+                                track.recreateToneSequence(true);
+                                if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                                showNotification(`Quantized ${quantizedCount} note(s) to 1/${snapValue}.`, 2000);
+                            } else {
+                                showNotification("No notes to quantize in selection.", 1500);
+                            }
+                            event.preventDefault();
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
         // V - Toggle sequencer piano roll / step view
         if (key === 'v') {
             if (typeof toggleSequencerViewMode === 'function') {
@@ -1052,7 +1103,7 @@ document.addEventListener('keydown', (event) => {
         }
 
         // Q - Quantize active sequence (snap notes to grid)
-        if (key === 'q') {
+        if (key === 'q' && !event.ctrlKey && !event.metaKey) {
             const armedTrackId = getArmedTrackId();
             if (armedTrackId !== null) {
                 const track = getTrackById(armedTrackId);
