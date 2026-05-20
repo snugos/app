@@ -1,3 +1,47 @@
+#### Day 532: Ctrl+A Select All Notes in Sequencer (2026-05-20)
+- **Feature**: Added Ctrl+A keyboard shortcut to select all notes in the active sequencer
+- **Files Modified**:
+  - `js/eventHandlers.js`: Added Ctrl+A keyboard shortcut to select all notes in the active sequencer
+  - `js/tests.js`: Added 7 tests for Ctrl+A functionality
+  - `js/constants.js`: Bumped APP_VERSION to 2.193.0
+- **Feature Details**:
+  - **Ctrl+A shortcut** (`js/eventHandlers.js`): Added in the keyboard event handler after the Escape/close window handling
+  - Gets active sequencer track via `getActiveSequencerTrackId()`
+  - Gets track via `getTrackById(activeSeqTrackId)`
+  - Selects all `.sequencer-step-cell` elements via `querySelectorAll` and adds `selected-cell` class
+  - Uses `getWindowByIdState` to access the sequencer window element
+  - Shows notification with active sequence name (e.g., "Selected all notes in Sequence 1")
+  - Prevents default browser behavior and returns early after handling
+  - Uses `selected-cell` class for copy/paste compatibility with existing clipboard operations
+- **Tests Added** (7 tests):
+  - Ctrl+A Select All uses selected-cell class for copy/paste compatibility
+  - Ctrl+A Select All gets active sequencer track via getActiveSequencerTrackId
+  - Ctrl+A Select All gets sequencer window element via getWindowByIdState
+  - Ctrl+A Select All selects all sequencer cells via querySelectorAll
+  - Ctrl+A Select All prevents default and returns early
+  - Ctrl+A Select All shows notification with sequence name
+  - APP_VERSION validation (version >= 2.192 for Day 532)
+- **Version**: Bumped to 2.193.0
+- **Test Count**: Increased from 12467 to 12474
+
+
+#### Day 531: Restore tests.js - revert substrate-bot test truncation (2026-05-20)
+- **Feature**: Restored tests.js from 7132 lines to 12614 lines (5494 insertions) after a substrate-bot commit incorrectly truncated the file
+- **Files Modified**:
+  - `js/tests.js`: Restored full test file from Day 530 end state (commit 35da206a)
+  - `js/constants.js`: Bumped APP_VERSION to 2.192.0
+- **Bug Details**:
+  - **Substrate-bot truncation**: Commit 472200e5 claimed to "sync imports with audio.js exports" but actually removed 1076 tests (Days 510-530) from tests.js, reducing it from 12567 lines to 7132 lines
+  - The restoration ensures `cleanupRecordingAudioResources` is properly imported from audio.js (line 167)
+  - All 5494 deleted tests were recovered from the upstream commit 35da206a
+- **Verification**:
+  - `node --check js/tests.js` passes
+  - `node --check js/constants.js` passes
+  - `node --check js/main.js` passes
+  - Tests count restored to 12467 (pre-truncation level)
+- **Version**: Bumped to 2.192.0
+
+
 #### Day 530: Track Slice & Pad Setters Undo Capture Tests + Bug Fixes (2026-05-19)
 - **Feature**: Added 103 unit tests for Recording module functions (getRecordingInputGainNode, setRecordingInputGain, cleanupRecordingAudioResources, runRecordingMicrophoneE2ETest) and fixed two bugs in Track.js
 - **Files Modified**:
