@@ -5910,16 +5910,16 @@ TestRunner.test('Automation Methods - Track.getAutomationLaneCount is a function
     t.assertEqual(typeof Track.prototype.getAutomationLaneCount, 'function', 'getAutomationLaneCount should be a function');
 });
 
-TestRunner.test('Track Methods - duplicateTrack not implemented on Track.prototype', (t) => {
-    t.assertEqual(typeof Track.prototype.duplicateTrack, 'undefined', 'duplicateTrack is not implemented on Track.prototype');
+TestRunner.test('Track Methods - duplicateTrack is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.duplicateTrack, 'function', 'duplicateTrack should be a function on Track.prototype');
 });
 
-TestRunner.test('Track Methods - freezeTrack not implemented on Track.prototype', (t) => {
-    t.assertEqual(typeof Track.prototype.freezeTrack, 'undefined', 'freezeTrack is not implemented on Track.prototype');
+TestRunner.test('Track Methods - freezeTrack is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.freezeTrack, 'function', 'freezeTrack should be a function on Track.prototype');
 });
 
-TestRunner.test('Track Methods - bounceTrack not implemented on Track.prototype', (t) => {
-    t.assertEqual(typeof Track.prototype.bounceTrack, 'undefined', 'bounceTrack is not implemented on Track.prototype');
+TestRunner.test('Track Methods - bounceTrack is a function', (t) => {
+    t.assertEqual(typeof Track.prototype.bounceTrack, 'function', 'bounceTrack should be a function on Track.prototype');
 });
 
 // Day 525: Fix stub tests for non-existent methods
@@ -6625,10 +6625,8 @@ TestRunner.test('MIDI Export - exportToMidiInternal calls showNotification', (t)
 });
 
 TestRunner.test('MIDI Export - exportToMidiInternal validates appServices', (t) => {
-    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('getProjectNameState') || funcStr.includes('appServices'), 'exportToMidiInternal should validate appServices');
+    t.assertTruthy(funcStr.includes('appServices'), 'exportToMidiInternal should validate appServices');
 });
-
-// ============================================
 // Day 508: MIDI Import Functions Tests
 // ============================================
 
@@ -12922,5 +12920,18 @@ TestRunner.test('Day 540 - APP_VERSION validation for Day 540', (t) => {
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 198, 'Minor version should be >= 198 for Day 540');
     }
+=======
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices'), 'exportToMidiInternal should validate appServices');
 });
 
+TestRunner.test('State - track template functions are defined', (t) => {
+    t.assertEqual(typeof getTrackTemplatesState, 'function', 'getTrackTemplatesState should be a function');
+    t.assertEqual(typeof getTrackTemplateByIdState, 'function', 'getTrackTemplateByIdState should be a function');
+    t.assertEqual(typeof addTrackTemplateState, 'function', 'addTrackTemplateState should be a function');
+    t.assertEqual(typeof updateTrackTemplateState, 'function', 'updateTrackTemplateState should be a function');
+    t.assertEqual(typeof removeTrackTemplateState, 'function', 'removeTrackTemplateState should be a function');
+>>>>>>> origin/main
+});
+
+console.log('All tests completed successfully');

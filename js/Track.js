@@ -2805,6 +2805,228 @@ export class Track {
             return false;
         }
     }
+    async duplicateTrack() {
+        const nextTrackId = this.appServices.getNextTrackId ? this.appServices.getNextTrackId() : (Date.now() % 100000);
+        const duplicatedData = JSON.parse(JSON.stringify({
+            id: nextTrackId,
+            name: `${this.name} (copy)`,
+            type: this.type,
+            isMuted: this.isMuted,
+            volume: this.previousVolumeBeforeMute,
+            panValue: this.panValue,
+            trackColor: this.trackColor,
+            automationArmed: this.automationArmed,
+            automation: this.automation,
+            activeEffects: this.activeEffects,
+            sequences: this.sequences,
+            activeSequenceId: this.activeSequenceId,
+            timelineClips: this.timelineClips,
+            waveformZoom: this.waveformZoom,
+            synthEngineType: this.synthEngineType,
+            synthParams: this.synthParams,
+            samplerAudioData: this.samplerAudioData,
+            slices: this.slices,
+            selectedSliceForEdit: this.selectedSliceForEdit,
+            slicerIsPolyphonic: this.slicerIsPolyphonic,
+            instrumentSamplerSettings: this.instrumentSamplerSettings,
+            instrumentSamplerIsPolyphonic: this.instrumentSamplerIsPolyphonic,
+            drumSamplerPads: this.drumSamplerPads,
+            selectedDrumPadForEdit: this.selectedDrumPadForEdit,
+            isMonitoringEnabled: this.isMonitoringEnabled,
+        }));
+
+        try {
+            const newTrack = await this.appServices.addTrackToState(this.type, duplicatedData);
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification(`Duplicated track "${this.name}"`, 2000);
+            }
+            return newTrack;
+        } catch (err) {
+            console.error(`[Track ${this.id} duplicateTrack] Error duplicating track:`, err);
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification(`Failed to duplicate track "${this.name}"`, 2000);
+            }
+            return null;
+        }
+    }
+
+    async freezeTrack() {
+        if (this.type === 'Audio') {
+            console.warn(`[Track ${this.id} freezeTrack] Audio tracks cannot be frozen.`);
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification(`Cannot freeze Audio track "${this.name}"`, 2000);
+            }
+            return false;
+        }
+
+        const wasPlaying = this.patternPlayerSequence && this.patternPlayerSequence.state === 'started';
+        try {
+            this.stopPlayback();
+        } catch (e) { console.warn(`[Track ${this.id} freezeTrack] Error stopping playback:`, e.message); }
+
+        if (this.instrument && !this.instrument.disposed) {
+            try { this.instrument.dispose(); } catch(e) { console.warn(`[Track ${this.id} freezeTrack] Error disposing instrument:`, e.message); }
+            this.instrument = null;
+        }
+        if (this.toneSampler && !this.toneSampler.disposed) {
+            try { this.toneSampler.dispose(); } catch(e) { console.warn(`[Track ${this.id} freezeTrack] Error disposing toneSampler:`, e.message); }
+            this.toneSampler = null;
+        }
+        this.disposeSlicerMonoNodes();
+
+        this.drumPadPlayers.forEach((player, index) => {
+            if (player && !player.disposed) {
+                try { player.dispose(); } catch(e) { console.warn(`[Track ${this.id} freezeTrack] Error disposing drumPadPlayer ${index}:`, e.message); }
+            }
+            this.drumPadPlayers[index] = null;
+        });
+
+        if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
+            try { this.patternPlayerSequence.dispose(); } catch(e) { console.warn(`[Track ${this.id} freezeTrack] Error disposing patternPlayerSequence:`, e.message); }
+            this.patternPlayerSequence = null;
+        }
+
+        if (this.audioBuffer && !this.audioBuffer.disposed) {
+            try { this.audioBuffer.dispose(); } catch(e) { console.warn(`[Track ${this.id} freezeTrack] Error disposing audioBuffer:`, e.message); }
+            this.audioBuffer = null;
+        }
+
+        (this.drumSamplerPads || []).forEach(p => {
+            if (p.audioBuffer && !p.audioBuffer.disposed) {
+                try { p.audioBuffer.dispose(); } catch(e) { console.warn(`[Track ${this.id} freezeTrack] Error disposing pad audioBuffer:`, e.message); }
+            }
+            p.audioBuffer = null;
+        });
+
+        if (this.instrumentSamplerSettings?.audioBuffer && !this.instrumentSamplerSettings.audioBuffer.disposed) {
+            try { this.instrumentSamplerSettings.audioBuffer.dispose(); } catch(e) { console.warn(`[Track ${this.id} freezeTrack] Error disposing IS audioBuffer:`, e.message); }
+        }
+        if (this.instrumentSamplerSettings) this.instrumentSamplerSettings.audioBuffer = null;
+
+        this.isFrozen = true;
+        if (this.appServices.showNotification) {
+            this.appServices.showNotification(`Frozen track "${this.name}". Audio nodes disposed.`, 2000);
+        }
+        console.log(`[Track ${this.id} freezeTrack] Track frozen. All audio nodes disposed.`);
+
+        if (wasPlaying && this.appServices.startPlayback) {
+            try {
+                setTimeout(() => this.appServices.startPlayback(), 100);
+            } catch (e) { console.warn(`[Track ${this.id} freezeTrack] Error restarting playback:`, e.message); }
+        }
+        return true;
+    }
+
+    async bounceTrack() {
+        if (this.type === 'Audio') {
+            console.warn(`[Track ${this.id} bounceTrack] Audio tracks cannot be bounced via this method.`);
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification(`Use timeline export for Audio tracks`, 2000);
+            }
+            return null;
+        }
+
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data || activeSeq.data.length === 0) {
+            console.warn(`[Track ${this.id} bounceTrack] No active sequence data to bounce.`);
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification(`No notes to bounce for "${this.name}"`, 2000);
+            }
+            return null;
+        }
+
+        let numSteps = activeSeq.length;
+        let numRows = 0;
+        if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = Constants.synthPitches.length;
+        else if (this.type === 'Sampler') numRows = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
+        else if (this.type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
+        else numRows = (activeSeq.data && activeSeq.data.length > 0) ? activeSeq.data.length : 1;
+
+        const sixteenthNoteTime = Tone.Time("16n").toSeconds();
+        const totalDuration = numSteps * sixteenthNoteTime + 2;
+
+        if (this.appServices.showNotification) {
+            this.appServices.showNotification(`Bouncing "${this.name}"...`, 1500);
+        }
+
+        try {
+            const wasPlaying = this.patternPlayerSequence && this.patternPlayerSequence.state === 'started';
+            this.stopPlayback();
+
+            const offlineContext = new Tone.OfflineContext(new Tone.Context(), totalDuration, 2, 44100);
+            await offlineContext.render();
+
+            const offlineTransport = Tone.Transport;
+            const originalBPM = offlineTransport.bpm.value;
+
+            offlineTransport.bpm.value = Tone.Transport.bpm.value;
+
+            if (this.instrument && !this.instrument.disposed) {
+                this.instrument.dispose();
+            }
+            if (this.toneSampler && !this.toneSampler.disposed) {
+                this.toneSampler.dispose();
+            }
+            if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
+                this.patternPlayerSequence.dispose();
+            }
+
+            const bounceGainNode = new Tone.Gain(this.previousVolumeBeforeMute).toDestination();
+            const sourceNodes = [];
+            const tempo = Tone.Transport.bpm.value;
+
+            if (this.type === 'Synth' && this.instrument) {
+                sourceNodes.push(this.instrument);
+            } else if (this.type === 'InstrumentSampler' && this.toneSampler) {
+                sourceNodes.push(this.toneSampler);
+            } else if (this.type === 'DrumSampler') {
+                this.drumPadPlayers.forEach(player => { if (player && !player.disposed) sourceNodes.push(player); });
+            }
+
+            sourceNodes.forEach(node => {
+                if (node && !node.disposed) {
+                    try { node.connect(bounceGainNode); } catch(e) { console.warn(`[Track ${this.id} bounceTrack] Error connecting source node:`, e.message); }
+                }
+            });
+
+            this.activeEffects.forEach(effect => {
+                if (effect.toneNode && !effect.toneNode.disposed) {
+                    try {
+                        sourceNodes.forEach(node => {
+                            if (node && !node.disposed) node.connect(effect.toneNode);
+                        });
+                        effect.toneNode.connect(bounceGainNode);
+                    } catch(e) { console.warn(`[Track ${this.id} bounceTrack] Error connecting effect ${effect.type}:`, e.message); }
+                }
+            });
+
+            Tone.Transport.start(0);
+            this.recreateToneSequence();
+
+            const buffer = await Tone.OfflineContext.startConcurrent();
+
+            Tone.Transport.stop();
+            Tone.Transport.cancel(0);
+
+            bounceGainNode.dispose();
+
+            if (wasPlaying && this.appServices.startPlayback) {
+                setTimeout(() => this.appServices.startPlayback(), 100);
+            }
+
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification(`Bounced "${this.name}" (${buffer.duration.toFixed(1)}s)`, 2000);
+            }
+            console.log(`[Track ${this.id} bounceTrack] Bounce complete. Duration: ${buffer.duration.toFixed(1)}s`);
+            return buffer;
+        } catch (err) {
+            console.error(`[Track ${this.id} bounceTrack] Error bouncing track:`, err);
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification(`Failed to bounce "${this.name}"`, 2000);
+            }
+            return null;
+        }
+    }
     dispose() {
         const trackNameForLog = this.name || `Track ${this.id}`; 
         console.log(`[Track Dispose START ${this.id}] Starting disposal for track: "${trackNameForLog}"`);
