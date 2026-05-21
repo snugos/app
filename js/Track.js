@@ -1592,6 +1592,38 @@ export class Track {
         return reversedCount;
     }
 
+    // Flip the sequence horizontally (left-right mirror)
+    flipSequence() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} flipSequence] No active sequence found.`);
+            return 0;
+        }
+
+        let flippedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        const halfCols = Math.floor(totalSteps / 2);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < halfCols; col++) {
+                const mirroredCol = totalSteps - 1 - col;
+                const leftCell = row[col];
+                const rightCell = row[mirroredCol];
+                if (leftCell && leftCell.active) flippedCount++;
+                if (rightCell && rightCell.active) flippedCount++;
+                row[col] = rightCell;
+                row[mirroredCol] = leftCell;
+            }
+        }
+
+        this._captureUndoState(`Flip Sequence ${activeSeq.name}`);
+        return flippedCount;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         if (this.type === 'Audio') return;

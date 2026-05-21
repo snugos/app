@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.201.0'; // Day 542: Add Ctrl+Shift+Left/Right handler tests
+export const APP_VERSION = '2.202.0'; // Day 543: Add Flip Sequence feature
 // Added Ctrl+Q keyboard shortcut to quantize only the selected sequencer cells to the current snap grid.
 // Uses selected-cell class to identify selected notes, snaps each note's column to the nearest snapValue grid point.
 // Prevents collision by checking if target slot is empty before moving.
