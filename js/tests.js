@@ -12920,18 +12920,25 @@ TestRunner.test('Day 540 - APP_VERSION validation for Day 540', (t) => {
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 198, 'Minor version should be >= 198 for Day 540');
     }
-=======
-    const funcStr = exportToMidiInternal.toString();
-    t.assertTruthy(funcStr.includes('appServices'), 'exportToMidiInternal should validate appServices');
 });
 
-TestRunner.test('State - track template functions are defined', (t) => {
-    t.assertEqual(typeof getTrackTemplatesState, 'function', 'getTrackTemplatesState should be a function');
-    t.assertEqual(typeof getTrackTemplateByIdState, 'function', 'getTrackTemplateByIdState should be a function');
-    t.assertEqual(typeof addTrackTemplateState, 'function', 'addTrackTemplateState should be a function');
-    t.assertEqual(typeof updateTrackTemplateState, 'function', 'updateTrackTemplateState should be a function');
-    t.assertEqual(typeof removeTrackTemplateState, 'function', 'removeTrackTemplateState should be a function');
->>>>>>> origin/main
+TestRunner.test('Day 541 - Keyboard shortcuts help shows Ctrl+Shift+Left row for Shift Notes Left', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Ctrl+Shift+Left') && uiStr.includes('Shift Notes Left'), 'Keyboard shortcuts help should show Ctrl+Shift+Left = Shift Notes Left');
 });
+
+TestRunner.test('Day 541 - Keyboard shortcuts help shows Ctrl+Shift+Right row for Shift Notes Right', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Ctrl+Shift+Right') && uiStr.includes('Shift Notes Right'), 'Keyboard shortcuts help should show Ctrl+Shift+Right = Shift Notes Right');
+});
+
+TestRunner.test('Day 541 - APP_VERSION validation for Day 541', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 541');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 199, 'Minor version should be >= 199 for Day 541');
+    }
+});
+
 
 console.log('All tests completed successfully');

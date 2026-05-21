@@ -3706,6 +3706,8 @@ export function showKeyboardShortcutsHelpWindow() {
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Delete</kbd></td><td>Delete Selection</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Up</kbd></td><td>Shift Notes Up</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Down</kbd></td><td>Shift Notes Down</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Left</kbd></td><td>Shift Notes Left</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Right</kbd></td><td>Shift Notes Right</td></tr>
                 </table>
             </div>
 
