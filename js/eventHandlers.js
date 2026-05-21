@@ -1117,6 +1117,58 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl+Shift+Up - Shift Notes Up (raise pitch by 1 semitone)
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && (key === 'arrowup' || key === 'up')) {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.shiftSequenceNotes === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Shift Notes Up on ${track.name} (${currentActiveSeq.name})`);
+                        const result = track.shiftSequenceNotes(1);
+                        if (result > 0) {
+                            track.recreateToneSequence(true);
+                            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Shifted ${result} note(s) up.`, 1500);
+                        } else {
+                            showNotification("No notes to shift up.", 1500);
+                        }
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
+        // Ctrl+Shift+Down - Shift Notes Down (lower pitch by 1 semitone)
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && (key === 'arrowdown' || key === 'down')) {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.shiftSequenceNotes === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Shift Notes Down on ${track.name} (${currentActiveSeq.name})`);
+                        const result = track.shiftSequenceNotes(-1);
+                        if (result > 0) {
+                            track.recreateToneSequence(true);
+                            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Shifted ${result} note(s) down.`, 1500);
+                        } else {
+                            showNotification("No notes to shift down.", 1500);
+                        }
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
         // Ctrl+Q - Quantize selection (selected cells only, with current snap value)
         if ((event.ctrlKey || event.metaKey) && key === 'q') {
             const activeSeqTrackId = getActiveSequencerTrackId();
@@ -1163,6 +1215,28 @@ document.addEventListener('keydown', (event) => {
                             event.preventDefault();
                             return;
                         }
+                    }
+                }
+            }
+        }
+
+        // Ctrl/Cmd+D - Duplicate active sequence
+        if ((event.ctrlKey || event.metaKey) && key === 'd') {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.duplicateSequence === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq) {
+                        const newSeq = track.duplicateSequence(currentActiveSeq.id);
+                        if (newSeq) {
+                            track.setActiveSequence(newSeq.id);
+                            showNotification(`Duplicated "${currentActiveSeq.name}" -> "${newSeq.name}".`, 2000);
+                        } else {
+                            showNotification("Cannot duplicate sequence.", 2000);
+                        }
+                        event.preventDefault();
+                        return;
                     }
                 }
             }
