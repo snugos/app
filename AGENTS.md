@@ -1,3 +1,20 @@
+#### Day 545: Fix Undo Capture Order in humanizeVelocity and scaleVelocities (2026-05-21)
+- **Bug Fix**: Reordered `_captureUndoState` call to happen BEFORE velocity mutations in `humanizeVelocity` and `scaleVelocities` methods
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in `humanizeVelocity` and `scaleVelocities` methods
+  - `js/tests.js`: Added Day 545 test block with 3 tests for undo capture order verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.204.0
+- **Bug Details**:
+  - **Problem**: Both `humanizeVelocity` and `scaleVelocities` were mutating velocity values in `activeSeq.data` BEFORE calling `_captureUndoState`. This means undo/redo would capture the post-mutation state instead of the pre-mutation state, making undo unreliable.
+  - **Fix**: Moved `this._captureUndoState(...)` call to the beginning of each method, before any data iteration/mutation begins.
+  - **Verification**: Tests check that `_captureUndoState` call appears at a lower string index than the `activeSeq.data.forEach` call, ensuring undo capture happens first.
+- **Tests** (`js/tests.js`): 3 tests covering:
+  - `humanizeVelocity` undo capture comes before data iteration
+  - `scaleVelocities` undo capture comes before data iteration
+  - APP_VERSION validation (>= 2.204 for Day 545)
+- **Version**: Bumped to 2.204.0
+- **Test Count**: Increased from 13248 to 13251
+
 #### Day 544: Shift Notes Left/Right - Add Column Shift to Context Menu (2026-05-21)
 - **Feature**: Added "Shift Notes Left" and "Shift Notes Right" menu items to sequencer context menu
 - **Files Modified**:

@@ -13246,3 +13246,33 @@ TestRunner.test('Day 544 - APP_VERSION validation for Day 544', (t) => {
         t.assertTruthy(versionParts[1] >= 203, 'Minor version should be >= 203 for Day 544');
     }
 });
+
+// Day 545: Fix undo capture order in humanizeVelocity and scaleVelocities
+// ============================================
+TestRunner.test('Day 545 - humanizeVelocity captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    // undo capture should come BEFORE the forEach loop that mutates velocities
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('activeSeq.data.forEach');
+    t.assertTruthy(undoIdx !== -1, 'humanizeVelocity should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'humanizeVelocity should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'undo capture should come BEFORE the data iteration');
+});
+
+TestRunner.test('Day 545 - scaleVelocities captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.scaleVelocities.toString();
+    // undo capture should come BEFORE the forEach loop that mutates velocities
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('activeSeq.data.forEach');
+    t.assertTruthy(undoIdx !== -1, 'scaleVelocities should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'scaleVelocities should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'undo capture should come BEFORE the data iteration');
+});
+
+TestRunner.test('Day 545 - APP_VERSION validation for Day 545', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 545');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 204, 'Minor version should be >= 204 for Day 545');
+    }
+});

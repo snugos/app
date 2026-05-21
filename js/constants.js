@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.203.0'; // Day 544: Add Shift Notes Left/Right to sequencer context menu
+export const APP_VERSION = '2.204.0'; // Day 545: Fix undo capture order in humanizeVelocity and scaleVelocities
 // Added Ctrl+Q keyboard shortcut to quantize only the selected sequencer cells to the current snap grid.
 // Uses selected-cell class to identify selected notes, snaps each note's column to the nearest snapValue grid point.
 // Prevents collision by checking if target slot is empty before moving.

@@ -1513,6 +1513,8 @@ export class Track {
             return 0;
         }
 
+        this._captureUndoState(`Humanize velocities on ${activeSeq.name}`);
+
         let humanizedCount = 0;
         const totalSteps = activeSeq.length;
 
@@ -1529,7 +1531,6 @@ export class Track {
             }
         });
 
-        this._captureUndoState(`Humanize velocities on ${activeSeq.name}`);
         return humanizedCount;
     }
 
@@ -1540,6 +1541,8 @@ export class Track {
             console.warn(`[Track ${this.id} scaleVelocities] No active sequence found.`);
             return 0;
         }
+
+        this._captureUndoState(`Scale velocities by ${Math.round(factor * 100)}% on ${activeSeq.name}`);
 
         let scaledCount = 0;
         const totalSteps = activeSeq.length;
@@ -1556,7 +1559,6 @@ export class Track {
             }
         });
 
-        this._captureUndoState(`Scale velocities by ${Math.round(factor * 100)}% on ${activeSeq.name}`);
         return scaledCount;
     }
 
