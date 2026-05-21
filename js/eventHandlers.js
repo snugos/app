@@ -1169,6 +1169,94 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl+Shift+Left - Shift Notes Left (move notes 1 column left)
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && (key === 'arrowleft' || key === 'left')) {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track) {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const seqWinId = `sequencerWin-${activeSeqTrackId}`;
+                        const sequencerWindow = getWindowByIdState ? getWindowByIdState(seqWinId) : null;
+                        if (sequencerWindow && sequencerWindow.element) {
+                            const selectedCells = sequencerWindow.element.querySelectorAll('.sequencer-step-cell.selected-cell');
+                            if (selectedCells.length > 0) {
+                                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Shift Notes Left on ${track.name} (${currentActiveSeq.name})`);
+                                let shiftedCount = 0;
+                                selectedCells.forEach(cell => {
+                                    const r = parseInt(cell.dataset.row);
+                                    const c = parseInt(cell.dataset.col);
+                                    if (c > 0 && currentActiveSeq.data[r] && currentActiveSeq.data[r][c] && currentActiveSeq.data[r][c].active) {
+                                        if (!currentActiveSeq.data[r][c - 1]) {
+                                            currentActiveSeq.data[r][c - 1] = { ...currentActiveSeq.data[r][c] };
+                                            currentActiveSeq.data[r][c] = null;
+                                            shiftedCount++;
+                                        }
+                                    }
+                                });
+                                if (shiftedCount > 0) {
+                                    track.recreateToneSequence(true);
+                                    if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                                    showNotification(`Shifted ${shiftedCount} note(s) left.`, 1500);
+                                } else {
+                                    showNotification("No notes to shift left.", 1500);
+                                }
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
+        // Ctrl+Shift+Right - Shift Notes Right (move notes 1 column right)
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && (key === 'arrowright' || key === 'right')) {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track) {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const seqWinId = `sequencerWin-${activeSeqTrackId}`;
+                        const sequencerWindow = getWindowByIdState ? getWindowByIdState(seqWinId) : null;
+                        if (sequencerWindow && sequencerWindow.element) {
+                            const selectedCells = sequencerWindow.element.querySelectorAll('.sequencer-step-cell.selected-cell');
+                            if (selectedCells.length > 0) {
+                                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Shift Notes Right on ${track.name} (${currentActiveSeq.name})`);
+                                let shiftedCount = 0;
+                                selectedCells.forEach(cell => {
+                                    const r = parseInt(cell.dataset.row);
+                                    const c = parseInt(cell.dataset.col);
+                                    if (c < currentActiveSeq.length - 1 && currentActiveSeq.data[r] && currentActiveSeq.data[r][c] && currentActiveSeq.data[r][c].active) {
+                                        if (!currentActiveSeq.data[r][c + 1]) {
+                                            currentActiveSeq.data[r][c + 1] = { ...currentActiveSeq.data[r][c] };
+                                            currentActiveSeq.data[r][c] = null;
+                                            shiftedCount++;
+                                        }
+                                    }
+                                });
+                                if (shiftedCount > 0) {
+                                    track.recreateToneSequence(true);
+                                    if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                                    showNotification(`Shifted ${shiftedCount} note(s) right.`, 1500);
+                                } else {
+                                    showNotification("No notes to shift right.", 1500);
+                                }
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
         // Ctrl+Q - Quantize selection (selected cells only, with current snap value)
         if ((event.ctrlKey || event.metaKey) && key === 'q') {
             const activeSeqTrackId = getActiveSequencerTrackId();
