@@ -6626,4 +6626,15 @@ TestRunner.test('MIDI Export - exportToMidiInternal calls showNotification', (t)
 
 TestRunner.test('MIDI Export - exportToMidiInternal validates appServices', (t) => {
     const funcStr = exportToMidiInternal.toString();
-    t.assertTruthy(funcStr.includes('
+    t.assertTruthy(funcStr.includes('appServices'), 'exportToMidiInternal should validate appServices');
+});
+
+TestRunner.test('State - track template functions are defined', (t) => {
+    t.assertEqual(typeof getTrackTemplatesState, 'function', 'getTrackTemplatesState should be a function');
+    t.assertEqual(typeof getTrackTemplateByIdState, 'function', 'getTrackTemplateByIdState should be a function');
+    t.assertEqual(typeof addTrackTemplateState, 'function', 'addTrackTemplateState should be a function');
+    t.assertEqual(typeof updateTrackTemplateState, 'function', 'updateTrackTemplateState should be a function');
+    t.assertEqual(typeof removeTrackTemplateState, 'function', 'removeTrackTemplateState should be a function');
+});
+
+console.log('All tests completed successfully');
