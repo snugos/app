@@ -13155,3 +13155,94 @@ TestRunner.test('Day 542 - APP_VERSION validation for Day 542', (t) => {
         t.assertTruthy(versionParts[1] >= 200, 'Minor version should be >= 200 for Day 542');
     }
 });
+
+// ============================================
+// Day 544: Shift Notes Left/Right Context Menu Tests
+// ============================================
+TestRunner.test('Day 544 - Shift Notes Left menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Shift Notes Left'), 'Shift Notes Left menu item should exist');
+});
+
+TestRunner.test('Day 544 - Shift Notes Right menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Shift Notes Right'), 'Shift Notes Right menu item should exist');
+});
+
+TestRunner.test('Day 544 - Shift Notes Left captures undo state', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('captureStateForUndo') && uiCode.includes('Shift Notes Left on'), 'Shift Notes Left should capture undo state');
+});
+
+TestRunner.test('Day 544 - Shift Notes Right captures undo state', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('captureStateForUndo') && uiCode.includes('Shift Notes Right on'), 'Shift Notes Right should capture undo state');
+});
+
+TestRunner.test('Day 544 - Shift Notes Left shifts notes left via column swap', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('c - 1') || uiCode.includes('c-1'), 'Shift Notes Left should reference c-1 for left shift');
+});
+
+TestRunner.test('Day 544 - Shift Notes Right shifts notes right via column swap', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('c + 1') || uiCode.includes('c+1'), 'Shift Notes Right should reference c+1 for right shift');
+});
+
+TestRunner.test('Day 544 - Shift Notes Left calls recreateToneSequence', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('recreateToneSequence'), 'Shift Notes Left should call recreateToneSequence');
+});
+
+TestRunner.test('Day 544 - Shift Notes Right calls recreateToneSequence', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('recreateToneSequence'), 'Shift Notes Right should call recreateToneSequence');
+});
+
+TestRunner.test('Day 544 - Shift Notes Left shows notification with shifted count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Shifted') && uiCode.includes('note(s) left'), 'Shift Notes Left should show notification with count');
+});
+
+TestRunner.test('Day 544 - Shift Notes Right shows notification with shifted count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Shifted') && uiCode.includes('note(s) right'), 'Shift Notes Right should show notification with count');
+});
+
+TestRunner.test('Day 544 - Shift Notes Left handles no notes case', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('No notes to shift left'), 'Shift Notes Left should handle no notes case');
+});
+
+TestRunner.test('Day 544 - Shift Notes Right handles no notes case', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('No notes to shift right'), 'Shift Notes Right should handle no notes case');
+});
+
+TestRunner.test('Day 544 - Shift Notes Left calls updateTrackUI', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('updateTrackUI'), 'Shift Notes Left should call updateTrackUI');
+});
+
+TestRunner.test('Day 544 - Shift Notes Right calls updateTrackUI', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('updateTrackUI'), 'Shift Notes Right should call updateTrackUI');
+});
+
+TestRunner.test('Day 544 - Shift Notes Left does not crash on Audio track', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('currentActiveSeq.data') && uiCode.includes('length'), 'Shift Notes Left should safely check sequence data');
+});
+
+TestRunner.test('Day 544 - Shift Notes Right does not crash on Audio track', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('currentActiveSeq.data') && uiCode.includes('length'), 'Shift Notes Right should safely check sequence data');
+});
+
+TestRunner.test('Day 544 - APP_VERSION validation for Day 544', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 544');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 203, 'Minor version should be >= 203 for Day 544');
+    }
+});

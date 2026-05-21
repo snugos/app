@@ -1,3 +1,37 @@
+#### Day 544: Shift Notes Left/Right - Add Column Shift to Context Menu (2026-05-21)
+- **Feature**: Added "Shift Notes Left" and "Shift Notes Right" menu items to sequencer context menu
+- **Files Modified**:
+  - `js/ui.js`: Added "Shift Notes Left" and "Shift Notes Right" context menu items after "Shift Notes Down"
+  - `js/tests.js`: Added Day 544 test block with 17 tests for Shift Notes Left/Right
+  - `js/constants.js`: Bumped APP_VERSION to 2.203.0
+- **Feature Details**:
+  - **Shift Notes Left** (`js/ui.js`): Shifts all notes one column to the left
+    - Iterates rows and columns (c from 1 to length-1)
+    - If note at [r][c] is active and [r][c-1] is empty, moves note left
+    - Counts all shifted notes for notification
+    - Captures undo state before operation
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+    - Shows "Shifted {count} note(s) left." or "No notes to shift left."
+  - **Shift Notes Right** (`js/ui.js`): Shifts all notes one column to the right
+    - Iterates rows and columns (c from length-2 down to 0)
+    - If note at [r][c] is active and [r][c+1] is empty, moves note right
+    - Counts all shifted notes for notification
+    - Captures undo state before operation
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+    - Shows "Shifted {count} note(s) right." or "No notes to shift right."
+  - **Tests** (`js/tests.js`): 17 tests covering:
+    - Menu items exist in sequencer context menu
+    - Undo state capture for both operations
+    - Column swap logic (c-1 for left, c+1 for right)
+    - recreateToneSequence call after shift
+    - Notification with shifted count
+    - No notes case handling
+    - updateTrackUI call
+    - Audio track safety (checks currentActiveSeq.data)
+    - APP_VERSION validation (>= 2.203 for Day 544)
+- **Version**: Bumped to 2.203.0
+- **Test Count**: Increased from 13157 to 13248
+
 #### Day 543: Flip Sequence - Mirror Notes Left-Right (2026-05-21)
 - **Feature**: Added `flipSequence()` method to Track class and "Flip Sequence" menu item to sequencer context menu
 - **Files Modified**:
