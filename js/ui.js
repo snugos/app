@@ -3699,10 +3699,13 @@ export function showKeyboardShortcutsHelpWindow() {
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+X</kbd></td><td>Cut Selection</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+V</kbd></td><td>Paste</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+A</kbd></td><td>Select All Notes</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+D</kbd></td><td>Duplicate Sequence</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Q</kbd></td><td>Quantize Selection</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+H</kbd></td><td>Humanize Velocities</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Escape</kbd></td><td>Clear Selection</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Delete</kbd></td><td>Delete Selection</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Up</kbd></td><td>Shift Notes Up</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Down</kbd></td><td>Shift Notes Down</td></tr>
                 </table>
             </div>
 

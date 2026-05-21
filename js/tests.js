@@ -13023,3 +13023,94 @@ TestRunner.test('Day 539 - APP_VERSION validation for Day 539', (t) => {
         t.assertTruthy(versionParts[1] >= 197, 'Minor version should be >= 197 for Day 539');
     }
 });
+// Day 540: Ctrl+Shift+Up/Down - Shift Notes Up/Down Keyboard Shortcuts
+TestRunner.test('Day 540 - Ctrl+Shift+Up Shift Notes handler function exists', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('Shift+Up') || eventHandlersCode.includes('arrowup'), 'Ctrl+Shift+Up handler should check for Shift+Up or arrowup key');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Down Shift Notes handler function exists', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('Shift+Down') || eventHandlersCode.includes('arrowdown'), 'Ctrl+Shift+Down handler should check for Shift+Down or arrowdown key');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Up handler gets active sequencer track via getActiveSequencerTrackId', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('getActiveSequencerTrackId'), 'Ctrl+Shift+Up should get active sequencer track ID');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Down handler gets active sequencer track via getActiveSequencerTrackId', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('getActiveSequencerTrackId'), 'Ctrl+Shift+Down should get active sequencer track ID');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Up handler calls track.shiftSequenceNotes with +1', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('shiftSequenceNotes(1)') || eventHandlersCode.includes('shiftSequenceNotes( 1 )'), 'Ctrl+Shift+Up should call shiftSequenceNotes with 1');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Down handler calls track.shiftSequenceNotes with -1', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('shiftSequenceNotes(-1)') || eventHandlersCode.includes('shiftSequenceNotes( -1 )'), 'Ctrl+Shift+Down should call shiftSequenceNotes with -1');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Up handler captures undo state before shifting', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('captureStateForUndo'), 'Ctrl+Shift+Up should capture undo state');
+    t.assertTruthy(eventHandlersCode.includes('Shift Notes Up'), 'Ctrl+Shift+Up should reference Shift Notes Up in undo label');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Down handler captures undo state before shifting', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('captureStateForUndo'), 'Ctrl+Shift+Down should capture undo state');
+    t.assertTruthy(eventHandlersCode.includes('Shift Notes Down'), 'Ctrl+Shift+Down should reference Shift Notes Down in undo label');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Up handler calls track.recreateToneSequence', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('recreateToneSequence'), 'Ctrl+Shift+Up should call recreateToneSequence');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Down handler calls track.recreateToneSequence', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('recreateToneSequence'), 'Ctrl+Shift+Down should call recreateToneSequence');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Up handler shows notification with shifted count', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('note(s) up'), 'Ctrl+Shift+Up should show note(s) up in notification');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Down handler shows notification with shifted count', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('note(s) down'), 'Ctrl+Shift+Down should show note(s) down in notification');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Up handler handles no notes case', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('No notes to shift up'), 'Ctrl+Shift+Up should handle no notes case with notification');
+});
+
+TestRunner.test('Day 540 - Ctrl+Shift+Down handler handles no notes case', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('No notes to shift down'), 'Ctrl+Shift+Down should handle no notes case with notification');
+});
+
+TestRunner.test('Day 540 - Keyboard shortcuts help shows Ctrl+Shift+Up row for Shift Notes Up', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Ctrl+Shift+Up') && uiStr.includes('Shift Notes Up'), 'Keyboard shortcuts help should show Ctrl+Shift+Up = Shift Notes Up');
+});
+
+TestRunner.test('Day 540 - Keyboard shortcuts help shows Ctrl+Shift+Down row for Shift Notes Down', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Ctrl+Shift+Down') && uiStr.includes('Shift Notes Down'), 'Keyboard shortcuts help should show Ctrl+Shift+Down = Shift Notes Down');
+});
+
+TestRunner.test('Day 540 - APP_VERSION validation for Day 540', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 540');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 198, 'Minor version should be >= 198 for Day 540');
+    }
+});
+
