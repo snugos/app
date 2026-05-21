@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.204.0'; // Day 545: Fix undo capture order in humanizeVelocity and scaleVelocities
+export const APP_VERSION = '2.205.0'; // Day 546: Add drop handlers to drum pad grid for direct sample drop
 // Added Ctrl+Q keyboard shortcut to quantize only the selected sequencer cells to the current snap grid.
 // Uses selected-cell class to identify selected notes, snaps each note's column to the nearest snapValue grid point.
 // Prevents collision by checking if target slot is empty before moving.

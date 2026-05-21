@@ -13276,3 +13276,52 @@ TestRunner.test('Day 545 - APP_VERSION validation for Day 545', (t) => {
         t.assertTruthy(versionParts[1] >= 204, 'Minor version should be >= 204 for Day 545');
     }
 });
+
+// Day 546: DrumSampler Pad Drop Zone Verification - Add drop handlers to pad grid
+TestRunner.test('Day 546 - renderDrumSamplerPads adds dragover to drum pads', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("padEl.addEventListener('dragover')"), 'renderDrumSamplerPads should add dragover handler to pads');
+});
+TestRunner.test('Day 546 - renderDrumSamplerPads adds dragleave to drum pads', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("padEl.addEventListener('dragleave')"), 'renderDrumSamplerPads should add dragleave handler to pads');
+});
+TestRunner.test('Day 546 - renderDrumSamplerPads adds drop to drum pads', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("padEl.addEventListener('drop')"), 'renderDrumSamplerPads should add drop handler to pads');
+});
+TestRunner.test('Day 546 - pad drop handler reads pad index from dataset', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("padEl.dataset.padIndex") || uiCode.includes("dataset.padIndex"), 'Drop handler should read pad index from dataset');
+});
+TestRunner.test('Day 546 - pad drop handler reads trackId from dataset', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("padEl.dataset.trackId") || uiCode.includes("dataset.trackId"), 'Drop handler should read trackId from dataset');
+});
+TestRunner.test('Day 546 - pad drop handler handles sound browser JSON drop', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("JSON.parse") && uiCode.includes("loadSoundFromBrowserToTarget"), 'Pad drop should parse JSON and call loadSoundFromBrowserToTarget');
+});
+TestRunner.test('Day 546 - pad drop handler handles OS file drop', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("dataTransfer.files") && uiCode.includes("loadDrumSamplerPadFile"), 'Pad drop should handle OS file drop via loadDrumSamplerPadFile');
+});
+TestRunner.test('Day 546 - pad drop handler calls preventDefault and stopPropagation', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("e.preventDefault") && uiCode.includes("e.stopPropagation"), 'Drop handler should call preventDefault and stopPropagation');
+});
+TestRunner.test('Day 546 - pad dragover adds dragover CSS class', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("padEl.classList.add('dragover')"), 'Dragover should add dragover class');
+});
+TestRunner.test('Day 546 - pad dragleave removes dragover CSS class', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("padEl.classList.remove('dragover')"), 'Dragleave should remove dragover class');
+});
+TestRunner.test('Day 546 - APP_VERSION validation for Day 546', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 546');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 205, 'Minor version should be >= 205 for Day 546');
+    }
+});

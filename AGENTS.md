@@ -1,3 +1,30 @@
+#### Day 546: DrumSampler Pad Drop Zone - Add Drop Handlers to Pad Grid (2026-05-21)
+- **Feature**: Added dragover/dragleave/drop event handlers to drum pad grid pads in `renderDrumSamplerPads`
+- **Files Modified**:
+  - `js/ui.js`: Added drop zone handlers to drum pad elements in renderDrumSamplerPads
+  - `js/tests.js`: Added Day 546 test block with 11 tests for pad drop zone verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.205.0
+- **Feature Details**:
+  - **Pad Drop Handlers** (`js/ui.js`): Added after the click handler loop in `renderDrumSamplerPads`
+    - `dragover`: Prevents default, stops propagation, adds `dragover` CSS class, sets `dropEffect = "copy"`
+    - `dragleave`: Prevents default, stops propagation, removes `dragover` CSS class
+    - `drop`: Parses padIndex and trackId from `padEl.dataset`, handles both sound browser JSON drops and OS file drops
+    - Sound browser drop: Parses `application/json`, calls `localAppServices.loadSoundFromBrowserToTarget(soundData, trackId, 'DrumSampler', padIndex)`
+    - OS file drop: Creates simulated event with `target.files`, calls `localAppServices.loadDrumSamplerPadFile(simulatedEvent, trackId, padIndex, file.name)`
+  - **Tests** (`js/tests.js`): 11 tests covering:
+    - dragover listener added to pads
+    - dragleave listener added to pads
+    - drop listener added to pads
+    - padIndex read from dataset
+    - trackId read from dataset
+    - JSON.parse for sound browser drops
+    - dataTransfer.files for OS file drops
+    - preventDefault and stopPropagation called
+    - dragover class added/removed
+    - APP_VERSION validation (>= 2.205 for Day 546)
+- **Version**: Bumped to 2.205.0
+- **Test Count**: Increased from 13278 to 13327
+
 #### Day 545: Fix Undo Capture Order in humanizeVelocity and scaleVelocities (2026-05-21)
 - **Bug Fix**: Reordered `_captureUndoState` call to happen BEFORE velocity mutations in `humanizeVelocity` and `scaleVelocities` methods
 - **Files Modified**:

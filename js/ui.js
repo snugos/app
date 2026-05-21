@@ -3451,6 +3451,47 @@ export function renderDrumSamplerPads(track) {
             }
         });
     });
+
+    // Add drop zone handlers for drum pads (direct drop onto pad grid pads)
+    container.querySelectorAll('.drum-pad').forEach(padEl => {
+        padEl.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            padEl.classList.add('dragover');
+            e.dataTransfer.dropEffect = "copy";
+        });
+        padEl.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            padEl.classList.remove('dragover');
+        });
+        padEl.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            padEl.classList.remove('dragover');
+
+            const padIndex = parseInt(padEl.dataset.padIndex, 10);
+            const trackId = padEl.dataset.trackId;
+
+            const soundDataString = e.dataTransfer.getData("application/json");
+            if (soundDataString) {
+                try {
+                    const soundData = JSON.parse(soundDataString);
+                    if (soundData.type === 'sound-browser-item' && localAppServices.loadSoundFromBrowserToTarget) {
+                        await localAppServices.loadSoundFromBrowserToTarget(soundData, trackId, 'DrumSampler', padIndex);
+                    }
+                } catch (err) {
+                    console.error("[UI renderDrumSamplerPads] Error parsing dropped sound data:", err);
+                }
+            } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                const simulatedEvent = { target: { files: [file] } };
+                if (localAppServices.loadDrumSamplerPadFile) {
+                    await localAppServices.loadDrumSamplerPadFile(simulatedEvent, trackId, padIndex, file.name);
+                }
+            }
+        });
+    });
 }
 
 export function renderSamplePads(track) {
