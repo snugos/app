@@ -435,6 +435,7 @@ const appServices = {
     getCurrentSoundBrowserPath: getCurrentSoundBrowserPathState,
     setCurrentSoundBrowserPath: setCurrentSoundBrowserPathState,
     getPlaybackMode: getPlaybackModeState,
+    setPlaybackMode: setPlaybackModeState,
 
     // Send Track State - exposed for UI and other modules
     getSendTracks: getSendTracksState,
