@@ -3694,6 +3694,7 @@ export function showKeyboardShortcutsHelpWindow() {
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Z</kbd></td><td>Undo</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Y</kbd></td><td>Redo</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Z</kbd></td><td>Redo (Alt)</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+C</kbd></td><td>Copy Sequencer Selection</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+X</kbd></td><td>Cut Selection</td></tr>
                     <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+V</kbd></td><td>Paste</td></tr>

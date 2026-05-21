@@ -889,6 +889,10 @@ document.addEventListener('keydown', (event) => {
              if (localAppServices.redoLastAction) localAppServices.redoLastAction();
             return;
         }
+        if (key === 'z' && (event.ctrlKey || event.metaKey) && event.shiftKey) {
+             if (localAppServices.redoLastAction) localAppServices.redoLastAction();
+            return;
+        }
         if (key === 'z' && !(event.ctrlKey || event.metaKey)) {
             currentOctaveShift = Math.max(MIN_OCTAVE_SHIFT, currentOctaveShift - 1);
             if (localAppServices.showNotification) localAppServices.showNotification(`Octave: ${currentOctaveShift}`, 1000);

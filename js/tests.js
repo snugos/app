@@ -12851,3 +12851,35 @@ TestRunner.test('Day 536 - APP_VERSION validation for Day 536', (t) => {
         t.assertTruthy(versionParts[1] >= 195, 'Minor version should be >= 195 for Day 536');
     }
 });
+
+// Day 537: Ctrl+Shift+Z Redo Shortcut Tests
+TestRunner.test('Day 537 - Ctrl+Shift+Z redo handler exists', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes('Ctrl+Shift+Z') || funcStr.includes('event.shiftKey'), 'Ctrl+Shift+Z redo handler should check for shift key');
+});
+
+TestRunner.test('Day 537 - Ctrl+Shift+Z redo calls redoLastAction', (t) => {
+    const funcStr = eventHandlersCode;
+    const redoBlock = funcStr.substring(funcStr.indexOf('Ctrl+Shift+Z') > -1 ? funcStr.indexOf('Ctrl+Shift+Z') : funcStr.indexOf('shiftKey'));
+    t.assertTruthy(redoBlock.includes('redoLastAction') || redoBlock.includes('services.redoLastAction'), 'Ctrl+Shift+Z redo should call redoLastAction');
+});
+
+TestRunner.test('Day 537 - Ctrl+Shift+Z redo returns early after handling', (t) => {
+    const funcStr = eventHandlersCode;
+    const redoBlock = funcStr.substring(funcStr.indexOf('Ctrl+Shift+Z') > -1 ? funcStr.indexOf('Ctrl+Shift+Z') : funcStr.indexOf('shiftKey'));
+    t.assertTruthy(redoBlock.includes('return;'), 'Ctrl+Shift+Z redo should return after handling');
+});
+
+TestRunner.test('Day 537 - Keyboard shortcuts help shows Ctrl+Shift+Z row for Redo (Alt)', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Ctrl+Shift+Z') && uiStr.includes('Redo (Alt)'), 'Keyboard shortcuts help should show Ctrl+Shift+Z = Redo (Alt)');
+});
+
+TestRunner.test('Day 537 - APP_VERSION validation for Day 537', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 537');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 196, 'Minor version should be >= 196 for Day 537');
+    }
+});
+
