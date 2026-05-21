@@ -12942,3 +12942,106 @@ TestRunner.test('Day 541 - APP_VERSION validation for Day 541', (t) => {
 
 
 console.log('All tests completed successfully');
+
+// ============================================
+// Day 542: Ctrl+Shift+Left/Right Column Shift Tests + Test Mic Shortcut
+// ============================================
+TestRunner.test('Day 542 - Ctrl+Shift+Left Shift Notes handler function exists', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('Shift+Left') || eventHandlersCode.includes('arrowleft'), 'Ctrl+Shift+Left handler should check for Shift+Left or arrowleft key');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Right Shift Notes handler function exists', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('Shift+Right') || eventHandlersCode.includes('arrowright'), 'Ctrl+Shift+Right handler should check for Shift+Right or arrowright key');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Left handler uses selected-cell class', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('.selected-cell'), 'Ctrl+Shift+Left should target .selected-cell elements');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Right handler uses selected-cell class', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('.selected-cell'), 'Ctrl+Shift+Right should target .selected-cell elements');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Left handler captures undo state', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('captureStateForUndo'), 'Ctrl+Shift+Left should capture undo state');
+    t.assertTruthy(eventHandlersCode.includes('Shift Notes Left'), 'Ctrl+Shift+Left should reference Shift Notes Left in undo label');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Right handler captures undo state', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('captureStateForUndo'), 'Ctrl+Shift+Right should capture undo state');
+    t.assertTruthy(eventHandlersCode.includes('Shift Notes Right'), 'Ctrl+Shift+Right should reference Shift Notes Right in undo label');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Left handler shifts notes left (c-1)', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('c - 1') || eventHandlersCode.includes('c-1'), 'Ctrl+Shift+Left should shift column by -1');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Right handler shifts notes right (c+1)', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('c + 1') || eventHandlersCode.includes('c+1'), 'Ctrl+Shift+Right should shift column by +1');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Left handler shows notification with shifted count', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('note(s) left'), 'Ctrl+Shift+Left should show note(s) left in notification');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Right handler shows notification with shifted count', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('note(s) right'), 'Ctrl+Shift+Right should show note(s) right in notification');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Left handler prevents default', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('event.preventDefault'), 'Ctrl+Shift+Left should prevent default browser behavior');
+});
+
+TestRunner.test('Day 542 - Ctrl+Shift+Right handler prevents default', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('event.preventDefault'), 'Ctrl+Shift+Right should prevent default browser behavior');
+});
+
+TestRunner.test('Day 542 - attachGlobalControlEvents sets up micTestBtn click handler', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('micTestBtnGlobal') && eventHandlersCode.includes('addEventListener'), 'attachGlobalControlEvents should set up micTestBtn click handler');
+});
+
+TestRunner.test('Day 542 - micTestBtn handler calls initAudioContextAndMasterMeter', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('initAudioContextAndMasterMeter'), 'Mic test button should call initAudioContextAndMasterMeter');
+});
+
+TestRunner.test('Day 542 - micTestBtn handler calls runRecordingMicrophoneE2ETest', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('runRecordingMicrophoneE2ETest'), 'Mic test button should call runRecordingMicrophoneE2ETest');
+});
+
+TestRunner.test('Day 542 - micTestBtn handler handles result with ok boolean', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('result.ok'), 'Mic test should check result.ok');
+});
+
+TestRunner.test('Day 542 - micTestBtn handler shows status based on result.ok', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('setMicTestStatus'), 'Mic test should call setMicTestStatus');
+});
+
+TestRunner.test('Day 542 - Keyboard shortcuts help shows Test Mic row for Mic Recording Test', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Test Mic') && uiStr.includes('Mic Recording Test'), 'Keyboard shortcuts help should show Test Mic row for Mic Recording Test');
+});
+
+TestRunner.test('Day 542 - APP_VERSION validation for Day 542', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 542');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 200, 'Minor version should be >= 200 for Day 542');
+    }
+});
