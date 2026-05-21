@@ -12883,3 +12883,86 @@ TestRunner.test('Day 537 - APP_VERSION validation for Day 537', (t) => {
     }
 });
 
+TestRunner.test('Day 538 - Escape clears sequencer selection', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes("key === 'escape'"), 'Escape key handler should exist');
+    t.assertTruthy(funcStr.includes('selected-cell'), 'Escape handler should reference selected-cell class');
+    t.assertTruthy(funcStr.includes('classList.remove'), 'Escape handler should remove selected-cell class');
+    t.assertTruthy(funcStr.includes('clearedCount') || funcStr.includes('selectedCells.length'), 'Escape handler should count cleared cells');
+});
+
+TestRunner.test('Day 538 - Escape clears all selected cells', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes('forEach(cell => cell.classList.remove'), 'Escape should iterate and remove selected-cell class');
+});
+
+TestRunner.test('Day 538 - Escape shows notification with cleared count', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('Cleared'), 'Escape should show notification about cleared cells');
+});
+
+TestRunner.test('Day 538 - Escape blurs active element', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes('activeEl.blur'), 'Escape should blur the active element');
+});
+
+TestRunner.test('Day 538 - Escape returns early after clearing selection', (t) => {
+    const funcStr = eventHandlersCode;
+    const escBlock = funcStr.substring(funcStr.indexOf("key === 'escape'"));
+    const afterEsc = escBlock.substring(0, 300);
+    t.assertTruthy(afterEsc.includes('return;'), 'Escape handler should return after clearing selection');
+});
+
+TestRunner.test('Day 538 - Escape handler gets active sequencer track', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes('getActiveSequencerTrackId'), 'Escape should get active sequencer track');
+    t.assertTruthy(funcStr.includes('getTrackById'), 'Escape should get track by ID');
+});
+
+TestRunner.test('Day 538 - Escape handler finds selected cells in sequencer window', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes('sequencerWin'), 'Escape should use sequencer window element');
+    t.assertTruthy(funcStr.includes('querySelectorAll'), 'Escape should query for selected cells');
+});
+
+TestRunner.test('Day 538 - Ctrl key shortcircuit allows Escape key', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.indexOf("key === 'escape'") < funcStr.indexOf('if (event.metaKey || event.ctrlKey)'), 'Escape handler should come before ctrl-key check');
+});
+
+TestRunner.test('Day 538 - Ctrl key shortcircuit allows Ctrl+A', (t) => {
+    const funcStr = eventHandlersCode;
+    t.assertTruthy(funcStr.includes("key === 'a'") && funcStr.includes('ctrlKey || event.metaKey'), 'Ctrl+A check should be in ctrl-key allowed list');
+});
+
+TestRunner.test('Day 538 - Ctrl key shortcircuit allows Ctrl+X', (t) => {
+    const funcStr = eventHandlersCode;
+    const ctrlBlock = funcStr.substring(funcStr.indexOf('if (event.metaKey || event.ctrlKey)'));
+    const shortcircuit = ctrlBlock.substring(0, 400);
+    t.assertTruthy(shortcircuit.includes("key === 'x'"), 'Ctrl+X should be in ctrl-key allowed list');
+});
+
+TestRunner.test('Day 538 - Ctrl key shortcircuit allows Ctrl+Q', (t) => {
+    const funcStr = eventHandlersCode;
+    const ctrlBlock = funcStr.substring(funcStr.indexOf('if (event.metaKey || event.ctrlKey)'));
+    const shortcircuit = ctrlBlock.substring(0, 400);
+    t.assertTruthy(shortcircuit.includes("key === 'q'"), 'Ctrl+Q should be in ctrl-key allowed list');
+});
+
+TestRunner.test('Day 538 - Keyboard shortcuts help shows Escape row for Clear Selection', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Escape') && uiStr.includes('Clear Selection'), 'Keyboard shortcuts help should show Escape = Clear Selection');
+});
+
+TestRunner.test('Day 538 - Keyboard shortcuts help shows Ctrl+Q row for Quantize Selection', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Ctrl+Q') && uiStr.includes('Quantize Selection'), 'Keyboard shortcuts help should show Ctrl+Q = Quantize Selection');
+});
+
+TestRunner.test('Day 538 - APP_VERSION validation for Day 538', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 538');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 196, 'Minor version should be >= 196 for Day 538');
+    }
+});

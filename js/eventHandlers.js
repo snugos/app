@@ -872,11 +872,29 @@ document.addEventListener('keydown', (event) => {
 
         const activeEl = document.activeElement;
         if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
-            if (key === 'escape') activeEl.blur();
+            if (key === 'escape') {
+                const activeSeqTrackId = getActiveSequencerTrackId();
+                if (activeSeqTrackId) {
+                    const track = getTrackById(activeSeqTrackId);
+                    if (track) {
+                        const seqWinId = `sequencerWin-${activeSeqTrackId}`;
+                        const seqWinInstance = getWindowByIdState ? getWindowByIdState(seqWinId) : null;
+                        if (seqWinInstance && seqWinInstance.element) {
+                            const selectedCells = seqWinInstance.element.querySelectorAll('.sequencer-step-cell.selected-cell');
+                            if (selectedCells.length > 0) {
+                                selectedCells.forEach(cell => cell.classList.remove('selected-cell'));
+                                showNotification(`Cleared ${selectedCells.length} selected cell(s).`, 1000);
+                            }
+                        }
+                    }
+                }
+                activeEl.blur();
+                return;
+            }
             return; 
         }
         if (event.metaKey || event.ctrlKey) {
-            if (!((key === 'z' || key === 'y' || key === 'c' || key === 'v'))) { 
+            if (!((key === 'z' || key === 'y' || key === 'c' || key === 'v' || key === 'a' || key === 'x' || key === 'q'))) { 
                  return;
             }
         }
