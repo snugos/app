@@ -4061,3 +4061,29 @@
   - `node --check js/constants.js` passes
   - Total tests remains at 2170
 - **Version**: Bumped to 2.187.0
+
+#### Day 541: Ctrl+Shift+Left/Right - Shift Notes by Column Position (2026-05-21)
+- **Feature**: Added Ctrl+Shift+Left and Ctrl+Shift+Right keyboard shortcuts to shift selected sequencer notes by column position (left/right movement within the timeline)
+- **Files Modified**:
+  - `js/eventHandlers.js`: Added Ctrl+Shift+Left/Right keyboard handlers (88 lines)
+  - `js/constants.js`: Bumped APP_VERSION to 2.199.0
+- **Feature Details**:
+  - **Ctrl+Shift+Left** (`js/eventHandlers.js`): Moves selected notes 1 column to the left
+    - Gets active sequencer track via `getActiveSequencerTrackId()`
+    - Finds selected cells via `querySelectorAll('.sequencer-step-cell.selected-cell')`
+    - Only shifts notes where destination column (c-1) is empty (no collision)
+    - Captures undo state before mutation using `captureStateForUndo`
+    - Shows notification with shifted count or "No notes to shift left."
+    - Prevents default browser behavior
+  - **Ctrl+Shift+Right**: Moves selected notes 1 column to the right
+    - Same pattern as Ctrl+Shift+Left but checks `c < currentActiveSeq.length - 1` and shifts to `c + 1`
+    - Shows notification with shifted count or "No notes to shift right."
+  - Both handlers call `track.recreateToneSequence(true)` and `updateTrackUI` after mutation
+  - **DrumSampler verification**: Pad drop zones confirmed working with `setupGenericDropZoneListeners` at lines 816-817
+  - **Tests count**: 2407 tests in tests.js
+- **Verification**:
+  - `node --check js/eventHandlers.js` passes
+  - `node --check js/tests.js` passes
+  - `node --check js/constants.js` passes
+  - `node --check js/ui.js` passes
+- **Version**: Bumped to 2.199.0
