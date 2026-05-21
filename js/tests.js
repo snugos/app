@@ -4631,10 +4631,120 @@ TestRunner.test('Day 530 - Recording - APP_VERSION validation for Day 530', (t) 
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 192, 'Minor version should be >= 192 for Day 530');
     }
+
+// Day 543: stopAudioRecording Error Handling Tests
+// ================================================================
+TestRunner.test('Recording Audio - stopAudioRecording uses activeRecorder from captured scope', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('activeRecorder') || funcStr.includes('recorder'), 'stopAudioRecording should capture the active recorder');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording uses activeMic from captured scope', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('activeMic') || funcStr.includes('mic'), 'stopAudioRecording should capture the active mic');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording uses activeTrackId from state', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('activeTrackId') || funcStr.includes('getRecordingTrackIdState'), 'stopAudioRecording should use recorded track ID from state');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording uses activeStartTime from state', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('activeStartTime') || funcStr.includes('getRecordingStartTimeState'), 'stopAudioRecording should use recording start time from state');
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording disconnects and disposes resources', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        (funcStr.includes('disconnect') || funcStr.includes('close') || funcStr.includes('dispose')),
+        'stopAudioRecording should disconnect/close/dispose audio resources'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording nulls out mic and recorder', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes('mic = null') && funcStr.includes('recorder = null'),
+        'stopAudioRecording should null out mic and recorder after stopping'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording returns false when no active recorder', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes('return false'),
+        'stopAudioRecording should return false when no active recorder'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording validates recording size', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes('size') || funcStr.includes('size <'),
+        'stopAudioRecording should check recording blob size'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording notifies when recording is empty', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes('empty') || funcStr.includes('Too short'),
+        'stopAudioRecording should notify when recording is too small'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording finds track via getTrackById', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes('getTrackById') || funcStr.includes('getTrack'),
+        'stopAudioRecording should find the recorded track via getTrackById'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording checks track type is Audio', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes("type === 'Audio'") || funcStr.includes("type !== 'Audio'"),
+        'stopAudioRecording should validate track type is Audio'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording calls addAudioClip on track', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes('addAudioClip'),
+        'stopAudioRecording should call addAudioClip to save recording'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording clears all recording state', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes('setIsRecordingState') &&
+        funcStr.includes('setRecordingTrackIdState') &&
+        funcStr.includes('setRecordingStartTimeState'),
+        'stopAudioRecording should clear all recording state (isRecording, trackId, startTime)'
+    );
+});
+
+TestRunner.test('Recording Audio - stopAudioRecording calls cleanupRecordingScheduling', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(
+        funcStr.includes('cleanupRecordingScheduling'),
+        'stopAudioRecording should call cleanupRecordingScheduling'
+    );
+});
+
+TestRunner.test('Recording Audio - APP_VERSION validation for Day 543', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 543');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 201, 'Minor version should be >= 201 for Day 543');
+    }
 });
 
 
-// Day 356: Project Save/Load Functions Tests
 // ============================================
 TestRunner.test('Project Save/Load - saveProjectInternal is a function', (t) => {
     t.assertEqual(typeof saveProjectInternal, 'function', 'saveProjectInternal should be a function');
