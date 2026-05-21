@@ -12966,3 +12966,60 @@ TestRunner.test('Day 538 - APP_VERSION validation for Day 538', (t) => {
         t.assertTruthy(versionParts[1] >= 196, 'Minor version should be >= 196 for Day 538');
     }
 });
+// Day 539: Ctrl+H - Humanize Velocities Shortcut
+TestRunner.test('Day 539 - Ctrl+H Humanize handler function exists', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes("key === 'h'"), 'Ctrl+H should check for h key');
+});
+
+TestRunner.test('Day 539 - Ctrl+H Humanize handler gets active sequencer track via getActiveSequencerTrackId', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('getActiveSequencerTrackId()'), 'Ctrl+H should use getActiveSequencerTrackId');
+});
+
+TestRunner.test('Day 539 - Ctrl+H Humanize handler captures undo state before humanizing', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('captureStateForUndo'), 'Ctrl+H should capture undo state');
+    t.assertTruthy(eventHandlersCode.includes('Humanize Velocities'), 'Ctrl+H should reference Humanize Velocities in undo label');
+});
+
+TestRunner.test('Day 539 - Ctrl+H Humanize handler humanizes selected cells with velocity variation', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('humanizedCount'), 'Ctrl+H should track humanizedCount');
+    t.assertTruthy(eventHandlersCode.includes('stepData.velocity'), 'Ctrl+H should modify stepData.velocity');
+    t.assertTruthy(eventHandlersCode.includes('Math.random'), 'Ctrl+H should use Math.random for variation');
+});
+
+TestRunner.test('Day 539 - Ctrl+H Humanize handler clamps velocity to 0.05-1.0 range', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('Math.max(0.05'), 'Ctrl+H should clamp to 0.05 minimum');
+    t.assertTruthy(eventHandlersCode.includes('Math.min(1.0'), 'Ctrl+H should clamp to 1.0 maximum');
+});
+
+TestRunner.test('Day 539 - Ctrl+H Humanize handler calls track.recreateToneSequence', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('recreateToneSequence'), 'Ctrl+H should call recreateToneSequence');
+});
+
+TestRunner.test('Day 539 - Ctrl+H Humanize handler shows notification with humanized count', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('Humanized ${humanizedCount}') || eventHandlersCode.includes('Humanized #{humanizedCount}'), 'Ctrl+H should show notification with count');
+});
+
+TestRunner.test('Day 539 - Ctrl+H Humanize handler handles no selection case', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    t.assertTruthy(eventHandlersCode.includes('No notes to humanize'), 'Ctrl+H should handle no notes case');
+});
+
+TestRunner.test('Day 539 - Keyboard shortcuts help shows Ctrl+H row for Humanize Velocities', (t) => {
+    const uiStr = uiCode;
+    t.assertTruthy(uiStr.includes('Ctrl+H') && uiStr.includes('Humanize Velocities'), 'Keyboard shortcuts help should show Ctrl+H = Humanize Velocities');
+});
+
+TestRunner.test('Day 539 - APP_VERSION validation for Day 539', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 539');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 197, 'Minor version should be >= 197 for Day 539');
+    }
+});

@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.196.0'; // Day 537: Ctrl+Shift+Z - Alt Redo Shortcut
+export const APP_VERSION = '2.197.0'; // Day 539: Ctrl+H - Humanize Velocities Shortcut
 // Added Ctrl+Q keyboard shortcut to quantize only the selected sequencer cells to the current snap grid.
 // Uses selected-cell class to identify selected notes, snaps each note's column to the nearest snapValue grid point.
 // Prevents collision by checking if target slot is empty before moving.

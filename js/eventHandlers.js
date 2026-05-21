@@ -1061,6 +1061,62 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl+H - Humanize Velocities: add random variation to velocities of selected notes
+        if ((event.ctrlKey || event.metaKey) && key === 'h') {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.humanizeVelocity === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const seqWinId = `sequencerWin-${activeSeqTrackId}`;
+                        const sequencerWindow = getWindowByIdState ? getWindowByIdState(seqWinId) : null;
+                        if (sequencerWindow && sequencerWindow.element) {
+                            const selectedCells = sequencerWindow.element.querySelectorAll('.sequencer-step-cell.selected-cell');
+                            if (selectedCells.length > 0) {
+                                // Humanize only selected cells
+                                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Humanize Velocities on ${track.name} (${currentActiveSeq.name})`);
+                                let humanizedCount = 0;
+                                selectedCells.forEach(cell => {
+                                    const r = parseInt(cell.dataset.row);
+                                    const c = parseInt(cell.dataset.col);
+                                    if (currentActiveSeq.data && currentActiveSeq.data[r] && currentActiveSeq.data[r][c] && currentActiveSeq.data[r][c].active) {
+                                        const stepData = currentActiveSeq.data[r][c];
+                                        const variation = (Math.random() - 0.5) * 0.3;
+                                        stepData.velocity = Math.max(0.05, Math.min(1.0, stepData.velocity + variation));
+                                        humanizedCount++;
+                                    }
+                                });
+                                if (humanizedCount > 0) {
+                                    track.recreateToneSequence(true);
+                                    if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                                    showNotification(`Humanized ${humanizedCount} velocity value(s).`, 1500);
+                                } else {
+                                    showNotification("No notes to humanize.", 1500);
+                                }
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                        // No selection - humanize all notes in sequence
+                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Humanize Velocities on ${track.name} (${currentActiveSeq.name})`);
+                        const result = track.humanizeVelocity(0.15);
+                        if (result > 0) {
+                            track.recreateToneSequence(true);
+                            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Humanized ${result} velocity value(s).`, 1500);
+                        } else {
+                            showNotification("No notes to humanize.", 1500);
+                        }
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
         // Ctrl+Q - Quantize selection (selected cells only, with current snap value)
         if ((event.ctrlKey || event.metaKey) && key === 'q') {
             const activeSeqTrackId = getActiveSequencerTrackId();
