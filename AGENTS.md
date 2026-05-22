@@ -1,3 +1,21 @@
+#### Day 556: duplicateSequence Undo Capture Order Fix (2026-05-22)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE `this.sequences.push` in `duplicateSequence`
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in `duplicateSequence` method
+  - `js/tests.js`: Added Day 556 test block with 5 tests for duplicateSequence
+  - `js/constants.js`: Bumped APP_VERSION to 2.215.0
+- **Bug Details**:
+  - **Problem**: `duplicateSequence` was pushing the new sequence to `this.sequences` BEFORE calling `_captureUndoState`. This means undo would capture the post-duplication state instead of the pre-duplication state, making undo unreliable after duplicating a sequence.
+  - **Fix**: Moved `this._captureUndoState(...)` call to before `this.sequences.push(newSequence)`. Now the undo stack correctly captures the state before the new sequence is added.
+- **Tests** (`js/tests.js`): 5 tests covering:
+  - duplicateSequence captures undo BEFORE pushing new sequence
+  - duplicateSequence returns null for Audio tracks
+  - duplicateSequence creates new sequence with correct properties (deep copy, length, Copy suffix name)
+  - duplicateSequence calls updateTrackUI after mutation
+  - APP_VERSION validation (>= 2.215 for Day 556)
+- **Version**: Bumped to 2.215.0
+- **Test Count**: Increased from 2549 to 2554
+
 #### Day 555: DrumSampler Pad Drop - Verify soundData.type Guard (2026-05-22)
 - **Verification**: Added tests verifying pad drop handler checks `soundData.type === 'sound-browser-item'` before loading sounds
 - **Files Modified**:

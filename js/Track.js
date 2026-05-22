@@ -1367,8 +1367,9 @@ export class Track {
             data: JSON.parse(JSON.stringify(originalSequence.data || [])),
             length: originalSequence.length
         };
-        this.sequences.push(newSequence);
+        // Capture undo BEFORE mutation
         this._captureUndoState(`Duplicate sequence "${originalSequence.name}" on ${this.name}`);
+        this.sequences.push(newSequence);
         if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
         console.log(`[Track ${this.id}] Duplicated sequence: "${originalSequence.name}" to "${newSequence.name}" (ID: ${newSeqId})`);
         return newSequence;

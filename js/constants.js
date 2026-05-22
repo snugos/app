@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.214.0'; // Day 555: DrumSampler pad drop - verify soundData.type guard - added 3 tests verifying drop handler checks soundData.type before loading sound
+export const APP_VERSION = '2.215.0'; // Day 556: duplicateSequence undo capture order fix - moved _captureUndoState BEFORE this.sequences.push
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted

@@ -13926,3 +13926,61 @@ TestRunner.test('Day 555 - APP_VERSION validation for Day 555', (t) => {
         t.assertTruthy(versionParts[1] >= 213, 'Minor version should be >= 213 for Day 555');
     }
 });
+
+// Day 556: duplicateSequence Undo Capture Order Fix
+// ============================================
+TestRunner.test('Day 556 - duplicateSequence captures undo BEFORE pushing new sequence', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('duplicateSequence(sequenceId)');
+    const funcEnd = trackCode.indexOf('\n    setActiveSequence(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const pushIdx = funcBody.indexOf('this.sequences.push');
+    
+    t.assertTruthy(captureIdx !== -1, '_captureUndoState should be called in duplicateSequence');
+    t.assertTruthy(pushIdx !== -1, 'this.sequences.push should be called in duplicateSequence');
+    t.assertTruthy(captureIdx < pushIdx, '_captureUndoState should be called BEFORE this.sequences.push');
+});
+
+TestRunner.test('Day 556 - duplicateSequence returns null for Audio tracks', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('duplicateSequence(sequenceId)');
+    const funcEnd = trackCode.indexOf('\n    setActiveSequence(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    t.assertTruthy(funcBody.includes("if (this.type === 'Audio') return null;"), 'duplicateSequence should return null for Audio type');
+});
+
+TestRunner.test('Day 556 - duplicateSequence creates new sequence with correct properties', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('duplicateSequence(sequenceId)');
+    const funcEnd = trackCode.indexOf('\n    setActiveSequence(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    t.assertTruthy(funcBody.includes('JSON.parse(JSON.stringify(originalSequence.data || []))'), 'should deep copy sequence data');
+    t.assertTruthy(funcBody.includes('originalSequence.length'), 'should copy sequence length');
+    t.assertTruthy(funcBody.includes('name: `${originalSequence.name} Copy`'), 'should set name with Copy suffix');
+});
+
+TestRunner.test('Day 556 - duplicateSequence calls updateTrackUI after mutation', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('duplicateSequence(sequenceId)');
+    const funcEnd = trackCode.indexOf('\n    setActiveSequence(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const pushIdx = funcBody.indexOf('this.sequences.push');
+    const updateIdx = funcBody.indexOf('updateTrackUI');
+    
+    t.assertTruthy(pushIdx !== -1, 'this.sequences.push should be called');
+    t.assertTruthy(updateIdx !== -1, 'updateTrackUI should be called');
+    t.assertTruthy(updateIdx > pushIdx, 'updateTrackUI should be called AFTER this.sequences.push');
+});
+
+TestRunner.test('Day 556 - APP_VERSION validation for Day 556', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 556');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 214, 'Minor version should be >= 214 for Day 556');
+    }
+});
