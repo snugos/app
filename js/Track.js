@@ -2637,8 +2637,8 @@ export class Track {
     setAudioClipPlaybackRate(clipId, rate) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.playbackRate = Math.max(0.25, Math.min(4, parseFloat(rate) || 1));
         this._captureUndoState(`Set Clip playback rate on ${this.name}`);
+        clip.playbackRate = Math.max(0.25, Math.min(4, parseFloat(rate) || 1));
         return true;
     }
 
@@ -2650,8 +2650,8 @@ export class Track {
     setAudioClipStartOffset(clipId, offset) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.startOffset = Math.max(0, parseFloat(offset) || 0);
         this._captureUndoState(`Set Clip start offset on ${this.name}`);
+        clip.startOffset = Math.max(0, parseFloat(offset) || 0);
         return true;
     }
 
@@ -2663,8 +2663,8 @@ export class Track {
     setAudioClipEndOffset(clipId, offset) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.endOffset = Math.max(0, parseFloat(offset) || 0);
         this._captureUndoState(`Set Clip end offset on ${this.name}`);
+        clip.endOffset = Math.max(0, parseFloat(offset) || 0);
         return true;
     }
 
@@ -2676,8 +2676,8 @@ export class Track {
     setAudioClipPitchShift(clipId, semitones) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.pitchShift = Math.max(-24, Math.min(24, parseInt(semitones) || 0));
         this._captureUndoState(`Set Clip pitch shift on ${this.name}`);
+        clip.pitchShift = Math.max(-24, Math.min(24, parseInt(semitones) || 0));
         return true;
     }
 
@@ -2689,8 +2689,8 @@ export class Track {
     setAudioClipCrossfade(clipId, crossfade) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.crossfade = Math.max(0, Math.min(1, parseFloat(crossfade) || 0));
         this._captureUndoState(`Set Clip crossfade on ${this.name}`);
+        clip.crossfade = Math.max(0, Math.min(1, parseFloat(crossfade) || 0));
         return true;
     }
 
@@ -2707,8 +2707,8 @@ export class Track {
             console.warn(`[${this.id}] Invalid fade in curve: ${curve}. Using 'linear'.`);
             curve = 'linear';
         }
-        clip.fadeInCurve = curve;
         this._captureUndoState(`Set Clip fade in curve on ${this.name}`);
+        clip.fadeInCurve = curve;
         return true;
     }
 
@@ -2725,8 +2725,8 @@ export class Track {
             console.warn(`[${this.id}] Invalid fade out curve: ${curve}. Using 'linear'.`);
             curve = 'linear';
         }
-        clip.fadeOutCurve = curve;
         this._captureUndoState(`Set Clip fade out curve on ${this.name}`);
+        clip.fadeOutCurve = curve;
         return true;
     }
 
@@ -2738,8 +2738,8 @@ export class Track {
     setAudioClipFadeIn(clipId, duration) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.fadeIn = Math.max(0, parseFloat(duration) || 0);
         this._captureUndoState(`Set Clip fade in on ${this.name}`);
+        clip.fadeIn = Math.max(0, parseFloat(duration) || 0);
         return true;
     }
 
@@ -2751,8 +2751,8 @@ export class Track {
     setAudioClipFadeOut(clipId, duration) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.fadeOut = Math.max(0, parseFloat(duration) || 0);
         this._captureUndoState(`Set Clip fade out on ${this.name}`);
+        clip.fadeOut = Math.max(0, parseFloat(duration) || 0);
         return true;
     }
 
@@ -2777,8 +2777,8 @@ export class Track {
     setAudioClipStartTime(clipId, startTime) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.startTime = Math.max(0, parseFloat(startTime) || 0);
         this._captureUndoState(`Move Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
+        clip.startTime = Math.max(0, parseFloat(startTime) || 0);
         return true;
     }
 
@@ -2790,8 +2790,8 @@ export class Track {
     setAudioClipDuration(clipId, duration) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.duration = Math.max(0.01, parseFloat(duration) || 0.1);
         this._captureUndoState(`Resize Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
+        clip.duration = Math.max(0.01, parseFloat(duration) || 0.1);
         return true;
     }
 

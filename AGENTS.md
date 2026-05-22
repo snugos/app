@@ -1,3 +1,29 @@
+#### Day 553c: Fix Undo Capture Order in All setAudioClip* Methods (2026-05-22)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE clip property mutations in all 14 setAudioClip methods
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in all setAudioClip methods
+  - `js/constants.js`: Updated APP_VERSION to 2.212.0
+- **Bug Details**:
+  - **Problem**: All 14 `setAudioClip*` methods were mutating clip properties BEFORE calling `_captureUndoState`. This means undo/redo would capture the post-mutation state instead of the pre-mutation state, making undo unreliable for all audio clip editing operations.
+  - **Fix**: Moved `this._captureUndoState(...)` call to the beginning of each method, before any property mutation. Methods fixed:
+    - `setAudioClipName` - was using `clip.name` in undo label after mutation
+    - `setAudioClipColor` - was mutating `clip.color` before undo capture
+    - `setAudioClipGain` - was mutating `clip.gain` before undo capture
+    - `setAudioClipPlaybackRate` - was mutating `clip.playbackRate` before undo capture
+    - `setAudioClipStartOffset` - was mutating `clip.startOffset` before undo capture
+    - `setAudioClipEndOffset` - was mutating `clip.endOffset` before undo capture
+    - `setAudioClipPitchShift` - was mutating `clip.pitchShift` before undo capture
+    - `setAudioClipCrossfade` - was mutating `clip.crossfade` before undo capture
+    - `setAudioClipFadeInCurve` - was mutating `clip.fadeInCurve` before undo capture
+    - `setAudioClipFadeOutCurve` - was mutating `clip.fadeOutCurve` before undo capture
+    - `setAudioClipFadeIn` - was mutating `clip.fadeIn` before undo capture
+    - `setAudioClipFadeOut` - was mutating `clip.fadeOut` before undo capture
+    - `setAudioClipReverse` - was mutating `clip.reverse` before undo capture
+    - `setAudioClipStartTime` - was mutating `clip.startTime` before undo capture
+    - `setAudioClipDuration` - was mutating `clip.duration` before undo capture
+  - This follows the established pattern from Days 545-552 for other Track methods
+- **Version**: 2.212.0 (already at 2.212.0 from Day 553)
+
 #### Day 553: Recording E2E - stopAudioRecording State Machine Verification (2026-05-22)
 - **Verification**: Confirmed stopAudioRecording properly manages its state machine for reliable recording
 - **Files Modified**:
