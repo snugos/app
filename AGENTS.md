@@ -1,3 +1,41 @@
+#### Day 554: Complete Undo Capture Order Tests for All 14 setAudioClip* Methods (2026-05-22)
+- **Verification**: Added comprehensive tests verifying ALL 14 setAudioClip* methods capture undo BEFORE mutation
+- **Files Modified**:
+  - `js/tests.js`: Added Day 554 test block with 14 tests for remaining setAudioClip methods
+  - `js/constants.js`: Bumped APP_VERSION to 2.213.0
+- **Verification Details**:
+  - **Day 553b** already covered 4 methods: setAudioClipName, setAudioClipColor, setAudioClipGain, setAudioClipReverse
+  - **Day 554** adds tests for the remaining 10 methods:
+    - setAudioClipPlaybackRate - clip.playbackRate = mutation
+    - setAudioClipStartOffset - clip.startOffset = mutation
+    - setAudioClipEndOffset - clip.endOffset = mutation
+    - setAudioClipPitchShift - clip.pitchShift = mutation
+    - setAudioClipCrossfade - clip.crossfade = mutation
+    - setAudioClipFadeInCurve - clip.fadeInCurve = mutation
+    - setAudioClipFadeOutCurve - clip.fadeOutCurve = mutation
+    - setAudioClipFadeIn - clip.fadeIn = mutation
+    - setAudioClipFadeOut - clip.fadeOut = mutation
+    - setAudioClipStartTime - clip.startTime = mutation
+    - setAudioClipDuration - clip.duration = mutation
+  - **Summary test**: Verifies all 15 methods (14 setters + validation) follow the undo-before-mutation pattern
+  - All tests check that `_captureUndoState` index < mutation index in the function source string
+- **Tests** (`js/tests.js`): 14 tests covering:
+  - setAudioClipPlaybackRate undo capture order
+  - setAudioClipStartOffset undo capture order
+  - setAudioClipEndOffset undo capture order
+  - setAudioClipPitchShift undo capture order
+  - setAudioClipCrossfade undo capture order
+  - setAudioClipFadeInCurve undo capture order
+  - setAudioClipFadeOutCurve undo capture order
+  - setAudioClipFadeIn undo capture order
+  - setAudioClipFadeOut undo capture order
+  - setAudioClipStartTime undo capture order
+  - setAudioClipDuration undo capture order
+  - All 14 methods summary check
+  - APP_VERSION validation (>= 2.213 for Day 554)
+- **Version**: Bumped to 2.213.0
+- **Test Count**: Increased from 2532 to 2546
+
 #### Day 553c: Fix Undo Capture Order in All setAudioClip* Methods (2026-05-22)
 - **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE clip property mutations in all 14 setAudioClip methods
 - **Files Modified**:

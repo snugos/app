@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.212.0'; // Day 553c: Fix undo capture order in all setAudioClip* methods - moved _captureUndoState BEFORE all clip property mutations in 14 setAudioClip methods (Name, Color, Gain, PlaybackRate, StartOffset, EndOffset, PitchShift, Crossfade, FadeInCurve, FadeOutCurve, FadeIn, FadeOut, Reverse, StartTime, Duration)
+export const APP_VERSION = '2.213.0'; // Day 554: Complete undo capture order tests for ALL 14 setAudioClip* methods - added 14 tests verifying _captureUndoState is called BEFORE clip property mutations in all methods
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted

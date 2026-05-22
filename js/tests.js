@@ -13756,3 +13756,138 @@ TestRunner.test('Day 553b - APP_VERSION validation for Day 553b', (t) => {
         t.assertTruthy(versionParts[1] >= 212, 'Minor version should be >= 212 for Day 553b');
     }
 });
+
+// ================================================================
+// Day 554: Complete Undo Capture Order Tests for All setAudioClip* Methods
+// ================================================================
+// Verifies ALL 14 setAudioClip* methods capture undo BEFORE mutation
+// Day 553b covered setAudioClipName, setAudioClipColor, setAudioClipGain, setAudioClipReverse
+// This adds tests for the remaining 10 methods
+
+TestRunner.test('Day 554 - setAudioClipPlaybackRate captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipPlaybackRate.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.playbackRate =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.playbackRate');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.playbackRate mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipStartOffset captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartOffset.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.startOffset =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.startOffset');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.startOffset mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipEndOffset captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipEndOffset.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.endOffset =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.endOffset');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.endOffset mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipPitchShift captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipPitchShift.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.pitchShift =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.pitchShift');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.pitchShift mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipCrossfade captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipCrossfade.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.crossfade =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.crossfade');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.crossfade mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipFadeInCurve captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeInCurve.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.fadeInCurve =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.fadeInCurve');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.fadeInCurve mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipFadeOutCurve captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOutCurve.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.fadeOutCurve =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.fadeOutCurve');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.fadeOutCurve mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipFadeIn captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeIn.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.fadeIn =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.fadeIn');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.fadeIn mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipFadeOut captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipFadeOut.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.fadeOut =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.fadeOut');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.fadeOut mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipStartTime captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipStartTime.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.startTime =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.startTime');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.startTime mutation');
+});
+
+TestRunner.test('Day 554 - setAudioClipDuration captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipDuration.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.duration =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.duration');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.duration mutation');
+});
+
+TestRunner.test('Day 554 - All 14 setAudioClip methods follow undo capture before mutation pattern', (t) => {
+    const methods = [
+        'setAudioClipName', 'setAudioClipColor', 'setAudioClipGain', 'setAudioClipPlaybackRate',
+        'setAudioClipStartOffset', 'setAudioClipEndOffset', 'setAudioClipPitchShift', 'setAudioClipCrossfade',
+        'setAudioClipFadeInCurve', 'setAudioClipFadeOutCurve', 'setAudioClipFadeIn', 'setAudioClipFadeOut',
+        'setAudioClipReverse', 'setAudioClipStartTime', 'setAudioClipDuration'
+    ];
+    let allCorrect = true;
+    let failedMethods = [];
+    methods.forEach(name => {
+        const funcStr = Track.prototype[name].toString();
+        const undoIdx = funcStr.indexOf('_captureUndoState');
+        const mutationIdx = funcStr.indexOf('clip.');
+        if (undoIdx === -1 || mutationIdx === -1 || undoIdx > mutationIdx) {
+            allCorrect = false;
+            failedMethods.push(name);
+        }
+    });
+    t.assertTruthy(allCorrect, 'All 14 setAudioClip methods should capture undo BEFORE mutation. Failed: ' + failedMethods.join(', '));
+});
+
+TestRunner.test('Day 554 - APP_VERSION validation for Day 554', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 554');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 212, 'Minor version should be >= 212 for Day 554');
+    }
+});
