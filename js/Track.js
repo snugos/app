@@ -1706,6 +1706,8 @@ export class Track {
 
         let quantizedCount = 0;
         const totalSteps = activeSeq.length;
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Quantize Sequence ${activeSeq.name}`);
 
         // For each step, find the nearest quantizeTo grid point and move the note there
         // If a note is at column C and quantizeTo=N, the snapped column is Math.round(C/N)*N
@@ -1788,7 +1790,6 @@ export class Track {
             }
         });
 
-        this._captureUndoState(`Quantize Sequence ${activeSeq.name}`);
         return snappedCount;
     }
 
@@ -1826,6 +1827,8 @@ export class Track {
             return 0;
         }
 
+        this._captureUndoState(`Paste Sequence Section on ${activeSeq.name}`);
+
         let pastedCount = 0;
         const sectionNumRows = sectionData.length;
         const sectionLength = sectionData[0]?.length || 0;
@@ -1855,7 +1858,6 @@ export class Track {
             }
         }
 
-        this._captureUndoState(`Paste Sequence Section on ${activeSeq.name}`);
         return pastedCount;
     }
 
