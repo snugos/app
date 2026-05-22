@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.209.0'; // Day 550: Fix undo capture order in quantizeSequence and pasteSequenceSection
+export const APP_VERSION = '2.210.0'; // Day 551: Fix undo capture order in shiftSequenceNotes - moved _captureUndoState before data mutation in shiftSequenceNotes method
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted

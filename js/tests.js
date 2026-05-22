@@ -13534,3 +13534,36 @@ TestRunner.test('Day 550 - APP_VERSION validation for Day 550', (t) => {
         t.assertTruthy(versionParts[1] >= 209, 'Minor version should be >= 209 for Day 550');
     }
 });
+
+// ============================================
+// Day 551: Fix undo capture order in shiftSequenceNotes
+// ============================================
+
+TestRunner.test('Day 551 - shiftSequenceNotes captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.shiftSequenceNotes.toString();
+    // undo capture should come BEFORE the map/iteration that builds newData
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mapIdx = funcStr.indexOf('.map(');
+    t.assertTruthy(undoIdx !== -1, 'shiftSequenceNotes should call _captureUndoState');
+    t.assertTruthy(mapIdx !== -1, 'shiftSequenceNotes should map over data');
+    t.assertTruthy(undoIdx < mapIdx, 'undo capture should come BEFORE the data map in shiftSequenceNotes');
+});
+
+TestRunner.test('Day 551 - shiftSequenceNotes is a function on Track.prototype', (t) => {
+    const funcStr = Track.prototype.shiftSequenceNotes.toString();
+    t.assertTruthy(funcStr.length > 0, 'shiftSequenceNotes should be a function');
+});
+
+TestRunner.test('Day 551 - Shift Notes Up/Down menu items exist in sequencer context menu', (t) => {
+    const uiCode = isWindowCodeDefined('ui.js') ? getWindowCode('ui.js') : '';
+    t.assertTruthy(uiCode.includes('Shift Notes Up'), 'Shift Notes Up menu item should exist');
+    t.assertTruthy(uiCode.includes('Shift Notes Down'), 'Shift Notes Down menu item should exist');
+});
+
+TestRunner.test('Day 551 - APP_VERSION validation for Day 551', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 551');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 210, 'Minor version should be >= 210 for Day 551');
+    }
+});

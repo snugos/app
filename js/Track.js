@@ -1478,6 +1478,9 @@ export class Track {
 
         if (rowShift === 0) return 0;
 
+        // Capture undo state BEFORE mutation (same pattern as humanizeVelocity/scaleVelocities)
+        this._captureUndoState(`Shift Notes ${semitones > 0 ? 'Down' : 'Up'} on ${activeSeq.name}`);
+
         // Ensure all rows exist before mapping
         for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
             if (!activeSeq.data[rowIndex]) {
@@ -1501,7 +1504,6 @@ export class Track {
         });
 
         activeSeq.data = newData;
-        this._captureUndoState(`Shift Notes ${semitones > 0 ? 'Down' : 'Up'} on ${activeSeq.name}`);
         return shiftedCount;
     }
 
