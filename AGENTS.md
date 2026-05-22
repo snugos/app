@@ -1,26 +1,23 @@
-#### Day 547: flipSequence Undo Capture Order Fix (2026-05-21)
-- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE data mutation in `flipSequence`, matching the pattern fixed in Day 545
+#### Day 547: reverseSequence & flipSequence Undo Capture Order Fix (2026-05-22)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE data mutation in `reverseSequence` and `flipSequence`, matching the pattern fixed in Day 545 for humanizeVelocity/scaleVelocities
 - **Files Modified**:
-  - `js/Track.js`: Fixed undo capture order in `flipSequence` method
-  - `js/tests.js`: Added Day 547 test block with 11 tests for flipSequence
-  - `js/constants.js`: Bumped APP_VERSION to 2.206.0
+  - `js/Track.js`: Fixed undo capture order in `reverseSequence` and `flipSequence` methods
+  - `js/ui.js`: Removed redundant `captureStateForUndo` calls from Reverse/Flip Sequence menu items (methods now handle undo internally)
+  - `js/tests.js`: Added 8 new tests for reverseSequence undo capture order + existing 11 flipSequence tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.206.0 (already done in prior commit)
 - **Bug Details**:
-  - **Problem**: `flipSequence` was swapping cells left-right BEFORE calling `_captureUndoState`. This means undo/redo would capture the post-mutation state instead of the pre-mutation state, making undo unreliable for the Flip Sequence operation.
-  - **Fix**: Moved `this._captureUndoState(...)` call to the beginning of the method, before any data iteration/mutation begins.
-  - **Verification**: Tests check that `_captureUndoState` call appears at a lower string index than the `for (let rowIndex` loop, ensuring undo capture happens first.
-- **Tests** (`js/tests.js`): 11 tests covering:
-  - `flipSequence` undo capture comes before data iteration
-  - `flipSequence` is a function on Track.prototype
-  - `flipSequence` accepts 0 parameters
-  - Returns 0 for Audio track type
-  - Gets active sequence via `getActiveSequence`
-  - Returns 0 if no active sequence
-  - Uses `halfCols` calculation with `Math.floor` for mirroring
-  - Swaps left and right cells via `mirroredCol`
-  - Calls `_captureUndoState` for undo support
-  - Returns `flippedCount`
+  - **Problem**: `reverseSequence` was mutating notes left-right BEFORE calling `_captureUndoState`. Same issue existed in `flipSequence` (fixed in prior Day 547 session). This means undo/redo would capture the post-mutation state instead of the pre-mutation state, making undo unreliable for both Reverse and Flip operations.
+  - **Fix**: Moved `this._captureUndoState(...)` call to the beginning of `reverseSequence`, before any data iteration/mutation. `flipSequence` already had the fix from prior session. Also removed redundant `captureStateForUndo` calls in the UI menu items.
+  - **Verification**: Tests check that `_captureUndoState` call appears at a lower string index than the data iteration loop.
+- **Tests** (`js/tests.js`): 8 new tests covering:
+  - `reverseSequence` undo capture comes before data iteration
+  - reverseSequence menu item exists and calls track.reverseSequence()
+  - reverseSequence menu item calls recreateToneSequence after reverse
+  - reverseSequence menu item shows notification with reversed count
+  - reverseSequence menu item handles no notes case
+  - Both reverseSequence and flipSequence capture undo before mutation
   - APP_VERSION validation (>= 2.206 for Day 547)
-- **Version**: Bumped to 2.206.0
+- **Version**: 2.206.0
 - **Test Count**: Increased from 13327 to 13406
 
 #### Day 546: DrumSampler Pad Drop Zone - Add Drop Handlers to Pad Grid (2026-05-21)
