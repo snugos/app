@@ -13392,3 +13392,21 @@ TestRunner.test('Day 547 - APP_VERSION validation for Day 547', (t) => {
         t.assertTruthy(versionParts[1] >= 206, 'Minor version should be >= 206 for Day 547');
     }
 });
+
+// Day 548: reverseSequence Undo Capture Order Tests
+TestRunner.test('Day 548 - reverseSequence captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('activeSeq.data.forEach');
+    t.assertTruthy(undoIdx !== -1, 'reverseSequence should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'reverseSequence should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'reverseSequence should capture undo BEFORE data mutation');
+});
+
+TestRunner.test('Day 548 - APP_VERSION validation for Day 548', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 548');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 207, 'Minor version should be >= 207 for Day 548');
+    }
+});

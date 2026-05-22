@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.206.0'; // Day 547: Fix flipSequence undo capture order - move _captureUndoState before data mutation
+export const APP_VERSION = '2.207.0'; // Day 548: Fix reverseSequence undo capture order - move _captureUndoState before data mutation (matching flipSequence pattern)
 // Added Ctrl+Q keyboard shortcut to quantize only the selected sequencer cells to the current snap grid.
 // Uses selected-cell class to identify selected notes, snaps each note's column to the nearest snapValue grid point.
 // Prevents collision by checking if target slot is empty before moving.

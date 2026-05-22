@@ -1570,6 +1570,9 @@ export class Track {
             return 0;
         }
 
+        // Capture undo state BEFORE mutation (flipSequence already did this correctly; reverseSequence was capturing after)
+        this._captureUndoState(`Reverse Sequence ${activeSeq.name}`);
+
         let reversedCount = 0;
         const totalSteps = activeSeq.length;
 
@@ -1590,7 +1593,6 @@ export class Track {
             }
         });
 
-        this._captureUndoState(`Reverse Sequence ${activeSeq.name}`);
         return reversedCount;
     }
 
