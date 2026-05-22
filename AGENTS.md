@@ -1,3 +1,24 @@
+#### Day 558: Tap Tempo Timeout Reset and Max Taps (2026-05-22)
+- **Bug Fix**: Missing `tapTimes` variable declaration and incomplete tap tempo timeout/max taps handling
+- **Files Modified**:
+  - `js/audio.js`: Added `tapTimes` variable declaration, updated `tapTempo` and `getTapTempoBpm` functions
+  - `js/tests.js`: Added Day 558 test block with 6 tests for tap tempo improvements
+  - `js/constants.js`: Bumped APP_VERSION to 2.216.0
+- **Bug Details**:
+  - **Missing tapTimes declaration**: The `tapTimes` array was being used by `resetTapTempo()`, `tapTempo()`, and `getTapTempoBpm()` but was never declared as a variable. Added `let tapTimes = [];` alongside other transport state variables.
+  - **tapTempo timeout reset**: Now checks if gap between taps exceeds `TAP_TEMPO_TIMEOUT_MS` (2000ms) and resets buffer if so. This prevents old taps from skewing the average when user resumes tapping after a pause.
+  - **tapTempo max taps**: Limits stored taps to `TAP_TEMPO_MAX_TAPS` (8) most recent entries by slicing the array.
+  - **getTapTempoBpm bounds**: Clamps result to `TAP_TEMPO_MIN_BPM` (20) and `TAP_TEMPO_MAX_BPM` (300) range.
+- **Tests** (`js/tests.js`): 6 tests covering:
+  - tapTempo resets buffer after TAP_TEMPO_TIMEOUT_MS gap
+  - tapTempo limits buffer to TAP_TEMPO_MAX_TAPS
+  - getTapTempoBpm clamps to TAP_TEMPO_MIN_BPM and TAP_TEMPO_MAX_BPM
+  - tapTempo references TAP_TEMPO_TIMEOUT_MS and TAP_TEMPO_MAX_TAPS constants
+  - getTapTempoBpm references TAP_TEMPO_MIN_TAPS, TAP_TEMPO_MIN_BPM, TAP_TEMPO_MAX_BPM constants
+  - APP_VERSION validation (>= 2.216 for Day 558)
+- **Version**: Bumped to 2.216.0
+- **Test Count**: Increased from 2561 to 2567
+
 #### Day 557: Timeline Clip Methods Undo Capture Order Fix (2026-05-22)
 - **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE clip mutations in `deleteTimelineClip`, `splitAudioClip`, and `duplicateTimelineClip`
 - **Files Modified**:

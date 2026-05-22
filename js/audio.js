@@ -60,6 +60,7 @@ let automationActive = false;
 let masterVolumeAutomation = [];
 let loopRegion = { ...Constants.DEFAULT_LOOP_REGION };
 let punchRegion = { in: 0, out: 16, enabled: false };
+let tapTimes = [];
 
 // Send Bus Audio Routing
 let sendBusNodes = new Map(); // sendId -> { inputGain, effects[], outputGain, muted }
@@ -1585,17 +1586,34 @@ export function resetTapTempo() {
 }
 
 export function tapTempo() {
-    tapTimes.push(Date.now());
+    const now = Date.now();
+    tapTimes.push(now);
+    // Reset if gap between taps is too large (> TAP_TEMPO_TIMEOUT_MS)
+    if (tapTimes.length >= 2) {
+        const lastDelta = tapTimes[tapTimes.length - 1] - tapTimes[tapTimes.length - 2];
+        if (lastDelta > Constants.TAP_TEMPO_TIMEOUT_MS) {
+            tapTimes = [now];
+            return;
+        }
+    }
+    // Limit to TAP_TEMPO_MAX_TAPS most recent entries
+    if (tapTimes.length > Constants.TAP_TEMPO_MAX_TAPS) {
+        tapTimes = tapTimes.slice(-Constants.TAP_TEMPO_MAX_TAPS);
+    }
 }
 
 export function getTapTempoBpm() {
-    if (tapTimes.length < 2) return null;
+    if (tapTimes.length < Constants.TAP_TEMPO_MIN_TAPS) return null;
     const deltas = [];
     for (let i = 1; i < tapTimes.length; i++) {
         deltas.push(tapTimes[i] - tapTimes[i - 1]);
     }
     const avgMs = deltas.reduce((a, b) => a + b, 0) / deltas.length;
-    return 60000 / avgMs;
+    const bpm = 60000 / avgMs;
+    // Clamp to valid BPM range
+    if (bpm < Constants.TAP_TEMPO_MIN_BPM) return Constants.TAP_TEMPO_MIN_BPM;
+    if (bpm > Constants.TAP_TEMPO_MAX_BPM) return Constants.TAP_TEMPO_MAX_BPM;
+    return bpm;
 }
 
 export function isTapTempoReady() {

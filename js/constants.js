@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.215.0'; // Day 557: Timeline clip methods undo capture order fix - moved _captureUndoState BEFORE clip mutations in deleteTimelineClip, splitAudioClip, and duplicateTimelineClip
+export const APP_VERSION = '2.216.0'; // Day 558: Tap tempo timeout reset and max taps - added tapTimes variable declaration, tapTempo now resets buffer after TAP_TEMPO_TIMEOUT_MS gap, limits to TAP_TEMPO_MAX_TAPS, getTapTempoBpm clamps to TAP_TEMPO_MIN_BPM/MAX_BPM
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted
