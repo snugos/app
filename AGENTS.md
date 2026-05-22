@@ -1,3 +1,25 @@
+#### Day 557: Timeline Clip Methods Undo Capture Order Fix (2026-05-22)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE clip mutations in `deleteTimelineClip`, `splitAudioClip`, and `duplicateTimelineClip`
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in all three timeline clip methods
+  - `js/tests.js`: Added Day 557 test block with 7 tests for undo capture order verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.215.0
+- **Bug Details**:
+  - **deleteTimelineClip**: Was filtering `this.timelineClips` BEFORE calling `_captureUndoState`. Now captures undo before the filter mutation.
+  - **splitAudioClip**: Was mutating `clip.duration` and pushing new clip BEFORE calling `_captureUndoState`. Now captures undo first.
+  - **duplicateTimelineClip**: Was pushing the new clip BEFORE calling `_captureUndoState`. Now captures undo before the push.
+  - This follows the established pattern from Days 545-556 for all other Track methods
+- **Tests** (`js/tests.js`): 7 tests covering:
+  - deleteTimelineClip captures undo BEFORE filter mutation
+  - deleteTimelineClip has descriptive undo label
+  - splitAudioClip captures undo BEFORE duration mutation and push
+  - splitAudioClip has descriptive undo label
+  - duplicateTimelineClip captures undo BEFORE push mutation
+  - duplicateTimelineClip has descriptive undo label
+  - APP_VERSION validation (>= 2.215 for Day 557)
+- **Version**: Bumped to 2.215.0
+- **Test Count**: Increased from 2554 to 2561
+
 #### Day 556: duplicateSequence Undo Capture Order Fix (2026-05-22)
 - **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE `this.sequences.push` in `duplicateSequence`
 - **Files Modified**:

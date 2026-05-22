@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.215.0'; // Day 556: duplicateSequence undo capture order fix - moved _captureUndoState BEFORE this.sequences.push
+export const APP_VERSION = '2.215.0'; // Day 557: Timeline clip methods undo capture order fix - moved _captureUndoState BEFORE clip mutations in deleteTimelineClip, splitAudioClip, and duplicateTimelineClip
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted

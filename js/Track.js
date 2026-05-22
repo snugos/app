@@ -2531,8 +2531,8 @@ export class Track {
             return false;
         }
         const clip = this.timelineClips[clipIndex];
-        this.timelineClips = this.timelineClips.filter(c => c.id !== clipId);
         this._captureUndoState(`Delete Clip "${clip.name || clip.id.slice(-4)}" from ${this.name}`);
+        this.timelineClips = this.timelineClips.filter(c => c.id !== clipId);
         if (this.appServices.renderTimeline) this.appServices.renderTimeline();
         return true;
     }
@@ -2548,6 +2548,7 @@ export class Track {
             console.warn(`[${this.id}] splitTime ${splitTime} is outside clip range (${clip.startTime} to ${clipEnd}).`);
             return null;
         }
+        this._captureUndoState(`Split Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
         const originalDuration = clip.duration;
         clip.duration = splitTime - clip.startTime;
         const newClip = {
@@ -2569,7 +2570,6 @@ export class Track {
         };
         if (clip.sourceSequenceId) newClip.sourceSequenceId = clip.sourceSequenceId;
         this.timelineClips.push(newClip);
-        this._captureUndoState(`Split Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
         if (this.appServices.renderTimeline) this.appServices.renderTimeline();
         return newClip;
     }
@@ -2585,8 +2585,8 @@ export class Track {
             startTime: clip.startTime + clip.duration + 0.01,
             name: clip.name ? `${clip.name} (copy)` : 'Copy'
         });
-        this.timelineClips.push(newClip);
         this._captureUndoState(`Duplicate Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
+        this.timelineClips.push(newClip);
         if (this.appServices.renderTimeline) this.appServices.renderTimeline();
         return newClip;
     }

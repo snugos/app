@@ -13984,3 +13984,90 @@ TestRunner.test('Day 556 - APP_VERSION validation for Day 556', (t) => {
         t.assertTruthy(versionParts[1] >= 214, 'Minor version should be >= 214 for Day 556');
     }
 });
+// Day 557: Timeline Clip Methods Undo Capture Order Fix
+// ============================================
+// Fixed undo capture order in deleteTimelineClip, splitAudioClip, and duplicateTimelineClip
+// Moved _captureUndoState call to BEFORE clip mutations in all three methods
+
+TestRunner.test('Day 557 - deleteTimelineClip captures undo BEFORE filter mutation', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('deleteTimelineClip(clipId)');
+    const funcEnd = trackCode.indexOf('\n    splitAudioClip(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const filterIdx = funcBody.indexOf('this.timelineClips.filter');
+    
+    t.assertTruthy(captureIdx !== -1, '_captureUndoState should be called in deleteTimelineClip');
+    t.assertTruthy(filterIdx !== -1, 'this.timelineClips.filter should be called in deleteTimelineClip');
+    t.assertTruthy(captureIdx < filterIdx, '_captureUndoState should be called BEFORE this.timelineClips.filter');
+});
+
+TestRunner.test('Day 557 - deleteTimelineClip has descriptive undo label', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('deleteTimelineClip(clipId)');
+    const funcEnd = trackCode.indexOf('\n    splitAudioClip(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    t.assertTruthy(funcBody.includes('Delete Clip') || funcBody.includes('"Delete Clip"'), 'undo label should reference Delete Clip');
+    t.assertTruthy(funcBody.includes('clip.name'), 'undo label should include clip name');
+});
+
+TestRunner.test('Day 557 - splitAudioClip captures undo BEFORE mutations', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('splitAudioClip(clipId, splitTime)');
+    const funcEnd = trackCode.indexOf('\n    duplicateTimelineClip(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const durationIdx = funcBody.indexOf('clip.duration = ');
+    const pushIdx = funcBody.indexOf('this.timelineClips.push');
+    
+    t.assertTruthy(captureIdx !== -1, '_captureUndoState should be called in splitAudioClip');
+    t.assertTruthy(durationIdx !== -1, 'clip.duration mutation should occur');
+    t.assertTruthy(pushIdx !== -1, 'this.timelineClips.push should be called');
+    t.assertTruthy(captureIdx < durationIdx, '_captureUndoState should be called BEFORE clip.duration mutation');
+    t.assertTruthy(captureIdx < pushIdx, '_captureUndoState should be called BEFORE this.timelineClips.push');
+});
+
+TestRunner.test('Day 557 - splitAudioClip has descriptive undo label', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('splitAudioClip(clipId, splitTime)');
+    const funcEnd = trackCode.indexOf('\n    duplicateTimelineClip(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    t.assertTruthy(funcBody.includes('Split Clip') || funcBody.includes('"Split Clip"'), 'undo label should reference Split Clip');
+    t.assertTruthy(funcBody.includes('clip.name'), 'undo label should include clip name');
+});
+
+TestRunner.test('Day 557 - duplicateTimelineClip captures undo BEFORE push mutation', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('duplicateTimelineClip(clipId)');
+    const funcEnd = trackCode.indexOf('\n    // Audio Clip Accessor Methods', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const pushIdx = funcBody.indexOf('this.timelineClips.push');
+    
+    t.assertTruthy(captureIdx !== -1, '_captureUndoState should be called in duplicateTimelineClip');
+    t.assertTruthy(pushIdx !== -1, 'this.timelineClips.push should be called');
+    t.assertTruthy(captureIdx < pushIdx, '_captureUndoState should be called BEFORE this.timelineClips.push');
+});
+
+TestRunner.test('Day 557 - duplicateTimelineClip has descriptive undo label', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('duplicateTimelineClip(clipId)');
+    const funcEnd = trackCode.indexOf('\n    // Audio Clip Accessor Methods', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    t.assertTruthy(funcBody.includes('Duplicate Clip') || funcBody.includes('"Duplicate Clip"'), 'undo label should reference Duplicate Clip');
+    t.assertTruthy(funcBody.includes('clip.name'), 'undo label should include clip name');
+});
+
+TestRunner.test('Day 557 - APP_VERSION validation for Day 557', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 557');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 215, 'Minor version should be >= 215 for Day 557');
+    }
+});
