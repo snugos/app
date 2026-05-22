@@ -1,3 +1,20 @@
+#### Day 550: Fix Undo Capture Order in quantizeSequence and pasteSequenceSection (2026-05-22)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE data mutation in `quantizeSequence` and `pasteSequenceSection`
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in `quantizeSequence` and `pasteSequenceSection` methods
+  - `js/tests.js`: Added Day 550 test block with 3 tests for undo capture order verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.209.0
+- **Bug Details**:
+  - **Problem**: `quantizeSequence` was mutating velocity/probability values in `activeSeq.data` BEFORE calling `_captureUndoState`. Same issue existed in `pasteSequenceSection`. This means undo/redo would capture the post-mutation state instead of the pre-mutation state, making undo unreliable for both operations.
+  - **Fix**: Moved `this._captureUndoState(...)` call to the beginning of each method, before any data iteration/mutation begins. This follows the pattern established in Day 545/547 for humanizeVelocity, scaleVelocities, reverseSequence, and flipSequence.
+  - **Verification**: Tests check that `_captureUndoState` call appears at a lower string index than the data iteration loop.
+- **Tests** (`js/tests.js`): 3 tests covering:
+  - `quantizeSequence` undo capture comes before data iteration
+  - `pasteSequenceSection` undo capture comes before data iteration
+  - APP_VERSION validation (>= 2.209 for Day 550)
+- **Version**: Bumped to 2.209.0
+- **Test Count**: Increased from 13477 to 13480
+
 #### Day 549: Duplicate Track Menu Item (2026-05-22)
 - **Feature**: Added "Duplicate Track" menu item to track mixer context menu
 - **Files Modified**:
