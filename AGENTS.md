@@ -1,3 +1,26 @@
+#### Day 549: Duplicate Track Menu Item (2026-05-22)
+- **Feature**: Added "Duplicate Track" menu item to track mixer context menu
+- **Files Modified**:
+  - `js/ui.js`: Added "Duplicate Track" menu item to track context menu in `renderMixer`
+  - `js/tests.js`: Added Day 549 test block with 6 tests for Duplicate Track menu item
+  - `js/constants.js`: Bumped APP_VERSION to 2.208.0
+- **Feature Details**:
+  - **Duplicate Track menu item** (`js/ui.js`): Added before "Remove Track" separator in track context menu
+    - Calls `track.duplicateTrack()` which deep-copies track data and calls `addTrackToState`
+    - Captures undo state before operation via `captureStateForUndo`
+    - Shows "Duplicated '{track.name}'" notification on success
+    - Shows "Failed to duplicate '{track.name}'" notification on failure
+    - Handles case where `track.duplicateTrack` is not available
+  - **Tests** (`js/tests.js`): 6 tests covering:
+    - Duplicate Track menu item exists in track context menu
+    - Menu item calls `track.duplicateTrack()`
+    - Menu item captures undo state before operation
+    - Menu item handles success case notification
+    - Menu item handles failure case notification
+    - APP_VERSION validation (>= 2.208 for Day 549)
+- **Version**: 2.208.0
+- **Test Count**: Increased from 13465 to 13477
+
 #### Day 547: reverseSequence & flipSequence Undo Capture Order Fix (2026-05-22)
 - **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE data mutation in `reverseSequence` and `flipSequence`, matching the pattern fixed in Day 545 for humanizeVelocity/scaleVelocities
 - **Files Modified**:

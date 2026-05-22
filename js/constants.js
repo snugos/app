@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.207.0'; // Day 548: Fix reverseSequence undo capture order - move _captureUndoState before data mutation (matching flipSequence pattern)
+export const APP_VERSION = '2.208.0'; // Day 549: Duplicate Track menu item - adds "Duplicate Track" to track mixer context menu
 // Added Ctrl+Q keyboard shortcut to quantize only the selected sequencer cells to the current snap grid.
 // Uses selected-cell class to identify selected notes, snaps each note's column to the nearest snapValue grid point.
 // Prevents collision by checking if target slot is empty before moving.

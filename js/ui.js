@@ -1909,6 +1909,20 @@ export function renderMixer(container) {
                 }
             }},
             {separator: true},
+            {label: "Duplicate Track", action: async () => {
+                if (track.duplicateTrack) {
+                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Duplicate Track "${track.name}"`);
+                    const newTrack = await track.duplicateTrack();
+                    if (newTrack) {
+                        if (localAppServices.showNotification) localAppServices.showNotification(`Duplicated "${track.name}"`, 2000);
+                    } else {
+                        if (localAppServices.showNotification) localAppServices.showNotification(`Failed to duplicate "${track.name}"`, 2000);
+                    }
+                } else {
+                    if (localAppServices.showNotification) localAppServices.showNotification('Duplicate not available', 1500);
+                }
+            }},
+            {separator: true},
             {label: "Remove Track", action: () => localAppServices.handleRemoveTrack(track.id)}
         ], localAppServices); });
         container.appendChild(trackDiv);

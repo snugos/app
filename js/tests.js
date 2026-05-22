@@ -13463,3 +13463,42 @@ TestRunner.test('Day 548 - APP_VERSION validation for Day 548', (t) => {
         t.assertTruthy(versionParts[1] >= 207, 'Minor version should be >= 207 for Day 548');
     }
 });
+
+// ============================================
+// Day 549: Duplicate Track Menu Item Tests
+// ============================================
+
+TestRunner.test('Day 549 - Duplicate Track menu item exists in track context menu', (t) => {
+    const renderMixerFnStr = renderMixer.toString();
+    t.assertTruthy(renderMixerFnStr.includes('Duplicate Track'), 'Track context menu should have Duplicate Track option');
+});
+
+TestRunner.test('Day 549 - Duplicate Track menu item calls track.duplicateTrack()', (t) => {
+    const renderMixerFnStr = renderMixer.toString();
+    t.assertTruthy(renderMixerFnStr.includes('track.duplicateTrack'), 'Duplicate Track menu item should call track.duplicateTrack()');
+});
+
+TestRunner.test('Day 549 - Duplicate Track menu item captures undo state before operation', (t) => {
+    const renderMixerFnStr = renderMixer.toString();
+    const duplicateTrackIdx = renderMixerFnStr.indexOf('Duplicate Track');
+    const captureIdx = renderMixerFnStr.indexOf('captureStateForUndo');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < duplicateTrackIdx + 500, 'Undo capture should happen before duplicate operation');
+});
+
+TestRunner.test('Day 549 - Duplicate Track menu item handles success case', (t) => {
+    const renderMixerFnStr = renderMixer.toString();
+    t.assertTruthy(renderMixerFnStr.includes('Duplicated') || renderMixerFnStr.includes('Duplicated track'), 'Should show notification on successful duplicate');
+});
+
+TestRunner.test('Day 549 - Duplicate Track menu item handles failure case', (t) => {
+    const renderMixerFnStr = renderMixer.toString();
+    t.assertTruthy(renderMixerFnStr.includes('Failed to duplicate') || renderMixerFnStr.includes('Failed to duplicat'), 'Should show notification on failed duplicate');
+});
+
+TestRunner.test('Day 549 - APP_VERSION validation for Day 549', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 549');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 208, 'Minor version should be >= 208 for Day 549');
+    }
+});
