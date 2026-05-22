@@ -14071,3 +14071,34 @@ TestRunner.test('Day 557 - APP_VERSION validation for Day 557', (t) => {
         t.assertTruthy(versionParts[1] >= 215, 'Minor version should be >= 215 for Day 557');
     }
 });
+TestRunner.test('Day 559 - addAudioClip captures undo BEFORE timelineClips.push', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('addAudioClip(blob, startTime)');
+    const funcEnd = trackCode.indexOf('\n    // Audio Clip Accessor Methods', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const pushIdx = funcBody.indexOf('this.timelineClips.push');
+    
+    t.assertTruthy(captureIdx !== -1, '_captureUndoState should be called in addAudioClip');
+    t.assertTruthy(pushIdx !== -1, 'this.timelineClips.push should be called');
+    t.assertTruthy(captureIdx < pushIdx, '_captureUndoState should be called BEFORE this.timelineClips.push');
+});
+
+TestRunner.test('Day 559 - addAudioClip has descriptive undo label', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('addAudioClip(blob, startTime)');
+    const funcEnd = trackCode.indexOf('\n    // Audio Clip Accessor Methods', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    t.assertTruthy(funcBody.includes('Add') || funcBody.includes('Recorded'), 'undo label should reference Add or Recorded');
+    t.assertTruthy(funcBody.includes('Clip') || funcBody.includes('clip'), 'undo label should reference Clip');
+});
+
+TestRunner.test('Day 559 - APP_VERSION validation for Day 559', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 559');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 217, 'Minor version should be >= 217 for Day 559');
+    }
+});

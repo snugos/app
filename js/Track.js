@@ -2095,10 +2095,10 @@ export class Track {
                 name: `Rec ${new Date().toLocaleTimeString().substring(0,8)}`
             };
 
+            // FIX Day 559: Capture undo BEFORE pushing clip (following established pattern)
+            this._captureUndoState(`Add Recorded Clip to ${this.name}`);
             this.timelineClips.push(newClip);
             console.log(`[Track ${this.id}] Added audio clip to timeline:`, newClip, "Start:", clipStartTime, "Duration:", duration);
-            this._captureUndoState(`Add Recorded Clip to ${this.name}`);
-
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
         } catch (error) {
             console.error(`[Track ${this.id} addAudioClip] Error:`, error);

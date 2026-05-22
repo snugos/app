@@ -1,3 +1,19 @@
+#### Day 559: Fix addAudioClip Undo Capture Order (2026-05-22)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE `timelineClips.push` in `addAudioClip`
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in `addAudioClip` method
+  - `js/tests.js`: Added Day 559 test block with 3 tests for addAudioClip undo capture
+  - `js/constants.js`: Bumped APP_VERSION to 2.217.0
+- **Bug Details**:
+  - **Problem**: `addAudioClip` was pushing the new clip to `this.timelineClips` BEFORE calling `_captureUndoState`. This means undo would capture the post-addition state instead of the pre-addition state, making undo unreliable after adding a recorded audio clip.
+  - **Fix**: Moved `this._captureUndoState(...)` call to before `this.timelineClips.push(newClip)`. Now the undo stack correctly captures the state before the new clip is added. This follows the established pattern from Days 545-558 for all other Track methods.
+- **Tests** (`js/tests.js`): 3 tests covering:
+  - addAudioClip captures undo BEFORE timelineClips.push
+  - addAudioClip has descriptive undo label
+  - APP_VERSION validation (>= 2.217 for Day 559)
+- **Version**: Bumped to 2.217.0
+- **Test Count**: Increased from 2561 to 2564
+
 #### Day 558: Tap Tempo Timeout Reset and Max Taps (2026-05-22)
 - **Bug Fix**: Missing `tapTimes` variable declaration and incomplete tap tempo timeout/max taps handling
 - **Files Modified**:
