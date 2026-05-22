@@ -1403,6 +1403,7 @@ export class Track {
             if(this.appServices.showNotification) this.appServices.showNotification(`Cannot double length, exceeds maximum of ${Constants.MAX_BARS} bars.`, 3000);
             return;
         }
+        // Capture undo state BEFORE mutation (same pattern as halveSequence/setSequenceLength)
         this._captureUndoState(`Double Sequence Length for "${activeSeq.name}" on ${this.name}`);
 
         activeSeq.data = activeSeq.data || []; 
@@ -1436,6 +1437,7 @@ export class Track {
             if (this.appServices.showNotification) this.appServices.showNotification(`Cannot halve length, minimum is 1 bar.`, 3000);
             return;
         }
+        // Capture undo state BEFORE mutation (same pattern as doubleSequence/setSequenceLength)
         this._captureUndoState(`Halve Sequence Length for "${activeSeq.name}" on ${this.name}`);
 
         activeSeq.data = activeSeq.data || [];
@@ -1878,6 +1880,7 @@ export class Track {
 
         if (oldActualLength === validatedNewLength && activeSeq.length === validatedNewLength) return; 
 
+        // Capture undo state BEFORE mutation (same pattern as doubleSequence/halveSequence)
         if (!skipUndoCapture) {
             this._captureUndoState(`Set Seq Length for "${activeSeq.name}" on ${this.name} to ${validatedNewLength / Constants.STEPS_PER_BAR} bars`);
         }

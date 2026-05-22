@@ -13567,3 +13567,43 @@ TestRunner.test('Day 551 - APP_VERSION validation for Day 551', (t) => {
         t.assertTruthy(versionParts[1] >= 210, 'Minor version should be >= 210 for Day 551');
     }
 });
+
+// ============================================
+// Day 552: doubleSequence, halveSequence, setSequenceLength - Undo Capture Order Verification
+// These three methods were already capturing undo BEFORE mutation (verified by consistent undo behavior).
+// Added clarifying comments matching the established pattern.
+// ============================================
+TestRunner.test('Day 552 - doubleSequence captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.doubleSequence.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('activeSeq.data.forEach');
+    t.assertTruthy(undoIdx !== -1, 'doubleSequence should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'doubleSequence should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'undo capture should come BEFORE the data iteration in doubleSequence');
+});
+
+TestRunner.test('Day 552 - halveSequence captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.halveSequence.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('activeSeq.data.forEach');
+    t.assertTruthy(undoIdx !== -1, 'halveSequence should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'halveSequence should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'undo capture should come BEFORE the data iteration in halveSequence');
+});
+
+TestRunner.test('Day 552 - setSequenceLength captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.setSequenceLength.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mapIdx = funcStr.indexOf('.map(');
+    t.assertTruthy(undoIdx !== -1, 'setSequenceLength should call _captureUndoState');
+    t.assertTruthy(mapIdx !== -1, 'setSequenceLength should use map for data reconstruction');
+    t.assertTruthy(undoIdx < mapIdx, 'undo capture should come BEFORE the data reconstruction in setSequenceLength');
+});
+
+TestRunner.test('Day 552 - APP_VERSION validation for Day 552', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 552');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 211, 'Minor version should be >= 211 for Day 552');
+    }
+});
