@@ -13326,6 +13326,59 @@ TestRunner.test('Day 546 - APP_VERSION validation for Day 546', (t) => {
     }
 });
 
+TestRunner.test('Day 547 - reverseSequence captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.reverseSequence.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('activeSeq.data.forEach');
+    t.assertTruthy(undoIdx !== -1, 'reverseSequence should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'reverseSequence should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'reverseSequence should capture undo BEFORE data iteration');
+});
+
+TestRunner.test('Day 547 - reverseSequence menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("label: \`Reverse Sequence\`"), 'Sequencer context menu should have Reverse Sequence item');
+});
+
+TestRunner.test('Day 547 - reverseSequence menu item calls track.reverseSequence', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('currentTrackForMenu.reverseSequence()'), 'Reverse Sequence menu item should call track.reverseSequence()');
+});
+
+TestRunner.test('Day 547 - reverseSequence menu item calls recreateToneSequence after reverse', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const reverseIdx = uiCode.indexOf('label: \`Reverse Sequence\`');
+    const afterText = uiCode.slice(reverseIdx, reverseIdx + 300);
+    t.assertTruthy(afterText.includes('recreateToneSequence(true)'), 'Reverse Sequence should call recreateToneSequence after reverse');
+});
+
+TestRunner.test('Day 547 - reverseSequence menu item shows notification with reversed count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const reverseIdx = uiCode.indexOf('label: \`Reverse Sequence\`');
+    const afterText = uiCode.slice(reverseIdx, reverseIdx + 300);
+    t.assertTruthy(afterText.includes('Reversed ${result}'), 'Reverse Sequence should show notification with count');
+});
+
+TestRunner.test('Day 547 - reverseSequence menu item handles no notes case', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const reverseIdx = uiCode.indexOf('label: \`Reverse Sequence\`');
+    const afterText = uiCode.slice(reverseIdx, reverseIdx + 300);
+    t.assertTruthy(afterText.includes('No notes to reverse'), 'Reverse Sequence should handle no notes case');
+});
+
+TestRunner.test('Day 547 - reverseSequence and flipSequence both capture undo state before mutation', (t) => {
+    const reverseStr = Track.prototype.reverseSequence.toString();
+    const flipStr = Track.prototype.flipSequence.toString();
+    const reverseUndoIdx = reverseStr.indexOf('_captureUndoState');
+    const flipUndoIdx = flipStr.indexOf('_captureUndoState');
+    const reverseForEachIdx = reverseStr.indexOf('activeSeq.data.forEach');
+    const flipForEachIdx = flipStr.indexOf('for (let rowIndex');
+    t.assertTruthy(reverseUndoIdx !== -1, 'reverseSequence should call _captureUndoState');
+    t.assertTruthy(flipUndoIdx !== -1, 'flipSequence should call _captureUndoState');
+    t.assertTruthy(reverseUndoIdx < reverseForEachIdx, 'reverseSequence undo should come before data iteration');
+    t.assertTruthy(flipUndoIdx < flipForEachIdx, 'flipSequence undo should come before data iteration');
+});
+
 // Day 547: flipSequence Undo Capture Order + flipSequence Tests
 // ==============================================================
 TestRunner.test('Day 547 - flipSequence captures undo state before mutation', (t) => {
