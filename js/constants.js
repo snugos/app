@@ -1,4 +1,8 @@
-export const APP_VERSION = '2.208.0'; // Day 549: Duplicate Track menu item - adds "Duplicate Track" to track mixer context menu
+export const APP_VERSION = '2.209.0'; // Day 550: Fix undo capture order in quantizeSequence and pasteSequenceSection
+// Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
+// - quantizeSequence: undo capture now happens before velocity/probability adjustments
+// - pasteSequenceSection: undo capture now happens before section data is pasted
+// This ensures undo/redo captures the pre-mutation state, making undo reliable for both operations.
 // Added Ctrl+Q keyboard shortcut to quantize only the selected sequencer cells to the current snap grid.
 // Uses selected-cell class to identify selected notes, snaps each note's column to the nearest snapValue grid point.
 // Prevents collision by checking if target slot is empty before moving.

@@ -13502,3 +13502,35 @@ TestRunner.test('Day 549 - APP_VERSION validation for Day 549', (t) => {
         t.assertTruthy(versionParts[1] >= 208, 'Minor version should be >= 208 for Day 549');
     }
 });
+
+// ============================================
+// Day 550: Fix undo capture order in quantizeSequence and pasteSequenceSection
+// ============================================
+
+TestRunner.test('Day 550 - quantizeSequence captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.quantizeSequence.toString();
+    // undo capture should come BEFORE the forEach loop that mutates velocities/probabilities
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('activeSeq.data.forEach');
+    t.assertTruthy(undoIdx !== -1, 'quantizeSequence should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'quantizeSequence should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'undo capture should come BEFORE the data iteration in quantizeSequence');
+});
+
+TestRunner.test('Day 550 - pasteSequenceSection captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.pasteSequenceSection.toString();
+    // undo capture should come BEFORE the nested loops that paste data
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('for (let rIndex');
+    t.assertTruthy(undoIdx !== -1, 'pasteSequenceSection should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'pasteSequenceSection should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'undo capture should come BEFORE the data iteration in pasteSequenceSection');
+});
+
+TestRunner.test('Day 550 - APP_VERSION validation for Day 550', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 550');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 209, 'Minor version should be >= 209 for Day 550');
+    }
+});
