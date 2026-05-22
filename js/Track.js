@@ -1603,6 +1603,9 @@ export class Track {
             return 0;
         }
 
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Flip Sequence ${activeSeq.name}`);
+
         let flippedCount = 0;
         const numRows = activeSeq.data.length;
         const totalSteps = activeSeq.length;
@@ -1622,7 +1625,6 @@ export class Track {
             }
         }
 
-        this._captureUndoState(`Flip Sequence ${activeSeq.name}`);
         return flippedCount;
     }
 

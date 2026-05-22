@@ -1,3 +1,28 @@
+#### Day 547: flipSequence Undo Capture Order Fix (2026-05-21)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE data mutation in `flipSequence`, matching the pattern fixed in Day 545
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in `flipSequence` method
+  - `js/tests.js`: Added Day 547 test block with 11 tests for flipSequence
+  - `js/constants.js`: Bumped APP_VERSION to 2.206.0
+- **Bug Details**:
+  - **Problem**: `flipSequence` was swapping cells left-right BEFORE calling `_captureUndoState`. This means undo/redo would capture the post-mutation state instead of the pre-mutation state, making undo unreliable for the Flip Sequence operation.
+  - **Fix**: Moved `this._captureUndoState(...)` call to the beginning of the method, before any data iteration/mutation begins.
+  - **Verification**: Tests check that `_captureUndoState` call appears at a lower string index than the `for (let rowIndex` loop, ensuring undo capture happens first.
+- **Tests** (`js/tests.js`): 11 tests covering:
+  - `flipSequence` undo capture comes before data iteration
+  - `flipSequence` is a function on Track.prototype
+  - `flipSequence` accepts 0 parameters
+  - Returns 0 for Audio track type
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Uses `halfCols` calculation with `Math.floor` for mirroring
+  - Swaps left and right cells via `mirroredCol`
+  - Calls `_captureUndoState` for undo support
+  - Returns `flippedCount`
+  - APP_VERSION validation (>= 2.206 for Day 547)
+- **Version**: Bumped to 2.206.0
+- **Test Count**: Increased from 13327 to 13406
+
 #### Day 546: DrumSampler Pad Drop Zone - Add Drop Handlers to Pad Grid (2026-05-21)
 - **Feature**: Added dragover/dragleave/drop event handlers to drum pad grid pads in `renderDrumSamplerPads`
 - **Files Modified**:

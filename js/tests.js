@@ -13325,3 +13325,70 @@ TestRunner.test('Day 546 - APP_VERSION validation for Day 546', (t) => {
         t.assertTruthy(versionParts[1] >= 205, 'Minor version should be >= 205 for Day 546');
     }
 });
+
+// Day 547: flipSequence Undo Capture Order + flipSequence Tests
+// ==============================================================
+TestRunner.test('Day 547 - flipSequence captures undo state before mutation', (t) => {
+    const funcStr = Track.prototype.flipSequence.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('for (let rowIndex');
+    t.assertTruthy(undoIdx !== -1, 'flipSequence should call _captureUndoState');
+    t.assertTruthy(forEachIdx !== -1, 'flipSequence should iterate over data');
+    t.assertTruthy(undoIdx < forEachIdx, 'flipSequence should capture undo BEFORE data mutation');
+});
+
+TestRunner.test('Day 547 - flipSequence is a function on Track.prototype', (t) => {
+    const track = new Track('test-track', 'Synth');
+    t.assertEqual(typeof track.flipSequence, 'function', 'flipSequence should be a function');
+});
+
+TestRunner.test('Day 547 - flipSequence accepts 0 parameters', (t) => {
+    const funcStr = Track.prototype.flipSequence.toString();
+    t.assertEqual(funcStr.match(/\(\s*\)/)?.[0] || '()', '()', 'flipSequence should accept 0 parameters');
+});
+
+TestRunner.test('Day 547 - flipSequence returns 0 for Audio tracks', (t) => {
+    const track = new Track('test-track', 'Audio');
+    const result = track.flipSequence();
+    t.assertEqual(result, 0, 'Audio tracks should return 0');
+});
+
+TestRunner.test('Day 547 - flipSequence gets active sequence via getActiveSequence', (t) => {
+    const funcStr = Track.prototype.flipSequence.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'flipSequence should call getActiveSequence');
+});
+
+TestRunner.test('Day 547 - flipSequence returns 0 if no active sequence', (t) => {
+    const track = new Track('test-track', 'Synth');
+    const result = track.flipSequence();
+    t.assertEqual(result, 0, 'flipSequence should return 0 when no active sequence');
+});
+
+TestRunner.test('Day 547 - flipSequence uses halfCols calculation with Math.floor', (t) => {
+    const funcStr = Track.prototype.flipSequence.toString();
+    t.assertTruthy(funcStr.includes('halfCols = Math.floor(totalSteps / 2)'), 'flipSequence should use halfCols with Math.floor');
+});
+
+TestRunner.test('Day 547 - flipSequence swaps left and right cells via mirroredCol', (t) => {
+    const funcStr = Track.prototype.flipSequence.toString();
+    t.assertTruthy(funcStr.includes('mirroredCol = totalSteps - 1 - col'), 'flipSequence should calculate mirroredCol');
+    t.assertTruthy(funcStr.includes('row[col] = rightCell') && funcStr.includes('row[mirroredCol] = leftCell'), 'flipSequence should swap left and right cells');
+});
+
+TestRunner.test('Day 547 - flipSequence calls _captureUndoState', (t) => {
+    const funcStr = Track.prototype.flipSequence.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'flipSequence should call _captureUndoState');
+});
+
+TestRunner.test('Day 547 - flipSequence returns flippedCount', (t) => {
+    const funcStr = Track.prototype.flipSequence.toString();
+    t.assertTruthy(funcStr.includes('return flippedCount'), 'flipSequence should return flippedCount');
+});
+
+TestRunner.test('Day 547 - APP_VERSION validation for Day 547', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 547');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 206, 'Minor version should be >= 206 for Day 547');
+    }
+});
