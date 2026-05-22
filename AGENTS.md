@@ -1,3 +1,22 @@
+#### Day 552: Undo Capture Order Verification for doubleSequence, halveSequence, setSequenceLength (2026-05-22)
+- **Verification**: Confirmed undo capture order is correct for doubleSequence, halveSequence, and setSequenceLength
+- **Files Modified**:
+  - `js/Track.js`: Added clarifying comments to doubleSequence, halveSequence, and setSequenceLength methods
+  - `js/tests.js`: Added Day 552 test block with 4 tests for undo capture order verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.211.0
+- **Verification Details**:
+  - **doubleSequence** (`js/Track.js`): Already capturing undo BEFORE mutation — added clarifying comment
+  - **halveSequence** (`js/Track.js`): Already capturing undo BEFORE mutation — added clarifying comment  
+  - **setSequenceLength** (`js/Track.js`): Already capturing undo BEFORE mutation — added clarifying comment
+  - All three methods follow the established pattern: `_captureUndoState` called before any `activeSeq.data` mutation
+- **Tests** (`js/tests.js`): 4 tests covering:
+  - `doubleSequence` undo capture comes before data iteration (forEach)
+  - `halveSequence` undo capture comes before data iteration (forEach)
+  - `setSequenceLength` undo capture comes before data reconstruction (map)
+  - APP_VERSION validation (>= 2.211 for Day 552)
+- **Version**: Bumped to 2.211.0
+- **Test Count**: Increased from 13569 to 13609
+
 #### Day 550: Fix Undo Capture Order in quantizeSequence and pasteSequenceSection (2026-05-22)
 - **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE data mutation in `quantizeSequence` and `pasteSequenceSection`
 - **Files Modified**:
