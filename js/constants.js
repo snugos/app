@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.210.0'; // Day 551: Fix undo capture order in shiftSequenceNotes - moved _captureUndoState before data mutation in shiftSequenceNotes method
+export const APP_VERSION = '2.211.0'; // Day 552: Add undo capture order verification tests for doubleSequence, halveSequence, setSequenceLength - these methods were already correctly capturing undo before mutation, added clarifying comments and 3 tests
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted
