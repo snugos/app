@@ -13891,3 +13891,38 @@ TestRunner.test('Day 554 - APP_VERSION validation for Day 554', (t) => {
         t.assertTruthy(versionParts[1] >= 212, 'Minor version should be >= 212 for Day 554');
     }
 });
+
+// ============================================
+// Day 555: DrumSampler Pad Drop - Verify soundData.type Guard
+// ============================================
+TestRunner.test('Day 555 - pad drop handler checks soundData.type === \'sound-browser-item\'', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes("soundData.type === 'sound-browser-item'"), 'Drop handler should verify soundData.type === \'sound-browser-item\'');
+});
+
+TestRunner.test('Day 555 - pad drop handler loads sound when type matches', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const dropIdx = uiCode.indexOf("padEl.addEventListener('drop'");
+    const typeCheckIdx = uiCode.indexOf("soundData.type === 'sound-browser-item'");
+    const loadIdx = uiCode.indexOf('loadSoundFromBrowserToTarget');
+    t.assertTruthy(dropIdx !== -1, 'drop handler should exist');
+    t.assertTruthy(typeCheckIdx > dropIdx, 'type check should come after drop handler start');
+    t.assertTruthy(loadIdx > typeCheckIdx, 'loadSoundFromBrowserToTarget should be called after type check');
+});
+
+TestRunner.test('Day 555 - pad drop handler does NOT load when type is not sound-browser-item', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const typeCheckIdx = uiCode.indexOf("soundData.type === 'sound-browser-item'");
+    const bracketIdx = uiCode.indexOf('if (soundData.type ===', typeCheckIdx + 50);
+    const nextIfIdx = uiCode.indexOf('if (', bracketIdx + 10);
+    const loadInElse = uiCode.substring(bracketIdx, nextIfIdx + 50).includes('loadDrumSamplerPadFile');
+    t.assertTruthy(loadInElse, 'OS file drop should be handled in else branch after type check');
+});
+
+TestRunner.test('Day 555 - APP_VERSION validation for Day 555', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 555');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 213, 'Minor version should be >= 213 for Day 555');
+    }
+});

@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.213.0'; // Day 554: Complete undo capture order tests for ALL 14 setAudioClip* methods - added 14 tests verifying _captureUndoState is called BEFORE clip property mutations in all methods
+export const APP_VERSION = '2.214.0'; // Day 555: DrumSampler pad drop - verify soundData.type guard - added 3 tests verifying drop handler checks soundData.type before loading sound
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted
