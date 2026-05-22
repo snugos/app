@@ -13607,3 +13607,152 @@ TestRunner.test('Day 552 - APP_VERSION validation for Day 552', (t) => {
         t.assertTruthy(versionParts[1] >= 211, 'Minor version should be >= 211 for Day 552');
     }
 });
+
+// ================================================================
+// Day 553: Recording E2E - stopAudioRecording State Machine Tests
+// ================================================================
+// Verifies that stopAudioRecording properly manages the state machine:
+// 1. Captures active recorder/mic/trackId/startTime at function entry
+// 2. Handles the null recorder case (early return with cleanup)
+// 3. Calls recorder.stop() and processes the recorded blob
+// 4. Validates the destination track and calls addAudioClip
+// 5. Clears all recording state on success or failure
+// 6. Handles empty/too-small recordings with notification
+
+TestRunner.test('Day 553 - stopAudioRecording captures state at entry for safety', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('activeRecorder'), 'stopAudioRecording should capture activeRecorder');
+    t.assertTruthy(funcStr.includes('activeMic'), 'stopAudioRecording should capture activeMic');
+    t.assertTruthy(funcStr.includes('activeTrackId'), 'stopAudioRecording should capture activeTrackId');
+    t.assertTruthy(funcStr.includes('activeStartTime'), 'stopAudioRecording should capture activeStartTime');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording captures state BEFORE null check', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    const captureIdx = funcStr.indexOf('activeRecorder');
+    const nullCheckIdx = funcStr.indexOf('!activeRecorder');
+    t.assertTruthy(captureIdx !== -1, 'should capture activeRecorder');
+    t.assertTruthy(nullCheckIdx !== -1, 'should check !activeRecorder');
+    t.assertTruthy(captureIdx < nullCheckIdx, 'state capture should come before null check');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording handles null recorder gracefully', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('!activeRecorder'), 'should check !activeRecorder');
+    t.assertTruthy(funcStr.includes('cleanupRecordingAudioResources') || funcStr.includes('cleanupRecordingScheduling'), 'should cleanup resources when recorder is null');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording calls recorder.stop()', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('recorder.stop') || funcStr.includes('stop()'), 'stopAudioRecording should call recorder.stop()');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording validates recording size', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('size') && (funcStr.includes('< 1000') || funcStr.includes('size <')), 'stopAudioRecording should check recording size');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording validates destination track', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('recordedTrack') && funcStr.includes("type !== 'Audio'"), 'stopAudioRecording should validate track type');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording calls addAudioClip on valid track', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('addAudioClip'), 'stopAudioRecording should call addAudioClip');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording passes activeStartTime to addAudioClip', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('addAudioClip') && funcStr.includes('activeStartTime'), 'stopAudioRecording should pass activeStartTime to addAudioClip');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording clears recording state on success', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setIsRecordingState(false)'), 'should clear isRecordingState');
+    t.assertTruthy(funcStr.includes('setRecordingTrackIdState(null)'), 'should clear recordingTrackId');
+    t.assertTruthy(funcStr.includes('setRecordingStartTimeState(0)'), 'should clear recordingStartTime');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording clears recording state on error', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('catch') && funcStr.includes('setIsRecordingState(false)'), 'should clear state in catch block');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording calls cleanupRecordingScheduling', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('cleanupRecordingScheduling'), 'stopAudioRecording should call cleanupRecordingScheduling');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording uses getTrackById to find destination', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'stopAudioRecording should use getTrackById');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording notifies on empty recording', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && (funcStr.includes('empty') || funcStr.includes('longer take')), 'should notify when recording is empty');
+});
+
+TestRunner.test('Day 553 - stopAudioRecording notifies on success', (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('saved'), 'should notify on successful save');
+});
+
+TestRunner.test('Day 553 - APP_VERSION validation for Day 553', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 553');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 212, 'Minor version should be >= 212 for Day 553');
+    }
+});
+
+// ================================================================
+// Day 553b: Audio Clip Setter Methods - Undo Capture Order Fixes
+// ================================================================
+// Fixes undo capture order in setAudioClipName, setAudioClipColor, setAudioClipGain, setAudioClipReverse
+// _captureUndoState must be called BEFORE the mutation, not after
+
+TestRunner.test('Day 553b - setAudioClipName captures undo BEFORE name mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipName.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.name = name');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.name');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.name mutation');
+});
+
+TestRunner.test('Day 553b - setAudioClipColor captures undo BEFORE color mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipColor.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.color = color');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.color');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.color mutation');
+});
+
+TestRunner.test('Day 553b - setAudioClipGain captures undo BEFORE gain mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipGain.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.gain =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.gain');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.gain mutation');
+});
+
+TestRunner.test('Day 553b - setAudioClipReverse captures undo BEFORE reverse mutation', (t) => {
+    const funcStr = Track.prototype.setAudioClipReverse.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('clip.reverse =');
+    t.assertTruthy(undoIdx !== -1, 'should call _captureUndoState');
+    t.assertTruthy(mutationIdx !== -1, 'should mutate clip.reverse');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo capture should come BEFORE clip.reverse mutation');
+});
+
+TestRunner.test('Day 553b - APP_VERSION validation for Day 553b', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 553b');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 212, 'Minor version should be >= 212 for Day 553b');
+    }
+});

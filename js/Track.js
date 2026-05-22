@@ -2598,8 +2598,8 @@ export class Track {
     setAudioClipName(clipId, name) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
+        this._captureUndoState(`Rename Clip "${name}" on ${this.name}`);
         clip.name = name;
-        this._captureUndoState(`Rename Clip "${clip.name}" on ${this.name}`);
         return true;
     }
 
@@ -2611,8 +2611,8 @@ export class Track {
     setAudioClipColor(clipId, color) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.color = color;
         this._captureUndoState(`Set Clip color on ${this.name}`);
+        clip.color = color;
         return true;
     }
 
@@ -2624,8 +2624,8 @@ export class Track {
     setAudioClipGain(clipId, gain) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.gain = Math.max(0, Math.min(4, parseFloat(gain) || 1));
         this._captureUndoState(`Set Clip gain on ${this.name}`);
+        clip.gain = Math.max(0, Math.min(4, parseFloat(gain) || 1));
         return true;
     }
 
@@ -2764,8 +2764,8 @@ export class Track {
     setAudioClipReverse(clipId, reverse) {
         const clip = this._getAudioClip(clipId);
         if (!clip) { console.warn(`[${this.id}] Could not find clip ${clipId}`); return false; }
-        clip.reverse = !!reverse;
         this._captureUndoState(`Set Clip reverse on ${this.name}`);
+        clip.reverse = !!reverse;
         return true;
     }
 

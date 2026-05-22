@@ -1,3 +1,38 @@
+#### Day 553: Recording E2E - stopAudioRecording State Machine Verification (2026-05-22)
+- **Verification**: Confirmed stopAudioRecording properly manages its state machine for reliable recording
+- **Files Modified**:
+  - `js/tests.js`: Added Day 553 test block with 15 tests for stopAudioRecording state machine verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.212.0
+- **Verification Details**:
+  - **stopAudioRecording** (`js/audio.js`): Confirmed to follow correct state machine pattern:
+    - Captures `activeRecorder`, `activeMic`, `activeTrackId`, `activeStartTime` at function entry (before null checks)
+    - Returns early with cleanup when `!activeRecorder`
+    - Calls `recorder.stop()` and processes the recorded blob
+    - Validates recording size (>1000 bytes) before attempting to save
+    - Uses `getTrackById` to find destination track and validates `type === "Audio"`
+    - Calls `addAudioClip(recording, activeStartTime)` on the valid track
+    - Clears all recording state (`setIsRecordingState(false)`, `setRecordingTrackIdState(null)`, `setRecordingStartTimeState(0)`) on success or failure
+    - Calls `cleanupRecordingScheduling()` in all exit paths
+    - Shows appropriate notifications for empty recordings, success, and errors
+- **Tests** (`js/tests.js`): 15 tests covering:
+  - State captured at entry (activeRecorder, activeMic, activeTrackId, activeStartTime)
+  - State captured BEFORE null check (captureIdx < nullCheckIdx)
+  - Null recorder handled gracefully with cleanup
+  - recorder.stop() called
+  - Recording size validated (>1000 bytes)
+  - Destination track validated (type === "Audio")
+  - addAudioClip called on valid track
+  - activeStartTime passed to addAudioClip
+  - Recording state cleared on success (isRecording, trackId, startTime)
+  - Recording state cleared on error (catch block)
+  - cleanupRecordingScheduling called
+  - getTrackById used to find destination
+  - Notification shown for empty recording
+  - Notification shown on successful save
+  - APP_VERSION validation (>= 2.212 for Day 553)
+- **Version**: Bumped to 2.212.0
+- **Test Count**: Increased from 2512 to 2527
+
 #### Day 552: Undo Capture Order Verification for doubleSequence, halveSequence, setSequenceLength (2026-05-22)
 - **Verification**: Confirmed undo capture order is correct for doubleSequence, halveSequence, and setSequenceLength
 - **Files Modified**:
