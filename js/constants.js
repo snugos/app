@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.222.0'; // Day 564: Clear Sequence - adds clearSequence method to Track class and 'Clear Sequence' menu item to sequencer context menu. Refactors 'Erase' to use the new method. Added 16 tests.
+export const APP_VERSION = '2.223.0'; // Day 565: Copy Section and Paste Section - adds Copy Section and Paste Section menu items to sequencer context menu using track.copySequenceSection and track.pasteSequenceSection methods. Section data stored in clipboard with type='section'. Added 10 tests for the new feature.
 /// Day 563: Shift Notes Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
 export const APP_VERSION = '2.219.0'; // Day 561: Add missing appServices.captureStateForUndo wrapper - enables undo support for all main.js operations that check appServices.captureStateForUndo before calling it
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:

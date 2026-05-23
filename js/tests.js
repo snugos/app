@@ -14543,3 +14543,76 @@ TestRunner.test('Day 564 - APP_VERSION validation for Day 564', (t) => {
         t.assertTruthy(versionParts[1] >= 221, 'Minor version should be >= 221 for Day 564');
     }
 });
+
+// ============================================
+// Day 565: Copy Section and Paste Section Menu Items
+// ============================================
+
+TestRunner.test('Day 565 - Copy Section menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const copySectionIdx = uiCode.indexOf('Copy Section');
+    t.assertTruthy(copySectionIdx !== -1, 'Copy Section menu item should exist in ui.js');
+});
+
+TestRunner.test('Day 565 - Copy Section calls track.copySequenceSection', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const copySectionIdx = uiCode.indexOf('Copy Section');
+    const context = uiCode.substring(copySectionIdx, copySectionIdx + 600);
+    t.assertTruthy(context.includes('copySequenceSection'), 'Copy Section should call copySequenceSection');
+});
+
+TestRunner.test('Day 565 - Copy Section sets clipboard with type section', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const copySectionIdx = uiCode.indexOf('Copy Section');
+    const context = uiCode.substring(copySectionIdx, copySectionIdx + 600);
+    t.assertTruthy(context.includes("type: 'section'"), 'Copy Section should set clipboard type to section');
+});
+
+TestRunner.test('Day 565 - Copy Section shows notification with dimensions', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const copySectionIdx = uiCode.indexOf('Copy Section');
+    const context = uiCode.substring(copySectionIdx, copySectionIdx + 600);
+    t.assertTruthy(context.includes('copied') && context.includes('Section'), 'Copy Section should show notification');
+});
+
+TestRunner.test('Day 565 - Paste Section menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const pasteSectionIdx = uiCode.indexOf('Paste Section');
+    t.assertTruthy(pasteSectionIdx !== -1, 'Paste Section menu item should exist in ui.js');
+});
+
+TestRunner.test('Day 565 - Paste Section calls track.pasteSequenceSection', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const pasteSectionIdx = uiCode.indexOf('Paste Section');
+    const context = uiCode.substring(pasteSectionIdx, pasteSectionIdx + 600);
+    t.assertTruthy(context.includes('pasteSequenceSection'), 'Paste Section should call pasteSequenceSection');
+});
+
+TestRunner.test('Day 565 - Paste Section checks clipboard type section', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const pasteSectionIdx = uiCode.indexOf('Paste Section');
+    const context = uiCode.substring(pasteSectionIdx, pasteSectionIdx + 600);
+    t.assertTruthy(context.includes("type !== 'section'") || context.includes("'section'"), 'Paste Section should check clipboard type');
+});
+
+TestRunner.test('Day 565 - Paste Section shows notification with pasted count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const pasteSectionIdx = uiCode.indexOf('Paste Section');
+    const context = uiCode.substring(pasteSectionIdx, pasteSectionIdx + 600);
+    t.assertTruthy(context.includes('Pasted') && context.includes('note(s)'), 'Paste Section should show notification with count');
+});
+
+TestRunner.test('Day 565 - Paste Section menu item calls recreateToneSequence after paste', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const pasteSectionIdx = uiCode.indexOf('Paste Section');
+    const context = uiCode.substring(pasteSectionIdx, pasteSectionIdx + 600);
+    t.assertTruthy(context.includes('recreateToneSequence(true)'), 'Paste Section should call recreateToneSequence after paste');
+});
+
+TestRunner.test('Day 565 - APP_VERSION validation for Day 565', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 565');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 222, 'Minor version should be >= 222 for Day 565');
+    }
+});
