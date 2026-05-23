@@ -1,5 +1,47 @@
 # SnugOS DAW - AGENTS.md
 
+#### Day 569: Trim Silence Feature (2026-05-23)
+- **Feature**: Added `trimSequenceEdges()` method to Track class and "Trim Silence" menu item to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `trimSequenceEdges()` method after `clearSequence`
+  - `js/ui.js`: Added "Trim Silence" menu item in sequencer context menu
+  - `js/tests.js`: Added Day 569 test block with 17 tests for trimSequenceEdges
+  - `js/constants.js`: Bumped APP_VERSION to 2.227.0
+- **Feature Details**:
+  - **trimSequenceEdges** (`js/Track.js`): Removes empty leading and trailing columns from active sequence
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Finds first and last column with any active note
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-568)
+    - Counts trimmed notes before mutation
+    - Creates new trimmed data array and replaces activeSeq.data and activeSeq.length
+    - Returns count of trimmed notes
+  - **Trim Silence menu item** (`js/ui.js`): Added to sequencer context menu after "Clear Sequence"
+    - Calls `track.trimSequenceEdges()` directly (method handles undo internally)
+    - Shows "Trimmed {count} column(s)." notification on success
+    - Shows "No leading/trailing silence to trim." notification when nothing to trim
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+- **Tests** (`js/tests.js`): 17 tests covering:
+  - `trimSequenceEdges` is a function on Track.prototype
+  - `trimSequenceEdges` accepts 0 parameters
+  - Returns 0 for Audio tracks
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Finds first and last active column
+  - Captures undo BEFORE mutation
+  - Counts trimmed notes before mutation
+  - Creates new trimmed data array
+  - Updates activeSeq.length to new trimmed length
+  - Returns trimmed count
+  - Menu item exists in sequencer context menu
+  - Menu item calls `track.trimSequenceEdges`
+  - Menu item calls `recreateToneSequence` after trim
+  - Menu item shows notification with trimmed count
+  - Menu item handles no silence case
+  - APP_VERSION validation (>= 2.227 for Day 569)
+- **Version**: Bumped to 2.227.0
+- **Test Count**: Increased from 14579 to 14596
+
 #### Day 564: Clear Sequence Feature (2026-05-23)
 - **Feature**: Added `clearSequence()` method to Track class and "Clear Sequence" menu item to sequencer context menu. Refactored the inline "Erase" functionality into the new method.
 - **Files Modified**:
