@@ -1257,6 +1257,56 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl+E - Reverse Sequence (mirror notes left-right)
+        if ((event.ctrlKey || event.metaKey) && key === 'e') {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.reverseSequence === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const result = track.reverseSequence();
+                        if (result > 0) {
+                            track.recreateToneSequence(true);
+                            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Reversed ${result} note(s).`, 1500);
+                        } else {
+                            showNotification("No notes to reverse.", 1500);
+                        }
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
+        // Ctrl+R - Flip Sequence (mirror notes left-right across center)
+        if ((event.ctrlKey || event.metaKey) && key === 'r') {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.flipSequence === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const result = track.flipSequence();
+                        if (result > 0) {
+                            track.recreateToneSequence(true);
+                            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Flipped ${result} note(s).`, 1500);
+                        } else {
+                            showNotification("No notes to flip.", 1500);
+                        }
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
         // Ctrl+Q - Quantize selection (selected cells only, with current snap value)
         if ((event.ctrlKey || event.metaKey) && key === 'q') {
             const activeSeqTrackId = getActiveSequencerTrackId();

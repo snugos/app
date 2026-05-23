@@ -14262,6 +14262,44 @@ TestRunner.test('Day 561 - UI menu items call recreateToneSequence after randomi
 TestRunner.test('Day 561 - UI menu items show notification with density', (t) => {
     const uiCode = ui.toString();
     t.assertTruthy(uiCode.includes('at 25% density') && uiCode.includes('at 50% density') && uiCode.includes('at 75% density'), 'UI should show notification with density percentage');
+=======
+TestRunner.test('Day 561 - appServices.captureStateForUndo is a function', (t) => {
+    const mainCode = require('fs').readFileSync('./js/main.js', 'utf-8');
+    const hasIt = mainCode.includes('captureStateForUndo: (description) =>');
+    t.assertTruthy(hasIt, 'appServices should have captureStateForUndo function defined');
+});
+
+TestRunner.test('Day 561 - appServices.captureStateForUndo guards against reconstruction', (t) => {
+    const mainCode = require('fs').readFileSync('./js/main.js', 'utf-8');
+    const funcStart = mainCode.indexOf('captureStateForUndo: (description) =>');
+    const funcEnd = mainCode.indexOf('\n    panicStopAllAudio:', funcStart);
+    const funcBody = mainCode.substring(funcStart, funcEnd);
+    t.assertTruthy(funcBody.includes('getIsReconstructingDAW') || funcBody.includes('_isReconstructingDAW_flag'), 'captureStateForUndo should check isReconstructing flag');
+    t.assertTruthy(funcBody.includes('captureStateForUndoInternal'), 'captureStateForUndo should call captureStateForUndoInternal');
+});
+
+TestRunner.test('Day 561 - addMasterEffect calls appServices.captureStateForUndo', (t) => {
+    const mainCode = require('fs').readFileSync('./js/main.js', 'utf-8');
+    const funcStart = mainCode.indexOf('addMasterEffect: async (effectType) =>');
+    const funcEnd = mainCode.indexOf('\n    removeMasterEffect:', funcStart);
+    const funcBody = mainCode.substring(funcStart, funcEnd);
+    t.assertTruthy(funcBody.includes('appServices.captureStateForUndo') || funcBody.includes('captureStateForUndo'), 'addMasterEffect should call captureStateForUndo');
+});
+
+TestRunner.test('Day 561 - removeMasterEffect calls appServices.captureStateForUndo', (t) => {
+    const mainCode = require('fs').readFileSync('./js/main.js', 'utf-8');
+    const funcStart = mainCode.indexOf('removeMasterEffect: async (effectId) =>');
+    const funcEnd = mainCode.indexOf('\n    updateMasterEffectParam:', funcStart);
+    const funcBody = mainCode.substring(funcStart, funcEnd);
+    t.assertTruthy(funcBody.includes('appServices.captureStateForUndo') || funcBody.includes('captureStateForUndo'), 'removeMasterEffect should call captureStateForUndo');
+});
+
+TestRunner.test('Day 561 - reorderMasterEffect calls appServices.captureStateForUndo', (t) => {
+    const mainCode = require('fs').readFileSync('./js/main.js', 'utf-8');
+    const funcStart = mainCode.indexOf('reorderMasterEffect: (effectId, newIndex) =>');
+    const funcEnd = mainCode.indexOf('\n    setActualMasterVolume:', funcStart);
+    const funcBody = mainCode.substring(funcStart, funcEnd);
+    t.assertTruthy(funcBody.includes('appServices.captureStateForUndo') || funcBody.includes('captureStateForUndo'), 'reorderMasterEffect should call captureStateForUndo');
 });
 
 TestRunner.test('Day 561 - APP_VERSION validation for Day 561', (t) => {

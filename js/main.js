@@ -748,6 +748,17 @@ const appServices = {
     },
 
     panicStopAllAudio: panicStopAllAudio,
+    // Undo/Redo wrapper - safely calls captureStateForUndoInternal when allowed
+    captureStateForUndo: (description) => {
+        try {
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructing && typeof captureStateForUndoInternal === 'function') {
+                captureStateForUndoInternal(description);
+            }
+        } catch (e) {
+            console.warn('[Main captureStateForUndo] Error:', e);
+        }
+    },
     undoLastAction: undoLastActionInternal,
     redoLastAction: redoLastActionInternal,
     getMutedTrackIds: getMutedTrackIdsState,
