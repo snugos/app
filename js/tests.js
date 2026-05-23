@@ -15029,3 +15029,100 @@ TestRunner.test('Day 569 - APP_VERSION validation for Day 569', (t) => {
         t.assertTruthy(versionParts[1] >= 227, 'Minor version should be >= 227 for Day 569');
     }
 });
+
+// Day 570: Snap to Scale
+TestRunner.test('Day 570 - snapNotesToScale is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.snapNotesToScale === 'function', 'snapNotesToScale should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale returns 0 for Audio tracks', (t) => {
+    const track = new Track('Audio', 'TestTrack');
+    const result = track.snapNotesToScale();
+    t.assertEqual(result, 0, 'snapNotesToScale should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale gets active sequence via getActiveSequence', (t) => {
+    const funcStr = Track.prototype.snapNotesToScale.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'snapNotesToScale should use getActiveSequence');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale returns 0 if no active sequence', (t) => {
+    const funcStr = Track.prototype.snapNotesToScale.toString();
+    t.assertTruthy(funcStr.includes('No active sequence found'), 'snapNotesToScale should handle no active sequence');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale gets scale mode state from getScaleModeState', (t) => {
+    const funcStr = Track.prototype.snapNotesToScale.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeState'), 'snapNotesToScale should get scale mode state');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale uses SCALES constant from Constants', (t) => {
+    const funcStr = Track.prototype.snapNotesToScale.toString();
+    t.assertTruthy(funcStr.includes('Constants.SCALES'), 'snapNotesToScale should use Constants.SCALES');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale uses SCALE_ROOTS constant from Constants', (t) => {
+    const funcStr = Track.prototype.snapNotesToScale.toString();
+    t.assertTruthy(funcStr.includes('Constants.SCALE_ROOTS'), 'snapNotesToScale should use Constants.SCALE_ROOTS');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.snapNotesToScale.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('activeSeq.data = newData');
+    t.assertTruthy(captureIdx !== -1 && mutationIdx !== -1 && captureIdx < mutationIdx,
+        'snapNotesToScale should capture undo before mutating data');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale returns count of snapped notes', (t) => {
+    const funcStr = Track.prototype.snapNotesToScale.toString();
+    t.assertTruthy(funcStr.includes('return snappedCount'), 'snapNotesToScale should return snappedCount');
+});
+
+TestRunner.test('Day 570 - snapNotesToScale builds pitch class lookup table', (t) => {
+    const funcStr = Track.prototype.snapNotesToScale.toString();
+    t.assertTruthy(funcStr.includes('snapPitches'), 'snapNotesToScale should build snapPitches lookup');
+});
+
+TestRunner.test('Day 570 - Snap to Scale menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Snap to Scale');
+    t.assertTruthy(idx !== -1, 'Snap to Scale menu item should exist');
+});
+
+TestRunner.test('Day 570 - Snap to Scale menu item calls track.snapNotesToScale', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Snap to Scale');
+    const context = uiCode.substring(idx, idx + 300);
+    t.assertTruthy(context.includes('snapNotesToScale'), 'Snap to Scale should call snapNotesToScale');
+});
+
+TestRunner.test('Day 570 - Snap to Scale menu item calls recreateToneSequence after snap', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Snap to Scale');
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes('recreateToneSequence'), 'Snap to Scale should call recreateToneSequence');
+});
+
+TestRunner.test('Day 570 - Snap to Scale menu item shows notification with snapped count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Snap to Scale');
+    const context = uiCode.substring(idx, idx + 500);
+    t.assertTruthy(context.includes('Snapped'), 'Snap to Scale should show notification');
+    t.assertTruthy(context.includes('note(s)'), 'Snap to Scale notification should mention notes');
+});
+
+TestRunner.test('Day 570 - Snap to Scale menu item handles no off-scale notes case', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Snap to Scale');
+    const context = uiCode.substring(idx, idx + 500);
+    t.assertTruthy(context.includes('No off-scale notes'), 'Snap to Scale should handle case when no notes need snapping');
+});
+
+TestRunner.test('Day 570 - APP_VERSION validation for Day 570', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 570');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 228, 'Minor version should be >= 228 for Day 570');
+    }
+});

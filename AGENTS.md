@@ -1,5 +1,47 @@
 # SnugOS DAW - AGENTS.md
 
+#### Day 570: Snap to Scale Feature (2026-05-23)
+- **Feature**: Added `snapNotesToScale()` method to Track class and "Snap to Scale" menu item to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `snapNotesToScale()` method after `trimSequenceEdges`
+  - `js/ui.js`: Added "Snap to Scale" menu item in sequencer context menu after "Trim Silence"
+  - `js/tests.js`: Added Day 570 test block with 16 tests for snapNotesToScale
+  - `js/constants.js`: Bumped APP_VERSION to 2.228.0
+- **Feature Details**:
+  - **snapNotesToScale** (`js/Track.js`): Snaps all notes in the active sequence to the nearest note in the current scale
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Gets current scale mode state via `getScaleModeState()` (scale name, root note, enabled)
+    - Builds a pitch class lookup table (`snapPitches[pc]`) that maps each of the 12 pitch classes to the nearest scale note
+    - Counts notes that need snapping before mutation
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-569)
+    - Creates new data array with notes moved to their target scale positions
+    - Returns count of snapped notes
+  - **Snap to Scale menu item** (`js/ui.js`): Added to sequencer context menu after "Trim Silence"
+    - Calls `track.snapNotesToScale()` directly (method handles undo internally)
+    - Shows "Snapped {count} note(s) to scale." notification on success
+    - Shows "No off-scale notes to snap." notification when nothing to snap
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+- **Tests** (`js/tests.js`): 16 tests covering:
+  - `snapNotesToScale` is a function on Track.prototype
+  - Returns 0 for Audio tracks
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Gets scale mode state via `getScaleModeState`
+  - Uses `Constants.SCALES` for scale intervals
+  - Uses `Constants.SCALE_ROOTS` for root note lookup
+  - Captures undo BEFORE mutation
+  - Returns count of snapped notes
+  - Builds pitch class lookup table (`snapPitches`)
+  - Menu item exists in sequencer context menu
+  - Menu item calls `track.snapNotesToScale`
+  - Menu item calls `recreateToneSequence` after snap
+  - Menu item shows notification with snapped count
+  - Menu item handles no off-scale notes case
+  - APP_VERSION validation (>= 2.228 for Day 570)
+- **Version**: Bumped to 2.228.0
+- **Test Count**: Increased from 14596 to 14612
+
 #### Day 569: Trim Silence Feature (2026-05-23)
 - **Feature**: Added `trimSequenceEdges()` method to Track class and "Trim Silence" menu item to sequencer context menu
 - **Files Modified**:

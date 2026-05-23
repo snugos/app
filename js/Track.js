@@ -1916,6 +1916,180 @@ export class Track {
         return trimmedCount;
     }
 
+    /**
+     * Snaps all notes in the active sequence to the nearest note in the current scale.
+     * Uses the global scale mode state (scale, root, enabled).
+     * For each note, finds the nearest scale note and moves it there.
+     * Notes that are already on a scale note remain in place.
+     * 
+     * @returns {number} Count of notes that were moved to new scale positions
+     */
+    snapNotesToScale() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} snapNotesToScale] No active sequence found.`);
+            return 0;
+        }
+
+        // Get scale mode state from global state (same pattern as other scale mode operations)
+        const scaleMode = (typeof getScaleModeState === 'function') ? getScaleModeState() : null;
+        const scaleName = scaleMode?.scale || 'Major';
+        const rootNote = scaleMode?.root || 'C';
+        const scaleEnabled = scaleMode?.enabled || false;
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        // Get scale intervals from SCALES constant
+        const scaleIntervals = Constants.SCALES && Constants.SCALES[scaleName]
+            ? Constants.SCALES[scaleName]
+            : Constants.SCALES['Major'];
+
+        // Get root note index (C=0, C#=1, ..., B=11)
+        const rootIndex = Constants.SCALE_ROOTS && Constants.SCALE_ROOTS.indexOf(rootNote);
+        const baseRootIndex = rootIndex >= 0 ? rootIndex : 0;
+
+        // Calculate absolute scale note indices (0-11 from root)
+        const scaleNoteIndices = scaleIntervals.map(interval => (baseRootIndex + interval) % 12);
+
+        // Build a fast lookup: for each of the 12 pitch classes, what's the nearest scale note (in semitones)?
+        // snapPitches[pitchClass] = nearest scale note index from pitchClass
+        // We also track which scale index each is closest to (for wrapping)
+        const snapPitches = new Array(12).fill(0);
+        const snapScaleIndices = new Array(12).fill(0);
+        for (let pc = 0; pc < 12; pc++) {
+            let bestDist = 12;
+            let bestIdx = 0;
+            for (let si = 0; si < scaleNoteIndices.length; si++) {
+                const dist = Math.abs(scaleNoteIndices[si] - pc);
+                const wrappedDist = 12 - dist; // Allow wrapping around octave
+                const minDist = Math.min(dist, wrappedDist);
+                if (minDist < bestDist) {
+                    bestDist = minDist;
+                    bestIdx = si;
+                    snapPitches[pc] = scaleNoteIndices[si];
+                }
+            }
+            snapScaleIndices[pc] = bestIdx;
+        }
+
+        // Count notes that will be affected
+        let affectedCount = 0;
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    // Map rowIndex to pitch class
+                    // synthPitches is reversed: index 0 = highest pitch (C6), last index = lowest (C1)
+                    // rowIndex 0 = highest note, rowIndex (numRows-1) = lowest note
+                    const reversedRowIndex = (Constants.synthPitches && Constants.synthPitches.length > 0)
+                        ? (Constants.synthPitches.length - 1 - rowIndex) % Constants.synthPitches.length
+                        : rowIndex;
+                    // Each row maps to a pitch from synthPitches (reversed)
+                    // We need to determine which octave and pitch class the row represents
+                    // synthPitches array: ['C1', 'C#1', ..., 'B1', 'C2', ...] - reversed so highest is first
+                    // Row 0 = highest pitch (top of piano roll), row numRows-1 = lowest pitch
+                    // We use reversed index to get the actual pitch
+                    let sourcePitchIdx = reversedRowIndex;
+                    if (sourcePitchIdx < 0) sourcePitchIdx += Constants.synthPitches.length;
+                    const pitchName = Constants.synthPitches[sourcePitchIdx % Constants.synthPitches.length];
+                    if (!pitchName) continue;
+
+                    // Extract pitch class from note name (e.g., 'C#4' -> 1, 'A3' -> 9)
+                    const pitchClass = Constants.noteNameToPitchClass ? Constants.noteNameToPitchClass(pitchName) : (() => {
+                        const match = pitchName.match(/^([A-G]#?)/);
+                        if (!match) return 0;
+                        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                        return noteNames.indexOf(match[1]);
+                    })();
+
+                    if (pitchClass < 0 || pitchClass >= 12) continue;
+
+                    const targetPitchClass = snapPitches[pitchClass];
+                    // If already on a scale note, no need to snap
+                    if (targetPitchClass === pitchClass) continue;
+
+                    affectedCount++;
+                }
+            }
+        }
+
+        // If no notes need snapping, return 0 early
+        if (affectedCount === 0) return 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Snap to Scale on ${activeSeq.name}`);
+
+        // Now actually move the notes
+        let snappedCount = 0;
+        const newData = activeSeq.data.map((row, rowIndex) => {
+            if (!row) return Array(totalSteps).fill(null);
+            const newRow = Array(totalSteps).fill(null);
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    // Determine source and target row
+                    const reversedRowIndex = (Constants.synthPitches && Constants.synthPitches.length > 0)
+                        ? (Constants.synthPitches.length - 1 - rowIndex) % Constants.synthPitches.length
+                        : rowIndex;
+                    let sourcePitchIdx = reversedRowIndex;
+                    if (sourcePitchIdx < 0) sourcePitchIdx += Constants.synthPitches.length;
+                    const pitchName = Constants.synthPitches[sourcePitchIdx % Constants.synthPitches.length];
+                    if (!pitchName) {
+                        newRow[col] = { ...stepData };
+                        continue;
+                    }
+
+                    const pitchClass = Constants.noteNameToPitchClass ? Constants.noteNameToPitchClass(pitchName) : (() => {
+                        const match = pitchName.match(/^([A-G]#?)/);
+                        if (!match) return 0;
+                        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                        return noteNames.indexOf(match[1]);
+                    })();
+
+                    if (pitchClass < 0 || pitchClass >= 12) {
+                        newRow[col] = { ...stepData };
+                        continue;
+                    }
+
+                    const targetPitchClass = snapPitches[pitchClass];
+                    // If already on a scale note, keep it
+                    if (targetPitchClass === pitchClass) {
+                        newRow[col] = { ...stepData };
+                        continue;
+                    }
+
+                    // Calculate row shift: how many rows to move to change pitch class
+                    const pitchDiff = targetPitchClass - pitchClass;
+                    const targetRowIndex = rowIndex + pitchDiff;
+
+                    // Clamp to valid row range
+                    if (targetRowIndex >= 0 && targetRowIndex < numRows) {
+                        // Check if target cell is empty
+                        const existing = newRow[col];
+                        if (!existing || !existing.active) {
+                            newRow[col] = { ...stepData };
+                            snappedCount++;
+                        } else {
+                            // Target occupied, keep in place
+                            newRow[col] = { ...stepData };
+                        }
+                    } else {
+                        // Out of range, keep in place
+                        newRow[col] = { ...stepData };
+                    }
+                }
+            }
+            return newRow;
+        });
+
+        activeSeq.data = newData;
+        return snappedCount;
+    }
+
     // Select all notes in the active sequence (UI-level selection, not data mutation)
     selectAllNotes() {
         if (this.type === 'Audio') return 0;
