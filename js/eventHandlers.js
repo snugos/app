@@ -1009,6 +1009,28 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl/Cmd+Shift+A - Deselect All Notes in sequencer
+        if ((key === 'a') && (event.ctrlKey || event.metaKey) && event.shiftKey) {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track) {
+                    const seqWinId = `sequencerWin-${activeSeqTrackId}`;
+                    const seqWinInstance = getWindowByIdState ? getWindowByIdState(seqWinId) : null;
+                    if (seqWinInstance && seqWinInstance.element) {
+                        const allCells = Array.from(seqWinInstance.element.querySelectorAll('.sequencer-step-cell.selected-cell'));
+                        allCells.forEach(cell => cell.classList.remove('selected-cell'));
+                        const activeSeq = track.getActiveSequence();
+                        if (activeSeq) {
+                            showNotification(`Deselected all notes in "${activeSeq.name}"`, 1500);
+                        }
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
         // Delete key - Clear selected sequencer notes
         if (key === 'delete' || key === 'backspace') {
             const activeSeqTrackId = getActiveSequencerTrackId();

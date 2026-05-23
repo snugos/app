@@ -1787,6 +1787,60 @@ export class Track {
         return clearedCount;
     }
 
+    // Select all notes in the active sequence (UI-level selection, not data mutation)
+    selectAllNotes() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} selectAllNotes] No active sequence found.`);
+            return 0;
+        }
+
+        let noteCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    noteCount++;
+                }
+            }
+        }
+
+        return noteCount;
+    }
+
+    // Deselect all notes in the active sequence (UI-level, no data mutation)
+    deselectAllNotes() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} deselectAllNotes] No active sequence found.`);
+            return 0;
+        }
+
+        let noteCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    noteCount++;
+                }
+            }
+        }
+
+        return noteCount;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         if (this.type === 'Audio') return;

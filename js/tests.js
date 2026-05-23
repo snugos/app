@@ -14720,3 +14720,126 @@ TestRunner.test('Day 566 - APP_VERSION validation for Day 566', (t) => {
         t.assertTruthy(versionParts[1] >= 223, 'Minor version should be >= 223 for Day 566');
     }
 });
+
+// ============================================
+// Day 567: Select All / Deselect All Notes
+// ============================================
+
+TestRunner.test('Day 567 - selectAllNotes is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.selectAllNotes === 'function', 'selectAllNotes should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 567 - deselectAllNotes is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.deselectAllNotes === 'function', 'deselectAllNotes should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 567 - selectAllNotes returns 0 for Audio tracks', (t) => {
+    const track = new Track({ id: 'test-audio', type: 'Audio', name: 'Audio Track', appServices: {} });
+    const result = track.selectAllNotes();
+    t.assertEquals(result, 0, 'selectAllNotes should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 567 - deselectAllNotes returns 0 for Audio tracks', (t) => {
+    const track = new Track({ id: 'test-audio', type: 'Audio', name: 'Audio Track', appServices: {} });
+    const result = track.deselectAllNotes();
+    t.assertEquals(result, 0, 'deselectAllNotes should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 567 - selectAllNotes counts all active notes', (t) => {
+    const mockAppServices = {
+        captureStateForUndo: () => {},
+        updateTrackUI: () => {},
+        getWindowById: () => null
+    };
+    const track = new Track({ id: 'test-synth', type: 'Synth', name: 'Synth Track', appServices: mockAppServices });
+    track.createNewSequence('Test Seq', 16, 8);
+    const seq = track.getActiveSequence();
+    seq.data[0][0] = { active: true, velocity: 0.7 };
+    seq.data[1][2] = { active: true, velocity: 0.8 };
+    seq.data[2][4] = { active: true, velocity: 0.9 };
+    const count = track.selectAllNotes();
+    t.assertEquals(count, 3, 'selectAllNotes should count 3 active notes');
+});
+
+TestRunner.test('Day 567 - deselectAllNotes counts all active notes', (t) => {
+    const mockAppServices = {
+        captureStateForUndo: () => {},
+        updateTrackUI: () => {},
+        getWindowById: () => null
+    };
+    const track = new Track({ id: 'test-synth', type: 'Synth', name: 'Synth Track', appServices: mockAppServices });
+    track.createNewSequence('Test Seq', 16, 8);
+    const seq = track.getActiveSequence();
+    seq.data[0][0] = { active: true, velocity: 0.7 };
+    seq.data[1][2] = { active: true, velocity: 0.8 };
+    const count = track.deselectAllNotes();
+    t.assertEquals(count, 2, 'deselectAllNotes should count 2 active notes');
+});
+
+TestRunner.test('Day 567 - Ctrl+Shift+A handler exists in eventHandlers', (t) => {
+    const eventHandlerCode = require('fs').readFileSync('./js/eventHandlers.js', 'utf-8');
+    const idx = eventHandlerCode.indexOf('Ctrl+Shift+A - Deselect All Notes');
+    t.assertTruthy(idx !== -1, 'Ctrl+Shift+A handler should exist in eventHandlers.js');
+});
+
+TestRunner.test('Day 567 - Ctrl+Shift+A handler checks for shiftKey', (t) => {
+    const eventHandlerCode = require('fs').readFileSync('./js/eventHandlers.js', 'utf-8');
+    const idx = eventHandlerCode.indexOf('Ctrl+Shift+A - Deselect All Notes');
+    const context = eventHandlerCode.substring(idx - 200, idx + 50);
+    t.assertTruthy(context.includes('event.shiftKey'), 'Ctrl+Shift+A handler should check event.shiftKey');
+});
+
+TestRunner.test('Day 567 - Ctrl+Shift+A handler removes selected-cell class', (t) => {
+    const eventHandlerCode = require('fs').readFileSync('./js/eventHandlers.js', 'utf-8');
+    const idx = eventHandlerCode.indexOf('Ctrl+Shift+A - Deselect All Notes');
+    const context = eventHandlerCode.substring(idx - 200, idx + 500);
+    t.assertTruthy(context.includes('selected-cell'), 'Ctrl+Shift+A handler should handle selected-cell class removal');
+});
+
+TestRunner.test('Day 567 - Ctrl+Shift+A handler shows notification', (t) => {
+    const eventHandlerCode = require('fs').readFileSync('./js/eventHandlers.js', 'utf-8');
+    const idx = eventHandlerCode.indexOf('Ctrl+Shift+A - Deselect All Notes');
+    const context = eventHandlerCode.substring(idx - 200, idx + 500);
+    t.assertTruthy(context.includes('Deselected all notes'), 'Ctrl+Shift+A handler should show Deselected notification');
+});
+
+TestRunner.test('Day 567 - Select All Notes menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Select All Notes');
+    t.assertTruthy(idx !== -1, 'Select All Notes menu item should exist in ui.js');
+});
+
+TestRunner.test('Day 567 - Deselect All Notes menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Deselect All Notes');
+    t.assertTruthy(idx !== -1, 'Deselect All Notes menu item should exist in ui.js');
+});
+
+TestRunner.test('Day 567 - Select All Notes menu item adds selected-cell class', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Select All Notes');
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes('selected-cell'), 'Select All Notes menu item should add selected-cell class');
+});
+
+TestRunner.test('Day 567 - Deselect All Notes menu item removes selected-cell class', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Deselect All Notes');
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes('selected-cell'), 'Deselect All Notes menu item should remove selected-cell class');
+});
+
+TestRunner.test('Day 567 - Keyboard shortcuts help includes Ctrl+Shift+A for Deselect All', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Ctrl+Shift+A');
+    const context = uiCode.substring(idx - 50, idx + 150);
+    t.assertTruthy(context.includes('Deselect All Notes'), 'Keyboard shortcuts help should include Ctrl+Shift+A for Deselect All Notes');
+});
+
+TestRunner.test('Day 567 - APP_VERSION validation for Day 567', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 567');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 225, 'Minor version should be >= 225 for Day 567');
+    }
+});
