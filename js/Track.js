@@ -1568,6 +1568,44 @@ export class Track {
         return scaledCount;
     }
 
+    // Randomize the sequence - fill cells with random notes based on density
+    // density: 0.0 to 1.0, where 1.0 = 100% chance of a note in each cell
+    randomizeSequence(density = Constants.RANDOMIZE_DENSITY_DEFAULT) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} randomizeSequence] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp density to valid range
+        const clampedDensity = Math.max(Constants.RANDOMIZE_DENSITY_MIN, Math.min(Constants.RANDOMIZE_DENSITY_MAX, density));
+
+        // Capture undo state BEFORE mutation (same pattern as humanizeVelocity/scaleVelocities)
+        this._captureUndoState(`Randomize Sequence (${Math.round(clampedDensity * 100)}% density) on ${activeSeq.name}`);
+
+        let randomizedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+            }
+            for (let col = 0; col < totalSteps; col++) {
+                if (Math.random() < clampedDensity) {
+                    const defaultVel = Constants.defaultVelocity || 0.7;
+                    activeSeq.data[rowIndex][col] = { active: true, velocity: defaultVel };
+                    randomizedCount++;
+                } else {
+                    activeSeq.data[rowIndex][col] = null;
+                }
+            }
+        }
+
+        return randomizedCount;
+    }
+
     reverseSequence() {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();

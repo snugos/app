@@ -1,3 +1,4 @@
+export const APP_VERSION = '2.219.0'; // Day 561: Randomize Sequence feature - fills sequence with random notes based on density (25%, 50%, 75%)
 export const APP_VERSION = '2.219.0'; // Day 561: Add missing appServices.captureStateForUndo wrapper - enables undo support for all main.js operations that check appServices.captureStateForUndo before calling it
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
@@ -38,6 +39,11 @@ export const defaultStepsPerBar = 16; // Default for new tracks
 export const MAX_BARS = 512; // Maximum number of bars a sequence can have
 export const MIN_TEMPO = 0; // Minimum tempo in BPM
 export const MAX_TEMPO = 999; // Maximum tempo in BPM
+
+// Randomize Sequence Constants
+export const RANDOMIZE_DENSITY_MIN = 0.05; // Minimum density (5% chance per cell)
+export const RANDOMIZE_DENSITY_MAX = 0.95; // Maximum density (95% chance per cell)
+export const RANDOMIZE_DENSITY_DEFAULT = 0.25; // Default density (25% chance per cell)
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 
 // Transport State Constants

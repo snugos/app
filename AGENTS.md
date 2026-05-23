@@ -1,3 +1,44 @@
+#### Day 561: Randomize Sequence Feature (2026-05-23)
+- **Feature**: Added `randomizeSequence(density)` method and UI menu items for generating random note patterns
+- **Files Modified**:
+  - `js/Track.js`: Added `randomizeSequence(density)` method after `scaleVelocities`
+  - `js/constants.js`: Added RANDOMIZE_DENSITY_MIN, RANDOMIZE_DENSITY_MAX, RANDOMIZE_DENSITY_DEFAULT constants
+  - `js/ui.js`: Added three Randomize Sequence menu items (25%, 50%, 75% density) in sequencer context menu
+  - `js/tests.js`: Added Day 561 test block with 14 tests for randomizeSequence
+  - `js/constants.js`: Bumped APP_VERSION to 2.219.0
+- **Feature Details**:
+  - **randomizeSequence** (`js/Track.js`): Fills active sequence with random notes based on density parameter
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps density to RANDOMIZE_DENSITY_MIN (0.05) / RANDOMIZE_DENSITY_MAX (0.95) range
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-560)
+    - Iterates all rows and columns, using `Math.random() < density` for each cell
+    - Creates note objects with `{ active: true, velocity: defaultVelocity }` for positive cells
+    - Returns total count of randomized notes
+  - **UI Menu Items** (`js/ui.js`): Three menu items in sequencer context menu after "Flip Sequence"
+    - "Randomize Sequence (25%)" - calls `randomizeSequence(0.25)`
+    - "Randomize Sequence (50%)" - calls `randomizeSequence(0.5)`
+    - "Randomize Sequence (75%)" - calls `randomizeSequence(0.75)`
+    - All capture undo state before operation, call `recreateToneSequence(true)` after randomization
+    - Show notifications with density percentage: "Randomized {count} note(s) at {density}% density."
+- **Tests** (`js/tests.js`): 14 tests covering:
+  - randomizeSequence is a function on Track.prototype
+  - randomizeSequence accepts density parameter
+  - randomizeSequence returns 0 for Audio tracks
+  - randomizeSequence captures undo BEFORE mutation
+  - randomizeSequence uses RANDOMIZE_DENSITY constants
+  - randomizeSequence clamps density to valid range
+  - randomizeSequence calls Math.random() for each cell
+  - randomizeSequence creates note objects with velocity
+  - randomizeSequence returns randomized count
+  - UI menu items exist for all three densities
+  - UI menu items call track.randomizeSequence with correct density
+  - UI menu items call recreateToneSequence after randomize
+  - UI menu items show notification with density
+  - APP_VERSION validation (>= 2.219 for Day 561)
+- **Version**: Bumped to 2.219.0
+- **Test Count**: Increased from 2570 to 2584
+
 #### Day 560: Fix Undo Capture Order in Three More Add/Push Methods (2026-05-23)
 - **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE mutations in `createNewSequence`, `addExternalAudioFileAsClip`, and `addSequenceClipToTimeline`
 - **Files Modified**:
