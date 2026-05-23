@@ -560,6 +560,7 @@ const appServices = {
     isTapTempoReady: isTapTempoReady,
 
     // Recording state
+    isTrackRecording: isTrackRecordingState,
     getRecordingTrackId: getRecordingTrackIdState,
     setRecordingTrackId: setRecordingTrackIdState,
     getRecordingStartTime: getRecordingStartTimeState,
