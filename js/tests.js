@@ -14309,3 +14309,122 @@ TestRunner.test('Day 561 - APP_VERSION validation for Day 561', (t) => {
         t.assertTruthy(versionParts[1] >= 219, 'Minor version should be >= 219 for Day 561');
     }
 });
+
+// Day 563: Shift Notes Octave Up/Down Feature
+TestRunner.test('Day 563 - Shift Notes Octave Up menu item exists in sequencer context menu', (t) => {
+    const uiCode = ui.toString();
+    t.assertTruthy(uiCode.includes('Shift Notes Octave Up'), 'Shift Notes Octave Up menu item should exist');
+});
+
+TestRunner.test('Day 563 - Shift Notes Octave Down menu item exists in sequencer context menu', (t) => {
+    const uiCode = ui.toString();
+    t.assertTruthy(uiCode.includes('Shift Notes Octave Down'), 'Shift Notes Octave Down menu item should exist');
+});
+
+TestRunner.test('Day 563 - Shift Notes Octave Up calls shiftSequenceNotes(12)', (t) => {
+    const uiCode = ui.toString();
+    const octaveUpIdx = uiCode.indexOf('Shift Notes Octave Up');
+    const segment = uiCode.substring(octaveUpIdx, octaveUpIdx + 500);
+    t.assertTruthy(segment.includes('shiftSequenceNotes(12)'), 'Shift Notes Octave Up should call shiftSequenceNotes(12)');
+});
+
+TestRunner.test('Day 563 - Shift Notes Octave Down calls shiftSequenceNotes(-12)', (t) => {
+    const uiCode = ui.toString();
+    const octaveDownIdx = uiCode.indexOf('Shift Notes Octave Down');
+    const segment = uiCode.substring(octaveDownIdx, octaveDownIdx + 500);
+    t.assertTruthy(segment.includes('shiftSequenceNotes(-12)'), 'Shift Notes Octave Down should call shiftSequenceNotes(-12)');
+});
+
+TestRunner.test('Day 563 - Shift Notes Octave Up shows notification with count', (t) => {
+    const uiCode = ui.toString();
+    const octaveUpIdx = uiCode.indexOf('Shift Notes Octave Up');
+    const segment = uiCode.substring(octaveUpIdx, octaveUpIdx + 500);
+    t.assertTruthy(segment.includes('up an octave'), 'Shift Notes Octave Up should show notification with up an octave');
+});
+
+TestRunner.test('Day 563 - Shift Notes Octave Down shows notification with count', (t) => {
+    const uiCode = ui.toString();
+    const octaveDownIdx = uiCode.indexOf('Shift Notes Octave Down');
+    const segment = uiCode.substring(octaveDownIdx, octaveDownIdx + 500);
+    t.assertTruthy(segment.includes('down an octave'), 'Shift Notes Octave Down should show notification with down an octave');
+});
+
+TestRunner.test('Day 563 - Ctrl+Alt+Up handler exists in eventHandlers', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    const hasOctaveUp = eventHandlersCode.includes("altKey") && eventHandlersCode.includes("arrowup") && eventHandlersCode.includes("shiftSequenceNotes(12)");
+    t.assertTruthy(hasOctaveUp, 'eventHandlers should have Ctrl+Alt+Up handler for octave shift up');
+});
+
+TestRunner.test('Day 563 - Ctrl+Alt+Down handler exists in eventHandlers', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    const hasOctaveDown = eventHandlersCode.includes("altKey") && eventHandlersCode.includes("arrowdown") && eventHandlersCode.includes("shiftSequenceNotes(-12)");
+    t.assertTruthy(hasOctaveDown, 'eventHandlers should have Ctrl+Alt+Down handler for octave shift down');
+});
+
+TestRunner.test('Day 563 - Ctrl+Alt+Up handler captures undo state', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    const funcStart = eventHandlersCode.indexOf("altKey");
+    const funcEnd = eventHandlersCode.indexOf("Ctrl+Alt+Down", funcStart);
+    const segment = eventHandlersCode.substring(funcStart, funcEnd > 0 ? funcEnd : funcStart + 1500);
+    t.assertTruthy(segment.includes('captureStateForUndo') && segment.includes('Octave Up'), 'Ctrl+Alt+Up handler should capture undo state');
+});
+
+TestRunner.test('Day 563 - Ctrl+Alt+Down handler captures undo state', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    const funcStart = eventHandlersCode.indexOf("Ctrl+Alt+Down");
+    const funcEnd = eventHandlersCode.indexOf("Ctrl+Shift+Left", funcStart);
+    const segment = eventHandlersCode.substring(funcStart, funcEnd > 0 ? funcEnd : funcStart + 1500);
+    t.assertTruthy(segment.includes('captureStateForUndo') && segment.includes('Octave Down'), 'Ctrl+Alt+Down handler should capture undo state');
+});
+
+TestRunner.test('Day 563 - Ctrl+Alt+Up handler calls recreateToneSequence', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    const funcStart = eventHandlersCode.indexOf("altKey");
+    const funcEnd = eventHandlersCode.indexOf("Ctrl+Alt+Down", funcStart);
+    const segment = eventHandlersCode.substring(funcStart, funcEnd > 0 ? funcEnd : funcStart + 1500);
+    t.assertTruthy(segment.includes('recreateToneSequence'), 'Ctrl+Alt+Up handler should call recreateToneSequence');
+});
+
+TestRunner.test('Day 563 - Ctrl+Alt+Down handler calls recreateToneSequence', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    const funcStart = eventHandlersCode.indexOf("Ctrl+Alt+Down");
+    const funcEnd = eventHandlersCode.indexOf("Ctrl+Shift+Left", funcStart);
+    const segment = eventHandlersCode.substring(funcStart, funcEnd > 0 ? funcEnd : funcStart + 1500);
+    t.assertTruthy(segment.includes('recreateToneSequence'), 'Ctrl+Alt+Down handler should call recreateToneSequence');
+});
+
+TestRunner.test('Day 563 - Ctrl+Alt+Up handler prevents default event', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    const funcStart = eventHandlersCode.indexOf("altKey");
+    const funcEnd = eventHandlersCode.indexOf("Ctrl+Alt+Down", funcStart);
+    const segment = eventHandlersCode.substring(funcStart, funcEnd > 0 ? funcEnd : funcStart + 1500);
+    t.assertTruthy(segment.includes('event.preventDefault'), 'Ctrl+Alt+Up handler should prevent default event');
+});
+
+TestRunner.test('Day 563 - Ctrl+Alt+Down handler prevents default event', (t) => {
+    const eventHandlersCode = eventHandlers.toString();
+    const funcStart = eventHandlersCode.indexOf("Ctrl+Alt+Down");
+    const funcEnd = eventHandlersCode.indexOf("Ctrl+Shift+Left", funcStart);
+    const segment = eventHandlersCode.substring(funcStart, funcEnd > 0 ? funcEnd : funcStart + 1500);
+    t.assertTruthy(segment.includes('event.preventDefault'), 'Ctrl+Alt+Down handler should prevent default event');
+});
+
+TestRunner.test('Day 563 - Keyboard shortcuts help includes Ctrl+Alt+Up for Octave Up', (t) => {
+    const uiCode = ui.toString();
+    const hasCtrlAltUp = uiCode.includes('Ctrl+Alt+Up') && uiCode.includes('Shift Notes Octave Up');
+    t.assertTruthy(hasCtrlAltUp, 'UI shortcuts help should show Ctrl+Alt+Up = Shift Notes Octave Up');
+});
+
+TestRunner.test('Day 563 - Keyboard shortcuts help includes Ctrl+Alt+Down for Octave Down', (t) => {
+    const uiCode = ui.toString();
+    const hasCtrlAltDown = uiCode.includes('Ctrl+Alt+Down') && uiCode.includes('Shift Notes Octave Down');
+    t.assertTruthy(hasCtrlAltDown, 'UI shortcuts help should show Ctrl+Alt+Down = Shift Notes Octave Down');
+});
+
+TestRunner.test('Day 563 - APP_VERSION validation for Day 563', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 563');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 220, 'Minor version should be >= 220 for Day 563');
+    }
+});

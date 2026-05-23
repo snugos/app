@@ -1169,6 +1169,58 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl+Alt+Up - Shift Notes Octave Up (12 semitones)
+        if ((event.ctrlKey || event.metaKey) && event.altKey && (key === 'arrowup' || key === 'up')) {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.shiftSequenceNotes === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Shift Notes Octave Up on ${track.name} (${currentActiveSeq.name})`);
+                        const result = track.shiftSequenceNotes(12);
+                        if (result > 0) {
+                            track.recreateToneSequence(true);
+                            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Shifted ${result} note(s) up an octave.`, 1500);
+                        } else {
+                            showNotification("No notes to shift up.", 1500);
+                        }
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
+        // Ctrl+Alt+Down - Shift Notes Octave Down (12 semitones)
+        if ((event.ctrlKey || event.metaKey) && event.altKey && (key === 'arrowdown' || key === 'down')) {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.shiftSequenceNotes === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Shift Notes Octave Down on ${track.name} (${currentActiveSeq.name})`);
+                        const result = track.shiftSequenceNotes(-12);
+                        if (result > 0) {
+                            track.recreateToneSequence(true);
+                            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Shifted ${result} note(s) down an octave.`, 1500);
+                        } else {
+                            showNotification("No notes to shift down.", 1500);
+                        }
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
         // Ctrl+Shift+Left - Shift Notes Left (move notes 1 column left)
         if ((event.ctrlKey || event.metaKey) && event.shiftKey && (key === 'arrowleft' || key === 'left')) {
             const activeSeqTrackId = getActiveSequencerTrackId();

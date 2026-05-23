@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.220.0'; // Day 562: Invert Sequence feature - mirrors notes top-to-bottom across the sequence center row
+export const APP_VERSION = '2.221.0'; // Day 563: Shift Notes Octave Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
 export const APP_VERSION = '2.219.0'; // Day 561: Add missing appServices.captureStateForUndo wrapper - enables undo support for all main.js operations that check appServices.captureStateForUndo before calling it
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
