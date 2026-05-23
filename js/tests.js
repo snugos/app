@@ -14102,3 +14102,92 @@ TestRunner.test('Day 559 - APP_VERSION validation for Day 559', (t) => {
         t.assertTruthy(versionParts[1] >= 217, 'Minor version should be >= 217 for Day 559');
     }
 });
+
+TestRunner.test('Day 560 - createNewSequence captures undo BEFORE sequences.push', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('createNewSequence(name = ');
+    const funcEnd = trackCode.indexOf('\n    deleteSequence(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const pushIdx = funcBody.indexOf('this.sequences.push');
+    
+    t.assertTruthy(captureIdx !== -1, '_captureUndoState should be called in createNewSequence');
+    t.assertTruthy(pushIdx !== -1, 'this.sequences.push should be called');
+    t.assertTruthy(captureIdx < pushIdx, '_captureUndoState should be called BEFORE this.sequences.push');
+});
+
+TestRunner.test('Day 560 - createNewSequence has skipUndo guard for undo capture', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('createNewSequence(name = ');
+    const funcEnd = trackCode.indexOf('\n    deleteSequence(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    t.assertTruthy(funcBody.includes('skipUndo'), 'createNewSequence should have skipUndo parameter');
+    t.assertTruthy(funcBody.includes('if (!skipUndo)'), 'undo capture should be guarded by skipUndo check');
+});
+
+TestRunner.test('Day 560 - addExternalAudioFileAsClip captures undo BEFORE timelineClips.push', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('addExternalAudioFileAsClip(dbKey, audioFileBlob');
+    const funcEnd = trackCode.indexOf('\n    addSequenceClipToTimeline(', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const pushIdx = funcBody.indexOf('this.timelineClips.push');
+    
+    t.assertTruthy(captureIdx !== -1, '_captureUndoState should be called in addExternalAudioFileAsClip');
+    t.assertTruthy(pushIdx !== -1, 'this.timelineClips.push should be called');
+    t.assertTruthy(captureIdx < pushIdx, '_captureUndoState should be called BEFORE this.timelineClips.push');
+});
+
+TestRunner.test('Day 560 - addSequenceClipToTimeline captures undo BEFORE timelineClips.push', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('addSequenceClipToTimeline(sourceSequenceId, startTime');
+    const funcEnd = trackCode.indexOf('\n    // Sequence/Timeline Clip Utility Methods', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const pushIdx = funcBody.indexOf('this.timelineClips.push');
+    
+    t.assertTruthy(captureIdx !== -1, '_captureUndoState should be called in addSequenceClipToTimeline');
+    t.assertTruthy(pushIdx !== -1, 'this.timelineClips.push should be called');
+    t.assertTruthy(captureIdx < pushIdx, '_captureUndoState should be called BEFORE this.timelineClips.push');
+});
+
+TestRunner.test('Day 560 - All three clip add methods have correct undo capture order', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    
+    // createNewSequence
+    const func1Start = trackCode.indexOf('createNewSequence(name = ');
+    const func1End = trackCode.indexOf('\n    deleteSequence(', func1Start);
+    const func1Body = trackCode.substring(func1Start, func1End);
+    const c1 = func1Body.indexOf('_captureUndoState');
+    const p1 = func1Body.indexOf('this.sequences.push');
+    
+    // addExternalAudioFileAsClip
+    const func2Start = trackCode.indexOf('addExternalAudioFileAsClip(dbKey, audioFileBlob');
+    const func2End = trackCode.indexOf('\n    addSequenceClipToTimeline(', func2Start);
+    const func2Body = trackCode.substring(func2Start, func2End);
+    const c2 = func2Body.indexOf('_captureUndoState');
+    const p2 = func2Body.indexOf('this.timelineClips.push');
+    
+    // addSequenceClipToTimeline
+    const func3Start = trackCode.indexOf('addSequenceClipToTimeline(sourceSequenceId, startTime');
+    const func3End = trackCode.indexOf('\n    // Sequence/Timeline Clip Utility Methods', func3Start);
+    const func3Body = trackCode.substring(func3Start, func3End);
+    const c3 = func3Body.indexOf('_captureUndoState');
+    const p3 = func3Body.indexOf('this.timelineClips.push');
+    
+    t.assertTruthy(c1 < p1, 'createNewSequence: undo before push');
+    t.assertTruthy(c2 < p2, 'addExternalAudioFileAsClip: undo before push');
+    t.assertTruthy(c3 < p3, 'addSequenceClipToTimeline: undo before push');
+});
+
+TestRunner.test('Day 560 - APP_VERSION validation for Day 560', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 560');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 218, 'Minor version should be >= 218 for Day 560');
+    }
+});

@@ -1303,11 +1303,12 @@ export class Track {
             data: Array(numRowsForGrid).fill(null).map(() => Array(actualLength).fill(null)),
             length: actualLength
         };
+        // Capture undo BEFORE mutation
+        if (!skipUndo) this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
         this.recreateToneSequence(true);
         if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
-        if (!skipUndo) this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
         console.log(`[Track ${this.id}] Created new sequence: "${name}" (ID: ${newSeqId}), Rows: ${numRowsForGrid}, Length: ${actualLength}`);
         return newSequence;
     }
@@ -2133,10 +2134,9 @@ export class Track {
                 name: clipName || audioFileBlob.name || `Audio Clip ${this.timelineClips.filter(c => c.type === 'audio').length + 1}`
             };
 
+            this._captureUndoState(`Add Audio File Clip "${newClip.name}" to ${this.name}`);
             this.timelineClips.push(newClip);
             console.log(`[Track ${this.id}] Added external audio file as clip to timeline:`, newClip);
-            this._captureUndoState(`Add Audio File Clip "${newClip.name}" to ${this.name}`);
-
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
             return newClip;
         } catch (error) {
@@ -2173,10 +2173,9 @@ export class Track {
             name: clipName || sourceSequence.name || `Seq Clip ${this.timelineClips.filter(c => c.type === 'sequence').length + 1}`
         };
 
+        this._captureUndoState(`Add Sequence Clip "${newClip.name}" to ${this.name}`);
         this.timelineClips.push(newClip);
         console.log(`[Track ${this.id}] Added sequence clip to timeline:`, newClip);
-        this._captureUndoState(`Add Sequence Clip "${newClip.name}" to ${this.name}`);
-
         if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
         if (this.appServices.renderTimeline) this.appServices.renderTimeline();
         return newClip;

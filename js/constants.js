@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.217.0'; // Day 559: Fix addAudioClip undo capture order - moved _captureUndoState BEFORE timelineClips.push (was pushing first, then capturing undo - now captures correctly like all other Track methods)
+export const APP_VERSION = '2.218.0'; // Day 560: Fix undo capture order in createNewSequence, addExternalAudioFileAsClip, addSequenceClipToTimeline - moved _captureUndoState BEFORE sequence/clip push operations
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted
