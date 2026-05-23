@@ -1540,6 +1540,44 @@ export class Track {
         return humanizedCount;
     }
 
+    humanizeTiming(shiftAmount = 2) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} humanizeTiming] No active sequence found.`);
+            return 0;
+        }
+
+        this._captureUndoState(`Humanize timing on ${activeSeq.name}`);
+
+        let humanizedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    const maxShift = Math.min(shiftAmount, Math.min(col, totalSteps - col - 1));
+                    if (maxShift === 0) continue;
+                    const shift = Math.floor(Math.random() * (maxShift * 2 + 1)) - maxShift;
+                    if (shift === 0) continue;
+                    const targetCol = col + shift;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (row[targetCol] && row[targetCol].active) continue;
+                    const temp = row[col];
+                    row[col] = row[targetCol];
+                    row[targetCol] = temp;
+                    humanizedCount++;
+                }
+            }
+        }
+
+        return humanizedCount;
+    }
+
     scaleVelocities(factor = 1.0) {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();
