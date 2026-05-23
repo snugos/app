@@ -3668,3 +3668,62 @@ export class Track {
         console.log(`[Track Dispose END ${this.id}] Finished disposal for track: "${trackNameForLog}"`);
     }
 }
+
+    // Strum notes - shifts simultaneous notes slightly within their column to create a strum effect
+    // strumAmount: 1 = small (subtle), 2 = medium, 3 = large (dramatic)
+    // Top row (higher pitch) plays first by default; negative strumAmount reverses this
+    strumNotes(strumAmount = 2) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} strumNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp strum amount to valid range
+        const clampedStrum = Math.max(1, Math.min(3, Math.abs(strumAmount)));
+        const reverseOrder = strumAmount < 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Strum Notes (±${clampedStrum}) on ${activeSeq.name}`);
+
+        let strummedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        // Find columns with multiple simultaneous notes and strum them
+        for (let col = 0; col < totalSteps; col++) {
+            // Collect all notes at this column
+            const notesAtColumn = [];
+            for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+                const row = activeSeq.data[rowIndex];
+                if (row && row[col] && row[col].active) {
+                    notesAtColumn.push({ rowIndex, stepData: row[col] });
+                }
+            }
+
+            // If multiple notes at same column, apply strum
+            if (notesAtColumn.length > 1) {
+                // Sort by row: lower rowIndex = higher pitch (top of piano roll)
+                // Default: strum from top (high pitch) to bottom (low pitch)
+                notesAtColumn.sort((a, b) => reverseOrder ? b.rowIndex - a.rowIndex : a.rowIndex - b.rowIndex);
+
+                for (let i = 0; i < notesAtColumn.length; i++) {
+                    const { rowIndex } = notesAtColumn[i];
+                    const stepData = activeSeq.data[rowIndex][col];
+                    // Calculate strum offset: top note gets negative offset (earlier), bottom gets positive (later)
+                    const strumOffset = reverseOrder ? (i - Math.floor(notesAtColumn.length / 2)) : (Math.floor(notesAtColumn.length / 2) - i);
+                    const targetCol = col + (strumOffset * clampedStrum);
+
+                    // Only move if target is within bounds and empty
+                    if (targetCol >= 0 && targetCol < totalSteps && !activeSeq.data[rowIndex][targetCol]?.active) {
+                        activeSeq.data[rowIndex][targetCol] = { ...stepData };
+                        activeSeq.data[rowIndex][col] = null;
+                        strummedCount++;
+                    }
+                }
+            }
+        }
+
+        return strummedCount;
+    }

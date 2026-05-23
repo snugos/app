@@ -15126,3 +15126,88 @@ TestRunner.test('Day 570 - APP_VERSION validation for Day 570', (t) => {
         t.assertTruthy(versionParts[1] >= 228, 'Minor version should be >= 228 for Day 570');
     }
 });
+
+// Day 571: Strum Notes Feature
+TestRunner.test('Day 571 - strumNotes is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.strumNotes === 'function', 'strumNotes should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 571 - strumNotes returns 0 for Audio tracks', (t) => {
+    const audioTrack = new Track('Audio', 'AudioTrack');
+    const result = audioTrack.strumNotes(2);
+    t.assertEqual(result, 0, 'strumNotes should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 571 - strumNotes gets active sequence via getActiveSequence', (t) => {
+    const funcStr = Track.prototype.strumNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'strumNotes should use getActiveSequence');
+});
+
+TestRunner.test('Day 571 - strumNotes returns 0 if no active sequence', (t) => {
+    const synthTrack = new Track('Synth', 'SynthTrack');
+    // No sequences added
+    const result = synthTrack.strumNotes(2);
+    t.assertEqual(result, 0, 'strumNotes should return 0 if no active sequence');
+});
+
+TestRunner.test('Day 571 - strumNotes captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.strumNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('activeSeq.data[rowIndex]');
+    t.assertTruthy(captureIdx !== -1 && (mutationIdx === -1 || captureIdx < mutationIdx),
+        'strumNotes should capture undo before mutating data');
+});
+
+TestRunner.test('Day 571 - strumNotes clamps strum amount to 1-3 range', (t) => {
+    const funcStr = Track.prototype.strumNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'strumNotes should clamp strum amount');
+    t.assertTruthy(funcStr.includes('1') && funcStr.includes('3'), 'strumNotes should use range 1-3');
+});
+
+TestRunner.test('Day 571 - strumNotes finds columns with multiple notes', (t) => {
+    const funcStr = Track.prototype.strumNotes.toString();
+    // Should iterate through columns and rows to find simultaneous notes
+    t.assertTruthy(funcStr.includes('notesAtColumn'), 'strumNotes should collect notes at each column');
+});
+
+TestRunner.test('Day 571 - strumNotes returns count of strummed notes', (t) => {
+    const funcStr = Track.prototype.strumNotes.toString();
+    t.assertTruthy(funcStr.includes('strummedCount'), 'strumNotes should return strummedCount');
+});
+
+TestRunner.test('Day 571 - Strum Notes menu items exist in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Strum Notes (Small)'), 'Strum Notes (Small) menu item should exist');
+    t.assertTruthy(uiCode.includes('Strum Notes (Medium)'), 'Strum Notes (Medium) menu item should exist');
+    t.assertTruthy(uiCode.includes('Strum Notes (Large)'), 'Strum Notes (Large) menu item should exist');
+});
+
+TestRunner.test('Day 571 - Strum Notes menu items call track.strumNotes', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Strum Notes (Small)');
+    const context = uiCode.substring(idx, idx + 300);
+    t.assertTruthy(context.includes('strumNotes'), 'Strum Notes should call strumNotes');
+});
+
+TestRunner.test('Day 571 - Strum Notes menu items call recreateToneSequence after strum', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Strum Notes (Medium)');
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes('recreateToneSequence'), 'Strum Notes should call recreateToneSequence');
+});
+
+TestRunner.test('Day 571 - Strum Notes menu items show notification with strum count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Strum Notes (Large)');
+    const context = uiCode.substring(idx, idx + 500);
+    t.assertTruthy(context.includes('Strummed'), 'Strum Notes should show Strummed notification');
+    t.assertTruthy(context.includes('note(s)'), 'Strum Notes notification should mention notes');
+});
+
+TestRunner.test('Day 571 - APP_VERSION validation for Day 571', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 571');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 229, 'Minor version should be >= 229 for Day 571');
+    }
+});

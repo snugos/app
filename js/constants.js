@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.228.0'; // Day 570: Snap to Scale - adds snapNotesToScale method to Track class and Snap to Scale menu item to sequencer context menu. Moves off-scale notes to nearest scale note in current scale mode.
+// Day 571: Strum Notes - adds strumNotes method to Track class and Strum Notes menu items (Small/Medium/Large) to sequencer context menu. Spreads simultaneous notes within columns to create a guitar-like strum effect. Adds undo support and 13 tests. Version bump to 2.229.0.
 /// Day 563: Shift Notes Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
 export const APP_VERSION = '2.219.0'; // Day 561: Add missing appServices.captureStateForUndo wrapper - enables undo support for all main.js operations that check appServices.captureStateForUndo before calling it
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
