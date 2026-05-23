@@ -1,5 +1,45 @@
 # SnugOS DAW - AGENTS.md
 
+#### Day 564: Clear Sequence Feature (2026-05-23)
+- **Feature**: Added `clearSequence()` method to Track class and "Clear Sequence" menu item to sequencer context menu. Refactored the inline "Erase" functionality into the new method.
+- **Files Modified**:
+  - `js/Track.js`: Added `clearSequence()` method after `invertSequence`
+  - `js/ui.js`: Updated "Erase" menu item to use `track.clearSequence()` instead of inline code
+  - `js/tests.js`: Added Day 564 test block with 16 tests for clearSequence
+  - `js/constants.js`: Bumped APP_VERSION to 2.222.0
+- **Feature Details**:
+  - **clearSequence** (`js/Track.js`): Clears all notes in the active sequence
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-563)
+    - Counts all active notes before clearing for return value
+    - Iterates all rows and fills each with `Array(totalSteps).fill(null)`
+    - Returns total count of cleared notes
+  - **Clear Sequence menu item** (`js/ui.js`): Refactored from "Erase" in sequencer context menu
+    - Renamed from "Erase \"{sequenceName}\"" to "Clear Sequence"
+    - Calls `track.clearSequence()` directly (method handles undo internally)
+    - Shows confirmation dialog before clearing
+    - Shows "Cleared {count} note(s)." notification on completion
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` after clear
+- **Tests** (`js/tests.js`): 16 tests covering:
+  - `clearSequence` is a function on Track.prototype
+  - `clearSequence` accepts 0 parameters
+  - Returns 0 for Audio track type
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation (`_captureUndoState` index < mutation index)
+  - Counts active notes before clearing
+  - Clears all rows by filling with null
+  - Returns cleared count
+  - Clear Sequence menu item exists
+  - Menu item calls `track.clearSequence`
+  - Menu item shows confirmation dialog
+  - Menu item calls `recreateToneSequence` after clear
+  - Menu item shows notification with count
+  - APP_VERSION validation (>= 2.222 for Day 564)
+- **Version**: Bumped to 2.222.0
+- **Test Count**: Increased from 14430 to 14545
+
 #### Day 563: Shift Notes Octave Up/Down Feature (2026-05-23)
 - **Feature**: Added Shift Notes Octave Up and Shift Notes Octave Down menu items and keyboard shortcuts for large pitch shifts
 - **Files Modified**:
