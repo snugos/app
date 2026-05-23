@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.218.0'; // Day 560: Fix undo capture order in createNewSequence, addExternalAudioFileAsClip, addSequenceClipToTimeline - moved _captureUndoState BEFORE sequence/clip push operations
+export const APP_VERSION = '2.219.0'; // Day 561: Add missing appServices.captureStateForUndo wrapper - enables undo support for all main.js operations that check appServices.captureStateForUndo before calling it
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted
