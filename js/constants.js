@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.225.0'; // Day 566: Select All/Deselect All - adds Ctrl+Shift+A keyboard shortcut and context menu items for Select All Notes and Deselect All Notes. Adds selectAllNotes() and deselectAllNotes() methods to Track class for counting notes.
+export const APP_VERSION = '2.226.0'; // Day 568: Thin Out Notes - adds thinOutNotes method to Track class and Thin Out Notes menu items to sequencer context menu. Randomly removes notes based on probability (25%, 50%, 75%). Adds 15 tests for the new feature.
 /// Day 563: Shift Notes Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
 export const APP_VERSION = '2.219.0'; // Day 561: Add missing appServices.captureStateForUndo wrapper - enables undo support for all main.js operations that check appServices.captureStateForUndo before calling it
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:

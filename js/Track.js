@@ -1644,6 +1644,59 @@ export class Track {
         return randomizedCount;
     }
 
+    // Thin out notes in the sequence - randomly remove notes based on probability
+    // probability: 0.0 to 1.0, where 1.0 = 100% chance of removing each note
+    thinOutNotes(probability = 0.5) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} thinOutNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp probability to valid range (0.1 to 0.9)
+        const minProb = 0.1;
+        const maxProb = 0.9;
+        const clampedProb = Math.max(minProb, Math.min(maxProb, probability));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Thin Out Notes (${Math.round(clampedProb * 100)}%) on ${activeSeq.name}`);
+
+        let removedCount = 0;
+        let totalNotes = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        // First pass: count active notes
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    totalNotes++;
+                }
+            }
+        }
+
+        // Second pass: randomly remove notes
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    if (Math.random() < clampedProb) {
+                        activeSeq.data[rowIndex][col] = null;
+                        removedCount++;
+                    }
+                }
+            }
+        }
+
+        return removedCount;
+    }
+
     reverseSequence() {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();
@@ -3029,7 +3082,7 @@ export class Track {
             const data = audioBuffer.getChannelData(0);
             let peakAmplitude = 0;
             for (let i = 0; i < data.length; i++) {
-                const abs = Math.abs(data[i]);
+                const abs = Math.abs(data[i];
                 if (abs > peakAmplitude) peakAmplitude = abs;
             }
 

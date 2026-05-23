@@ -14843,3 +14843,89 @@ TestRunner.test('Day 567 - APP_VERSION validation for Day 567', (t) => {
         t.assertTruthy(versionParts[1] >= 225, 'Minor version should be >= 225 for Day 567');
     }
 });
+
+TestRunner.test('Day 568 - thinOutNotes is a function on Track.prototype', (t) => {
+    t.assertEqual(typeof track.thinOutNotes, 'function', 'thinOutNotes should be a function');
+});
+
+TestRunner.test('Day 568 - thinOutNotes accepts probability parameter', (t) => {
+    const funcStr = Track.prototype.thinOutNotes.toString();
+    t.assertTruthy(funcStr.includes('probability'), 'thinOutNotes should accept probability parameter');
+});
+
+TestRunner.test('Day 568 - thinOutNotes returns 0 for Audio tracks', (t) => {
+    const audioTrack = new Track(1, 'Audio');
+    const result = audioTrack.thinOutNotes(0.5);
+    t.assertEqual(result, 0, 'thinOutNotes should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 568 - thinOutNotes gets active sequence via getActiveSequence', (t) => {
+    const funcStr = Track.prototype.thinOutNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'thinOutNotes should call getActiveSequence');
+});
+
+TestRunner.test('Day 568 - thinOutNotes returns 0 if no active sequence', (t) => {
+    const result = track.thinOutNotes(0.5);
+    t.assertEqual(result, 0, 'thinOutNotes should return 0 when no active sequence');
+});
+
+TestRunner.test('Day 568 - thinOutNotes captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.thinOutNotes.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forLoopIdx = funcStr.indexOf('for (let');
+    t.assertTruthy(undoIdx !== -1, 'thinOutNotes should call _captureUndoState');
+    t.assertTruthy(undoIdx < forLoopIdx, 'thinOutNotes should capture undo BEFORE data iteration');
+});
+
+TestRunner.test('Day 568 - thinOutNotes clamps probability to valid range (0.1-0.9)', (t) => {
+    const funcStr = Track.prototype.thinOutNotes.toString();
+    t.assertTruthy(funcStr.includes('minProb') && funcStr.includes('maxProb'), 'thinOutNotes should clamp probability to 0.1-0.9 range');
+});
+
+TestRunner.test('Day 568 - thinOutNotes uses Math.random() for each note', (t) => {
+    const funcStr = Track.prototype.thinOutNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.random()'), 'thinOutNotes should use Math.random() for each note');
+});
+
+TestRunner.test('Day 568 - thinOutNotes removes notes based on probability', (t) => {
+    const funcStr = Track.prototype.thinOutNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.random() < clampedProb'), 'thinOutNotes should check probability for each note');
+});
+
+TestRunner.test('Day 568 - thinOutNotes returns count of removed notes', (t) => {
+    const funcStr = Track.prototype.thinOutNotes.toString();
+    t.assertTruthy(funcStr.includes('return removedCount'), 'thinOutNotes should return removedCount');
+});
+
+TestRunner.test('Day 568 - Thin Out Notes (25%) menu item exists', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Thin Out Notes (25%)');
+    t.assertTruthy(idx !== -1, 'Thin Out Notes (25%) menu item should exist');
+});
+
+TestRunner.test('Day 568 - Thin Out Notes (50%) menu item exists', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Thin Out Notes (50%)');
+    t.assertTruthy(idx !== -1, 'Thin Out Notes (50%) menu item should exist');
+});
+
+TestRunner.test('Day 568 - Thin Out Notes (75%) menu item exists', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Thin Out Notes (75%)');
+    t.assertTruthy(idx !== -1, 'Thin Out Notes (75%) menu item should exist');
+});
+
+TestRunner.test('Day 568 - Thin Out Notes menu items call track.thinOutNotes', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx25 = uiCode.indexOf('Thin Out Notes (25%)');
+    const context = uiCode.substring(idx25, idx25 + 500);
+    t.assertTruthy(context.includes('thinOutNotes'), 'Thin Out Notes (25%) should call thinOutNotes');
+});
+
+TestRunner.test('Day 568 - APP_VERSION validation for Day 568', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 568');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 226, 'Minor version should be >= 226 for Day 568');
+    }
+});
