@@ -14191,3 +14191,83 @@ TestRunner.test('Day 560 - APP_VERSION validation for Day 560', (t) => {
         t.assertTruthy(versionParts[1] >= 218, 'Minor version should be >= 218 for Day 560');
     }
 });
+
+// Day 561: Randomize Sequence Feature
+TestRunner.test('Day 561 - randomizeSequence is a function on Track.prototype', (t) => {
+    t.assertEqual(typeof Track.prototype.randomizeSequence, 'function', 'randomizeSequence should be a function');
+});
+
+TestRunner.test('Day 561 - randomizeSequence accepts density parameter', (t) => {
+    const funcStr = Track.prototype.randomizeSequence.toString();
+    t.assertTruthy(funcStr.includes('density'), 'randomizeSequence should accept density parameter');
+});
+
+TestRunner.test('Day 561 - randomizeSequence returns 0 for Audio tracks', (t) => {
+    const funcStr = Track.prototype.randomizeSequence.toString();
+    t.assertTruthy(funcStr.includes("this.type === 'Audio'"), 'randomizeSequence should return early for Audio tracks');
+});
+
+TestRunner.test('Day 561 - randomizeSequence captures undo BEFORE mutation', (t) => {
+    const trackCode = Track.prototype.randomizeSequence.toString();
+    const captureIdx = trackCode.indexOf('_captureUndoState');
+    const dataIdx = trackCode.indexOf('activeSeq.data');
+    t.assertTruthy(captureIdx < dataIdx, 'undo capture should come before data mutation');
+});
+
+TestRunner.test('Day 561 - randomizeSequence uses RANDOMIZE_DENSITY constants', (t) => {
+    const funcStr = Track.prototype.randomizeSequence.toString();
+    t.assertTruthy(funcStr.includes('RANDOMIZE_DENSITY_MIN') && funcStr.includes('RANDOMIZE_DENSITY_MAX') && funcStr.includes('RANDOMIZE_DENSITY_DEFAULT'), 'randomizeSequence should use RANDOMIZE_DENSITY constants');
+});
+
+TestRunner.test('Day 561 - randomizeSequence clamps density to valid range', (t) => {
+    const funcStr = Track.prototype.randomizeSequence.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'randomizeSequence should clamp density range');
+});
+
+TestRunner.test('Day 561 - randomizeSequence calls Math.random for each cell', (t) => {
+    const funcStr = Track.prototype.randomizeSequence.toString();
+    t.assertTruthy(funcStr.includes('Math.random()'), 'randomizeSequence should use Math.random() for probability');
+});
+
+TestRunner.test('Day 561 - randomizeSequence creates note objects with velocity', (t) => {
+    const funcStr = Track.prototype.randomizeSequence.toString();
+    t.assertTruthy(funcStr.includes('active: true') && funcStr.includes('velocity'), 'randomizeSequence should create note objects with active and velocity');
+});
+
+TestRunner.test('Day 561 - randomizeSequence returns randomized count', (t) => {
+    const funcStr = Track.prototype.randomizeSequence.toString();
+    t.assertTruthy(funcStr.includes('randomizedCount'), 'randomizeSequence should track and return count');
+});
+
+TestRunner.test('Day 561 - UI menu items for Randomize Sequence exist', (t) => {
+    const uiCode = ui.toString();
+    t.assertTruthy(uiCode.includes('Randomize Sequence (25%)'), 'UI should have Randomize Sequence 25% menu item');
+    t.assertTruthy(uiCode.includes('Randomize Sequence (50%)'), 'UI should have Randomize Sequence 50% menu item');
+    t.assertTruthy(uiCode.includes('Randomize Sequence (75%)'), 'UI should have Randomize Sequence 75% menu item');
+});
+
+TestRunner.test('Day 561 - UI menu items call track.randomizeSequence with correct density', (t) => {
+    const uiCode = ui.toString();
+    t.assertTruthy(uiCode.includes('randomizeSequence(0.25)') && uiCode.includes('randomizeSequence(0.5)') && uiCode.includes('randomizeSequence(0.75)'), 'UI should call randomizeSequence with correct density values');
+});
+
+TestRunner.test('Day 561 - UI menu items call recreateToneSequence after randomize', (t) => {
+    const uiCode = ui.toString();
+    const idx25 = uiCode.indexOf('Randomize Sequence (25%)');
+    const nextIdx = uiCode.indexOf('Randomize Sequence (50%)');
+    const segment = uiCode.substring(idx25, nextIdx > 0 ? nextIdx : uiCode.length);
+    t.assertTruthy(segment.includes('recreateToneSequence'), 'Randomize menu item should call recreateToneSequence');
+});
+
+TestRunner.test('Day 561 - UI menu items show notification with density', (t) => {
+    const uiCode = ui.toString();
+    t.assertTruthy(uiCode.includes('at 25% density') && uiCode.includes('at 50% density') && uiCode.includes('at 75% density'), 'UI should show notification with density percentage');
+});
+
+TestRunner.test('Day 561 - APP_VERSION validation for Day 561', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 561');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 219, 'Minor version should be >= 219 for Day 561');
+    }
+});
