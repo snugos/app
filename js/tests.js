@@ -14929,3 +14929,103 @@ TestRunner.test('Day 568 - APP_VERSION validation for Day 568', (t) => {
         t.assertTruthy(versionParts[1] >= 226, 'Minor version should be >= 226 for Day 568');
     }
 });
+
+// Day 569: Trim Silence
+TestRunner.test('Day 569 - trimSequenceEdges is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.trimSequenceEdges === 'function', 'trimSequenceEdges should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges returns 0 for Audio tracks', (t) => {
+    const track = new Track('Audio', 'TestTrack', {}, {});
+    const result = track.trimSequenceEdges();
+    t.assertEquals(0, result, 'trimSequenceEdges should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges gets active sequence via getActiveSequence', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'trimSequenceEdges should use getActiveSequence');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges returns 0 if no active sequence', (t) => {
+    const track = new Track('Synth', 'TestTrack', {}, {});
+    track.sequences = [];
+    track.activeSequenceId = null;
+    const result = track.trimSequenceEdges();
+    t.assertEquals(0, result, 'trimSequenceEdges should return 0 if no active sequence');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const firstLoopIdx = funcStr.indexOf('for (let col = 0; col < totalSteps; col++)');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < firstLoopIdx, 'trimSequenceEdges should capture undo before data iteration');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges finds first active column', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('firstActiveCol'), 'trimSequenceEdges should find first active column');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges finds last active column', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('lastActiveCol'), 'trimSequenceEdges should find last active column');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges returns 0 if no notes found', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('lastActiveCol === -1'), 'trimSequenceEdges should check if no notes found');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges returns 0 if no leading/trailing silence', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('firstActiveCol === 0'), 'trimSequenceEdges should check if no trimming needed');
+    t.assertTruthy(funcStr.includes('lastActiveCol === totalSteps - 1'), 'trimSequenceEdges should check if sequence is already tight');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges counts affected notes before trimming', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('trimmedCount'), 'trimSequenceEdges should count notes being trimmed');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges recalculates sequence length', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('newLength = lastActiveCol - firstActiveCol + 1'), 'trimSequenceEdges should calculate new length');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges updates activeSeq.data', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('activeSeq.data = newData'), 'trimSequenceEdges should update data');
+});
+
+TestRunner.test('Day 569 - trimSequenceEdges updates activeSeq.length', (t) => {
+    const funcStr = Track.prototype.trimSequenceEdges.toString();
+    t.assertTruthy(funcStr.includes('activeSeq.length = newLength'), 'trimSequenceEdges should update length');
+});
+
+TestRunner.test('Day 569 - Trim Silence menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Trim Silence');
+    t.assertTruthy(idx !== -1, 'Trim Silence menu item should exist');
+});
+
+TestRunner.test('Day 569 - Trim Silence menu item calls track.trimSequenceEdges', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Trim Silence');
+    const context = uiCode.substring(idx, idx + 300);
+    t.assertTruthy(context.includes('trimSequenceEdges'), 'Trim Silence should call trimSequenceEdges');
+});
+
+TestRunner.test('Day 569 - Trim Silence menu item calls recreateToneSequence after trim', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Trim Silence');
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes('recreateToneSequence'), 'Trim Silence should call recreateToneSequence');
+});
+
+TestRunner.test('Day 569 - APP_VERSION validation for Day 569', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 569');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 227, 'Minor version should be >= 227 for Day 569');
+    }
+});

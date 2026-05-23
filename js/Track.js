@@ -1840,6 +1840,82 @@ export class Track {
         return clearedCount;
     }
 
+    // Trim silence from sequence edges - removes empty leading/trailing columns
+    trimSequenceEdges() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} trimSequenceEdges] No active sequence found.`);
+            return 0;
+        }
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        // Find first and last column with any active note
+        let firstActiveCol = totalSteps;
+        let lastActiveCol = -1;
+
+        for (let col = 0; col < totalSteps; col++) {
+            for (let row = 0; row < numRows; row++) {
+                const stepData = activeSeq.data[row]?.[col];
+                if (stepData && stepData.active) {
+                    if (col < firstActiveCol) firstActiveCol = col;
+                    if (col > lastActiveCol) lastActiveCol = col;
+                    break;
+                }
+            }
+        }
+
+        // No active notes found
+        if (lastActiveCol === -1 || firstActiveCol >= totalSteps) {
+            return 0;
+        }
+
+        // No leading/trailing to trim (notes span entire sequence)
+        if (firstActiveCol === 0 && lastActiveCol === totalSteps - 1) {
+            return 0;
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Trim Silence on ${activeSeq.name}`);
+
+        // Count notes that will be affected
+        let trimmedCount = 0;
+        for (let col = 0; col < firstActiveCol; col++) {
+            for (let row = 0; row < numRows; row++) {
+                if (activeSeq.data[row]?.[col]?.active) trimmedCount++;
+            }
+        }
+        for (let col = lastActiveCol + 1; col < totalSteps; col++) {
+            for (let row = 0; row < numRows; row++) {
+                if (activeSeq.data[row]?.[col]?.active) trimmedCount++;
+            }
+        }
+
+        // Calculate new length
+        const newLength = lastActiveCol - firstActiveCol + 1;
+
+        // Create new trimmed data
+        const newData = [];
+        for (let row = 0; row < numRows; row++) {
+            const oldRow = activeSeq.data[row];
+            if (!oldRow) {
+                newData[row] = Array(newLength).fill(null);
+            } else {
+                newData[row] = [];
+                for (let col = firstActiveCol; col <= lastActiveCol; col++) {
+                    newData[row].push(oldRow[col] || null);
+                }
+            }
+        }
+
+        activeSeq.data = newData;
+        activeSeq.length = newLength;
+
+        return trimmedCount;
+    }
+
     // Select all notes in the active sequence (UI-level selection, not data mutation)
     selectAllNotes() {
         if (this.type === 'Audio') return 0;
