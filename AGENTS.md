@@ -590,3 +590,42 @@
     - APP_VERSION validation (>= 2.201 for Day 543)
 - **Version**: Bumped to 2.202.0
 - **Test Count**: Increased from 2429 to 2446
+
+#### Day 568: Thin Out Notes Feature (2026-05-23)
+- **Feature**: Added `thinOutNotes(probability)` method to Track class and "Thin Out Notes" menu items to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `thinOutNotes(probability)` method after `randomizeSequence`
+  - `js/ui.js`: Added three Thin Out Notes menu items (25%, 50%, 75%) in sequencer context menu
+  - `js/tests.js`: Added Day 568 test block with 15 tests for thinOutNotes
+  - `js/constants.js`: Bumped APP_VERSION to 2.226.0
+- **Feature Details**:
+  - **thinOutNotes** (`js/Track.js`): Randomly removes notes from the active sequence based on probability
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps probability to 0.1-0.9 range to prevent edge cases
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-567)
+    - Does a first pass to count total active notes
+    - Does a second pass to randomly remove notes where `Math.random() < clampedProb`
+    - Returns count of removed notes
+  - **UI Menu Items** (`js/ui.js`): Three menu items in sequencer context menu after "Randomize Sequence (75%)"
+    - "Thin Out Notes (25%)" - calls `thinOutNotes(0.25)`
+    - "Thin Out Notes (50%)" - calls `thinOutNotes(0.5)`
+    - "Thin Out Notes (75%)" - calls `thinOutNotes(0.75)`
+    - All call `recreateToneSequence(true)` after thinning
+    - Show notifications with probability percentage: "Removed {count} note(s) at {prob}% probability."
+- **Tests** (`js/tests.js`): 15 tests covering:
+  - `thinOutNotes` is a function on Track.prototype
+  - `thinOutNotes` accepts probability parameter
+  - Returns 0 for Audio tracks
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation
+  - Clamps probability to 0.1-0.9 range
+  - Uses `Math.random()` for each note
+  - Removes notes based on probability check
+  - Returns count of removed notes
+  - Thin Out Notes (25%), (50%), (75%) menu items exist
+  - Menu items call `track.thinOutNotes`
+  - APP_VERSION validation (>= 2.226 for Day 568)
+- **Version**: Bumped to 2.226.0
+- **Test Count**: Increased from 14564 to 14579
