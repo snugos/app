@@ -14428,3 +14428,118 @@ TestRunner.test('Day 563 - APP_VERSION validation for Day 563', (t) => {
         t.assertTruthy(versionParts[1] >= 220, 'Minor version should be >= 220 for Day 563');
     }
 });
+
+// ============================================
+// Day 564: Clear Sequence Feature
+// ============================================
+TestRunner.test('Day 564 - clearSequence is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.clearSequence === 'function', 'clearSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 564 - clearSequence accepts 0 parameters', (t) => {
+    t.assertEqual(Track.prototype.clearSequence.length, 0, 'clearSequence should accept 0 parameters');
+});
+
+TestRunner.test('Day 564 - clearSequence returns 0 for Audio tracks', (t) => {
+    const Track = require('./js/Track.js').Track;
+    const audioTrack = new Track({ id: 'test-audio', type: 'Audio', name: 'Audio Track' });
+    const result = audioTrack.clearSequence();
+    t.assertEqual(result, 0, 'clearSequence should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 564 - clearSequence gets active sequence via getActiveSequence', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('clearSequence()');
+    const funcEnd = trackCode.indexOf('\n    // Set the length', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    t.assertTruthy(funcBody.includes('getActiveSequence()'), 'clearSequence should call getActiveSequence()');
+});
+
+TestRunner.test('Day 564 - clearSequence returns 0 if no active sequence', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('clearSequence()');
+    const funcEnd = trackCode.indexOf('\n    // Set the length', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    const hasNullCheck = funcBody.includes('return 0') && funcBody.includes('No active sequence found');
+    t.assertTruthy(hasNullCheck, 'clearSequence should return 0 when no active sequence');
+});
+
+TestRunner.test('Day 564 - clearSequence captures undo BEFORE mutation', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('clearSequence()');
+    const funcEnd = trackCode.indexOf('\n    // Set the length', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    
+    const captureIdx = funcBody.indexOf('_captureUndoState');
+    const mutationIdx = funcBody.indexOf('activeSeq.data[rowIndex] = Array');
+    
+    t.assertTruthy(captureIdx !== -1, 'clearSequence should call _captureUndoState');
+    t.assertTruthy(captureIdx < mutationIdx, '_captureUndoState should come before data mutation');
+});
+
+TestRunner.test('Day 564 - clearSequence counts notes before clearing', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('clearSequence()');
+    const funcEnd = trackCode.indexOf('\n    // Set the length', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    t.assertTruthy(funcBody.includes('clearedCount') && funcBody.includes('.active'), 'clearSequence should count active notes before clearing');
+});
+
+TestRunner.test('Day 564 - clearSequence clears all rows', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('clearSequence()');
+    const funcEnd = trackCode.indexOf('\n    // Set the length', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    const hasClearLoop = funcBody.includes('for (let rowIndex = 0; rowIndex < numRows');
+    const hasNullFill = funcBody.includes('Array(totalSteps).fill(null)');
+    t.assertTruthy(hasClearLoop && hasNullFill, 'clearSequence should loop through rows and fill with null');
+});
+
+TestRunner.test('Day 564 - clearSequence returns cleared count', (t) => {
+    const trackCode = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const funcStart = trackCode.indexOf('clearSequence()');
+    const funcEnd = trackCode.indexOf('\n    // Set the length', funcStart);
+    const funcBody = trackCode.substring(funcStart, funcEnd);
+    t.assertTruthy(funcBody.includes('return clearedCount'), 'clearSequence should return the count of cleared notes');
+});
+
+TestRunner.test('Day 564 - Clear Sequence menu item exists in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Clear Sequence'), 'Clear Sequence menu item should exist');
+});
+
+TestRunner.test('Day 564 - Clear Sequence menu item calls track.clearSequence', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const clearSeqIdx = uiCode.indexOf('Clear Sequence');
+    const context = uiCode.substring(clearSeqIdx - 100, clearSeqIdx + 300);
+    t.assertTruthy(context.includes('clearSequence()'), 'Clear Sequence menu item should call track.clearSequence()');
+});
+
+TestRunner.test('Day 564 - Clear Sequence menu item shows confirmation dialog', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const clearSeqIdx = uiCode.indexOf('Clear Sequence');
+    const context = uiCode.substring(clearSeqIdx - 50, clearSeqIdx + 500);
+    t.assertTruthy(context.includes('showConfirmationDialog'), 'Clear Sequence should show confirmation dialog');
+});
+
+TestRunner.test('Day 564 - Clear Sequence menu item calls recreateToneSequence after clear', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const clearSeqIdx = uiCode.indexOf('Clear Sequence');
+    const context = uiCode.substring(clearSeqIdx - 50, clearSeqIdx + 500);
+    t.assertTruthy(context.includes('recreateToneSequence(true)'), 'Clear Sequence should call recreateToneSequence after clear');
+});
+
+TestRunner.test('Day 564 - Clear Sequence menu item shows notification with cleared count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const clearSeqIdx = uiCode.indexOf('Clear Sequence');
+    const context = uiCode.substring(clearSeqIdx - 50, clearSeqIdx + 500);
+    t.assertTruthy(context.includes('note(s)'), 'Clear Sequence should show notification with count');
+});
+
+TestRunner.test('Day 564 - APP_VERSION validation for Day 564', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 564');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 221, 'Minor version should be >= 221 for Day 564');
+    }
+});

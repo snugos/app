@@ -1713,6 +1713,42 @@ export class Track {
         return invertedCount;
     }
 
+    // Clear all notes in the active sequence
+    clearSequence() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} clearSequence] No active sequence found.`);
+            return 0;
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Clear Sequence ${activeSeq.name}`);
+
+        let clearedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        // Count notes before clearing
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    clearedCount++;
+                }
+            }
+        }
+
+        // Clear all cells
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+        }
+
+        return clearedCount;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         if (this.type === 'Audio') return;
