@@ -1674,6 +1674,45 @@ export class Track {
         return flippedCount;
     }
 
+    // Invert the sequence vertically (top-bottom mirror)
+    invertSequence() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} invertSequence] No active sequence found.`);
+            return 0;
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Invert Sequence ${activeSeq.name}`);
+
+        let invertedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    invertedCount++;
+                }
+            }
+        }
+
+        // Swap rows from top to bottom
+        const halfRows = Math.floor(numRows / 2);
+        for (let rowIndex = 0; rowIndex < halfRows; rowIndex++) {
+            const mirroredRowIndex = numRows - 1 - rowIndex;
+            const temp = activeSeq.data[rowIndex];
+            activeSeq.data[rowIndex] = activeSeq.data[mirroredRowIndex];
+            activeSeq.data[mirroredRowIndex] = temp;
+        }
+
+        return invertedCount;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         if (this.type === 'Audio') return;

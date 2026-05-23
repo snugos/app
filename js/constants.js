@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.219.0'; // Day 561: Randomize Sequence feature - fills sequence with random notes based on density (25%, 50%, 75%)
+export const APP_VERSION = '2.220.0'; // Day 562: Invert Sequence feature - mirrors notes top-to-bottom across the sequence center row
 export const APP_VERSION = '2.219.0'; // Day 561: Add missing appServices.captureStateForUndo wrapper - enables undo support for all main.js operations that check appServices.captureStateForUndo before calling it
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments

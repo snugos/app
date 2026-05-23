@@ -1,3 +1,45 @@
+#### Day 562: Invert Sequence Feature (2026-05-23)
+- **Feature**: Added `invertSequence()` method to Track class and "Invert Sequence" menu item to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `invertSequence()` method after `flipSequence`
+  - `js/ui.js`: Added "Invert Sequence" menu item in sequencer context menu + keyboard shortcut (Ctrl+I)
+  - `js/tests.js`: Added Day 562 test block with 17 tests for invertSequence
+  - `js/constants.js`: Bumped APP_VERSION to 2.220.0
+- **Feature Details**:
+  - **invertSequence** (`js/Track.js`): Mirrors notes top-to-bottom across the sequence center row
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-561)
+    - Counts all active notes before swap for return value
+    - Uses `halfRows = Math.floor(numRows / 2)` to iterate only half the rows
+    - Swaps `activeSeq.data[rowIndex]` with `activeSeq.data[mirroredRowIndex]` using temp variable
+    - Returns total count of inverted notes
+  - **Invert Sequence menu item** (`js/ui.js`): Added to sequencer context menu after "Flip Sequence"
+    - Calls `track.invertSequence()` directly (method handles undo internally)
+    - Shows "Inverted {count} note(s)." notification on success
+    - Shows "No notes to invert." notification when nothing to invert
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+    - Added Ctrl+I keyboard shortcut to keyboard shortcuts help
+- **Tests** (`js/tests.js`): 17 tests covering:
+  - `invertSequence` is a function on Track.prototype
+  - `invertSequence` accepts 0 parameters
+  - Returns 0 for Audio track type
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation (`_captureUndoState` index < data iteration index)
+  - Uses `halfRows` calculation with `Math.floor` for vertical mirroring
+  - Swaps rows using temp variable
+  - Counts active notes before swap
+  - Menu item exists in sequencer context menu
+  - Menu item calls `track.invertSequence`
+  - Menu item calls `recreateToneSequence` after invert
+  - Menu item shows notification with inverted count
+  - Menu item handles no notes case
+  - Keyboard shortcut Ctrl+I in help
+  - APP_VERSION validation (>= 2.220 for Day 562)
+- **Version**: Bumped to 2.220.0
+- **Test Count**: Increased from 5212 to 5229
+
 #### Day 561: Randomize Sequence Feature (2026-05-23)
 - **Feature**: Added `randomizeSequence(density)` method and UI menu items for generating random note patterns
 - **Files Modified**:
