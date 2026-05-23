@@ -1,3 +1,57 @@
+# SnugOS DAW - AGENTS.md
+
+#### Day 563: Shift Notes Octave Up/Down Feature (2026-05-23)
+- **Feature**: Added Shift Notes Octave Up and Shift Notes Octave Down menu items and keyboard shortcuts for large pitch shifts
+- **Files Modified**:
+  - `js/ui.js`: Added "Shift Notes Octave Up" and "Shift Notes Octave Down" menu items in sequencer context menu + keyboard shortcuts help
+  - `js/eventHandlers.js`: Added Ctrl+Alt+Up and Ctrl+Alt+Down keyboard handlers for octave shifting
+  - `js/tests.js`: Added Day 563 test block with 18 tests for octave shift feature
+  - `js/constants.js`: Bumped APP_VERSION to 2.221.0
+- **Feature Details**:
+  - **Shift Notes Octave Up menu item** (`js/ui.js`): Added after "Shift Notes Down" in sequencer context menu
+    - Calls `shiftSequenceNotes(12)` (12 semitones = 1 octave up)
+    - Shows "Shifted {count} note(s) up an octave." notification
+    - Shows "No notes to shift up." when nothing to shift
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+  - **Shift Notes Octave Down menu item** (`js/ui.js`): Added after "Shift Notes Octave Up"
+    - Calls `shiftSequenceNotes(-12)` (12 semitones = 1 octave down)
+    - Shows "Shifted {count} note(s) down an octave." notification
+    - Shows "No notes to shift down." when nothing to shift
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+  - **Ctrl+Alt+Up keyboard handler** (`js/eventHandlers.js`): Added after Ctrl+Shift+Down handler
+    - Condition: `(event.ctrlKey || event.metaKey) && event.altKey && (key === 'arrowup' || key === 'up')`
+    - Calls `track.shiftSequenceNotes(12)` via `shiftSequenceNotes(12)`
+    - Captures undo state before operation: `captureStateForUndo('Shift Notes Octave Up on {track.name}')`
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+    - Shows "Shifted {count} note(s) up an octave." notification
+  - **Ctrl+Alt+Down keyboard handler** (`js/eventHandlers.js`): Added after Ctrl+Alt+Up handler
+    - Condition: `(event.ctrlKey || event.metaKey) && event.altKey && (key === 'arrowdown' || key === 'down')`
+    - Calls `track.shiftSequenceNotes(-12)` via `shiftSequenceNotes(-12)`
+    - Captures undo state before operation: `captureStateForUndo('Shift Notes Octave Down on {track.name}')`
+    - Calls `recreateToneSequence(true)` and `updateTrackUI` on success
+    - Shows "Shifted {count} note(s) down an octave." notification
+  - **Keyboard shortcuts help**: Added Ctrl+Alt+Up = Shift Notes Octave Up, Ctrl+Alt+Down = Shift Notes Octave Down
+- **Tests** (`js/tests.js`): 18 tests covering:
+  - Shift Notes Octave Up menu item exists in sequencer context menu
+  - Shift Notes Octave Down menu item exists in sequencer context menu
+  - Shift Notes Octave Up calls shiftSequenceNotes(12)
+  - Shift Notes Octave Down calls shiftSequenceNotes(-12)
+  - Shift Notes Octave Up shows notification with "up an octave"
+  - Shift Notes Octave Down shows notification with "down an octave"
+  - Ctrl+Alt+Up handler exists with altKey and arrowup
+  - Ctrl+Alt+Down handler exists with altKey and arrowdown
+  - Ctrl+Alt+Up handler captures undo state with "Octave Up" label
+  - Ctrl+Alt+Down handler captures undo state with "Octave Down" label
+  - Ctrl+Alt+Up handler calls recreateToneSequence
+  - Ctrl+Alt+Down handler calls recreateToneSequence
+  - Ctrl+Alt+Up handler prevents default event
+  - Ctrl+Alt+Down handler prevents default event
+  - Keyboard shortcuts help includes Ctrl+Alt+Up for Octave Up
+  - Keyboard shortcuts help includes Ctrl+Alt+Down for Octave Down
+  - APP_VERSION validation (>= 2.221 for Day 563)
+- **Version**: Bumped to 2.221.0
+- **Test Count**: Increased from 14311 to 14430
+
 #### Day 562: Invert Sequence Feature (2026-05-23)
 - **Feature**: Added `invertSequence()` method to Track class and "Invert Sequence" menu item to sequencer context menu
 - **Files Modified**:
