@@ -1,4 +1,44 @@
 # SnugOS DAW - AGENTS.md
+#### Day 571: Strum Notes Feature (2026-05-23)
+- **Feature**: Added `strumNotes(strumAmount)` method to Track class and "Strum Notes (Small/Medium/Large)" menu items to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `strumNotes(strumAmount)` method after `thinOutNotes`
+  - `js/ui.js`: Added "Strum Notes (Small)", "Strum Notes (Medium)", and "Strum Notes (Large)" menu items in sequencer context menu after "Thin Out Notes"
+  - `js/tests.js`: Added Day 571 test block with 13 tests for strumNotes
+  - `js/constants.js`: Bumped APP_VERSION to 2.229.0
+- **Feature Details**:
+  - **strumNotes** (`js/Track.js`): Spreads simultaneous notes within their column to create a guitar-like strum effect
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps strum amount to 1-3 range
+    - Supports reverse order via negative strumAmount (bottom-to-top strum)
+    - Captures undo state BEFORE mutation
+    - For each column, collects all notes at that position and spreads them with calculated offsets
+    - Top note (higher pitch) gets negative offset (earlier), bottom note gets positive offset (later)
+    - Only moves notes if target column is within bounds and empty
+    - Returns count of strummed notes
+  - **Strum Notes Menu Items** (`js/ui.js`): Three menu items in sequencer context menu after "Thin Out Notes"
+    - "Strum Notes (Small)" - calls `strumNotes(1)`
+    - "Strum Notes (Medium)" - calls `strumNotes(2)` 
+    - "Strum Notes (Large)" - calls `strumNotes(3)`
+    - All call `recreateToneSequence(true)` after strumming
+    - Show notifications: "Strummed {count} note(s) with small/medium/large offset."
+- **Tests** (`js/tests.js`): 13 tests covering:
+  - `strumNotes` is a function on Track.prototype
+  - Returns 0 for Audio tracks
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation
+  - Clamps strum amount to 1-3 range
+  - Finds columns with multiple notes
+  - Returns count of strummed notes
+  - Strum Notes (Small/Medium/Large) menu items exist
+  - Menu items call `track.strumNotes`
+  - Menu items call recreateToneSequence after strum
+  - Menu items show notification with strum count
+  - APP_VERSION validation (>= 2.229 for Day 571)
+- **Version**: Bumped to 2.229.0
+- **Test Count**: Increased from 14612 to 14625
 
 #### Day 570: Snap to Scale Feature (2026-05-23)
 - **Feature**: Added `snapNotesToScale()` method to Track class and "Snap to Scale" menu item to sequencer context menu
