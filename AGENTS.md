@@ -1,3 +1,24 @@
+#### Day 560: Fix Undo Capture Order in Three More Add/Push Methods (2026-05-23)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE mutations in `createNewSequence`, `addExternalAudioFileAsClip`, and `addSequenceClipToTimeline`
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in all three methods
+  - `js/tests.js`: Added Day 560 test block with 6 tests for undo capture order verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.218.0
+- **Bug Details**:
+  - **createNewSequence**: Was pushing new sequence to `this.sequences` BEFORE calling `_captureUndoState`. Now captures undo before push. Preserves `skipUndo` parameter guard.
+  - **addExternalAudioFileAsClip**: Was pushing new audio clip to `this.timelineClips` BEFORE calling `_captureUndoState`. Now captures undo before push.
+  - **addSequenceClipToTimeline**: Was pushing new sequence clip to `this.timelineClips` BEFORE calling `_captureUndoState`. Now captures undo before push.
+  - This completes the undo capture order fixes for ALL add/push mutations in Track methods (Days 545-560)
+- **Tests** (`js/tests.js`): 6 tests covering:
+  - createNewSequence captures undo BEFORE sequences.push
+  - createNewSequence has skipUndo guard for undo capture
+  - addExternalAudioFileAsClip captures undo BEFORE timelineClips.push
+  - addSequenceClipToTimeline captures undo BEFORE timelineClips.push
+  - All three methods summary check
+  - APP_VERSION validation (>= 2.218 for Day 560)
+- **Version**: Bumped to 2.218.0
+- **Test Count**: Increased from 2564 to 2570
+
 #### Day 559: Fix addAudioClip Undo Capture Order (2026-05-22)
 - **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE `timelineClips.push` in `addAudioClip`
 - **Files Modified**:
