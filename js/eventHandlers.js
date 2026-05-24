@@ -1381,6 +1381,31 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
+        // Ctrl+I - Invert Sequence (mirror notes top-to-bottom across center row)
+        if ((event.ctrlKey || event.metaKey) && key === 'i') {
+            const activeSeqTrackId = getActiveSequencerTrackId();
+            if (activeSeqTrackId) {
+                const track = getTrackById(activeSeqTrackId);
+                if (track && typeof track.invertSequence === 'function') {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const result = track.invertSequence();
+                        if (result > 0) {
+                            track.recreateToneSequence(true);
+                            if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Inverted ${result} note(s).`, 1500);
+                        } else {
+                            showNotification("No notes to invert.", 1500);
+                        }
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            event.preventDefault();
+            return;
+        }
+
         // Ctrl+Q - Quantize selection (selected cells only, with current snap value)
         if ((event.ctrlKey || event.metaKey) && key === 'q') {
             const activeSeqTrackId = getActiveSequencerTrackId();

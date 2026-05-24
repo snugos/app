@@ -15979,3 +15979,47 @@ TestRunner.test("Day 577 - APP_VERSION validation for Day 577", (t) => {
         t.assertTruthy(versionParts[1] >= 234, "Minor version should be >= 234 for Day 577");
     }
 });
+
+// Day 578: Add Ctrl+I keyboard shortcut for Invert Sequence
+TestRunner.test("Day 578 - Ctrl+I handler exists for Invert Sequence", (t) => {
+    const funcStr = require('./js/eventHandlers.js').handleKeyDown?.toString() || '';
+    t.assertTruthy(funcStr.includes("key === 'i'") && funcStr.includes('invertSequence'), "Ctrl+I handler should call invertSequence");
+});
+TestRunner.test("Day 578 - Ctrl+I handler has altKey or ctrlKey check", (t) => {
+    const funcStr = require('./js/eventHandlers.js').handleKeyDown?.toString() || '';
+    const iKeyIdx = funcStr.indexOf("key === 'i'");
+    const ctrlIdx = funcStr.indexOf('(event.ctrlKey || event.metaKey)', iKeyIdx - 200, iKeyIdx + 500);
+    t.assertTruthy(ctrlIdx !== -1, "Ctrl+I handler should check for ctrlKey or metaKey");
+});
+TestRunner.test("Day 578 - Ctrl+I handler calls recreateToneSequence after invert", (t) => {
+    const funcStr = require('./js/eventHandlers.js').handleKeyDown?.toString() || '';
+    const invertIdx = funcStr.indexOf('invertSequence()');
+    const recreateIdx = funcStr.indexOf('recreateToneSequence', invertIdx);
+    t.assertTruthy(recreateIdx !== -1, "Ctrl+I handler should call recreateToneSequence after invert");
+});
+TestRunner.test("Day 578 - Ctrl+I handler shows notification with inverted count", (t) => {
+    const funcStr = require('./js/eventHandlers.js').handleKeyDown?.toString() || '';
+    const invertIdx = funcStr.indexOf('invertSequence()');
+    const notifyIdx = funcStr.indexOf('showNotification', invertIdx);
+    t.assertTruthy(notifyIdx !== -1 && funcStr.substring(invertIdx, notifyIdx + 50).includes('Inverted'), "Ctrl+I handler should show notification with 'Inverted' count");
+});
+TestRunner.test("Day 578 - Ctrl+I handler prevents default event", (t) => {
+    const funcStr = require('./js/eventHandlers.js').handleKeyDown?.toString() || '';
+    const iKeyIdx = funcStr.indexOf("key === 'i'");
+    const preventIdx = funcStr.indexOf('event.preventDefault()', iKeyIdx);
+    t.assertTruthy(preventIdx !== -1 && preventIdx < iKeyIdx + 1000, "Ctrl+I handler should call event.preventDefault()");
+});
+TestRunner.test("Day 578 - Ctrl+I handler calls updateTrackUI after invert", (t) => {
+    const funcStr = require('./js/eventHandlers.js').handleKeyDown?.toString() || '';
+    const invertIdx = funcStr.indexOf('invertSequence()');
+    const updateIdx = funcStr.indexOf('updateTrackUI', invertIdx);
+    t.assertTruthy(updateIdx !== -1, "Ctrl+I handler should call updateTrackUI after invert");
+});
+TestRunner.test("Day 578 - APP_VERSION validation for Day 578", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 578");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 235, "Minor version should be >= 235 for Day 578");
+    }
+});
