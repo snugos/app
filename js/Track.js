@@ -1644,6 +1644,48 @@ export class Track {
         return humanizedCount;
     }
 
+    // Ramp velocities - apply a linear ramp from startVelocity to endVelocity across the sequence
+    // Creates a crescendo (startVelocity < endVelocity) or diminuendo (startVelocity > endVelocity) effect
+    // startVelocity: 0.05 to 1.0, velocity at the start of the sequence
+    // endVelocity: 0.05 to 1.0, velocity at the end of the sequence
+    rampVelocities(startVelocity = 0.3, endVelocity = 1.0) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} rampVelocities] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp velocities to valid range
+        const clampedStart = Math.max(0.05, Math.min(1.0, startVelocity));
+        const clampedEnd = Math.max(0.05, Math.min(1.0, endVelocity));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Ramp velocities on ${activeSeq.name}`);
+
+        let rampedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.velocity !== undefined) {
+                    // Linear interpolation from startVelocity to endVelocity
+                    const t = totalSteps > 1 ? col / (totalSteps - 1) : 0;
+                    const newVelocity = clampedStart + (clampedEnd - clampedStart) * t;
+                    row[col].velocity = Math.round(Math.max(0.05, Math.min(1.0, newVelocity)) * 100) / 100;
+                    rampedCount++;
+                }
+            }
+        }
+
+        return rampedCount;
+    }
+
     // Randomize the sequence - fill cells with random notes based on density
     // density: 0.0 to 1.0, where 1.0 = 100% chance of a note in each cell
     randomizeSequence(density = Constants.RANDOMIZE_DENSITY_DEFAULT) {

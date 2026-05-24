@@ -1,3 +1,46 @@
+# SnugOS DAW - AGENTS.md
+#### Day 582: Humanize Probabilities Feature (2026-05-24)
+- **Feature**: Added `humanizeProbabilities(amount)` method to Track class and "Humanize Probabilities (+/- 10%, 20%, 30%)" menu items to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `humanizeProbabilities(amount)` method after `scaleVelocities`
+  - `js/ui.js`: Added three Humanize Probabilities menu items in sequencer context menu
+  - `js/tests.js`: Added Day 582 test block with 15 tests for humanizeProbabilities
+  - `js/constants.js`: Bumped APP_VERSION to 2.239.0
+- **Feature Details**:
+  - **humanizeProbabilities** (`js/Track.js`): Applies random variation to note probability values creating more natural note triggering patterns
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-581)
+    - Applies random variation: `(Math.random() * 2 - 1) * amount` where amount is the max variation
+    - Small=10%, Medium=20%, Large=30%
+    - Clamps result to 0-1 range using `Math.max(0, Math.min(1, ...))`
+    - Rounds to 2 decimal places: `Math.round(newProbability * 100) / 100`
+    - Returns count of humanized notes
+  - **Humanize Probabilities Menu Items** (`js/ui.js`): Three menu items in sequencer context menu
+    - "Humanize Probabilities (+/- 10%)" - calls `humanizeProbabilities(0.1)`
+    - "Humanize Probabilities (+/- 20%)" - calls `humanizeProbabilities(0.2)`
+    - "Humanize Probabilities (+/- 30%)" - calls `humanizeProbabilities(0.3)`
+    - All call `recreateToneSequence(true)` after humanizing
+    - Show notifications: "Humanized {count} probability value(s)."
+    - Show "No notes to humanize." when nothing to humanize
+- **Tests** (`js/tests.js`): 15 tests covering:
+  - `humanizeProbabilities` is a function on Track.prototype
+  - `humanizeProbabilities` accepts amount parameter with default 0.2
+  - Returns 0 for Audio tracks
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation
+  - Uses `Math.random()` for variation
+  - Clamps result to 0-1 range
+  - Rounds to 2 decimal places
+  - All 3 Humanize Probabilities menu items exist
+  - Menu items call `humanizeProbabilities` with correct amount
+  - Menu items call `recreateToneSequence`
+  - Menu items show notification with count
+  - APP_VERSION validation (>= 2.239 for Day 582)
+- **Version**: Bumped to 2.239.0
+- **Test Count**: Increased from 539 to 554
+
 #### Day 581: Recording E2E Tests (2026-05-24)
 - **Feature**: Added 20 tests for `runRecordingMicrophoneE2ETest` function to complete Recording E2E testing
 - **Files Modified**:
@@ -91,7 +134,6 @@
 - **Version**: Bumped to 2.236.0
 - **Test Count**: Increased from 16024 to 16042
 
-# SnugOS DAW - AGENTS.md
 #### Day 576: Scale Durations Feature (2026-05-24)
 - **Feature**: Added `scaleDurations(factor)` method to Track class and "Scale Durations" menu items (50%, 75%, 100%, 125%, 150%) to sequencer context menu
 - **Files Modified**:
