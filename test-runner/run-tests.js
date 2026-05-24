@@ -123,7 +123,8 @@ global.document = {
         querySelectorAll: () => []
     }),
     querySelector: () => null,
-    querySelectorAll: () => []
+    querySelectorAll: () => [],
+    addEventListener: () => {}
 };
 global.navigator = {
     mediaDevices: {
@@ -132,79 +133,31 @@ global.navigator = {
     userAgent: 'Node.js Test'
 };
 global.console = console;
+global.localStorage = {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+    clear: () => {}
+};
 
-// Run tests
+// Run tests - tests.js imports TestRunner from testRunner.js which handles its own test registration
 async function runTests() {
-    const TestRunner = {
-        tests: [],
-        results: { passed: 0, failed: 0, errors: [] },
-        
-        test(name, fn) {
-            this.tests.push({ name, fn });
-        },
-        
-        assert(condition, message = 'Assertion failed') {
-            if (!condition) throw new Error(message);
-        },
-        
-        assertEqual(actual, expected, message = '') {
-            if (actual !== expected) throw new Error(`${message} Expected ${expected}, got ${actual}`);
-        },
-        
-        assertDeepEqual(actual, expected, message = '') {
-            if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`${message} Objects not equal`);
-        },
-        
-        assertTruthy(value, message = 'Expected truthy') {
-            if (!value) throw new Error(message);
-        },
-        
-        assertFalsy(value, message = 'Expected falsy') {
-            if (value) throw new Error(message);
-        },
-        
-        assertThrows(fn, message = 'Expected to throw') {
-            let threw = false;
-            try { fn(); } catch (e) { threw = true; }
-            if (!threw) throw new Error(message);
-        },
-        
-        async runAll() {
-            this.results = { passed: 0, failed: 0, errors: [] };
-            const startTime = Date.now();
-            
-            console.log('[TestRunner] Running tests...\n');
-            
-            for (const test of this.tests) {
-                try {
-                    await test.fn(this);
-                    this.results.passed++;
-                    console.log(`✓ ${test.name}`);
-                } catch (e) {
-                    this.results.failed++;
-                    this.results.errors.push({ name: test.name, error: e.message });
-                    console.error(`✗ ${test.name}: ${e.message}`);
-                }
-            }
-            
-            const duration = (Date.now() - startTime).toFixed(0);
-            console.log(`\n[TestRunner] ${this.results.passed} passed, ${this.results.failed} failed (${duration}ms)`);
-            
-            return this.results;
-        }
-    };
-    
+    // First, import testRunner.js to get the TestRunner instance
+    // Then set it on global so tests.js uses the same instance
+    const { TestRunner } = await import('../js/testRunner.js');
     global.TestRunner = TestRunner;
     
-    // Import and run tests
+    // Now import tests.js which will register tests to the shared TestRunner
     try {
-        const testsModule = await import('../js/tests.js');
-        const results = await TestRunner.runAll();
-        process.exit(results.failed > 0 ? 1 : 0);
+        await import('../js/tests.js');
     } catch (error) {
         console.error('[TestRunner] Error loading tests:', error.message);
         process.exit(1);
     }
+    
+    // Run all registered tests
+    const results = await TestRunner.runAll();
+    process.exit(results.failed > 0 ? 1 : 0);
 }
 
 runTests();
