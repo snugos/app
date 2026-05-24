@@ -1,6 +1,6 @@
 // Day 571: Strum Notes - adds strumNotes method to Track class and Strum Notes menu items (Small/Medium/Large) to sequencer context menu. Spreads simultaneous notes within columns to create a guitar-like strum effect. Adds undo support and 13 tests. Version bump to 2.229.0.
 /// Day 563: Shift Notes Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
-export const APP_VERSION = '2.236.0'; // Day 579: Ghost Notes - adds ghostNotes method to Track class and Ghost Notes menu items (odd/even columns, light/medium/heavy) to sequencer context menu. Reduces velocity of notes at alternating columns to create ghost note rhythmic effect. Includes undo support and 18 tests.
+export const APP_VERSION = '2.237.0'; // Day 580: Humanize Velocities (+/- 35%) - adds Humanize Velocities (+/- 35%) menu item to sequencer context menu. Small=15%, Medium=25%, Large=35% velocity variation. Includes undo support and 7 tests.
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted

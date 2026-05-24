@@ -3262,3 +3262,41 @@ TestRunner.test("Day 578 - APP_VERSION validation for Day 578", (t) => {
         t.assertTruthy(versionParts[1] >= 235, "Minor version should be >= 235 for Day 578");
     }
 });
+
+// Day 580: Humanize Velocities (+/- 35%) Feature
+TestRunner.test("Day 580 - Humanize Velocities (+/- 35%) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Humanize Velocities (+/- 35%)'), "Humanize Velocities (+/- 35%) menu item should exist");
+});
+TestRunner.test("Day 580 - Humanize Velocities (+/- 35%) calls humanizeVelocity(0.35)", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('humanizeVelocity(0.35)'), "Humanize Velocities (+/- 35%) should call humanizeVelocity(0.35)");
+});
+TestRunner.test("Day 580 - Humanize Velocities (+/- 35%) menu item exists after 25% option", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    const idx25 = funcStr.indexOf('Humanize Velocities (+/- 25%)');
+    const idx35 = funcStr.indexOf('Humanize Velocities (+/- 35%)');
+    t.assertTruthy(idx35 > idx25, "Humanize Velocities (+/- 35%) should appear after the 25% option");
+});
+TestRunner.test("Day 580 - Humanize Velocities (+/- 35%) calls recreateToneSequence after humanize", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    const humanizeIdx = funcStr.indexOf('humanizeVelocity(0.35)');
+    const recreateIdx = funcStr.indexOf('recreateToneSequence', humanizeIdx);
+    t.assertTruthy(recreateIdx !== -1, "Humanize Velocities (+/- 35%) should call recreateToneSequence after humanize");
+});
+TestRunner.test("Day 580 - humanizeVelocity accepts 0.35 as amount parameter", (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('amount = 0.15') || funcStr.includes('amount='), "humanizeVelocity should accept amount parameter");
+});
+TestRunner.test("Day 580 - humanizeVelocity clamps amount to valid range", (t) => {
+    const funcStr = Track.prototype.humanizeVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), "humanizeVelocity should clamp amount with Math.max/Math.min");
+});
+TestRunner.test("Day 580 - APP_VERSION validation for Day 580", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 580");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 236, "Minor version should be >= 236 for Day 580");
+    }
+});
