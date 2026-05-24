@@ -1,6 +1,6 @@
 // Day 571: Strum Notes - adds strumNotes method to Track class and Strum Notes menu items (Small/Medium/Large) to sequencer context menu. Spreads simultaneous notes within columns to create a guitar-like strum effect. Adds undo support and 13 tests. Version bump to 2.229.0.
 /// Day 563: Shift Notes Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
-export const APP_VERSION = '2.235.0'; // Day 578: Add Ctrl+I keyboard shortcut for Invert Sequence - adds keyboard handler that calls track.invertSequence() following same pattern as Ctrl+R for Flip Sequence. Includes undo support. 7 tests added. Version bump to 2.235.0.
+export const APP_VERSION = '2.236.0'; // Day 579: Ghost Notes - adds ghostNotes method to Track class and Ghost Notes menu items (odd/even columns, light/medium/heavy) to sequencer context menu. Reduces velocity of notes at alternating columns to create ghost note rhythmic effect. Includes undo support and 18 tests.
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted

@@ -3975,3 +3975,44 @@ export class Track {
 
         return shortenedCount;
     }
+
+    // Ghost Notes - reduce velocity of notes at odd-numbered columns to create a ghost note effect
+    // Creates a rhythmic pattern where off-beat notes are softer, like accented 16th notes
+    ghostNotes(velocityFactor = 0.3, onOddColumns = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} ghostNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedFactor = Math.max(0.1, Math.min(0.9, velocityFactor));
+        if (clampedFactor === 1.0) return 0; // No change needed
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Ghost notes (±${Math.round(clampedFactor * 100)}%) on ${activeSeq.name}`);
+
+        let ghostedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    // Apply ghost effect based on column position
+                    const shouldGhost = onOddColumns ? (col % 2 === 1) : (col % 2 === 0);
+                    if (shouldGhost) {
+                        const originalVelocity = stepData.velocity || 1.0;
+                        stepData.velocity = Math.max(0.1, originalVelocity * clampedFactor);
+                        ghostedCount++;
+                    }
+                }
+            }
+        }
+
+        return ghostedCount;
+    }
