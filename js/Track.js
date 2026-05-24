@@ -3900,6 +3900,44 @@ export class Track {
         return extendedCount;
     }
 
+    // Scale note durations by a factor
+    // factor: 0.25 = 25% (shorter), 1.0 = 100% (unchanged), 2.0 = 200% (longer)
+    scaleDurations(factor = 1.0) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} scaleDurations] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedFactor = Math.max(0.25, Math.min(factor, 4.0)); // Clamp 0.25x to 4x
+        if (clampedFactor === 1.0) return 0; // No change needed
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Scale durations by ${Math.round(clampedFactor * 100)}% on ${activeSeq.name}`);
+
+        let scaledCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    const currentLength = stepData.length || 1;
+                    const newLength = Math.max(1, Math.min(Math.round(currentLength * clampedFactor), totalSteps - col));
+                    stepData.length = newLength;
+                    scaledCount++;
+                }
+            }
+        }
+
+        return scaledCount;
+    }
+
     // Halve the duration of notes - inverse of doubleDurations
     // divisor: 2 = halve, 3 = third, 4 = quarter, etc.
     shortenDurations(divisor = 2) {

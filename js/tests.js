@@ -15870,3 +15870,78 @@ TestRunner.test("Day 575 - APP_VERSION validation for Day 575", (t) => {
         t.assertTruthy(versionParts[1] >= 233, "Minor version should be >= 233 for Day 575");
     }
 });
+
+// Day 576: Scale Durations Feature
+TestRunner.test("Day 576 - scaleDurations is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.scaleDurations === 'function', "scaleDurations should be a function on Track.prototype");
+});
+TestRunner.test("Day 576 - scaleDurations accepts factor parameter", (t) => {
+    const funcStr = Track.prototype.scaleDurations.toString();
+    t.assertTruthy(funcStr.includes('factor = 1.0'), "scaleDurations should accept factor parameter with default 1.0");
+});
+TestRunner.test("Day 576 - scaleDurations returns 0 for Audio tracks", (t) => {
+    const track = new Track(999, 'Audio');
+    t.assertEqual(track.scaleDurations(2.0), 0, "Audio tracks should return 0");
+});
+TestRunner.test("Day 576 - scaleDurations gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.scaleDurations.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), "scaleDurations should use getActiveSequence()");
+});
+TestRunner.test("Day 576 - scaleDurations returns 0 if no active sequence", (t) => {
+    const track = new Track(999, 'Synth');
+    t.assertEqual(track.scaleDurations(2.0), 0, "Should return 0 when no active sequence");
+});
+TestRunner.test("Day 576 - scaleDurations captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.scaleDurations.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('forEach') !== -1 ? funcStr.indexOf('forEach') : funcStr.indexOf('for (let');
+    t.assertTruthy(captureIdx < forEachIdx, "Undo capture should happen BEFORE data iteration");
+});
+TestRunner.test("Day 576 - scaleDurations clamps factor to 0.25-4.0 range", (t) => {
+    const funcStr = Track.prototype.scaleDurations.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0.25') && funcStr.includes('Math.min(4.0'), "scaleDurations should clamp factor to 0.25-4.0 range");
+});
+TestRunner.test("Day 576 - scaleDurations returns 0 when factor is 1.0", (t) => {
+    const funcStr = Track.prototype.scaleDurations.toString();
+    t.assertTruthy(funcStr.includes('if (clampedFactor === 1.0) return 0'), "scaleDurations should return 0 when factor is 1.0 (no change)");
+});
+TestRunner.test("Day 576 - scaleDurations returns count of scaled notes", (t) => {
+    const funcStr = Track.prototype.scaleDurations.toString();
+    t.assertTruthy(funcStr.includes('scaledCount') || funcStr.includes('return scaled'), "scaleDurations should return count of scaled notes");
+});
+TestRunner.test("Day 576 - Scale Durations (50%) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Scale Durations (50%)'), "Scale Durations (50%) menu item should exist");
+});
+TestRunner.test("Day 576 - Scale Durations (75%) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Scale Durations (75%)'), "Scale Durations (75%) menu item should exist");
+});
+TestRunner.test("Day 576 - Scale Durations (100%) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Scale Durations (100%)'), "Scale Durations (100%) menu item should exist");
+});
+TestRunner.test("Day 576 - Scale Durations (125%) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Scale Durations (125%)'), "Scale Durations (125%) menu item should exist");
+});
+TestRunner.test("Day 576 - Scale Durations (150%) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Scale Durations (150%)'), "Scale Durations (150%) menu item should exist");
+});
+TestRunner.test("Day 576 - Scale Durations menu items call scaleDurations", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('scaleDurations(0.5)') && funcStr.includes('scaleDurations(1.5'), "Scale Durations menu items should call scaleDurations with correct factors");
+});
+TestRunner.test("Day 576 - Scale Durations menu items call recreateToneSequence", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('recreateToneSequence'), "Scale Durations menu items should call recreateToneSequence");
+});
+TestRunner.test("Day 576 - APP_VERSION validation for Day 576", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 576");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 234, "Minor version should be >= 234 for Day 576");
+    }
+});
