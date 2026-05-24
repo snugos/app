@@ -14,6 +14,50 @@
 - **Version**: 2.234.0 (already at 2.234 from Day 576)
 - **Test Count**: Increased from 2847 to 2853
 
+#### Day 578: Ghost Notes Feature (2026-05-24)
+- **Feature**: Added `ghostNotes(velocityFactor, onOddColumns)` method to Track class and Ghost Notes menu items to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `ghostNotes(velocityFactor, onOddColumns)` method after `shortenDurations`
+  - `js/ui.js`: Added six Ghost Notes menu items in sequencer context menu after Scale Durations
+  - `js/tests.js`: Added Day 578 test block with 18 tests for ghostNotes
+  - `js/constants.js`: Bumped APP_VERSION to 2.236.0
+- **Feature Details**:
+  - **ghostNotes** (`js/Track.js`): Reduces velocity of notes at alternating columns to create a ghost note rhythmic effect
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps velocityFactor to 0.1-0.9 range (Light=0.6, Medium=0.3, Heavy=0.15)
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-577)
+    - When `onOddColumns=true`: applies ghost effect to odd columns (col % 2 === 1)
+    - When `onOddColumns=false`: applies ghost effect to even columns (col % 2 === 0)
+    - Multiplies velocity by velocityFactor, clamped to minimum 0.1
+    - Returns count of ghosted notes
+  - **Ghost Notes Menu Items** (`js/ui.js`): Six menu items in sequencer context menu after Scale Durations
+    - "Ghost Notes (Light)" - calls `ghostNotes(0.6, true)` - 60% velocity on odd columns
+    - "Ghost Notes (Medium)" - calls `ghostNotes(0.3, true)` - 30% velocity on odd columns
+    - "Ghost Notes (Heavy)" - calls `ghostNotes(0.15, true)` - 15% velocity on odd columns
+    - "Ghost Notes - Even Cols (Light)" - calls `ghostNotes(0.6, false)` - 60% velocity on even columns
+    - "Ghost Notes - Even Cols (Medium)" - calls `ghostNotes(0.3, false)` - 30% velocity on even columns
+    - "Ghost Notes - Even Cols (Heavy)" - calls `ghostNotes(0.15, false)` - 15% velocity on even columns
+    - All call `recreateToneSequence(true)` after ghosting
+    - Show notifications: "Ghosted {count} note(s) with light/medium/heavy effect."
+- **Tests** (`js/tests.js`): 18 tests covering:
+  - `ghostNotes` is a function on Track.prototype
+  - ghostNotes accepts velocityFactor and onOddColumns parameters with defaults
+  - ghostNotes returns 0 for Audio tracks
+  - ghostNotes gets active sequence via getActiveSequence
+  - ghostNotes returns 0 if no active sequence
+  - ghostNotes captures undo BEFORE mutation
+  - ghostNotes clamps velocityFactor to 0.1-0.9 range
+  - ghostNotes applies to odd columns when onOddColumns is true
+  - ghostNotes applies to even columns when onOddColumns is false
+  - ghostNotes returns count of ghosted notes
+  - All 6 Ghost Notes menu items exist
+  - Menu items call ghostNotes with correct parameters
+  - Menu items call recreateToneSequence
+  - APP_VERSION validation (>= 2.236 for Day 578)
+- **Version**: Bumped to 2.236.0
+- **Test Count**: Increased from 16024 to 16042
+
 # SnugOS DAW - AGENTS.md
 #### Day 576: Scale Durations Feature (2026-05-24)
 - **Feature**: Added `scaleDurations(factor)` method to Track class and "Scale Durations" menu items (50%, 75%, 100%, 125%, 150%) to sequencer context menu

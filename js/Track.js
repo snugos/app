@@ -3334,7 +3334,7 @@ export class Track {
             const data = audioBuffer.getChannelData(0);
             let peakAmplitude = 0;
             for (let i = 0; i < data.length; i++) {
-                const abs = Math.abs(data[i];
+                const abs = Math.abs(data[i]);
                 if (abs > peakAmplitude) peakAmplitude = abs;
             }
 
@@ -3669,7 +3669,6 @@ export class Track {
 
         console.log(`[Track Dispose END ${this.id}] Finished disposal for track: "${trackNameForLog}"`);
     }
-}
 
     // Strum notes - shifts simultaneous notes slightly within their column to create a strum effect
     // strumAmount: 1 = small (subtle), 2 = medium, 3 = large (dramatic)
@@ -4016,3 +4015,4 @@ export class Track {
 
         return ghostedCount;
     }
+}

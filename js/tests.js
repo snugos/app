@@ -3180,4 +3180,85 @@ TestRunner.test('Audio Clip Getters - getAudioClipName references clipId paramet
     t.assertTruthy(funcStr.includes('clipId'), 'getAudioClipName should reference clipId parameter');
 });
 
-TestRunner
+// Day 578: Ghost Notes Feature
+TestRunner.test("Day 578 - ghostNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.ghostNotes === 'function', "ghostNotes should be a function on Track.prototype");
+});
+TestRunner.test("Day 578 - ghostNotes accepts velocityFactor and onOddColumns parameters", (t) => {
+    const funcStr = Track.prototype.ghostNotes.toString();
+    t.assertTruthy(funcStr.includes('velocityFactor = 0.3') && funcStr.includes('onOddColumns = true'), "ghostNotes should accept velocityFactor and onOddColumns parameters with defaults");
+});
+TestRunner.test("Day 578 - ghostNotes returns 0 for Audio tracks", (t) => {
+    const track = new Track({ id: 'test', type: 'Audio', name: 'Audio Track' });
+    const result = track.ghostNotes(0.3, true);
+    t.assertEquals(0, result, "ghostNotes should return 0 for Audio tracks");
+});
+TestRunner.test("Day 578 - ghostNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.ghostNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), "ghostNotes should use getActiveSequence()");
+});
+TestRunner.test("Day 578 - ghostNotes returns 0 if no active sequence", (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    const result = track.ghostNotes(0.3, true);
+    t.assertEquals(0, result, "ghostNotes should return 0 when no active sequence");
+});
+TestRunner.test("Day 578 - ghostNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.ghostNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const dataIdx = funcStr.indexOf('stepData.velocity');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < dataIdx, "ghostNotes should capture undo before velocity mutation");
+});
+TestRunner.test("Day 578 - ghostNotes clamps velocityFactor to 0.1-0.9 range", (t) => {
+    const funcStr = Track.prototype.ghostNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0.1') && funcStr.includes('Math.min(0.9'), "ghostNotes should clamp velocityFactor to 0.1-0.9 range");
+});
+TestRunner.test("Day 578 - ghostNotes applies to odd columns when onOddColumns is true", (t) => {
+    const funcStr = Track.prototype.ghostNotes.toString();
+    t.assertTruthy(funcStr.includes('col % 2 === 1') && funcStr.includes('onOddColumns'), "ghostNotes should check odd columns when onOddColumns is true");
+});
+TestRunner.test("Day 578 - ghostNotes applies to even columns when onOddColumns is false", (t) => {
+    const funcStr = Track.prototype.ghostNotes.toString();
+    t.assertTruthy(funcStr.includes('col % 2 === 0') && funcStr.includes('onOddColumns'), "ghostNotes should check even columns when onOddColumns is false");
+});
+TestRunner.test("Day 578 - ghostNotes returns count of ghosted notes", (t) => {
+    const funcStr = Track.prototype.ghostNotes.toString();
+    t.assertTruthy(funcStr.includes('ghostedCount++') && funcStr.includes('return ghostedCount'), "ghostNotes should return count of ghosted notes");
+});
+TestRunner.test("Day 578 - Ghost Notes (Light) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Ghost Notes (Light)'), "Ghost Notes (Light) menu item should exist");
+});
+TestRunner.test("Day 578 - Ghost Notes (Medium) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Ghost Notes (Medium)'), "Ghost Notes (Medium) menu item should exist");
+});
+TestRunner.test("Day 578 - Ghost Notes (Heavy) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Ghost Notes (Heavy)'), "Ghost Notes (Heavy) menu item should exist");
+});
+TestRunner.test("Day 578 - Ghost Notes menu items call ghostNotes with correct parameters", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('ghostNotes(0.6, true)') && funcStr.includes('ghostNotes(0.3, true)') && funcStr.includes('ghostNotes(0.15, true)'), "Ghost Notes menu items should call ghostNotes with correct velocityFactor and onOddColumns");
+});
+TestRunner.test("Day 578 - Ghost Notes - Even Cols menu items exist", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Ghost Notes - Even Cols (Light)') && funcStr.includes('Ghost Notes - Even Cols (Medium)') && funcStr.includes('Ghost Notes - Even Cols (Heavy)'), "Ghost Notes - Even Cols menu items should exist");
+});
+TestRunner.test("Day 578 - Ghost Notes - Even Cols menu items call ghostNotes with onOddColumns=false", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('ghostNotes(0.6, false)') && funcStr.includes('ghostNotes(0.3, false)') && funcStr.includes('ghostNotes(0.15, false)'), "Ghost Notes - Even Cols menu items should call ghostNotes with onOddColumns=false");
+});
+TestRunner.test("Day 578 - Ghost Notes menu items call recreateToneSequence after ghost", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    const ghostIdx = funcStr.indexOf('ghostNotes');
+    const recreateIdx = funcStr.indexOf('recreateToneSequence', ghostIdx);
+    t.assertTruthy(recreateIdx !== -1, "Ghost Notes menu items should call recreateToneSequence after ghost");
+});
+TestRunner.test("Day 578 - APP_VERSION validation for Day 578", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 578");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 235, "Minor version should be >= 235 for Day 578");
+    }
+});
