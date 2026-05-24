@@ -3399,3 +3399,99 @@ TestRunner.test("Day 581 - APP_VERSION validation for Day 581", (t) => {
         t.assertTruthy(versionParts[1] >= 238, "Minor version should be >= 238 for Day 581");
     }
 });
+
+// ============================================
+// Day 582: Humanize Probabilities Feature
+// ============================================
+TestRunner.test("Day 582 - humanizeProbabilities is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.humanizeProbabilities, 'function', 'humanizeProbabilities should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 582 - humanizeProbabilities accepts amount parameter with default 0.2", (t) => {
+    const funcStr = Track.prototype.humanizeProbabilities.toString();
+    t.assertTruthy(funcStr.includes('amount = 0.2'), 'humanizeProbabilities should accept amount parameter with default 0.2');
+});
+
+TestRunner.test("Day 582 - humanizeProbabilities returns 0 for Audio tracks", (t) => {
+    const mockTrack = { type: 'Audio' };
+    const result = Track.prototype.humanizeProbabilities.call(mockTrack);
+    t.assertEqual(result, 0, 'humanizeProbabilities should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 582 - humanizeProbabilities calls getActiveSequence", (t) => {
+    const funcStr = Track.prototype.humanizeProbabilities.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'humanizeProbabilities should call getActiveSequence');
+});
+
+TestRunner.test("Day 582 - humanizeProbabilities returns 0 when no active sequence", (t) => {
+    const mockTrack = { type: 'MIDI', getActiveSequence: () => null };
+    const result = Track.prototype.humanizeProbabilities.call(mockTrack);
+    t.assertEqual(result, 0, 'humanizeProbabilities should return 0 when no active sequence');
+});
+
+TestRunner.test("Day 582 - humanizeProbabilities captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.humanizeProbabilities.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('forEach');
+    t.assertTruthy(undoIdx < forEachIdx, '_captureUndoState should come before forEach (undo before mutation)');
+});
+
+TestRunner.test("Day 582 - humanizeProbabilities applies random variation to probabilities", (t) => {
+    const funcStr = Track.prototype.humanizeProbabilities.toString();
+    t.assertTruthy(funcStr.includes('Math.random()'), 'humanizeProbabilities should use Math.random() for variation');
+    t.assertTruthy(funcStr.includes('probability'), 'humanizeProbabilities should reference probability');
+});
+
+TestRunner.test("Day 582 - humanizeProbabilities clamps result to 0-1 range", (t) => {
+    const funcStr = Track.prototype.humanizeProbabilities.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0'), 'humanizeProbabilities should clamp minimum to 0');
+    t.assertTruthy(funcStr.includes('Math.min(1'), 'humanizeProbabilities should clamp maximum to 1');
+});
+
+TestRunner.test("Day 582 - humanizeProbabilities rounds to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.humanizeProbabilities.toString();
+    t.assertTruthy(funcStr.includes('100) / 100') || funcStr.includes('* 100) / 100'), 'humanizeProbabilities should round to 2 decimal places');
+});
+
+TestRunner.test("Day 582 - Humanize Probabilities (+/- 10%) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Humanize Probabilities (+/- 10%)'), 'UI should include Humanize Probabilities (+/- 10%) menu item');
+});
+
+TestRunner.test("Day 582 - Humanize Probabilities (+/- 20%) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Humanize Probabilities (+/- 20%)'), 'UI should include Humanize Probabilities (+/- 20%) menu item');
+});
+
+TestRunner.test("Day 582 - Humanize Probabilities (+/- 30%) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Humanize Probabilities (+/- 30%)'), 'UI should include Humanize Probabilities (+/- 30%) menu item');
+});
+
+TestRunner.test("Day 582 - Humanize Probabilities menu items call humanizeProbabilities with correct amount", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('humanizeProbabilities(0.1)'), 'UI should call humanizeProbabilities(0.1) for +/- 10%');
+    t.assertTruthy(uiStr.includes('humanizeProbabilities(0.2)'), 'UI should call humanizeProbabilities(0.2) for +/- 20%');
+    t.assertTruthy(uiStr.includes('humanizeProbabilities(0.3)'), 'UI should call humanizeProbabilities(0.3) for +/- 30%');
+});
+
+TestRunner.test("Day 582 - Humanize Probabilities menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Humanize Probabilities \(\+\/- \d+%\)[^}]+recreateToneSequence/g);
+    t.assertTruthy(matches && matches.length >= 3, 'All Humanize Probabilities menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 582 - Humanize Probabilities menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Humanize Probabilities \(\+\/- \d+%\)[^}]+Humanized.*\$\{result\}/g);
+    t.assertTruthy(matches && matches.length >= 3, 'All Humanize Probabilities menu items should show notification with result count');
+});
+
+TestRunner.test("Day 582 - APP_VERSION validation for Day 582", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 582");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 239, "Minor version should be >= 239 for Day 582");
+    }
+});

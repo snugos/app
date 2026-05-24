@@ -1606,6 +1606,44 @@ export class Track {
         return scaledCount;
     }
 
+    // Humanize note probabilities - apply random variation to note probabilities
+    // Creates more natural, human-like note triggering patterns
+    // amount: 0.0 to 1.0, maximum random variation to apply (e.g., 0.2 = +/- 20%)
+    humanizeProbabilities(amount = 0.2) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} humanizeProbabilities] No active sequence found.`);
+            return 0;
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Humanize probabilities on ${activeSeq.name}`);
+
+        let humanizedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.probability !== undefined) {
+                    const currentProb = stepData.probability;
+                    // Apply random variation: -amount to +amount
+                    const variation = (Math.random() * 2 - 1) * amount;
+                    const newProbability = Math.max(0, Math.min(1, currentProb + variation));
+                    row[col].probability = Math.round(newProbability * 100) / 100; // Round to 2 decimal places
+                    humanizedCount++;
+                }
+            }
+        }
+
+        return humanizedCount;
+    }
+
     // Randomize the sequence - fill cells with random notes based on density
     // density: 0.0 to 1.0, where 1.0 = 100% chance of a note in each cell
     randomizeSequence(density = Constants.RANDOMIZE_DENSITY_DEFAULT) {
