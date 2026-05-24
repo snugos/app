@@ -1,4 +1,47 @@
 # SnugOS DAW - AGENTS.md
+#### Day 583: Ramp Velocities Feature (2026-05-24)
+- **Feature**: Added `rampVelocities(startVelocity, endVelocity)` method to Track class and "Ramp Velocities (Crescendo/Diminuendo/Piano to Forte/Forte to Piano)" menu items to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `rampVelocities(startVelocity, endVelocity)` method after `scaleVelocities`
+  - `js/ui.js`: Added four Ramp Velocities menu items in sequencer context menu
+  - `js/tests.js`: Added Day 583 test block with 16 tests for rampVelocities
+  - `js/constants.js`: Bumped APP_VERSION to 2.240.0
+- **Feature Details**:
+  - **rampVelocities** (`js/Track.js`): Applies linear interpolation to note velocities across columns
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps velocities to 0.05-1.0 range
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-581)
+    - For each row, iterates columns and applies linear interpolation between start and end velocities
+    - Returns count of ramped notes
+  - **Ramp Velocities Menu Items** (`js/ui.js`): Four menu items in sequencer context menu
+    - "Ramp Velocities (Crescendo)" - calls `rampVelocities(0.3, 1.0)`
+    - "Ramp Velocities (Diminuendo)" - calls `rampVelocities(1.0, 0.3)`
+    - "Ramp Velocities (Piano to Forte)" - calls `rampVelocities(0.3, 1.0)`
+    - "Ramp Velocities (Forte to Piano)" - calls `rampVelocities(1.0, 0.3)`
+    - All call `recreateToneSequence(true)` after ramping
+    - Show notifications: "Ramped {count} note(s) with crescendo/diminuendo effect."
+    - Show "No notes to ramp." when nothing to ramp
+- **Tests** (`js/tests.js`): 16 tests covering:
+  - `rampVelocities` is a function on Track.prototype
+  - rampVelocities accepts startVelocity and endVelocity parameters with defaults (0.3, 1.0)
+  - rampVelocities returns 0 for Audio tracks
+  - rampVelocities gets active sequence via getActiveSequence
+  - rampVelocities returns 0 if no active sequence
+  - rampVelocities captures undo BEFORE mutation
+  - rampVelocities clamps velocities to 0.05-1.0 range
+  - rampVelocities applies linear interpolation across columns
+  - rampVelocities returns count of ramped notes
+  - Ramp Velocities (Crescendo) menu item exists
+  - Ramp Velocities (Diminuendo) menu item exists
+  - Ramp Velocities (Piano to Forte) menu item exists
+  - Ramp Velocities (Forte to Piano) menu item exists
+  - Menu items call rampVelocities with correct parameters
+  - Menu items call recreateToneSequence
+  - APP_VERSION validation (>= 2.240 for Day 583)
+- **Version**: Bumped to 2.240.0
+- **Test Count**: Increased from 554 to 570
+
 #### Day 582: Humanize Probabilities Feature (2026-05-24)
 - **Feature**: Added `humanizeProbabilities(amount)` method to Track class and "Humanize Probabilities (+/- 10%, 20%, 30%)" menu items to sequencer context menu
 - **Files Modified**:

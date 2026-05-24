@@ -3495,3 +3495,126 @@ TestRunner.test("Day 582 - APP_VERSION validation for Day 582", (t) => {
         t.assertTruthy(versionParts[1] >= 239, "Minor version should be >= 239 for Day 582");
     }
 });
+
+TestRunner.test("Day 583 - rampVelocities is a function on Track.prototype", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    t.assertTruthy(typeof track.rampVelocities === 'function', 'rampVelocities should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 583 - rampVelocities accepts startVelocity and endVelocity parameters", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true,velocity:0.5}]], length: 1 }];
+    track.activeSequenceId = 'seq1';
+    const result = track.rampVelocities(0.3, 0.8);
+    t.assertTruthy(typeof result === 'number', 'rampVelocities should return a number');
+});
+
+TestRunner.test("Day 583 - rampVelocities returns 0 for Audio tracks", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Audio', name: 'Audio Track' });
+    const result = track.rampVelocities(0.3, 0.8);
+    t.assertEqual(result, 0, 'rampVelocities should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 583 - rampVelocities calls getActiveSequence", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true,velocity:0.5}]], length: 1 }];
+    track.activeSequenceId = 'seq1';
+    const originalGetActiveSequence = track.getActiveSequence;
+    let called = false;
+    track.getActiveSequence = function() {
+        called = true;
+        return originalGetActiveSequence.call(this);
+    };
+    track.rampVelocities(0.3, 0.8);
+    t.assertTruthy(called, 'rampVelocities should call getActiveSequence');
+    track.getActiveSequence = originalGetActiveSequence;
+});
+
+TestRunner.test("Day 583 - rampVelocities returns 0 when no active sequence", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [];
+    track.activeSequenceId = null;
+    const result = track.rampVelocities(0.3, 0.8);
+    t.assertEqual(result, 0, 'rampVelocities should return 0 when no active sequence');
+});
+
+TestRunner.test("Day 583 - rampVelocities captures undo BEFORE mutation", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true,velocity:0.5}]], length: 1 }];
+    track.activeSequenceId = 'seq1';
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const rampIdx = trackStr.indexOf('rampVelocities(');
+    const captureIdx = trackStr.indexOf('_captureUndoState', rampIdx);
+    const forEachIdx = trackStr.indexOf('forEach', rampIdx);
+    t.assertTruthy(captureIdx < forEachIdx, 'rampVelocities should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 583 - rampVelocities clamps velocities to 0.05-1.0 range", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true,velocity:0.5}],[{active:true,velocity:0.5}]], length: 2 }];
+    track.activeSequenceId = 'seq1';
+    track.rampVelocities(0.0, 1.5);
+    const seq = track.getActiveSequence();
+    t.assertTruthy(seq.data[0][0].velocity >= 0.05, 'Start velocity should be clamped to minimum 0.05');
+    t.assertTruthy(seq.data[0][0].velocity <= 1.0, 'Start velocity should be clamped to maximum 1.0');
+});
+
+TestRunner.test("Day 583 - rampVelocities applies linear interpolation across columns", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true,velocity:0.5},{active:true,velocity:0.5},{active:true,velocity:0.5}]], length: 3 }];
+    track.activeSequenceId = 'seq1';
+    track.rampVelocities(0.2, 0.8);
+    const seq = track.getActiveSequence();
+    t.assertTruthy(seq.data[0][0].velocity < seq.data[0][2].velocity, 'First column velocity should be less than last in crescendo');
+});
+
+TestRunner.test("Day 583 - rampVelocities returns count of ramped notes", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true,velocity:0.5},{active:true,velocity:0.5}],[null,null]], length: 2 }];
+    track.activeSequenceId = 'seq1';
+    const result = track.rampVelocities(0.3, 0.8);
+    t.assertEqual(result, 2, 'rampVelocities should return count of ramped notes');
+});
+
+TestRunner.test("Day 583 - Ramp Velocities (Crescendo) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Ramp Velocities (Crescendo)'), 'UI should include Ramp Velocities (Crescendo) menu item');
+});
+
+TestRunner.test("Day 583 - Ramp Velocities (Diminuendo) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Ramp Velocities (Diminuendo)'), 'UI should include Ramp Velocities (Diminuendo) menu item');
+});
+
+TestRunner.test("Day 583 - Ramp Velocities (Piano to Forte) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Ramp Velocities (Piano to Forte)'), 'UI should include Ramp Velocities (Piano to Forte) menu item');
+});
+
+TestRunner.test("Day 583 - Ramp Velocities (Forte to Piano) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Ramp Velocities (Forte to Piano)'), 'UI should include Ramp Velocities (Forte to Piano) menu item');
+});
+
+TestRunner.test("Day 583 - Ramp Velocities menu items call rampVelocities with correct parameters", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('rampVelocities(0.3, 1.0)'), 'UI should call rampVelocities(0.3, 1.0) for Crescendo');
+    t.assertTruthy(uiStr.includes('rampVelocities(1.0, 0.3)'), 'UI should call rampVelocities(1.0, 0.3) for Diminuendo');
+    t.assertTruthy(uiStr.includes('rampVelocities(0.2, 0.9)'), 'UI should call rampVelocities(0.2, 0.9) for Piano to Forte');
+    t.assertTruthy(uiStr.includes('rampVelocities(0.9, 0.2)'), 'UI should call rampVelocities(0.9, 0.2) for Forte to Piano');
+});
+
+TestRunner.test("Day 583 - Ramp Velocities menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Ramp Velocities \\([^)]+\\)[^}]+recreateToneSequence/g);
+    t.assertTruthy(matches && matches.length >= 4, 'All Ramp Velocities menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 583 - APP_VERSION validation for Day 583", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 583");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 240, "Minor version should be >= 240 for Day 583");
+    }
+});

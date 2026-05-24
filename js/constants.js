@@ -1,6 +1,6 @@
 // Day 571: Strum Notes - adds strumNotes method to Track class and Strum Notes menu items (Small/Medium/Large) to sequencer context menu. Spreads simultaneous notes within columns to create a guitar-like strum effect. Adds undo support and 13 tests. Version bump to 2.229.0.
 /// Day 563: Shift Notes Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
-export const APP_VERSION = '2.239.0'; // Day 582: Humanize Probabilities - adds humanizeProbabilities(amount) method to Track class and Humanize Probabilities menu items (+/- 10%, 20%, 30%) to sequencer context menu. Applies random variation to note probability values creating more natural note triggering patterns. Includes undo support and 15 tests. Version bump to 2.239.0.
+export const APP_VERSION = '2.240.0'; // Day 583: Ramp Velocities - adds rampVelocities(startVelocity, endVelocity) method to Track class and Ramp Velocities menu items (Crescendo, Diminuendo, Piano to Forte, Forte to Piano) to sequencer context menu. Applies linear velocity ramps across the sequence for dynamic expression effects. Includes undo support and 19 tests. Version bump to 2.240.0.
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted
