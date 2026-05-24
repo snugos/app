@@ -3300,3 +3300,102 @@ TestRunner.test("Day 580 - APP_VERSION validation for Day 580", (t) => {
         t.assertTruthy(versionParts[1] >= 236, "Minor version should be >= 236 for Day 580");
     }
 });
+// ============================================
+// Day 581: Recording E2E Tests for runRecordingMicrophoneE2ETest
+// ============================================
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest function exists", (t) => {
+    t.assertEqual(typeof runRecordingMicrophoneE2ETest, 'function', 'runRecordingMicrophoneE2ETest should be a function');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest returns a Promise", (t) => {
+    const result = runRecordingMicrophoneE2ETest(null);
+    t.assertTruthy(result instanceof Promise, 'runRecordingMicrophoneE2ETest should return a Promise');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest accepts 2 parameters", (t) => {
+    t.assertEqual(runRecordingMicrophoneE2ETest.length, 2, 'runRecordingMicrophoneE2ETest should accept 2 parameters');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest defaults recordDurationMs to 2500", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('recordDurationMs = 2500'), 'runRecordingMicrophoneE2ETest should default recordDurationMs to 2500');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest calls resolveRecordingMicrophoneTestTrack", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('resolveRecordingMicrophoneTestTrack'), 'runRecordingMicrophoneE2ETest should call resolveRecordingMicrophoneTestTrack');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest validates Audio track type", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes("recordingTrack.type !== 'Audio'"), 'runRecordingMicrophoneE2ETest should validate track type is Audio');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest checks isTrackRecordingState for busy condition", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('isTrackRecordingState()'), 'runRecordingMicrophoneE2ETest should check if already recording');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest checks navigator.mediaDevices.getUserMedia", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('navigator.mediaDevices.getUserMedia'), 'runRecordingMicrophoneE2ETest should check browser mediaDevices support');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest calls startAudioRecording", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('startAudioRecording'), 'runRecordingMicrophoneE2ETest should call startAudioRecording');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest calls stopAudioRecording", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('stopAudioRecording'), 'runRecordingMicrophoneE2ETest should call stopAudioRecording');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest counts timelineClips before and after", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('initialClipCount') && funcStr.includes('finalClipCount'), 'runRecordingMicrophoneE2ETest should count clips before and after');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest calls cleanupRecordingScheduling in finally block", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('cleanupRecordingScheduling'), 'runRecordingMicrophoneE2ETest should cleanup in finally block');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest returns result object with ok field", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('{ ok:') && funcStr.includes('ok,') && funcStr.includes('ok,'), 'runRecordingMicrophoneE2ETest should return result with ok field');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest returns result object with step field", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes('step:'), 'runRecordingMicrophoneE2ETest should return result with step field');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest handles track-selection error case", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes("step: 'track-selection'") || funcStr.includes("step:\"track-selection\""), 'runRecordingMicrophoneE2ETest should handle track-selection error');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest handles busy error case", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes("step: 'busy'") || funcStr.includes("step:\"busy\""), 'runRecordingMicrophoneE2ETest should handle busy error');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest handles unsupported browser error case", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes("step: 'unsupported'") || funcStr.includes("step:\"unsupported\""), 'runRecordingMicrophoneE2ETest should handle unsupported browser error');
+});
+
+TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest handles error case with step='error'", (t) => {
+    const funcStr = runRecordingMicrophoneE2ETest.toString();
+    t.assertTruthy(funcStr.includes("step: 'error'") || funcStr.includes("step:\"error\""), 'runRecordingMicrophoneE2ETest should handle error case');
+});
+
+TestRunner.test("Day 581 - APP_VERSION validation for Day 581", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 581");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 238, "Minor version should be >= 238 for Day 581");
+    }
+});

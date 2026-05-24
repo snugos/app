@@ -1,6 +1,6 @@
 // Day 571: Strum Notes - adds strumNotes method to Track class and Strum Notes menu items (Small/Medium/Large) to sequencer context menu. Spreads simultaneous notes within columns to create a guitar-like strum effect. Adds undo support and 13 tests. Version bump to 2.229.0.
 /// Day 563: Shift Notes Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
-export const APP_VERSION = '2.237.0'; // Day 580: Humanize Velocities (+/- 35%) - adds Humanize Velocities (+/- 35%) menu item to sequencer context menu. Small=15%, Medium=25%, Large=35% velocity variation. Includes undo support and 7 tests.
+export const APP_VERSION = '2.238.0'; // Day 581: Recording E2E Tests - adds 20 tests covering runRecordingMicrophoneE2ETest function signature, Audio track validation, browser support checks, start/stop recording calls, clip counting, error handling (track-selection/busy/unsupported/error), finally block cleanup. Version bump to 2.238.0.
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted
