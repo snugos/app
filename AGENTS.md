@@ -1,3 +1,45 @@
+#### Day 585: Sort Column Notes Feature (2026-05-24)
+- **Feature**: Added `sortColumnNotes(mode)` method to Track class and "Sort Column Notes (Velocity Hi→Lo/Velocity Lo→Hi/Pitch Hi→Lo/Pitch Lo→Hi)" menu items to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `sortColumnNotes(mode)` method after `deselectAllNotes`
+  - `js/ui.js`: Added four Sort Column Notes menu items in sequencer context menu
+  - `js/tests.js`: Added Day 585 test block with 19 tests for sortColumnNotes
+  - `js/constants.js`: Bumped APP_VERSION to 2.242.0
+- **Feature Details**:
+  - **sortColumnNotes** (`js/Track.js`): Sorts notes within each column by velocity or pitch
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Captures undo state BEFORE mutation (following established pattern)
+    - Four modes: velocity-desc, velocity-asc, pitch-desc, pitch-asc
+    - For each column, collects active notes, sorts by the specified criteria, places back
+    - Returns count of sorted notes
+  - **Sort Column Notes Menu Items** (`js/ui.js`): Four menu items in sequencer context menu
+    - "Sort Column Notes (Velocity Hi→Lo)" - calls `sortColumnNotes('velocity-desc')`
+    - "Sort Column Notes (Velocity Lo→Hi)" - calls `sortColumnNotes('velocity-asc')`
+    - "Sort Column Notes (Pitch Hi→Lo)" - calls `sortColumnNotes('pitch-desc')`
+    - "Sort Column Notes (Pitch Lo→Hi)" - calls `sortColumnNotes('pitch-asc')`
+    - All call `recreateToneSequence(true)` after sorting
+    - Show notifications: "Sorted {count} note(s) by velocity/pitch..."
+- **Tests** (`js/tests.js`): 19 tests covering:
+  - `sortColumnNotes` is a function on Track.prototype
+  - sortColumnNotes accepts mode parameter with default
+  - Returns 0 for Audio tracks
+  - Gets active sequence via getActiveSequence
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation
+  - Sorts by velocity descending
+  - Sorts by velocity ascending
+  - Sorts by pitch descending (high to low)
+  - Sorts by pitch ascending (low to high)
+  - All 4 menu items exist
+  - Menu items call sortColumnNotes with correct parameters
+  - Menu items call recreateToneSequence
+  - Menu items show notification with count
+  - APP_VERSION validation (>= 2.242 for Day 585)
+- **Version**: Bumped to 2.242.0
+- **Test Count**: Increased from 3738 to 3757
+
+
 # SnugOS DAW - AGENTS.md
 #### Day 583: Ramp Velocities Feature (2026-05-24)
 - **Feature**: Added `rampVelocities(startVelocity, endVelocity)` method to Track class and "Ramp Velocities (Crescendo/Diminuendo/Piano to Forte/Forte to Piano)" menu items to sequencer context menu
