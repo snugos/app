@@ -1,3 +1,36 @@
+#### Day 581: Recording E2E Tests (2026-05-24)
+- **Feature**: Added 20 tests for `runRecordingMicrophoneE2ETest` function to complete Recording E2E testing
+- **Files Modified**:
+  - `js/tests.js`: Added Day 581 test block with 20 tests for runRecordingMicrophoneE2ETest
+  - `js/constants.js`: Bumped APP_VERSION to 2.238.0
+- **Feature Details**:
+  - **Recording E2E Tests** (`js/tests.js`): 20 tests covering the `runRecordingMicrophoneE2ETest` function
+    - Function exists and returns a Promise
+    - Accepts 2 parameters (trackId, recordDurationMs) with default 2500ms
+    - Calls `resolveRecordingMicrophoneTestTrack` to find Audio track
+    - Validates `recordingTrack.type === 'Audio'`
+    - Checks `isTrackRecordingState()` for busy condition
+    - Checks `navigator.mediaDevices.getUserMedia` for browser support
+    - Calls `startAudioRecording` and `stopAudioRecording`
+    - Counts `timelineClips` before and after recording
+    - Handles error cases: track-selection, busy, unsupported, error
+    - Calls `cleanupRecordingScheduling` in finally block
+    - Returns result object with `ok`, `step`, `trackId`, `trackName` fields
+- **Tests** (`js/tests.js`): 20 tests covering:
+  - `runRecordingMicrophoneE2ETest` is a function
+  - Returns a Promise
+  - Accepts 2 parameters with correct defaults
+  - Calls `resolveRecordingMicrophoneTestTrack`
+  - Validates Audio track type
+  - Checks `isTrackRecordingState` for busy condition
+  - Checks browser `navigator.mediaDevices.getUserMedia` support
+  - Calls `startAudioRecording` and `stopAudioRecording`
+  - Counts timelineClips before and after
+  - Handles error steps: track-selection, busy, unsupported, error
+  - APP_VERSION validation (>= 2.238 for Day 581)
+- **Version**: Bumped to 2.238.0
+- **Test Count**: Increased from 518 to 538
+
 #### Day 577: Humanize Timing (Large) Feature (2026-05-24)
 - **Feature**: Added `Humanize Timing (Large)` menu item to sequencer context menu with shiftAmount=6
 - **Files Modified**:
