@@ -1,3 +1,19 @@
+#### Day 577: Humanize Timing (Large) Feature (2026-05-24)
+- **Feature**: Added `Humanize Timing (Large)` menu item to sequencer context menu with shiftAmount=6
+- **Files Modified**:
+  - `js/ui.js`: Added "Humanize Timing (Large)" menu item after "Humanize Timing (Medium)"
+  - `js/tests.js`: Added Day 577 test block with 6 tests for Humanize Timing (Large)
+- **Feature Details**:
+  - **Humanize Timing (Large)** (`js/ui.js`): Added after "Humanize Timing (Medium)"
+    - Calls `humanizeTiming(6)` (6 step max shift = Large effect)
+    - Small=2, Medium=4, Large=6
+    - Calls `recreateToneSequence(true)` after humanizing
+    - Shows "Humanized timing for {count} note(s)." notification
+  - No Track.js changes needed - method already accepts any shiftAmount
+- **Tests** (`js/tests.js`): 6 tests covering Humanize Timing (Large) menu item, calls humanizeTiming(6), recreateToneSequence, notification, parameter validation, and APP_VERSION
+- **Version**: 2.234.0 (already at 2.234 from Day 576)
+- **Test Count**: Increased from 2847 to 2853
+
 # SnugOS DAW - AGENTS.md
 #### Day 576: Scale Durations Feature (2026-05-24)
 - **Feature**: Added `scaleDurations(factor)` method to Track class and "Scale Durations" menu items (50%, 75%, 100%, 125%, 150%) to sequencer context menu
