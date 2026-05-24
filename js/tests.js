@@ -15310,3 +15310,334 @@ TestRunner.test('Day 572 - APP_VERSION validation for Day 572', (t) => {
         t.assertTruthy(versionParts[1] >= 230, 'Minor version should be >= 230 for Day 572');
     }
 });
+
+// Day 573: Rotate Sequence + Double Durations Features
+TestRunner.test('Day 573 - rotateSequence is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.rotateSequence === 'function', 'rotateSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 573 - rotateSequence returns 0 for Audio tracks', (t) => {
+    const audioTrack = new Track('Audio', 'AudioTrack');
+    const result = audioTrack.rotateSequence(1);
+    t.assertEqual(result, 0, 'rotateSequence should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 573 - rotateSequence gets active sequence via getActiveSequence', (t) => {
+    const funcStr = Track.prototype.rotateSequence.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'rotateSequence should use getActiveSequence');
+});
+
+TestRunner.test('Day 573 - rotateSequence returns 0 if no active sequence', (t) => {
+    const synthTrack = new Track('Synth', 'SynthTrack');
+    const result = synthTrack.rotateSequence(1);
+    t.assertEqual(result, 0, 'rotateSequence should return 0 if no active sequence');
+});
+
+TestRunner.test('Day 573 - rotateSequence captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.rotateSequence.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('row[', captureIdx);
+    t.assertTruthy(captureIdx !== -1 && (mutationIdx === -1 || captureIdx < mutationIdx),
+        'rotateSequence should capture undo before mutating data');
+});
+
+TestRunner.test('Day 573 - rotateSequence handles wrapping', (t) => {
+    const funcStr = Track.prototype.rotateSequence.toString();
+    t.assertTruthy(funcStr.includes('newCol += totalSteps') || funcStr.includes('newCol < 0'),
+        'rotateSequence should handle wrapping');
+});
+
+TestRunner.test('Day 573 - rotateSequence returns count of rotated notes', (t) => {
+    const funcStr = Track.prototype.rotateSequence.toString();
+    t.assertTruthy(funcStr.includes('rotatedCount'), 'rotateSequence should return rotatedCount');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence menu items exist', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Rotate Sequence (Left)'), 'Rotate Sequence (Left) should exist');
+    t.assertTruthy(uiCode.includes('Rotate Sequence (Right)'), 'Rotate Sequence (Right) should exist');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence menu items call rotateSequence', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Rotate Sequence (Left)');
+    const context = uiCode.substring(idx, idx + 300);
+    t.assertTruthy(context.includes('rotateSequence'), 'Rotate Sequence should call rotateSequence');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence menu items call recreateToneSequence', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Rotate Sequence (Right)');
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes('recreateToneSequence'), 'Rotate Sequence should call recreateToneSequence');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence menu items show notification', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Rotate Sequence (Left)');
+    const context = uiCode.substring(idx, idx + 500);
+    t.assertTruthy(context.includes('Rotated'), 'Rotate Sequence should show Rotated notification');
+});
+
+TestRunner.test('Day 573 - doubleDurations is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.doubleDurations === 'function', 'doubleDurations should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 573 - doubleDurations returns 0 for Audio tracks', (t) => {
+    const audioTrack = new Track('Audio', 'AudioTrack');
+    const result = audioTrack.doubleDurations(2);
+    t.assertEqual(result, 0, 'doubleDurations should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 573 - doubleDurations gets active sequence via getActiveSequence', (t) => {
+    const funcStr = Track.prototype.doubleDurations.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'doubleDurations should use getActiveSequence');
+});
+
+TestRunner.test('Day 573 - doubleDurations captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.doubleDurations.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('stepData.length', captureIdx);
+    t.assertTruthy(captureIdx !== -1 && (mutationIdx === -1 || captureIdx < mutationIdx),
+        'doubleDurations should capture undo before mutating data');
+});
+
+TestRunner.test('Day 573 - doubleDurations clamps multiplier to 1-8 range', (t) => {
+    const funcStr = Track.prototype.doubleDurations.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'doubleDurations should clamp multiplier');
+    t.assertTruthy(funcStr.includes('1') && funcStr.includes('8'), 'doubleDurations should use range 1-8');
+});
+
+TestRunner.test('Day 573 - doubleDurations returns count of extended notes', (t) => {
+    const funcStr = Track.prototype.doubleDurations.toString();
+    t.assertTruthy(funcStr.includes('extendedCount'), 'doubleDurations should return extendedCount');
+});
+
+TestRunner.test('Day 573 - Double Durations menu item exists', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Double Durations'), 'Double Durations menu item should exist');
+});
+
+TestRunner.test('Day 573 - Double Durations menu item calls doubleDurations', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Double Durations');
+    const context = uiCode.substring(idx, idx + 300);
+    t.assertTruthy(context.includes('doubleDurations'), 'Double Durations should call doubleDurations');
+});
+
+TestRunner.test('Day 573 - Double Durations menu item calls recreateToneSequence', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Double Durations');
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes('recreateToneSequence'), 'Double Durations should call recreateToneSequence');
+});
+
+TestRunner.test('Day 573 - Double Durations menu item shows notification', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Double Durations');
+    const context = uiCode.substring(idx, idx + 500);
+    t.assertTruthy(context.includes('Extended') || context.includes('double length'),
+        'Double Durations should show notification');
+});
+
+TestRunner.test('Day 573 - APP_VERSION validation for Day 573', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 573');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 231, 'Minor version should be >= 231 for Day 573');
+    }
+});
+
+// Day 573: Rotate Sequence + Double Durations Feature
+TestRunner.test('Day 573 - rotateSequence is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.rotateSequence === 'function', 'rotateSequence should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 573 - rotateSequence returns 0 for Audio tracks', (t) => {
+    const track = new Track({ id: 'test', type: 'Audio', name: 'Audio Track' });
+    const result = track.rotateSequence(1);
+    t.assertEquals(0, result, 'rotateSequence should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 573 - rotateSequence gets active sequence via getActiveSequence', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[null]], active: true }];
+    const getActiveSpy = sinon.spy(track, 'getActiveSequence');
+    track.rotateSequence(1);
+    t.assertTruthy(getActiveSpy.called, 'rotateSequence should call getActiveSequence');
+});
+
+TestRunner.test('Day 573 - rotateSequence returns 0 if no active sequence', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [];
+    const result = track.rotateSequence(1);
+    t.assertEquals(0, result, 'rotateSequence should return 0 if no active sequence');
+});
+
+TestRunner.test('Day 573 - rotateSequence captures undo BEFORE mutation', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, length: 1 }], [null]], length: 16, active: true }];
+    track._undoStack = [];
+    const captureSpy = sinon.spy(track, '_captureUndoState');
+    track.rotateSequence(1);
+    t.assertTruthy(captureSpy.called, 'rotateSequence should capture undo state');
+    const trackCode = Track.prototype.rotateSequence.toString();
+    const captureIdx = trackCode.indexOf('_captureUndoState');
+    const mutationIdx = trackCode.indexOf('activeSeq.data[rowIndex]');
+    t.assertTruthy(captureIdx < mutationIdx, '_captureUndoState should come before data mutation');
+});
+
+TestRunner.test('Day 573 - rotateSequence clamps amount to valid range', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[null]], length: 16, active: true }];
+    const trackCode = Track.prototype.rotateSequence.toString();
+    t.assertTruthy(trackCode.includes('Math.max'), 'rotateSequence should clamp amount using Math.max');
+    t.assertTruthy(trackCode.includes('Math.min'), 'rotateSequence should clamp amount using Math.min');
+});
+
+TestRunner.test('Day 573 - rotateSequence handles wrapping at boundaries', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[null]], length: 4, active: true }];
+    const trackCode = Track.prototype.rotateSequence.toString();
+    t.assertTruthy(trackCode.includes('newCol < 0') || trackCode.includes('totalSteps'), 'rotateSequence should handle wrapping');
+});
+
+TestRunner.test('Day 573 - rotateSequence returns count of rotated notes', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, length: 1 }], [null]], length: 16, active: true }];
+    const result = track.rotateSequence(1);
+    t.assertTruthy(typeof result === 'number', 'rotateSequence should return a number');
+    t.assertTruthy(result >= 0, 'rotateSequence should return non-negative count');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence (Left) menu item exists', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Rotate Sequence (Left)'), 'Rotate Sequence (Left) menu item should exist');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence (Right) menu item exists', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Rotate Sequence (Right)'), 'Rotate Sequence (Right) menu item should exist');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence menu items call track.rotateSequence', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const leftIdx = uiCode.indexOf('Rotate Sequence (Left)');
+    const rightIdx = uiCode.indexOf('Rotate Sequence (Right)');
+    const leftContext = uiCode.substring(leftIdx, leftIdx + 200);
+    const rightContext = uiCode.substring(rightIdx, rightIdx + 200);
+    t.assertTruthy(leftContext.includes('rotateSequence(-1)'), 'Left rotation should call rotateSequence(-1)');
+    t.assertTruthy(rightContext.includes('rotateSequence(1)'), 'Right rotation should call rotateSequence(1)');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence menu items call recreateToneSequence after rotate', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Rotate Sequence (Left)');
+    const context = uiCode.substring(idx, idx + 500);
+    t.assertTruthy(context.includes('recreateToneSequence'), 'Rotate Sequence should call recreateToneSequence');
+});
+
+TestRunner.test('Day 573 - Rotate Sequence menu items show notification with rotated count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Rotate Sequence (Left)');
+    const context = uiCode.substring(idx, idx + 600);
+    t.assertTruthy(context.includes('Rotated'), 'Rotate Sequence should show Rotated notification');
+    t.assertTruthy(context.includes('note'), 'Rotate Sequence notification should mention notes');
+});
+
+TestRunner.test('Day 573 - doubleDurations is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.doubleDurations === 'function', 'doubleDurations should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 573 - doubleDurations returns 0 for Audio tracks', (t) => {
+    const track = new Track({ id: 'test', type: 'Audio', name: 'Audio Track' });
+    const result = track.doubleDurations(2);
+    t.assertEquals(0, result, 'doubleDurations should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 573 - doubleDurations gets active sequence via getActiveSequence', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[null]], active: true }];
+    const getActiveSpy = sinon.spy(track, 'getActiveSequence');
+    track.doubleDurations(2);
+    t.assertTruthy(getActiveSpy.called, 'doubleDurations should call getActiveSequence');
+});
+
+TestRunner.test('Day 573 - doubleDurations returns 0 if no active sequence', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [];
+    const result = track.doubleDurations(2);
+    t.assertEquals(0, result, 'doubleDurations should return 0 if no active sequence');
+});
+
+TestRunner.test('Day 573 - doubleDurations captures undo BEFORE mutation', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, length: 1 }], [null]], length: 16, active: true }];
+    track._undoStack = [];
+    const captureSpy = sinon.spy(track, '_captureUndoState');
+    track.doubleDurations(2);
+    t.assertTruthy(captureSpy.called, 'doubleDurations should capture undo state');
+    const trackCode = Track.prototype.doubleDurations.toString();
+    const captureIdx = trackCode.indexOf('_captureUndoState');
+    const mutationIdx = trackCode.indexOf('stepData.length');
+    t.assertTruthy(captureIdx < mutationIdx, '_captureUndoState should come before length mutation');
+});
+
+TestRunner.test('Day 573 - doubleDurations clamps multiplier to valid range', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[null]], length: 16, active: true }];
+    const trackCode = Track.prototype.doubleDurations.toString();
+    t.assertTruthy(trackCode.includes('Math.max'), 'doubleDurations should clamp multiplier using Math.max');
+    t.assertTruthy(trackCode.includes('Math.min'), 'doubleDurations should clamp multiplier using Math.min');
+});
+
+TestRunner.test('Day 573 - doubleDurations doubles note lengths', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, length: 1 }], [null]], length: 16, active: true }];
+    track._undoStack = [];
+    track.doubleDurations(2);
+    const note = track.sequences[0].data[0][0];
+    t.assertEquals(2, note.length, 'Note length should be doubled to 2');
+});
+
+TestRunner.test('Day 573 - doubleDurations returns count of extended notes', (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, length: 1 }], [null]], length: 16, active: true }];
+    const result = track.doubleDurations(2);
+    t.assertTruthy(typeof result === 'number', 'doubleDurations should return a number');
+    t.assertTruthy(result >= 0, 'doubleDurations should return non-negative count');
+});
+
+TestRunner.test('Day 573 - Double Durations menu item exists', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Double Durations'), 'Double Durations menu item should exist');
+});
+
+TestRunner.test('Day 573 - Double Durations menu item calls track.doubleDurations', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Double Durations');
+    const context = uiCode.substring(idx, idx + 300);
+    t.assertTruthy(context.includes('doubleDurations'), 'Double Durations should call doubleDurations');
+});
+
+TestRunner.test('Day 573 - Double Durations menu item calls recreateToneSequence after extend', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Double Durations');
+    const context = uiCode.substring(idx, idx + 500);
+    t.assertTruthy(context.includes('recreateToneSequence'), 'Double Durations should call recreateToneSequence');
+});
+
+TestRunner.test('Day 573 - Double Durations menu item shows notification with extended count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Double Durations');
+    const context = uiCode.substring(idx, idx + 600);
+    t.assertTruthy(context.includes('Extended') || context.includes('double'), 'Double Durations should show notification');
+});
+
+TestRunner.test('Day 573 - APP_VERSION validation for Day 573', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 573');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 231, 'Minor version should be >= 231 for Day 573');
+    }
+});

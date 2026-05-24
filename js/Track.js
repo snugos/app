@@ -3807,3 +3807,93 @@ export class Track {
 
         return connectedCount;
     }
+
+    // Rotate Sequence - shifts all notes by a specified amount with wrapping
+    // Positive amount = shift right (later columns), Negative = shift left (earlier columns)
+    // amount: number of columns to rotate (can be negative for left rotation)
+    rotateSequence(amount = 1) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} rotateSequence] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedAmount = Math.max(-activeSeq.length + 1, Math.min(amount, activeSeq.length - 1));
+        if (clampedAmount === 0) return 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Rotate sequence by ${clampedAmount} on ${activeSeq.name}`);
+
+        let rotatedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        const effectiveAmount = clampedAmount % totalSteps; // Handle full rotations
+
+        if (effectiveAmount === 0) return 0;
+
+        // For each row, rotate the columns
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            // Collect notes that will move to new positions
+            const notesToMove = [];
+            for (let col = 0; col < totalSteps; col++) {
+                if (row[col] && row[col].active) {
+                    notesToMove.push({ col, stepData: row[col] });
+                    row[col] = null; // Clear original position
+                }
+            }
+
+            // Move each note to its rotated position
+            for (const note of notesToMove) {
+                let newCol = note.col + effectiveAmount;
+                // Handle wrapping (JavaScript mod can return negative)
+                if (newCol < 0) newCol += totalSteps;
+                if (newCol >= totalSteps) newCol -= totalSteps;
+
+                row[newCol] = note.stepData;
+                rotatedCount++;
+            }
+        }
+
+        return rotatedCount;
+    }
+
+    // Double note durations - extends each note's length by a multiplier
+    doubleDurations(multiplier = 2) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} doubleDurations] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedMult = Math.max(1, Math.min(multiplier, 8)); // Clamp 1-8x
+        if (clampedMult === 1) return 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Double durations (${clampedMult}x) on ${activeSeq.name}`);
+
+        let extendedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    const currentLength = stepData.length || 1;
+                    const newLength = Math.min(currentLength * clampedMult, totalSteps - col);
+                    stepData.length = newLength;
+                    extendedCount++;
+                }
+            }
+        }
+
+        return extendedCount;
+    }

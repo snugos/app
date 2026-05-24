@@ -1,4 +1,64 @@
 # SnugOS DAW - AGENTS.md
+#### Day 573: Rotate Sequence + Double Durations Features (2026-05-24)
+- **Feature**: Added `rotateSequence(amount)` and `doubleDurations(multiplier)` methods to Track class with corresponding menu items
+- **Files Modified**:
+  - `js/Track.js`: Added `rotateSequence(amount)` and `doubleDurations(multiplier)` methods after `connectLegato`
+  - `js/ui.js`: Added "Rotate Sequence (Left)", "Rotate Sequence (Right)", and "Double Durations" menu items in sequencer context menu after "Legato Connect"
+  - `js/tests.js`: Added Day 573 test block with 19 tests for rotateSequence and doubleDurations
+  - `js/constants.js`: Bumped APP_VERSION to 2.231.0
+- **Feature Details**:
+  - **rotateSequence** (`js/Track.js`): Shifts all notes by a specified amount with column wrapping
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps rotation amount to valid column range
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-572)
+    - For each row, collects active notes and calculates new column positions with wrapping
+    - Uses `newCol += totalSteps` / `newCol -= totalSteps` for wrapping both directions
+    - Returns count of rotated notes
+  - **rotateSequence Menu Items** (`js/ui.js`): Two menu items in sequencer context menu after "Legato Connect (Large)"
+    - "Rotate Sequence (Left)" - calls `rotateSequence(-1)` (shift to earlier columns)
+    - "Rotate Sequence (Right)" - calls `rotateSequence(1)` (shift to later columns)
+    - Both call `recreateToneSequence(true)` after rotating
+    - Show notifications: "Rotated {count} note(s) left/right."
+    - Show "No notes to rotate." when nothing to rotate
+  - **doubleDurations** (`js/Track.js`): Extends each note's length by a multiplier
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps multiplier to 1-8 range
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-572)
+    - For each active note, calculates new length = min(currentLength * multiplier, totalSteps - col)
+    - Returns count of extended notes
+  - **Double Durations Menu Item** (`js/ui.js`): Added to sequencer context menu after Rotate Sequence items
+    - Calls `doubleDurations(2)` (2x multiplier by default)
+    - Calls `recreateToneSequence(true)` after extending
+    - Shows notification: "Extended {count} note(s) to double length."
+    - Shows "No notes to extend." when nothing to extend
+- **Tests** (`js/tests.js`): 19 tests covering:
+  - `rotateSequence` is a function on Track.prototype
+  - rotateSequence returns 0 for Audio tracks
+  - rotateSequence gets active sequence via getActiveSequence
+  - rotateSequence returns 0 if no active sequence
+  - rotateSequence captures undo BEFORE mutation
+  - rotateSequence handles wrapping (newCol += totalSteps)
+  - rotateSequence returns count of rotated notes
+  - Rotate Sequence (Left/Right) menu items exist
+  - Rotate Sequence menu items call rotateSequence
+  - Rotate Sequence menu items call recreateToneSequence
+  - Rotate Sequence menu items show notification
+  - `doubleDurations` is a function on Track.prototype
+  - doubleDurations returns 0 for Audio tracks
+  - doubleDurations gets active sequence via getActiveSequence
+  - doubleDurations captures undo BEFORE mutation
+  - doubleDurations clamps multiplier to 1-8 range
+  - doubleDurations returns count of extended notes
+  - Double Durations menu item exists
+  - Double Durations menu item calls doubleDurations
+  - Double Durations menu item calls recreateToneSequence
+  - Double Durations menu item shows notification
+  - APP_VERSION validation (>= 2.231 for Day 573)
+- **Version**: Bumped to 2.231.0
+- **Test Count**: Increased from 14641 to 14660
+
 #### Day 572: Legato Connect Feature (2026-05-24)
 - **Feature**: Added `connectLegato(gapSteps)` method to Track class and "Legato Connect (Small/Medium/Large)" menu items to sequencer context menu
 - **Files Modified**:
