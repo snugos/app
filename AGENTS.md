@@ -1,4 +1,40 @@
 # SnugOS DAW - AGENTS.md
+#### Day 574: Shorten Durations Feature (2026-05-24)
+- **Feature**: Added `shortenDurations(divisor)` method to Track class and "Shorten Durations" menu item to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `shortenDurations(divisor)` method after `doubleDurations`
+  - `js/ui.js`: Added "Shorten Durations" menu item in sequencer context menu after "Double Durations"
+  - `js/tests.js`: Added Day 574 test block with 12 tests for shortenDurations
+  - `js/constants.js`: Bumped APP_VERSION to 2.232.0
+- **Feature Details**:
+  - **shortenDurations** (`js/Track.js`): Divides the length of each note by a divisor (inverse of `doubleDurations`)
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps divisor to 2-8 range (prevents division by 1 or too aggressive trimming)
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-573)
+    - For each active note, calculates new length = max(1, floor(currentLength / divisor))
+    - Returns count of shortened notes
+  - **Shorten Durations Menu Item** (`js/ui.js`): Added to sequencer context menu after "Double Durations"
+    - Calls `shortenDurations(2)` (default 2 = halve the lengths)
+    - Calls `recreateToneSequence(true)` after shortening
+    - Shows notification: "Shortened {count} note(s) to half length."
+    - Shows "No notes to shorten." when nothing to shorten
+- **Tests** (`js/tests.js`): 12 tests covering:
+  - `shortenDurations` is a function on Track.prototype
+  - shortenDurations returns 0 for Audio tracks
+  - shortenDurations gets active sequence via getActiveSequence
+  - shortenDurations returns 0 if no active sequence
+  - shortenDurations captures undo BEFORE mutation
+  - shortenDurations clamps divisor to 2-8 range
+  - shortenDurations returns count of shortened notes
+  - Shorten Durations menu item exists
+  - Shorten Durations menu item calls shortenDurations(2)
+  - Shorten Durations menu item calls recreateToneSequence
+  - Shorten Durations menu item shows notification with shortened count
+  - APP_VERSION validation (>= 2.232 for Day 574)
+- **Version**: Bumped to 2.232.0
+- **Test Count**: Increased from 14660 to 14672
+
 #### Day 573: Rotate Sequence + Double Durations Features (2026-05-24)
 - **Feature**: Added `rotateSequence(amount)` and `doubleDurations(multiplier)` methods to Track class with corresponding menu items
 - **Files Modified**:

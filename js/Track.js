@@ -3897,3 +3897,41 @@ export class Track {
 
         return extendedCount;
     }
+
+    // Halve the duration of notes - inverse of doubleDurations
+    // divisor: 2 = halve, 3 = third, 4 = quarter, etc.
+    shortenDurations(divisor = 2) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} shortenDurations] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedDiv = Math.max(2, Math.min(divisor, 8)); // Clamp 2-8x
+        if (clampedDiv === 1) return 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Shorten durations (1/${clampedDiv}) on ${activeSeq.name}`);
+
+        let shortenedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    const currentLength = stepData.length || 1;
+                    const newLength = Math.max(1, Math.floor(currentLength / clampedDiv));
+                    stepData.length = newLength;
+                    shortenedCount++;
+                }
+            }
+        }
+
+        return shortenedCount;
+    }

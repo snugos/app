@@ -15772,3 +15772,69 @@ TestRunner.test("Day 573 - APP_VERSION validation for Day 573", (t) => {
         t.assertTruthy(versionParts[1] >= 231, "Minor version should be >= 231 for Day 573");
     }
 });
+
+// Day 574: Shorten Durations Feature
+TestRunner.test("Day 574 - shortenDurations is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.shortenDurations === "function", "shortenDurations should be a function on Track.prototype");
+});
+TestRunner.test("Day 574 - shortenDurations returns 0 for Audio tracks", (t) => {
+    const track = new Track("test", "Audio");
+    const result = track.shortenDurations(2);
+    t.assertEquals(0, result, "shortenDurations should return 0 for Audio tracks");
+});
+TestRunner.test("Day 574 - shortenDurations gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.shortenDurations.toString();
+    t.assertTruthy(funcStr.includes("getActiveSequence"), "shortenDurations should use getActiveSequence");
+});
+TestRunner.test("Day 574 - shortenDurations returns 0 if no active sequence", (t) => {
+    const track = new Track("test", "Synth");
+    const result = track.shortenDurations(2);
+    t.assertEquals(0, result, "shortenDurations should return 0 if no active sequence");
+});
+TestRunner.test("Day 574 - shortenDurations captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.shortenDurations.toString();
+    const captureIdx = funcStr.indexOf("_captureUndoState");
+    const mutationIdx = funcStr.indexOf("stepData.length");
+    t.assertTruthy(captureIdx !== -1 && (mutationIdx === -1 || captureIdx < mutationIdx),
+        "shortenDurations should capture undo before mutating length");
+});
+TestRunner.test("Day 574 - shortenDurations clamps divisor to 2-8 range", (t) => {
+    const funcStr = Track.prototype.shortenDurations.toString();
+    t.assertTruthy(funcStr.includes("Math.max(2") && funcStr.includes("Math.min(divisor, 8)"),
+        "shortenDurations should clamp divisor to 2-8 range");
+});
+TestRunner.test("Day 574 - shortenDurations returns count of shortened notes", (t) => {
+    const funcStr = Track.prototype.shortenDurations.toString();
+    t.assertTruthy(funcStr.includes("shortenedCount"), "shortenDurations should return shortenedCount");
+});
+TestRunner.test("Day 574 - Shorten Durations menu item exists", (t) => {
+    const uiCode = require("fs").readFileSync("./js/ui.js", "utf-8");
+    t.assertTruthy(uiCode.includes("Shorten Durations"), "Shorten Durations menu item should exist");
+});
+TestRunner.test("Day 574 - Shorten Durations menu item calls shortenDurations", (t) => {
+    const uiCode = require("fs").readFileSync("./js/ui.js", "utf-8");
+    const idx = uiCode.indexOf("Shorten Durations");
+    const context = uiCode.substring(idx, idx + 200);
+    t.assertTruthy(context.includes("shortenDurations(2)"), "Shorten Durations should call shortenDurations(2)");
+});
+TestRunner.test("Day 574 - Shorten Durations menu item calls recreateToneSequence", (t) => {
+    const uiCode = require("fs").readFileSync("./js/ui.js", "utf-8");
+    const idx = uiCode.indexOf("Shorten Durations");
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes("recreateToneSequence"), "Shorten Durations should call recreateToneSequence");
+});
+TestRunner.test("Day 574 - Shorten Durations menu item shows notification with shortened count", (t) => {
+    const uiCode = require("fs").readFileSync("./js/ui.js", "utf-8");
+    const idx = uiCode.indexOf("Shorten Durations");
+    const context = uiCode.substring(idx, idx + 600);
+    t.assertTruthy(context.includes("Shortened") && context.includes("note(s)"),
+        "Shorten Durations should show notification with shortened count");
+});
+TestRunner.test("Day 574 - APP_VERSION validation for Day 574", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 574");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 232, "Minor version should be >= 232 for Day 574");
+    }
+});
