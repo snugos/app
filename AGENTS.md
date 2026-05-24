@@ -1,4 +1,22 @@
 # SnugOS DAW - AGENTS.md
+#### Day 575: Fix Undo Capture Order in updateAudioClipPosition and updateAudioClipDuration (2026-05-24)
+- **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE clip property mutations in `updateAudioClipPosition` and `updateAudioClipDuration`
+- **Files Modified**:
+  - `js/Track.js`: Fixed undo capture order in both async methods
+  - `js/tests.js`: Added Day 575 test block with 5 tests for undo capture order verification
+  - `js/constants.js`: Bumped APP_VERSION to 2.233.0
+- **Bug Details**:
+  - **updateAudioClipPosition**: Was mutating `clip.startTime` BEFORE calling `_captureUndoState`. Now captures undo first with label "Move Clip".
+  - **updateAudioClipDuration**: Was mutating `clip.duration` BEFORE calling `_captureUndoState`. Now captures undo first with label "Resize Clip".
+  - This follows the established pattern from Days 545-574 for all other Track methods
+- **Tests** (`js/tests.js`): 5 tests covering:
+  - updateAudioClipPosition captures undo BEFORE mutation
+  - updateAudioClipPosition has descriptive "Move Clip" undo label
+  - updateAudioClipDuration captures undo BEFORE mutation
+  - updateAudioClipDuration has descriptive "Resize Clip" undo label
+  - APP_VERSION validation (>= 2.233 for Day 575)
+- **Version**: Bumped to 2.233.0
+
 #### Day 574: Shorten Durations Feature (2026-05-24)
 - **Feature**: Added `shortenDurations(divisor)` method to Track class and "Shorten Durations" menu item to sequencer context menu
 - **Files Modified**:

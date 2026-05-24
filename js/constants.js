@@ -1,6 +1,6 @@
 // Day 571: Strum Notes - adds strumNotes method to Track class and Strum Notes menu items (Small/Medium/Large) to sequencer context menu. Spreads simultaneous notes within columns to create a guitar-like strum effect. Adds undo support and 13 tests. Version bump to 2.229.0.
 /// Day 563: Shift Notes Up/Down - adds Ctrl+Alt+Up/Down for octave shifting (12 semitones) via context menu and keyboard shortcuts
-export const APP_VERSION = '2.232.0'; // Day 574: Shorten Durations - adds shortenDurations method to Track class and Shorten Durations menu item. Inverse of Double Durations, divides note lengths by a divisor. Version bump to 2.232.0.
+export const APP_VERSION = '2.233.0'; // Day 575: Fix Undo Capture Order in updateAudioClipPosition and updateAudioClipDuration - moves _captureUndoState BEFORE mutation to ensure undo captures pre-mutation state. Version bump to 2.233.0.
 // Fixed undo capture order by moving _captureUndoState call BEFORE data mutation in:
 // - quantizeSequence: undo capture now happens before velocity/probability adjustments
 // - pasteSequenceSection: undo capture now happens before section data is pasted

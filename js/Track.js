@@ -2977,9 +2977,10 @@ export class Track {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (clip) {
             const oldStartTime = clip.startTime;
+            // Capture undo BEFORE mutation (following established pattern from Days 545-574)
+            this._captureUndoState(`Move Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
             clip.startTime = Math.max(0, parseFloat(newStartTime) || 0);
             console.log(`[Track ${this.id}] Updated ${clip.type} clip ${clipId} startTime from ${oldStartTime.toFixed(2)} to ${clip.startTime.toFixed(2)}`);
-            this._captureUndoState(`Move Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
 
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
 
@@ -3006,9 +3007,10 @@ export class Track {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (clip) {
             const oldDuration = clip.duration;
+            // Capture undo BEFORE mutation (following established pattern from Days 545-574)
+            this._captureUndoState(`Resize Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
             clip.duration = Math.max(0.1, parseFloat(newDuration) || 0.1);
             console.log(`[Track ${this.id}] Updated ${clip.type} clip ${clipId} duration from ${oldDuration.toFixed(2)} to ${clip.duration.toFixed(2)}`);
-            this._captureUndoState(`Resize Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
 
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
 

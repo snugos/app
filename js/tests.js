@@ -15838,3 +15838,35 @@ TestRunner.test("Day 574 - APP_VERSION validation for Day 574", (t) => {
         t.assertTruthy(versionParts[1] >= 232, "Minor version should be >= 232 for Day 574");
     }
 });
+
+// Day 575: Fix Undo Capture Order in updateAudioClipPosition and updateAudioClipDuration
+TestRunner.test("Day 575 - updateAudioClipPosition captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    const captureIdx = funcStr.indexOf("_captureUndoState");
+    const mutationIdx = funcStr.indexOf("clip.startTime =");
+    t.assertTruthy(captureIdx !== -1, "updateAudioClipPosition should call _captureUndoState");
+    t.assertTruthy(captureIdx < mutationIdx, "_captureUndoState should come BEFORE clip.startTime mutation");
+});
+TestRunner.test("Day 575 - updateAudioClipPosition has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.updateAudioClipPosition.toString();
+    t.assertTruthy(funcStr.includes("Move Clip"), "updateAudioClipPosition undo label should mention 'Move Clip'");
+});
+TestRunner.test("Day 575 - updateAudioClipDuration captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    const captureIdx = funcStr.indexOf("_captureUndoState");
+    const mutationIdx = funcStr.indexOf("clip.duration =");
+    t.assertTruthy(captureIdx !== -1, "updateAudioClipDuration should call _captureUndoState");
+    t.assertTruthy(captureIdx < mutationIdx, "_captureUndoState should come BEFORE clip.duration mutation");
+});
+TestRunner.test("Day 575 - updateAudioClipDuration has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.updateAudioClipDuration.toString();
+    t.assertTruthy(funcStr.includes("Resize Clip"), "updateAudioClipDuration undo label should mention 'Resize Clip'");
+});
+TestRunner.test("Day 575 - APP_VERSION validation for Day 575", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 575");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 233, "Minor version should be >= 233 for Day 575");
+    }
+});
