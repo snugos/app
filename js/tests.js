@@ -15211,3 +15211,102 @@ TestRunner.test('Day 571 - APP_VERSION validation for Day 571', (t) => {
         t.assertTruthy(versionParts[1] >= 229, 'Minor version should be >= 229 for Day 571');
     }
 });
+
+// Day 572: Legato Connect Feature
+TestRunner.test('Day 572 - connectLegato is a function on Track.prototype', (t) => {
+    t.assertTruthy(typeof Track.prototype.connectLegato === 'function', 'connectLegato should be a function on Track.prototype');
+});
+
+TestRunner.test('Day 572 - connectLegato returns 0 for Audio tracks', (t) => {
+    const audioTrack = new Track('Audio', 'AudioTrack');
+    const result = audioTrack.connectLegato(2);
+    t.assertEqual(result, 0, 'connectLegato should return 0 for Audio tracks');
+});
+
+TestRunner.test('Day 572 - connectLegato gets active sequence via getActiveSequence', (t) => {
+    const funcStr = Track.prototype.connectLegato.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'connectLegato should use getActiveSequence');
+});
+
+TestRunner.test('Day 572 - connectLegato returns 0 if no active sequence', (t) => {
+    const synthTrack = new Track('Synth', 'SynthTrack');
+    // No sequences added
+    const result = synthTrack.connectLegato(2);
+    t.assertEqual(result, 0, 'connectLegato should return 0 if no active sequence');
+});
+
+TestRunner.test('Day 572 - connectLegato captures undo BEFORE mutation', (t) => {
+    const funcStr = Track.prototype.connectLegato.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    // Find first row mutation (row[ currentNote.col])
+    const mutationIdx = funcStr.indexOf('row[', captureIdx);
+    t.assertTruthy(captureIdx !== -1 && (mutationIdx === -1 || captureIdx < mutationIdx),
+        'connectLegato should capture undo before mutating data');
+});
+
+TestRunner.test('Day 572 - connectLegato clamps gap to 1-8 range', (t) => {
+    const funcStr = Track.prototype.connectLegato.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'connectLegato should clamp gap amount');
+    t.assertTruthy(funcStr.includes('1') && funcStr.includes('8'), 'connectLegato should use range 1-8');
+});
+
+TestRunner.test('Day 572 - connectLegato finds notes in each row', (t) => {
+    const funcStr = Track.prototype.connectLegato.toString();
+    t.assertTruthy(funcStr.includes('notesInRow'), 'connectLegato should collect notes per row');
+});
+
+TestRunner.test('Day 572 - connectLegato returns count of connected note pairs', (t) => {
+    const funcStr = Track.prototype.connectLegato.toString();
+    t.assertTruthy(funcStr.includes('connectedCount'), 'connectLegato should return connectedCount');
+});
+
+TestRunner.test('Day 572 - Legato Connect menu items exist in sequencer context menu', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(uiCode.includes('Legato Connect (Small)'), 'Legato Connect (Small) menu item should exist');
+    t.assertTruthy(uiCode.includes('Legato Connect (Medium)'), 'Legato Connect (Medium) menu item should exist');
+    t.assertTruthy(uiCode.includes('Legato Connect (Large)'), 'Legato Connect (Large) menu item should exist');
+});
+
+TestRunner.test('Day 572 - Legato Connect menu items call track.connectLegato', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Legato Connect (Small)');
+    const context = uiCode.substring(idx, idx + 300);
+    t.assertTruthy(context.includes('connectLegato'), 'Legato Connect should call connectLegato');
+});
+
+TestRunner.test('Day 572 - Legato Connect menu items call recreateToneSequence after connect', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Legato Connect (Medium)');
+    const context = uiCode.substring(idx, idx + 400);
+    t.assertTruthy(context.includes('recreateToneSequence'), 'Legato Connect should call recreateToneSequence');
+});
+
+TestRunner.test('Day 572 - Legato Connect menu items show notification with connected count', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Legato Connect (Large)');
+    const context = uiCode.substring(idx, idx + 500);
+    t.assertTruthy(context.includes('Connected'), 'Legato Connect should show Connected notification');
+    t.assertTruthy(context.includes('note pair'), 'Legato Connect notification should mention note pairs');
+});
+
+TestRunner.test('Day 572 - Legato Connect menu items handle no notes case', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const idx = uiCode.indexOf('Legato Connect (Small)');
+    const context = uiCode.substring(idx, idx + 600);
+    t.assertTruthy(context.includes('No notes to connect'), 'Legato Connect should handle no notes case');
+});
+
+TestRunner.test('Day 572 - Legato Connect menu items use correct gap values', (t) => {
+    const uiCode = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    // Small = 2, Medium = 4, Large = 8
+    t.assertTruthy(uiCode.includes('connectLegato(2)') && uiCode.includes('connectLegato(4)') && uiCode.includes('connectLegato(8)'),
+        'Legato Connect should use correct gap values: Small=2, Medium=4, Large=8');
+});
+
+TestRunner.test('Day 572 - APP_VERSION validation for Day 572', (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 572');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 230, 'Minor version should be >= 230 for Day 572');
+    }
+});

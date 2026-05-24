@@ -3727,3 +3727,83 @@ export class Track {
 
         return strummedCount;
     }
+
+    // Legato Connect - extends adjacent notes within a gap threshold to create legato effect
+    // Finds notes in the same row where the gap between note end and next note start is <= gapSteps
+    // Extends the first note's length so it reaches the next note's start position
+    // Preserves the original attack (start time) but extends the visual/sonic length
+    // gapSteps: maximum gap between notes to trigger legato extension (default: 2 steps)
+    connectLegato(gapSteps = 2) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} connectLegato] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedGap = Math.max(1, Math.min(gapSteps, 8)); // Clamp to 1-8 steps
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Legato Connect (${clampedGap} step gap) on ${activeSeq.name}`);
+
+        let connectedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        // Process each row independently
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            // Find all notes in this row and sort by column position
+            const notesInRow = [];
+            for (let col = 0; col < totalSteps; col++) {
+                if (row[col] && row[col].active) {
+                    notesInRow.push({
+                        col,
+                        stepData: row[col],
+                        noteLength: row[col].length || 1
+                    });
+                }
+            }
+
+            // If fewer than 2 notes, nothing to connect
+            if (notesInRow.length < 2) continue;
+
+            // Sort by column position (left to right)
+            notesInRow.sort((a, b) => a.col - b.col);
+
+            // Check consecutive note pairs for legato
+            for (let i = 0; i < notesInRow.length - 1; i++) {
+                const currentNote = notesInRow[i];
+                const nextNote = notesInRow[i + 1];
+
+                // Calculate current note's end position
+                const currentNoteEnd = currentNote.col + (currentNote.stepData.length || 1);
+
+                // Calculate gap to next note
+                const gap = nextNote.col - currentNoteEnd;
+
+                // If gap is positive and within threshold
+                if (gap > 0 && gap <= clampedGap) {
+                    // Check if all cells between current end and next start are empty
+                    let canExtend = true;
+                    for (let checkCol = currentNoteEnd; checkCol < nextNote.col; checkCol++) {
+                        if (checkCol < totalSteps && row[checkCol]?.active) {
+                            canExtend = false;
+                            break;
+                        }
+                    }
+
+                    // Extend current note to reach next note's start
+                    if (canExtend) {
+                        const newLength = nextNote.col - currentNote.col;
+                        row[currentNote.col].length = Math.max(1, newLength);
+                        connectedCount++;
+                    }
+                }
+            }
+        }
+
+        return connectedCount;
+    }
