@@ -15945,3 +15945,37 @@ TestRunner.test("Day 576 - APP_VERSION validation for Day 576", (t) => {
         t.assertTruthy(versionParts[1] >= 234, "Minor version should be >= 234 for Day 576");
     }
 });
+
+// Day 577: Humanize Timing (Large) Feature
+TestRunner.test("Day 577 - Humanize Timing (Large) menu item exists", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('Humanize Timing (Large)'), "Humanize Timing (Large) menu item should exist");
+});
+TestRunner.test("Day 577 - Humanize Timing (Large) calls humanizeTiming with 6", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    t.assertTruthy(funcStr.includes('humanizeTiming(6)'), "Humanize Timing (Large) should call humanizeTiming(6)");
+});
+TestRunner.test("Day 577 - Humanize Timing (Large) calls recreateToneSequence", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    const largeTimingIdx = funcStr.indexOf('Humanize Timing (Large)');
+    const recreateIdx = funcStr.indexOf('recreateToneSequence', largeTimingIdx);
+    t.assertTruthy(recreateIdx !== -1, "Humanize Timing (Large) should call recreateToneSequence");
+});
+TestRunner.test("Day 577 - Humanize Timing (Large) shows notification", (t) => {
+    const funcStr = require('./js/ui.js').renderSequencerContextMenu?.toString() || '';
+    const largeTimingIdx = funcStr.indexOf('Humanize Timing (Large)');
+    const notifyIdx = funcStr.indexOf('showNotification', largeTimingIdx);
+    t.assertTruthy(notifyIdx !== -1, "Humanize Timing (Large) should show notification");
+});
+TestRunner.test("Day 577 - humanizeTiming accepts shiftAmount parameter up to 6", (t) => {
+    const funcStr = Track.prototype.humanizeTiming.toString();
+    t.assertTruthy(funcStr.includes('shiftAmount = 2') || funcStr.includes('shiftAmount = 2,'), "humanizeTiming should accept shiftAmount parameter");
+});
+TestRunner.test("Day 577 - APP_VERSION validation for Day 577", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 577");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 234, "Minor version should be >= 234 for Day 577");
+    }
+});
