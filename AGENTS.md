@@ -1,4 +1,46 @@
 # SnugOS DAW - AGENTS.md
+#### Day 576: Scale Durations Feature (2026-05-24)
+- **Feature**: Added `scaleDurations(factor)` method to Track class and "Scale Durations" menu items (50%, 75%, 100%, 125%, 150%) to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `scaleDurations(factor)` method after `doubleDurations`
+  - `js/ui.js`: Added five "Scale Durations" menu items in sequencer context menu after "Shorten Durations"
+  - `js/tests.js`: Added Day 576 test block with 18 tests for scaleDurations
+  - `js/constants.js`: Bumped APP_VERSION to 2.234.0
+- **Feature Details**:
+  - **scaleDurations** (`js/Track.js`): Scales the length of each note by a factor (inverse of doubleDurations/shortenDurations)
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps factor to 0.25-4.0 range (prevents too extreme scaling)
+    - Returns 0 when factor is 1.0 (no change needed)
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-575)
+    - For each active note, calculates new length = max(1, min(round(currentLength * clampedFactor), totalSteps - col))
+    - Returns count of scaled notes
+  - **Scale Durations Menu Items** (`js/ui.js`): Five menu items in sequencer context menu after "Shorten Durations"
+    - "Scale Durations (50%)" - calls `scaleDurations(0.5)`
+    - "Scale Durations (75%)" - calls `scaleDurations(0.75)`
+    - "Scale Durations (100%)" - calls `scaleDurations(1.0)`
+    - "Scale Durations (125%)" - calls `scaleDurations(1.25)`
+    - "Scale Durations (150%)" - calls `scaleDurations(1.5)`
+    - All call `recreateToneSequence(true)` after scaling
+    - Show notifications: "Scaled {count} note(s) to {percent}% duration."
+    - Show "No notes to scale." when nothing to scale
+- **Tests** (`js/tests.js`): 18 tests covering:
+  - `scaleDurations` is a function on Track.prototype
+  - scaleDurations accepts factor parameter with default 1.0
+  - scaleDurations returns 0 for Audio tracks
+  - scaleDurations gets active sequence via getActiveSequence
+  - scaleDurations returns 0 if no active sequence
+  - scaleDurations captures undo BEFORE mutation
+  - scaleDurations clamps factor to 0.25-4.0 range
+  - scaleDurations returns 0 when factor is 1.0
+  - scaleDurations returns count of scaled notes
+  - Scale Durations (50%), (75%), (100%), (125%), (150%) menu items exist
+  - Menu items call scaleDurations with correct factors
+  - Menu items call recreateToneSequence
+  - APP_VERSION validation (>= 2.234 for Day 576)
+- **Version**: Bumped to 2.234.0
+- **Test Count**: Increased from 15872 to 15947
+
 #### Day 575: Fix Undo Capture Order in updateAudioClipPosition and updateAudioClipDuration (2026-05-24)
 - **Bug Fix**: Moved `_captureUndoState` call to happen BEFORE clip property mutations in `updateAudioClipPosition` and `updateAudioClipDuration`
 - **Files Modified**:
