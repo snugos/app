@@ -3618,3 +3618,280 @@ TestRunner.test("Day 583 - APP_VERSION validation for Day 583", (t) => {
         t.assertTruthy(versionParts[1] >= 240, "Minor version should be >= 240 for Day 583");
     }
 });
+
+TestRunner.test("Day 584 - shiftSequenceNotes is a function on Track.prototype", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    t.assertEqual(typeof track.shiftSequenceNotes, 'function', 'shiftSequenceNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 584 - shiftSequenceNotes accepts semitones parameter", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true},{active:true}],[null,null]], length: 2 }];
+    track.activeSequenceId = 'seq1';
+    const result = track.shiftSequenceNotes(1);
+    t.assertEqual(typeof result, 'number', 'shiftSequenceNotes should return a number');
+});
+
+TestRunner.test("Day 584 - shiftSequenceNotes returns 0 for Audio tracks", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Audio', name: 'Audio Track' });
+    const result = track.shiftSequenceNotes(1);
+    t.assertEqual(result, 0, 'shiftSequenceNotes should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 584 - shiftSequenceNotes gets active sequence via getActiveSequence", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true},{active:true}],[null,null]], length: 2 }];
+    track.activeSequenceId = 'seq1';
+    const getActiveSequenceSpy = sinon.stub(track, 'getActiveSequence').returns(track.sequences[0]);
+    track.shiftSequenceNotes(1);
+    t.assertTruthy(getActiveSequenceSpy.called, 'shiftSequenceNotes should call getActiveSequence');
+    getActiveSequenceSpy.restore();
+});
+
+TestRunner.test("Day 584 - shiftSequenceNotes returns 0 when no active sequence", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [];
+    track.activeSequenceId = null;
+    const result = track.shiftSequenceNotes(1);
+    t.assertEqual(result, 0, 'shiftSequenceNotes should return 0 when no active sequence');
+});
+
+TestRunner.test("Day 584 - shiftSequenceNotes captures undo BEFORE mutation", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true},{active:true}],[null,null]], length: 2 }];
+    track.activeSequenceId = 'seq1';
+    const originalData = JSON.parse(JSON.stringify(track.sequences[0].data));
+    const captureIdx = track.shiftSequenceNotes.toString().indexOf('_captureUndoState');
+    const mapIdx = track.shiftSequenceNotes.toString().indexOf('activeSeq.data.map');
+    t.assertTruthy(captureIdx < mapIdx, 'Undo capture should happen before data map mutation');
+});
+
+TestRunner.test("Day 584 - shiftSequenceNotes returns 0 for Sampler/DrumSampler types", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Sampler', name: 'Test Sampler' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true},{active:true}],[null,null]], length: 2 }];
+    track.activeSequenceId = 'seq1';
+    const result = track.shiftSequenceNotes(1);
+    t.assertEqual(result, 0, 'shiftSequenceNotes should return 0 for Sampler type');
+});
+
+TestRunner.test("Day 584 - shiftSequenceNotes returns count of shifted notes", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Test Seq', data: [[{active:true,velocity:0.5},{active:true,velocity:0.5}],[null,null]], length: 2 }];
+    track.activeSequenceId = 'seq1';
+    const result = track.shiftSequenceNotes(1);
+    t.assertEqual(result, 2, 'shiftSequenceNotes should return count of shifted notes');
+});
+
+TestRunner.test("Day 584 - Shift Notes Up menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Shift Notes Up'), 'UI should include Shift Notes Up menu item');
+});
+
+TestRunner.test("Day 584 - Shift Notes Down menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Shift Notes Down'), 'UI should include Shift Notes Down menu item');
+});
+
+TestRunner.test("Day 584 - Shift Notes Octave Up menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Shift Notes Octave Up'), 'UI should include Shift Notes Octave Up menu item');
+});
+
+TestRunner.test("Day 584 - Shift Notes Octave Down menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Shift Notes Octave Down'), 'UI should include Shift Notes Octave Down menu item');
+});
+
+TestRunner.test("Day 584 - Shift Notes Up calls shiftSequenceNotes(1)", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('shiftSequenceNotes(1)'), 'Shift Notes Up should call shiftSequenceNotes(1)');
+});
+
+TestRunner.test("Day 584 - Shift Notes Down calls shiftSequenceNotes(-1)", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('shiftSequenceNotes(-1)'), 'Shift Notes Down should call shiftSequenceNotes(-1)');
+});
+
+TestRunner.test("Day 584 - Shift Notes Octave Up calls shiftSequenceNotes(12)", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('shiftSequenceNotes(12)'), 'Shift Notes Octave Up should call shiftSequenceNotes(12)');
+});
+
+TestRunner.test("Day 584 - Shift Notes Octave Down calls shiftSequenceNotes(-12)", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('shiftSequenceNotes(-12)'), 'Shift Notes Octave Down should call shiftSequenceNotes(-12)');
+});
+
+TestRunner.test("Day 584 - Shift Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Shift Notes (Up|Down|Octave Up|Octave Down)[^}]+recreateToneSequence/g);
+    t.assertTruthy(matches && matches.length >= 4, 'All Shift Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 584 - APP_VERSION validation for Day 584", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 584");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 241, "Minor version should be >= 241 for Day 584");
+    }
+});
+
+// Day 585: Sort Column Notes Feature
+TestRunner.test("Day 585 - sortColumnNotes is a function on Track.prototype", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    t.assertTruthy(typeof Track !== 'undefined', 'Track should be defined');
+    t.assertEqual(typeof Track.prototype.sortColumnNotes, 'function', 'sortColumnNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes accepts mode parameter with default", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, velocity: 0.8 }]], length: 1 }];
+    track.activeSequenceId = 'seq1';
+    const result = track.sortColumnNotes();
+    t.assertEqual(typeof result, 'number', 'sortColumnNotes should return a number');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes returns 0 for Audio tracks", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Audio', name: 'Audio Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, velocity: 0.8 }]], length: 1 }];
+    track.activeSequenceId = 'seq1';
+    const result = track.sortColumnNotes('velocity-desc');
+    t.assertEqual(result, 0, 'sortColumnNotes should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes gets active sequence via getActiveSequence", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, velocity: 0.8 }]], length: 1 }];
+    track.activeSequenceId = 'seq1';
+    const getActiveSequenceSpy = { called: false };
+    track.getActiveSequence = function() { getActiveSequenceSpy.called = true; return this.sequences[0]; };
+    track.sortColumnNotes('velocity-desc');
+    t.assertTruthy(getActiveSequenceSpy.called, 'sortColumnNotes should call getActiveSequence');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes returns 0 when no active sequence", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, velocity: 0.8 }]], length: 1 }];
+    track.activeSequenceId = null;
+    const result = track.sortColumnNotes('velocity-desc');
+    t.assertEqual(result, 0, 'sortColumnNotes should return 0 when no active sequence');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes captures undo BEFORE mutation", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{ id: 'seq1', name: 'Seq 1', data: [[{ active: true, velocity: 0.8 }]], length: 1 }];
+    track.activeSequenceId = 'seq1';
+    const captureIdx = track.sortColumnNotes.toString().indexOf('_captureUndoState');
+    const forEachIdx = track.sortColumnNotes.toString().indexOf('for (let col = 0; col < totalSteps');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'sortColumnNotes should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes sorts by velocity descending", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{
+        id: 'seq1', name: 'Seq 1',
+        data: [
+            [{ active: true, velocity: 0.3 }, { active: true, velocity: 0.7 }],
+            [{ active: true, velocity: 0.9 }, { active: true, velocity: 0.2 }]
+        ],
+        length: 2
+    }];
+    track.activeSequenceId = 'seq1';
+    const result = track.sortColumnNotes('velocity-desc');
+    const col0Sorted = track.sequences[0].data[0][0].velocity === 0.9 || track.sequences[0].data[1][0].velocity === 0.9;
+    t.assertTruthy(result >= 2, 'sortColumnNotes should sort notes by velocity descending');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes sorts by velocity ascending", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{
+        id: 'seq1', name: 'Seq 1',
+        data: [
+            [{ active: true, velocity: 0.9 }, { active: true, velocity: 0.2 }],
+            [{ active: true, velocity: 0.3 }, { active: true, velocity: 0.7 }]
+        ],
+        length: 2
+    }];
+    track.activeSequenceId = 'seq1';
+    const result = track.sortColumnNotes('velocity-asc');
+    t.assertTruthy(result >= 2, 'sortColumnNotes should sort notes by velocity ascending');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes sorts by pitch descending (high to low)", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{
+        id: 'seq1', name: 'Seq 1',
+        data: [
+            [{ active: true, velocity: 0.8 }, null],
+            [{ active: true, velocity: 0.8 }, null]
+        ],
+        length: 2
+    }];
+    track.activeSequenceId = 'seq1';
+    const result = track.sortColumnNotes('pitch-desc');
+    t.assertTruthy(result >= 2, 'sortColumnNotes should sort notes by pitch descending');
+});
+
+TestRunner.test("Day 585 - sortColumnNotes sorts by pitch ascending (low to high)", (t) => {
+    const track = new Track({ id: 'test-track', type: 'Synth', name: 'Test Track' });
+    track.sequences = [{
+        id: 'seq1', name: 'Seq 1',
+        data: [
+            [{ active: true, velocity: 0.8 }, null],
+            [{ active: true, velocity: 0.8 }, null]
+        ],
+        length: 2
+    }];
+    track.activeSequenceId = 'seq1';
+    const result = track.sortColumnNotes('pitch-asc');
+    t.assertTruthy(result >= 2, 'sortColumnNotes should sort notes by pitch ascending');
+});
+
+TestRunner.test("Day 585 - Sort Column Notes (Velocity Hi→Lo) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Sort Column Notes (Velocity Hi→Lo)'), 'Sort Column Notes (Velocity Hi→Lo) menu item should exist');
+});
+
+TestRunner.test("Day 585 - Sort Column Notes (Velocity Lo→Hi) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Sort Column Notes (Velocity Lo→Hi)'), 'Sort Column Notes (Velocity Lo→Hi) menu item should exist');
+});
+
+TestRunner.test("Day 585 - Sort Column Notes (Pitch Hi→Lo) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Sort Column Notes (Pitch Hi→Lo)'), 'Sort Column Notes (Pitch Hi→Lo) menu item should exist');
+});
+
+TestRunner.test("Day 585 - Sort Column Notes (Pitch Lo→Hi) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Sort Column Notes (Pitch Lo→Hi)'), 'Sort Column Notes (Pitch Lo→Hi) menu item should exist');
+});
+
+TestRunner.test("Day 585 - Sort Column Notes menu items call sortColumnNotes with correct parameters", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes("sortColumnNotes('velocity-desc')"), 'Velocity Hi→Lo should call sortColumnNotes with velocity-desc');
+    t.assertTruthy(uiStr.includes("sortColumnNotes('velocity-asc')"), 'Velocity Lo→Hi should call sortColumnNotes with velocity-asc');
+    t.assertTruthy(uiStr.includes("sortColumnNotes('pitch-desc')"), 'Pitch Hi→Lo should call sortColumnNotes with pitch-desc');
+    t.assertTruthy(uiStr.includes("sortColumnNotes('pitch-asc')"), 'Pitch Lo→Hi should call sortColumnNotes with pitch-asc');
+});
+
+TestRunner.test("Day 585 - Sort Column Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Sort Column Notes[^}]+recreateToneSequence/g);
+    t.assertTruthy(matches && matches.length >= 4, 'All Sort Column Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 585 - Sort Column Notes menu items show notifications", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Sorted ${result} note(s)'), 'Sort Column Notes should show notification with count');
+});
+
+TestRunner.test("Day 585 - APP_VERSION validation for Day 585", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 585");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 241, "Minor version should be >= 241 for Day 585");
+    }
+});
