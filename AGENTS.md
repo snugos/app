@@ -1,4 +1,48 @@
 # SnugOS DAW - AGENTS.md
+#### Day 572: Legato Connect Feature (2026-05-24)
+- **Feature**: Added `connectLegato(gapSteps)` method to Track class and "Legato Connect (Small/Medium/Large)" menu items to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `connectLegato(gapSteps)` method after `strumNotes`
+  - `js/ui.js`: Added "Legato Connect (Small)", "Legato Connect (Medium)", and "Legato Connect (Large)" menu items in sequencer context menu after "Strum Notes"
+  - `js/tests.js`: Added Day 572 test block with 16 tests for connectLegato
+  - `js/constants.js`: Bumped APP_VERSION to 2.230.0
+- **Feature Details**:
+  - **connectLegato** (`js/Track.js`): Extends adjacent notes within a gap threshold to create a legato effect
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps gap steps to 1-8 range (Small=2, Medium=4, Large=8)
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-571)
+    - For each row, collects all notes and sorts by column position
+    - For each consecutive note pair, calculates gap between note end and next note start
+    - If gap is positive and within threshold, extends first note's length to reach next note's start
+    - Checks that cells between notes are empty before extending
+    - Returns count of connected note pairs
+  - **Legato Connect Menu Items** (`js/ui.js`): Three menu items in sequencer context menu after "Strum Notes (Large)"
+    - "Legato Connect (Small)" - calls `connectLegato(2)` (2 step gap)
+    - "Legato Connect (Medium)" - calls `connectLegato(4)` (4 step gap)
+    - "Legato Connect (Large)" - calls `connectLegato(8)` (8 step gap)
+    - All call `recreateToneSequence(true)` after connecting
+    - Show notifications: "Connected {count} note pair(s) with small/medium/large gap."
+    - Show "No notes to connect." when nothing to connect
+- **Tests** (`js/tests.js`): 16 tests covering:
+  - `connectLegato` is a function on Track.prototype
+  - Returns 0 for Audio tracks
+  - Gets active sequence via `getActiveSequence`
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation
+  - Clamps gap to 1-8 range
+  - Finds notes in each row
+  - Returns count of connected note pairs
+  - Legato Connect (Small/Medium/Large) menu items exist
+  - Menu items call `track.connectLegato`
+  - Menu items call recreateToneSequence after connect
+  - Menu items show notification with connected count
+  - Menu items handle no notes case
+  - Menu items use correct gap values (2, 4, 8)
+  - APP_VERSION validation (>= 2.230 for Day 572)
+- **Version**: Bumped to 2.230.0
+- **Test Count**: Increased from 14625 to 14641
+
 #### Day 571: Strum Notes Feature (2026-05-23)
 - **Feature**: Added `strumNotes(strumAmount)` method to Track class and "Strum Notes (Small/Medium/Large)" menu items to sequencer context menu
 - **Files Modified**:
