@@ -1,5 +1,46 @@
 # SnugOS DAW - AGENTS.md
 
+#### Day 588: Invert Velocities Feature (2026-05-25)
+- **Feature**: Added `invertVelocities()` method to Track class and "Invert Velocities" menu item to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `invertVelocities()` method after `scaleVelocities`
+  - `js/ui.js`: Added "Invert Velocities" menu item after "Ramp Velocities (Forte to Piano)"
+  - `js/tests.js`: Added Day 588 test block with 15 tests for invertVelocities
+  - `js/constants.js`: Bumped APP_VERSION to 2.244.0
+- **Feature Details**:
+  - **invertVelocities** (`js/Track.js`): Inverts velocity values around the center point (min + max) / 2
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Captures undo state BEFORE any mutation (following established pattern)
+    - First pass: finds min and max velocities across all notes
+    - Second pass: inverts each velocity using formula `newVelocity = centerPoint - currentVelocity`
+    - Clamps results to 0.05-1.0 range (Tone.js velocity bounds)
+    - Rounds to 2 decimal places
+    - Returns count of inverted velocities
+  - **Invert Velocities Menu Item** (`js/ui.js`): Added after "Ramp Velocities (Forte to Piano)"
+    - Calls `currentTrackForMenu.invertVelocities()`
+    - Calls `recreateToneSequence(true)` after inverting
+    - Shows notification: "Inverted {count} velocity value(s)."
+    - Shows "No velocities to invert." when nothing to invert
+- **Tests** (`js/tests.js`): 15 tests covering:
+  - `invertVelocities` is a function on Track.prototype
+  - Returns 0 for Audio tracks
+  - Gets active sequence via getActiveSequence
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation
+  - Finds min and max velocities in first pass
+  - Uses center point formula
+  - Clamps velocities to 0.05-1.0 range
+  - Rounds to 2 decimal places
+  - Returns count of inverted velocities
+  - Invert Velocities menu item exists
+  - Menu item calls invertVelocities()
+  - Menu item calls recreateToneSequence
+  - Menu item shows notification
+  - APP_VERSION validation (>= 2.244 for Day 588)
+- **Version**: Bumped to 2.244.0
+- **Test Count**: Increased from 4023 to 4038
+
 #### Day 587: Humanize Timing Tests (2026-05-24)
 - **Tests**: Added 18 tests for `humanizeTiming` method and Humanize Timing menu items (Small/Medium/Large)
 - **Files Modified**:
