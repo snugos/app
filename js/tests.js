@@ -4557,3 +4557,279 @@ TestRunner.test("Day 592 - APP_VERSION validation for Day 592", (t) => {
         t.assertTruthy(versionParts[1] >= 248, "Minor version should be >= 248 for Day 592");
     }
 });
+
+// ============================================
+// Day 593: Scale Mode & Chord Mode State Tests
+// ============================================
+TestRunner.test("Day 593 - Scale Mode - getScaleModeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getScaleModeState'), 'getScaleModeState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setScaleModeState'), 'setScaleModeState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setScaleModeState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeState uses descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeState');
+    const undoLabelIdx = stateStr.indexOf("Set Scale Mode", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 500, 'setScaleModeState undo label should be "Set Scale Mode"');
+});
+
+TestRunner.test("Day 593 - Scale Mode - getScaleModeEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getScaleModeEnabledState'), 'getScaleModeEnabledState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setScaleModeEnabledState'), 'setScaleModeEnabledState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeEnabledState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeEnabledState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setScaleModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeEnabledState uses descriptive undo label with On/Off", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeEnabledState');
+    const undoLabelIdx = stateStr.indexOf("Toggle Scale Mode", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setScaleModeEnabledState undo label should include "Toggle Scale Mode"');
+});
+
+TestRunner.test("Day 593 - Scale Mode - getScaleModeScaleState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getScaleModeScaleState'), 'getScaleModeScaleState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeScaleState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setScaleModeScaleState'), 'setScaleModeScaleState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeScaleState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeScaleState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setScaleModeScaleState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeScaleState uses descriptive undo label with scale name", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeScaleState');
+    const undoLabelIdx = stateStr.indexOf("Set Scale to", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setScaleModeScaleState undo label should include "Set Scale to"');
+});
+
+TestRunner.test("Day 593 - Scale Mode - getScaleModeRootState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getScaleModeRootState'), 'getScaleModeRootState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeRootState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setScaleModeRootState'), 'setScaleModeRootState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeRootState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeRootState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setScaleModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeRootState uses descriptive undo label with root note", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeRootState');
+    const undoLabelIdx = stateStr.indexOf("Set Scale Root to", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setScaleModeRootState undo label should include "Set Scale Root to"');
+});
+
+TestRunner.test("Day 593 - Scale Mode - getScaleModeLockState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getScaleModeLockState'), 'getScaleModeLockState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeLockState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setScaleModeLockState'), 'setScaleModeLockState should be exported');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeLockState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeLockState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setScaleModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Scale Mode - setScaleModeLockState uses descriptive undo label with On/Off", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setScaleModeLockState');
+    const undoLabelIdx = stateStr.indexOf("Toggle Scale Lock", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setScaleModeLockState undo label should include "Toggle Scale Lock"');
+});
+
+TestRunner.test("Day 593 - Chord Mode - getChordModeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getChordModeState'), 'getChordModeState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setChordModeState'), 'setChordModeState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setChordModeState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeState uses descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeState');
+    const undoLabelIdx = stateStr.indexOf("Set Chord Mode", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 500, 'setChordModeState undo label should be "Set Chord Mode"');
+});
+
+TestRunner.test("Day 593 - Chord Mode - getChordModeEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getChordModeEnabledState'), 'getChordModeEnabledState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setChordModeEnabledState'), 'setChordModeEnabledState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeEnabledState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeEnabledState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setChordModeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeEnabledState uses descriptive undo label with On/Off", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeEnabledState');
+    const undoLabelIdx = stateStr.indexOf("Toggle Chord Mode", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setChordModeEnabledState undo label should include "Toggle Chord Mode"');
+});
+
+TestRunner.test("Day 593 - Chord Mode - getChordModeRootState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getChordModeRootState'), 'getChordModeRootState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeRootState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setChordModeRootState'), 'setChordModeRootState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeRootState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeRootState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setChordModeRootState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeRootState uses descriptive undo label with root note", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeRootState');
+    const undoLabelIdx = stateStr.indexOf("Set Chord Root to", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setChordModeRootState undo label should include "Set Chord Root to"');
+});
+
+TestRunner.test("Day 593 - Chord Mode - getChordModeTypeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getChordModeTypeState'), 'getChordModeTypeState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeTypeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setChordModeTypeState'), 'setChordModeTypeState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeTypeState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeTypeState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setChordModeTypeState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeTypeState uses descriptive undo label with chord type", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeTypeState');
+    const undoLabelIdx = stateStr.indexOf("Set Chord Type to", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setChordModeTypeState undo label should include "Set Chord Type to"');
+});
+
+TestRunner.test("Day 593 - Chord Mode - getChordModeLockState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getChordModeLockState'), 'getChordModeLockState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeLockState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setChordModeLockState'), 'setChordModeLockState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeLockState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeLockState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setChordModeLockState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordModeLockState uses descriptive undo label with On/Off", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordModeLockState');
+    const undoLabelIdx = stateStr.indexOf("Toggle Chord Lock", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setChordModeLockState undo label should include "Toggle Chord Lock"');
+});
+
+TestRunner.test("Day 593 - Chord Mode - getChordVoicingState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getChordVoicingState'), 'getChordVoicingState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordVoicingState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setChordVoicingState'), 'setChordVoicingState should be exported');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordVoicingState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordVoicingState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setChordVoicingState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 593 - Chord Mode - setChordVoicingState uses descriptive undo label with voicing", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setChordVoicingState');
+    const undoLabelIdx = stateStr.indexOf("Set Chord Voicing to", setIdx);
+    t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setChordVoicingState undo label should include "Set Chord Voicing to"');
+});
+
+TestRunner.test("Day 593 - APP_VERSION validation for Day 593", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 593");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 249, "Minor version should be >= 249 for Day 593");
+    }
+});
