@@ -2224,6 +2224,57 @@ export class Track {
         return noteCount;
     }
 
+    // Sort notes within each column by velocity or pitch
+    sortColumnNotes(mode = 'velocity-desc') {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} sortColumnNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Sort Column Notes ${activeSeq.name}`);
+
+        let totalSorted = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let col = 0; col < totalSteps; col++) {
+            // Collect all notes in this column with their row index
+            const columnNotes = [];
+            for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+                const cell = activeSeq.data[rowIndex]?.[col];
+                if (cell && cell.active) {
+                    columnNotes.push({ rowIndex, cell, velocity: cell.velocity || 0.7, pitch: rowIndex });
+                }
+            }
+
+            if (columnNotes.length <= 1) continue;
+
+            // Sort based on mode
+            if (mode === 'velocity-desc') {
+                columnNotes.sort((a, b) => b.velocity - a.velocity);
+            } else if (mode === 'velocity-asc') {
+                columnNotes.sort((a, b) => a.velocity - b.velocity);
+            } else if (mode === 'pitch-desc') {
+                columnNotes.sort((a, b) => b.pitch - a.pitch);
+            } else if (mode === 'pitch-asc') {
+                columnNotes.sort((a, b) => a.pitch - b.pitch);
+            }
+
+            // Place sorted notes back into the column
+            for (let i = 0; i < columnNotes.length; i++) {
+                const { rowIndex, cell } = columnNotes[i];
+                activeSeq.data[rowIndex][col] = cell;
+            }
+
+            totalSorted += columnNotes.length;
+        }
+
+        return totalSorted;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         if (this.type === 'Audio') return;
