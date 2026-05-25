@@ -5346,3 +5346,105 @@ TestRunner.test("Day 596 - APP_VERSION validation for Day 596", (t) => {
         t.assertTruthy(versionParts[1] >= 251, "Minor version should be >= 251 for Day 596");
     }
 });
+
+TestRunner.test("Day 597 - Master Effects - getMasterEffectsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMasterEffectsState'), 'getMasterEffectsState should be exported');
+});
+
+TestRunner.test("Day 597 - Master Effects - setMasterEffectsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMasterEffectsState'), 'setMasterEffectsState should be exported');
+});
+
+TestRunner.test("Day 597 - Master Effects - setMasterEffectsState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMasterEffectsState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setMasterEffectsState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Master Effects - setMasterEffectsState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMasterEffectsState');
+    const labelIdx = stateStr.indexOf('Set Master Effects Chain', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setMasterEffectsState should have descriptive undo label');
+});
+
+TestRunner.test("Day 597 - Master Effects - setMasterEffectsState validates array input", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMasterEffectsState');
+    const arrCheckIdx = stateStr.indexOf('Array.isArray', fnIdx);
+    t.assertTruthy(arrCheckIdx > fnIdx && arrCheckIdx < fnIdx + 200, 'setMasterEffectsState should check Array.isArray for newChain');
+});
+
+TestRunner.test("Day 597 - Master Effects - setMasterEffectsState skips capture when unchanged", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMasterEffectsState');
+    const ifIdx = stateStr.indexOf('if (masterEffectsChainState !== nextChain)', fnIdx);
+    t.assertTruthy(ifIdx > fnIdx && ifIdx < fnIdx + 200, 'setMasterEffectsState should skip capture when state unchanged');
+});
+
+TestRunner.test("Day 597 - Master Gain - getMasterGainValueState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMasterGainValueState'), 'getMasterGainValueState should be exported');
+});
+
+TestRunner.test("Day 597 - Master Gain - setMasterGainValueState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMasterGainValueState'), 'setMasterGainValueState should be exported');
+});
+
+TestRunner.test("Day 597 - Master Gain - setMasterGainValueState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMasterGainValueState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setMasterGainValueState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Master Gain - setMasterGainValueState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMasterGainValueState');
+    const labelIdx = stateStr.indexOf('Set Master Volume to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setMasterGainValueState should have descriptive undo label');
+});
+
+TestRunner.test("Day 597 - Master Gain - setMasterGainValueState validates numeric input", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMasterGainValueState');
+    const numCheckIdx = stateStr.indexOf('Number.isFinite', fnIdx);
+    t.assertTruthy(numCheckIdx > fnIdx && numCheckIdx < fnIdx + 200, 'setMasterGainValueState should check Number.isFinite for value');
+});
+
+TestRunner.test("Day 597 - Master Gain - setMasterGainValueState skips capture when unchanged", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMasterGainValueState');
+    const ifIdx = stateStr.indexOf('if (masterGainValueState !== nextValue)', fnIdx);
+    t.assertTruthy(ifIdx > fnIdx && ifIdx < fnIdx + 200, 'setMasterGainValueState should skip capture when value unchanged');
+});
+
+TestRunner.test("Day 597 - Master Effects - getMasterEffectsState returns array copy", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getMasterEffectsState');
+    const returnIdx = stateStr.indexOf('return masterEffectsChainState', fnIdx);
+    t.assertTruthy(returnIdx === -1, 'getMasterEffectsState should NOT return raw state (security)');
+    const returnCopyIdx = stateStr.indexOf('return masterEffectsChainState.map', fnIdx);
+    const returnNewIdx = stateStr.indexOf('return { ...masterEffectsChainState', fnIdx);
+    t.assertTruthy(returnCopyIdx > fnIdx || returnNewIdx > fnIdx, 'getMasterEffectsState should return a copy');
+});
+
+TestRunner.test("Day 597 - Master Gain - getMasterGainValueState returns numeric value", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getMasterGainValueState');
+    const returnIdx = stateStr.indexOf('return masterGainValueState', fnIdx);
+    t.assertTruthy(returnIdx > fnIdx && returnIdx < fnIdx + 100, 'getMasterGainValueState should return masterGainValueState directly');
+});
+
+TestRunner.test("Day 597 - APP_VERSION validation for Day 597", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 597");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 252, "Minor version should be >= 252 for Day 597");
+    }
+});
