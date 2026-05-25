@@ -1430,3 +1430,21 @@
   - APP_VERSION validation (>= 2.249 for Day 593)
 - **Version**: Bumped to 2.249.0
 - **Test Count**: Increased from 716 to 761
+
+#### Day 596: Time Signature and Recording State Function Tests (2026-05-25)
+- **Tests**: Added 22 tests for Time Signature and Recording state functions in state.js
+- **Files Modified**:
+  - `js/constants.js`: Bumped APP_VERSION to 2.252.0
+  - `js/tests.js`: Added Day 596 test block with 22 tests for Time Signature and Recording state functions
+- **Test Details** (`js/tests.js`): 22 tests covering:
+  - **Time Signature** (12 tests):
+    - getTimeSignatureState, setTimeSignatureState exports, captureStateForUndo, and descriptive "Set Time Signature to {n}/{d}" undo label
+    - getTimeSignatureNumeratorState, setTimeSignatureNumeratorState exports, captureStateForUndo, and descriptive "Set Time Signature Numerator to {n}" undo label
+    - getTimeSignatureDenominatorState, setTimeSignatureDenominatorState exports, captureStateForUndo, and descriptive "Set Time Signature Denominator to {d}" undo label
+  - **Recording** (10 tests):
+    - setIsRecordingState exports, captureStateForUndo, and descriptive "Set Recording State {On/Off}" undo label
+    - setRecordingTrackIdState exports, captureStateForUndo, and descriptive "Set Recording Track to {id}" undo label
+    - setRecordingStartTimeState exports, captureStateForUndo, and descriptive "Set Recording Start Time to {time}" undo label
+  - APP_VERSION validation (>= 2.251 for Day 596)
+- **Version**: Bumped to 2.252.0
+- **Test Count**: Increased from 823 to 845
