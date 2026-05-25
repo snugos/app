@@ -4411,3 +4411,149 @@ TestRunner.test("Day 591 - APP_VERSION validation for Day 591", (t) => {
         t.assertTruthy(versionParts[1] >= 247, "Minor version should be >= 247 for Day 591");
     }
 });
+// Day 592: Track Groups, Track Templates, Ghost Track, and Loop Region State Tests
+TestRunner.test("Day 592 - Track Groups - getTrackGroupsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackGroupsState'), 'getTrackGroupsState should be exported');
+});
+
+TestRunner.test("Day 592 - Track Groups - getTrackGroupByIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackGroupByIdState'), 'getTrackGroupByIdState should be exported');
+});
+
+TestRunner.test("Day 592 - Track Groups - addTrackGroupState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addTrackGroupState'), 'addTrackGroupState should be exported');
+});
+
+TestRunner.test("Day 592 - Track Groups - addTrackGroupState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const addIdx = stateStr.indexOf('export function addTrackGroupState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', addIdx);
+    t.assertTruthy(captureIdx > addIdx, 'addTrackGroupState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Track Groups - addTrackGroupState uses descriptive undo label with group name", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('Create Track Group'), 'addTrackGroupState undo label should include "Create Track Group"');
+});
+
+TestRunner.test("Day 592 - Track Groups - setTrackGroupNameState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setTrackGroupNameState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setTrackGroupNameState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Track Groups - removeTrackGroupState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const remIdx = stateStr.indexOf('export function removeTrackGroupState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', remIdx);
+    t.assertTruthy(captureIdx > remIdx, 'removeTrackGroupState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Track Templates - getTrackTemplatesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackTemplatesState'), 'getTrackTemplatesState should be exported');
+});
+
+TestRunner.test("Day 592 - Track Templates - addTrackTemplateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addTrackTemplateState'), 'addTrackTemplateState should be exported');
+});
+
+TestRunner.test("Day 592 - Track Templates - addTrackTemplateState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const addIdx = stateStr.indexOf('export function addTrackTemplateState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', addIdx);
+    t.assertTruthy(captureIdx > addIdx, 'addTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Track Templates - updateTrackTemplateState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const updIdx = stateStr.indexOf('export function updateTrackTemplateState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', updIdx);
+    t.assertTruthy(captureIdx > updIdx, 'updateTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Track Templates - removeTrackTemplateState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const remIdx = stateStr.indexOf('export function removeTrackTemplateState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', remIdx);
+    t.assertTruthy(captureIdx > remIdx, 'removeTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Ghost Track - getGhostTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getGhostTrackIdState'), 'getGhostTrackIdState should be exported');
+});
+
+TestRunner.test("Day 592 - Ghost Track - setGhostTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setGhostTrackIdState'), 'setGhostTrackIdState should be exported');
+});
+
+TestRunner.test("Day 592 - Ghost Track - setGhostTrackIdState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setGhostTrackIdState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setGhostTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Ghost Track - setGhostTrackIdState uses descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes("'Set Ghost Track'"), 'setGhostTrackIdState undo label should be "Set Ghost Track"');
+});
+
+TestRunner.test("Day 592 - Loop Region - getLoopRegionState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getLoopRegionState'), 'getLoopRegionState should be exported');
+});
+
+TestRunner.test("Day 592 - Loop Region - setLoopRegionState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLoopRegionState'), 'setLoopRegionState should be exported');
+});
+
+TestRunner.test("Day 592 - Loop Region - setLoopRegionState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setLoopRegionState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setLoopRegionState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Loop Region - setLoopRegionState uses descriptive undo label with bars", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('Set Loop Region to ${'), 'setLoopRegionState undo label should include bar values');
+});
+
+TestRunner.test("Day 592 - Loop Region - setLoopRegionEnabledState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setLoopRegionEnabledState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setLoopRegionEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Loop Region - setLoopRegionStartBarState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setLoopRegionStartBarState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setLoopRegionStartBarState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - Loop Region - setLoopRegionEndBarState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setLoopRegionEndBarState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setLoopRegionEndBarState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 592 - APP_VERSION validation for Day 592", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 592");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 248, "Minor version should be >= 248 for Day 592");
+    }
+});
