@@ -1327,3 +1327,25 @@
   - APP_VERSION validation (>= 2.236 for Day 579)
 - **Version**: Bumped to 2.236.0
 - **Test Count**: Increased from 2860 to 2880
+#### Day 593: Scale Mode & Chord Mode State Function Tests (2026-05-25)
+- **Tests**: Added 45 tests for Scale Mode and Chord Mode state functions
+- **Files Modified**:
+  - `js/constants.js`: Bumped APP_VERSION to 2.249.0
+  - `js/tests.js`: Added Day 593 test block with 45 tests for state.js functions
+- **Test Details** (`js/tests.js`): 45 tests covering:
+  - **Scale Mode** (10 getters/setters):
+    - getScaleModeState, setScaleModeState (export + capture + undo label "Set Scale Mode")
+    - getScaleModeEnabledState, setScaleModeEnabledState (export + capture + undo label "Toggle Scale Mode On/Off")
+    - getScaleModeScaleState, setScaleModeScaleState (export + capture + undo label "Set Scale to {scale}")
+    - getScaleModeRootState, setScaleModeRootState (export + capture + undo label "Set Scale Root to {root}")
+    - getScaleModeLockState, setScaleModeLockState (export + capture + undo label "Toggle Scale Lock On/Off")
+  - **Chord Mode** (11 getters/setters):
+    - getChordModeState, setChordModeState (export + capture + undo label "Set Chord Mode")
+    - getChordModeEnabledState, setChordModeEnabledState (export + capture + undo label "Toggle Chord Mode On/Off")
+    - getChordModeRootState, setChordModeRootState (export + capture + undo label "Set Chord Root to {root}")
+    - getChordModeTypeState, setChordModeTypeState (export + capture + undo label "Set Chord Type to {type}")
+    - getChordModeLockState, setChordModeLockState (export + capture + undo label "Toggle Chord Lock On/Off")
+    - getChordVoicingState, setChordVoicingState (export + capture + undo label "Set Chord Voicing to {voicing}")
+  - APP_VERSION validation (>= 2.249 for Day 593)
+- **Version**: Bumped to 2.249.0
+- **Test Count**: Increased from 716 to 761
