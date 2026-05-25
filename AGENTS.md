@@ -1,3 +1,28 @@
+#### Day 596: Playback Mode State Function Tests (2026-05-25)
+- **Tests**: Added 13 tests for Playback Mode and MIDI Access state functions in state.js
+- **Files Modified**:
+  - `js/constants.js`: Bumped APP_VERSION to 2.252.0
+  - `js/tests.js`: Added Day 596 test block with 13 tests for Playback Mode state functions
+- **Test Details** (`js/tests.js`): 13 tests covering:
+  - **Playback Mode** (6 tests):
+    - getPlaybackModeState is a function export
+    - setPlaybackModeStateInternal is a function export
+    - setPlaybackModeStateInternal calls captureStateForUndo
+    - setPlaybackModeStateInternal has descriptive undo label "Set Playback Mode to"
+    - getPlaybackModeState returns globalPlaybackMode string
+    - setPlaybackModeStateInternal validates mode values (sequencer or timeline)
+  - **MIDI Access** (6 tests):
+    - getMidiAccessState is a function export
+    - setMidiAccessState is a function export
+    - getActiveMIDIInputState is a function export
+    - setActiveMIDIInputState is a function export
+    - setActiveMIDIInputState calls captureStateForUndo
+    - setActiveMIDIInputState has descriptive undo label "Set Active MIDI Input"
+  - APP_VERSION validation (>= 2.251 for Day 596)
+- **Version**: Bumped to 2.252.0
+- **Test Count**: Increased from 813 to 826
+
+
 # SnugOS DAW - AGENTS.md
 #### Day 595: MIDI Learn and MIDI Access State Function Tests (2026-05-25)
 - **Tests**: Added 30 tests for MIDI Learn and MIDI Access state functions in state.js
