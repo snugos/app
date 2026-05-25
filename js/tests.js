@@ -5123,3 +5123,86 @@ TestRunner.test("Day 595 - APP_VERSION validation for Day 595", (t) => {
         t.assertTruthy(versionParts[1] >= 250, "Minor version should be >= 250 for Day 595");
     }
 });
+
+// Day 596: Playback Mode State Function Tests
+// =============================================
+TestRunner.test("Day 596 - Playback Mode - getPlaybackModeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getPlaybackModeState'), 'getPlaybackModeState should be exported');
+});
+
+TestRunner.test("Day 596 - Playback Mode - setPlaybackModeStateInternal is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setPlaybackModeStateInternal'), 'setPlaybackModeStateInternal should be exported');
+});
+
+TestRunner.test("Day 596 - Playback Mode - setPlaybackModeStateInternal calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setPlaybackModeStateInternal');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setPlaybackModeStateInternal should call captureStateForUndo');
+});
+
+TestRunner.test("Day 596 - Playback Mode - setPlaybackModeStateInternal has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setPlaybackModeStateInternal');
+    const labelIdx = stateStr.indexOf('Set Playback Mode to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setPlaybackModeStateInternal should have descriptive undo label');
+});
+
+TestRunner.test("Day 596 - Playback Mode - getPlaybackModeState returns a string", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getPlaybackModeState');
+    const returnIdx = stateStr.indexOf('return globalPlaybackMode', fnIdx);
+    t.assertTruthy(returnIdx > fnIdx && returnIdx < fnIdx + 100, 'getPlaybackModeState should return globalPlaybackMode string');
+});
+
+TestRunner.test("Day 596 - Playback Mode - setPlaybackModeStateInternal validates mode values", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setPlaybackModeStateInternal');
+    const validIdx = stateStr.indexOf("mode === 'sequencer' || mode === 'timeline'", fnIdx);
+    t.assertTruthy(validIdx > fnIdx && validIdx < fnIdx + 300, 'setPlaybackModeStateInternal should validate mode values');
+});
+
+TestRunner.test("Day 596 - Playback Mode - getMidiAccessState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMidiAccessState'), 'getMidiAccessState should be exported');
+});
+
+TestRunner.test("Day 596 - Playback Mode - setMidiAccessState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMidiAccessState'), 'setMidiAccessState should be exported');
+});
+
+TestRunner.test("Day 596 - Playback Mode - getActiveMIDIInputState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getActiveMIDIInputState'), 'getActiveMIDIInputState should be exported');
+});
+
+TestRunner.test("Day 596 - Playback Mode - setActiveMIDIInputState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setActiveMIDIInputState'), 'setActiveMIDIInputState should be exported');
+});
+
+TestRunner.test("Day 596 - Playback Mode - setActiveMIDIInputState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setActiveMIDIInputState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setActiveMIDIInputState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 596 - Playback Mode - setActiveMIDIInputState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setActiveMIDIInputState');
+    const labelIdx = stateStr.indexOf('Set Active MIDI Input', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setActiveMIDIInputState should have descriptive undo label');
+});
+
+TestRunner.test("Day 596 - Playback Mode - APP_VERSION validation for Day 596", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 596");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 251, "Minor version should be >= 251 for Day 596");
+    }
+});
