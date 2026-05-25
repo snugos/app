@@ -1,3 +1,29 @@
+# SnugOS DAW - AGENTS.md
+
+#### Day 587: Humanize Timing Tests (2026-05-24)
+- **Tests**: Added 18 tests for `humanizeTiming` method and Humanize Timing menu items (Small/Medium/Large)
+- **Files Modified**:
+  - `js/tests.js`: Added Day 587 test block with 18 tests for humanizeTiming
+  - `js/constants.js`: Bumped APP_VERSION to 2.244.0
+- **Test Details** (`js/tests.js`): 18 tests covering:
+  - `humanizeTiming` is a function on Track.prototype
+  - humanizeTiming accepts shiftAmount parameter with default 2
+  - Returns 0 for Audio tracks
+  - Gets active sequence via getActiveSequence
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation
+  - Uses Math.random() for variation
+  - Clamps shift to valid bounds (targetCol < 0, >= totalSteps)
+  - Swaps notes using temp variable
+  - Returns count of humanized notes
+  - Humanize Timing (Small), (Medium), (Large) menu items exist
+  - Menu items call humanizeTiming with correct parameters (2, 4, 6)
+  - Menu items call recreateToneSequence
+  - Menu items show notification with humanized count
+  - APP_VERSION validation (>= 2.243 for Day 587)
+- **Version**: Bumped to 2.244.0
+- **Test Count**: Increased from 4005 to 4023
+
 #### Day 586: Ramp Probabilities Feature (2026-05-24)
 - **Feature**: Added `rampProbabilities(startProbability, endProbability)` method to Track class and "Ramp Probabilities (Sparse Start/Dense Start/Escalate/De-escalate)" menu items to sequencer context menu
 - **Files Modified**:
