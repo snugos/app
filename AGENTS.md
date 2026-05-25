@@ -1,4 +1,28 @@
 # SnugOS DAW - AGENTS.md
+#### Day 595: MIDI Learn and MIDI Access State Function Tests (2026-05-25)
+- **Tests**: Added 30 tests for MIDI Learn and MIDI Access state functions in state.js
+- **Files Modified**:
+  - `js/constants.js`: Bumped APP_VERSION to 2.251.0
+  - `js/tests.js`: Added Day 595 test block with 30 tests for MIDI state functions
+- **Test Details** (`js/tests.js`): 30 tests covering:
+  - **MIDI Learn** (27 tests):
+    - getMidiLearnMappingsState, getMidiLearnMappingsState returns mapped array copy (uses .map to return copy)
+    - getMidiLearnModeState, setMidiLearnModeState exports and captureStateForUndo with "Toggle MIDI Learn On/Off" label
+    - getMidiLearnPendingParamState, setMidiLearnPendingParamState exports and captureStateForUndo
+    - addMidiLearnMapping export, captureStateForUndo, and descriptive "Add MIDI Learn Mapping" undo label
+    - removeMidiLearnMapping export, captureStateForUndo, and descriptive "Remove MIDI Learn Mapping" undo label
+    - clearMidiLearnMappings export and captureStateForUndo
+    - updateMidiLearnMapping export and captureStateForUndo
+    - getMidiLearnMappingByIndex, findMidiLearnMapping exports
+    - setMidiLearnMappingsState does NOT exist (MIDI mappings modified via addMidiLearnMapping/removeMidiLearnMapping/clearMidiLearnMappings instead)
+  - **MIDI Access** (4 tests):
+    - getMidiAccessState, setMidiAccessState exports
+    - getActiveMIDIInputState, setActiveMIDIInputState exports
+  - APP_VERSION validation (>= 2.250 for Day 595)
+- **Note**: setMidiLearnMappingsState does not exist - MIDI mappings are modified via addMidiLearnMapping/removeMidiLearnMapping/clearMidiLearnMappings which all call captureStateForUndo internally
+- **Version**: Bumped to 2.251.0
+- **Test Count**: Increased from 783 to 813
+
 #### Day 594: Project, Preview, Library, Synth Presets, and Undo/Redo State Function Tests (2026-05-25)
 - **Tests**: Added 22 tests for state.js functions covering Project, Preview Sound, Loaded ZIP Files, Sound Library, Synth Presets, and Undo/Redo Stack
 - **Files Modified**:
