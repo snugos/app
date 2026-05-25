@@ -4105,3 +4105,90 @@ TestRunner.test("Day 587 - APP_VERSION validation for Day 587", (t) => {
         t.assertTruthy(versionParts[1] >= 243, "Minor version should be >= 243 for Day 587");
     }
 });
+
+// Day 588: Invert Velocities Feature
+// ================================================
+TestRunner.test("Day 588 - invertVelocities is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.invertVelocities === 'function', 'invertVelocities should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 588 - invertVelocities returns 0 for Audio tracks", (t) => {
+    const track = new Track({ id: 'test', type: 'Audio', name: 'Audio Track' });
+    const result = track.invertVelocities();
+    t.assertEqual(0, result, 'invertVelocities should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 588 - invertVelocities gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.invertVelocities.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'invertVelocities should use getActiveSequence()');
+});
+
+TestRunner.test("Day 588 - invertVelocities returns 0 if no active sequence", (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    const result = track.invertVelocities();
+    t.assertEqual(0, result, 'invertVelocities should return 0 when no active sequence');
+});
+
+TestRunner.test("Day 588 - invertVelocities captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.invertVelocities.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('for (let rowIndex');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'invertVelocities should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 588 - invertVelocities finds min and max velocities in first pass", (t) => {
+    const funcStr = Track.prototype.invertVelocities.toString();
+    t.assertTruthy(funcStr.includes('minVel'), 'invertVelocities should track minVel');
+    t.assertTruthy(funcStr.includes('maxVel'), 'invertVelocities should track maxVel');
+});
+
+TestRunner.test("Day 588 - invertVelocities uses center point formula", (t) => {
+    const funcStr = Track.prototype.invertVelocities.toString();
+    t.assertTruthy(funcStr.includes('centerPoint') && funcStr.includes('minVel + maxVel'), 'invertVelocities should calculate center point');
+});
+
+TestRunner.test("Day 588 - invertVelocities clamps velocities to 0.05-1.0 range", (t) => {
+    const funcStr = Track.prototype.invertVelocities.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0.05') && funcStr.includes('Math.min(1.0'), 'invertVelocities should clamp to 0.05-1.0 range');
+});
+
+TestRunner.test("Day 588 - invertVelocities rounds to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.invertVelocities.toString();
+    t.assertTruthy(funcStr.includes('Math.round(newVelocity * 100) / 100'), 'invertVelocities should round to 2 decimal places');
+});
+
+TestRunner.test("Day 588 - invertVelocities returns count of inverted velocities", (t) => {
+    const funcStr = Track.prototype.invertVelocities.toString();
+    t.assertTruthy(funcStr.includes('invertedCount'), 'invertVelocities should track invertedCount');
+    t.assertTruthy(funcStr.includes('return invertedCount'), 'invertVelocities should return invertedCount');
+});
+
+TestRunner.test("Day 588 - Invert Velocities menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Invert Velocities'), 'Invert Velocities menu item should exist');
+});
+
+TestRunner.test("Day 588 - Invert Velocities menu item calls track.invertVelocities", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.invertVelocities()'), 'Invert Velocities menu item should call invertVelocities()');
+});
+
+TestRunner.test("Day 588 - Invert Velocities menu item calls recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Invert Velocities[^}]+recreateToneSequence/g);
+    t.assertTruthy(matches && matches.length >= 1, 'Invert Velocities menu item should call recreateToneSequence');
+});
+
+TestRunner.test("Day 588 - Invert Velocities menu item shows notification", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Inverted') && uiStr.includes('velocity value(s)'), 'Invert Velocities should show notification');
+});
+
+TestRunner.test("Day 588 - APP_VERSION validation for Day 588", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 588");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 244, "Minor version should be >= 244 for Day 588");
+    }
+});

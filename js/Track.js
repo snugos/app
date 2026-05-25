@@ -1606,6 +1606,63 @@ export class Track {
         return scaledCount;
     }
 
+    // Invert velocities - mirror velocity values around the center point between min and max
+    // Creates an inversion effect where quiet notes become loud and loud notes become quiet
+    invertVelocities() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} invertVelocities] No active sequence found.`);
+            return 0;
+        }
+
+        // First pass: find min and max velocities
+        let minVel = 1.0;
+        let maxVel = 0.05;
+        let foundAny = false;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.velocity !== undefined) {
+                    foundAny = true;
+                    if (stepData.velocity < minVel) minVel = stepData.velocity;
+                    if (stepData.velocity > maxVel) maxVel = stepData.velocity;
+                }
+            }
+        }
+
+        if (!foundAny) return 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Invert velocities on ${activeSeq.name}`);
+
+        // Second pass: invert velocities around center point
+        // newVelocity = minVel + maxVel - currentVelocity
+        // This mirrors around (minVel + maxVel) / 2
+        const centerPoint = minVel + maxVel;
+        let invertedCount = 0;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.velocity !== undefined) {
+                    const newVelocity = Math.max(0.05, Math.min(1.0, centerPoint - stepData.velocity));
+                    row[col].velocity = Math.round(newVelocity * 100) / 100;
+                    invertedCount++;
+                }
+            }
+        }
+
+        return invertedCount;
+    }
+
     // Humanize note probabilities - apply random variation to note probabilities
     // Creates more natural, human-like note triggering patterns
     // amount: 0.0 to 1.0, maximum random variation to apply (e.g., 0.2 = +/- 20%)
