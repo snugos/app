@@ -4960,3 +4960,166 @@ TestRunner.test("Day 594 - APP_VERSION validation for Day 594", (t) => {
 });
 
 
+
+// Day 595: MIDI Learn State Function Tests
+// ================================================
+TestRunner.test("Day 595 - MIDI Learn - getMidiLearnMappingsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMidiLearnMappingsState'), 'getMidiLearnMappingsState should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - setMidiLearnMappingsState - uses direct mutation (no setter)", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getMidiLearnMappingsState');
+    const setIdx = stateStr.indexOf('export function setMidiLearnMappingsState', fnIdx);
+    t.assertEqual(setIdx, -1, 'setMidiLearnMappingsState should not exist - MIDI mappings use direct mutation via addMidiLearnMapping/removeMidiLearnMapping/clearMidiLearnMappings');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - getMidiLearnMappingsState returns mapped array copy", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getMidiLearnMappingsState');
+    const mapIdx = stateStr.indexOf('.map', fnIdx);
+    t.assertTruthy(mapIdx > fnIdx && mapIdx < fnIdx + 300, 'getMidiLearnMappingsState should return mapped array copy');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - getMidiLearnModeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMidiLearnModeState'), 'getMidiLearnModeState should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - setMidiLearnModeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMidiLearnModeState'), 'setMidiLearnModeState should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - setMidiLearnModeState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setMidiLearnModeState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setMidiLearnModeState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - setMidiLearnModeState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setMidiLearnModeState');
+    const labelIdx = stateStr.indexOf('Toggle MIDI Learn', setIdx);
+    t.assertTruthy(labelIdx > setIdx && labelIdx < setIdx + 300, 'setMidiLearnModeState should have descriptive undo label');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - getMidiLearnPendingParamState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMidiLearnPendingParamState'), 'getMidiLearnPendingParamState should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - setMidiLearnPendingParamState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMidiLearnPendingParamState'), 'setMidiLearnPendingParamState should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - setMidiLearnPendingParamState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setMidiLearnPendingParamState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setMidiLearnPendingParamState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - addMidiLearnMapping is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addMidiLearnMapping'), 'addMidiLearnMapping should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - addMidiLearnMapping calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addMidiLearnMapping');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'addMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - addMidiLearnMapping has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addMidiLearnMapping');
+    const labelIdx = stateStr.indexOf('Add MIDI Learn Mapping', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'addMidiLearnMapping should have descriptive undo label');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - removeMidiLearnMapping is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeMidiLearnMapping'), 'removeMidiLearnMapping should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - removeMidiLearnMapping calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeMidiLearnMapping');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'removeMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - removeMidiLearnMapping has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeMidiLearnMapping');
+    const labelIdx = stateStr.indexOf('Remove MIDI Learn Mapping', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'removeMidiLearnMapping should have descriptive undo label');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - clearMidiLearnMappings is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function clearMidiLearnMappings'), 'clearMidiLearnMappings should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - clearMidiLearnMappings calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearMidiLearnMappings');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'clearMidiLearnMappings should call captureStateForUndo');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - updateMidiLearnMapping is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function updateMidiLearnMapping'), 'updateMidiLearnMapping should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - updateMidiLearnMapping calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function updateMidiLearnMapping');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'updateMidiLearnMapping should call captureStateForUndo');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - getMidiLearnMappingByIndex is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMidiLearnMappingByIndex'), 'getMidiLearnMappingByIndex should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Learn - findMidiLearnMapping is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function findMidiLearnMapping'), 'findMidiLearnMapping should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Access - getMidiAccessState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMidiAccessState'), 'getMidiAccessState should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Access - setMidiAccessState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMidiAccessState'), 'setMidiAccessState should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Access - getActiveMIDIInputState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getActiveMIDIInputState'), 'getActiveMIDIInputState should be exported');
+});
+
+TestRunner.test("Day 595 - MIDI Access - setActiveMIDIInputState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setActiveMIDIInputState'), 'setActiveMIDIInputState should be exported');
+});
+
+TestRunner.test("Day 595 - APP_VERSION validation for Day 595", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 595");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 250, "Minor version should be >= 250 for Day 595");
+    }
+});
