@@ -1,26 +1,28 @@
-#### Day 596: Playback Mode State Function Tests (2026-05-25)
-- **Tests**: Added 13 tests for Playback Mode and MIDI Access state functions in state.js
+#### Day 597: Master Effects and Master Gain State Function Tests (2026-05-25)
+- **Tests**: Added 18 tests for Master Effects and Master Gain state functions in state.js
 - **Files Modified**:
-  - `js/constants.js`: Bumped APP_VERSION to 2.252.0
-  - `js/tests.js`: Added Day 596 test block with 13 tests for Playback Mode state functions
-- **Test Details** (`js/tests.js`): 13 tests covering:
-  - **Playback Mode** (6 tests):
-    - getPlaybackModeState is a function export
-    - setPlaybackModeStateInternal is a function export
-    - setPlaybackModeStateInternal calls captureStateForUndo
-    - setPlaybackModeStateInternal has descriptive undo label "Set Playback Mode to"
-    - getPlaybackModeState returns globalPlaybackMode string
-    - setPlaybackModeStateInternal validates mode values (sequencer or timeline)
-  - **MIDI Access** (6 tests):
-    - getMidiAccessState is a function export
-    - setMidiAccessState is a function export
-    - getActiveMIDIInputState is a function export
-    - setActiveMIDIInputState is a function export
-    - setActiveMIDIInputState calls captureStateForUndo
-    - setActiveMIDIInputState has descriptive undo label "Set Active MIDI Input"
-  - APP_VERSION validation (>= 2.251 for Day 596)
-- **Version**: Bumped to 2.252.0
-- **Test Count**: Increased from 813 to 826
+  - `js/constants.js`: Bumped APP_VERSION to 2.253.0
+  - `js/tests.js`: Added Day 597 test block with 18 tests for state.js functions
+- **Test Details** (`js/tests.js`): 18 tests covering:
+  - **Master Effects** (7 tests):
+    - getMasterEffectsState is a function export
+    - setMasterEffectsState is a function export
+    - setMasterEffectsState calls captureStateForUndo
+    - setMasterEffectsState has descriptive undo label "Set Master Effects Chain"
+    - setMasterEffectsState validates array input with Array.isArray
+    - setMasterEffectsState skips capture when state unchanged
+    - getMasterEffectsState returns a copy (not raw state)
+  - **Master Gain** (7 tests):
+    - getMasterGainValueState is a function export
+    - setMasterGainValueState is a function export
+    - setMasterGainValueState calls captureStateForUndo
+    - setMasterGainValueState has descriptive undo label "Set Master Volume to"
+    - setMasterGainValueState validates numeric input with Number.isFinite
+    - setMasterGainValueState skips capture when value unchanged
+    - getMasterGainValueState returns numeric value directly
+  - APP_VERSION validation (>= 2.252 for Day 597)
+- **Version**: Bumped to 2.253.0
+- **Test Count**: Increased from 842 to 860
 
 
 # SnugOS DAW - AGENTS.md
