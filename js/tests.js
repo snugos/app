@@ -4005,3 +4005,103 @@ TestRunner.test("Day 586 - APP_VERSION validation for Day 586", (t) => {
         t.assertTruthy(versionParts[1] >= 242, "Minor version should be >= 242 for Day 586");
     }
 });
+// Day 587: Humanize Timing Tests
+// ================================================
+TestRunner.test("Day 587 - humanizeTiming is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.humanizeTiming === 'function', 'humanizeTiming should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 587 - humanizeTiming accepts shiftAmount parameter with default 2", (t) => {
+    const funcStr = Track.prototype.humanizeTiming.toString();
+    t.assertTruthy(funcStr.includes('shiftAmount = 2'), 'humanizeTiming should accept shiftAmount parameter with default 2');
+});
+
+TestRunner.test("Day 587 - humanizeTiming returns 0 for Audio tracks", (t) => {
+    const track = new Track({ id: 'test', type: 'Audio', name: 'Audio Track' });
+    const result = track.humanizeTiming(2);
+    t.assertEqual(0, result, 'humanizeTiming should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 587 - humanizeTiming gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.humanizeTiming.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'humanizeTiming should use getActiveSequence()');
+});
+
+TestRunner.test("Day 587 - humanizeTiming returns 0 if no active sequence", (t) => {
+    const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
+    // No sequences added, so getActiveSequence should return null/undefined
+    const result = track.humanizeTiming(2);
+    t.assertEqual(0, result, 'humanizeTiming should return 0 when no active sequence');
+});
+
+TestRunner.test("Day 587 - humanizeTiming captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.humanizeTiming.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('for (let rowIndex');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'humanizeTiming should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 587 - humanizeTiming uses Math.random() for variation", (t) => {
+    const funcStr = Track.prototype.humanizeTiming.toString();
+    t.assertTruthy(funcStr.includes('Math.random()'), 'humanizeTiming should use Math.random() for variation');
+});
+
+TestRunner.test("Day 587 - humanizeTiming clamps shift to valid bounds", (t) => {
+    const funcStr = Track.prototype.humanizeTiming.toString();
+    // Should check col bounds and totalSteps bounds
+    t.assertTruthy(funcStr.includes('targetCol < 0') || funcStr.includes('targetCol >= totalSteps'), 'humanizeTiming should clamp shift to valid bounds');
+});
+
+TestRunner.test("Day 587 - humanizeTiming swaps notes when moving", (t) => {
+    const funcStr = Track.prototype.humanizeTiming.toString();
+    // Should swap notes using temp variable
+    t.assertTruthy(funcStr.includes('temp'), 'humanizeTiming should swap notes using temp variable');
+});
+
+TestRunner.test("Day 587 - humanizeTiming returns count of humanized notes", (t) => {
+    const funcStr = Track.prototype.humanizeTiming.toString();
+    t.assertTruthy(funcStr.includes('humanizedCount'), 'humanizeTiming should track humanizedCount');
+    t.assertTruthy(funcStr.includes('return humanizedCount'), 'humanizeTiming should return humanizedCount');
+});
+
+TestRunner.test("Day 587 - Humanize Timing (Small) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Humanize Timing (Small)'), 'Humanize Timing (Small) menu item should exist');
+});
+
+TestRunner.test("Day 587 - Humanize Timing (Medium) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Humanize Timing (Medium)'), 'Humanize Timing (Medium) menu item should exist');
+});
+
+TestRunner.test("Day 587 - Humanize Timing (Large) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Humanize Timing (Large)'), 'Humanize Timing (Large) menu item should exist');
+});
+
+TestRunner.test("Day 587 - Humanize Timing menu items call humanizeTiming with correct parameters", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('humanizeTiming(2)'), 'Small should call humanizeTiming(2)');
+    t.assertTruthy(uiStr.includes('humanizeTiming(4)'), 'Medium should call humanizeTiming(4)');
+    t.assertTruthy(uiStr.includes('humanizeTiming(6)'), 'Large should call humanizeTiming(6)');
+});
+
+TestRunner.test("Day 587 - Humanize Timing menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const humanizeTimingMatches = uiStr.match(/Humanize Timing[^}]+recreateToneSequence/g);
+    t.assertTruthy(humanizeTimingMatches && humanizeTimingMatches.length >= 3, 'All Humanize Timing menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 587 - Humanize Timing menu items show notifications with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Humanized timing for') && uiStr.includes('note(s)'), 'Humanize Timing should show notification with humanized count');
+});
+
+TestRunner.test("Day 587 - APP_VERSION validation for Day 587", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 587");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 243, "Minor version should be >= 243 for Day 587");
+    }
+});
