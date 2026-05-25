@@ -936,19 +936,19 @@ export class Track {
 
     toggleMuteAutomationNow() {
         if (!this.automationArmed) {
-            showNotification(`Arm automation recording first for ${this.name}`, 1500);
+            if (this.appServices.showNotification) this.appServices.showNotification(`Arm automation recording first for ${this.name}`, 1500);
             return;
         }
         const transportPos = Tone.Transport.position;
         const timeInSeconds = Tone.Transport.seconds;
         this.writeMuteAutomation(timeInSeconds, this.isMuted ? 1 : 0);
-        showNotification(`Mute: ${this.isMuted ? 'ON' : 'OFF'} recorded at ${transportPos}`, 1500);
+        if (this.appServices.showNotification) this.appServices.showNotification(`Mute: ${this.isMuted ? 'ON' : 'OFF'} recorded at ${transportPos}`, 1500);
         console.log(`[Track ${this.id}] Mute automation recorded at pos ${transportPos}, time ${timeInSeconds.toFixed(3)}s, value ${this.isMuted ? 1 : 0}`);
     }
 
     toggleSoloAutomationNow() {
         if (!this.automationArmed) {
-            showNotification(`Arm automation recording first for ${this.name}`, 1500);
+            if (this.appServices.showNotification) this.appServices.showNotification(`Arm automation recording first for ${this.name}`, 1500);
             return;
         }
         const transportPos = Tone.Transport.position;
@@ -957,7 +957,7 @@ export class Track {
         const soloedId = this.appServices && this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
         const isCurrentlySoloed = (soloedId === this.id);
         this.writeSoloAutomation(timeInSeconds, isCurrentlySoloed ? 1 : 0);
-        showNotification(`Solo: ${isCurrentlySoloed ? 'ON' : 'OFF'} recorded at ${transportPos}`, 1500);
+        if (this.appServices.showNotification) this.appServices.showNotification(`Solo: ${isCurrentlySoloed ? 'ON' : 'OFF'} recorded at ${transportPos}`, 1500);
         console.log(`[Track ${this.id}] Solo automation recorded at pos ${transportPos}, time ${timeInSeconds.toFixed(3)}s, value ${isCurrentlySoloed ? 1 : 0}`);
     }
 
@@ -2055,7 +2055,7 @@ export class Track {
         }
 
         // Get scale mode state from global state (same pattern as other scale mode operations)
-        const scaleMode = (typeof getScaleModeState === 'function') ? getScaleModeState() : null;
+        const scaleMode = (typeof this.appServices.getScaleMode === 'function') ? this.appServices.getScaleMode() : null;
         const scaleName = scaleMode?.scale || 'Major';
         const rootNote = scaleMode?.root || 'C';
         const scaleEnabled = scaleMode?.enabled || false;
