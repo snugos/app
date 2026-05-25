@@ -1616,6 +1616,9 @@ export class Track {
             return 0;
         }
 
+        // Capture undo state BEFORE any mutation
+        this._captureUndoState(`Invert velocities on ${activeSeq.name}`);
+
         // First pass: find min and max velocities
         let minVel = 1.0;
         let maxVel = 0.05;
@@ -1637,9 +1640,6 @@ export class Track {
         }
 
         if (!foundAny) return 0;
-
-        // Capture undo state BEFORE mutation
-        this._captureUndoState(`Invert velocities on ${activeSeq.name}`);
 
         // Second pass: invert velocities around center point
         // newVelocity = minVel + maxVel - currentVelocity
