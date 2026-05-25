@@ -6,7 +6,7 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
-import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, playDrumSamplerPadPreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, setMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, getPunchRegion, isPositionInPunchRegion, getRecordingScheduledTrackId, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, resolveRecordingMicrophoneTestTrack, getRecordingInputGainNode, getPunchInBars, getPunchOutBars, createSendBusInAudio, deleteSendBusFromAudio, getSendBusNodes, connectTrackToSendBus, disconnectTrackFromSendBus, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted, getCountInBars, setCountInBars, isCountInActive, startCountIn, cleanupCountIn, setMetronomeVolume, getMetronomeVolume, stopMetronome, cleanupMetronome, tapTempo, getTapTempoBpm, resetTapTempo, isTapTempoReady, clearAllMasterEffectNodes } from './audio.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars, loadSampleFile, loadSoundFromBrowserToTarget, fetchSoundLibrary, loadDrumSamplerPadFile, playSlicePreview, playDrumSamplerPadPreview, updateMeters, initAudioContextAndMasterMeter, scheduleRecordingForPunch, cancelScheduledRecording, cleanupRecordingScheduling, initializeAudioModule, isMetronomeEnabled, setMetronomeEnabled, isPunchRegionEnabled, setPunchRegionEnabled, setPunchRegion, getPunchRegion, isPositionInPunchRegion, getRecordingScheduledTrackId, addMasterEffectToAudio, reorderMasterEffectInAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio, startAudioRecording, stopAudioRecording, setRecordingInputGain, runRecordingMicrophoneE2ETest, resolveRecordingMicrophoneTestTrack, getRecordingInputGainNode, getPunchInBars, getPunchOutBars, createSendBusInAudio, deleteSendBusFromAudio, getSendBusNodes, connectTrackToSendBus, disconnectTrackFromSendBus, addEffectToSendBus, removeEffectFromSendBus, reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted, getCountInBars, setCountInBars, isCountInActive, startCountIn, cleanupCountIn, setMetronomeVolume, getMetronomeVolume, stopMetronome, cleanupMetronome, tapTempo, getTapTempoBpm, resetTapTempo, isTapTempoReady, clearAllMasterEffectNodes, getActiveMasterEffectNodes } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTimelineLaneDrop,
@@ -35,7 +35,8 @@ import {
     openScaleModeWindow,
     openChordModeWindow,
     openTimelineMarkersWindow,
-    openTransportSettingsWindow
+    openTransportSettingsWindow,
+    updateTimelineRegionMarkers
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -343,19 +344,21 @@ const appServices = {
     },
     clearAllMasterEffectNodes: clearAllMasterEffectNodes,
     enableSidechainFromMicForEffect: (effectId) => {
-        if (!activeMasterEffectNodes || !activeMasterEffectNodes.has(effectId)) {
+        const activeNodes = getActiveMasterEffectNodes();
+        if (!activeNodes || !activeNodes.has(effectId)) {
             console.warn(`[Main enableSidechainFromMicForEffect] Master effect ${effectId} not found in active nodes.`);
             return;
         }
-        const compressorNode = activeMasterEffectNodes.get(effectId);
+        const compressorNode = activeNodes.get(effectId);
         enableSidechainFromMic(compressorNode);
     },
     enableSidechainFromTrackForEffect: (effectId, trackId) => {
-        if (!activeMasterEffectNodes || !activeMasterEffectNodes.has(effectId)) {
+        const activeNodes = getActiveMasterEffectNodes();
+        if (!activeNodes || !activeNodes.has(effectId)) {
             console.warn(`[Main enableSidechainFromTrackForEffect] Master effect ${effectId} not found in active nodes.`);
             return;
         }
-        const compressorNode = activeMasterEffectNodes.get(effectId);
+        const compressorNode = activeNodes.get(effectId);
         enableSidechainFromTrackIn(trackId, compressorNode);
     },
     disableSidechainForEffect: (effectId) => {
@@ -1275,7 +1278,7 @@ async function initializeSnugOS() {
                     loopToggleBtn.classList.toggle('loop-active', newEnabled);
                     showSafeNotification(newEnabled ? "Loop ON" : "Loop OFF", 1500);
                     // Update timeline region markers
-                    if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                    updateTimelineRegionMarkers();
                 });
                 // Sync button state
                 loopToggleBtn.classList.toggle('loop-active', isLoopRegionEnabled());
@@ -1289,7 +1292,7 @@ async function initializeSnugOS() {
                             Tone.Transport.loopEnd = `${endBars}:0:0`;
                         }
                         showSafeNotification(`Loop: ${startBars} - ${endBars} bars`, 1000);
-                        if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                        updateTimelineRegionMarkers();
                     }
                 });
 
@@ -1302,7 +1305,7 @@ async function initializeSnugOS() {
                             Tone.Transport.loopEnd = `${endBars}:0:0`;
                         }
                         showSafeNotification(`Loop: ${startBars} - ${endBars} bars`, 1000);
-                        if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                        updateTimelineRegionMarkers();
                     }
                 });
 
@@ -1326,7 +1329,7 @@ async function initializeSnugOS() {
                     punchToggleBtn.classList.toggle('punch-active', newEnabled);
                     showSafeNotification(newEnabled ? "Punch In/Out ON" : "Punch In/Out OFF", 1500);
                     // Update timeline region markers
-                    if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                    updateTimelineRegionMarkers();
                 });
                 punchToggleBtn.classList.toggle('punch-active', isPunchRegionEnabled());
 
@@ -1335,7 +1338,7 @@ async function initializeSnugOS() {
                     const outBars = parseInt(punchOutInput.value, 10) || 16;
                     if (setPunchRegion(inBars, outBars)) {
                         showSafeNotification(`Punch: ${inBars} - ${outBars} bars`, 1000);
-                        if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                        updateTimelineRegionMarkers();
                     }
                 });
 
@@ -1344,7 +1347,7 @@ async function initializeSnugOS() {
                     const outBars = parseInt(e.target.value, 10) || 16;
                     if (setPunchRegion(inBars, outBars)) {
                         showSafeNotification(`Punch: ${inBars} - ${outBars} bars`, 1000);
-                        if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                        updateTimelineRegionMarkers();
                     }
                 });
 
@@ -1490,8 +1493,8 @@ async function initializeSnugOS() {
         if (typeof startAutoSave === 'function') {
             startAutoSave();
         }
-        if (typeof hasAutoSavedProject === 'function' && hasAutoSavedProject()) {
-            const timestamp = typeof getAutoSavedProjectTimestamp === 'function' ? getAutoSavedProjectTimestamp() : null;
+        if (typeof hasAutoSavedProject_check === 'function' && hasAutoSavedProject_check()) {
+            const timestamp = typeof getAutoSavedTimestamp === 'function' ? getAutoSavedTimestamp() : null;
             const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString() : 'unknown';
             if (typeof showConfirmationDialog === 'function') {
                 showConfirmationDialog(
@@ -1522,7 +1525,7 @@ async function initializeSnugOS() {
                     },
                     () => {
                         // User clicked Dismiss - just keep current session
-                        if (typeof clearAutoSavedProject === 'function') clearAutoSavedProject();
+                        if (typeof clearAutoSave === 'function') clearAutoSave();
                         showSafeNotification("Auto-save dismissed. Current session kept.", 2000);
                     }
                 );

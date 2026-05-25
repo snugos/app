@@ -1486,6 +1486,10 @@ export function clearAllMasterEffectNodes() {
     activeMasterEffectNodes.clear();
 }
 
+export function getActiveMasterEffectNodes() {
+    return activeMasterEffectNodes;
+}
+
 export function isMetronomeEnabled() { return metronomeEnabled; }
 export function getCountInBars() { return countInBars; }
 export function setCountInBars(bars) {
