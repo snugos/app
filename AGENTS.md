@@ -1,4 +1,24 @@
 # SnugOS DAW - AGENTS.md
+#### Day 590: Keyboard Shortcuts Tests (2026-05-25)
+- **Tests**: Added 11 tests for Ctrl+Q, Ctrl+A, and Ctrl+Shift+A keyboard shortcut handlers
+- **Files Modified**:
+  - `js/constants.js`: Bumped APP_VERSION to 2.246.0
+  - `js/tests.js`: Added Day 590 test block with 11 tests for keyboard shortcuts
+- **Test Details** (`js/tests.js`): 11 tests covering:
+  - Ctrl+Q handler exists and calls quantizeSequence
+  - Ctrl+Q handler captures undo state before quantize
+  - Ctrl+Q handler calls recreateToneSequence after quantize
+  - Ctrl+Q handler shows notification with quantized count
+  - Ctrl+A handler exists and selects cells with selected-cell class
+  - Ctrl+A handler captures undo state
+  - Ctrl+Shift+A handler exists for deselecting (removes selected-cell)
+  - Keyboard shortcuts help includes Ctrl+Q for quantize
+  - Keyboard shortcuts help includes Ctrl+A for select all
+  - Keyboard shortcuts help includes Ctrl+Shift+A for deselect
+  - APP_VERSION validation (>= 2.246 for Day 590)
+- **Version**: Bumped to 2.246.0
+- **Test Count**: Increased from 670 to 681
+
 #### Day 589: Quantize Sequence Tests (2026-05-25)
 - **Tests**: Added 16 tests for `quantizeSequence` method and Quantize menu items (1/16, 1/8, 1/4)
 - **Files Modified**:
