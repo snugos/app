@@ -1740,83 +1740,84 @@ document.addEventListener('keydown', (event) => {
             return;
         }
 
-        // Ctrl/Cmd+V - Paste sequencer clipboard to selection or full paste
-        if ((event.ctrlKey || event.metaKey) && key === 'v') {
+        // Ctrl/Cmd+Shift+C - Copy sequencer selection as a section to clipboard
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === 'c') {
+            const armedTrackId = getArmedTrackId();
+            if (armedTrackId !== null) {
+                const track = getTrackById(armedTrackId);
+                if (track && localAppServices.getClipboardData && localAppServices.setClipboardData) {
+                    const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                    if (currentActiveSeq && currentActiveSeq.data) {
+                        const sequencerWindow = track._lastOpenedSequencerWindow;
+                        if (sequencerWindow && sequencerWindow.element) {
+                            const selectedCells = sequencerWindow.element.querySelectorAll('.sequencer-step-cell.selected-cell');
+                            if (selectedCells.length > 0) {
+                                // Find min/max columns from selected cells (section is column-based)
+                                let minCol = Infinity, maxCol = -Infinity;
+                                selectedCells.forEach(cell => {
+                                    const c = parseInt(cell.dataset.col);
+                                    if (c < minCol) minCol = c;
+                                    if (c > maxCol) maxCol = c;
+                                });
+                                const sectionData = track.copySequenceSection(minCol, maxCol);
+                                if (sectionData) {
+                                    localAppServices.setClipboardData({ type: 'section', sourceTrackType: track.type, data: sectionData, sectionLength: maxCol - minCol + 1, startCol: minCol });
+                                    showNotification(`Section (${currentActiveSeq.data.length}x${maxCol-minCol+1}) copied.`, 2000);
+                                } else {
+                                    showNotification("Failed to copy section.", 2000);
+                                }
+                                return;
+                            }
+                        }
+                        // No selection - check for any selection region
+                        if (selectionStartCell && selectionEndCell) {
+                            const c1 = Math.min(selectionStartCell.col, selectionEndCell.col);
+                            const c2 = Math.max(selectionStartCell.col, selectionEndCell.col);
+                            const sectionData = track.copySequenceSection(c1, c2);
+                            if (sectionData) {
+                                localAppServices.setClipboardData({ type: 'section', sourceTrackType: track.type, data: sectionData, sectionLength: c2 - c1 + 1, startCol: c1 });
+                                showNotification(`Section (${currentActiveSeq.data.length}x${c2-c1+1}) copied.`, 2000);
+                            } else {
+                                showNotification("Failed to copy section.", 2000);
+                            }
+                            return;
+                        }
+                        showNotification("Drag to select a region first.", 2000);
+                        return;
+                    }
+                }
+            }
+            return;
+        }
+
+        // Ctrl/Cmd+Shift+V - Paste section from clipboard at the original column position
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === 'v') {
             const armedTrackId = getArmedTrackId();
             if (armedTrackId !== null) {
                 const track = getTrackById(armedTrackId);
                 if (track && localAppServices.getClipboardData) {
                     const cb = localAppServices.getClipboardData();
-                    if (!cb || !cb.data) {
-                        showNotification("Clipboard empty.", 2000);
+                    if (!cb || cb.type !== 'section' || !cb.data) {
+                        showNotification("Use Copy Section first.", 2000);
                         return;
                     }
-                    if (cb.type === 'selection' && cb.sourceTrackType === track.type) {
-                        // Paste selection
-                        let currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
-                        if (!currentActiveSeq) return;
-                        const sequencerWindow = track._lastOpenedSequencerWindow;
-                        if (sequencerWindow && sequencerWindow.element) {
-                            const selectedCells = sequencerWindow.element.querySelectorAll('.sequencer-step-cell.selected-cell');
-                            if (selectedCells.length > 0) {
-                                let minRow = Infinity, maxRow = -Infinity, minCol = Infinity, maxCol = -Infinity;
-                                selectedCells.forEach(cell => {
-                                    const r = parseInt(cell.dataset.row);
-                                    const c = parseInt(cell.dataset.col);
-                                    if (r < minRow) minRow = r;
-                                    if (r > maxRow) maxRow = r;
-                                    if (c < minCol) minCol = c;
-                                    if (c > maxCol) maxCol = c;
-                                });
-                                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Selection on ${track.name}`);
-                                const rows = cb.data.length;
-                                const cols = cb.data[0] ? cb.data[0].length : 0;
-                                for (let r = 0; r < rows; r++) {
-                                    if (!currentActiveSeq.data[r + minRow]) currentActiveSeq.data[r + minRow] = Array(currentActiveSeq.length).fill(null);
-                                    for (let c = 0; c < cols; c++) {
-                                        if (cb.data[r] && cb.data[r][c]) {
-                                            currentActiveSeq.data[r + minRow][c + minCol] = JSON.parse(JSON.stringify(cb.data[r][c]));
-                                        }
-                                    }
-                                }
-                                track.recreateToneSequence(true);
-                                showNotification(`Selection pasted at (${minRow+1}, ${minCol+1}).`, 2000);
-                                if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
-                                return;
-                            }
-                        }
-                        // No selection - paste at beginning
-                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Selection on ${track.name}`);
-                        // currentActiveSeq is already declared above, just reassign
-                        currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
-                        if (!currentActiveSeq) return;
-                        const r1 = 0, c1 = 0;
-                        const rows = cb.data.length;
-                        const cols = cb.data[0] ? cb.data[0].length : 0;
-                        for (let r = 0; r < rows; r++) {
-                            if (!currentActiveSeq.data[r + r1]) currentActiveSeq.data[r + r1] = Array(currentActiveSeq.length).fill(null);
-                            for (let c = 0; c < cols; c++) {
-                                if (cb.data[r] && cb.data[r][c]) {
-                                    currentActiveSeq.data[r + r1][c + c1] = JSON.parse(JSON.stringify(cb.data[r][c]));
-                                }
-                            }
-                        }
-                        track.recreateToneSequence(true);
-                        showNotification(`Selection pasted at (1, 1).`, 2000);
-                        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
-                        return;
-                    } else if (cb.type === 'sequence' && cb.sourceTrackType === track.type) {
-                        // Full sequence paste
-                        currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
-                        if (!currentActiveSeq) return;
-                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${track.name}`);
-                        currentActiveSeq.data = JSON.parse(JSON.stringify(cb.data));
-                        currentActiveSeq.length = cb.sequenceLength;
-                        track.recreateToneSequence(true);
-                        showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000);
-                        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                    if (cb.sourceTrackType !== track.type) {
+                        showNotification(`Track types mismatch.`, 3000);
                         return;
                     }
+                    const targetCol = cb.startCol !== undefined ? cb.startCol : 0;
+                    if (localAppServices.captureStateForUndo) {
+                        localAppServices.captureStateForUndo(`Paste Section on ${track.name}`);
+                    }
+                    const result = track.pasteSequenceSection(cb.data, targetCol);
+                    if (result > 0) {
+                        track.recreateToneSequence(true);
+                        showNotification(`Pasted ${result} note(s) at column ${targetCol+1}.`, 2000);
+                        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                    } else {
+                        showNotification("No notes to paste.", 2000);
+                    }
+                    return;
                 }
             }
             return;

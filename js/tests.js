@@ -4346,11 +4346,68 @@ TestRunner.test("Day 590 - Keyboard shortcuts help includes Ctrl+Shift+A for des
     t.assertTruthy(uiStr.includes('Deselect All Notes') && uiStr.includes('Ctrl+Shift+A'), 'Keyboard shortcuts help should include Ctrl+Shift+A');
 });
 
-TestRunner.test("Day 590 - APP_VERSION validation for Day 590", (t) => {
+TestRunner.test("Day 591 - Ctrl+Shift+C handler exists for copy section", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('event.shiftKey && key === \'c\'') && eventStr.includes('copySequenceSection'), 'Ctrl+Shift+C handler should call copySequenceSection');
+});
+
+TestRunner.test("Day 591 - Ctrl+Shift+C copies section from selection", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('setClipboardData') && eventStr.includes('type: \'section\''), 'Ctrl+Shift+C should set clipboard type to section');
+});
+
+TestRunner.test("Day 591 - Ctrl+Shift+C copies section at correct start column", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('startCol: minCol') || eventStr.includes('startCol: c1'), 'Ctrl+Shift+C should save the section start column');
+});
+
+TestRunner.test("Day 591 - Ctrl+Shift+C handles no selection case", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('No selection') || eventStr.includes('select a region'), 'Ctrl+Shift+C should handle no selection case with notification');
+});
+
+TestRunner.test("Day 591 - Ctrl+Shift+V handler exists for paste section", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('event.shiftKey && key === \'v\'') && eventStr.includes('pasteSequenceSection'), 'Ctrl+Shift+V handler should call pasteSequenceSection');
+});
+
+TestRunner.test("Day 591 - Ctrl+Shift+V validates section clipboard type", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('cb.type !== \'section\'') && eventStr.includes('Use Copy Section first'), 'Ctrl+Shift+V should validate section clipboard type');
+});
+
+TestRunner.test("Day 591 - Ctrl+Shift+V captures undo state before paste", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    const shiftVIdx = eventStr.indexOf('event.shiftKey && key === \'v\'');
+    const captureIdx = eventStr.indexOf('captureStateForUndo', shiftVIdx);
+    t.assertTruthy(captureIdx > shiftVIdx, 'Ctrl+Shift+V should capture undo state');
+});
+
+TestRunner.test("Day 591 - Ctrl+Shift+V calls pasteSequenceSection with correct target column", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('pasteSequenceSection(cb.data, targetCol)') || eventStr.includes('pasteSequenceSection(cb.data, cb.startCol'), 'Ctrl+Shift+V should call pasteSequenceSection with target column');
+});
+
+TestRunner.test("Day 591 - Ctrl+Shift+V shows notification with pasted count and column", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('Pasted ${result}') && eventStr.includes('targetCol+1'), 'Ctrl+Shift+V should show notification with pasted count and column');
+});
+
+TestRunner.test("Day 591 - Keyboard shortcuts help includes Ctrl+Shift+C for copy section", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Copy Section') && uiStr.includes('Ctrl+Shift+C'), 'Keyboard shortcuts help should include Ctrl+Shift+C');
+});
+
+TestRunner.test("Day 591 - Keyboard shortcuts help includes Ctrl+Shift+V for paste section", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Paste Section') && uiStr.includes('Ctrl+Shift+V'), 'Keyboard shortcuts help should include Ctrl+Shift+V');
+});
+
+TestRunner.test("Day 591 - APP_VERSION validation for Day 591", (t) => {
     const version = require("./js/constants.js").APP_VERSION;
     const versionParts = version.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 590");
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 591");
     if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 246, "Minor version should be >= 246 for Day 590");
+        t.assertTruthy(versionParts[1] >= 247, "Minor version should be >= 247 for Day 591");
     }
 });
