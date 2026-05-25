@@ -4825,11 +4825,138 @@ TestRunner.test("Day 593 - Chord Mode - setChordVoicingState uses descriptive un
     t.assertTruthy(undoLabelIdx > setIdx && undoLabelIdx < setIdx + 300, 'setChordVoicingState undo label should include "Set Chord Voicing to"');
 });
 
-TestRunner.test("Day 593 - APP_VERSION validation for Day 593", (t) => {
+// Day 594: Project, Preview, Library, Synth Presets, and Undo/Redo State Function Tests
+TestRunner.test("Day 594 - Project - getProjectNameState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getProjectNameState'), 'getProjectNameState should be exported');
+});
+
+TestRunner.test("Day 594 - Project - setProjectNameState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setProjectNameState'), 'setProjectNameState should be exported');
+});
+
+TestRunner.test("Day 594 - Project - setProjectNameState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setProjectNameState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setProjectNameState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 594 - Project - getProjectNotesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getProjectNotesState'), 'getProjectNotesState should be exported');
+});
+
+TestRunner.test("Day 594 - Project - setProjectNotesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setProjectNotesState'), 'setProjectNotesState should be exported');
+});
+
+TestRunner.test("Day 594 - Project - setProjectNotesState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setProjectNotesState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setProjectNotesState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 594 - Preview Sound - getSelectedSoundForPreviewState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSelectedSoundForPreviewState'), 'getSelectedSoundForPreviewState should be exported');
+});
+
+TestRunner.test("Day 594 - Preview Sound - setSelectedSoundForPreviewState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSelectedSoundForPreviewState'), 'setSelectedSoundForPreviewState should be exported');
+});
+
+TestRunner.test("Day 594 - Preview Sound - setSelectedSoundForPreviewState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setSelectedSoundForPreviewState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setSelectedSoundForPreviewState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 594 - Loaded ZIP Files - getLoadedZipFilesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getLoadedZipFilesState'), 'getLoadedZipFilesState should be exported');
+});
+
+TestRunner.test("Day 594 - Loaded ZIP Files - setLoadedZipFilesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLoadedZipFilesState'), 'setLoadedZipFilesState should be exported');
+});
+
+TestRunner.test("Day 594 - Loaded ZIP Files - setLoadedZipFilesState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setLoadedZipFilesState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setLoadedZipFilesState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 594 - Sound Library - getSoundLibraryFileTreesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSoundLibraryFileTreesState'), 'getSoundLibraryFileTreesState should be exported');
+});
+
+TestRunner.test("Day 594 - Sound Library - setSoundLibraryFileTreesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSoundLibraryFileTreesState'), 'setSoundLibraryFileTreesState should be exported');
+});
+
+TestRunner.test("Day 594 - Sound Library - setSoundLibraryFileTreesState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const setIdx = stateStr.indexOf('export function setSoundLibraryFileTreesState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', setIdx);
+    t.assertTruthy(captureIdx > setIdx, 'setSoundLibraryFileTreesState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 594 - Synth Presets - getSynthPresets is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSynthPresets'), 'getSynthPresets should be exported');
+});
+
+TestRunner.test("Day 594 - Synth Presets - saveSynthPreset is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function saveSynthPreset'), 'saveSynthPreset should be exported');
+});
+
+TestRunner.test("Day 594 - Synth Presets - deleteSynthPreset is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function deleteSynthPreset'), 'deleteSynthPreset should be exported');
+});
+
+TestRunner.test("Day 594 - Undo/Redo - getUndoStackState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getUndoStackState'), 'getUndoStackState should be exported');
+});
+
+TestRunner.test("Day 594 - Undo/Redo - getRedoStackState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getRedoStackState'), 'getRedoStackState should be exported');
+});
+
+TestRunner.test("Day 594 - Undo/Redo - getUndoStackState returns array copy", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getUndoStackState');
+    const spreadIdx = stateStr.indexOf('[...undoStack]', fnIdx);
+    t.assertTruthy(spreadIdx > fnIdx, 'getUndoStackState should return a copy using spread operator');
+});
+
+TestRunner.test("Day 594 - Undo/Redo - getRedoStackState returns array copy", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getRedoStackState');
+    const spreadIdx = stateStr.indexOf('[...redoStack]', fnIdx);
+    t.assertTruthy(spreadIdx > fnIdx, 'getRedoStackState should return a copy using spread operator');
+});
+
+TestRunner.test("Day 594 - APP_VERSION validation for Day 594", (t) => {
     const version = require("./js/constants.js").APP_VERSION;
     const versionParts = version.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 593");
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 594");
     if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 249, "Minor version should be >= 249 for Day 593");
+        t.assertTruthy(versionParts[1] >= 250, "Minor version should be >= 250 for Day 594");
     }
 });
+
+

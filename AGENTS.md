@@ -1,4 +1,20 @@
 # SnugOS DAW - AGENTS.md
+#### Day 594: Project, Preview, Library, Synth Presets, and Undo/Redo State Function Tests (2026-05-25)
+- **Tests**: Added 22 tests for state.js functions covering Project, Preview Sound, Loaded ZIP Files, Sound Library, Synth Presets, and Undo/Redo Stack
+- **Files Modified**:
+  - `js/constants.js`: Bumped APP_VERSION to 2.250.0
+  - `js/tests.js`: Added Day 594 test block with 22 tests for state.js functions
+- **Test Details** (`js/tests.js`): 22 tests covering:
+  - **Project** (6 tests): getProjectNameState, setProjectNameState exports, captureStateForUndo, and same for getProjectNotesState, setProjectNotesState
+  - **Preview Sound** (3 tests): getSelectedSoundForPreviewState, setSelectedSoundForPreviewState exports, captureStateForUndo
+  - **Loaded ZIP Files** (3 tests): getLoadedZipFilesState, setLoadedZipFilesState exports, captureStateForUndo
+  - **Sound Library** (3 tests): getSoundLibraryFileTreesState, setSoundLibraryFileTreesState exports, captureStateForUndo
+  - **Synth Presets** (3 tests): getSynthPresets, saveSynthPreset, deleteSynthPreset exports
+  - **Undo/Redo Stack** (4 tests): getUndoStackState and getRedoStackState exports, both return array copies using spread operator
+  - APP_VERSION validation (>= 2.250 for Day 594)
+- **Version**: Bumped to 2.250.0
+- **Test Count**: Increased from 761 to 783
+
 #### Day 590: Keyboard Shortcuts Tests (2026-05-25)
 - **Tests**: Added 11 tests for Ctrl+Q, Ctrl+A, and Ctrl+Shift+A keyboard shortcut handlers
 - **Files Modified**:
@@ -152,6 +168,22 @@
 
 
 # SnugOS DAW - AGENTS.md
+#### Day 594: Project, Preview, Library, Synth Presets, and Undo/Redo State Function Tests (2026-05-25)
+- **Tests**: Added 22 tests for state.js functions covering Project, Preview Sound, Loaded ZIP Files, Sound Library, Synth Presets, and Undo/Redo Stack
+- **Files Modified**:
+  - `js/constants.js`: Bumped APP_VERSION to 2.250.0
+  - `js/tests.js`: Added Day 594 test block with 22 tests for state.js functions
+- **Test Details** (`js/tests.js`): 22 tests covering:
+  - **Project** (6 tests): getProjectNameState, setProjectNameState exports, captureStateForUndo, and same for getProjectNotesState, setProjectNotesState
+  - **Preview Sound** (3 tests): getSelectedSoundForPreviewState, setSelectedSoundForPreviewState exports, captureStateForUndo
+  - **Loaded ZIP Files** (3 tests): getLoadedZipFilesState, setLoadedZipFilesState exports, captureStateForUndo
+  - **Sound Library** (3 tests): getSoundLibraryFileTreesState, setSoundLibraryFileTreesState exports, captureStateForUndo
+  - **Synth Presets** (3 tests): getSynthPresets, saveSynthPreset, deleteSynthPreset exports
+  - **Undo/Redo Stack** (4 tests): getUndoStackState and getRedoStackState exports, both return array copies using spread operator
+  - APP_VERSION validation (>= 2.250 for Day 594)
+- **Version**: Bumped to 2.250.0
+- **Test Count**: Increased from 761 to 783
+
 #### Day 583: Ramp Velocities Feature (2026-05-24)
 - **Feature**: Added `rampVelocities(startVelocity, endVelocity)` method to Track class and "Ramp Velocities (Crescendo/Diminuendo/Piano to Forte/Forte to Piano)" menu items to sequencer context menu
 - **Files Modified**:
