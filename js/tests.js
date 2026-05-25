@@ -4287,3 +4287,70 @@ TestRunner.test("Day 589 - APP_VERSION validation for Day 589", (t) => {
         t.assertTruthy(versionParts[1] >= 245, "Minor version should be >= 245 for Day 589");
     }
 });
+
+// Day 590: Keyboard Shortcuts Tests (Ctrl+Q, Ctrl+A, Ctrl+Shift+A)
+// ================================================
+TestRunner.test("Day 590 - Ctrl+Q handler exists for quantize selection", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('key === \'q\'') && eventStr.includes('quantizeSequence'), 'Ctrl+Q handler should call quantizeSequence');
+});
+
+TestRunner.test("Day 590 - Ctrl+Q handler captures undo state before quantize", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    const ctrlQIdx = eventStr.indexOf('key === \'q\'');
+    const captureIdx = eventStr.indexOf('captureStateForUndo', ctrlQIdx);
+    t.assertTruthy(captureIdx > ctrlQIdx, 'Ctrl+Q handler should capture undo state');
+});
+
+TestRunner.test("Day 590 - Ctrl+Q handler calls recreateToneSequence after quantize", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    const ctrlQIdx = eventStr.indexOf('key === \'q\'');
+    const recreateIdx = eventStr.indexOf('recreateToneSequence', ctrlQIdx);
+    t.assertTruthy(recreateIdx > ctrlQIdx, 'Ctrl+Q handler should call recreateToneSequence');
+});
+
+TestRunner.test("Day 590 - Ctrl+Q handler shows notification with quantized count", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('Quantized ${quantizedCount}') || eventStr.includes('Quantized'), 'Ctrl+Q handler should show notification');
+});
+
+TestRunner.test("Day 590 - Ctrl+A handler exists for select all notes", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('key === \'a\'') && eventStr.includes('selected-cell'), 'Ctrl+A handler should select cells');
+});
+
+TestRunner.test("Day 590 - Ctrl+A handler captures undo state", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    const ctrlAIdx = eventStr.indexOf('key === \'a\'');
+    const captureIdx = eventStr.indexOf('captureStateForUndo', ctrlAIdx);
+    t.assertTruthy(captureIdx > ctrlAIdx, 'Ctrl+A handler should capture undo state');
+});
+
+TestRunner.test("Day 590 - Ctrl+Shift+A handler exists for deselect all notes", (t) => {
+    const eventStr = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    t.assertTruthy(eventStr.includes('key === \'a\'') && eventStr.includes('shiftKey') && eventStr.includes('remove(\'selected-cell\')'), 'Ctrl+Shift+A should deselect cells');
+});
+
+TestRunner.test("Day 590 - Keyboard shortcuts help includes Ctrl+Q for quantize", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Quantize Selection') && uiStr.includes('Ctrl+Q'), 'Keyboard shortcuts help should include Ctrl+Q');
+});
+
+TestRunner.test("Day 590 - Keyboard shortcuts help includes Ctrl+A for select all", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Select All Notes') && uiStr.includes('Ctrl+A'), 'Keyboard shortcuts help should include Ctrl+A');
+});
+
+TestRunner.test("Day 590 - Keyboard shortcuts help includes Ctrl+Shift+A for deselect", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Deselect All Notes') && uiStr.includes('Ctrl+Shift+A'), 'Keyboard shortcuts help should include Ctrl+Shift+A');
+});
+
+TestRunner.test("Day 590 - APP_VERSION validation for Day 590", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 590");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 246, "Minor version should be >= 246 for Day 590");
+    }
+});
