@@ -5448,3 +5448,295 @@ TestRunner.test("Day 597 - APP_VERSION validation for Day 597", (t) => {
         t.assertTruthy(versionParts[1] >= 252, "Minor version should be >= 252 for Day 597");
     }
 });
+// Day 597: Swing, Track Group Members, Master Effects, Timeline Markers, Track Templates State Function Tests
+// =============================================
+TestRunner.test("Day 597 - Swing - getSwingState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSwingState'), 'getSwingState should be exported');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSwingState'), 'setSwingState should be exported');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setSwingState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingState');
+    const labelIdx = stateStr.indexOf('Set Swing', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setSwingState undo label should include "Set Swing"');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSwingEnabledState'), 'setSwingEnabledState should be exported');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingEnabledState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingEnabledState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setSwingEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingEnabledState has descriptive undo label with On/Off", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingEnabledState');
+    const labelIdx = stateStr.indexOf('Toggle Swing', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setSwingEnabledState undo label should include "Toggle Swing"');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingAmountState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSwingAmountState'), 'setSwingAmountState should be exported');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingAmountState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingAmountState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setSwingAmountState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Swing - setSwingAmountState has descriptive undo label with amount", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingAmountState');
+    const labelIdx = stateStr.indexOf('Set Swing Amount to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setSwingAmountState undo label should include "Set Swing Amount to"');
+});
+
+TestRunner.test("Day 597 - Track Group Members - addTrackToGroupState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addTrackToGroupState'), 'addTrackToGroupState should be exported');
+});
+
+TestRunner.test("Day 597 - Track Group Members - addTrackToGroupState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTrackToGroupState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'addTrackToGroupState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Track Group Members - addTrackToGroupState has descriptive undo label with group name", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTrackToGroupState');
+    const labelIdx = stateStr.indexOf('Add Track to Group', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'addTrackToGroupState undo label should include "Add Track to Group"');
+});
+
+TestRunner.test("Day 597 - Track Group Members - removeTrackFromGroupState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeTrackFromGroupState'), 'removeTrackFromGroupState should be exported');
+});
+
+TestRunner.test("Day 597 - Track Group Members - removeTrackFromGroupState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTrackFromGroupState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'removeTrackFromGroupState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Track Group Members - removeTrackFromGroupState has descriptive undo label with group name", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTrackFromGroupState');
+    const labelIdx = stateStr.indexOf('Remove Track from Group', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'removeTrackFromGroupState undo label should include "Remove Track from Group"');
+});
+
+TestRunner.test("Day 597 - Master Effects - addMasterEffectToState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addMasterEffectToState'), 'addMasterEffectToState should be exported');
+});
+
+TestRunner.test("Day 597 - Master Effects - addMasterEffectToState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addMasterEffectToState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'addMasterEffectToState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Master Effects - addMasterEffectToState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addMasterEffectToState');
+    const labelIdx = stateStr.indexOf('Add ', fnIdx);
+    const effectTypeIdx = stateStr.indexOf('Master Effect', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200 && effectTypeIdx > fnIdx, 'addMasterEffectToState undo label should include "Add" and "Master Effect"');
+});
+
+TestRunner.test("Day 597 - Master Effects - removeMasterEffectFromState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeMasterEffectFromState'), 'removeMasterEffectFromState should be exported');
+});
+
+TestRunner.test("Day 597 - Master Effects - removeMasterEffectFromState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeMasterEffectFromState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'removeMasterEffectFromState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Master Effects - removeMasterEffectFromState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeMasterEffectFromState');
+    const labelIdx = stateStr.indexOf('Remove Master Effect', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'removeMasterEffectFromState undo label should include "Remove Master Effect"');
+});
+
+TestRunner.test("Day 597 - Master Effects - updateMasterEffectParamInState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function updateMasterEffectParamInState'), 'updateMasterEffectParamInState should be exported');
+});
+
+TestRunner.test("Day 597 - Master Effects - updateMasterEffectParamInState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function updateMasterEffectParamInState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'updateMasterEffectParamInState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Master Effects - reorderMasterEffectInState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function reorderMasterEffectInState'), 'reorderMasterEffectInState should be exported');
+});
+
+TestRunner.test("Day 597 - Master Effects - reorderMasterEffectInState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function reorderMasterEffectInState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'reorderMasterEffectInState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Timeline Markers - addTimelineMarkerState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addTimelineMarkerState'), 'addTimelineMarkerState should be exported');
+});
+
+TestRunner.test("Day 597 - Timeline Markers - addTimelineMarkerState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTimelineMarkerState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'addTimelineMarkerState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Timeline Markers - removeTimelineMarkerState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeTimelineMarkerState'), 'removeTimelineMarkerState should be exported');
+});
+
+TestRunner.test("Day 597 - Timeline Markers - removeTimelineMarkerState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTimelineMarkerState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'removeTimelineMarkerState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Timeline Markers - removeTimelineMarkerState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTimelineMarkerState');
+    const labelIdx = stateStr.indexOf('Remove Timeline Marker', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'removeTimelineMarkerState undo label should include "Remove Timeline Marker"');
+});
+
+TestRunner.test("Day 597 - Timeline Markers - clearTimelineMarkersState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function clearTimelineMarkersState'), 'clearTimelineMarkersState should be exported');
+});
+
+TestRunner.test("Day 597 - Timeline Markers - clearTimelineMarkersState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearTimelineMarkersState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'clearTimelineMarkersState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Timeline Markers - clearTimelineMarkersState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearTimelineMarkersState');
+    const labelIdx = stateStr.indexOf('Clear All Timeline Markers', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'clearTimelineMarkersState undo label should include "Clear All Timeline Markers"');
+});
+
+TestRunner.test("Day 597 - Track Templates - addTrackTemplateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addTrackTemplateState'), 'addTrackTemplateState should be exported');
+});
+
+TestRunner.test("Day 597 - Track Templates - addTrackTemplateState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTrackTemplateState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'addTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Track Templates - addTrackTemplateState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTrackTemplateState');
+    const labelIdx = stateStr.indexOf('Add Track Template', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'addTrackTemplateState undo label should include "Add Track Template"');
+});
+
+TestRunner.test("Day 597 - Track Templates - updateTrackTemplateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function updateTrackTemplateState'), 'updateTrackTemplateState should be exported');
+});
+
+TestRunner.test("Day 597 - Track Templates - updateTrackTemplateState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function updateTrackTemplateState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'updateTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Track Templates - removeTrackTemplateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeTrackTemplateState'), 'removeTrackTemplateState should be exported');
+});
+
+TestRunner.test("Day 597 - Track Templates - removeTrackTemplateState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTrackTemplateState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'removeTrackTemplateState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Track Templates - removeTrackTemplateState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTrackTemplateState');
+    const labelIdx = stateStr.indexOf('Remove Track Template', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'removeTrackTemplateState undo label should include "Remove Track Template"');
+});
+
+TestRunner.test("Day 597 - Track Templates - clearTrackTemplatesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function clearTrackTemplatesState'), 'clearTrackTemplatesState should be exported');
+});
+
+TestRunner.test("Day 597 - Track Templates - clearTrackTemplatesState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearTrackTemplatesState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'clearTrackTemplatesState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 597 - Track Templates - clearTrackTemplatesState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearTrackTemplatesState');
+    const labelIdx = stateStr.indexOf('Clear All Track Templates', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'clearTrackTemplatesState undo label should include "Clear All Track Templates"');
+});
+
+TestRunner.test("Day 597 - APP_VERSION validation for Day 597", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 597");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 252, "Minor version should be >= 252 for Day 597");
+    }
+});
