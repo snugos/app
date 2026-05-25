@@ -4192,3 +4192,98 @@ TestRunner.test("Day 588 - APP_VERSION validation for Day 588", (t) => {
         t.assertTruthy(versionParts[1] >= 244, "Minor version should be >= 244 for Day 588");
     }
 });
+
+// Day 589: Quantize Sequence Tests
+TestRunner.test("Day 589 - quantizeSequence is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.quantizeSequence, 'function', 'quantizeSequence should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 589 - quantizeSequence accepts quantizeTo parameter with default 16", (t) => {
+    const funcStr = Track.prototype.quantizeSequence.toString();
+    t.assertTruthy(funcStr.includes('quantizeTo = 16'), 'quantizeSequence should have quantizeTo parameter with default 16');
+});
+
+TestRunner.test("Day 589 - quantizeSequence returns 0 for Audio tracks", (t) => {
+    const track = new Track(999, 'Audio');
+    const result = track.quantizeSequence();
+    t.assertEqual(result, 0, 'quantizeSequence should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 589 - quantizeSequence gets active sequence via getActiveSequence", (t) => {
+    const track = new Track(1, 'Synth');
+    track.sequences = [{ id: 'seq1', name: 'Test', data: [[null]], length: 16 }];
+    track.activeSequenceId = 'seq1';
+    const getActiveSequenceSpy = { called: false };
+    const originalGetActiveSequence = track.getActiveSequence.bind(track);
+    track.getActiveSequence = function() {
+        getActiveSequenceSpy.called = true;
+        return originalGetActiveSequence();
+    };
+    track.quantizeSequence(16);
+    t.assertTruthy(getActiveSequenceSpy.called, 'quantizeSequence should call getActiveSequence');
+});
+
+TestRunner.test("Day 589 - quantizeSequence returns 0 if no active sequence", (t) => {
+    const track = new Track(1, 'Synth');
+    track.sequences = [];
+    const result = track.quantizeSequence();
+    t.assertEqual(result, 0, 'quantizeSequence should return 0 when no active sequence');
+});
+
+TestRunner.test("Day 589 - quantizeSequence captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.quantizeSequence.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('activeSeq.data.forEach');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'quantizeSequence should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 589 - quantizeSequence uses Math.round for snapping", (t) => {
+    const funcStr = Track.prototype.quantizeSequence.toString();
+    t.assertTruthy(funcStr.includes('Math.round(col / quantizeTo) * quantizeTo'), 'quantizeSequence should use Math.round for snapping');
+});
+
+TestRunner.test("Day 589 - quantizeSequence returns count of quantized notes", (t) => {
+    const funcStr = Track.prototype.quantizeSequence.toString();
+    t.assertTruthy(funcStr.includes('quantizedCount') || funcStr.includes('snappedCount'), 'quantizeSequence should track quantized/snapped count');
+});
+
+TestRunner.test("Day 589 - Quantize to 1/16 menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Quantize to 1/16'), 'Quantize to 1/16 menu item should exist');
+});
+
+TestRunner.test("Day 589 - Quantize to 1/8 menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Quantize to 1/8'), 'Quantize to 1/8 menu item should exist');
+});
+
+TestRunner.test("Day 589 - Quantize to 1/4 menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Quantize to 1/4'), 'Quantize to 1/4 menu item should exist');
+});
+
+TestRunner.test("Day 589 - Quantize menu items call quantizeSequence with correct parameters", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('quantizeSequence(16)') && uiStr.includes('quantizeSequence(8)') && uiStr.includes('quantizeSequence(4)'), 'Quantize menu items should call quantizeSequence with 16, 8, 4');
+});
+
+TestRunner.test("Day 589 - Quantize menu items call recreateToneSequence after quantize", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const quantizeIdx = uiStr.indexOf('quantizeSequence');
+    const recreateIdx = uiStr.indexOf('recreateToneSequence', quantizeIdx);
+    t.assertTruthy(recreateIdx !== -1, 'Quantize menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 589 - Quantize menu items show notification with quantized count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Quantized') && uiStr.includes('note(s)'), 'Quantize menu items should show notification with quantized count');
+});
+
+TestRunner.test("Day 589 - APP_VERSION validation for Day 589", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 589");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 245, "Minor version should be >= 245 for Day 589");
+    }
+});
