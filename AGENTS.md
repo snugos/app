@@ -1,4 +1,28 @@
 # SnugOS DAW - AGENTS.md
+#### Day 589: Quantize Sequence Tests (2026-05-25)
+- **Tests**: Added 16 tests for `quantizeSequence` method and Quantize menu items (1/16, 1/8, 1/4)
+- **Files Modified**:
+  - `js/constants.js`: Added APP_VERSION constant (was undefined causing test failures)
+  - `js/tests.js`: Added Day 589 test block with 16 tests for quantizeSequence
+- **Test Details** (`js/tests.js`): 16 tests covering:
+  - `quantizeSequence` is a function on Track.prototype
+  - quantizeSequence accepts quantizeTo parameter with default 16
+  - Returns 0 for Audio tracks
+  - Gets active sequence via getActiveSequence
+  - Returns 0 if no active sequence
+  - Captures undo BEFORE mutation (forEachIdx > captureIdx)
+  - Uses Math.round for snapping formula
+  - Returns count of quantized notes
+  - Quantize to 1/16, 1/8, 1/4 menu items exist
+  - Menu items call quantizeSequence with correct parameters (16, 8, 4)
+  - Menu items call recreateToneSequence after quantize
+  - Menu items show notification with quantized count
+  - APP_VERSION validation (>= 2.245 for Day 589)
+- **Bug Fix**: APP_VERSION constant was missing from constants.js
+- **Version**: Bumped to 2.245.0
+- **Test Count**: Increased from 4194 to 4210
+
+
 
 #### Day 588: Invert Velocities Feature (2026-05-25)
 - **Feature**: Added `invertVelocities()` method to Track class and "Invert Velocities" menu item to sequencer context menu
