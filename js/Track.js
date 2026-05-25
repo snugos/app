@@ -2224,6 +2224,81 @@ export class Track {
         return noteCount;
     }
 
+    // Sort notes within each column (step) by velocity or pitch
+    // mode: 'velocity-desc', 'velocity-asc', 'pitch-desc', 'pitch-asc'
+    // Useful for arpeggio-like patterns where you want notes ordered by intensity
+    sortColumnNotes(mode = 'velocity-desc') {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} sortColumnNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Sort column notes (${mode}) on ${activeSeq.name}`);
+
+        let sortedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        // For each column (step), collect active notes and sort them
+        for (let col = 0; col < totalSteps; col++) {
+            // Collect all active notes in this column with their row index and sort key
+            const notesInColumn = [];
+            for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+                const row = activeSeq.data[rowIndex];
+                if (!row) continue;
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    // Get sort key based on mode
+                    let sortKey;
+                    if (mode === 'velocity-desc' || mode === 'velocity-asc') {
+                        sortKey = stepData.velocity !== undefined ? stepData.velocity : 0.5;
+                    } else if (mode === 'pitch-desc' || mode === 'pitch-asc') {
+                        // Pitch is based on row index (higher row = higher pitch typically)
+                        sortKey = rowIndex;
+                    } else {
+                        sortKey = rowIndex;
+                    }
+                    notesInColumn.push({ rowIndex, stepData, sortKey });
+                }
+            }
+
+            if (notesInColumn.length <= 1) continue;
+
+            // Sort based on mode
+            if (mode === 'velocity-desc') {
+                notesInColumn.sort((a, b) => b.sortKey - a.sortKey);
+            } else if (mode === 'velocity-asc') {
+                notesInColumn.sort((a, b) => a.sortKey - b.sortKey);
+            } else if (mode === 'pitch-desc') {
+                // Higher pitch (higher row index) first
+                notesInColumn.sort((a, b) => b.sortKey - a.sortKey);
+            } else if (mode === 'pitch-asc') {
+                // Lower pitch (lower row index) first
+                notesInColumn.sort((a, b) => a.sortKey - b.sortKey);
+            }
+
+            // Clear the column
+            for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+                const row = activeSeq.data[rowIndex];
+                if (row) row[col] = null;
+            }
+
+            // Place sorted notes back in order
+            for (let i = 0; i < notesInColumn.length; i++) {
+                const { rowIndex, stepData } = notesInColumn[i];
+                if (activeSeq.data[rowIndex]) {
+                    activeSeq.data[rowIndex][col] = stepData;
+                }
+                sortedCount++;
+            }
+        }
+
+        return sortedCount;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         if (this.type === 'Audio') return;
