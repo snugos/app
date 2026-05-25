@@ -1,43 +1,43 @@
-#### Day 585: Sort Column Notes Feature (2026-05-24)
-- **Feature**: Added `sortColumnNotes(mode)` method to Track class and "Sort Column Notes (Velocity Hi→Lo/Velocity Lo→Hi/Pitch Hi→Lo/Pitch Lo→Hi)" menu items to sequencer context menu
+#### Day 586: Ramp Probabilities Feature (2026-05-24)
+- **Feature**: Added `rampProbabilities(startProbability, endProbability)` method to Track class and "Ramp Probabilities (Sparse Start/Dense Start/Escalate/De-escalate)" menu items to sequencer context menu
 - **Files Modified**:
-  - `js/Track.js`: Added `sortColumnNotes(mode)` method after `deselectAllNotes`
-  - `js/ui.js`: Added four Sort Column Notes menu items in sequencer context menu
-  - `js/tests.js`: Added Day 585 test block with 19 tests for sortColumnNotes
-  - `js/constants.js`: Bumped APP_VERSION to 2.242.0
+  - `js/Track.js`: Added `rampProbabilities(startProbability, endProbability)` method after `rampVelocities`
+  - `js/ui.js`: Added four Ramp Probabilities menu items in sequencer context menu
+  - `js/tests.js`: Added Day 586 test block with 19 tests for rampProbabilities
+  - `js/constants.js`: Bumped APP_VERSION to 2.243.0
 - **Feature Details**:
-  - **sortColumnNotes** (`js/Track.js`): Sorts notes within each column by velocity or pitch
+  - **rampProbabilities** (`js/Track.js`): Applies linear interpolation to note probability values across columns
     - Returns 0 for Audio tracks (no sequencer data)
     - Validates active sequence exists via `getActiveSequence()`
-    - Captures undo state BEFORE mutation (following established pattern)
-    - Four modes: velocity-desc, velocity-asc, pitch-desc, pitch-asc
-    - For each column, collects active notes, sorts by the specified criteria, places back
-    - Returns count of sorted notes
-  - **Sort Column Notes Menu Items** (`js/ui.js`): Four menu items in sequencer context menu
-    - "Sort Column Notes (Velocity Hi→Lo)" - calls `sortColumnNotes('velocity-desc')`
-    - "Sort Column Notes (Velocity Lo→Hi)" - calls `sortColumnNotes('velocity-asc')`
-    - "Sort Column Notes (Pitch Hi→Lo)" - calls `sortColumnNotes('pitch-desc')`
-    - "Sort Column Notes (Pitch Lo→Hi)" - calls `sortColumnNotes('pitch-asc')`
-    - All call `recreateToneSequence(true)` after sorting
-    - Show notifications: "Sorted {count} note(s) by velocity/pitch..."
+    - Clamps probabilities to 0.0-1.0 range
+    - Captures undo state BEFORE mutation (following established pattern from Days 545-585)
+    - For each row, iterates columns and applies linear interpolation between start and end probabilities
+    - Returns count of ramped notes
+  - **Ramp Probabilities Menu Items** (`js/ui.js`): Four menu items in sequencer context menu
+    - "Ramp Probabilities (Sparse Start)" - calls `rampProbabilities(0.2, 1.0)`
+    - "Ramp Probabilities (Dense Start)" - calls `rampProbabilities(1.0, 0.2)`
+    - "Ramp Probabilities (Escalate)" - calls `rampProbabilities(0.3, 0.9)`
+    - "Ramp Probabilities (De-escalate)" - calls `rampProbabilities(0.9, 0.3)`
+    - All call `recreateToneSequence(true)` after ramping
+    - Show notifications: "Ramped {count} probability value(s) with sparse to dense/dense to sparse/escalating/de-escalating effect."
+    - Show "No notes to ramp." when nothing to ramp
 - **Tests** (`js/tests.js`): 19 tests covering:
-  - `sortColumnNotes` is a function on Track.prototype
-  - sortColumnNotes accepts mode parameter with default
+  - `rampProbabilities` is a function on Track.prototype
+  - rampProbabilities accepts startProbability and endProbability parameters with defaults
   - Returns 0 for Audio tracks
   - Gets active sequence via getActiveSequence
   - Returns 0 if no active sequence
   - Captures undo BEFORE mutation
-  - Sorts by velocity descending
-  - Sorts by velocity ascending
-  - Sorts by pitch descending (high to low)
-  - Sorts by pitch ascending (low to high)
-  - All 4 menu items exist
-  - Menu items call sortColumnNotes with correct parameters
+  - Clamps probabilities to 0-1 range
+  - Applies linear interpolation across columns
+  - Returns count of ramped notes
+  - All 4 Ramp Probabilities menu items exist
+  - Menu items call rampProbabilities with correct parameters
   - Menu items call recreateToneSequence
   - Menu items show notification with count
-  - APP_VERSION validation (>= 2.242 for Day 585)
-- **Version**: Bumped to 2.242.0
-- **Test Count**: Increased from 3738 to 3757
+  - APP_VERSION validation (>= 2.243 for Day 586)
+- **Version**: Bumped to 2.243.0
+- **Test Count**: Increased from 3757 to 3776
 
 
 # SnugOS DAW - AGENTS.md

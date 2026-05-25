@@ -3895,3 +3895,113 @@ TestRunner.test("Day 585 - APP_VERSION validation for Day 585", (t) => {
         t.assertTruthy(versionParts[1] >= 241, "Minor version should be >= 241 for Day 585");
     }
 });
+
+// Day 586: Ramp Probabilities Feature
+TestRunner.test("Day 586 - rampProbabilities is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.rampProbabilities === 'function', 'rampProbabilities should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 586 - rampProbabilities accepts startProbability and endProbability parameters with defaults", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const match = trackStr.match(/rampProbabilities\s*\(\s*startProbability\s*=\s*[\d.]+\s*,\s*endProbability\s*=\s*[\d.]+\s*\)/);
+    t.assertTruthy(match, 'rampProbabilities should accept startProbability and endProbability parameters with defaults');
+});
+
+TestRunner.test("Day 586 - rampProbabilities returns 0 for Audio tracks", (t) => {
+    const track = new Track({ id: 1, name: 'Test', type: 'Audio' });
+    const result = track.rampProbabilities(0.3, 1.0);
+    t.assertEquals(0, result, 'rampProbabilities should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 586 - rampProbabilities gets active sequence via getActiveSequence", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const rampIdx = trackStr.indexOf('rampProbabilities(');
+    const getActiveIdx = trackStr.indexOf('getActiveSequence()', rampIdx);
+    t.assertTruthy(getActiveIdx > rampIdx, 'rampProbabilities should call getActiveSequence');
+});
+
+TestRunner.test("Day 586 - rampProbabilities returns 0 if no active sequence", (t) => {
+    const track = new Track({ id: 1, name: 'Test', type: 'Sampler' });
+    // No sequences added - getActiveSequence should return null/undefined
+    const result = track.rampProbabilities(0.3, 1.0);
+    t.assertEquals(0, result, 'rampProbabilities should return 0 if no active sequence');
+});
+
+TestRunner.test("Day 586 - rampProbabilities captures undo BEFORE mutation", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const rampIdx = trackStr.indexOf('rampProbabilities(');
+    const captureIdx = trackStr.indexOf('_captureUndoState', rampIdx);
+    const forEachIdx = trackStr.indexOf('for (let rowIndex', rampIdx);
+    t.assertTruthy(captureIdx > 0 && captureIdx < forEachIdx, 'rampProbabilities should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 586 - rampProbabilities clamps probabilities to 0-1 range", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const rampIdx = trackStr.indexOf('rampProbabilities(');
+    const clampStartIdx = trackStr.indexOf('Math.max(0.0', rampIdx);
+    const clampEndIdx = trackStr.indexOf('Math.max(0.0', clampStartIdx + 100);
+    t.assertTruthy(clampStartIdx > rampIdx, 'rampProbabilities should clamp start probability');
+    t.assertTruthy(clampEndIdx > clampStartIdx, 'rampProbabilities should clamp end probability');
+});
+
+TestRunner.test("Day 586 - rampProbabilities applies linear interpolation across columns", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const rampIdx = trackStr.indexOf('rampProbabilities(');
+    const interpIdx = trackStr.indexOf('(clampedEnd - clampedStart) * t', rampIdx);
+    t.assertTruthy(interpIdx > rampIdx, 'rampProbabilities should apply linear interpolation');
+});
+
+TestRunner.test("Day 586 - rampProbabilities returns count of ramped notes", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const rampIdx = trackStr.indexOf('rampProbabilities(');
+    const returnIdx = trackStr.indexOf('return rampedCount', rampIdx);
+    t.assertTruthy(returnIdx > rampIdx, 'rampProbabilities should return rampedCount');
+});
+
+TestRunner.test("Day 586 - Ramp Probabilities (Sparse Start) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Ramp Probabilities (Sparse Start)'), 'Ramp Probabilities (Sparse Start) menu item should exist');
+});
+
+TestRunner.test("Day 586 - Ramp Probabilities (Dense Start) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Ramp Probabilities (Dense Start)'), 'Ramp Probabilities (Dense Start) menu item should exist');
+});
+
+TestRunner.test("Day 586 - Ramp Probabilities (Escalate) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Ramp Probabilities (Escalate)'), 'Ramp Probabilities (Escalate) menu item should exist');
+});
+
+TestRunner.test("Day 586 - Ramp Probabilities (De-escalate) menu item exists", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Ramp Probabilities (De-escalate)'), 'Ramp Probabilities (De-escalate) menu item should exist');
+});
+
+TestRunner.test("Day 586 - Ramp Probabilities menu items call rampProbabilities", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes("rampProbabilities(0.2, 1.0)"), 'Sparse Start should call rampProbabilities(0.2, 1.0)');
+    t.assertTruthy(uiStr.includes("rampProbabilities(1.0, 0.2)"), 'Dense Start should call rampProbabilities(1.0, 0.2)');
+    t.assertTruthy(uiStr.includes("rampProbabilities(0.3, 0.9)"), 'Escalate should call rampProbabilities(0.3, 0.9)');
+    t.assertTruthy(uiStr.includes("rampProbabilities(0.9, 0.3)"), 'De-escalate should call rampProbabilities(0.9, 0.3)');
+});
+
+TestRunner.test("Day 586 - Ramp Probabilities menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const rampProbMatches = uiStr.match(/Ramp Probabilities[^}]+recreateToneSequence/g);
+    t.assertTruthy(rampProbMatches && rampProbMatches.length >= 4, 'All Ramp Probabilities menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 586 - Ramp Probabilities menu items show notifications with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('ramped ${result} probability'), 'Ramp Probabilities should show notification with ramped count');
+});
+
+TestRunner.test("Day 586 - APP_VERSION validation for Day 586", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 586");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 242, "Minor version should be >= 242 for Day 586");
+    }
+});

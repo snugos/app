@@ -1686,6 +1686,48 @@ export class Track {
         return rampedCount;
     }
 
+    // Ramp probabilities - apply a linear ramp from startProbability to endProbability across the sequence
+    // Creates a probability gradient where notes at the start or end are more/less likely to trigger
+    // startProbability: 0.0 to 1.0, probability at the start of the sequence
+    // endProbability: 0.0 to 1.0, probability at the end of the sequence
+    rampProbabilities(startProbability = 0.3, endProbability = 1.0) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} rampProbabilities] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp probabilities to valid range
+        const clampedStart = Math.max(0.0, Math.min(1.0, startProbability));
+        const clampedEnd = Math.max(0.0, Math.min(1.0, endProbability));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Ramp probabilities on ${activeSeq.name}`);
+
+        let rampedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.probability !== undefined) {
+                    // Linear interpolation from startProbability to endProbability
+                    const t = totalSteps > 1 ? col / (totalSteps - 1) : 0;
+                    const newProbability = clampedStart + (clampedEnd - clampedStart) * t;
+                    row[col].probability = Math.round(Math.max(0.0, Math.min(1.0, newProbability)) * 100) / 100;
+                    rampedCount++;
+                }
+            }
+        }
+
+        return rampedCount;
+    }
+
     // Randomize the sequence - fill cells with random notes based on density
     // density: 0.0 to 1.0, where 1.0 = 100% chance of a note in each cell
     randomizeSequence(density = Constants.RANDOMIZE_DENSITY_DEFAULT) {
