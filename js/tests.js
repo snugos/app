@@ -5206,3 +5206,143 @@ TestRunner.test("Day 596 - Playback Mode - APP_VERSION validation for Day 596", 
         t.assertTruthy(versionParts[1] >= 251, "Minor version should be >= 251 for Day 596");
     }
 });
+
+// Day 596: Time Signature and Recording State Function Tests
+// =============================================================
+TestRunner.test("Day 596 - Time Signature - getTimeSignatureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimeSignatureState'), 'getTimeSignatureState should be exported');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTimeSignatureState'), 'setTimeSignatureState should be exported');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setTimeSignatureState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureState');
+    const labelIdx = stateStr.indexOf('Set Time Signature to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setTimeSignatureState should have descriptive undo label');
+});
+
+TestRunner.test("Day 596 - Time Signature - getTimeSignatureNumeratorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimeSignatureNumeratorState'), 'getTimeSignatureNumeratorState should be exported');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureNumeratorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTimeSignatureNumeratorState'), 'setTimeSignatureNumeratorState should be exported');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureNumeratorState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureNumeratorState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setTimeSignatureNumeratorState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureNumeratorState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureNumeratorState');
+    const labelIdx = stateStr.indexOf('Set Time Signature Numerator to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setTimeSignatureNumeratorState should have descriptive undo label');
+});
+
+TestRunner.test("Day 596 - Time Signature - getTimeSignatureDenominatorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimeSignatureDenominatorState'), 'getTimeSignatureDenominatorState should be exported');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureDenominatorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTimeSignatureDenominatorState'), 'setTimeSignatureDenominatorState should be exported');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureDenominatorState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureDenominatorState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setTimeSignatureDenominatorState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 596 - Time Signature - setTimeSignatureDenominatorState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureDenominatorState');
+    const labelIdx = stateStr.indexOf('Set Time Signature Denominator to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setTimeSignatureDenominatorState should have descriptive undo label');
+});
+
+TestRunner.test("Day 596 - Recording - setIsRecordingState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setIsRecordingState'), 'setIsRecordingState should be exported');
+});
+
+TestRunner.test("Day 596 - Recording - setIsRecordingState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setIsRecordingState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setIsRecordingState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 596 - Recording - setIsRecordingState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setIsRecordingState');
+    const labelIdx = stateStr.indexOf('Set Recording State', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setIsRecordingState should have descriptive undo label');
+});
+
+TestRunner.test("Day 596 - Recording - setRecordingTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setRecordingTrackIdState'), 'setRecordingTrackIdState should be exported');
+});
+
+TestRunner.test("Day 596 - Recording - setRecordingTrackIdState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setRecordingTrackIdState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setRecordingTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 596 - Recording - setRecordingTrackIdState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setRecordingTrackIdState');
+    const labelIdx = stateStr.indexOf('Set Recording Track to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setRecordingTrackIdState should have descriptive undo label');
+});
+
+TestRunner.test("Day 596 - Recording - setRecordingStartTimeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setRecordingStartTimeState'), 'setRecordingStartTimeState should be exported');
+});
+
+TestRunner.test("Day 596 - Recording - setRecordingStartTimeState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setRecordingStartTimeState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx, 'setRecordingStartTimeState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 596 - Recording - setRecordingStartTimeState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setRecordingStartTimeState');
+    const labelIdx = stateStr.indexOf('Set Recording Start Time to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setRecordingStartTimeState should have descriptive undo label');
+});
+
+TestRunner.test("Day 596 - APP_VERSION validation for Day 596", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 596");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 251, "Minor version should be >= 251 for Day 596");
+    }
+});
