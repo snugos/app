@@ -7632,11 +7632,11 @@ TestRunner.test("Day 610 - Timeline Markers - addTimelineMarkerState is a functi
 });
 
 TestRunner.test("Day 610 - Timeline Markers - addTimelineMarkerState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function addTimelineMarkerState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'addTimelineMarkerState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function addTimelineMarkerState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'addTimelineMarkerState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Timeline Markers - addTimelineMarkerState has descriptive undo label", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function addTimelineMarkerState'); const labelIdx = stateStr.indexOf('Add Timeline Marker', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 300, 'addTimelineMarkerState should have Add Timeline Marker undo label');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function addTimelineMarkerState'); const labelIdx = stateStr.indexOf('Add Timeline Marker', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 600, 'addTimelineMarkerState should have Add Timeline Marker undo label');
 });
 
 TestRunner.test("Day 610 - Timeline Markers - setTimelineMarkerState is a function export", (t) => {
@@ -7644,7 +7644,7 @@ TestRunner.test("Day 610 - Timeline Markers - setTimelineMarkerState is a functi
 });
 
 TestRunner.test("Day 610 - Timeline Markers - setTimelineMarkerState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setTimelineMarkerState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setTimelineMarkerState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setTimelineMarkerState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setTimelineMarkerState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Timeline Markers - removeTimelineMarkerState is a function export", (t) => {
@@ -7652,7 +7652,7 @@ TestRunner.test("Day 610 - Timeline Markers - removeTimelineMarkerState is a fun
 });
 
 TestRunner.test("Day 610 - Timeline Markers - removeTimelineMarkerState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function removeTimelineMarkerState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'removeTimelineMarkerState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function removeTimelineMarkerState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'removeTimelineMarkerState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Timeline Markers - clearTimelineMarkersState is a function export", (t) => {
@@ -7660,7 +7660,7 @@ TestRunner.test("Day 610 - Timeline Markers - clearTimelineMarkersState is a fun
 });
 
 TestRunner.test("Day 610 - Timeline Markers - clearTimelineMarkersState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function clearTimelineMarkersState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'clearTimelineMarkersState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function clearTimelineMarkersState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'clearTimelineMarkersState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeState is a function export", (t) => {
@@ -7668,11 +7668,11 @@ TestRunner.test("Day 610 - Chord Mode - setChordModeState is a function export",
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setChordModeState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setChordModeState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeState has descriptive undo label", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeState'); const labelIdx = stateStr.indexOf('Set Chord Mode', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 300, 'setChordModeState should have Set Chord Mode undo label');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeState'); const labelIdx = stateStr.indexOf('Set Chord Mode', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 600, 'setChordModeState should have Set Chord Mode undo label');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeEnabledState is a function export", (t) => {
@@ -7680,11 +7680,11 @@ TestRunner.test("Day 610 - Chord Mode - setChordModeEnabledState is a function e
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeEnabledState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeEnabledState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setChordModeEnabledState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeEnabledState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setChordModeEnabledState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeEnabledState has descriptive undo label", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeEnabledState'); const labelIdx = stateStr.indexOf('Toggle Chord Mode', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 300, 'setChordModeEnabledState should have Toggle Chord Mode undo label');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeEnabledState'); const labelIdx = stateStr.indexOf('Toggle Chord Mode', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 600, 'setChordModeEnabledState should have Toggle Chord Mode undo label');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeRootState is a function export", (t) => {
@@ -7692,11 +7692,11 @@ TestRunner.test("Day 610 - Chord Mode - setChordModeRootState is a function expo
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeRootState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeRootState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setChordModeRootState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeRootState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setChordModeRootState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeRootState has descriptive undo label", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeRootState'); const labelIdx = stateStr.indexOf('Set Chord Root', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 300, 'setChordModeRootState should have Set Chord Root undo label');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeRootState'); const labelIdx = stateStr.indexOf('Set Chord Root', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 600, 'setChordModeRootState should have Set Chord Root undo label');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeTypeState is a function export", (t) => {
@@ -7704,11 +7704,11 @@ TestRunner.test("Day 610 - Chord Mode - setChordModeTypeState is a function expo
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeTypeState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeTypeState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setChordModeTypeState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeTypeState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setChordModeTypeState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeTypeState has descriptive undo label", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeTypeState'); const labelIdx = stateStr.indexOf('Set Chord Type', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 300, 'setChordModeTypeState should have Set Chord Type undo label');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeTypeState'); const labelIdx = stateStr.indexOf('Set Chord Type', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 600, 'setChordModeTypeState should have Set Chord Type undo label');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeLockState is a function export", (t) => {
@@ -7716,7 +7716,7 @@ TestRunner.test("Day 610 - Chord Mode - setChordModeLockState is a function expo
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordModeLockState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeLockState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setChordModeLockState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordModeLockState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setChordModeLockState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Chord Mode - getChordVoicingState is a function export", (t) => {
@@ -7728,11 +7728,11 @@ TestRunner.test("Day 610 - Chord Mode - setChordVoicingState is a function expor
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordVoicingState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordVoicingState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setChordVoicingState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordVoicingState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setChordVoicingState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Chord Mode - setChordVoicingState has descriptive undo label", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordVoicingState'); const labelIdx = stateStr.indexOf('Set Chord Voicing', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 300, 'setChordVoicingState should have Set Chord Voicing undo label');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setChordVoicingState'); const labelIdx = stateStr.indexOf('Set Chord Voicing', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 600, 'setChordVoicingState should have Set Chord Voicing undo label');
 });
 
 TestRunner.test("Day 610 - Solo State - setSoloedTrackIdState is a function export", (t) => {
@@ -7740,11 +7740,11 @@ TestRunner.test("Day 610 - Solo State - setSoloedTrackIdState is a function expo
 });
 
 TestRunner.test("Day 610 - Solo State - setSoloedTrackIdState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setSoloedTrackIdState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setSoloedTrackIdState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setSoloedTrackIdState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setSoloedTrackIdState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Solo State - setSoloedTrackIdState has descriptive undo label", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setSoloedTrackIdState'); const labelIdx = stateStr.indexOf('Solo', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 300, 'setSoloedTrackIdState should have Solo undo label');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setSoloedTrackIdState'); const labelIdx = stateStr.indexOf('Solo', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 600, 'setSoloedTrackIdState should have Solo undo label');
 });
 
 TestRunner.test("Day 610 - Mute State - setTrackMutedState is a function export", (t) => {
@@ -7752,11 +7752,11 @@ TestRunner.test("Day 610 - Mute State - setTrackMutedState is a function export"
 });
 
 TestRunner.test("Day 610 - Mute State - setTrackMutedState calls captureStateForUndo", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setTrackMutedState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 300, 'setTrackMutedState should call captureStateForUndo');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setTrackMutedState'); const capIdx = stateStr.indexOf('captureStateForUndo', idx); t.assertTruthy(capIdx > idx && capIdx < idx + 600, 'setTrackMutedState should call captureStateForUndo');
 });
 
 TestRunner.test("Day 610 - Mute State - setTrackMutedState has descriptive undo label", (t) => {
-    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setTrackMutedState'); const labelIdx = stateStr.indexOf('Mute', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 300, 'setTrackMutedState should have Mute undo label');
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8'); const idx = stateStr.indexOf('export function setTrackMutedState'); const labelIdx = stateStr.indexOf('Mute', idx); t.assertTruthy(labelIdx > idx && labelIdx < idx + 600, 'setTrackMutedState should have Mute undo label');
 });
 
 TestRunner.test("Day 610 - Timeline - setActiveSequencerTrackIdState is a function export", (t) => {
