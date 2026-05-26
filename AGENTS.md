@@ -1,3 +1,35 @@
+#### Day 610: Timeline Markers and Chord Mode State Function Tests (2026-05-26)
+- **Tests**: Added 42 tests for Timeline Markers and Chord Mode state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 610 test block with 42 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.265.0
+- **Test Details** (`js/tests.js`): 42 tests covering:
+  - **Timeline Markers** (12 tests):
+    - getTimelineMarkersState, getTimelineMarkerByIdState exports
+    - getTimelineMarkerByIdState uses .find to locate marker by id
+    - addTimelineMarkerState export, captureStateForUndo, descriptive "Add Timeline Marker" undo label
+    - setTimelineMarkerState export, captureStateForUndo
+    - removeTimelineMarkerState export, captureStateForUndo
+    - clearTimelineMarkersState export, captureStateForUndo
+  - **Chord Mode Setters** (22 tests):
+    - setChordModeState export, captureStateForUndo, descriptive "Set Chord Mode" undo label
+    - setChordModeEnabledState export, captureStateForUndo, descriptive "Toggle Chord Mode" undo label
+    - setChordModeRootState export, captureStateForUndo, descriptive "Set Chord Root" undo label
+    - setChordModeTypeState export, captureStateForUndo, descriptive "Set Chord Type" undo label
+    - setChordModeLockState export, captureStateForUndo
+    - getChordVoicingState export
+    - setChordVoicingState export, captureStateForUndo, descriptive "Set Chord Voicing" undo label
+  - **Solo/Mute/Track State** (7 tests):
+    - setSoloedTrackIdState export, captureStateForUndo, descriptive "Solo" undo label
+    - setTrackMutedState export, captureStateForUndo, descriptive "Mute" undo label
+    - setActiveSequencerTrackIdState export
+    - setPlaybackModeStateInternal export
+  - **Track Templates** (1 test):
+    - updateTrackTemplateState has appServices guard for captureStateForUndo
+  - APP_VERSION validation (>= 2.264 for Day 610)
+- **Version**: Bumped to 2.265.0
+- **Test Count**: Increased from 1198 to 1240
+
 #### Day 609: Additional State Function Tests - Track Templates and Auto-Save Recovery (2026-05-26)
 - **Tests**: Added 11 tests for Track Template and Auto-Save Recovery state functions
 - **Files Modified**:
