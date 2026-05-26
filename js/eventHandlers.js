@@ -1994,29 +1994,78 @@ export function toggleSoloShortcut() {
     return null;
 }
 
-// --- Track Control Handlers ---
+export function handleTrackMute(trackId) {
+    if (!trackId) return;
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) {
+        console.warn(`[EventHandlers handleTrackMute] Track ${trackId} not found.`);
+        return;
+    }
+    if (localAppServices.setTrackMuted) {
+        const isMuted = localAppServices.isTrackMuted ? localAppServices.isTrackMuted(trackId) : false;
+        localAppServices.setTrackMuted(trackId, !isMuted);
+        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(trackId, 'muteChanged');
+    }
+}
 
+export function handleTrackSolo(trackId) {
+    if (!trackId) return;
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) {
+        console.warn(`[EventHandlers handleTrackSolo] Track ${trackId} not found.`);
+        return;
+    }
+    if (localAppServices.getSoloedTrackId && localAppServices.setSoloedTrackId) {
+        const soloedTrackId = localAppServices.getSoloedTrackId();
+        const isSoloed = soloedTrackId === trackId;
+        localAppServices.setSoloedTrackId(isSoloed ? null : trackId);
+        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(trackId, 'soloChanged');
+    }
+}
 
+export function handleTrackArm(trackId) {
+    if (!trackId) return;
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) {
+        console.warn(`[EventHandlers handleTrackArm] Track ${trackId} not found.`);
+        return;
+    }
+    if (localAppServices.getArmedTrackId && localAppServices.setArmedTrackId) {
+        const armedTrackId = localAppServices.getArmedTrackId();
+        const isArmed = armedTrackId === trackId;
+        localAppServices.setArmedTrackId(isArmed ? null : trackId);
+        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(trackId, 'armChanged');
+    }
+}
 
+export function handleRemoveTrack(trackId) {
+    if (!trackId) return;
+    if (localAppServices.captureStateForUndo) {
+        localAppServices.captureStateForUndo(`Remove Track ${trackId}`);
+    }
+    if (localAppServices.removeTrackFromState) {
+        localAppServices.removeTrackFromState(trackId);
+    }
+}
 
+export function handleOpenTrackInspector(trackId) {
+    if (!trackId) return;
+    if (localAppServices.openTrackInspectorWindow) {
+        localAppServices.openTrackInspectorWindow(trackId);
+    }
+}
 
-function toggleFullScreen() {
-    try {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-                const message = `Error attempting to enable full-screen mode: ${err.message} (${err.name})`;
-                if (localAppServices.showNotification) localAppServices.showNotification(message, 3000);
-                else showNotification(message, 3000);
-                console.error(message, err);
-            });
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            }
-        }
-    } catch (error) {
-        console.error("[EventHandlers toggleFullScreen] Error:", error);
-        if (localAppServices.showNotification) localAppServices.showNotification("Fullscreen toggle error.", 3000);
+export function handleOpenEffectsRack(trackId) {
+    if (!trackId) return;
+    if (localAppServices.openTrackEffectsRackWindow) {
+        localAppServices.openTrackEffectsRackWindow(trackId);
+    }
+}
+
+export function handleOpenSequencer(trackId) {
+    if (!trackId) return;
+    if (localAppServices.openTrackSequencerWindow) {
+        localAppServices.openTrackSequencerWindow(trackId);
     }
 }
 
