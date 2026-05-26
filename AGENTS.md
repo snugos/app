@@ -1,3 +1,15 @@
+#### Day 600: Sound Browser Path State Tests (2026-05-26)
+- **Tests**: Added 7 tests for Sound Browser Path state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 600 test block with 7 tests for Sound Browser Path state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.256.0
+- **Test Details** (`js/tests.js`): 7 tests covering:
+  - **getCurrentSoundBrowserPathState** (1 test): is a function export
+  - **setCurrentSoundBrowserPathState** (5 tests): is a function export, calls captureStateForUndoIfAllowed, has descriptive "Set Sound Browser Path" undo label, uses areSoundBrowserPathsEqual for comparison, normalizes path to array with Array.isArray and spread operator
+  - APP_VERSION validation (>= 2.255 for Day 600)
+- **Version**: Bumped to 2.256.0
+- **Test Count**: Increased from 980 to 987
+
 #### Day 599: Additional State Functions - Master Automation Armed, UI State, Windows, and Track Accessor Tests (2026-05-26)
 - **Tests**: Added 36 tests for Additional State Functions in state.js
 - **Files Modified**:
