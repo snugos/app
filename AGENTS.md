@@ -1,7 +1,36 @@
-#### Day 606: MIDI Export Helper Functions Tests (2026-05-26)
+#### Day 608: Ghost Track, Loop Region, Swing, and Time Signature State Function Tests (2026-05-26)
+- **Tests**: Added 29 tests for Ghost Track, Loop Region, Swing, and Time Signature state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 608 test block with 29 tests for state.js functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.263.0
+- **Test Details** (`js/tests.js`): 29 tests covering:
+  - **Ghost Track** (3 tests):
+    - setGhostTrackIdState is a function export
+    - setGhostTrackIdState calls captureStateForUndo
+    - setGhostTrackIdState has descriptive "Set Ghost Track" undo label
+  - **Loop Region State** (13 tests):
+    - setLoopRegionState is a function export, calls captureStateForUndo, descriptive "Set Loop Region to n-n" undo label, clamps values with Math.max
+    - setLoopRegionEnabledState is a function export, calls captureStateForUndo, descriptive "Toggle Loop Region On/Off" undo label
+    - setLoopRegionStartBarState is a function export, calls captureStateForUndo, descriptive "Set Loop Region Start to Bar n" undo label, clamps and adjusts endBar
+    - setLoopRegionEndBarState is a function export, calls captureStateForUndo, descriptive "Set Loop Region End to Bar n" undo label, clamps to >= startBar
+  - **Swing State** (4 tests):
+    - setSwingState is a function export
+    - setSwingState calls captureStateForUndo with "Set Swing" label
+    - setSwingState sets both enabled and amount properties
+  - **Time Signature State** (6 tests):
+    - setTimeSignatureState is a function export
+    - setTimeSignatureState calls captureStateForUndo with "Set Time Signature to n/d" label
+    - setTimeSignatureState clamps numerator to TIME_SIG_MAX_NUMERATOR
+    - setTimeSignatureState clamps denominator to TIME_SIG_MAX_DENOMINATOR
+    - setTimeSignatureState sets numerator and denominator properties
+  - APP_VERSION validation (>= 2.262 for Day 608)
+- **Version**: Bumped to 2.263.0
+- **Test Count**: Increased from 7346 to 7540
+
+#### Day 607: MIDI Export Helper Functions Tests (2026-05-26)
 - **Tests**: Added 16 tests for MIDI Export helper functions in state.js
 - **Files Modified**:
-  - `js/tests.js`: Added Day 606 test block with 16 tests for MIDI helper functions
+  - `js/tests.js`: Added Day 607 test block with 16 tests for MIDI helper functions
   - `js/constants.js`: Bumped APP_VERSION to 2.262.0
 - **Test Details** (`js/tests.js`): 16 tests covering:
   - **noteNameToMidiNumber** (4 tests):
@@ -22,7 +51,7 @@
     - handles noteOn events
     - builds MThd header chunk
     - builds MTrk track chunk
-  - APP_VERSION validation (>= 2.260 for Day 606)
+  - APP_VERSION validation (>= 2.260 for Day 607)
 - **Version**: Bumped to 2.262.0
 - **Test Count**: Increased from 1105 to 1121
 
