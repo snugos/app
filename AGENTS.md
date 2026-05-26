@@ -1,3 +1,19 @@
+#### Day 611: Fix Timeline Marker/Chord Mode Test Tolerances (2026-05-26)
+- **Bug Fix**: Widened `captureStateForUndo` search range from 300 to 600 chars in 20 tests from Day 610 test block
+- **Files Modified**:
+  - `js/tests.js`: Fixed 20 tests with wider search tolerances
+  - `js/constants.js`: Bumped APP_VERSION to 2.266.0
+- **Bug Details**:
+  - Day 610 added 42 tests for Timeline Markers and Chord Mode state functions
+  - Tests search for `captureStateForUndo` within `idx + 300` chars of function definition
+  - Functions with longer bodies (validation, error handling, multiple lines) exceeded 300-char limit
+  - 20 affected tests had false failures due to too-narrow search tolerance
+  - Fixed by extending search range to `idx + 600` chars
+  - **Functions affected**: addTimelineMarkerState, setTimelineMarkerState, removeTimelineMarkerState, clearTimelineMarkersState, setChordModeState, setChordModeEnabledState, setChordModeRootState, setChordModeTypeState, setChordModeLockState, setChordVoicingState, setSoloedTrackIdState, setTrackMutedState
+  - No new tests added; pure tolerance correction
+- **Version**: Bumped to 2.266.0
+- **Test Count**: Unchanged at 1240
+
 #### Day 610: Timeline Markers and Chord Mode State Function Tests (2026-05-26)
 - **Tests**: Added 42 tests for Timeline Markers and Chord Mode state functions in state.js
 - **Files Modified**:
