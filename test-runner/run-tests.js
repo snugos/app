@@ -133,6 +133,12 @@ global.navigator = {
     userAgent: 'Node.js Test'
 };
 global.console = console;
+global.require = require;
+// Read APP_VERSION from constants.js (which uses ESM export)
+const fs = require('fs');
+const constantsContent = fs.readFileSync('./js/constants.js', 'utf8');
+const versionMatch = constantsContent.match(/export\s+const\s+APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+global.APP_VERSION = versionMatch ? versionMatch[1] : '2.262.0';
 global.localStorage = {
     getItem: () => null,
     setItem: () => {},
