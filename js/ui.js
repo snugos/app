@@ -11,7 +11,7 @@ import {
     clearMidiCCMappings, removeMidiCCMapping, setMidiCCMapping, getMidiCCMapping,
     startMidiCCLearn, cancelMidiCCLearn
 } from './eventHandlers.js';
-import { getTracksState } from './state.js';
+import { getTracksState, getProjectNotesState, setProjectNotesState } from './state.js';
 
 
 // Module-level state for appServices, to be set by main.js
@@ -29,6 +29,8 @@ let timelineScrollX = 0; // Horizontal scroll offset for timeline
 
 // Sequencer view mode: 'step' (default) or 'piano' (piano roll)
 let sequencerViewMode = 'step';
+// Module-level clipboard for velocity copy/paste (used in sequencer click handler)
+let clipboard = null;
 
 export function toggleSequencerViewMode() {
     sequencerViewMode = sequencerViewMode === 'step' ? 'piano' : 'step';
@@ -684,6 +686,56 @@ function initializeSamplerSpecificControls(track, winEl) {
     }
 }
 
+function initializeInstrumentSamplerSpecificControls(track, winEl) {
+    if (!track || !winEl) return;
+    // Set up drop zone for instrument sampler sample upload
+    const dropZoneContainer = winEl.querySelector(`#dropZoneContainer-${track.id}-instrumentsampler`);
+    if (dropZoneContainer) {
+        dropZoneContainer.innerHTML = createDropZoneHTML(track.id, `instrumentSamplerFileInput-${track.id}`, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
+        const dropZoneEl = dropZoneContainer.querySelector('.drop-zone');
+        const fileInputEl = dropZoneContainer.querySelector(`#instrumentSamplerFileInput-${track.id}`);
+        if (dropZoneEl) {
+            setupGenericDropZoneListeners(dropZoneEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
+        }
+        if (fileInputEl) {
+            fileInputEl.onchange = (e) => {
+                if (localAppServices.loadSampleFile) {
+                    localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler', null);
+                }
+            };
+        }
+    }
+    // Set up root note selector
+    const rootNoteSelect = winEl.querySelector(`#instrumentRootNote-${track.id}`);
+    if (rootNoteSelect) {
+        const pitches = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        rootNoteSelect.innerHTML = pitches.map(p => `<option value="${p}">${p}</option>`).join('');
+        if (track.instrumentRootNote) rootNoteSelect.value = track.instrumentRootNote;
+    }
+    // Envelope knobs
+    const envParams = ['attack', 'decay', 'sustain', 'release'];
+    envParams.forEach(param => {
+        const placeholder = winEl.querySelector(`#instrumentEnv${param.charAt(0).toUpperCase() + param.slice(1)}-${track.id}-placeholder`);
+        if (placeholder) {
+            const knob = createKnob({
+                label: param.charAt(0).toUpperCase() + param.slice(1),
+                min: 0, max: 10, step: 0.01, initialValue: track[`instrumentEnv${param.charAt(0).toUpperCase() + param.slice(1)}`] || 0.1,
+                trackRef: track,
+                onValueChange: (val) => {
+                    track[`instrumentEnv${param.charAt(0).toUpperCase() + param.slice(1)}`] = val;
+                    if (track.updateInstrumentEnvelope) track.updateInstrumentEnvelope(param, val);
+                }
+            });
+            placeholder.innerHTML = '';
+            placeholder.appendChild(knob);
+        }
+    });
+    // Waveform canvas
+    const waveformCanvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
+    if (waveformCanvas && localAppServices.drawInstrumentWaveform) {
+        localAppServices.drawInstrumentWaveform(track, waveformCanvas);
+    }
+}
 
 function buildTrackInspectorContentDOM(track) {
     if (!track) return '<div>Error: Track data not found.</div>';
@@ -1234,7 +1286,7 @@ export function openSoundBrowserWindow(savedState = null) {
         const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
         if (currentLibNameFromState && localAppServices.updateSoundBrowserDisplayForLibrary) {
             console.log(`[UI SoundBrowser Re-Open/Restore] Updating display for already selected library: ${currentLibNameFromState}`);
-            localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameNameFromState);
+            localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
         }
         return openWindows.get(windowId);
     }
@@ -2822,8 +2874,8 @@ export function openTimelineWindow(savedState = null) {
     console.log('[UI openTimelineWindow] Creating timeline window...');
     
     // Check if timeline window already exists
-    if (typeof getWindowByIdState === 'function') {
-        const existingWin = getWindowByIdState('timeline');
+    if (localAppServices.getWindowById) {
+        const existingWin = localAppServices.getWindowById('timeline');
         if (existingWin) {
             existingWin.restore();
             existingWin.focus();
