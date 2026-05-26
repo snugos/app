@@ -1,3 +1,26 @@
+#### Day 605: Swing State Function Tests (2026-05-26)
+- **Tests**: Added 14 tests for Swing state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 605 test block with 14 tests for Swing state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.261.0
+- **Test Details** (`js/tests.js`): 14 tests covering:
+  - **Swing Enabled** (6 tests):
+    - getSwingEnabledState is a function export
+    - getSwingEnabledState returns boolean using !! on swingState.enabled
+    - setSwingEnabledState is a function export
+    - setSwingEnabledState calls captureStateForUndo with "Toggle Swing On/Off" label
+    - setSwingEnabledState guards captureStateForUndo with appServices check
+  - **Swing Amount** (7 tests):
+    - getSwingAmountState is a function export
+    - getSwingAmountState returns swingState.amount directly
+    - setSwingAmountState is a function export
+    - setSwingAmountState calls captureStateForUndo with "Set Swing Amount to" label
+    - setSwingAmountState clamps value to MAX_SWING_AMOUNT
+    - setSwingAmountState guards captureStateForUndo with appServices check
+  - APP_VERSION validation (>= 2.259 for Day 605)
+- **Version**: Bumped to 2.261.0
+- **Test Count**: Increased from 1091 to 1105
+
 #### Day 601: Favorites, Recently Played, and Auto-Save State Function Tests (2026-05-26)
 - **Tests**: Added 30 tests for Favorites, Recently Played, and Auto-Save state functions in state.js
 - **Files Modified**:
