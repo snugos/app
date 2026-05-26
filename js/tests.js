@@ -6781,3 +6781,132 @@ TestRunner.test("Day 603 - APP_VERSION validation for Day 603", (t) => {
         t.assertTruthy(versionParts[1] >= 258, "Minor version should be >= 258 for Day 603");
     }
 });
+// Timeline Markers State Function Tests
+TestRunner.test("Day 604 - Timeline Markers - getTimelineMarkersState is a function export", (t) => {
+    const funcs = Object.keys(require('fs').readFileSync('./js/state.js', 'utf8').match(/export function \w+/g) || []);
+    t.assertTruthy(funcs.some(f => f === 'export function getTimelineMarkersState'), 'getTimelineMarkersState should be exported');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - getTimelineMarkersState returns array copy", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getTimelineMarkersState');
+    const mapIdx = stateStr.indexOf('.map(', fnIdx);
+    t.assertTruthy(mapIdx > fnIdx && mapIdx < fnIdx + 100, 'getTimelineMarkersState should use .map to return copies');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - getTimelineMarkerByIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getTimelineMarkerByIdState');
+    t.assertTruthy(fnIdx > 0, 'getTimelineMarkerByIdState should be exported');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - getTimelineMarkerByIdState uses .find and returns copy", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getTimelineMarkerByIdState');
+    const findIdx = stateStr.indexOf('.find(', fnIdx);
+    t.assertTruthy(findIdx > fnIdx && findIdx < fnIdx + 100, 'getTimelineMarkerByIdState should use .find');
+    const spreadIdx = stateStr.indexOf('{ ...marker }', fnIdx);
+    t.assertTruthy(spreadIdx > fnIdx && spreadIdx < fnIdx + 200, 'getTimelineMarkerByIdState should return spread copy');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - addTimelineMarkerState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTimelineMarkerState');
+    t.assertTruthy(fnIdx > 0, 'addTimelineMarkerState should be exported');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - addTimelineMarkerState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTimelineMarkerState');
+    const capIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(capIdx > fnIdx && capIdx < fnIdx + 200, 'addTimelineMarkerState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - addTimelineMarkerState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTimelineMarkerState');
+    const labelIdx = stateStr.indexOf('Add Timeline Marker', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'addTimelineMarkerState should have Add Timeline Marker undo label');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - addTimelineMarkerState enforces MAX_TIMELINE_MARKERS limit", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTimelineMarkerState');
+    const limitIdx = stateStr.indexOf('MAX_TIMELINE_MARKERS', fnIdx);
+    t.assertTruthy(limitIdx > fnIdx && limitIdx < fnIdx + 200, 'addTimelineMarkerState should check MAX_TIMELINE_MARKERS');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - setTimelineMarkerState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimelineMarkerState');
+    t.assertTruthy(fnIdx > 0, 'setTimelineMarkerState should be exported');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - setTimelineMarkerState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimelineMarkerState');
+    const capIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(capIdx > fnIdx && capIdx < fnIdx + 200, 'setTimelineMarkerState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - setTimelineMarkerState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimelineMarkerState');
+    const labelIdx = stateStr.indexOf('Update Timeline Marker', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setTimelineMarkerState should have Update Timeline Marker undo label');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - removeTimelineMarkerState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTimelineMarkerState');
+    t.assertTruthy(fnIdx > 0, 'removeTimelineMarkerState should be exported');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - removeTimelineMarkerState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTimelineMarkerState');
+    const capIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(capIdx > fnIdx && capIdx < fnIdx + 200, 'removeTimelineMarkerState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - removeTimelineMarkerState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeTimelineMarkerState');
+    const labelIdx = stateStr.indexOf('Remove Timeline Marker', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'removeTimelineMarkerState should have Remove Timeline Marker undo label');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - clearTimelineMarkersState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearTimelineMarkersState');
+    t.assertTruthy(fnIdx > 0, 'clearTimelineMarkersState should be exported');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - clearTimelineMarkersState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearTimelineMarkersState');
+    const capIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(capIdx > fnIdx && capIdx < fnIdx + 200, 'clearTimelineMarkersState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - clearTimelineMarkersState has 'Clear All Timeline Markers' undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearTimelineMarkersState');
+    const labelIdx = stateStr.indexOf('Clear All Timeline Markers', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'clearTimelineMarkersState should have Clear All Timeline Markers undo label');
+});
+
+TestRunner.test("Day 604 - Timeline Markers - addTimelineMarkerState sorts markers by bar after adding", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addTimelineMarkerState');
+    const sortIdx = stateStr.indexOf('.sort(', fnIdx);
+    t.assertTruthy(sortIdx > fnIdx && sortIdx < fnIdx + 300, 'addTimelineMarkerState should sort markers by bar');
+});
+
+TestRunner.test("Day 604 - APP_VERSION validation for Day 604", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 604");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 259, "Minor version should be >= 259 for Day 604");
+    }
+});
