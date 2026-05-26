@@ -7002,3 +7002,119 @@ TestRunner.test("Day 605 - APP_VERSION validation for Day 605", (t) => {
         t.assertTruthy(versionParts[1] >= 259, "Minor version should be >= 259 for Day 605");
     }
 });
+// Day 606: MIDI Export Helper Functions Tests
+// Tests for noteNameToMidiNumber, pitchToRow, and buildMidiFile helper functions
+
+TestRunner.test("Day 606 - MIDI Helper - noteNameToMidiNumber is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function noteNameToMidiNumber'), 'noteNameToMidiNumber should be exported');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - noteNameToMidiNumber uses NOTE_MAP for note lookup", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function noteNameToMidiNumber');
+    const mapIdx = stateStr.indexOf("const NOTE_MAP = { 'C': 0", fnIdx);
+    t.assertTruthy(mapIdx > fnIdx && mapIdx < fnIdx + 100, 'noteNameToMidiNumber should define NOTE_MAP');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - noteNameToMidiNumber returns correct MIDI number for C4", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function noteNameToMidiNumber');
+    // Should compute (octave + 1) * 12 + note where C=0
+    // C4 = (4+1)*12 + 0 = 60, A4 = (4+1)*12 + 9 = 69
+    t.assertTruthy(stateStr.includes('return (octave + 1) * 12 + note') || stateStr.includes('return (octave+1)*12+note'), 'noteNameToMidiNumber should compute MIDI number correctly');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - noteNameToMidiNumber defaults to C4 when note is undefined", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function noteNameToMidiNumber');
+    const defaultIdx = stateStr.indexOf('return 60', fnIdx);
+    t.assertTruthy(defaultIdx > fnIdx && defaultIdx < fnIdx + 200, 'noteNameToMidiNumber should default to 60 (C4)');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - pitchToRow is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function pitchToRow'), 'pitchToRow should be exported');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - pitchToRow returns 60 + rowIndex for Synth tracks", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function pitchToRow');
+    const synthIdx = stateStr.indexOf("trackType === 'Synth'", fnIdx);
+    t.assertTruthy(synthIdx > fnIdx && synthIdx < fnIdx + 200, 'pitchToRow should check Synth trackType');
+    const returnIdx = stateStr.indexOf('return 60 + rowIndex', fnIdx);
+    t.assertTruthy(returnIdx > fnIdx && returnIdx < fnIdx + 300, 'pitchToRow should return 60 + rowIndex for Synth');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - pitchToRow returns 36 + rowIndex for DrumSampler tracks", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function pitchToRow');
+    const drumIdx = stateStr.indexOf("trackType === 'DrumSampler'", fnIdx);
+    t.assertTruthy(drumIdx > fnIdx && drumIdx < fnIdx + 400, 'pitchToRow should check DrumSampler trackType');
+    const returnIdx = stateStr.indexOf('return 36 + rowIndex', fnIdx);
+    t.assertTruthy(returnIdx > fnIdx && returnIdx < fnIdx + 400, 'pitchToRow should return 36 + rowIndex for DrumSampler');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - pitchToRow returns rowIndex directly for Sampler tracks", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function pitchToRow');
+    const samplerIdx = stateStr.indexOf("trackType === 'Sampler'", fnIdx);
+    t.assertTruthy(samplerIdx > fnIdx && samplerIdx < fnIdx + 500, 'pitchToRow should check Sampler trackType');
+    const returnIdx = stateStr.indexOf('return rowIndex', fnIdx);
+    t.assertTruthy(returnIdx > fnIdx && returnIdx < fnIdx + 500, 'pitchToRow should return rowIndex directly for Sampler');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - buildMidiFile is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function buildMidiFile'), 'buildMidiFile should be exported');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - buildMidiFile accepts default ticksPerQuarter of 480", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function buildMidiFile');
+    const defaultIdx = stateStr.indexOf('ticksPerQuarter = 480', fnIdx);
+    t.assertTruthy(defaultIdx > fnIdx && defaultIdx < fnIdx + 100, 'buildMidiFile should have default ticksPerQuarter of 480');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - buildMidiFile sorts events by time before writing", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function buildMidiFile');
+    const sortIdx = stateStr.indexOf('.sort((a, b) => a.time - b.time)', fnIdx);
+    t.assertTruthy(sortIdx > fnIdx && sortIdx < fnIdx + 300, 'buildMidiFile should sort events by time');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - buildMidiFile uses VLQ encoding for delta times", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function buildMidiFile');
+    const vlqIdx = stateStr.indexOf('ticksToVLQ', fnIdx);
+    t.assertTruthy(vlqIdx > fnIdx && vlqIdx < fnIdx + 500, 'buildMidiFile should use ticksToVLQ for delta encoding');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - buildMidiFile handles noteOn events", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function buildMidiFile');
+    const noteOnIdx = stateStr.indexOf("evt.type === 'noteOn'", fnIdx);
+    t.assertTruthy(noteOnIdx > fnIdx && noteOnIdx < fnIdx + 600, 'buildMidiFile should handle noteOn events');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - buildMidiFile builds MThd header chunk", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function buildMidiFile');
+    const headerIdx = stateStr.indexOf('MThd', fnIdx);
+    t.assertTruthy(headerIdx > fnIdx && headerIdx < fnIdx + 1000, 'buildMidiFile should build MThd header');
+});
+
+TestRunner.test("Day 606 - MIDI Helper - buildMidiFile builds MTrk track chunk", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function buildMidiFile');
+    const trackIdx = stateStr.indexOf('MTrk', fnIdx);
+    t.assertTruthy(trackIdx > fnIdx && trackIdx < fnIdx + 1200, 'buildMidiFile should build MTrk track chunk');
+});
+
+TestRunner.test("Day 606 - APP_VERSION validation for Day 606", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 606");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 260, "Minor version should be >= 260 for Day 606");
+    }
+});
