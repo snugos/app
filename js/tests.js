@@ -6247,3 +6247,200 @@ TestRunner.test("Day 600 - APP_VERSION validation for Day 600", (t) => {
         t.assertTruthy(versionParts[1] >= 255, "Minor version should be >= 255 for Day 600");
     }
 });
+
+// ============================================
+// Day 601: Favorites, Recently Played, and Auto-Save State Function Tests
+// ============================================
+TestRunner.test("Day 601 - Auto-Save - hasAutoSavedProject is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function hasAutoSavedProject'), 'hasAutoSavedProject should be exported');
+});
+
+TestRunner.test("Day 601 - Auto-Save - getAutoSavedProjectTimestamp is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getAutoSavedProjectTimestamp'), 'getAutoSavedProjectTimestamp should be exported');
+});
+
+TestRunner.test("Day 601 - Auto-Save - getAutoSavedProjectTimestamp returns localStorage value or null", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getAutoSavedProjectTimestamp');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 100);
+    t.assertTruthy(funcContent.includes('localStorage.getItem'), 'getAutoSavedProjectTimestamp should check localStorage');
+    t.assertTruthy(funcContent.includes('|| null'), 'getAutoSavedProjectTimestamp should return null as fallback');
+});
+
+TestRunner.test("Day 601 - Auto-Save - clearAutoSavedProject is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function clearAutoSavedProject'), 'clearAutoSavedProject should be exported');
+});
+
+TestRunner.test("Day 601 - Auto-Save - clearAutoSavedProject calls captureStateForUndoIfAllowed", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearAutoSavedProject');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'clearAutoSavedProject should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 601 - Auto-Save - clearAutoSavedProject has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearAutoSavedProject');
+    const labelIdx = stateStr.indexOf("'Clear Auto-Saved Project'", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'clearAutoSavedProject undo label should include "Clear Auto-Saved Project"');
+});
+
+TestRunner.test("Day 601 - Auto-Save - clearAutoSavedProject guards capture with localStorage check", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearAutoSavedProject');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 300);
+    t.assertTruthy(funcContent.includes('if (localStorage.getItem(AUTOSAVE_KEY)') || funcContent.includes('if (localStorage.getItem(AUTOSAVE_TIMESTAMP_KEY)'), 'clearAutoSavedProject should guard undo capture with localStorage check');
+});
+
+TestRunner.test("Day 601 - Favorites - getFavoriteSounds is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getFavoriteSounds'), 'getFavoriteSounds should be exported');
+});
+
+TestRunner.test("Day 601 - Favorites - getFavoriteSounds returns array copy", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getFavoriteSounds');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 100);
+    t.assertTruthy(funcContent.includes('[...favoriteSoundsGlobal]') || funcContent.includes('...favoriteSoundsGlobal'), 'getFavoriteSounds should return array copy');
+});
+
+TestRunner.test("Day 601 - Favorites - getFavoriteSounds lazy loads from storage when empty", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getFavoriteSounds');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 150);
+    t.assertTruthy(funcContent.includes('loadFavoritesFromStorage'), 'getFavoriteSounds should call loadFavoritesFromStorage when array is empty');
+});
+
+TestRunner.test("Day 601 - Favorites - isFavorite is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function isFavorite'), 'isFavorite should be exported');
+});
+
+TestRunner.test("Day 601 - Favorites - isFavorite uses makeSoundKey for comparison", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function isFavorite');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 150);
+    t.assertTruthy(funcContent.includes('makeSoundKey'), 'isFavorite should use makeSoundKey for comparison');
+});
+
+TestRunner.test("Day 601 - Favorites - toggleFavorite is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function toggleFavorite'), 'toggleFavorite should be exported');
+});
+
+TestRunner.test("Day 601 - Favorites - toggleFavorite captures undo for remove (Add Favorite label)", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function toggleFavorite');
+    const labelIdx = stateStr.indexOf('Add Favorite', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 500, 'toggleFavorite should have "Add Favorite" undo label');
+});
+
+TestRunner.test("Day 601 - Favorites - toggleFavorite captures undo for add (Remove Favorite label)", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function toggleFavorite');
+    const labelIdx = stateStr.indexOf('Remove Favorite', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 500, 'toggleFavorite should have "Remove Favorite" undo label');
+});
+
+TestRunner.test("Day 601 - Favorites - toggleFavorite calls saveFavoritesToStorage", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function toggleFavorite');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 500);
+    t.assertTruthy(funcContent.includes('saveFavoritesToStorage()'), 'toggleFavorite should call saveFavoritesToStorage after modification');
+});
+
+TestRunner.test("Day 601 - Favorites - toggleFavorite returns boolean indicating change", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function toggleFavorite');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 500);
+    t.assertTruthy(funcContent.includes('return idx >= 0') || funcContent.includes('return idx >= 0;'), 'toggleFavorite should return boolean');
+});
+
+TestRunner.test("Day 601 - Recently Played - addToRecentlyPlayed is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addToRecentlyPlayed'), 'addToRecentlyPlayed should be exported');
+});
+
+TestRunner.test("Day 601 - Recently Played - addToRecentlyPlayed calls captureStateForUndoIfAllowed", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addToRecentlyPlayed');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 400, 'addToRecentlyPlayed should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 601 - Recently Played - addToRecentlyPlayed adds to front with unshift", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addToRecentlyPlayed');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 400);
+    t.assertTruthy(funcContent.includes('unshift'), 'addToRecentlyPlayed should use unshift to add to front');
+});
+
+TestRunner.test("Day 601 - Recently Played - addToRecentlyPlayed trims to MAX_RECENTLY_PLAYED limit", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addToRecentlyPlayed');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 400);
+    t.assertTruthy(funcContent.includes('MAX_RECENTLY_PLAYED'), 'addToRecentlyPlayed should enforce MAX_RECENTLY_PLAYED limit');
+    t.assertTruthy(funcContent.includes('slice(0, MAX_RECENTLY_PLAYED)') || funcContent.includes('.slice(0, MAX_RECENTLY_PLAYED)'), 'addToRecentlyPlayed should slice to MAX_RECENTLY_PLAYED');
+});
+
+TestRunner.test("Day 601 - Recently Played - addToRecentlyPlayed removes duplicates before adding", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addToRecentlyPlayed');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 400);
+    t.assertTruthy(funcContent.includes('filter'), 'addToRecentlyPlayed should filter out duplicates before adding');
+});
+
+TestRunner.test("Day 601 - Recently Played - getRecentlyPlayedSounds is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getRecentlyPlayedSounds'), 'getRecentlyPlayedSounds should be exported');
+});
+
+TestRunner.test("Day 601 - Recently Played - getRecentlyPlayedSounds returns array copy", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getRecentlyPlayedSounds');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 100);
+    t.assertTruthy(funcContent.includes('[...recentlyPlayedGlobal]') || funcContent.includes('...recentlyPlayedGlobal'), 'getRecentlyPlayedSounds should return array copy');
+});
+
+TestRunner.test("Day 601 - Recently Played - clearRecentlyPlayed is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function clearRecentlyPlayed'), 'clearRecentlyPlayed should be exported');
+});
+
+TestRunner.test("Day 601 - Recently Played - clearRecentlyPlayed calls captureStateForUndoIfAllowed guarded by length check", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearRecentlyPlayed');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    const lengthIdx = stateStr.indexOf('length > 0', fnIdx);
+    t.assertTruthy(lengthIdx > fnIdx && lengthIdx < fnIdx + 200, 'clearRecentlyPlayed should check if array has items');
+    t.assertTruthy(captureIdx > lengthIdx && captureIdx < fnIdx + 200, 'clearRecentlyPlayed capture should be guarded by length check');
+});
+
+TestRunner.test("Day 601 - Recently Played - clearRecentlyPlayed has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function clearRecentlyPlayed');
+    const labelIdx = stateStr.indexOf("'Clear Recently Played'", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'clearRecentlyPlayed undo label should include "Clear Recently Played"');
+});
+
+TestRunner.test("Day 601 - Favorites - loadFavoritesFromStorage is referenced", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('function loadFavoritesFromStorage') || stateStr.includes('function loadFavoritesFromStorage()'), 'loadFavoritesFromStorage should be defined');
+});
+
+TestRunner.test("Day 601 - Favorites - makeSoundKey is referenced", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('function makeSoundKey') || stateStr.includes('function makeSoundKey('), 'makeSoundKey should be defined');
+});
+
+TestRunner.test("Day 601 - APP_VERSION validation for Day 601", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 601");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 256, "Minor version should be >= 256 for Day 601");
+    }
+});
