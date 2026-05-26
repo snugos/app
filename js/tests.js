@@ -6940,7 +6940,7 @@ TestRunner.test("Day 605 - Swing - setSwingEnabledState has descriptive undo lab
     const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
     const fnIdx = stateStr.indexOf('export function setSwingEnabledState');
     const labelIdx = stateStr.indexOf('Toggle Swing', fnIdx);
-    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setSwingEnabledState should have "Toggle Swing" undo label');
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setSwingEnabledState undo label should include "Toggle Swing"');
 });
 
 TestRunner.test("Day 605 - Swing - setSwingEnabledState guards capture with appServices check", (t) => {
@@ -6978,7 +6978,7 @@ TestRunner.test("Day 605 - Swing - setSwingAmountState has descriptive undo labe
     const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
     const fnIdx = stateStr.indexOf('export function setSwingAmountState');
     const labelIdx = stateStr.indexOf('Set Swing Amount to', fnIdx);
-    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setSwingAmountState should have "Set Swing Amount to" undo label');
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setSwingAmountState undo label should include "Set Swing Amount to"');
 });
 
 TestRunner.test("Day 605 - Swing - setSwingAmountState clamps value to MAX_SWING_AMOUNT", (t) => {
@@ -7116,5 +7116,231 @@ TestRunner.test("Day 606 - APP_VERSION validation for Day 606", (t) => {
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 606");
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 260, "Minor version should be >= 260 for Day 606");
+    }
+});
+
+// Day 607: Performance Monitor & Auto-Save State Function Tests
+// ============================================================
+// Performance Monitor state functions cover CPU, memory, audio context monitoring.
+// Auto-save functions handle periodic project persistence to localStorage.
+
+TestRunner.test("Day 607 - Performance Monitor - getAudioContextStateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getAudioContextStateState'), 'getAudioContextStateState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setAudioContextStateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setAudioContextStateState'), 'setAudioContextStateState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setAudioContextStateState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setAudioContextStateState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setAudioContextStateState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setAudioContextStateState has descriptive undo label with Audio Context", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setAudioContextStateState');
+    const labelIdx = stateStr.indexOf('Audio Context', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setAudioContextStateState undo label should mention Audio Context');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setCPUUsageState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCPUUsageState'), 'setCPUUsageState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setCPUUsageState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCPUUsageState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setCPUUsageState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setCPUUsageState has descriptive undo label with CPU", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCPUUsageState');
+    const labelIdx = stateStr.indexOf('CPU', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setCPUUsageState undo label should mention CPU');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setCPUUsageState clamps value to 0-100 range", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCPUUsageState');
+    const clampIdx = stateStr.indexOf('Math.max', fnIdx);
+    t.assertTruthy(clampIdx > fnIdx && clampIdx < fnIdx + 300, 'setCPUUsageState should clamp value with Math.max');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setMemoryPressureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMemoryPressureState'), 'setMemoryPressureState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setMemoryPressureState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMemoryPressureState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setMemoryPressureState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setMemoryPressureState has descriptive undo label with Memory Pressure", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMemoryPressureState');
+    const labelIdx = stateStr.indexOf('Memory Pressure', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setMemoryPressureState undo label should mention Memory Pressure');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setMemoryPressureState validates against valid values", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setMemoryPressureState');
+    const validIdx = stateStr.indexOf("['none', 'low', 'medium', 'high']", fnIdx);
+    t.assertTruthy(validIdx > fnIdx && validIdx < fnIdx + 200, 'setMemoryPressureState should validate against valid values');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setActiveVoicesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setActiveVoicesState'), 'setActiveVoicesState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setActiveVoicesState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setActiveVoicesState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setActiveVoicesState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setAudioLatencyState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setAudioLatencyState'), 'setAudioLatencyState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setAudioLatencyState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setAudioLatencyState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setAudioLatencyState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setLastCallbackTimeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLastCallbackTimeState'), 'setLastCallbackTimeState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setLastCallbackTimeState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLastCallbackTimeState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setLastCallbackTimeState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setDroppedCallbacksState'), 'setDroppedCallbacksState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - setDroppedCallbacksState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setDroppedCallbacksState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setDroppedCallbacksState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - incrementDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function incrementDroppedCallbacksState'), 'incrementDroppedCallbacksState should be exported');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - incrementDroppedCallbacksState increments dropped count", (t) => {
+    const funcStr = incrementDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('++') || funcStr.includes('+= 1'), 'incrementDroppedCallbacksState should increment the count');
+});
+
+TestRunner.test("Day 607 - Performance Monitor - resetPerformanceMonitorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function resetPerformanceMonitorState'), 'resetPerformanceMonitorState should be exported');
+});
+
+TestRunner.test("Day 607 - Auto-Save - startAutoSave is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function startAutoSave'), 'startAutoSave should be exported');
+});
+
+TestRunner.test("Day 607 - Auto-Save - startAutoSave uses setInterval for auto-save loop", (t) => {
+    const funcStr = startAutoSave.toString();
+    t.assertTruthy(funcStr.includes('setInterval'), 'startAutoSave should use setInterval');
+});
+
+TestRunner.test("Day 607 - Auto-Save - stopAutoSave is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function stopAutoSave'), 'stopAutoSave should be exported');
+});
+
+TestRunner.test("Day 607 - Auto-Save - stopAutoSave clears the auto-save interval", (t) => {
+    const funcStr = stopAutoSave.toString();
+    t.assertTruthy(funcStr.includes('clearInterval'), 'stopAutoSave should use clearInterval');
+});
+
+TestRunner.test("Day 607 - Auto-Save - autoSaveToLocalStorage is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function autoSaveToLocalStorage'), 'autoSaveToLocalStorage should be exported');
+});
+
+TestRunner.test("Day 607 - Auto-Save - autoSaveToLocalStorage calls gatherProjectDataInternal", (t) => {
+    const funcStr = autoSaveToLocalStorage.toString();
+    t.assertTruthy(funcStr.includes('gatherProjectDataInternal'), 'autoSaveToLocalStorage should call gatherProjectDataInternal');
+});
+
+TestRunner.test("Day 607 - Auto-Save - autoSaveToLocalStorage saves to localStorage", (t) => {
+    const funcStr = autoSaveToLocalStorage.toString();
+    t.assertTruthy(funcStr.includes('localStorage.setItem'), 'autoSaveToLocalStorage should use localStorage.setItem');
+});
+
+TestRunner.test("Day 607 - Auto-Save - autoSaveToLocalStorage checks for AUTOSAVE_KEY", (t) => {
+    const funcStr = autoSaveToLocalStorage.toString();
+    t.assertTruthy(funcStr.includes('AUTOSAVE_KEY') || funcStr.includes("'snugosAutosave'"), 'autoSaveToLocalStorage should reference AUTOSAVE_KEY');
+});
+
+TestRunner.test("Day 607 - Auto-Save - autoSaveToLocalStorage stores timestamp", (t) => {
+    const funcStr = autoSaveToLocalStorage.toString();
+    t.assertTruthy(funcStr.includes('AUTOSAVE_TIMESTAMP_KEY') || funcStr.includes('setItem'), 'autoSaveToLocalStorage should store timestamp');
+});
+
+TestRunner.test("Day 607 - Rename Track - renameTrackInState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function renameTrackInState'), 'renameTrackInState should be exported');
+});
+
+TestRunner.test("Day 607 - Master Effects - removeMasterEffectFromState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeMasterEffectFromState'), 'removeMasterEffectFromState should be exported');
+});
+
+TestRunner.test("Day 607 - Master Effects - removeMasterEffectFromState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeMasterEffectFromState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'removeMasterEffectFromState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - Master Effects - reorderMasterEffectInState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function reorderMasterEffectInState'), 'reorderMasterEffectInState should be exported');
+});
+
+TestRunner.test("Day 607 - Master Effects - reorderMasterEffectInState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function reorderMasterEffectInState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'reorderMasterEffectInState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 607 - APP_VERSION validation for Day 607", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 607");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 262, "Minor version should be >= 262 for Day 607");
     }
 });
