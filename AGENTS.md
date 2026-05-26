@@ -1,3 +1,19 @@
+#### Day 599: Additional State Functions - Master Automation Armed, UI State, Windows, and Track Accessor Tests (2026-05-26)
+- **Tests**: Added 36 tests for Additional State Functions in state.js
+- **Files Modified**:
+  - `js/constants.js`: Bumped APP_VERSION to 2.255.0
+  - `js/tests.js`: Added Day 599 test block with 36 tests for state.js functions
+- **Test Details** (`js/tests.js`): 36 tests covering:
+  - **Master Automation Armed** (4 tests): getMasterAutomationArmedState and setMasterAutomationArmedState exports, captureStateForUndoIfAllowed, descriptive "Toggle Master Automation Arm On/Off" undo label
+  - **UI State** (12 tests): Library/Sound File Tree/Preview Player get/set function exports with captureStateForUndoIfAllowed calls and descriptive undo labels ("Set Current Library", "Set Sound File Tree", "Set Preview Player")
+  - **Windows State** (6 tests): getOpenWindowsState, getWindowByIdState exports; addWindowToStoreState and removeWindowFromStoreState exports with captureStateForUndoIfAllowed and descriptive "Open Window"/"Close Window" undo labels
+  - **Z-Index Tracking** (6 tests): getHighestZState, setHighestZState, incrementHighestZState exports with captureStateForUndoIfAllowed and descriptive "Set Highest Z"/"Increment Highest Z" undo labels
+  - **Track Accessors** (3 tests): getTracksState and getTrackByIdState exports; getTrackByIdState uses .find() to locate track by id
+  - **Clipboard** (1 test): setClipboardDataState is a function export
+  - APP_VERSION validation (>= 2.254 for Day 599)
+- **Version**: Bumped to 2.255.0
+- **Test Count**: Increased from 944 to 980
+
 #### Day 597: Master Effects and Master Gain State Function Tests (2026-05-25)
 #### Day 598: Track Group Setters, Send Tracks, and Additional State Function Tests (2026-05-26)
 - **Tests**: Added 41 tests for Track Group setters, Send Tracks, and Track Send state functions in state.js
