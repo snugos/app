@@ -6910,3 +6910,95 @@ TestRunner.test("Day 604 - APP_VERSION validation for Day 604", (t) => {
         t.assertTruthy(versionParts[1] >= 259, "Minor version should be >= 259 for Day 604");
     }
 });
+
+// Day 605: Swing State Function Tests
+TestRunner.test("Day 605 - Swing - getSwingEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSwingEnabledState'), 'getSwingEnabledState should be exported');
+});
+
+TestRunner.test("Day 605 - Swing - getSwingEnabledState returns boolean", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getSwingEnabledState');
+    const returnIdx = stateStr.indexOf('return !!swingState.enabled', fnIdx);
+    t.assertTruthy(returnIdx > fnIdx && returnIdx < fnIdx + 100, 'getSwingEnabledState should use !! to return boolean');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSwingEnabledState'), 'setSwingEnabledState should be exported');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingEnabledState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingEnabledState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setSwingEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingEnabledState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingEnabledState');
+    const labelIdx = stateStr.indexOf('Toggle Swing', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setSwingEnabledState should have "Toggle Swing" undo label');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingEnabledState guards capture with appServices check", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingEnabledState');
+    const appIdx = stateStr.indexOf('appServices && appServices.captureStateForUndo', fnIdx);
+    t.assertTruthy(appIdx > fnIdx && appIdx < fnIdx + 200, 'setSwingEnabledState should guard captureStateForUndo with appServices check');
+});
+
+TestRunner.test("Day 605 - Swing - getSwingAmountState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSwingAmountState'), 'getSwingAmountState should be exported');
+});
+
+TestRunner.test("Day 605 - Swing - getSwingAmountState returns swingState.amount", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getSwingAmountState');
+    const returnIdx = stateStr.indexOf('return swingState.amount', fnIdx);
+    t.assertTruthy(returnIdx > fnIdx && returnIdx < fnIdx + 100, 'getSwingAmountState should return swingState.amount');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingAmountState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSwingAmountState'), 'setSwingAmountState should be exported');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingAmountState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingAmountState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setSwingAmountState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingAmountState has descriptive undo label with amount value", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingAmountState');
+    const labelIdx = stateStr.indexOf('Set Swing Amount to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setSwingAmountState should have "Set Swing Amount to" undo label');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingAmountState clamps value to MAX_SWING_AMOUNT", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingAmountState');
+    const maxIdx = stateStr.indexOf('MAX_SWING_AMOUNT', fnIdx);
+    t.assertTruthy(maxIdx > fnIdx && maxIdx < fnIdx + 300, 'setSwingAmountState should clamp to MAX_SWING_AMOUNT');
+});
+
+TestRunner.test("Day 605 - Swing - setSwingAmountState guards capture with appServices check", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingAmountState');
+    const appIdx = stateStr.indexOf('appServices && appServices.captureStateForUndo', fnIdx);
+    t.assertTruthy(appIdx > fnIdx && appIdx < fnIdx + 300, 'setSwingAmountState should guard captureStateForUndo with appServices check');
+});
+
+TestRunner.test("Day 605 - APP_VERSION validation for Day 605", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 605");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 259, "Minor version should be >= 259 for Day 605");
+    }
+});
