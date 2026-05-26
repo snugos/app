@@ -1,3 +1,16 @@
+#### Day 601: Favorites, Recently Played, and Auto-Save State Function Tests (2026-05-26)
+- **Tests**: Added 30 tests for Favorites, Recently Played, and Auto-Save state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 601 test block with 30 tests for Favorites/Recently Played/Auto-Save state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.257.0
+- **Test Details** (`js/tests.js`): 30 tests covering:
+  - **Auto-Save** (7 tests): hasAutoSavedProject export, getAutoSavedProjectTimestamp export + returns localStorage value or null, clearAutoSavedProject export + captureStateForUndoIfAllowed + descriptive "Clear Auto-Saved Project" undo label + guards capture with localStorage check
+  - **Favorites** (9 tests): getFavoriteSounds export + returns array copy + lazy loads from storage when empty; isFavorite export + uses makeSoundKey for comparison; toggleFavorite export + captures "Add Favorite"/"Remove Favorite" undo labels + calls saveFavoritesToStorage + returns boolean; loadFavoritesFromStorage and makeSoundKey helper functions defined
+  - **Recently Played** (8 tests): addToRecentlyPlayed export + captureStateForUndoIfAllowed + unshift to add to front + trims to MAX_RECENTLY_PLAYED limit + removes duplicates before adding; getRecentlyPlayedSounds export + returns array copy; clearRecentlyPlayed export + captureStateForUndoIfAllowed guarded by length check + descriptive "Clear Recently Played" undo label
+  - APP_VERSION validation (>= 2.256 for Day 601)
+- **Version**: Bumped to 2.257.0
+- **Test Count**: Increased from 987 to 1017
+
 #### Day 600: Sound Browser Path State Tests (2026-05-26)
 - **Tests**: Added 7 tests for Sound Browser Path state functions in state.js
 - **Files Modified**:
