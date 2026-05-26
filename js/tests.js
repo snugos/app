@@ -6649,3 +6649,135 @@ TestRunner.test("Day 602 - APP_VERSION validation for Day 602", (t) => {
         t.assertTruthy(versionParts[1] >= 257, "Minor version should be >= 257 for Day 602");
     }
 });
+
+// Day 603: Undo/Redo System State Function Tests (2026-05-26)
+TestRunner.test("Day 603 - Undo/Redo Stacks - getUndoStackState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getUndoStackState'), 'getUndoStackState should be exported');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - getUndoStackState returns array using spread operator", (t) => {
+    const funcBody = getUndoStackState.toString();
+    t.assertTruthy(funcBody.includes('[...undoStack]') || funcBody.includes('undoStack.slice()'), 'getUndoStackState should return a copy of the array');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - getRedoStackState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getRedoStackState'), 'getRedoStackState should be exported');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - getRedoStackState returns array using spread operator", (t) => {
+    const funcBody = getRedoStackState.toString();
+    t.assertTruthy(funcBody.includes('[...redoStack]') || funcBody.includes('redoStack.slice()'), 'getRedoStackState should return a copy of the array');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - undoStack and redoStack are initialized as empty arrays", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('let undoStack = []'), 'undoStack should be initialized as empty array');
+    t.assertTruthy(stateStr.includes('let redoStack = []'), 'redoStack should be initialized as empty array');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - undoStack.push is called in captureStateForUndoInternal", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function captureStateForUndoInternal');
+    const pushIdx = stateStr.indexOf('undoStack.push', fnIdx);
+    t.assertTruthy(pushIdx > fnIdx, 'captureStateForUndoInternal should call undoStack.push');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - redoStack is cleared when undo is captured", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function captureStateForUndoInternal');
+    const clearIdx = stateStr.indexOf('redoStack = []', fnIdx);
+    t.assertTruthy(clearIdx > fnIdx, 'captureStateForUndoInternal should clear redoStack on new action');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - captureStateForUndoInternal enforces MAX_HISTORY_STATES limit", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function captureStateForUndoInternal');
+    const maxIdx = stateStr.indexOf('MAX_HISTORY_STATES', fnIdx);
+    t.assertTruthy(maxIdx > fnIdx, 'captureStateForUndoInternal should reference MAX_HISTORY_STATES');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - undoLastActionInternal pops from undoStack", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export async function undoLastActionInternal');
+    const popIdx = stateStr.indexOf('undoStack.pop', fnIdx);
+    t.assertTruthy(popIdx > fnIdx, 'undoLastActionInternal should pop from undoStack');
+    const guardIdx = stateStr.indexOf('undoStack.length === 0', fnIdx);
+    t.assertTruthy(guardIdx > fnIdx, 'undoLastActionInternal should guard against empty undoStack');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - redoLastActionInternal pops from redoStack", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export async function redoLastActionInternal');
+    const popIdx = stateStr.indexOf('redoStack.pop', fnIdx);
+    t.assertTruthy(popIdx > fnIdx, 'redoLastActionInternal should pop from redoStack');
+    const guardIdx = stateStr.indexOf('redoStack.length === 0', fnIdx);
+    t.assertTruthy(guardIdx > fnIdx, 'redoLastActionInternal should guard against empty redoStack');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - undoLastActionInternal calls reconstructDAWInternal with isUndoRedo=true", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export async function undoLastActionInternal');
+    const reconIdx = stateStr.indexOf('reconstructDAWInternal', fnIdx);
+    t.assertTruthy(reconIdx > fnIdx, 'undoLastActionInternal should call reconstructDAWInternal');
+    const trueIdx = stateStr.indexOf('true', reconIdx - 10);
+    t.assertTruthy(trueIdx > reconIdx - 20, 'undoLastActionInternal should pass true for isUndoRedo');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - redoLastActionInternal calls reconstructDAWInternal with isUndoRedo=true", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export async function redoLastActionInternal');
+    const reconIdx = stateStr.indexOf('reconstructDAWInternal', fnIdx);
+    t.assertTruthy(reconIdx > fnIdx, 'redoLastActionInternal should call reconstructDAWInternal');
+    const trueIdx = stateStr.indexOf('true', reconIdx - 10);
+    t.assertTruthy(trueIdx > reconIdx - 20, 'redoLastActionInternal should pass true for isUndoRedo');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - undoLastActionInternal shows 'Nothing to undo.' notification when stack is empty", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export async function undoLastActionInternal');
+    const notifyIdx = stateStr.indexOf('Nothing to undo', fnIdx);
+    t.assertTruthy(notifyIdx > fnIdx, 'undoLastActionInternal should show Nothing to undo notification');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - redoLastActionInternal shows 'Nothing to redo.' notification when stack is empty", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export async function redoLastActionInternal');
+    const notifyIdx = stateStr.indexOf('Nothing to redo', fnIdx);
+    t.assertTruthy(notifyIdx > fnIdx, 'redoLastActionInternal should show Nothing to redo notification');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - undo stacks are cleared when loading a new project", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const loadIdx = stateStr.indexOf('export async function loadProjectInternal');
+    const undoClearIdx = stateStr.indexOf('undoStack = []', loadIdx);
+    const redoClearIdx = stateStr.indexOf('redoStack = []', loadIdx);
+    t.assertTruthy(undoClearIdx > loadIdx && undoClearIdx < loadIdx + 500, 'loadProjectInternal should clear undoStack');
+    t.assertTruthy(redoClearIdx > loadIdx && redoClearIdx < loadIdx + 500, 'loadProjectInternal should clear redoStack');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - captureStateForUndoInternal pushes deep copy using JSON.parse(JSON.stringify)", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function captureStateForUndoInternal');
+    const deepCopyIdx = stateStr.indexOf('JSON.parse(JSON.stringify', fnIdx);
+    t.assertTruthy(deepCopyIdx > fnIdx && deepCopyIdx < fnIdx + 400, 'captureStateForUndoInternal should deep copy using JSON.parse(JSON.stringify)');
+});
+
+TestRunner.test("Day 603 - Undo/Redo Stacks - _isReconstructingDAW_flag is set during undo/redo reconstruction", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fn1Idx = stateStr.indexOf('export async function undoLastActionInternal');
+    const flag1Idx = stateStr.indexOf('_isReconstructingDAW_flag', fn1Idx);
+    const fn2Idx = stateStr.indexOf('export async function redoLastActionInternal');
+    const flag2Idx = stateStr.indexOf('_isReconstructingDAW_flag', fn2Idx);
+    t.assertTruthy(flag1Idx > fn1Idx, 'undoLastActionInternal should set _isReconstructingDAW_flag');
+    t.assertTruthy(flag2Idx > fn2Idx, 'redoLastActionInternal should set _isReconstructingDAW_flag');
+});
+
+TestRunner.test("Day 603 - APP_VERSION validation for Day 603", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 603");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 258, "Minor version should be >= 258 for Day 603");
+    }
+});
