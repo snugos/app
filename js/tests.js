@@ -6196,3 +6196,54 @@ TestRunner.test("Day 599 - APP_VERSION validation for Day 599", (t) => {
         t.assertTruthy(versionParts[1] >= 254, "Minor version should be >= 254 for Day 599");
     }
 });
+
+// ============================================
+// Day 600: Sound Browser Path State Tests
+// ============================================
+TestRunner.test("Day 600 - Sound Browser Path - getCurrentSoundBrowserPathState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getCurrentSoundBrowserPathState'), 'getCurrentSoundBrowserPathState should be exported');
+});
+
+TestRunner.test("Day 600 - Sound Browser Path - setCurrentSoundBrowserPathState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCurrentSoundBrowserPathState'), 'setCurrentSoundBrowserPathState should be exported');
+});
+
+TestRunner.test("Day 600 - Sound Browser Path - setCurrentSoundBrowserPathState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCurrentSoundBrowserPathState');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setCurrentSoundBrowserPathState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 600 - Sound Browser Path - setCurrentSoundBrowserPathState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCurrentSoundBrowserPathState');
+    const labelIdx = stateStr.indexOf("'Set Sound Browser Path'", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setCurrentSoundBrowserPathState undo label should include "Set Sound Browser Path"');
+});
+
+TestRunner.test("Day 600 - Sound Browser Path - setCurrentSoundBrowserPathState uses areSoundBrowserPathsEqual for comparison", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCurrentSoundBrowserPathState');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 200);
+    t.assertTruthy(funcContent.includes('areSoundBrowserPathsEqual'), 'setCurrentSoundBrowserPathState should use areSoundBrowserPathsEqual for comparison');
+});
+
+TestRunner.test("Day 600 - Sound Browser Path - setCurrentSoundBrowserPathState normalizes path to array", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCurrentSoundBrowserPathState');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 200);
+    t.assertTruthy(funcContent.includes('Array.isArray(path)'), 'setCurrentSoundBrowserPathState should check if path is an array');
+    t.assertTruthy(funcContent.includes('[...path]'), 'setCurrentSoundBrowserPathState should spread path into new array');
+});
+
+TestRunner.test("Day 600 - APP_VERSION validation for Day 600", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 600");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 255, "Minor version should be >= 255 for Day 600");
+    }
+});
