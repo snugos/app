@@ -5740,3 +5740,244 @@ TestRunner.test("Day 597 - APP_VERSION validation for Day 597", (t) => {
         t.assertTruthy(versionParts[1] >= 252, "Minor version should be >= 252 for Day 597");
     }
 });
+
+// Day 598: Track Group Setters, Send Tracks, and Additional State Function Tests
+TestRunner.test("Day 598 - Track Groups - setTrackGroupColorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTrackGroupColorState'), 'setTrackGroupColorState should be exported');
+});
+
+TestRunner.test("Day 598 - Track Groups - setTrackGroupColorState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackGroupColorState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setTrackGroupColorState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Track Groups - setTrackGroupColorState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackGroupColorState');
+    const labelIdx = stateStr.indexOf('Change Track Group', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setTrackGroupColorState undo label should include "Change Track Group"');
+});
+
+TestRunner.test("Day 598 - Track Groups - setTrackGroupMutedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTrackGroupMutedState'), 'setTrackGroupMutedState should be exported');
+});
+
+TestRunner.test("Day 598 - Track Groups - setTrackGroupMutedState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackGroupMutedState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setTrackGroupMutedState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Track Groups - setTrackGroupMutedState has descriptive undo label with Mute", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackGroupMutedState');
+    const labelIdx = stateStr.indexOf('Toggle Track Group', fnIdx);
+    const muteIdx = stateStr.indexOf('Mute', labelIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300 && muteIdx > labelIdx && muteIdx < labelIdx + 50, 'setTrackGroupMutedState undo label should include "Mute"');
+});
+
+TestRunner.test("Day 598 - Track Groups - setTrackGroupSoloedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTrackGroupSoloedState'), 'setTrackGroupSoloedState should be exported');
+});
+
+TestRunner.test("Day 598 - Track Groups - setTrackGroupSoloedState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackGroupSoloedState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setTrackGroupSoloedState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Track Groups - setTrackGroupSoloedState has descriptive undo label with Solo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackGroupSoloedState');
+    const labelIdx = stateStr.indexOf('Toggle Track Group', fnIdx);
+    const soloIdx = stateStr.indexOf('Solo', labelIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300 && soloIdx > labelIdx && soloIdx < labelIdx + 50, 'setTrackGroupSoloedState undo label should include "Solo"');
+});
+
+TestRunner.test("Day 598 - Send Tracks - getSendTracksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSendTracksState'), 'getSendTracksState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - getSendTrackByIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSendTrackByIdState'), 'getSendTrackByIdState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - addSendTrackState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addSendTrackState'), 'addSendTrackState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - addSendTrackState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addSendTrackState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'addSendTrackState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Send Tracks - addSendTrackState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addSendTrackState');
+    const labelIdx = stateStr.indexOf('Add Send Bus', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'addSendTrackState undo label should include "Add Send Bus"');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackNameState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSendTrackNameState'), 'setSendTrackNameState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackNameState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSendTrackNameState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setSendTrackNameState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackNameState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSendTrackNameState');
+    const labelIdx = stateStr.indexOf('Rename Send Bus', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setSendTrackNameState undo label should include "Rename Send Bus"');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackLevelState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSendTrackLevelState'), 'setSendTrackLevelState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackLevelState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSendTrackLevelState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setSendTrackLevelState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackLevelState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSendTrackLevelState');
+    const labelIdx = stateStr.indexOf('Set Send Level', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setSendTrackLevelState undo label should include "Set Send Level"');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackMutedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSendTrackMutedState'), 'setSendTrackMutedState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackMutedState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSendTrackMutedState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setSendTrackMutedState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackMutedState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSendTrackMutedState');
+    const labelIdx = stateStr.indexOf('Toggle Send Bus', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setSendTrackMutedState undo label should include "Toggle Send Bus"');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackEffectsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSendTrackEffectsState'), 'setSendTrackEffectsState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackEffectsState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSendTrackEffectsState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setSendTrackEffectsState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setSendTrackEffectsState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSendTrackEffectsState');
+    const labelIdx = stateStr.indexOf('Set Send Bus Effects', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setSendTrackEffectsState undo label should include "Set Send Bus Effects"');
+});
+
+TestRunner.test("Day 598 - Send Tracks - removeSendTrackState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeSendTrackState'), 'removeSendTrackState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - removeSendTrackState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeSendTrackState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'removeSendTrackState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Send Tracks - removeSendTrackState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeSendTrackState');
+    const labelIdx = stateStr.indexOf('Remove Send Bus', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'removeSendTrackState undo label should include "Remove Send Bus"');
+});
+
+TestRunner.test("Day 598 - Send Tracks - getTrackSendsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackSendsState'), 'getTrackSendsState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - getTrackSendByIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackSendByIdState'), 'getTrackSendByIdState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setTrackSendLevelState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTrackSendLevelState'), 'setTrackSendLevelState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setTrackSendLevelState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackSendLevelState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setTrackSendLevelState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setTrackSendLevelState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackSendLevelState');
+    const labelIdx = stateStr.indexOf('Set Track Send Level', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setTrackSendLevelState undo label should include "Set Track Send Level"');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setTrackSendPreFaderState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTrackSendPreFaderState'), 'setTrackSendPreFaderState should be exported');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setTrackSendPreFaderState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackSendPreFaderState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setTrackSendPreFaderState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 598 - Send Tracks - setTrackSendPreFaderState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTrackSendPreFaderState');
+    const labelIdx = stateStr.indexOf('Set Track Send Pre-Fader', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setTrackSendPreFaderState undo label should include "Set Track Send Pre-Fader"');
+});
+
+TestRunner.test("Day 598 - APP_VERSION validation for Day 598", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 598");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 253, "Minor version should be >= 253 for Day 598");
+    }
+});
