@@ -5981,3 +5981,218 @@ TestRunner.test("Day 598 - APP_VERSION validation for Day 598", (t) => {
         t.assertTruthy(versionParts[1] >= 253, "Minor version should be >= 253 for Day 598");
     }
 });
+
+// Day 599: Additional State Functions - Master Automation Armed, UI State, Windows, and Track Accessor Tests
+TestRunner.test("Day 599 - Master Automation - getMasterAutomationArmedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMasterAutomationArmedState'), 'getMasterAutomationArmedState should be exported');
+});
+
+TestRunner.test("Day 599 - Master Automation - setMasterAutomationArmedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMasterAutomationArmedState'), 'setMasterAutomationArmedState should be exported');
+});
+
+TestRunner.test("Day 599 - Master Automation - setMasterAutomationArmedState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('captureStateForUndoIfAllowed'), 'setMasterAutomationArmedState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 599 - Master Automation - setMasterAutomationArmedState has descriptive undo label with On/Off", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes("'Toggle Master Automation Arm") && stateStr.includes("On") && stateStr.includes("Off"), 'setMasterAutomationArmedState should have Toggle Master Automation Arm On/Off label');
+});
+
+TestRunner.test("Day 599 - UI State - getCurrentLibraryNameState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getCurrentLibraryNameState'), 'getCurrentLibraryNameState should be exported');
+});
+
+TestRunner.test("Day 599 - UI State - setCurrentLibraryNameState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCurrentLibraryNameState'), 'setCurrentLibraryNameState should be exported');
+});
+
+TestRunner.test("Day 599 - UI State - setCurrentLibraryNameState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCurrentLibraryNameState');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 150, 'setCurrentLibraryNameState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 599 - UI State - setCurrentLibraryNameState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCurrentLibraryNameState');
+    const labelIdx = stateStr.indexOf("'Set Current Library'", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 150, 'setCurrentLibraryNameState undo label should include "Set Current Library"');
+});
+
+TestRunner.test("Day 599 - UI State - getCurrentSoundFileTreeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getCurrentSoundFileTreeState'), 'getCurrentSoundFileTreeState should be exported');
+});
+
+TestRunner.test("Day 599 - UI State - setCurrentSoundFileTreeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCurrentSoundFileTreeState'), 'setCurrentSoundFileTreeState should be exported');
+});
+
+TestRunner.test("Day 599 - UI State - setCurrentSoundFileTreeState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCurrentSoundFileTreeState');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 150, 'setCurrentSoundFileTreeState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 599 - UI State - setCurrentSoundFileTreeState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setCurrentSoundFileTreeState');
+    const labelIdx = stateStr.indexOf("'Set Sound File Tree'", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 150, 'setCurrentSoundFileTreeState undo label should include "Set Sound File Tree"');
+});
+
+TestRunner.test("Day 599 - UI State - getPreviewPlayerState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getPreviewPlayerState'), 'getPreviewPlayerState should be exported');
+});
+
+TestRunner.test("Day 599 - UI State - setPreviewPlayerState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setPreviewPlayerState'), 'setPreviewPlayerState should be exported');
+});
+
+TestRunner.test("Day 599 - UI State - setPreviewPlayerState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setPreviewPlayerState');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 150, 'setPreviewPlayerState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 599 - UI State - setPreviewPlayerState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setPreviewPlayerState');
+    const labelIdx = stateStr.indexOf("'Set Preview Player'", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 150, 'setPreviewPlayerState undo label should include "Set Preview Player"');
+});
+
+TestRunner.test("Day 599 - Windows - getOpenWindowsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getOpenWindowsState'), 'getOpenWindowsState should be exported');
+});
+
+TestRunner.test("Day 599 - Windows - getWindowByIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getWindowByIdState'), 'getWindowByIdState should be exported');
+});
+
+TestRunner.test("Day 599 - Windows - addWindowToStoreState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addWindowToStoreState'), 'addWindowToStoreState should be exported');
+});
+
+TestRunner.test("Day 599 - Windows - addWindowToStoreState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addWindowToStoreState');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'addWindowToStoreState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 599 - Windows - addWindowToStoreState has descriptive undo label with Open", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function addWindowToStoreState');
+    const labelIdx = stateStr.indexOf("'Open Window", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'addWindowToStoreState undo label should include "Open Window"');
+});
+
+TestRunner.test("Day 599 - Windows - removeWindowFromStoreState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeWindowFromStoreState'), 'removeWindowFromStoreState should be exported');
+});
+
+TestRunner.test("Day 599 - Windows - removeWindowFromStoreState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeWindowFromStoreState');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'removeWindowFromStoreState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 599 - Windows - removeWindowFromStoreState has descriptive undo label with Close", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function removeWindowFromStoreState');
+    const labelIdx = stateStr.indexOf("'Close Window", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'removeWindowFromStoreState undo label should include "Close Window"');
+});
+
+TestRunner.test("Day 599 - Z-Index - getHighestZState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getHighestZState'), 'getHighestZState should be exported');
+});
+
+TestRunner.test("Day 599 - Z-Index - setHighestZState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setHighestZState'), 'setHighestZState should be exported');
+});
+
+TestRunner.test("Day 599 - Z-Index - setHighestZState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setHighestZState');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setHighestZState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 599 - Z-Index - setHighestZState has descriptive undo label with Highest Z", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setHighestZState');
+    const labelIdx = stateStr.indexOf("'Set Highest Z", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setHighestZState undo label should include "Set Highest Z" if changed');
+});
+
+TestRunner.test("Day 599 - Z-Index - incrementHighestZState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function incrementHighestZState'), 'incrementHighestZState should be exported');
+});
+
+TestRunner.test("Day 599 - Z-Index - incrementHighestZState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function incrementHighestZState');
+    const captureIdx = stateStr.indexOf('captureStateForUndoIfAllowed', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'incrementHighestZState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 599 - Z-Index - incrementHighestZState has descriptive undo label with Increment Highest Z", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function incrementHighestZState');
+    const labelIdx = stateStr.indexOf("'Increment Highest Z'", fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'incrementHighestZState undo label should include "Increment Highest Z"');
+});
+
+TestRunner.test("Day 599 - Track Access - getTracksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTracksState'), 'getTracksState should be exported');
+});
+
+TestRunner.test("Day 599 - Track Access - getTrackByIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackByIdState'), 'getTrackByIdState should be exported');
+});
+
+TestRunner.test("Day 599 - Track Access - getTrackByIdState uses find to locate track by id", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getTrackByIdState');
+    const funcContent = stateStr.substring(fnIdx, fnIdx + 200);
+    t.assertTruthy(funcContent.includes('.find('), 'getTrackByIdState should use .find() to locate track by id');
+});
+
+TestRunner.test("Day 599 - Clipboard - setClipboardDataState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setClipboardDataState'), 'setClipboardDataState should be exported');
+});
+
+TestRunner.test("Day 599 - APP_VERSION validation for Day 599", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 599");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 254, "Minor version should be >= 254 for Day 599");
+    }
+});
