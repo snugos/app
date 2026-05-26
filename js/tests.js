@@ -7538,3 +7538,79 @@ TestRunner.test("Day 608 - APP_VERSION validation for Day 608", (t) => {
         t.assertTruthy(versionParts[1] >= 262, "Minor version should be >= 262 for Day 608");
     }
 });
+// Day 609: Additional State Function Tests - Track Templates and Auto-Save Recovery
+TestRunner.test("Day 609 - Track Templates - getTrackTemplateByIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackTemplateByIdState'), 'getTrackTemplateByIdState should be exported');
+});
+
+TestRunner.test("Day 609 - Track Templates - getTrackTemplateByIdState uses .find to locate template", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getTrackTemplateByIdState');
+    const findIdx = stateStr.indexOf('.find', fnIdx);
+    t.assertTruthy(findIdx > fnIdx && findIdx < fnIdx + 100, 'getTrackTemplateByIdState should use .find to locate template');
+});
+
+TestRunner.test("Day 609 - Track Templates - getTrackTemplateByIdState accepts 1 parameter (id)", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function getTrackTemplateByIdState');
+    const parenIdx = stateStr.indexOf('(', fnIdx);
+    const closeIdx = stateStr.indexOf(')', parenIdx);
+    const params = stateStr.substring(parenIdx, closeIdx + 1);
+    t.assertTruthy(params.includes('id'), 'getTrackTemplateByIdState should accept id parameter');
+});
+
+TestRunner.test("Day 609 - Auto-Save Recovery - recoverAutoSavedProject is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export async function recoverAutoSavedProject') || stateStr.includes('export function recoverAutoSavedProject'), 'recoverAutoSavedProject should be exported');
+});
+
+TestRunner.test("Day 609 - Auto-Save Recovery - recoverAutoSavedProject uses localStorage getItem", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function recoverAutoSavedProject');
+    const getItemIdx = stateStr.indexOf('localStorage.getItem', fnIdx);
+    t.assertTruthy(getItemIdx > fnIdx && getItemIdx < fnIdx + 300, 'recoverAutoSavedProject should use localStorage.getItem');
+});
+
+TestRunner.test("Day 609 - Auto-Save Recovery - recoverAutoSavedProject checks for AUTOSAVE_KEY", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function recoverAutoSavedProject');
+    const keyIdx = stateStr.indexOf('AUTOSAVE_KEY', fnIdx);
+    t.assertTruthy(keyIdx > fnIdx && keyIdx < fnIdx + 300, 'recoverAutoSavedProject should check for AUTOSAVE_KEY');
+});
+
+TestRunner.test("Day 609 - Auto-Save Recovery - recoverAutoSavedProject uses JSON.parse", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function recoverAutoSavedProject');
+    const parseIdx = stateStr.indexOf('JSON.parse', fnIdx);
+    t.assertTruthy(parseIdx > fnIdx && parseIdx < fnIdx + 400, 'recoverAutoSavedProject should use JSON.parse');
+});
+
+TestRunner.test("Day 609 - Auto-Save Recovery - recoverAutoSavedProject returns null when no saved project", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function recoverAutoSavedProject');
+    const nullIdx = stateStr.indexOf('return null', fnIdx);
+    t.assertTruthy(nullIdx > fnIdx && nullIdx < fnIdx + 400, 'recoverAutoSavedProject should return null when no saved project');
+});
+
+TestRunner.test("Day 609 - Auto-Save Recovery - recoverAutoSavedProject handles errors gracefully", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function recoverAutoSavedProject');
+    const catchIdx = stateStr.indexOf('catch', fnIdx);
+    t.assertTruthy(catchIdx > fnIdx && catchIdx < fnIdx + 500, 'recoverAutoSavedProject should have error handling with catch block');
+});
+
+TestRunner.test("Day 609 - Auto-Save Recovery - recoverAutoSavedProject returns projectData on success", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function recoverAutoSavedProject');
+    const returnDataIdx = stateStr.indexOf('return projectData', fnIdx);
+    t.assertTruthy(returnDataIdx > fnIdx && returnDataIdx < fnIdx + 500, 'recoverAutoSavedProject should return projectData on success');
+});
+
+TestRunner.test("Day 609 - APP_VERSION validation for Day 609", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 609");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 263, "Minor version should be >= 263 for Day 609");
+    }
+});
