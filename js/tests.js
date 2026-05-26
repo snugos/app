@@ -7344,3 +7344,197 @@ TestRunner.test("Day 607 - APP_VERSION validation for Day 607", (t) => {
         t.assertTruthy(versionParts[1] >= 262, "Minor version should be >= 262 for Day 607");
     }
 });
+
+// Day 608: Ghost Track, Loop Region, Swing, and Time Signature State Function Tests
+TestRunner.test("Day 608 - Ghost Track - setGhostTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setGhostTrackIdState'), 'setGhostTrackIdState should be exported');
+});
+
+TestRunner.test("Day 608 - Ghost Track - setGhostTrackIdState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setGhostTrackIdState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setGhostTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 608 - Ghost Track - setGhostTrackIdState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setGhostTrackIdState');
+    const labelIdx = stateStr.indexOf('Set Ghost Track', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setGhostTrackIdState undo label should mention Ghost Track');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLoopRegionState'), 'setLoopRegionState should be exported');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setLoopRegionState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionState has descriptive undo label with bar numbers", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionState');
+    const labelIdx = stateStr.indexOf('Set Loop Region to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setLoopRegionState undo label should mention Loop Region');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionState clamps values to valid range", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionState');
+    const clampIdx = stateStr.indexOf('Math.max', fnIdx);
+    t.assertTruthy(clampIdx > fnIdx && clampIdx < fnIdx + 500, 'setLoopRegionState should clamp values with Math.max');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLoopRegionEnabledState'), 'setLoopRegionEnabledState should be exported');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionEnabledState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionEnabledState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setLoopRegionEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionEnabledState has descriptive undo label with On/Off", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionEnabledState');
+    const labelIdx = stateStr.indexOf('Toggle Loop Region', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setLoopRegionEnabledState undo label should mention Toggle Loop Region');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionStartBarState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLoopRegionStartBarState'), 'setLoopRegionStartBarState should be exported');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionStartBarState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionStartBarState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setLoopRegionStartBarState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionStartBarState has descriptive undo label with bar number", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionStartBarState');
+    const labelIdx = stateStr.indexOf('Set Loop Region Start to Bar', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setLoopRegionStartBarState undo label should mention Loop Region Start');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionStartBarState clamps start bar and adjusts end bar", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionStartBarState');
+    const clampIdx = stateStr.indexOf('Math.max', fnIdx);
+    const endBarIdx = stateStr.indexOf('endBar', fnIdx);
+    t.assertTruthy(clampIdx > fnIdx && clampIdx < fnIdx + 500, 'setLoopRegionStartBarState should clamp with Math.max');
+    t.assertTruthy(endBarIdx > fnIdx && endBarIdx < fnIdx + 500, 'setLoopRegionStartBarState should adjust endBar when needed');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionEndBarState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLoopRegionEndBarState'), 'setLoopRegionEndBarState should be exported');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionEndBarState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionEndBarState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setLoopRegionEndBarState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionEndBarState has descriptive undo label with bar number", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionEndBarState');
+    const labelIdx = stateStr.indexOf('Set Loop Region End to Bar', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 300, 'setLoopRegionEndBarState undo label should mention Loop Region End');
+});
+
+TestRunner.test("Day 608 - Loop Region - setLoopRegionEndBarState clamps end bar to be >= start bar", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setLoopRegionEndBarState');
+    const clampIdx = stateStr.indexOf('Math.max', fnIdx);
+    const startBarIdx = stateStr.indexOf('startBar', fnIdx);
+    t.assertTruthy(clampIdx > fnIdx && clampIdx < fnIdx + 500, 'setLoopRegionEndBarState should clamp end bar');
+    t.assertTruthy(startBarIdx > fnIdx && startBarIdx < fnIdx + 500, 'setLoopRegionEndBarState should reference startBar');
+});
+
+TestRunner.test("Day 608 - Swing - setSwingState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSwingState'), 'setSwingState should be exported');
+});
+
+TestRunner.test("Day 608 - Swing - setSwingState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 200, 'setSwingState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 608 - Swing - setSwingState has descriptive undo label", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingState');
+    const labelIdx = stateStr.indexOf('Set Swing', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 200, 'setSwingState undo label should mention Set Swing');
+});
+
+TestRunner.test("Day 608 - Swing - setSwingState sets both enabled and amount properties", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setSwingState');
+    const enabledIdx = stateStr.indexOf('enabled:', fnIdx);
+    const amountIdx = stateStr.indexOf('amount:', fnIdx);
+    t.assertTruthy(enabledIdx > fnIdx && enabledIdx < fnIdx + 400, 'setSwingState should set enabled property');
+    t.assertTruthy(amountIdx > fnIdx && amountIdx < fnIdx + 400, 'setSwingState should set amount property');
+});
+
+TestRunner.test("Day 608 - Time Signature - setTimeSignatureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTimeSignatureState'), 'setTimeSignatureState should be exported');
+});
+
+TestRunner.test("Day 608 - Time Signature - setTimeSignatureState calls captureStateForUndo", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureState');
+    const captureIdx = stateStr.indexOf('captureStateForUndo', fnIdx);
+    t.assertTruthy(captureIdx > fnIdx && captureIdx < fnIdx + 300, 'setTimeSignatureState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 608 - Time Signature - setTimeSignatureState has descriptive undo label with n/d", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureState');
+    const labelIdx = stateStr.indexOf('Set Time Signature to', fnIdx);
+    t.assertTruthy(labelIdx > fnIdx && labelIdx < fnIdx + 400, 'setTimeSignatureState undo label should mention Time Signature');
+});
+
+TestRunner.test("Day 608 - Time Signature - setTimeSignatureState clamps numerator and denominator to valid ranges", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureState');
+    const numIdx = stateStr.indexOf('TIME_SIG_MAX_NUMERATOR', fnIdx);
+    const denIdx = stateStr.indexOf('TIME_SIG_MAX_DENOMINATOR', fnIdx);
+    t.assertTruthy(numIdx > fnIdx && numIdx < fnIdx + 500, 'setTimeSignatureState should clamp numerator');
+    t.assertTruthy(denIdx > fnIdx && denIdx < fnIdx + 500, 'setTimeSignatureState should clamp denominator');
+});
+
+TestRunner.test("Day 608 - Time Signature - setTimeSignatureState sets numerator and denominator properties", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    const fnIdx = stateStr.indexOf('export function setTimeSignatureState');
+    const numIdx = stateStr.indexOf('numerator:', fnIdx);
+    const denIdx = stateStr.indexOf('denominator:', fnIdx);
+    t.assertTruthy(numIdx > fnIdx && numIdx < fnIdx + 500, 'setTimeSignatureState should set numerator');
+    t.assertTruthy(denIdx > fnIdx && denIdx < fnIdx + 500, 'setTimeSignatureState should set denominator');
+});
+
+TestRunner.test("Day 608 - APP_VERSION validation for Day 608", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 608");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 262, "Minor version should be >= 262 for Day 608");
+    }
+});
