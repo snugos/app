@@ -1,3 +1,31 @@
+#### Day 606: MIDI Export Helper Functions Tests (2026-05-26)
+- **Tests**: Added 16 tests for MIDI Export helper functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 606 test block with 16 tests for MIDI helper functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.262.0
+- **Test Details** (`js/tests.js`): 16 tests covering:
+  - **noteNameToMidiNumber** (4 tests):
+    - is a function export
+    - uses NOTE_MAP for note lookup
+    - returns correct MIDI number for C4 (60)
+    - defaults to C4 (60) when note is undefined
+  - **pitchToRow** (4 tests):
+    - is a function export
+    - returns 60 + rowIndex for Synth tracks
+    - returns 36 + rowIndex for DrumSampler tracks
+    - returns rowIndex directly for Sampler tracks
+  - **buildMidiFile** (7 tests):
+    - is a function export
+    - accepts default ticksPerQuarter of 480
+    - sorts events by time before writing
+    - uses VLQ encoding for delta times
+    - handles noteOn events
+    - builds MThd header chunk
+    - builds MTrk track chunk
+  - APP_VERSION validation (>= 2.260 for Day 606)
+- **Version**: Bumped to 2.262.0
+- **Test Count**: Increased from 1105 to 1121
+
 #### Day 605: Swing State Function Tests (2026-05-26)
 - **Tests**: Added 14 tests for Swing state functions in state.js
 - **Files Modified**:
