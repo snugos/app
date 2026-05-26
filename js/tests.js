@@ -6444,3 +6444,208 @@ TestRunner.test("Day 601 - APP_VERSION validation for Day 601", (t) => {
         t.assertTruthy(versionParts[1] >= 256, "Minor version should be >= 256 for Day 601");
     }
 });
+
+// ============================================
+// Day 602: Armed/Recording/Muted Track State Function Tests
+// ============================================
+TestRunner.test("Day 602 - Muted Track State - getMutedTrackIdsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMutedTrackIdsState'), 'getMutedTrackIdsState should be exported');
+});
+
+TestRunner.test("Day 602 - Muted Track State - setMutedTrackIdsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMutedTrackIdsState'), 'setMutedTrackIdsState should be exported');
+});
+
+TestRunner.test("Day 602 - Muted Track State - setMutedTrackIdsState calls captureStateForUndoIfAllowed", (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcBody.indexOf('export function setMutedTrackIdsState');
+    t.assertTruthy(captureIdx > fnIdx, 'setMutedTrackIdsState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 602 - Muted Track State - setMutedTrackIdsState has descriptive undo label", (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    t.assertTruthy(funcBody.includes('Set Muted Tracks'), 'setMutedTrackIdsState should have "Set Muted Tracks" undo label');
+});
+
+TestRunner.test("Day 602 - Muted Track State - setMutedTrackIdsState validates array input with Array.isArray", (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    t.assertTruthy(funcBody.includes('Array.isArray'), 'setMutedTrackIdsState should use Array.isArray for validation');
+});
+
+TestRunner.test("Day 602 - Muted Track State - setMutedTrackIdsState guards capture with change detection", (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    t.assertTruthy(funcBody.includes('mutedTrackIds.length') && funcBody.includes('changed'), 'setMutedTrackIdsState should check for changes before capturing');
+});
+
+TestRunner.test("Day 602 - Muted Track State - isTrackMutedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function isTrackMutedState'), 'isTrackMutedState should be exported');
+});
+
+TestRunner.test("Day 602 - Muted Track State - isTrackMutedState uses .includes to check trackId", (t) => {
+    const funcBody = isTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('.includes'), 'isTrackMutedState should use .includes to check trackId');
+});
+
+TestRunner.test("Day 602 - Soloed Track State - isTrackSoloedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function isTrackSoloedState'), 'isTrackSoloedState should be exported');
+});
+
+TestRunner.test("Day 602 - Soloed Track State - isTrackSoloedState uses === comparison for trackId", (t) => {
+    const funcBody = isTrackSoloedState.toString();
+    t.assertTruthy(funcBody.includes('soloedTrackId === trackId'), 'isTrackSoloedState should use === to compare trackId');
+});
+
+TestRunner.test("Day 602 - Track Mute State - setTrackMutedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTrackMutedState'), 'setTrackMutedState should be exported');
+});
+
+TestRunner.test("Day 602 - Track Mute State - setTrackMutedState calls captureStateForUndoIfAllowed", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcBody.indexOf('export function setTrackMutedState');
+    t.assertTruthy(captureIdx > fnIdx, 'setTrackMutedState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 602 - Track Mute State - setTrackMutedState has descriptive undo label", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('Mute') && funcBody.includes('Unmute'), 'setTrackMutedState should have "Mute"/"Unmute" undo labels');
+});
+
+TestRunner.test("Day 602 - Track Mute State - setTrackMutedState uses push/filter to modify mutedTrackIds", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('.push') && funcBody.includes('.filter'), 'setTrackMutedState should use push and filter to modify mutedTrackIds');
+});
+
+TestRunner.test("Day 602 - Armed Track State - setArmedTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setArmedTrackIdState'), 'setArmedTrackIdState should be exported');
+});
+
+TestRunner.test("Day 602 - Armed Track State - setArmedTrackIdState calls captureStateForUndoIfAllowed", (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcBody.indexOf('export function setArmedTrackIdState');
+    t.assertTruthy(captureIdx > fnIdx, 'setArmedTrackIdState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 602 - Armed Track State - setArmedTrackIdState has descriptive undo label", (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Armed Track'), 'setArmedTrackIdState should have "Armed Track" undo label');
+});
+
+TestRunner.test("Day 602 - Armed Track State - setArmedTrackIdState uses Object.is for comparison", (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Object.is'), 'setArmedTrackIdState should use Object.is for comparison');
+});
+
+TestRunner.test("Day 602 - Armed Track State - setArmedTrackIdState handles null correctly", (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('id === null'), 'setArmedTrackIdState should handle null ID');
+});
+
+TestRunner.test("Day 602 - Armed Track State - getArmedTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getArmedTrackIdState'), 'getArmedTrackIdState should be exported');
+});
+
+TestRunner.test("Day 602 - Armed Track State - getArmedTrackIdState returns armed track ID directly", (t) => {
+    const funcBody = getArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('return armedTrackId'), 'getArmedTrackIdState should return armedTrackId directly');
+});
+
+TestRunner.test("Day 602 - Recording State - setIsRecordingState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setIsRecordingState'), 'setIsRecordingState should be exported');
+});
+
+TestRunner.test("Day 602 - Recording State - setIsRecordingState calls captureStateForUndoIfAllowed", (t) => {
+    const funcBody = setIsRecordingState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcBody.indexOf('export function setIsRecordingState');
+    t.assertTruthy(captureIdx > fnIdx, 'setIsRecordingState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 602 - Recording State - setIsRecordingState has descriptive undo label", (t) => {
+    const funcBody = setIsRecordingState.toString();
+    t.assertTruthy(funcBody.includes('Recording State'), 'setIsRecordingState should have "Recording State" undo label');
+});
+
+TestRunner.test("Day 602 - Recording State - setRecordingTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setRecordingTrackIdState'), 'setRecordingTrackIdState should be exported');
+});
+
+TestRunner.test("Day 602 - Recording State - setRecordingTrackIdState calls captureStateForUndoIfAllowed", (t) => {
+    const funcBody = setRecordingTrackIdState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcBody.indexOf('export function setRecordingTrackIdState');
+    t.assertTruthy(captureIdx > fnIdx, 'setRecordingTrackIdState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 602 - Recording State - setRecordingTrackIdState has descriptive undo label", (t) => {
+    const funcBody = setRecordingTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Recording Track'), 'setRecordingTrackIdState should have "Recording Track" undo label');
+});
+
+TestRunner.test("Day 602 - Recording State - setRecordingStartTimeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setRecordingStartTimeState'), 'setRecordingStartTimeState should be exported');
+});
+
+TestRunner.test("Day 602 - Recording State - setRecordingStartTimeState calls captureStateForUndoIfAllowed", (t) => {
+    const funcBody = setRecordingStartTimeState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcBody.indexOf('export function setRecordingStartTimeState');
+    t.assertTruthy(captureIdx > fnIdx, 'setRecordingStartTimeState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 602 - Recording State - setRecordingStartTimeState has descriptive undo label", (t) => {
+    const funcBody = setRecordingStartTimeState.toString();
+    t.assertTruthy(funcBody.includes('Recording Start Time'), 'setRecordingStartTimeState should have "Recording Start Time" undo label');
+});
+
+TestRunner.test("Day 602 - Active Sequencer Track State - setActiveSequencerTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setActiveSequencerTrackIdState'), 'setActiveSequencerTrackIdState should be exported');
+});
+
+TestRunner.test("Day 602 - Active Sequencer Track State - setActiveSequencerTrackIdState calls captureStateForUndoIfAllowed", (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcBody.indexOf('export function setActiveSequencerTrackIdState');
+    t.assertTruthy(captureIdx > fnIdx, 'setActiveSequencerTrackIdState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 602 - Active Sequencer Track State - setActiveSequencerTrackIdState has descriptive undo label", (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Active Sequencer Track'), 'setActiveSequencerTrackIdState should have "Active Sequencer Track" undo label');
+});
+
+TestRunner.test("Day 602 - Active Sequencer Track State - setActiveSequencerTrackIdState uses Object.is for comparison", (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Object.is'), 'setActiveSequencerTrackIdState should use Object.is for comparison');
+});
+
+TestRunner.test("Day 602 - Active Sequencer Track State - setActiveSequencerTrackIdState handles null correctly", (t) => {
+    const funcBody = setActiveSequencerTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('id === null'), 'setActiveSequencerTrackIdState should handle null ID');
+});
+
+TestRunner.test("Day 602 - Active Sequencer Track State - getActiveSequencerTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getActiveSequencerTrackIdState'), 'getActiveSequencerTrackIdState should be exported');
+});
+
+TestRunner.test("Day 602 - APP_VERSION validation for Day 602", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 602");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 257, "Minor version should be >= 257 for Day 602");
+    }
+});
