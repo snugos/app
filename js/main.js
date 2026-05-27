@@ -8,6 +8,7 @@ import { DESKTOP_BACKGROUND_KEY, DESKTOP_BG_TYPE_KEY } from './constants.js';
 import { getAudio as bgDbGetAudio, storeAudio as bgDbStoreAudio, deleteAudio as bgDbDeleteAudio } from './db.js';
 import { 
     startMetronome, stopMetronome, setMetronomeVolume,
+    isMetronomeEnabled, setMetronomeEnabled,
     initAudioContextAndMasterMeter, clearAllMasterEffectNodes, 
     addMasterEffectToAudio, getActualMasterGainNode,
     createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus,
@@ -523,6 +524,8 @@ const appServices = {
     startMetronome: startMetronome,
     stopMetronome: stopMetronome,
     setMetronomeVolume: setMetronomeVolume,
+    isMetronomeEnabled: isMetronomeEnabled,
+    setMetronomeEnabled: setMetronomeEnabled,
     // Send Bus functions
     createSendBusInAudio,
     deleteSendBusFromAudio,
