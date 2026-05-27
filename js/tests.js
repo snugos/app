@@ -7975,3 +7975,212 @@ TestRunner.test("Day 612 - DrumSampler Pad Drop - pad elements have data-track-i
 TestRunner.test("Day 612 - APP_VERSION validation for Day 612", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 612'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 265, 'Minor version should be >= 265 for Day 612'); }
 });
+
+// Day 613: Track Instance Methods - Automation Armed, Monitoring, Selection, and Instrument Settings Tests (2026-05-27)
+TestRunner.test("Day 613 - Track Instance Methods - setAutomationArmed is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setAutomationArmed, 'function', 'setAutomationArmed should be a function');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setAutomationArmed captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setAutomationArmed.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.automationArmed =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setAutomationArmed should capture undo before setting automationArmed');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setAutomationArmed has descriptive undo label with On/Off", (t) => {
+    const funcStr = Track.prototype.setAutomationArmed.toString();
+    t.assertTruthy(funcStr.includes('Toggle Automation Arm') && funcStr.includes('On') && funcStr.includes('Off'), 'setAutomationArmed should have Toggle Automation Arm On/Off label');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setAutomationArmed uses !! to coerce boolean", (t) => {
+    const funcStr = Track.prototype.setAutomationArmed.toString();
+    const boolIdx = funcStr.indexOf('!!armed');
+    t.assertTruthy(boolIdx >= 0, 'setAutomationArmed should use !! to coerce armed to boolean');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setAutomationArmed only captures when value changes", (t) => {
+    const funcStr = Track.prototype.setAutomationArmed.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const condIdx = funcStr.indexOf('if (this.automationArmed !== nextValue)');
+    t.assertTruthy(condIdx >= 0 && condIdx < captureIdx, 'setAutomationArmed should only capture when value changes');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setAutomationArmed returns the new value", (t) => {
+    const funcStr = Track.prototype.setAutomationArmed.toString();
+    const returnIdx = funcStr.indexOf('return this.automationArmed');
+    t.assertTruthy(returnIdx >= 0, 'setAutomationArmed should return this.automationArmed');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setMonitoringEnabled is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setMonitoringEnabled, 'function', 'setMonitoringEnabled should be a function');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setMonitoringEnabled captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setMonitoringEnabled.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.isMonitoringEnabled =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setMonitoringEnabled should capture undo before setting isMonitoringEnabled');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setMonitoringEnabled has descriptive undo label with On/Off", (t) => {
+    const funcStr = Track.prototype.setMonitoringEnabled.toString();
+    t.assertTruthy(funcStr.includes('Toggle Input Monitoring') && funcStr.includes('On') && funcStr.includes('Off'), 'setMonitoringEnabled should have Toggle Input Monitoring On/Off label');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setMonitoringEnabled uses !! to coerce boolean", (t) => {
+    const funcStr = Track.prototype.setMonitoringEnabled.toString();
+    const boolIdx = funcStr.indexOf('!!enabled');
+    t.assertTruthy(boolIdx >= 0, 'setMonitoringEnabled should use !! to coerce enabled to boolean');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setMonitoringEnabled only captures when value changes", (t) => {
+    const funcStr = Track.prototype.setMonitoringEnabled.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const condIdx = funcStr.indexOf('if (this.isMonitoringEnabled !== nextValue)');
+    t.assertTruthy(condIdx >= 0 && condIdx < captureIdx, 'setMonitoringEnabled should only capture when value changes');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setMonitoringEnabled returns the new value", (t) => {
+    const funcStr = Track.prototype.setMonitoringEnabled.toString();
+    const returnHitIdx = funcStr.indexOf('return this.isMonitoringEnabled');
+    t.assertTruthy(returnHitIdx >= 0, 'setMonitoringEnabled should return this.isMonitoringEnabled');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedSliceForEdit is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setSelectedSliceForEdit, 'function', 'setSelectedSliceForEdit should be a function');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedSliceForEdit accepts sliceIndex parameter", (t) => {
+    t.assertEqual(Track.prototype.setSelectedSliceForEdit.length, 1, 'setSelectedSliceForEdit should accept 1 parameter');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedSliceForEdit captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setSelectedSliceForEdit.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.selectedSliceForEdit =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setSelectedSliceForEdit should capture undo before setting selectedSliceForEdit');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedSliceForEdit has descriptive undo label with slice number", (t) => {
+    const funcStr = Track.prototype.setSelectedSliceForEdit.toString();
+    t.assertTruthy(funcStr.includes('Select Slice ${nextIndex + 1}'), 'setSelectedSliceForEdit should have Select Slice undo label');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedSliceForEdit clamps index to valid range", (t) => {
+    const funcStr = Track.prototype.setSelectedSliceForEdit.toString();
+    const maxIdx = funcStr.indexOf('Math.max(0, Math.min');
+    t.assertTruthy(maxIdx >= 0, 'setSelectedSliceForEdit should clamp index to valid range');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedSliceForEdit only captures when value changes", (t) => {
+    const funcStr = Track.prototype.setSelectedSliceForEdit.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const condIdx = funcStr.indexOf('if (this.selectedSliceForEdit !== nextIndex)');
+    t.assertTruthy(condIdx >= 0 && condIdx < captureIdx, 'setSelectedSliceForEdit should only capture when value changes');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedSliceForEdit returns the new value", (t) => {
+    const funcStr = Track.prototype.setSelectedSliceForEdit.toString();
+    const returnHitIdx = funcStr.indexOf('return this.selectedSliceForEdit');
+    t.assertTruthy(returnHitIdx >= 0, 'setSelectedSliceForEdit should return this.selectedSliceForEdit');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedDrumPadForEdit is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setSelectedDrumPadForEdit, 'function', 'setSelectedDrumPadForEdit should be a function');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedDrumPadForEdit accepts padIndex parameter", (t) => {
+    t.assertEqual(Track.prototype.setSelectedDrumPadForEdit.length, 1, 'setSelectedDrumPadForEdit should accept 1 parameter');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedDrumPadForEdit captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setSelectedDrumPadForEdit.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.selectedDrumPadForEdit =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setSelectedDrumPadForEdit should capture undo before setting selectedDrumPadForEdit');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedDrumPadForEdit has descriptive undo label with pad number", (t) => {
+    const funcStr = Track.prototype.setSelectedDrumPadForEdit.toString();
+    t.assertTruthy(funcStr.includes('Select Drum Pad ${nextIndex + 1}'), 'setSelectedDrumPadForEdit should have Select Drum Pad undo label');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedDrumPadForEdit clamps index to valid range", (t) => {
+    const funcStr = Track.prototype.setSelectedDrumPadForEdit.toString();
+    const maxIdx = funcStr.indexOf('Math.max(0, Math.min');
+    t.assertTruthy(maxIdx >= 0, 'setSelectedDrumPadForEdit should clamp index to valid range');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedDrumPadForEdit only captures when value changes", (t) => {
+    const funcStr = Track.prototype.setSelectedDrumPadForEdit.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const condIdx = funcStr.indexOf('if (this.selectedDrumPadForEdit !== nextIndex)');
+    t.assertTruthy(condIdx >= 0 && condIdx < captureIdx, 'setSelectedDrumPadForEdit should only capture when value changes');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setSelectedDrumPadForEdit returns the new value", (t) => {
+    const funcStr = Track.prototype.setSelectedDrumPadForEdit.toString();
+    const returnHitIdx = funcStr.indexOf('return this.selectedDrumPadForEdit');
+    t.assertTruthy(returnHitIdx >= 0, 'setSelectedDrumPadForEdit should return this.selectedDrumPadForEdit');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setTrackColor is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setTrackColor, 'function', 'setTrackColor should be a function');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setTrackColor captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.trackColor =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setTrackColor should capture undo before setting trackColor');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setTrackColor has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('Change color on'), 'setTrackColor should have Change color undo label');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setTrackColor calls updateTrackUI on color change", (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('this.appServices.updateTrackUI') || funcStr.includes('updateTrackUI'), 'setTrackColor should call updateTrackUI');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setTrackColor has appServices guard for updateTrackUI", (t) => {
+    const funcStr = Track.prototype.setTrackColor.toString();
+    t.assertTruthy(funcStr.includes('if (this.appServices.updateTrackUI)'), 'setTrackColor should guard updateTrackUI call');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setInstrumentSamplerRootNote is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setInstrumentSamplerRootNote, 'function', 'setInstrumentSamplerRootNote should be a function');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setInstrumentSamplerRootNote accepts noteName parameter", (t) => {
+    t.assertEqual(Track.prototype.setInstrumentSamplerRootNote.length, 1, 'setInstrumentSamplerRootNote should accept 1 parameter');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setInstrumentSamplerRootNote captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerRootNote.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.instrumentSamplerSettings.rootNote =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setInstrumentSamplerRootNote should capture undo before setting rootNote');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setInstrumentSamplerRootNote has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerRootNote.toString();
+    t.assertTruthy(funcStr.includes('Set root note on'), 'setInstrumentSamplerRootNote should have Set root note undo label');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setInstrumentSamplerRootNote guards instrumentSamplerSettings", (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerRootNote.toString();
+    t.assertTruthy(funcStr.includes('if (this.instrumentSamplerSettings)'), 'setInstrumentSamplerRootNote should guard instrumentSamplerSettings');
+});
+
+TestRunner.test("Day 613 - Track Instance Methods - setInstrumentSamplerRootNote calls setupToneSampler after change", (t) => {
+    const funcStr = Track.prototype.setInstrumentSamplerRootNote.toString();
+    t.assertTruthy(funcStr.includes('this.setupToneSampler()'), 'setInstrumentSamplerRootNote should call setupToneSampler');
+});
+
+TestRunner.test("Day 613 - APP_VERSION validation for Day 613", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 613'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 267, 'Minor version should be >= 267 for Day 613'); }
+});
