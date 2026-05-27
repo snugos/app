@@ -8638,7 +8638,224 @@ TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline is a function export",
 
 TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline calls setTimelineZoomLevelState", (t) => {
     const funcBody = zoomInTimeline.toString();
-    t.assertTruthy(funcBody.includes('setTimeline
+    t.assertTruthy(funcBody.includes('setTimelineZoomLevelState'), 'zoomInTimeline should call setTimelineZoomLevelState');
 TestRunner.test("Day 616 - Track Armed/Solo/Mute - APP_VERSION validation for Day 616", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 616'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 271, 'Minor version should be >= 271 for Day 616'); }
+});
+// ============================================
+// Day 617: Performance Monitor State Functions Tests
+// ============================================
+
+// --- Performance Monitor State Getters ---
+TestRunner.test("Day 617 - Perf Monitor - getPerformanceMonitorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getPerformanceMonitorState'), 'getPerformanceMonitorState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - getPerformanceMonitorState returns object copy", (t) => {
+    const funcBody = getPerformanceMonitorState.toString();
+    t.assertTruthy(funcBody.includes('...performanceMonitorState') || funcBody.includes('{ ...performanceMonitorState }'), 'getPerformanceMonitorState should return a copy using spread operator');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - getPerformanceMonitorEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getPerformanceMonitorEnabledState'), 'getPerformanceMonitorEnabledState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - getPerformanceMonitorEnabledState uses !! coercion", (t) => {
+    const funcBody = getPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcBody.includes('!!performanceMonitorState.enabled') || funcBody.includes('!!'), 'getPerformanceMonitorEnabledState should use !! coercion');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setPerformanceMonitorEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setPerformanceMonitorEnabledState'), 'setPerformanceMonitorEnabledState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setPerformanceMonitorEnabledState calls captureStateForUndo", (t) => {
+    const funcBody = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setPerformanceMonitorEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setPerformanceMonitorEnabledState uses !! coercion for value", (t) => {
+    const funcBody = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcBody.includes('!!value') || funcBody.includes('const nextValue = !!value'), 'setPerformanceMonitorEnabledState should coerce value to boolean');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setPerformanceMonitorEnabledState guards capture with change detection", (t) => {
+    const funcBody = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.enabled !== nextValue'), 'setPerformanceMonitorEnabledState should check if value changed');
+});
+
+// --- CPU Usage State ---
+TestRunner.test("Day 617 - Perf Monitor - getCPUUsageState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getCPUUsageState'), 'getCPUUsageState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - getCPUUsageState returns performanceMonitorState.cpuUsage directly", (t) => {
+    const funcBody = getCPUUsageState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.cpuUsage'), 'getCPUUsageState should return cpuUsage property');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setCPUUsageState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCPUUsageState'), 'setCPUUsageState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setCPUUsageState uses parseFloat for conversion", (t) => {
+    const funcBody = setCPUUsageState.toString();
+    t.assertTruthy(funcBody.includes('parseFloat'), 'setCPUUsageState should use parseFloat');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setCPUUsageState calls captureStateForUndo", (t) => {
+    const funcBody = setCPUUsageState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setCPUUsageState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setCPUUsageState clamps value to 0-100 range", (t) => {
+    const funcBody = setCPUUsageState.toString();
+    t.assertTruthy(funcBody.includes('Math.max(0') && funcBody.includes('Math.min(100', 'setCPUUsageState should clamp cpuUsage to 0-100 range'));
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setCPUUsageState guards capture with change detection", (t) => {
+    const funcBody = setCPUUsageState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.cpuUsage !== clamped'), 'setCPUUsageState should check if value changed');
+});
+
+// --- Memory Pressure State ---
+TestRunner.test("Day 617 - Perf Monitor - getMemoryPressureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMemoryPressureState'), 'getMemoryPressureState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - getMemoryPressureState returns performanceMonitorState.memoryPressure directly", (t) => {
+    const funcBody = getMemoryPressureState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.memoryPressure'), 'getMemoryPressureState should return memoryPressure property');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setMemoryPressureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMemoryPressureState'), 'setMemoryPressureState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setMemoryPressureState uses validValues array validation", (t) => {
+    const funcBody = setMemoryPressureState.toString();
+    t.assertTruthy(funcBody.includes('validValues') && funcBody.includes('includes'), 'setMemoryPressureState should validate against validValues');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setMemoryPressureState guards capture with change detection", (t) => {
+    const funcBody = setMemoryPressureState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.memoryPressure !== value'), 'setMemoryPressureState should check if value changed');
+});
+
+// --- Active Voices State ---
+TestRunner.test("Day 617 - Perf Monitor - getActiveVoicesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getActiveVoicesState'), 'getActiveVoicesState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - getActiveVoicesState returns performanceMonitorState.activeVoices directly", (t) => {
+    const funcBody = getActiveVoicesState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.activeVoices'), 'getActiveVoicesState should return activeVoices property');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setActiveVoicesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setActiveVoicesState'), 'setActiveVoicesState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setActiveVoicesState uses parseInt for conversion", (t) => {
+    const funcBody = setActiveVoicesState.toString();
+    t.assertTruthy(funcBody.includes('parseInt'), 'setActiveVoicesState should use parseInt');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setActiveVoicesState clamps to minimum 0", (t) => {
+    const funcBody = setActiveVoicesState.toString();
+    t.assertTruthy(funcBody.includes('Math.max(0'), 'setActiveVoicesState should clamp to 0 minimum');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setActiveVoicesState guards capture with change detection", (t) => {
+    const funcBody = setActiveVoicesState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.activeVoices !== clamped'), 'setActiveVoicesState should check if value changed');
+});
+
+// --- Audio Latency State ---
+TestRunner.test("Day 617 - Perf Monitor - getAudioLatencyState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getAudioLatencyState'), 'getAudioLatencyState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setAudioLatencyState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setAudioLatencyState'), 'setAudioLatencyState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setAudioLatencyState uses parseFloat and clamps to 0 minimum", (t) => {
+    const funcBody = setAudioLatencyState.toString();
+    t.assertTruthy(funcBody.includes('parseFloat') && funcBody.includes('Math.max(0'), 'setAudioLatencyState should use parseFloat and clamp to 0 minimum');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setAudioLatencyState guards capture with change detection", (t) => {
+    const funcBody = setAudioLatencyState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.audioLatency !== clamped'), 'setAudioLatencyState should check if value changed');
+});
+
+// --- Last Callback Time State ---
+TestRunner.test("Day 617 - Perf Monitor - getLastCallbackTimeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getLastCallbackTimeState'), 'getLastCallbackTimeState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setLastCallbackTimeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLastCallbackTimeState'), 'setLastCallbackTimeState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - setLastCallbackTimeState uses parseFloat and clamps to 0 minimum", (t) => {
+    const funcBody = setLastCallbackTimeState.toString();
+    t.assertTruthy(funcBody.includes('parseFloat') && funcBody.includes('Math.max(0'), 'setLastCallbackTimeState should use parseFloat and clamp to 0 minimum');
+});
+
+// --- Reset Performance Monitor ---
+TestRunner.test("Day 617 - Perf Monitor - resetPerformanceMonitorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function resetPerformanceMonitorState'), 'resetPerformanceMonitorState should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - resetPerformanceMonitorState calls captureStateForUndo", (t) => {
+    const funcBody = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo') || funcBody.includes('captureStateForUndoIfAllowed'), 'resetPerformanceMonitorState should capture state for undo');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - resetPerformanceMonitorState has descriptive undo label", (t) => {
+    const funcBody = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcBody.includes('Reset Performance Monitor'), 'resetPerformanceMonitorState should have descriptive undo label');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - resetPerformanceMonitorState resets all performance monitor fields", (t) => {
+    const funcBody = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.enabled = false'), 'resetPerformanceMonitorState should reset enabled to false');
+    t.assertTruthy(funcBody.includes('performanceMonitorState.cpuUsage = 0'), 'resetPerformanceMonitorState should reset cpuUsage to 0');
+    t.assertTruthy(funcBody.includes('performanceMonitorState.memoryPressure = \'none\''), 'resetPerformanceMonitorState should reset memoryPressure to none');
+});
+
+// --- Initialize State Module ---
+TestRunner.test("Day 617 - Perf Monitor - initializeStateModule is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function initializeStateModule'), 'initializeStateModule should be exported');
+});
+
+TestRunner.test("Day 617 - Perf Monitor - initializeStateModule is async", (t) => {
+    const funcBody = initializeStateModule.toString();
+    t.assertTruthy(funcBody.includes('async') || funcBody.includes('Promise'), 'initializeStateModule should be async');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 617 - Perf Monitor - APP_VERSION validation for Day 617", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 617');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 272, 'Minor version should be >= 272 for Day 617');
+    }
 });
