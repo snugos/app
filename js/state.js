@@ -880,6 +880,73 @@ export function clearTimelineMarkersState() {
     timelineMarkersState.length = 0;
 }
 
+// --- Timeline Zoom State ---
+let timelineZoomLevelState = Constants.TIMELINE_ZOOM_DEFAULT;
+let timelineVerticalZoomLevelState = Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT;
+
+export function getTimelineZoomState() {
+    return {
+        level: timelineZoomLevelState,
+        verticalLevel: timelineVerticalZoomLevelState
+    };
+}
+
+export function getTimelineZoomLevelState() {
+    return timelineZoomLevelState;
+}
+
+export function setTimelineZoomLevelState(level) {
+    const nextValue = Math.max(
+        Constants.TIMELINE_ZOOM_MIN,
+        Math.min(parseFloat(level) || Constants.TIMELINE_ZOOM_DEFAULT, Constants.TIMELINE_ZOOM_MAX)
+    );
+    if (timelineZoomLevelState === nextValue) return;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Timeline Zoom to ${Math.round(nextValue * 100)}%`);
+    }
+    timelineZoomLevelState = nextValue;
+}
+
+export function getTimelineVerticalZoomState() {
+    return timelineVerticalZoomLevelState;
+}
+
+export function setTimelineVerticalZoomState(level) {
+    const nextValue = Math.max(
+        Constants.TIMELINE_VERTICAL_ZOOM_MIN,
+        Math.min(parseFloat(level) || Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT, Constants.TIMELINE_VERTICAL_ZOOM_MAX)
+    );
+    if (timelineVerticalZoomLevelState === nextValue) return;
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Timeline Vertical Zoom to ${Math.round(nextValue * 100)}%`);
+    }
+    timelineVerticalZoomLevelState = nextValue;
+}
+
+export function zoomInTimeline() {
+    setTimelineZoomLevelState(timelineZoomLevelState * (1 + Constants.TIMELINE_ZOOM_STEP));
+}
+
+export function zoomOutTimeline() {
+    setTimelineZoomLevelState(timelineZoomLevelState * (1 - Constants.TIMELINE_ZOOM_STEP));
+}
+
+export function zoomInVerticalTimeline() {
+    setTimelineVerticalZoomState(timelineVerticalZoomLevelState * (1 + Constants.TIMELINE_VERTICAL_ZOOM_STEP));
+}
+
+export function zoomOutVerticalTimeline() {
+    setTimelineVerticalZoomState(timelineVerticalZoomLevelState * (1 - Constants.TIMELINE_VERTICAL_ZOOM_STEP));
+}
+
+export function resetTimelineZoom() {
+    if (appServices && appServices.captureStateForUndo) {
+        appServices.captureStateForUndo('Reset Timeline Zoom');
+    }
+    timelineZoomLevelState = Constants.TIMELINE_ZOOM_DEFAULT;
+    timelineVerticalZoomLevelState = Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT;
+}
+
 // --- Chord Mode State ---
 let chordModeState = { ...Constants.DEFAULT_CHORD_MODE };
 
