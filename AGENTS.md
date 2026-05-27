@@ -1736,3 +1736,32 @@
   - APP_VERSION validation (>= 2.251 for Day 596)
 - **Version**: Bumped to 2.252.0
 - **Test Count**: Increased from 823 to 845
+
+#### Day 614: Audio Processing Methods Tests (2026-05-27)
+- **Tests**: Added 17 tests for audio processing methods on Track.prototype
+- **Files Modified**:
+  - `js/tests.js`: Added Day 614 test block with 17 tests for audio processing methods
+  - `js/constants.js`: Bumped APP_VERSION to 2.269.0
+- **Test Details** (`js/tests.js`): 17 tests covering:
+  - **normalizeAudioClip** (6 tests):
+    - is a function on Track.prototype
+    - is async
+    - captures undo BEFORE mutation (`_captureUndoState` before `clip.gain =`)
+    - has descriptive "Normalize" undo label
+    - returns boolean (true/false)
+    - uses appServices.showNotification for user feedback
+  - **bounceTrack** (4 tests):
+    - is a function on Track.prototype
+    - is async
+    - returns null for Audio tracks
+    - uses Tone.OfflineContext for rendering
+    - uses appServices.showNotification
+  - **freezeTrack** (5 tests):
+    - is a function on Track.prototype
+    - is async
+    - returns false for Audio tracks
+    - disposes audio nodes (.dispose() calls)
+    - uses appServices.showNotification
+  - APP_VERSION validation (= 2.269 for Day 614)
+- **Version**: Bumped to 2.269.0
+- **Test Count**: Increased from 1307 to 1324
