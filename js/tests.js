@@ -9137,6 +9137,111 @@ TestRunner.test("Day 619 - Perf Monitor - setMemoryPressureState uses validValue
     t.assertTruthy(funcBody.includes('validValues') && funcBody.includes('includes'), 'setMemoryPressureState should validate against validValues array');
 });
 
+// --- Day 620: Master Effects State Function Tests ---
+TestRunner.test("Day 620 - Master Effects - addMasterEffectToState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function addMasterEffectToState'), 'addMasterEffectToState should be exported');
+});
+
+TestRunner.test("Day 620 - Master Effects - addMasterEffectToState generates unique effect ID", (t) => {
+    const funcBody = addMasterEffectToState.toString();
+    t.assertTruthy(funcBody.includes('effectId') && funcBody.includes('Date.now()'), 'addMasterEffectToState should generate unique ID with Date.now()');
+});
+
+TestRunner.test("Day 620 - Master Effects - addMasterEffectToState uses effectsRegistryAccess for default params", (t) => {
+    const funcBody = addMasterEffectToState.toString();
+    t.assertTruthy(funcBody.includes('effectsRegistryAccess') && funcBody.includes('getEffectDefaultParams'), 'addMasterEffectToState should use effectsRegistryAccess for defaults');
+});
+
+TestRunner.test("Day 620 - Master Effects - addMasterEffectToState calls captureStateForUndo", (t) => {
+    const funcBody = addMasterEffectToState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndoIfAllowed'), 'addMasterEffectToState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 620 - Master Effects - addMasterEffectToState has descriptive undo label", (t) => {
+    const funcBody = addMasterEffectToState.toString();
+    t.assertTruthy(funcBody.includes('Add ') && funcBody.includes('Master Effect'), 'addMasterEffectToState undo label should include "Add" and "Master Effect"');
+});
+
+TestRunner.test("Day 620 - Master Effects - addMasterEffectToState pushes to masterEffectsChainState", (t) => {
+    const funcBody = addMasterEffectToState.toString();
+    t.assertTruthy(funcBody.includes('masterEffectsChainState.push'), 'addMasterEffectToState should push to masterEffectsChainState');
+});
+
+TestRunner.test("Day 620 - Master Effects - removeMasterEffectFromState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeMasterEffectFromState'), 'removeMasterEffectFromState should be exported');
+});
+
+TestRunner.test("Day 620 - Master Effects - removeMasterEffectFromState uses findIndex to locate effect", (t) => {
+    const funcBody = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcBody.includes('findIndex'), 'removeMasterEffectFromState should use findIndex');
+});
+
+TestRunner.test("Day 620 - Master Effects - removeMasterEffectFromState calls captureStateForUndo", (t) => {
+    const funcBody = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndoIfAllowed'), 'removeMasterEffectFromState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 620 - Master Effects - removeMasterEffectFromState uses splice to remove", (t) => {
+    const funcBody = removeMasterEffectFromState.toString();
+    t.assertTruthy(funcBody.includes('splice'), 'removeMasterEffectFromState should use splice');
+});
+
+TestRunner.test("Day 620 - Master Effects - updateMasterEffectParamInState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function updateMasterEffectParamInState'), 'updateMasterEffectParamInState should be exported');
+});
+
+TestRunner.test("Day 620 - Master Effects - updateMasterEffectParamInState finds effect by id", (t) => {
+    const funcBody = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcBody.includes('find') && funcBody.includes('effectId'), 'updateMasterEffectParamInState should find effect by id');
+});
+
+TestRunner.test("Day 620 - Master Effects - updateMasterEffectParamInState calls captureStateForUndo", (t) => {
+    const funcBody = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndoIfAllowed'), 'updateMasterEffectParamInState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 620 - Master Effects - updateMasterEffectParamInState uses paramPath split by dot", (t) => {
+    const funcBody = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcBody.includes("split('.')") && funcBody.includes('paramPath'), 'updateMasterEffectParamInState should split paramPath by dot');
+});
+
+TestRunner.test("Day 620 - Master Effects - updateMasterEffectParamInState uses nested key assignment", (t) => {
+    const funcBody = updateMasterEffectParamInState.toString();
+    t.assertTruthy(funcBody.includes('keys[keys.length - 1]') && funcBody.includes('currentStoredParamLevel'), 'updateMasterEffectParamInState should use nested key assignment');
+});
+
+TestRunner.test("Day 620 - Master Effects - reorderMasterEffectInState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function reorderMasterEffectInState'), 'reorderMasterEffectInState should be exported');
+});
+
+TestRunner.test("Day 620 - Master Effects - reorderMasterEffectInState validates oldIndex and newIndex", (t) => {
+    const funcBody = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcBody.includes('oldIndex === -1') && funcBody.includes('newIndex < 0'), 'reorderMasterEffectInState should validate indices');
+});
+
+TestRunner.test("Day 620 - Master Effects - reorderMasterEffectInState calls captureStateForUndo", (t) => {
+    const funcBody = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndoIfAllowed'), 'reorderMasterEffectInState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 620 - Master Effects - reorderMasterEffectInState uses splice to move effect", (t) => {
+    const funcBody = reorderMasterEffectInState.toString();
+    t.assertTruthy(funcBody.includes('splice(oldIndex, 1)') && funcBody.includes('splice(newIndex, 0'), 'reorderMasterEffectInState should use splice twice to move');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 620 - APP_VERSION validation for Day 620", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 620');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 275, 'Minor version should be >= 275 for Day 620');
+    }
+});
+
 // --- APP_VERSION validation ---
 TestRunner.test("Day 619 - APP_VERSION validation for Day 619", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
