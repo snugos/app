@@ -751,6 +751,36 @@ export function setSwingAmountState(amount) {
     }
 }
 
+// --- Metronome State ---
+import { isMetronomeEnabled as audioIsMetronomeEnabled, setMetronomeEnabled as audioSetMetronomeEnabled, getMetronomeVolume as audioGetMetronomeVolume, setMetronomeVolume as audioSetMetronomeVolume } from './audio.js';
+
+let metronomeEnabledState = Constants.DEFAULT_METRONOME_ENABLED;
+let metronomeVolumeState = Constants.DEFAULT_METRONOME_VOLUME;
+
+export function getMetronomeEnabledState() { return metronomeEnabledState; }
+export function setMetronomeEnabledState(enabled) {
+    const nextValue = !!enabled;
+    if (metronomeEnabledState !== nextValue) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Toggle Metronome ${nextValue ? 'On' : 'Off'}`);
+        }
+        metronomeEnabledState = nextValue;
+        audioSetMetronomeEnabled(nextValue);
+    }
+}
+
+export function getMetronomeVolumeState() { return metronomeVolumeState; }
+export function setMetronomeVolumeState(vol) {
+    const nextValue = Math.max(Constants.MIN_METRONOME_VOLUME, Math.min(Constants.MAX_METRONOME_VOLUME, parseFloat(vol) || Constants.DEFAULT_METRONOME_VOLUME));
+    if (metronomeVolumeState !== nextValue) {
+        if (appServices && appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Metronome Volume to ${nextValue.toFixed(2)}`);
+        }
+        metronomeVolumeState = nextValue;
+        audioSetMetronomeVolume(nextValue);
+    }
+}
+
 // --- Time Signature State ---
 let timeSignatureState = { ...Constants.DEFAULT_TIME_SIGNATURE };
 
