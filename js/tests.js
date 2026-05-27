@@ -8859,3 +8859,113 @@ TestRunner.test("Day 617 - Perf Monitor - APP_VERSION validation for Day 617", (
         t.assertTruthy(versionParts[1] >= 272, 'Minor version should be >= 272 for Day 617');
     }
 });
+
+// ============================================
+// Day 618: Remaining State Function Missing Tests
+// ============================================
+
+// --- Timeline Zoom Helper Functions ---
+TestRunner.test("Day 618 - Timeline Zoom - zoomOutTimeline is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function zoomOutTimeline'), 'zoomOutTimeline should be exported');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - zoomOutTimeline calls setTimelineZoomLevelState", (t) => {
+    const funcBody = zoomOutTimeline.toString();
+    t.assertTruthy(funcBody.includes('setTimelineZoomLevelState'), 'zoomOutTimeline should call setTimelineZoomLevelState');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - zoomOutTimeline decreases zoom level by step", (t) => {
+    const funcBody = zoomOutTimeline.toString();
+    t.assertTruthy(funcBody.includes('1 - Constants.TIMELINE_ZOOM_STEP') || funcBody.includes('(1 -'), 'zoomOutTimeline should multiply by (1 - step)');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - zoomInVerticalTimeline is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function zoomInVerticalTimeline'), 'zoomInVerticalTimeline should be exported');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - zoomInVerticalTimeline calls setTimelineVerticalZoomState", (t) => {
+    const funcBody = zoomInVerticalTimeline.toString();
+    t.assertTruthy(funcBody.includes('setTimelineVerticalZoomState'), 'zoomInVerticalTimeline should call setTimelineVerticalZoomState');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - zoomInVerticalTimeline increases zoom level by step", (t) => {
+    const funcBody = zoomInVerticalTimeline.toString();
+    t.assertTruthy(funcBody.includes('1 + Constants.TIMELINE_VERTICAL_ZOOM_STEP') || funcBody.includes('(1 +'), 'zoomInVerticalTimeline should multiply by (1 + step)');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - zoomOutVerticalTimeline is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function zoomOutVerticalTimeline'), 'zoomOutVerticalTimeline should be exported');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - zoomOutVerticalTimeline calls setTimelineVerticalZoomState", (t) => {
+    const funcBody = zoomOutVerticalTimeline.toString();
+    t.assertTruthy(funcBody.includes('setTimelineVerticalZoomState'), 'zoomOutVerticalTimeline should call setTimelineVerticalZoomState');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - zoomOutVerticalTimeline decreases zoom level by step", (t) => {
+    const funcBody = zoomOutVerticalTimeline.toString();
+    t.assertTruthy(funcBody.includes('1 - Constants.TIMELINE_VERTICAL_ZOOM_STEP') || funcBody.includes('(1 -'), 'zoomOutVerticalTimeline should multiply by (1 - step if vertical step constant exists)');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - resetTimelineZoom is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function resetTimelineZoom'), 'resetTimelineZoom should be exported');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - resetTimelineZoom calls captureStateForUndo", (t) => {
+    const funcBody = resetTimelineZoom.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'resetTimelineZoom should call captureStateForUndo');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - resetTimelineZoom has descriptive undo label", (t) => {
+    const funcBody = resetTimelineZoom.toString();
+    t.assertTruthy(funcBody.includes('Reset Timeline Zoom'), 'resetTimelineZoom undo label should include "Reset Timeline Zoom"');
+});
+
+TestRunner.test("Day 618 - Timeline Zoom - resetTimelineZoom resets both horizontal and vertical zoom", (t) => {
+    const funcBody = resetTimelineZoom.toString();
+    t.assertTruthy(funcBody.includes('TIMELINE_ZOOM_DEFAULT') && funcBody.includes('TIMELINE_VERTICAL_ZOOM_DEFAULT'), 'resetTimelineZoom should reset both levels to DEFAULT');
+});
+
+// --- Loop Region Getters ---
+TestRunner.test("Day 618 - Loop Region - getLoopRegionEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getLoopRegionEnabledState'), 'getLoopRegionEnabledState should be exported');
+});
+
+TestRunner.test("Day 618 - Loop Region - getLoopRegionEnabledState returns !! of enabled", (t) => {
+    const funcBody = getLoopRegionEnabledState.toString();
+    t.assertTruthy(funcBody.includes('!!loopRegionState.enabled'), 'getLoopRegionEnabledState should return !!loopRegionState.enabled');
+});
+
+TestRunner.test("Day 618 - Loop Region - getLoopRegionStartBarState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getLoopRegionStartBarState'), 'getLoopRegionStartBarState should be exported');
+});
+
+TestRunner.test("Day 618 - Loop Region - getLoopRegionStartBarState returns loopRegionState.startBar", (t) => {
+    const funcBody = getLoopRegionStartBarState.toString();
+    t.assertTruthy(funcBody.includes('loopRegionState.startBar'), 'getLoopRegionStartBarState should return loopRegionState.startBar');
+});
+
+TestRunner.test("Day 618 - Loop Region - getLoopRegionEndBarState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getLoopRegionEndBarState'), 'getLoopRegionEndBarState should be exported');
+});
+
+TestRunner.test("Day 618 - Loop Region - getLoopRegionEndBarState returns loopRegionState.endBar", (t) => {
+    const funcBody = getLoopRegionEndBarState.toString();
+    t.assertTruthy(funcBody.includes('loopRegionState.endBar'), 'getLoopRegionEndBarState should return loopRegionState.endBar');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 618 - APP_VERSION validation for Day 618", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 618');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 272, 'Minor version should be >= 272 for Day 618');
+    }
+});
