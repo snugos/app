@@ -9376,3 +9376,139 @@ TestRunner.test("Day 621 - APP_VERSION validation for Day 621", (t) => {
         t.assertTruthy(versionParts[1] >= 276, 'Minor version should be >= 276 for Day 621');
     }
 });
+
+// --- Day 622: playSlicePreview Function Tests ---
+TestRunner.test("Day 622 - playSlicePreview is a function export", (t) => {
+    t.assertEqual(typeof playSlicePreview, 'function', 'playSlicePreview should be a function export');
+});
+
+TestRunner.test("Day 622 - playSlicePreview is async", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('async'), 'playSlicePreview should be async');
+});
+
+TestRunner.test("Day 622 - playSlicePreview accepts 4 parameters", (t) => {
+    t.assertEqual(playSlicePreview.length, 4, 'playSlicePreview should accept 4 parameters');
+});
+
+TestRunner.test("Day 622 - playSlicePreview calls initAudioContextAndMasterMeter", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'playSlicePreview should call initAudioContextAndMasterMeter');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references trackId parameter", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'playSlicePreview should reference trackId parameter');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references sliceIndex parameter", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('sliceIndex'), 'playSlicePreview should reference sliceIndex parameter');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references velocity parameter", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('velocity'), 'playSlicePreview should reference velocity parameter');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references getTrackById from localAppServices", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'playSlicePreview should reference getTrackById from localAppServices');
+});
+
+TestRunner.test("Day 622 - playSlicePreview validates track type is Sampler", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'Sampler'") || funcStr.includes("type !== 'Sampler'"), 'playSlicePreview should validate track type is Sampler');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references audioBuffer and audioBuffer.loaded", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer') && funcStr.includes('loaded'), 'playSlicePreview should reference audioBuffer and audioBuffer.loaded');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references slices array", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('track.slices') || funcStr.includes('slices['), 'playSlicePreview should reference slices array');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references sliceData properties", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('sliceData'), 'playSlicePreview should reference sliceData');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references sliceData.pitchShift and sliceData.volume", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('sliceData.pitchShift') || funcStr.includes('pitchShift'), 'playSlicePreview should reference sliceData.pitchShift');
+    t.assertTruthy(funcStr.includes('sliceData.volume') || funcStr.includes('volume'), 'playSlicePreview should reference sliceData.volume');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references sliceData.reverse and sliceData.loop", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('sliceData.reverse') || funcStr.includes('reverse'), 'playSlicePreview should reference sliceData.reverse');
+    t.assertTruthy(funcStr.includes('sliceData.loop') || funcStr.includes('loop'), 'playSlicePreview should reference sliceData.loop');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references sliceData.offset and sliceData.duration", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('sliceData.offset') || funcStr.includes('offset'), 'playSlicePreview should reference sliceData.offset');
+    t.assertTruthy(funcStr.includes('sliceData.duration') || funcStr.includes('duration'), 'playSlicePreview should reference sliceData.duration');
+});
+
+TestRunner.test("Day 622 - playSlicePreview uses Math.pow for playbackRate", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('Math.pow(2,'), 'playSlicePreview should use Math.pow for playbackRate');
+});
+
+TestRunner.test("Day 622 - playSlicePreview uses Tone.dbToGain for volume conversion", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('dbToGain') || funcStr.includes('Tone.dbToGain'), 'playSlicePreview should use Tone.dbToGain for volume conversion');
+});
+
+TestRunner.test("Day 622 - playSlicePreview calls player.start with Tone.now", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('player.start') && funcStr.includes('Tone.now'), 'playSlicePreview should call player.start with Tone.now');
+});
+
+TestRunner.test("Day 622 - playSlicePreview has error handling with console.warn", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('console.warn'), 'playSlicePreview should have error handling with console.warn');
+});
+
+TestRunner.test("Day 622 - playSlicePreview has error handling with console.error", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'playSlicePreview should have error handling with console.error');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references getActualMasterGainNode", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('getActualMasterGainNode'), 'playSlicePreview should reference getActualMasterGainNode');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references slicerIsPolyphonic", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('slicerIsPolyphonic'), 'playSlicePreview should reference slicerIsPolyphonic');
+});
+
+TestRunner.test("Day 622 - playSlicePreview references slicerMonoPlayer, slicerMonoEnvelope, slicerMonoGain", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('slicerMonoPlayer') && funcStr.includes('slicerMonoEnvelope') && funcStr.includes('slicerMonoGain'), 'playSlicePreview should reference slicerMonoPlayer, slicerMonoEnvelope, and slicerMonoGain');
+});
+
+TestRunner.test("Day 622 - playSlicePreview shows notification for unloaded Sampler audio", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'playSlicePreview should show notification for unloaded Sampler audio');
+});
+
+TestRunner.test("Day 622 - playSlicePreview calculates playbackRate from sliceData.pitchShift and additionalPitchShiftInSemitones", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('additionalPitchShiftInSemitones'), 'playSlicePreview should calculate playbackRate using additionalPitchShiftInSemitones');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 622 - APP_VERSION validation for Day 622", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 622');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 277, 'Minor version should be >= 277 for Day 622');
+    }
+});
