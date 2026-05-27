@@ -8369,3 +8369,276 @@ TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState calls audioSetMet
 TestRunner.test("Day 615 - APP_VERSION validation for Day 615", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 615'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 269 || (versionParts[1] === 269 && versionParts[2] >= 0), 'Minor version should be >= 269 for Day 615'); }
 });
+
+// Day 616: Track Solo/Mute/Armed State Functions Tests
+// ================================================
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - getArmedTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getArmedTrackIdState'), 'getArmedTrackIdState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - getArmedTrackIdState returns armed track ID or null", (t) => {
+    const result = getArmedTrackIdState();
+    t.assertTruthy(result === null || typeof result === 'string', 'getArmedTrackIdState should return null or string');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setArmedTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setArmedTrackIdState'), 'setArmedTrackIdState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setArmedTrackIdState calls captureStateForUndo", (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setArmedTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setArmedTrackIdState uses descriptive undo label", (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(
+        (funcBody.includes('Clear Armed Track') || funcBody.includes('Set Armed Track to')),
+        'setArmedTrackIdState should have descriptive undo label'
+    );
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setArmedTrackIdState uses Object.is for comparison", (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('Object.is'), 'setArmedTrackIdState should use Object.is for comparison');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setArmedTrackIdState guards capture with change detection", (t) => {
+    const funcBody = setArmedTrackIdState.toString();
+    t.assertTruthy(
+        funcBody.includes('Object.is') && funcBody.includes('armedTrackId'),
+        'setArmedTrackIdState should check if value changed before capture'
+    );
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - getSoloedTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getSoloedTrackIdState'), 'getSoloedTrackIdState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - getSoloedTrackIdState returns soloed track ID or null", (t) => {
+    const result = getSoloedTrackIdState();
+    t.assertTruthy(result === null || typeof result === 'string', 'getSoloedTrackIdState should return null or string');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setSoloedTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setSoloedTrackIdState'), 'setSoloedTrackIdState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setSoloedTrackIdState calls captureStateForUndo", (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setSoloedTrackIdState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setSoloedTrackIdState uses descriptive undo label", (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(
+        (funcBody.includes('Clear Soloed Track') || funcBody.includes('Set Soloed Track to')),
+        'setSoloedTrackIdState should have descriptive undo label'
+    );
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setSoloedTrackIdState uses previousId/local variable for undo label", (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('previousId') || funcBody.includes('previous'), 'setSoloedTrackIdState should store previous value for undo label');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setSoloedTrackIdState normalizes id to null for undefined", (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(
+        funcBody.includes('id === undefined') || funcBody.includes('id === null'),
+        'setSoloedTrackIdState should normalize undefined/null to null'
+    );
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setSoloedTrackIdState calls appServices.onSoloedTrackChanged", (t) => {
+    const funcBody = setSoloedTrackIdState.toString();
+    t.assertTruthy(funcBody.includes('onSoloedTrackChanged'), 'setSoloedTrackIdState should call onSoloedTrackChanged callback');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - getMutedTrackIdsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMutedTrackIdsState'), 'getMutedTrackIdsState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - getMutedTrackIdsState returns array copy", (t) => {
+    const funcBody = getMutedTrackIdsState.toString();
+    t.assertTruthy(funcBody.includes('[...]') || funcBody.includes('slice'), 'getMutedTrackIdsState should return array copy');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setMutedTrackIdsState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMutedTrackIdsState'), 'setMutedTrackIdsState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setMutedTrackIdsState calls captureStateForUndo", (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setMutedTrackIdsState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setMutedTrackIdsState has descriptive undo label", (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    t.assertTruthy(funcBody.includes('Set Muted Tracks'), 'setMutedTrackIdsState should have "Set Muted Tracks" undo label');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setMutedTrackIdsState guards capture with array change detection", (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    t.assertTruthy(
+        funcBody.includes('mutedTrackIds.length') || funcBody.includes('some('),
+        'setMutedTrackIdsState should check if array changed before capture'
+    );
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setMutedTrackIdsState calls appServices.onMutedTracksChanged", (t) => {
+    const funcBody = setMutedTrackIdsState.toString();
+    t.assertTruthy(funcBody.includes('onMutedTracksChanged'), 'setMutedTrackIdsState should call onMutedTracksChanged callback');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - isTrackMutedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function isTrackMutedState'), 'isTrackMutedState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - isTrackMutedState uses mutedTrackIds.includes", (t) => {
+    const funcBody = isTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('mutedTrackIds.includes'), 'isTrackMutedState should use mutedTrackIds.includes');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setTrackMutedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTrackMutedState'), 'setTrackMutedState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setTrackMutedState calls captureStateForUndo", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setTrackMutedState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setTrackMutedState uses Mute/Unmute descriptive undo label", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    t.assertTruthy(
+        funcBody.includes('Mute') && funcBody.includes('Unmute'),
+        'setTrackMutedState should have Mute/Unmute undo labels'
+    );
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setTrackMutedState uses !! boolean coercion for muted param", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('!!muted') || funcBody.includes('shouldMute'), 'setTrackMutedState should coerce muted to boolean');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setTrackMutedState guards capture with isCurrentlyMuted check", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('isCurrentlyMuted') && funcBody.includes('shouldMute'), 'setTrackMutedState should check current state before capture');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setTrackMutedState uses push for mute and filter for unmute", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('push') && funcBody.includes('filter'), 'setTrackMutedState should use push/filter for mute/unmute');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - setTrackMutedState calls appServices.onMutedTracksChanged", (t) => {
+    const funcBody = setTrackMutedState.toString();
+    t.assertTruthy(funcBody.includes('onMutedTracksChanged'), 'setTrackMutedState should call onMutedTracksChanged callback');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - isTrackSoloedState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function isTrackSoloedState'), 'isTrackSoloedState should be exported');
+});
+
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - isTrackSoloedState uses === comparison with soloedTrackId", (t) => {
+    const funcBody = isTrackSoloedState.toString();
+    t.assertTruthy(funcBody.includes('soloedTrackId'), 'isTrackSoloedState should reference soloedTrackId');
+    t.assertTruthy(funcBody.includes('==='), 'isTrackSoloedState should use strict equality');
+});
+
+// Day 616: Timeline Zoom State Functions Tests
+// ============================================
+TestRunner.test("Day 616 - Timeline Zoom - getTimelineZoomState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimelineZoomState'), 'getTimelineZoomState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - getTimelineZoomState returns object with level and verticalLevel", (t) => {
+    const funcStr = getTimelineZoomState.toString();
+    t.assertTruthy(funcStr.includes('level:'), 'getTimelineZoomState should return level property');
+    t.assertTruthy(funcStr.includes('verticalLevel:'), 'getTimelineZoomState should return verticalLevel property');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - getTimelineZoomLevelState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimelineZoomLevelState'), 'getTimelineZoomLevelState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTimelineZoomLevelState'), 'setTimelineZoomLevelState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState calls captureStateForUndo", (t) => {
+    const funcBody = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setTimelineZoomLevelState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState has descriptive undo label", (t) => {
+    const funcBody = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcBody.includes('Set Timeline Zoom to'), 'setTimelineZoomLevelState should have descriptive undo label');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState clamps to TIMELINE_ZOOM_MIN and TIMELINE_ZOOM_MAX", (t) => {
+    const funcBody = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcBody.includes('TIMELINE_ZOOM_MIN') && funcBody.includes('TIMELINE_ZOOM_MAX'), 'setTimelineZoomLevelState should clamp to valid range');
+    t.assertTruthy(funcBody.includes('Math.max') && funcBody.includes('Math.min'), 'setTimelineZoomLevelState should use Math.max and Math.min');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState guards capture with change detection", (t) => {
+    const funcBody = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcBody.includes('timelineZoomLevelState === nextValue'), 'setTimelineZoomLevelState should check if value changed before capture');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - getTimelineVerticalZoomState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimelineVerticalZoomState'), 'getTimelineVerticalZoomState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTimelineVerticalZoomState'), 'setTimelineVerticalZoomState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState calls captureStateForUndo", (t) => {
+    const funcBody = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setTimelineVerticalZoomState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState has descriptive undo label", (t) => {
+    const funcBody = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcBody.includes('Set Timeline Vertical Zoom to'), 'setTimelineVerticalZoomState should have descriptive undo label');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState clamps to TIMELINE_VERTICAL_ZOOM_MIN and MAX", (t) => {
+    const funcBody = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcBody.includes('TIMELINE_VERTICAL_ZOOM_MIN') && funcBody.includes('TIMELINE_VERTICAL_ZOOM_MAX'), 'setTimelineVerticalZoomState should clamp to valid range');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState guards capture with change detection", (t) => {
+    const funcBody = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcBody.includes('timelineVerticalZoomLevelState === nextValue'), 'setTimelineVerticalZoomState should check if value changed');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function zoomInTimeline'), 'zoomInTimeline should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline calls setTimelineZoomLevelState", (t) => {
+    const funcBody = zoomInTimeline.toString();
+    t.assertTruthy(funcBody.includes('setTimeline
+TestRunner.test("Day 616 - Track Armed/Solo/Mute - APP_VERSION validation for Day 616", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 616'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 271, 'Minor version should be >= 271 for Day 616'); }
+});
