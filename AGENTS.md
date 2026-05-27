@@ -1,3 +1,23 @@
+#### Day 623: Context Suspension & Sidechain Audio Function Tests (2026-05-27)
+- **Tests**: Added 51 tests for Context Suspension and Sidechain audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 623 test block with 51 tests for Context Suspension & Sidechain audio functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.278.0
+- **Test Details** (`js/tests.js`): 51 tests covering:
+  - **startContextSuspensionMonitoring** (8 tests): is a function export, accepts 1 parameter with default intervalMs=3000, references resumeAttemptScheduled, Tone.context, Tone.context.resume(), contextSuspendedCount, localAppServices.showNotification
+  - **stopContextSuspensionMonitoring** (3 tests): is a function export, accepts 0 parameters, references resumeAttemptScheduled
+  - **getContextSuspensionCount** (3 tests): is a function export, accepts 0 parameters, returns contextSuspendedCount
+  - **getContextState** (4 tests): is a function export, accepts 0 parameters, references Tone.context.state, returns unavailable fallback
+  - **getSidechainBusInput** (4 tests): is a function export, accepts 0 parameters, references sidechainBus, creates Tone.Gain node when disposed
+  - **enableSidechainFromMic** (8 tests): is an async function export, accepts 1 parameter (compressorNode), validates compressorNode, references micForSidechain, calls getSidechainBusInput, navigator.mediaDevices.getUserMedia, has console.warn/console.error
+  - **disableSidechainFromMic** (5 tests): is a function export, accepts 0 parameters, references micForSidechain, calls disconnect and close, sets to null
+  - **enableSidechainFromTrackIn** (6 tests): is an async function export, accepts 2 parameters, validates compressorNode, references localAppServices.getTrackById, track.inputChannel, getSidechainBusInput, has console.warn for missing track
+  - **disableSidechainBus** (3 tests): is a function export, accepts 0 parameters, calls disableSidechainFromMic, references sidechainBus
+  - **isMicOpenForSidechain** (4 tests): is a function export, accepts 0 parameters, references micForSidechain, checks state === started
+  - APP_VERSION validation (>= 2.278 for Day 623)
+- **Version**: Bumped to 2.278.0
+- **Test Count**: Increased from 1555 to 1606
+
 #### Day 620: Master Effects State Function Tests (2026-05-27)
 - **Tests**: Added 21 tests for Master Effects state functions in state.js
 - **Files Modified**:
