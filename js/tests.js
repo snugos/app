@@ -8273,3 +8273,99 @@ TestRunner.test("Day 614 - Audio Processing - freezeTrack uses appServices for n
 TestRunner.test("Day 614 - APP_VERSION validation for Day 614", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 614'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 268, 'Minor version should be >= 268 for Day 614'); }
 });
+
+TestRunner.test("Day 615 - Metronome - getMetronomeEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMetronomeEnabledState'), 'getMetronromeEnabledState should be exported');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMetronomeEnabledState'), 'setMetronomeEnabledState should be exported');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeEnabledState calls captureStateForUndo", (t) => {
+    const funcBody = setMetronomeEnabledState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndo');
+    const fnIdx = funcBody.indexOf('export function setMetronomeEnabledState');
+    t.assertTruthy(captureIdx > fnIdx, 'setMetronomeEnabledState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeEnabledState has descriptive undo label", (t) => {
+    const funcBody = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcBody.includes('Toggle Metronome') && funcBody.includes('On') && funcBody.includes('Off'), 'setMetronomeEnabledState should have "Toggle Metronome On/Off" undo label');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeEnabledState uses !! for boolean coercion", (t) => {
+    const funcBody = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcBody.includes('!!enabled'), 'setMetronomeEnabledState should use !! to coerce enabled value');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeEnabledState guards capture with change detection", (t) => {
+    const funcBody = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcBody.includes('metronomeEnabledState !== nextValue'), 'setMetronomeEnabledState should check if value changed before capturing');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeEnabledState returns the enabled value", (t) => {
+    const funcBody = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcBody.includes('metronomeEnabledState = nextValue'), 'setMetronomeEnabledState should set metronomeEnabledState');
+});
+
+TestRunner.test("Day 615 - Metronome - getMetronomeVolumeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMetronomeVolumeState'), 'getMetronomeVolumeState should be exported');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMetronomeVolumeState'), 'setMetronomeVolumeState should be exported');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState calls captureStateForUndo", (t) => {
+    const funcBody = setMetronomeVolumeState.toString();
+    const captureIdx = funcBody.indexOf('captureStateForUndo');
+    const fnIdx = funcBody.indexOf('export function setMetronomeVolumeState');
+    t.assertTruthy(captureIdx > fnIdx, 'setMetronomeVolumeState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState has descriptive undo label", (t) => {
+    const funcBody = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcBody.includes('Set Metronome Volume to'), 'setMetronomeVolumeState should have "Set Metronome Volume to" undo label');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState clamps value to valid range", (t) => {
+    const funcBody = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcBody.includes('MIN_METRONOME_VOLUME') && funcBody.includes('MAX_METRONOME_VOLUME'), 'setMetronomeVolumeState should clamp to MIN_METRONOME_VOLUME and MAX_METRONOME_VOLUME');
+    t.assertTruthy(funcBody.includes('Math.max') && funcBody.includes('Math.min'), 'setMetronomeVolumeState should use Math.max and Math.min for clamping');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState guards capture with change detection", (t) => {
+    const funcBody = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcBody.includes('metronomeVolumeState !== nextValue'), 'setMetronomeVolumeState should check if value changed before capturing');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState uses parseFloat for input conversion", (t) => {
+    const funcBody = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcBody.includes('parseFloat(vol)'), 'setMetronomeVolumeState should use parseFloat to convert input');
+});
+
+TestRunner.test("Day 615 - Metronome - state.js imports metronome functions from audio.js", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes("from './audio.js'"), 'state.js should import from audio.js');
+    t.assertTruthy(stateStr.includes('isMetronomeEnabled') && stateStr.includes('setMetronomeEnabled'), 'state.js should import metronome functions from audio.js');
+    t.assertTruthy(stateStr.includes('getMetronomeVolume') && stateStr.includes('setMetronomeVolume'), 'state.js should import getMetronomeVolume and setMetronomeVolume from audio.js');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeEnabledState calls audioSetMetronomeEnabled after state change", (t) => {
+    const funcBody = setMetronomeEnabledState.toString();
+    t.assertTruthy(funcBody.includes('audioSetMetronomeEnabled'), 'setMetronomeEnabledState should call audioSetMetronomeEnabled to sync audio engine');
+});
+
+TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState calls audioSetMetronomeVolume after state change", (t) => {
+    const funcBody = setMetronomeVolumeState.toString();
+    t.assertTruthy(funcBody.includes('audioSetMetronomeVolume'), 'setMetronomeVolumeState should call audioSetMetronomeVolume to sync audio engine');
+});
+
+TestRunner.test("Day 615 - APP_VERSION validation for Day 615", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 615'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 269 || (versionParts[1] === 269 && versionParts[2] >= 0), 'Minor version should be >= 269 for Day 615'); }
+});
