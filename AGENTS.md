@@ -1,3 +1,22 @@
+#### Day 616: Track Solo/Mute/Armed State Functions Tests (2026-05-27)
+- **Tests**: Added 50 tests for Track Solo/Mute/Armed state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 616 test block with 50 tests for Track Armed/Solo/Mute state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.271.0
+- **Test Details** (`js/tests.js`): 50 tests covering:
+  - **getArmedTrackIdState** (2 tests): is a function export, returns armed track ID or null
+  - **setArmedTrackIdState** (6 tests): is a function export, calls captureStateForUndo, uses descriptive "Clear Armed Track"/"Set Armed Track to" labels, uses Object.is for comparison, guards capture with change detection
+  - **getSoloedTrackIdState** (2 tests): is a function export, returns soloed track ID or null
+  - **setSoloedTrackIdState** (6 tests): is a function export, calls captureStateForUndo, uses previousId tracking for undo label, normalizes id to null for undefined, calls appServices.onSoloedTrackChanged callback
+  - **getMutedTrackIdsState** (3 tests): is a function export, returns array copy
+  - **setMutedTrackIdsState** (5 tests): is a function export, calls captureStateForUndo with "Set Muted Tracks" label, guards capture with array change detection, calls appServices.onMutedTracksChanged callback
+  - **isTrackMutedState** (2 tests): is a function export, uses mutedTrackIds.includes
+  - **setTrackMutedState** (6 tests): is a function export, calls captureStateForUndo with "Mute"/"Unmute" labels, uses !! boolean coercion for muted param, guards capture with isCurrentlyMuted check, uses push for mute and filter for unmute, calls appServices.onMutedTracksChanged callback
+  - **isTrackSoloedState** (2 tests): is a function export, uses === comparison with soloedTrackId
+  - APP_VERSION validation (>= 2.270 for Day 616)
+- **Version**: Bumped to 2.271.0
+- **Test Count**: Increased from 1344 to 1393
+
 #### Day 616: Timeline Zoom State Functions Tests (2026-05-27)
 - **Tests**: Added 30 tests for Timeline Zoom state functions in state.js
 - **Files Modified**:
