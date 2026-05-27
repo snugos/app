@@ -4,6 +4,57 @@
   - `js/tests.js`: Added Day 612 test block with 33 tests for pad drop zone verification
   - `js/constants.js`: Bumped APP_VERSION to 2.267.0
 - **Test Details** (`js/tests.js`): 33 tests covering:
+
+#### Day 613: Track Instance Methods - Automation Armed, Monitoring, Selection, and Instrument Settings Tests (2026-05-27)
+- **Tests**: Added 38 tests for 6 Track instance methods with undo capture verification
+- **Files Modified**:
+  - `js/tests.js`: Added Day 613 test block with 38 tests for Track instance methods
+  - `js/constants.js`: Bumped APP_VERSION to 2.268.0
+- **Test Details** (`js/tests.js`): 38 tests covering 6 methods:
+  - **setAutomationArmed** (6 tests):
+    - is a function on Track.prototype
+    - captures undo BEFORE mutation (`captureIdx < mutationIdx`)
+    - has descriptive "Toggle Automation Arm On/Off" undo label
+    - uses `!!` to coerce armed to boolean
+    - only captures when value changes (`if (this.automationArmed !== nextValue)`)
+    - returns `this.automationArmed`
+  - **setMonitoringEnabled** (6 tests):
+    - is a function on Track.prototype
+    - captures undo BEFORE mutation
+    - has descriptive "Toggle Input Monitoring On/Off" undo label
+    - uses `!!` to coerce enabled to boolean
+    - only captures when value changes
+    - returns `this.isMonitoringEnabled`
+  - **setSelectedSliceForEdit** (6 tests):
+    - is a function on Track.prototype, accepts 1 parameter
+    - captures undo BEFORE mutation
+    - has descriptive "Select Slice ${nextIndex + 1}" undo label (1-indexed)
+    - clamps index to valid range with `Math.max(0, Math.min(...))`
+    - only captures when value changes
+    - returns `this.selectedSliceForEdit`
+  - **setSelectedDrumPadForEdit** (6 tests):
+    - is a function on Track.prototype, accepts 1 parameter
+    - captures undo BEFORE mutation
+    - has descriptive "Select Drum Pad ${nextIndex + 1}" undo label (1-indexed)
+    - clamps index to valid range with `Math.max(0, Math.min(...))`
+    - only captures when value changes
+    - returns `this.selectedDrumPadForEdit`
+  - **setTrackColor** (5 tests):
+    - is a function on Track.prototype
+    - captures undo BEFORE mutation (`this._captureUndoState` before `this.trackColor =`)
+    - has descriptive "Change color on" undo label
+    - calls `this.appServices.updateTrackUI` after color change
+    - has `if (this.appServices.updateTrackUI)` guard
+  - **setInstrumentSamplerRootNote** (5 tests):
+    - is a function on Track.prototype, accepts 1 parameter (noteName)
+    - captures undo BEFORE mutation
+    - has descriptive "Set root note on" undo label
+    - guards `this.instrumentSamplerSettings` before mutation
+    - calls `this.setupToneSampler()` after change (reloads Tone.Sampler with new root note)
+  - **APP_VERSION validation** (= 2.268 for Day 613)
+- **Version**: Bumped to 2.268.0
+- **Test Count**: Increased from 1269 to 1307
+
   - **Pad Drop Event Handlers** (4 tests): dragover, dragleave, drop listeners added to pads via forEach(padEl => ...)
   - **Data Attribute Reading** (3 tests): padIndex parsed via parseInt from padEl.dataset.padIndex, trackId from padEl.dataset.trackId
   - **Sound Browser Drop** (10 tests): getData("application/json"), JSON.parse, soundData.type === "sound-browser-item" check, loadSoundFromBrowserToTarget called with soundData, trackId, "DrumSampler", padIndex, await used for async call, error handling via try/catch
