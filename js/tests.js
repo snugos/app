@@ -9250,3 +9250,129 @@ TestRunner.test("Day 619 - APP_VERSION validation for Day 619", (t) => {
         t.assertTruthy(versionParts[1] >= 274, 'Minor version should be >= 274 for Day 619');
     }
 });
+// --- Day 621: playDrumSamplerPadPreview Function Tests ---
+TestRunner.test("Day 621 - playDrumSamplerPadPreview is a function export", (t) => {
+    t.assertEqual(typeof playDrumSamplerPadPreview, 'function', 'playDrumSamplerPadPreview should be a function');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview is async", (t) => {
+    t.assertTruthy(playDrumSamplerPadPreview.constructor.name === 'AsyncFunction', 'playDrumSamplerPadPreview should be an async function');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview accepts 4 parameters", (t) => {
+    t.assertEqual(playDrumSamplerPadPreview.length, 4, 'playDrumSamplerPadPreview should accept 4 parameters (trackId, padIndex, velocity, additionalPitchShiftInSemitones)');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview calls initAudioContextAndMasterMeter", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'playDrumSamplerPadPreview should call initAudioContextAndMasterMeter');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references trackId parameter", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'playDrumSamplerPadPreview should reference trackId parameter');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references padIndex parameter", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('padIndex'), 'playDrumSamplerPadPreview should reference padIndex parameter');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references velocity parameter", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('velocity'), 'playDrumSamplerPadPreview should reference velocity parameter');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references getTrackById from appServices", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'playDrumSamplerPadPreview should reference getTrackById from appServices');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview validates track type is DrumSampler", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('DrumSampler'), 'playDrumSamplerPadPreview should validate track type is DrumSampler');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references drumPadPlayers array", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('drumPadPlayers'), 'playDrumSamplerPadPreview should reference drumPadPlayers array');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references drumSamplerPads array", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads'), 'playDrumSamplerPadPreview should reference drumSamplerPads array');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview checks player.disposed or player.loaded", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('disposed') || funcStr.includes('loaded'), 'playDrumSamplerPadPreview should check player.disposed or player.loaded');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references actualDestination", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('actualDestination'), 'playDrumSamplerPadPreview should reference actualDestination');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references padData.volume", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('padData.volume') || funcStr.includes('volume'), 'playDrumSamplerPadPreview should reference padData.volume');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview references padData.pitchShift", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('padData.pitchShift') || funcStr.includes('pitchShift'), 'playDrumSamplerPadPreview should reference padData.pitchShift');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview uses Tone.gainToDb for volume conversion", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('gainToDb') || funcStr.includes('Tone.gainToDb'), 'playDrumSamplerPadPreview should use Tone.gainToDb');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview uses Math.pow(2, pitchShift / 12) for playbackRate", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('Math.pow(2,') || funcStr.includes('Math.pow(2,'), 'playDrumSamplerPadPreview should use Math.pow(2, pitchShift / 12) for playbackRate');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview calls player.start with Tone.now", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('player.start') && funcStr.includes('Tone.now'), 'playDrumSamplerPadPreview should call player.start with Tone.now');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview has error handling with console.warn", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('console.warn'), 'playDrumSamplerPadPreview should have error handling with console.warn');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview has error handling with console.error", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'playDrumSamplerPadPreview should have error handling with console.error');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview calls player.disconnect and player.connect", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('player.disconnect') && funcStr.includes('player.connect'), 'playDrumSamplerPadPreview should call player.disconnect and player.connect');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview sets player.volume.value", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('player.volume.value') || funcStr.includes('volume.value'), 'playDrumSamplerPadPreview should set player.volume.value');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview shows notification for unloaded pad", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'playDrumSamplerPadPreview should show notification for unloaded pad');
+});
+
+TestRunner.test("Day 621 - playDrumSamplerPadPreview calculates totalPadPitchShift from padData.pitchShift and additionalPitchShiftInSemitones", (t) => {
+    const funcStr = playDrumSamplerPadPreview.toString();
+    t.assertTruthy(funcStr.includes('totalPadPitchShift'), 'playDrumSamplerPadPreview should calculate totalPadPitchShift from pad pitch and additional pitch');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 621 - APP_VERSION validation for Day 621", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 621');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 276, 'Minor version should be >= 276 for Day 621');
+    }
+});

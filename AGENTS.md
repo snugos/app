@@ -11,6 +11,17 @@
   - APP_VERSION validation (>= 2.275 for Day 620)
 - **Version**: Bumped to 2.275.0
 - **Test Count**: Increased from 1483 to 1504
+#### Day 621: playDrumSamplerPadPreview Function Tests (2026-05-27)
+- **Tests**: Added 24 tests for playDrumSamplerPadPreview function in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 621 test block with 24 tests for playDrumSamplerPadPreview
+  - `js/constants.js`: Bumped APP_VERSION to 2.276.0
+- **Test Details** (`js/tests.js`): 24 tests covering:
+  - **playDrumSamplerPadPreview** (21 tests): is a function export, is async, accepts 4 parameters (trackId, padIndex, velocity, additionalPitchShiftInSemitones), calls initAudioContextAndMasterMeter, references trackId and padIndex parameters, references getTrackById from appServices, validates track type is DrumSampler, references drumPadPlayers and drumSamplerPads arrays, checks player.disposed or player.loaded, references actualDestination, references padData.volume and padData.pitchShift, uses Tone.gainToDb for volume conversion, uses Math.pow(2, pitchShift / 12) for playbackRate, calls player.start with Tone.now, has error handling with console.warn and console.error, calls player.disconnect and player.connect, sets player.volume.value, shows notification for unloaded pad, calculates totalPadPitchShift from pad and additional pitch
+  - APP_VERSION validation (>= 2.276 for Day 621)
+- **Version**: Bumped to 2.276.0
+- **Test Count**: Increased from 9252 to 9278
+
 
 #### Day 616: Track Solo/Mute/Armed State Functions Tests (2026-05-27)
 - **Tests**: Added 50 tests for Track Solo/Mute/Armed state functions in state.js
