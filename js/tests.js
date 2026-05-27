@@ -8969,3 +8969,180 @@ TestRunner.test("Day 618 - APP_VERSION validation for Day 618", (t) => {
         t.assertTruthy(versionParts[1] >= 272, 'Minor version should be >= 272 for Day 618');
     }
 });
+
+// ============================================
+// Day 619: Performance Monitor incrementDroppedCallbacksState and Additional State Function Tests
+// ============================================
+
+TestRunner.test("Day 619 - Perf Monitor - incrementDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function incrementDroppedCallbacksState'), 'incrementDroppedCallbacksState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - incrementDroppedCallbacksState increments droppedCallbacks by 1", (t) => {
+    const funcBody = incrementDroppedCallbacksState.toString();
+    t.assertTruthy(funcBody.includes('droppedCallbacks++') || funcBody.includes('droppedCallbacks += 1'), 'incrementDroppedCallbacksState should increment by 1');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - incrementDroppedCallbacksState does NOT call captureStateForUndo", (t) => {
+    const funcBody = incrementDroppedCallbacksState.toString();
+    t.assertTruthy(!funcBody.includes('captureStateForUndo'), 'incrementDroppedCallbacksState should not call captureStateForUndo (increment only)');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - getAudioContextStateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getAudioContextStateState'), 'getAudioContextStateState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - getAudioContextStateState returns performanceMonitorState.audioContextState", (t) => {
+    const funcBody = getAudioContextStateState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.audioContextState'), 'getAudioContextStateState should return audioContextState');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setAudioContextStateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setAudioContextStateState'), 'setAudioContextStateState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setAudioContextStateState uses validValues array validation", (t) => {
+    const funcBody = setAudioContextStateState.toString();
+    t.assertTruthy(funcBody.includes('validValues') && funcBody.includes('includes'), 'setAudioContextStateState should validate against validValues array');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setAudioContextStateState calls captureStateForUndo", (t) => {
+    const funcBody = setAudioContextStateState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setAudioContextStateState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setAudioContextStateState has descriptive undo label", (t) => {
+    const funcBody = setAudioContextStateState.toString();
+    t.assertTruthy(funcBody.includes('Set Audio Context'), 'setAudioContextStateState undo label should include "Set Audio Context"');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setAudioContextStateState guards capture with change detection", (t) => {
+    const funcBody = setAudioContextStateState.toString();
+    t.assertTruthy(
+        (funcBody.includes('!==') || funcBody.includes('audioContextState !==')) && funcBody.includes('captureStateForUndo'),
+        'setAudioContextStateState should check if value changed before capture'
+    );
+});
+
+TestRunner.test("Day 619 - Perf Monitor - getActiveVoicesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getActiveVoicesState'), 'getActiveVoicesState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - getActiveVoicesState returns performanceMonitorState.activeVoices", (t) => {
+    const funcBody = getActiveVoicesState.toString();
+    t.assertTruthy(funcBody.includes('performanceMonitorState.activeVoices'), 'getActiveVoicesState should return activeVoices');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setActiveVoicesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setActiveVoicesState'), 'setActiveVoicesState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setActiveVoicesState uses parseInt for conversion", (t) => {
+    const funcBody = setActiveVoicesState.toString();
+    t.assertTruthy(funcBody.includes('parseInt'), 'setActiveVoicesState should use parseInt for conversion');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setActiveVoicesState clamps to minimum 0", (t) => {
+    const funcBody = setActiveVoicesState.toString();
+    t.assertTruthy(funcBody.includes('Math.max(0'), 'setActiveVoicesState should clamp to minimum 0');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setActiveVoicesState guards capture with change detection", (t) => {
+    const funcBody = setActiveVoicesState.toString();
+    t.assertTruthy(
+        (funcBody.includes('!==') || funcBody.includes('activeVoices !==') || funcBody.includes('clamped !==')) && funcBody.includes('captureStateForUndo'),
+        'setActiveVoicesState should check if value changed before capture'
+    );
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setAudioLatencyState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setAudioLatencyState'), 'setAudioLatencyState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setAudioLatencyState uses parseFloat for conversion", (t) => {
+    const funcBody = setAudioLatencyState.toString();
+    t.assertTruthy(funcBody.includes('parseFloat'), 'setAudioLatencyState should use parseFloat for conversion');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setAudioLatencyState clamps to 0 minimum", (t) => {
+    const funcBody = setAudioLatencyState.toString();
+    t.assertTruthy(funcBody.includes('Math.max(0'), 'setAudioLatencyState should clamp to minimum 0');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setLastCallbackTimeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setLastCallbackTimeState'), 'setLastCallbackTimeState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setLastCallbackTimeState uses parseFloat for conversion", (t) => {
+    const funcBody = setLastCallbackTimeState.toString();
+    t.assertTruthy(funcBody.includes('parseFloat'), 'setLastCallbackTimeState should use parseFloat for conversion');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setLastCallbackTimeState clamps to 0 minimum", (t) => {
+    const funcBody = setLastCallbackTimeState.toString();
+    t.assertTruthy(funcBody.includes('Math.max(0'), 'setLastCallbackTimeState should clamp to minimum 0');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setDroppedCallbacksState'), 'setDroppedCallbacksState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setDroppedCallbacksState uses parseInt for conversion", (t) => {
+    const funcBody = setDroppedCallbacksState.toString();
+    t.assertTruthy(funcBody.includes('parseInt'), 'setDroppedCallbacksState should use parseInt for conversion');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setDroppedCallbacksState clamps to minimum 0", (t) => {
+    const funcBody = setDroppedCallbacksState.toString();
+    t.assertTruthy(funcBody.includes('Math.max(0'), 'setDroppedCallbacksState should clamp to minimum 0');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setDroppedCallbacksState guards capture with change detection", (t) => {
+    const funcBody = setDroppedCallbacksState.toString();
+    t.assertTruthy(
+        (funcBody.includes('!==') || funcBody.includes('droppedCallbacks !==') || funcBody.includes('clamped !==')) && funcBody.includes('captureStateForUndo'),
+        'setDroppedCallbacksState should check if value changed before capture'
+    );
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setDroppedCallbacksState has descriptive undo label", (t) => {
+    const funcBody = setDroppedCallbacksState.toString();
+    t.assertTruthy(funcBody.includes('Set Dropped Callbacks'), 'setDroppedCallbacksState undo label should include "Set Dropped Callbacks"');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setCPUUsageState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCPUUsageState'), 'setCPUUsageState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setCPUUsageState clamps value to 0-100 range", (t) => {
+    const funcBody = setCPUUsageState.toString();
+    t.assertTruthy(funcBody.includes('Math.max(0') && funcBody.includes('Math.min(100') || funcBody.includes('100'), 'setCPUUsageState should clamp to 0-100 range');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setMemoryPressureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMemoryPressureState'), 'setMemoryPressureState should be exported');
+});
+
+TestRunner.test("Day 619 - Perf Monitor - setMemoryPressureState uses validValues array validation", (t) => {
+    const funcBody = setMemoryPressureState.toString();
+    t.assertTruthy(funcBody.includes('validValues') && funcBody.includes('includes'), 'setMemoryPressureState should validate against validValues array');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 619 - APP_VERSION validation for Day 619", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 619');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 274, 'Minor version should be >= 274 for Day 619');
+    }
+});
