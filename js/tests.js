@@ -164,6 +164,16 @@ import {
     runRecordingMicrophoneE2ETest,
     getRecordingInputGainNode,
     setRecordingInputGain,
+    getContextSuspensionCount,
+    getContextState,
+    startContextSuspensionMonitoring,
+    stopContextSuspensionMonitoring,
+    getSidechainBusInput,
+    enableSidechainFromMic,
+    disableSidechainFromMic,
+    enableSidechainFromTrackIn,
+    disableSidechainBus,
+    isMicOpenForSidechain,
     cleanupRecordingAudioResources
 } from './audio.js';
 
@@ -9510,5 +9520,250 @@ TestRunner.test("Day 622 - APP_VERSION validation for Day 622", (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 622');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 277, 'Minor version should be >= 277 for Day 622');
+    }
+});
+
+// ============================================
+// Day 623: Context Suspension & Sidechain Audio Function Tests
+// ============================================
+
+TestRunner.test("Day 623 - startContextSuspensionMonitoring is a function export", (t) => {
+    t.assertEqual(typeof startContextSuspensionMonitoring, 'function', 'startContextSuspensionMonitoring should be a function');
+});
+
+TestRunner.test("Day 623 - startContextSuspensionMonitoring accepts 1 parameter", (t) => {
+    t.assertEqual(startContextSuspensionMonitoring.length, 1, 'startContextSuspensionMonitoring should accept 1 parameter');
+});
+
+TestRunner.test("Day 623 - startContextSuspensionMonitoring defaults intervalMs to 3000", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('intervalMs = 3000'), 'startContextSuspensionMonitoring should default intervalMs to 3000');
+});
+
+TestRunner.test("Day 623 - startContextSuspensionMonitoring references resumeAttemptScheduled", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('resumeAttemptScheduled'), 'startContextSuspensionMonitoring should reference resumeAttemptScheduled');
+});
+
+TestRunner.test("Day 623 - startContextSuspensionMonitoring references Tone.context", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('Tone.context'), 'startContextSuspensionMonitoring should reference Tone.context');
+});
+
+TestRunner.test("Day 623 - startContextSuspensionMonitoring calls Tone.context.resume()", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('Tone.context.resume') || funcStr.includes('context.resume'), 'startContextSuspensionMonitoring should call resume on Tone.context');
+});
+
+TestRunner.test("Day 623 - startContextSuspensionMonitoring references contextSuspendedCount", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('contextSuspendedCount'), 'startContextSuspensionMonitoring should reference contextSuspendedCount');
+});
+
+TestRunner.test("Day 623 - startContextSuspensionMonitoring calls localAppServices.showNotification", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('localAppServices.showNotification'), 'startContextSuspensionMonitoring should call showNotification via localAppServices');
+});
+
+TestRunner.test("Day 623 - stopContextSuspensionMonitoring is a function export", (t) => {
+    t.assertEqual(typeof stopContextSuspensionMonitoring, 'function', 'stopContextSuspensionMonitoring should be a function');
+});
+
+TestRunner.test("Day 623 - stopContextSuspensionMonitoring accepts 0 parameters", (t) => {
+    t.assertEqual(stopContextSuspensionMonitoring.length, 0, 'stopContextSuspensionMonitoring should accept no parameters');
+});
+
+TestRunner.test("Day 623 - stopContextSuspensionMonitoring references resumeAttemptScheduled", (t) => {
+    const funcStr = stopContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('resumeAttemptScheduled'), 'stopContextSuspensionMonitoring should reference resumeAttemptScheduled');
+});
+
+TestRunner.test("Day 623 - getContextSuspensionCount is a function export", (t) => {
+    t.assertEqual(typeof getContextSuspensionCount, 'function', 'getContextSuspensionCount should be a function');
+});
+
+TestRunner.test("Day 623 - getContextSuspensionCount accepts 0 parameters", (t) => {
+    t.assertEqual(getContextSuspensionCount.length, 0, 'getContextSuspensionCount should accept no parameters');
+});
+
+TestRunner.test("Day 623 - getContextSuspensionCount references contextSuspendedCount", (t) => {
+    const funcStr = getContextSuspensionCount.toString();
+    t.assertTruthy(funcStr.includes('contextSuspendedCount'), 'getContextSuspensionCount should return contextSuspendedCount');
+});
+
+TestRunner.test("Day 623 - getContextState is a function export", (t) => {
+    t.assertEqual(typeof getContextState, 'function', 'getContextState should be a function');
+});
+
+TestRunner.test("Day 623 - getContextState accepts 0 parameters", (t) => {
+    t.assertEqual(getContextState.length, 0, 'getContextState should accept no parameters');
+});
+
+TestRunner.test("Day 623 - getContextState references Tone.context.state", (t) => {
+    const funcStr = getContextState.toString();
+    t.assertTruthy(funcStr.includes('Tone.context.state') || (funcStr.includes('context.state')), 'getContextState should reference Tone.context.state');
+});
+
+TestRunner.test("Day 623 - getContextState returns 'unavailable' as fallback", (t) => {
+    const funcStr = getContextState.toString();
+    t.assertTruthy(funcStr.includes("'unavailable'") || funcStr.includes('"unavailable"'), 'getContextState should return unavailable when Tone.context is missing');
+});
+
+TestRunner.test("Day 623 - getSidechainBusInput is a function export", (t) => {
+    t.assertEqual(typeof getSidechainBusInput, 'function', 'getSidechainBusInput should be a function');
+});
+
+TestRunner.test("Day 623 - getSidechainBusInput accepts 0 parameters", (t) => {
+    t.assertEqual(getSidechainBusInput.length, 0, 'getSidechainBusInput should accept no parameters');
+});
+
+TestRunner.test("Day 623 - getSidechainBusInput references sidechainBus variable", (t) => {
+    const funcStr = getSidechainBusInput.toString();
+    t.assertTruthy(funcStr.includes('sidechainBus'), 'getSidechainBusInput should reference sidechainBus variable');
+});
+
+TestRunner.test("Day 623 - getSidechainBusInput creates Tone.Gain when bus is disposed", (t) => {
+    const funcStr = getSidechainBusInput.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Gain'), 'getSidechainBusInput should create new Tone.Gain node');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromMic is an async function export", (t) => {
+    t.assertEqual(typeof enableSidechainFromMic, 'function', 'enableSidechainFromMic should be a function');
+    t.assertEqual(enableSidechainFromMic.constructor.name, 'AsyncFunction', 'enableSidechainFromMic should be async');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromMic accepts 1 parameter", (t) => {
+    t.assertEqual(enableSidechainFromMic.length, 1, 'enableSidechainFromMic should accept 1 parameter');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromMic validates compressorNode", (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('compressorNode') && (funcStr.includes('disposed') || funcStr.includes('Invalid')), 'enableSidechainFromMic should validate compressorNode');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromMic references micForSidechain", (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('micForSidechain'), 'enableSidechainFromMic should reference micForSidechain');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromMic references getSidechainBusInput", (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('getSidechainBusInput'), 'enableSidechainFromMic should call getSidechainBusInput');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromMic calls navigator.mediaDevices.getUserMedia", (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('navigator.mediaDevices.getUserMedia'), 'enableSidechainFromMic should call getUserMedia for microphone access');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromMic has error handling with console.warn", (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('console.warn'), 'enableSidechainFromMic should have console.warn for invalid compressor');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromMic has error handling with console.error", (t) => {
+    const funcStr = enableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'enableSidechainFromMic should have console.error for mic access failures');
+});
+
+TestRunner.test("Day 623 - disableSidechainFromMic is a function export", (t) => {
+    t.assertEqual(typeof disableSidechainFromMic, 'function', 'disableSidechainFromMic should be a function');
+});
+
+TestRunner.test("Day 623 - disableSidechainFromMic accepts 0 parameters", (t) => {
+    t.assertEqual(disableSidechainFromMic.length, 0, 'disableSidechainFromMic should accept no parameters');
+});
+
+TestRunner.test("Day 623 - disableSidechainFromMic references micForSidechain", (t) => {
+    const funcStr = disableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('micForSidechain'), 'disableSidechainFromMic should reference micForSidechain');
+});
+
+TestRunner.test("Day 623 - disableSidechainFromMic calls micForSidechain.disconnect and micForSidechain.close", (t) => {
+    const funcStr = disableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('disconnect') && funcStr.includes('close'), 'disableSidechainFromMic should disconnect and close the mic');
+});
+
+TestRunner.test("Day 623 - disableSidechainFromMic sets micForSidechain to null", (t) => {
+    const funcStr = disableSidechainFromMic.toString();
+    t.assertTruthy(funcStr.includes('= null') || funcStr.includes('= null'), 'disableSidechainFromMic should nullify micForSidechain');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromTrackIn is an async function export", (t) => {
+    t.assertEqual(typeof enableSidechainFromTrackIn, 'function', 'enableSidechainFromTrackIn should be a function');
+    t.assertEqual(enableSidechainFromTrackIn.constructor.name, 'AsyncFunction', 'enableSidechainFromTrackIn should be async');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromTrackIn accepts 2 parameters", (t) => {
+    t.assertEqual(enableSidechainFromTrackIn.length, 2, 'enableSidechainFromTrackIn should accept 2 parameters');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromTrackIn validates compressorNode", (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('compressorNode') && funcStr.includes('disposed'), 'enableSidechainFromTrackIn should validate compressorNode');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromTrackIn references localAppServices.getTrackById", (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'enableSidechainFromTrackIn should get track by ID');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromTrackIn references track.inputChannel", (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('inputChannel'), 'enableSidechainFromTrackIn should reference track.inputChannel');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromTrackIn references getSidechainBusInput", (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('getSidechainBusInput'), 'enableSidechainFromTrackIn should call getSidechainBusInput');
+});
+
+TestRunner.test("Day 623 - enableSidechainFromTrackIn has console.warn for missing track", (t) => {
+    const funcStr = enableSidechainFromTrackIn.toString();
+    t.assertTruthy(funcStr.includes('console.warn') || funcStr.includes('Track not found'), 'enableSidechainFromTrackIn should warn when track not found');
+});
+
+TestRunner.test("Day 623 - disableSidechainBus is a function export", (t) => {
+    t.assertEqual(typeof disableSidechainBus, 'function', 'disableSidechainBus should be a function');
+});
+
+TestRunner.test("Day 623 - disableSidechainBus accepts 0 parameters", (t) => {
+    t.assertEqual(disableSidechainBus.length, 0, 'disableSidechainBus should accept no parameters');
+});
+
+TestRunner.test("Day 623 - disableSidechainBus calls disableSidechainFromMic", (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('disableSidechainFromMic'), 'disableSidechainBus should call disableSidechainFromMic');
+});
+
+TestRunner.test("Day 623 - disableSidechainBus references sidechainBus", (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('sidechainBus'), 'disableSidechainBus should reference sidechainBus');
+});
+
+TestRunner.test("Day 623 - isMicOpenForSidechain is a function export", (t) => {
+    t.assertEqual(typeof isMicOpenForSidechain, 'function', 'isMicOpenForSidechain should be a function');
+});
+
+TestRunner.test("Day 623 - isMicOpenForSidechain accepts 0 parameters", (t) => {
+    t.assertEqual(isMicOpenForSidechain.length, 0, 'isMicOpenForSidechain should accept no parameters');
+});
+
+TestRunner.test("Day 623 - isMicOpenForSidechain references micForSidechain", (t) => {
+    const funcStr = isMicOpenForSidechain.toString();
+    t.assertTruthy(funcStr.includes('micForSidechain'), 'isMicOpenForSidechain should reference micForSidechain');
+});
+
+TestRunner.test("Day 623 - isMicOpenForSidechain checks micForSidechain.state === 'started'", (t) => {
+    const funcStr = isMicOpenForSidechain.toString();
+    t.assertTruthy(funcStr.includes("'started'") || funcStr.includes('"started"') || funcStr.includes('state'), 'isMicOpenForSidechain should check mic state');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 623 - APP_VERSION validation for Day 623", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 623');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 278, 'Minor version should be >= 278 for Day 623');
     }
 });
