@@ -8369,3 +8369,153 @@ TestRunner.test("Day 615 - Metronome - setMetronomeVolumeState calls audioSetMet
 TestRunner.test("Day 615 - APP_VERSION validation for Day 615", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 615'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 269 || (versionParts[1] === 269 && versionParts[2] >= 0), 'Minor version should be >= 269 for Day 615'); }
 });
+
+// Day 616: Timeline Zoom State Functions Tests
+// ============================================
+TestRunner.test("Day 616 - Timeline Zoom - getTimelineZoomState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimelineZoomState'), 'getTimelineZoomState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - getTimelineZoomState returns object with level and verticalLevel", (t) => {
+    const funcStr = getTimelineZoomState.toString();
+    t.assertTruthy(funcStr.includes('level:'), 'getTimelineZoomState should return level property');
+    t.assertTruthy(funcStr.includes('verticalLevel:'), 'getTimelineZoomState should return verticalLevel property');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - getTimelineZoomLevelState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimelineZoomLevelState'), 'getTimelineZoomLevelState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTimelineZoomLevelState'), 'setTimelineZoomLevelState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState calls captureStateForUndo", (t) => {
+    const funcBody = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setTimelineZoomLevelState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState has descriptive undo label", (t) => {
+    const funcBody = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcBody.includes('Set Timeline Zoom to'), 'setTimelineZoomLevelState should have descriptive undo label');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState clamps to TIMELINE_ZOOM_MIN and TIMELINE_ZOOM_MAX", (t) => {
+    const funcBody = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcBody.includes('TIMELINE_ZOOM_MIN') && funcBody.includes('TIMELINE_ZOOM_MAX'), 'setTimelineZoomLevelState should clamp to valid range');
+    t.assertTruthy(funcBody.includes('Math.max') && funcBody.includes('Math.min'), 'setTimelineZoomLevelState should use Math.max and Math.min');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineZoomLevelState guards capture with change detection", (t) => {
+    const funcBody = setTimelineZoomLevelState.toString();
+    t.assertTruthy(funcBody.includes('timelineZoomLevelState === nextValue'), 'setTimelineZoomLevelState should check if value changed before capture');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - getTimelineVerticalZoomState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTimelineVerticalZoomState'), 'getTimelineVerticalZoomState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setTimelineVerticalZoomState'), 'setTimelineVerticalZoomState should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState calls captureStateForUndo", (t) => {
+    const funcBody = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setTimelineVerticalZoomState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState has descriptive undo label", (t) => {
+    const funcBody = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcBody.includes('Set Timeline Vertical Zoom to'), 'setTimelineVerticalZoomState should have descriptive undo label');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState clamps to TIMELINE_VERTICAL_ZOOM_MIN and MAX", (t) => {
+    const funcBody = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcBody.includes('TIMELINE_VERTICAL_ZOOM_MIN') && funcBody.includes('TIMELINE_VERTICAL_ZOOM_MAX'), 'setTimelineVerticalZoomState should clamp to valid range');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - setTimelineVerticalZoomState guards capture with change detection", (t) => {
+    const funcBody = setTimelineVerticalZoomState.toString();
+    t.assertTruthy(funcBody.includes('timelineVerticalZoomLevelState === nextValue'), 'setTimelineVerticalZoomState should check if value changed');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function zoomInTimeline'), 'zoomInTimeline should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline calls setTimelineZoomLevelState", (t) => {
+    const funcBody = zoomInTimeline.toString();
+    t.assertTruthy(funcBody.includes('setTimelineZoomLevelState'), 'zoomInTimeline should call setTimelineZoomLevelState');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline increases zoom level", (t) => {
+    const funcBody = zoomInTimeline.toString();
+    t.assertTruthy(funcBody.includes('* (1 +'), 'zoomInTimeline should multiply by (1 + step) to increase');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomOutTimeline is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function zoomOutTimeline'), 'zoomOutTimeline should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomOutTimeline calls setTimelineZoomLevelState", (t) => {
+    const funcBody = zoomOutTimeline.toString();
+    t.assertTruthy(funcBody.includes('setTimelineZoomLevelState'), 'zoomOutTimeline should call setTimelineZoomLevelState');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomOutTimeline decreases zoom level", (t) => {
+    const funcBody = zoomOutTimeline.toString();
+    t.assertTruthy(funcBody.includes('* (1 -'), 'zoomOutTimeline should multiply by (1 - step) to decrease');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomInVerticalTimeline is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function zoomInVerticalTimeline'), 'zoomInVerticalTimeline should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomInVerticalTimeline calls setTimelineVerticalZoomState", (t) => {
+    const funcBody = zoomInVerticalTimeline.toString();
+    t.assertTruthy(funcBody.includes('setTimelineVerticalZoomState'), 'zoomInVerticalTimeline should call setTimelineVerticalZoomState');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomOutVerticalTimeline is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function zoomOutVerticalTimeline'), 'zoomOutVerticalTimeline should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - zoomOutVerticalTimeline calls setTimelineVerticalZoomState", (t) => {
+    const funcBody = zoomOutVerticalTimeline.toString();
+    t.assertTruthy(funcBody.includes('setTimelineVerticalZoomState'), 'zoomOutVerticalTimeline should call setTimelineVerticalZoomState');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - resetTimelineZoom is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function resetTimelineZoom'), 'resetTimelineZoom should be exported');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - resetTimelineZoom calls captureStateForUndo", (t) => {
+    const funcBody = resetTimelineZoom.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'resetTimelineZoom should call captureStateForUndo');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - resetTimelineZoom has descriptive undo label", (t) => {
+    const funcBody = resetTimelineZoom.toString();
+    t.assertTruthy(funcBody.includes('Reset Timeline Zoom'), 'resetTimelineZoom should have "Reset Timeline Zoom" undo label');
+});
+
+TestRunner.test("Day 616 - Timeline Zoom - resetTimelineZoom resets both horizontal and vertical zoom", (t) => {
+    const funcBody = resetTimelineZoom.toString();
+    t.assertTruthy(funcBody.includes('TIMELINE_ZOOM_DEFAULT'), 'resetTimelineZoom should reset horizontal to DEFAULT');
+    t.assertTruthy(funcBody.includes('TIMELINE_VERTICAL_ZOOM_DEFAULT'), 'resetTimelineZoom should reset vertical to DEFAULT');
+});
+
+TestRunner.test("Day 616 - APP_VERSION validation for Day 616", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 616'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 270, 'Minor version should be >= 270 for Day 616'); }
+});
+

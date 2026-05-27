@@ -1,3 +1,23 @@
+#### Day 616: Timeline Zoom State Functions Tests (2026-05-27)
+- **Tests**: Added 30 tests for Timeline Zoom state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 616 test block with 30 tests for Timeline Zoom state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.271.0
+- **Test Details** (`js/tests.js`): 30 tests covering:
+  - **getTimelineZoomState** (2 tests): is a function export, returns object with level and verticalLevel properties
+  - **getTimelineZoomLevelState** (1 test): is a function export
+  - **setTimelineZoomLevelState** (4 tests): is a function export, calls captureStateForUndo with "Set Timeline Zoom to" label, clamps to TIMELINE_ZOOM_MIN and TIMELINE_ZOOM_MAX, guards capture with change detection
+  - **getTimelineVerticalZoomState** (1 test): is a function export
+  - **setTimelineVerticalZoomState** (4 tests): is a function export, calls captureStateForUndo with "Set Timeline Vertical Zoom to" label, clamps to TIMELINE_VERTICAL_ZOOM_MIN and MAX, guards capture with change detection
+  - **zoomInTimeline** (3 tests): is a function export, calls setTimelineZoomLevelState, increases zoom level with (1 + step)
+  - **zoomOutTimeline** (3 tests): is a function export, calls setTimelineZoomLevelState, decreases zoom level with (1 - step)
+  - **zoomInVerticalTimeline** (2 tests): is a function export, calls setTimelineVerticalZoomState
+  - **zoomOutVerticalTimeline** (2 tests): is a function export, calls setTimelineVerticalZoomState
+  - **resetTimelineZoom** (4 tests): is a function export, calls captureStateForUndo with "Reset Timeline Zoom" label, resets both horizontal and vertical zoom to DEFAULT
+  - APP_VERSION validation (>= 2.270 for Day 616)
+- **Version**: Bumped to 2.271.0
+- **Test Count**: Increased from 1342 to 1372
+
 #### Day 615: Metronome State Functions Tests (2026-05-27)
 - **Tests**: Added 20 tests for metronome enable and volume state functions in state.js
 - **Files Modified**:
