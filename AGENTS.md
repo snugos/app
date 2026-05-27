@@ -1,3 +1,18 @@
+#### Day 615: Metronome State Functions Tests (2026-05-27)
+- **Tests**: Added 20 tests for metronome enable and volume state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 615 test block with 20 tests for Metronome state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.270.0
+- **Test Details** (`js/tests.js`): 20 tests covering:
+  - **getMetronomeEnabledState** (1 test): is a function export
+  - **setMetronomeEnabledState** (6 tests): is a function export, calls captureStateForUndo with "Toggle Metronome On/Off" label, uses !! boolean coercion, guards capture with change detection (metronomeEnabledState !== nextValue), calls audioSetMetronomeEnabled to sync audio engine
+  - **getMetronomeVolumeState** (1 test): is a function export
+  - **setMetronomeVolumeState** (8 tests): is a function export, calls captureStateForUndo with "Set Metronome Volume to" label, clamps to MIN_METRONOME_VOLUME and MAX_METRONOME_VOLUME, uses parseFloat for input conversion, guards capture with change detection, calls audioSetMetronomeVolume to sync audio engine
+  - **state.js imports** (1 test): imports isMetronomeEnabled, setMetronomeEnabled, getMetronomeVolume, setMetronomeVolume from audio.js
+  - APP_VERSION validation (>= 2.269 for Day 615)
+- **Version**: Bumped to 2.270.0
+- **Test Count**: Increased from 1324 to 1344
+
 #### Day 612: DrumSampler Pad Drop Zone Handler Tests (2026-05-27)
 - **Tests**: Added 33 tests for DrumSampler pad drop zone handlers in renderDrumSamplerPads
 - **Files Modified**:
