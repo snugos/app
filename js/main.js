@@ -651,7 +651,176 @@ const appServices = {
 
     openAudioClipEditorWindow: (trackId, clipId, savedState = null) => {
         openAudioClipEditorWindow(trackId, clipId, savedState);
-    }
+    },
+
+    // Scale Mode state
+    getScaleModeEnabled: getScaleModeEnabledState,
+    getScaleModeScale: getScaleModeScaleState,
+    getScaleModeRoot: getScaleModeRootState,
+    getScaleModeLock: getScaleModeLockState,
+    setScaleModeEnabled: setScaleModeEnabledState,
+    setScaleModeScale: setScaleModeScaleState,
+    setScaleModeRoot: setScaleModeRootState,
+    setScaleModeLock: setScaleModeLockState,
+
+    // Chord Mode state
+    getChordModeEnabled: getChordModeEnabledState,
+    getChordModeRoot: getChordModeRootState,
+    getChordModeType: getChordModeTypeState,
+    getChordModeLock: getChordModeLockState,
+    getChordVoicing: getChordVoicingState,
+    setChordModeEnabled: setChordModeEnabledState,
+    setChordModeRoot: setChordModeRootState,
+    setChordModeType: setChordModeTypeState,
+    setChordModeLock: setChordModeLockState,
+    setChordVoicing: setChordVoicingState,
+
+    // Ghost Track state
+    getGhostTrackId: getGhostTrackIdState,
+    setGhostTrackId: setGhostTrackIdState,
+
+    // Swing state
+    getSwingEnabled: getSwingEnabledState,
+    getSwingAmount: getSwingAmountState,
+    setSwingEnabled: setSwingEnabledState,
+    setSwingAmount: setSwingAmountState,
+
+    // Timeline Markers state
+    getTimelineMarkers: getTimelineMarkersState,
+    getTimelineMarkerById: getTimelineMarkerByIdState,
+    addTimelineMarker: addTimelineMarkerState,
+    setTimelineMarker: setTimelineMarkerState,
+    removeTimelineMarker: removeTimelineMarkerState,
+    clearTimelineMarkers: clearTimelineMarkersState,
+
+    // Send Tracks state
+    getSendTracks: getSendTracksState,
+    getSendTrackById: getSendTrackByIdState,
+    addSendTrack: addSendTrackState,
+    removeSendTrack: removeSendTrackState,
+    setSendTrackName: setSendTrackNameState,
+    setSendTrackLevel: setSendTrackLevelState,
+    setSendTrackMuted: setSendTrackMutedState,
+    setSendTrackEffects: setSendTrackEffectsState,
+    setTrackSendLevel: setTrackSendLevelState,
+
+    // Track Groups state
+    getTrackGroups: getTrackGroupsState,
+    getTrackGroupById: getTrackGroupByIdState,
+    addTrackGroup: addTrackGroupState,
+    setTrackGroupName: setTrackGroupNameState,
+    setTrackGroupColor: setTrackGroupColorState,
+    addTrackToGroup: addTrackToGroupState,
+    removeTrackFromGroup: removeTrackFromGroupState,
+    setTrackGroupMuted: setTrackGroupMutedState,
+    setTrackGroupSoloed: setTrackGroupSoloedState,
+    removeTrackGroup: removeTrackGroupState,
+
+    // Track Templates state
+    getTrackTemplates: getTrackTemplatesState,
+    getTrackTemplateById: getTrackTemplateByIdState,
+    addTrackTemplate: addTrackTemplateState,
+    updateTrackTemplate: updateTrackTemplateState,
+    removeTrackTemplate: removeTrackTemplateState,
+
+    // Sound Browser state
+    getLoadedZipFiles: getLoadedZipFilesState,
+    getSoundLibraryFileTrees: getSoundLibraryFileTreesState,
+    getCurrentLibraryName: getCurrentLibraryNameState,
+    getCurrentSoundFileTree: getCurrentSoundFileTreeState,
+    getCurrentSoundBrowserPath: getCurrentSoundBrowserPathState,
+    getPreviewPlayer: getPreviewPlayerState,
+    setCurrentLibraryName: setCurrentLibraryNameState,
+    setCurrentSoundFileTree: setCurrentSoundFileTreeState,
+    setCurrentSoundBrowserPath: setCurrentSoundBrowserPathState,
+    setPreviewPlayer: setPreviewPlayerState,
+
+    // Master Effects
+    getMasterEffects: getMasterEffectsState,
+    getMasterGainValue: getMasterGainValueState,
+
+    // Playback & Recording state
+    getActiveSequencerTrackId: getActiveSequencerTrackIdState,
+    setActiveSequencerTrackId: setActiveSequencerTrackIdState,
+    getPlaybackMode: getPlaybackModeState,
+    setPlaybackMode: setPlaybackModeState,
+    isTrackRecording: isTrackRecordingState,
+    getRecordingTrackId: getRecordingTrackIdState,
+
+    // Loop Region state
+    getLoopStartBars: () => { const s = state_LoopRegionState; return s ? s.startBar : null; },
+    getLoopEndBars: () => { const s = state_LoopRegionState; return s ? s.endBar : null; },
+    isLoopRegionEnabled: () => { const s = state_LoopRegionState; return s ? s.enabled : false; },
+
+    // Count-in
+    getCountInBars: () => state_CountInState,
+    setCountInBars: (bars) => { state_CountInState = bars; },
+
+    // Master Automation
+    masterAutomationArmed: (() => { const s = state_MasterAutomationArmedState; return s ? s.armed : false; })(),
+    setMasterAutomationArmed: (val) => { if (state_MasterAutomationArmedState) state_MasterAutomationArmedState.armed = val; },
+
+    // Tap Tempo
+    getTapTempoBpm: () => { return typeof getTapTempoBpmValue === 'function' ? getTapTempoBpmValue() : null; },
+    isTapTempoReady: () => { return typeof isTapTempoReadyValue === 'function' ? isTapTempoReadyValue() : false; },
+
+    // Synth Presets
+    getSynthPresets: () => { return typeof getSynthPresetsData === 'function' ? getSynthPresetsData() : {}; },
+    saveSynthPreset: (name, params) => { return typeof saveSynthPresetData === 'function' ? saveSynthPresetData(name, params) : false; },
+    deleteSynthPreset: (name) => { return typeof deleteSynthPresetData === 'function' ? deleteSynthPresetData(name) : false; },
+
+    // Undo/Redo clipboard
+    getClipboardData: getClipboardDataState,
+    setClipboardData: setClipboardDataState,
+
+    // Window management helpers
+    getWindowById: (id) => { return getWindowByIdState ? getWindowByIdState(id) : null; },
+
+    // Play slice preview
+    playSlicePreview: (trackId, sliceIndex) => { const track = getTrackByIdState(trackId); if (track && typeof track.playSlicePreview === 'function') return track.playSlicePreview(sliceIndex); },
+
+    // Drum pad selection
+    selectDrumPad: (trackId, padIndex) => { const track = getTrackByIdState(trackId); if (track && typeof track.selectDrumPad === 'function') return track.selectDrumPad(padIndex); },
+
+    // Track monitoring
+    setTrackMonitoring: (trackId, enabled) => { const track = getTrackByIdState(trackId); if (track && typeof track.setMonitoringEnabled === 'function') return track.setMonitoringEnabled(enabled); },
+
+    // Tap Tempo controls
+    tapTempo: () => { return typeof doTapTempo === 'function' ? doTapTempo() : null; },
+    resetTapTempo: () => { return typeof resetTapTempoValue === 'function' ? resetTapTempoValue() : null; },
+
+    // Favorites
+    isFavorite: (soundId) => { return typeof checkIsFavorite === 'function' ? checkIsFavorite(soundId) : false; },
+    toggleFavorite: (soundId) => { return typeof doToggleFavorite === 'function' ? doToggleFavorite(soundId) : false; },
+
+    // Audio file loading for drum pads
+    loadDrumSamplerPadFile: async (e, trackId, padIndex) => {
+        const track = getTrackByIdState(trackId);
+        if (!track || !e || !e.target || !e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await Tone.context.decodeAudioData(arrayBuffer);
+            if (track.setPadAudioBuffer) {
+                await track.setPadAudioBuffer(padIndex, audioBuffer, file.name);
+                if (typeof renderDrumSamplerPads === 'function') renderDrumSamplerPads(track);
+            }
+        } catch (err) { console.error('[AppServices loadDrumSamplerPadFile]', err); }
+    },
+
+    // Recording input gain
+    setRecordingInputGain: (val) => {
+        if (typeof setRecordingInputGainValue === 'function') setRecordingInputGainValue(val);
+    },
+
+    // Track template CRUD
+    addTrackTemplate: (template) => addTrackTemplateState(template),
+    removeTrackTemplate: (id) => removeTrackTemplateState(id),
+    updateTrackTemplate: (id, updates) => updateTrackTemplateState(id, updates),
+
+    // Track group CRUD
+    addTrackGroup: (group) => addTrackGroupState(group),
+    removeTrackGroup: (id) => removeTrackGroupState(id),
 };
 
 // ============================================
