@@ -9996,3 +9996,254 @@ TestRunner.test("Day 624 - APP_VERSION validation for Day 624", (t) => {
         t.assertTruthy(versionParts[1] >= 279, 'Minor version should be >= 279 for Day 624');
     }
 });
+
+// ============================================
+// Day 624: Automation & Transport Audio Function Tests
+// ============================================
+
+TestRunner.test("Day 624 - startAutomation is a function export", (t) => {
+    t.assertEqual(typeof startAutomation, 'function', 'startAutomation should be a function');
+});
+
+TestRunner.test("Day 624 - startAutomation references automationActive variable", (t) => {
+    const funcStr = startAutomation.toString();
+    t.assertTruthy(funcStr.includes('automationActive'), 'startAutomation should reference automationActive');
+});
+
+TestRunner.test("Day 624 - startAutomation sets automationActive to true", (t) => {
+    const funcStr = startAutomation.toString();
+    t.assertTruthy(funcStr.includes('automationActive = true'), 'startAutomation should set automationActive to true');
+});
+
+TestRunner.test("Day 624 - startAutomation calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = startAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'startAutomation should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 624 - startAutomation has descriptive undo label 'Start Automation'", (t) => {
+    const funcStr = startAutomation.toString();
+    t.assertTruthy(funcStr.includes("'Start Automation'") || funcStr.includes('"Start Automation"'), 'startAutomation should have "Start Automation" undo label');
+});
+
+TestRunner.test("Day 624 - stopAutomation is a function export", (t) => {
+    t.assertEqual(typeof stopAutomation, 'function', 'stopAutomation should be a function');
+});
+
+TestRunner.test("Day 624 - stopAutomation references automationActive variable", (t) => {
+    const funcStr = stopAutomation.toString();
+    t.assertTruthy(funcStr.includes('automationActive'), 'stopAutomation should reference automationActive');
+});
+
+TestRunner.test("Day 624 - stopAutomation sets automationActive to false", (t) => {
+    const funcStr = stopAutomation.toString();
+    t.assertTruthy(funcStr.includes('automationActive = false'), 'stopAutomation should set automationActive to false');
+});
+
+TestRunner.test("Day 624 - stopAutomation calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = stopAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'stopAutomation should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 624 - stopAutomation has descriptive undo label 'Stop Automation'", (t) => {
+    const funcStr = stopAutomation.toString();
+    t.assertTruthy(funcStr.includes("'Stop Automation'") || funcStr.includes('"Stop Automation"'), 'stopAutomation should have "Stop Automation" undo label');
+});
+
+TestRunner.test("Day 624 - cleanupAutomation is a function export", (t) => {
+    t.assertEqual(typeof cleanupAutomation, 'function', 'cleanupAutomation should be a function');
+});
+
+TestRunner.test("Day 624 - cleanupAutomation calls stopAutomation", (t) => {
+    const funcStr = cleanupAutomation.toString();
+    t.assertTruthy(funcStr.includes('stopAutomation'), 'cleanupAutomation should call stopAutomation');
+});
+
+TestRunner.test("Day 624 - onTransportStart is a function export", (t) => {
+    t.assertEqual(typeof onTransportStart, 'function', 'onTransportStart should be a function');
+});
+
+TestRunner.test("Day 624 - onTransportStart sets automationActive to true", (t) => {
+    const funcStr = onTransportStart.toString();
+    t.assertTruthy(funcStr.includes('automationActive = true'), 'onTransportStart should set automationActive to true');
+});
+
+TestRunner.test("Day 624 - onTransportStop is a function export", (t) => {
+    t.assertEqual(typeof onTransportStop, 'function', 'onTransportStop should be a function');
+});
+
+TestRunner.test("Day 624 - onTransportStop sets automationActive to false", (t) => {
+    const funcStr = onTransportStop.toString();
+    t.assertTruthy(funcStr.includes('automationActive = false'), 'onTransportStop should set automationActive to false');
+});
+
+TestRunner.test("Day 624 - writeMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof writeMasterVolumeAutomation, 'function', 'writeMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 624 - writeMasterVolumeAutomation accepts 2 parameters", (t) => {
+    t.assertEqual(writeMasterVolumeAutomation.length, 2, 'writeMasterVolumeAutomation should accept 2 parameters (time, value)');
+});
+
+TestRunner.test("Day 624 - writeMasterVolumeAutomation references masterVolumeAutomation array", (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'writeMasterVolumeAutomation should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 624 - writeMasterVolumeAutomation pushes {time, value} object to masterVolumeAutomation", (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('push'), 'writeMasterVolumeAutomation should push to masterVolumeAutomation');
+});
+
+TestRunner.test("Day 624 - applyMasterVolumeAutomationAtTime is a function export", (t) => {
+    t.assertEqual(typeof applyMasterVolumeAutomationAtTime, 'function', 'applyMasterVolumeAutomationAtTime should be a function');
+});
+
+TestRunner.test("Day 624 - applyMasterVolumeAutomationAtTime accepts 1 parameter", (t) => {
+    t.assertEqual(applyMasterVolumeAutomationAtTime.length, 1, 'applyMasterVolumeAutomationAtTime should accept 1 parameter (time)');
+});
+
+TestRunner.test("Day 624 - applyMasterVolumeAutomationAtTime references masterVolumeAutomation", (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'applyMasterVolumeAutomationAtTime should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 624 - applyMasterVolumeAutomationAtTime uses find to locate event by time", (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('find'), 'applyMasterVolumeAutomationAtTime should use find to locate event');
+});
+
+TestRunner.test("Day 624 - applyMasterVolumeAutomationAtTime calls setMasterVolumeAutomation", (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('setMasterVolumeAutomation'), 'applyMasterVolumeAutomationAtTime should call setMasterVolumeAutomation');
+});
+
+TestRunner.test("Day 624 - getMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof getMasterVolumeAutomation, 'function', 'getMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 624 - getMasterVolumeAutomation accepts 0 parameters", (t) => {
+    t.assertEqual(getMasterVolumeAutomation.length, 0, 'getMasterVolumeAutomation should accept no parameters');
+});
+
+TestRunner.test("Day 624 - getMasterVolumeAutomation references masterVolumeAutomation", (t) => {
+    const funcStr = getMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'getMasterVolumeAutomation should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 624 - getMasterVolumeAutomation returns a mapped copy of the automation data", (t) => {
+    const funcStr = getMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('map'), 'getMasterVolumeAutomation should use map to create a copy');
+});
+
+TestRunner.test("Day 624 - setMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof setMasterVolumeAutomation, 'function', 'setMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 624 - setMasterVolumeAutomation accepts 1 parameter", (t) => {
+    t.assertEqual(setMasterVolumeAutomation.length, 1, 'setMasterVolumeAutomation should accept 1 parameter (automationData)');
+});
+
+TestRunner.test("Day 624 - setMasterVolumeAutomation calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMasterVolumeAutomation should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 624 - setMasterVolumeAutomation has descriptive undo label", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes("Automation"), 'setMasterVolumeAutomation should have Automation-related undo label');
+});
+
+TestRunner.test("Day 624 - setMasterVolumeAutomation checks Array.isArray", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'setMasterVolumeAutomation should check Array.isArray');
+});
+
+TestRunner.test("Day 624 - setMasterVolumeAutomation assigns array copy to masterVolumeAutomation", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation ='), 'setMasterVolumeAutomation should assign to masterVolumeAutomation');
+});
+
+TestRunner.test("Day 624 - resetTapTempo is a function export", (t) => {
+    t.assertEqual(typeof resetTapTempo, 'function', 'resetTapTempo should be a function');
+});
+
+TestRunner.test("Day 624 - resetTapTempo accepts 0 parameters", (t) => {
+    t.assertEqual(resetTapTempo.length, 0, 'resetTapTempo should accept no parameters');
+});
+
+TestRunner.test("Day 624 - resetTapTempo references tapTimes array", (t) => {
+    const funcStr = resetTapTempo.toString();
+    t.assertTruthy(funcStr.includes('tapTimes'), 'resetTapTempo should reference tapTimes array');
+});
+
+TestRunner.test("Day 624 - resetTapTempo sets tapTimes to empty array", (t) => {
+    const funcStr = resetTapTempo.toString();
+    t.assertTruthy(funcStr.includes('tapTimes = []'), 'resetTapTempo should reset tapTimes to empty array');
+});
+
+TestRunner.test("Day 624 - tapTempo is a function export", (t) => {
+    t.assertEqual(typeof tapTempo, 'function', 'tapTempo should be a function');
+});
+
+TestRunner.test("Day 624 - tapTempo accepts 0 parameters", (t) => {
+    t.assertEqual(tapTempo.length, 0, 'tapTempo should accept no parameters');
+});
+
+TestRunner.test("Day 624 - tapTempo references tapTimes array", (t) => {
+    const funcStr = tapTempo.toString();
+    t.assertTruthy(funcStr.includes('tapTimes'), 'tapTempo should reference tapTimes array');
+});
+
+TestRunner.test("Day 624 - tapTempo uses Date.now() for timestamp", (t) => {
+    const funcStr = tapTempo.toString();
+    t.assertTruthy(funcStr.includes('Date.now'), 'tapTempo should use Date.now() for timestamps');
+});
+
+TestRunner.test("Day 624 - tapTempo checks TAP_TEMPO_TIMEOUT_MS for reset", (t) => {
+    const funcStr = tapTempo.toString();
+    t.assertTruthy(funcStr.includes('TAP_TEMPO_TIMEOUT') || funcStr.includes('2000'), 'tapTempo should check timeout for reset');
+});
+
+TestRunner.test("Day 624 - getTapTempoBpm is a function export", (t) => {
+    t.assertEqual(typeof getTapTempoBpm, 'function', 'getTapTempoBpm should be a function');
+});
+
+TestRunner.test("Day 624 - getTapTempoBpm accepts 0 parameters", (t) => {
+    t.assertEqual(getTapTempoBpm.length, 0, 'getTapTempoBpm should accept no parameters');
+});
+
+TestRunner.test("Day 624 - getTapTempoBpm references tapTimes array", (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('tapTimes'), 'getTapTempoBpm should reference tapTimes array');
+});
+
+TestRunner.test("Day 624 - getTapTempoBpm clamps result to BPM range (MIN/MAX)", (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'getTapTempoBpm should clamp BPM to valid range');
+});
+
+TestRunner.test("Day 624 - isTapTempoReady is a function export", (t) => {
+    t.assertEqual(typeof isTapTempoReady, 'function', 'isTapTempoReady should be a function');
+});
+
+TestRunner.test("Day 624 - isTapTempoReady accepts 0 parameters", (t) => {
+    t.assertEqual(isTapTempoReady.length, 0, 'isTapTempoReady should accept no parameters');
+});
+
+TestRunner.test("Day 624 - isTapTempoReady references tapTimes array", (t) => {
+    const funcStr = isTapTempoReady.toString();
+    t.assertTruthy(funcStr.includes('tapTimes'), 'isTapTempoReady should reference tapTimes');
+});
+
+TestRunner.test("Day 624 - isTapTempoReady checks tapTimes.length", (t) => {
+    const funcStr = isTapTempoReady.toString();
+    t.assertTruthy(funcStr.includes('length'), 'isTapTempoReady should check tapTimes.length');
+});
+
+TestRunner.test("Day 624 - APP_VERSION validation for Day 624", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 624');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 278, 'Minor version should be >= 278 for Day 624');
+    }
+});
