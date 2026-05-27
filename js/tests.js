@@ -9767,3 +9767,232 @@ TestRunner.test("Day 623 - APP_VERSION validation for Day 623", (t) => {
         t.assertTruthy(versionParts[1] >= 278, 'Minor version should be >= 278 for Day 623');
     }
 });
+
+
+// ============================================
+// Day 624: Send Bus Audio Function Tests
+// ============================================
+
+TestRunner.test("Day 624 - getSendBusNodes is a function export", (t) => {
+    t.assertEqual(typeof getSendBusNodes, 'function', 'getSendBusNodes should be a function');
+});
+
+TestRunner.test("Day 624 - getSendBusNodes accepts 0 parameters", (t) => {
+    t.assertEqual(getSendBusNodes.length, 0, 'getSendBusNodes should accept no parameters');
+});
+
+TestRunner.test("Day 624 - getSendBusNodes returns sendBusNodes Map", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('return sendBusNodes;'), 'getSendBusNodes should return sendBusNodes');
+});
+
+TestRunner.test("Day 624 - getSendBusNodes references sendBusNodes variable", (t) => {
+    const funcStr = getSendBusNodes.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'getSendBusNodes should reference sendBusNodes variable');
+});
+
+TestRunner.test("Day 624 - connectTrackToSendBus is a function export", (t) => {
+    t.assertEqual(typeof connectTrackToSendBus, 'function', 'connectTrackToSendBus should be a function');
+});
+
+TestRunner.test("Day 624 - connectTrackToSendBus accepts 2 parameters", (t) => {
+    t.assertEqual(connectTrackToSendBus.length, 2, 'connectTrackToSendBus should accept 2 parameters');
+});
+
+TestRunner.test("Day 624 - connectTrackToSendBus references localAppServices.getTrackById", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('localAppServices.getTrackById') || funcStr.includes('getTrackById'), 'connectTrackToSendBus should reference getTrackById');
+});
+
+TestRunner.test("Day 624 - connectTrackToSendBus references sendBusNodes", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'connectTrackToSendBus should reference sendBusNodes');
+});
+
+TestRunner.test("Day 624 - connectTrackToSendBus has console.warn for missing track or send bus", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('console.warn'), 'connectTrackToSendBus should have console.warn for errors');
+});
+
+TestRunner.test("Day 624 - connectTrackToSendBus returns boolean", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'connectTrackToSendBus should return boolean');
+});
+
+TestRunner.test("Day 624 - disconnectTrackFromSendBus is a function export", (t) => {
+    t.assertEqual(typeof disconnectTrackFromSendBus, 'function', 'disconnectTrackFromSendBus should be a function');
+});
+
+TestRunner.test("Day 624 - disconnectTrackFromSendBus accepts 2 parameters", (t) => {
+    t.assertEqual(disconnectTrackFromSendBus.length, 2, 'disconnectTrackFromSendBus should accept 2 parameters');
+});
+
+TestRunner.test("Day 624 - disconnectTrackFromSendBus references trackSendNodes", (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes'), 'disconnectTrackFromSendBus should reference trackSendNodes');
+});
+
+TestRunner.test("Day 624 - disconnectTrackFromSendBus returns boolean", (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('return true'), 'disconnectTrackFromSendBus should return true');
+});
+
+TestRunner.test("Day 624 - createSendBusInAudio is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function createSendBusInAudio'), 'createSendBusInAudio should be async function export');
+});
+
+TestRunner.test("Day 624 - createSendBusInAudio accepts 1 parameter", (t) => {
+    t.assertEqual(createSendBusInAudio.length, 1, 'createSendBusInAudio should accept 1 parameter');
+});
+
+TestRunner.test("Day 624 - createSendBusInAudio checks sendBusNodes.has(sendId)", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes.has'), 'createSendBusInAudio should check if send bus already exists');
+});
+
+TestRunner.test("Day 624 - createSendBusInAudio creates Tone.Gain nodes", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Gain'), 'createSendBusInAudio should create Tone.Gain nodes');
+});
+
+TestRunner.test("Day 624 - createSendBusInAudio connects inputGain to outputGain", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('inputGain.connect(outputGain)'), 'createSendBusInAudio should connect inputGain to outputGain');
+});
+
+TestRunner.test("Day 624 - createSendBusInAudio sets sendBusNodes with inputGain, effects, outputGain, muted", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes.set'), 'createSendBusInAudio should set sendBusNodes');
+    t.assertTruthy(funcStr.includes('inputGain') && funcStr.includes('effects') && funcStr.includes('outputGain') && funcStr.includes('muted'), 'sendBusNodes entry should have all properties');
+});
+
+TestRunner.test("Day 624 - deleteSendBusFromAudio is a function export", (t) => {
+    t.assertEqual(typeof deleteSendBusFromAudio, 'function', 'deleteSendBusFromAudio should be a function');
+});
+
+TestRunner.test("Day 624 - deleteSendBusFromAudio accepts 1 parameter", (t) => {
+    t.assertEqual(deleteSendBusFromAudio.length, 1, 'deleteSendBusFromAudio should accept 1 parameter');
+});
+
+TestRunner.test("Day 624 - deleteSendBusFromAudio disposes effect nodes", (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('.dispose()') || funcStr.includes('dispose'), 'deleteSendBusFromAudio should dispose nodes');
+});
+
+TestRunner.test("Day 624 - deleteSendBusFromAudio removes from sendBusNodes", (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes.delete'), 'deleteSendBusFromAudio should delete from sendBusNodes');
+});
+
+TestRunner.test("Day 624 - addEffectToSendBus is a function export", (t) => {
+    t.assertEqual(typeof addEffectToSendBus, 'function', 'addEffectToSendBus should be a function');
+});
+
+TestRunner.test("Day 624 - addEffectToSendBus accepts 3 parameters", (t) => {
+    t.assertEqual(addEffectToSendBus.length, 3, 'addEffectToSendBus should accept 3 parameters');
+});
+
+TestRunner.test("Day 624 - addEffectToSendBus references sendBusNodes", (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes.get'), 'addEffectToSendBus should get bus data from sendBusNodes');
+});
+
+TestRunner.test("Day 624 - addEffectToSendBus calls createEffectInstance", (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('createEffectInstance'), 'addEffectToSendBus should call createEffectInstance');
+});
+
+TestRunner.test("Day 624 - addEffectToSendBus rebuilds signal chain", (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('disconnect') && funcStr.includes('connect'), 'addEffectToSendBus should rebuild signal chain');
+});
+
+TestRunner.test("Day 624 - addEffectToSendBus returns boolean", (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'addEffectToSendBus should return boolean');
+});
+
+TestRunner.test("Day 624 - removeEffectFromSendBus is a function export", (t) => {
+    t.assertEqual(typeof removeEffectFromSendBus, 'function', 'removeEffectFromSendBus should be a function');
+});
+
+TestRunner.test("Day 624 - removeEffectFromSendBus accepts 2 parameters", (t) => {
+    t.assertEqual(removeEffectFromSendBus.length, 2, 'removeEffectFromSendBus should accept 2 parameters');
+});
+
+TestRunner.test("Day 624 - removeEffectFromSendBus finds effect by id", (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('find'), 'removeEffectFromSendBus should find effect by id');
+});
+
+TestRunner.test("Day 624 - removeEffectFromSendBus rebuilds chain after removal", (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('rebuild') || (funcStr.includes('disconnect') && funcStr.includes('connect')), 'removeEffectFromSendBus should rebuild chain');
+});
+
+TestRunner.test("Day 624 - reorderEffectInSendBus is a function export", (t) => {
+    t.assertEqual(typeof reorderEffectInSendBus, 'function', 'reorderEffectInSendBus should be a function');
+});
+
+TestRunner.test("Day 624 - reorderEffectInSendBus accepts 3 parameters", (t) => {
+    t.assertEqual(reorderEffectInSendBus.length, 3, 'reorderEffectInSendBus should accept 3 parameters');
+});
+
+TestRunner.test("Day 624 - reorderEffectInSendBus uses splice to reorder", (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'reorderEffectInSendBus should use splice to reorder effects');
+});
+
+TestRunner.test("Day 624 - updateSendBusEffectParam is a function export", (t) => {
+    t.assertEqual(typeof updateSendBusEffectParam, 'function', 'updateSendBusEffectParam should be a function');
+});
+
+TestRunner.test("Day 624 - updateSendBusEffectParam accepts 4 parameters", (t) => {
+    t.assertEqual(updateSendBusEffectParam.length, 4, 'updateSendBusEffectParam should accept 4 parameters');
+});
+
+TestRunner.test("Day 624 - updateSendBusEffectParam uses paramPath.split('.')", (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes("split('.')") || funcStr.includes('split(".")'), 'updateSendBusEffectParam should split param path');
+});
+
+TestRunner.test("Day 624 - updateSendBusEffectParam uses rampTo for smooth transitions", (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('rampTo'), 'updateSendBusEffectParam should use rampTo for smooth value changes');
+});
+
+TestRunner.test("Day 624 - setSendBusLevel is a function export", (t) => {
+    t.assertEqual(typeof setSendBusLevel, 'function', 'setSendBusLevel should be a function');
+});
+
+TestRunner.test("Day 624 - setSendBusLevel accepts 2 parameters", (t) => {
+    t.assertEqual(setSendBusLevel.length, 2, 'setSendBusLevel should accept 2 parameters');
+});
+
+TestRunner.test("Day 624 - setSendBusLevel clamps level to 0-1 range", (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setSendBusLevel should clamp value');
+});
+
+TestRunner.test("Day 624 - setSendBusLevel uses rampTo for smooth transitions", (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('rampTo'), 'setSendBusLevel should use rampTo for smooth level changes');
+});
+
+TestRunner.test("Day 624 - setSendBusMuted is a function export", (t) => {
+    t.assertEqual(typeof setSendBusMuted, 'function', 'setSendBusMuted should be a function');
+});
+
+TestRunner.test("Day 624 - setSendBusMuted accepts 2 parameters", (t) => {
+    t.assertEqual(setSendBusMuted.length, 2, 'setSendBusMuted should accept 2 parameters');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 624 - APP_VERSION validation for Day 624", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 624');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 279, 'Minor version should be >= 279 for Day 624');
+    }
+});
