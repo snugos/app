@@ -8184,3 +8184,92 @@ TestRunner.test("Day 613 - Track Instance Methods - setInstrumentSamplerRootNote
 TestRunner.test("Day 613 - APP_VERSION validation for Day 613", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 613'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 267, 'Minor version should be >= 267 for Day 613'); }
 });
+
+// Day 614: Audio Processing Methods Tests - normalizeAudioClip, bounceTrack, freezeTrack
+// ====================================================================================
+
+TestRunner.test("Day 614 - Audio Processing - normalizeAudioClip is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.normalizeAudioClip, 'function', 'normalizeAudioClip should be a function');
+});
+
+TestRunner.test("Day 614 - Audio Processing - normalizeAudioClip is async", (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('async normalizeAudioClip'), 'normalizeAudioClip should be async');
+});
+
+TestRunner.test("Day 614 - Audio Processing - normalizeAudioClip captures undo before mutation", (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const clipGainIdx = funcStr.indexOf('clip.gain =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < clipGainIdx, 'normalizeAudioClip should capture undo before setting clip.gain');
+});
+
+TestRunner.test("Day 614 - Audio Processing - normalizeAudioClip has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('Normalize'), 'normalizeAudioClip undo label should reference Normalize');
+});
+
+TestRunner.test("Day 614 - Audio Processing - normalizeAudioClip returns boolean", (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('return true') || funcStr.includes('return false'), 'normalizeAudioClip should return boolean');
+});
+
+TestRunner.test("Day 614 - Audio Processing - normalizeAudioClip uses appServices for notifications", (t) => {
+    const funcStr = Track.prototype.normalizeAudioClip.toString();
+    t.assertTruthy(funcStr.includes('appServices.showNotification'), 'normalizeAudioClip should use appServices.showNotification');
+});
+
+TestRunner.test("Day 614 - Audio Processing - bounceTrack is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.bounceTrack, 'function', 'bounceTrack should be a function');
+});
+
+TestRunner.test("Day 614 - Audio Processing - bounceTrack is async", (t) => {
+    const funcStr = Track.prototype.bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('async bounceTrack'), 'bounceTrack should be async');
+});
+
+TestRunner.test("Day 614 - Audio Processing - bounceTrack returns null for Audio tracks", (t) => {
+    const funcStr = Track.prototype.bounceTrack.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'"), 'bounceTrack should check for Audio track type');
+    t.assertTruthy(funcStr.includes("return null"), 'bounceTrack should return null for Audio tracks');
+});
+
+TestRunner.test("Day 614 - Audio Processing - bounceTrack uses OfflineContext for rendering", (t) => {
+    const funcStr = Track.prototype.bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('Tone.OfflineContext') || funcStr.includes('OfflineContext'), 'bounceTrack should use OfflineContext');
+});
+
+TestRunner.test("Day 614 - Audio Processing - bounceTrack uses appServices for notifications", (t) => {
+    const funcStr = Track.prototype.bounceTrack.toString();
+    t.assertTruthy(funcStr.includes('appServices.showNotification'), 'bounceTrack should use appServices.showNotification');
+});
+
+TestRunner.test("Day 614 - Audio Processing - freezeTrack is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.freezeTrack, 'function', 'freezeTrack should be a function');
+});
+
+TestRunner.test("Day 614 - Audio Processing - freezeTrack is async", (t) => {
+    const funcStr = Track.prototype.freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('async freezeTrack'), 'freezeTrack should be async');
+});
+
+TestRunner.test("Day 614 - Audio Processing - freezeTrack returns false for Audio tracks", (t) => {
+    const funcStr = Track.prototype.freezeTrack.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'"), 'freezeTrack should check for Audio track type');
+    t.assertTruthy(funcStr.includes("return false"), 'freezeTrack should return false for Audio tracks');
+});
+
+TestRunner.test("Day 614 - Audio Processing - freezeTrack disposes audio nodes", (t) => {
+    const funcStr = Track.prototype.freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('.dispose()'), 'freezeTrack should dispose audio nodes');
+    t.assertTruthy(funcStr.includes('this.instrument') || funcStr.includes('instrument'), 'freezeTrack should reference instrument');
+});
+
+TestRunner.test("Day 614 - Audio Processing - freezeTrack uses appServices for notifications", (t) => {
+    const funcStr = Track.prototype.freezeTrack.toString();
+    t.assertTruthy(funcStr.includes('appServices.showNotification'), 'freezeTrack should use appServices.showNotification');
+});
+
+TestRunner.test("Day 614 - APP_VERSION validation for Day 614", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 614'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 268, 'Minor version should be >= 268 for Day 614'); }
+});
