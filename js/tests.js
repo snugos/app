@@ -11458,3 +11458,67 @@ TestRunner.test("Day 631 - APP_VERSION validation for Day 631", (t) => {
     }
 });
 });
+
+// ============================================
+// Day 632: getMimeTypeFromFilename Function Tests
+// ============================================
+TestRunner.test("Day 632 - getMimeTypeFromFilename is a function export", (t) => {
+    t.assertEqual(typeof getMimeTypeFromFilename, 'function', 'getMimeTypeFromFilename should be a function export');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename accepts 1 parameter", (t) => {
+    t.assertEqual(getMimeTypeFromFilename.length, 1, 'getMimeTypeFromFilename should accept 1 parameter');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename handles .wav extension", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('.wav') && funcStr.includes('audio/wav'), 'getMimeTypeFromFilename should return audio/wav for .wav');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename handles .mp3 extension", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('.mp3') && funcStr.includes('audio/mpeg'), 'getMimeTypeFromFilename should return audio/mpeg for .mp3');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename handles .ogg extension", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('.ogg') && funcStr.includes('audio/ogg'), 'getMimeTypeFromFilename should return audio/ogg for .ogg');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename handles .m4a extension", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('.m4a') && funcStr.includes('audio/mp4'), 'getMimeTypeFromFilename should return audio/mp4 for .m4a');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename handles .flac extension", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('.flac') && funcStr.includes('audio/flac'), 'getMimeTypeFromFilename should return audio/flac for .flac');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename handles .webm extension", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('.webm') && funcStr.includes('audio/webm'), 'getMimeTypeFromFilename should return audio/webm for .webm');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename returns default for unknown extension", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('application/octet-stream'), 'getMimeTypeFromFilename should return application/octet-stream for unknown');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename handles null/undefined input", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('!filename') || funcStr.includes('filename !== \'string\''), 'getMimeTypeFromFilename should handle null/undefined');
+});
+
+TestRunner.test("Day 632 - getMimeTypeFromFilename uses case-insensitive matching", (t) => {
+    const funcStr = getMimeTypeFromFilename.toString();
+    t.assertTruthy(funcStr.includes('toLowerCase'), 'getMimeTypeFromFilename should use toLowerCase for case-insensitive matching');
+});
+
+TestRunner.test("Day 632 - APP_VERSION validation for Day 632", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 632');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 286, 'Minor version should be >= 286 for Day 632');
+    }
+});
