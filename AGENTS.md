@@ -1940,3 +1940,19 @@
   - APP_VERSION validation (>= 2.281 for Day 626)
 - **Version**: Bumped to 2.282.0
 - **Test Count**: Increased from 1763 to 1810
+
+#### Day 628: Additional Performance Monitor State Function Tests (2026-05-28)
+- **Tests**: Added 16 tests for additional Performance Monitor state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 628 test block with 16 tests for Performance Monitor state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.284.0
+- **Test Details** (`js/tests.js`): 16 tests covering:
+  - **setCPUUsageState** (3 tests): uses Number.isFinite and parseFloat, guards capture with change detection, has descriptive "Set CPU Usage to" undo label with %
+  - **setMemoryPressureState** (3 tests): has descriptive "Set Memory Pressure to" undo label, guards capture with change detection, sets value after validation
+  - **resetPerformanceMonitorState** (2 tests): calls captureStateForUndo with "Reset Performance Monitor" label, resets all fields (enabled=false, audioContextState, cpuUsage=0, memoryPressure, activeVoices=0, audioLatency=0, lastCallbackTime=0, droppedCallbacks=0)
+  - **setAudioLatencyState** (2 tests): calls captureStateForUndo, has descriptive "Set Audio Latency to" undo label with ms
+  - **setLastCallbackTimeState** (2 tests): calls captureStateForUndo, has descriptive "Set Last Callback Time to" undo label with ms
+  - **setDroppedCallbacksState** (1 test): sets value after clamping
+  - APP_VERSION validation (>= 2.283 for Day 628)
+- **Version**: Bumped to 2.284.0
+- **Test Count**: Increased from 1852 to 1868

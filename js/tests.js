@@ -11022,3 +11022,102 @@ TestRunner.test("Day 627 - APP_VERSION validation for Day 627", (t) => {
     }
 });
 
+
+// Day 628: Additional Performance Monitor State Function Tests
+TestRunner.test("Day 628 - Perf Monitor - setCPUUsageState uses Number.isFinite and parseFloat", (t) => {
+    const funcBody = setCPUUsageState.toString();
+    t.assertTruthy(funcBody.includes('Number.isFinite') && funcBody.includes('parseFloat'), 'setCPUUsageState should use Number.isFinite and parseFloat');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setCPUUsageState guards capture with change detection", (t) => {
+    const funcBody = setCPUUsageState.toString();
+    t.assertTruthy(
+        (funcBody.includes('!==') || funcBody.includes('cpuUsage !==')) && funcBody.includes('captureStateForUndo'),
+        'setCPUUsageState should check if value changed before capture'
+    );
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setCPUUsageState has descriptive undo label with %", (t) => {
+    const funcBody = setCPUUsageState.toString();
+    t.assertTruthy(funcBody.includes('Set CPU Usage') && funcBody.includes('%'), 'setCPUUsageState undo label should include "Set CPU Usage" and %');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setMemoryPressureState has descriptive undo label", (t) => {
+    const funcBody = setMemoryPressureState.toString();
+    t.assertTruthy(funcBody.includes('Set Memory Pressure to'), 'setMemoryPressureState undo label should include "Set Memory Pressure to"');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setMemoryPressureState guards capture with change detection", (t) => {
+    const funcBody = setMemoryPressureState.toString();
+    t.assertTruthy(
+        (funcBody.includes('!==') || funcBody.includes('memoryPressure !==')) && funcBody.includes('captureStateForUndo'),
+        'setMemoryPressureState should check if value changed before capture'
+    );
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setMemoryPressureState sets value after validation", (t) => {
+    const funcBody = setMemoryPressureState.toString();
+    const setIdx = funcBody.indexOf('performanceMonitorState.memoryPressure =');
+    const validIdx = funcBody.indexOf('validValues.includes');
+    t.assertTruthy(setIdx > validIdx, 'setMemoryPressureState should set value after validation');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - resetPerformanceMonitorState calls captureStateForUndo", (t) => {
+    const funcBody = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'resetPerformanceMonitorState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - resetPerformanceMonitorState has descriptive undo label", (t) => {
+    const funcBody = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcBody.includes('Reset Performance Monitor'), 'resetPerformanceMonitorState undo label should include "Reset Performance Monitor"');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - resetPerformanceMonitorState resets all fields", (t) => {
+    const funcBody = resetPerformanceMonitorState.toString();
+    t.assertTruthy(
+        funcBody.includes('performanceMonitorState.enabled = false') &&
+        funcBody.includes('audioContextState =') &&
+        funcBody.includes('cpuUsage = 0') &&
+        funcBody.includes('memoryPressure =') &&
+        funcBody.includes('activeVoices = 0') &&
+        funcBody.includes('audioLatency = 0') &&
+        funcBody.includes('lastCallbackTime = 0') &&
+        funcBody.includes('droppedCallbacks = 0'),
+        'resetPerformanceMonitorState should reset all performance monitor fields'
+    );
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setAudioLatencyState calls captureStateForUndo", (t) => {
+    const funcBody = setAudioLatencyState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setAudioLatencyState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setAudioLatencyState has descriptive undo label with ms", (t) => {
+    const funcBody = setAudioLatencyState.toString();
+    t.assertTruthy(funcBody.includes('Set Audio Latency to') && funcBody.includes('ms'), 'setAudioLatencyState undo label should include "Set Audio Latency to" and ms');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setLastCallbackTimeState calls captureStateForUndo", (t) => {
+    const funcBody = setLastCallbackTimeState.toString();
+    t.assertTruthy(funcBody.includes('captureStateForUndo'), 'setLastCallbackTimeState should call captureStateForUndo');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setLastCallbackTimeState has descriptive undo label with ms", (t) => {
+    const funcBody = setLastCallbackTimeState.toString();
+    t.assertTruthy(funcBody.includes('Set Last Callback Time to') && funcBody.includes('ms'), 'setLastCallbackTimeState undo label should include "Set Last Callback Time to" and ms');
+});
+
+TestRunner.test("Day 628 - Perf Monitor - setDroppedCallbacksState sets value after clamping", (t) => {
+    const funcBody = setDroppedCallbacksState.toString();
+    const setIdx = funcBody.indexOf('performanceMonitorState.droppedCallbacks =');
+    const clampIdx = funcBody.indexOf('Math.max(0');
+    t.assertTruthy(setIdx > clampIdx, 'setDroppedCallbacksState should set value after clamping');
+});
+
+TestRunner.test("Day 628 - APP_VERSION validation for Day 628", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 628');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 283, 'Minor version should be >= 283 for Day 628');
+    }
+});
