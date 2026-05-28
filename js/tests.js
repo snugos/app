@@ -10506,3 +10506,110 @@ TestRunner.test("Day 625 - APP_VERSION validation for Day 625", (t) => {
         t.assertTruthy(versionParts[1] >= 280, 'Minor version should be >= 280 for Day 625');
     }
 });
+
+// Day 626: EffectsRegistry Audio Function Tests
+// ============================================
+
+TestRunner.test("Day 626 - createEffectInstance is a function export", (t) => {
+    t.assertEqual(typeof createEffectInstance, 'function', 'createEffectInstance should be a function');
+});
+
+TestRunner.test("Day 626 - createEffectInstance accepts 2 parameters", (t) => {
+    t.assertEqual(createEffectInstance.length, 2, 'createEffectInstance should accept 2 parameters');
+});
+
+TestRunner.test("Day 626 - createEffectInstance checks for Tone.js global", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('typeof Tone') || funcStr.includes('Tone === undefined'), 'createEffectInstance should check for Tone.js');
+});
+
+TestRunner.test("Day 626 - createEffectInstance looks up definition in AVAILABLE_EFFECTS", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'createEffectInstance should reference AVAILABLE_EFFECTS');
+});
+
+TestRunner.test("Day 626 - createEffectInstance checks if definition exists", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('definition'), 'createEffectInstance should check definition');
+});
+
+TestRunner.test("Day 626 - createEffectInstance checks Tone[definition.toneClass]", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('Tone[definition.toneClass]') || funcStr.includes('definition.toneClass'), 'createEffectInstance should reference Tone class via definition');
+});
+
+TestRunner.test("Day 626 - createEffectInstance handles parameter path splitting", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('.split(') || funcStr.includes('pathKeys'), 'createEffectInstance should handle dot-notation param paths');
+});
+
+TestRunner.test("Day 626 - createEffectInstance uses new Tone[definition.toneClass] instantiation", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('new Tone[') || funcStr.includes('new Tone.'), 'createEffectInstance should instantiate Tone effect');
+});
+
+TestRunner.test("Day 626 - getEffectDefaultParams is a function export", (t) => {
+    t.assertEqual(typeof getEffectDefaultParams, 'function', 'getEffectDefaultParams should be a function');
+});
+
+TestRunner.test("Day 626 - getEffectDefaultParams accepts 1 parameter", (t) => {
+    t.assertEqual(getEffectDefaultParams.length, 1, 'getEffectDefaultParams should accept 1 parameter');
+});
+
+TestRunner.test("Day 626 - getEffectDefaultParams looks up definition in AVAILABLE_EFFECTS", (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectDefaultParams should reference AVAILABLE_EFFECTS');
+});
+
+TestRunner.test("Day 626 - getEffectDefaultParams returns empty object when no definition", (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('return {}'), 'getEffectDefaultParams should return empty object for unknown effect');
+});
+
+TestRunner.test("Day 626 - getEffectDefaultParams builds nested param object from defaults", (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('params') && funcStr.includes('defaultValue'), 'getEffectDefaultParams should use definition params and defaultValue');
+});
+
+TestRunner.test("Day 626 - getEffectParamDefinitions is a function export", (t) => {
+    t.assertEqual(typeof getEffectParamDefinitions, 'function', 'getEffectParamDefinitions should be a function');
+});
+
+TestRunner.test("Day 626 - getEffectParamDefinitions accepts 1 parameter", (t) => {
+    t.assertEqual(getEffectParamDefinitions.length, 1, 'getEffectParamDefinitions should accept 1 parameter');
+});
+
+TestRunner.test("Day 626 - getEffectParamDefinitions looks up definition in AVAILABLE_EFFECTS", (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectParamDefinitions should reference AVAILABLE_EFFECTS');
+});
+
+TestRunner.test("Day 626 - getEffectParamDefinitions returns definition.params", (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('definition.params') || funcStr.includes('.params'), 'getEffectParamDefinitions should return params array');
+});
+
+TestRunner.test("Day 626 - getEffectBypassState is a function export", (t) => {
+    t.assertEqual(typeof getEffectBypassState, 'function', 'getEffectBypassState should be a function');
+});
+
+TestRunner.test("Day 626 - getEffectBypassState accepts 1 parameter", (t) => {
+    t.assertEqual(getEffectBypassState.length, 1, 'getEffectBypassState should accept 1 parameter');
+});
+
+TestRunner.test("Day 626 - setEffectBypassState is a function export", (t) => {
+    t.assertEqual(typeof setEffectBypassState, 'function', 'setEffectBypassState should be a function');
+});
+
+TestRunner.test("Day 626 - setEffectBypassState accepts 2 parameters", (t) => {
+    t.assertEqual(setEffectBypassState.length, 2, 'setEffectBypassState should accept 2 parameters');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 626 - APP_VERSION validation for Day 626", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 626');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 281, 'Minor version should be >= 281 for Day 626');
+    }
+});
