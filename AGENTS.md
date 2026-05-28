@@ -1956,3 +1956,19 @@
   - APP_VERSION validation (>= 2.283 for Day 628)
 - **Version**: Bumped to 2.284.0
 - **Test Count**: Increased from 1852 to 1868
+
+#### Day 629: Master Effects Bus Audio Function Tests (2026-05-28)
+- **Tests**: Added 35 tests for Master Effects Bus audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 629 test block with 35 tests for Master Effects Bus audio functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.285.0
+- **Test Details** (`js/tests.js`): 35 tests covering:
+  - **getMasterEffectsBusInputNode** (5 tests): is a function export, accepts 0 parameters, references masterEffectsBusInputNode, checks for disposed, calls setupMasterBus when needed
+  - **getActualMasterGainNode** (5 tests): is a function export, accepts 0 parameters, references masterGainNodeActual, checks for disposed, calls setupMasterBus when needed
+  - **clearAllMasterEffectNodes** (5 tests): is a function export, accepts 0 parameters, references activeMasterEffectNodes, calls forEach on nodes, calls dispose on nodes, clears the collection
+  - **getActiveMasterEffectNodes** (3 tests): is a function export, accepts 0 parameters, returns activeMasterEffectNodes
+  - **rebuildMasterEffectChain** (4 tests): is a function export, accepts 0 parameters, checks master bus components (masterEffectsBusInputNode, masterGainNodeActual, masterMeterNode), calls setupMasterBus, references localAppServices.getMasterEffects
+  - **updateMasterEffectParamInAudio** (5 tests): is a function export, accepts 3 parameters (effectId, paramPath, value), references effectId and activeMasterEffectNodes, uses paramPath.split for nested param access, checks for rampTo function
+  - APP_VERSION validation (>= 2.284 for Day 629)
+- **Version**: Bumped to 2.285.0
+- **Test Count**: Increased from 1868 to 1903

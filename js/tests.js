@@ -11121,3 +11121,155 @@ TestRunner.test("Day 628 - APP_VERSION validation for Day 628", (t) => {
         t.assertTruthy(versionParts[1] >= 283, 'Minor version should be >= 283 for Day 628');
     }
 });
+// Day 629: Master Effects Bus Audio Function Tests
+TestRunner.test("Day 629 - Master Effects Bus - getMasterEffectsBusInputNode is a function export", (t) => {
+    const audioStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getMasterEffectsBusInputNode should be exported');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getMasterEffectsBusInputNode accepts 0 parameters", (t) => {
+    t.assertEqual(getMasterEffectsBusInputNode.length, 0, 'getMasterEffectsBusInputNode should accept 0 parameters');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getMasterEffectsBusInputNode references masterEffectsBusInputNode", (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('masterEffectsBusInputNode'), 'getMasterEffectsBusInputNode should reference masterEffectsBusInputNode');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getMasterEffectsBusInputNode checks for disposed", (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('.disposed'), 'getMasterEffectsBusInputNode should check node.disposed');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getMasterEffectsBusInputNode calls setupMasterBus when needed", (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'getMasterEffectsBusInputNode should call setupMasterBus when node not ready');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getActualMasterGainNode is a function export", (t) => {
+    const audioStr = getActualMasterGainNode.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getActualMasterGainNode should be exported');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getActualMasterGainNode accepts 0 parameters", (t) => {
+    t.assertEqual(getActualMasterGainNode.length, 0, 'getActualMasterGainNode should accept 0 parameters');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getActualMasterGainNode references masterGainNodeActual", (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('masterGainNodeActual'), 'getActualMasterGainNode should reference masterGainNodeActual');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getActualMasterGainNode checks for disposed", (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('.disposed'), 'getActualMasterGainNode should check node.disposed');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getActualMasterGainNode calls setupMasterBus when needed", (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'getActualMasterGainNode should call setupMasterBus when node not ready');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - clearAllMasterEffectNodes is a function export", (t) => {
+    const audioStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'clearAllMasterEffectNodes should be exported');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - clearAllMasterEffectNodes accepts 0 parameters", (t) => {
+    t.assertEqual(clearAllMasterEffectNodes.length, 0, 'clearAllMasterEffectNodes should accept 0 parameters');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - clearAllMasterEffectNodes references activeMasterEffectNodes", (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'clearAllMasterEffectNodes should reference activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - clearAllMasterEffectNodes calls forEach on nodes", (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('.forEach'), 'clearAllMasterEffectNodes should iterate over nodes');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - clearAllMasterEffectNodes calls dispose on nodes", (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('.dispose()'), 'clearAllMasterEffectNodes should call dispose on each node');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - clearAllMasterEffectNodes clears the collection", (t) => {
+    const funcStr = clearAllMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('.clear()'), 'clearAllMasterEffectNodes should call clear on the collection');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getActiveMasterEffectNodes is a function export", (t) => {
+    const audioStr = getActiveMasterEffectNodes.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getActiveMasterEffectNodes should be exported');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getActiveMasterEffectNodes accepts 0 parameters", (t) => {
+    t.assertEqual(getActiveMasterEffectNodes.length, 0, 'getActiveMasterEffectNodes should accept 0 parameters');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - getActiveMasterEffectNodes returns activeMasterEffectNodes", (t) => {
+    const funcStr = getActiveMasterEffectNodes.toString();
+    t.assertTruthy(funcStr.includes('return activeMasterEffectNodes'), 'getActiveMasterEffectNodes should return activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - rebuildMasterEffectChain is a function export", (t) => {
+    const audioStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'rebuildMasterEffectChain should be exported');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - rebuildMasterEffectChain accepts 0 parameters", (t) => {
+    t.assertEqual(rebuildMasterEffectChain.length, 0, 'rebuildMasterEffectChain should accept 0 parameters');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - rebuildMasterEffectChain checks master bus components", (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('masterEffectsBusInputNode') && funcStr.includes('masterGainNodeActual') && funcStr.includes('masterMeterNode'), 'rebuildMasterEffectChain should check all master bus components');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - rebuildMasterEffectChain calls setupMasterBus", (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'rebuildMasterEffectChain should call setupMasterBus when components not ready');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - rebuildMasterEffectChain references localAppServices.getMasterEffects", (t) => {
+    const funcStr = rebuildMasterEffectChain.toString();
+    t.assertTruthy(funcStr.includes('localAppServices.getMasterEffects'), 'rebuildMasterEffectChain should get master effects from appServices');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - updateMasterEffectParamInAudio is a function export", (t) => {
+    const audioStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'updateMasterEffectParamInAudio should be exported');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - updateMasterEffectParamInAudio accepts 3 parameters", (t) => {
+    t.assertEqual(updateMasterEffectParamInAudio.length, 3, 'updateMasterEffectParamInAudio should accept 3 parameters');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - updateMasterEffectParamInAudio references effectId param", (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId'), 'updateMasterEffectParamInAudio should reference effectId');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - updateMasterEffectParamInAudio references activeMasterEffectNodes", (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'updateMasterEffectParamInAudio should reference activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - updateMasterEffectParamInAudio uses paramPath.split", (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('paramPath.split'), 'updateMasterEffectParamInAudio should split param path');
+});
+
+TestRunner.test("Day 629 - Master Effects Bus - updateMasterEffectParamInAudio checks for rampTo function", (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('.rampTo'), 'updateMasterEffectParamInAudio should use rampTo for smooth transitions');
+});
+
+TestRunner.test("Day 629 - APP_VERSION validation for Day 629", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 629');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 284, 'Minor version should be >= 284 for Day 629');
+    }
+});
