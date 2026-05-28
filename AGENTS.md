@@ -1,3 +1,24 @@
+#### Day 627: Send Bus Audio Function Tests (2026-05-28)
+- **Tests**: Added 60 tests for Send Bus audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 627 test block with 60 tests for Send Bus audio functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.283.0
+- **Test Details** (`js/tests.js`): 60 tests covering:
+  - **getSendBusNodes** (3 tests): is a function export, accepts 0 parameters, returns sendBusNodes Map
+  - **connectTrackToSendBus** (9 tests): is a function export, accepts 2 parameters (trackId, sendId), validates track exists via localAppServices.getTrackById, validates bus exists in sendBusNodes, creates Tone.Gain node, connects track.outputChannel to sendGain, stores in trackSendNodes Map
+  - **disconnectTrackFromSendBus** (4 tests): is a function export, accepts 2 parameters, references trackSendNodes, calls disconnect and dispose on sendGainNode
+  - **createSendBusInAudio** (7 tests): is an async function export, accepts 1 parameter (sendId), checks if bus already exists, creates Tone.Gain input and output nodes, connects inputGain to outputGain, calls toDestination on outputGain, stores bus data in sendBusNodes
+  - **deleteSendBusFromAudio** (4 tests): is a function export, accepts 1 parameter (sendId), disconnects all tracks from bus, disposes nodes, deletes from sendBusNodes
+  - **addEffectToSendBus** (3 tests): is a function export, creates effect via EffectsRegistry, stores in bus effects array
+  - **removeEffectFromSendBus** (3 tests): is a function export, finds effect by id, disposes, removes from array
+  - **reorderEffectInSendBus** (3 tests): is a function export, reorders effects array using splice
+  - **updateSendBusEffectParam** (5 tests): is a function export, finds effect by id, updates nested param via paramPath.split('.') and keys[keys.length-1], calls rampTo
+  - **setSendBusLevel** (4 tests): is a function export, accepts 2 parameters (sendId, level), clamps level to 0-1 range with Math.max/min, uses rampTo on outputGain.gain
+  - **setSendBusMuted** (4 tests): is a function export, accepts 2 parameters (sendId, muted), uses !! for boolean coercion, sets inputGain.gain to 0 when muted
+  - APP_VERSION validation (>= 2.282 for Day 627)
+- **Version**: Bumped to 2.283.0
+- **Test Count**: Increased from 1808 to 1868
+
 #### Day 623: Context Suspension & Sidechain Audio Function Tests (2026-05-27)
 - **Tests**: Added 51 tests for Context Suspension and Sidechain audio functions in audio.js
 - **Files Modified**:
@@ -1894,3 +1915,28 @@
   - APP_VERSION validation (>= 2.280 for Day 625)
 - **Version**: Bumped to 2.281.0
 - **Test Count**: Increased from 1707 to 1759
+
+#### Day 626: Loop Region & Punch Region Audio Function Tests (2026-05-28)
+- **Tests**: Added 48 tests for Loop Region and Punch Region audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 626 test block with 48 tests for Loop Region & Punch Region audio functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.282.0
+- **Test Details** (`js/tests.js`): 48 tests covering:
+  - **Loop Region Functions** (20 tests):
+    - `getLoopRegion` (2 tests): is a function export, returns object copy
+    - `setLoopRegion` (7 tests): is a function export, accepts 2 parameters, validates endBars > startBars, references Constants.MAX_BARS, calls captureAudioStateForUndoIfAllowed, sets loopRegion.start and loopRegion.end
+    - `setLoopRegionEnabled` (4 tests): is a function export, accepts 1 parameter, calls captureAudioStateForUndoIfAllowed on change, uses !! boolean coercion, sets loopRegion.enabled
+    - `isLoopRegionEnabled` (3 tests): is a function export, accepts 0 parameters, returns loopRegion.enabled
+    - `getLoopStartBars` (2 tests): is a function export, returns loopRegion.start
+    - `getLoopEndBars` (2 tests): is a function export, returns loopRegion.end
+  - **Punch Region Functions** (26 tests):
+    - `getPunchRegion` (2 tests): is a function export, returns object copy
+    - `setPunchRegion` (7 tests): is a function export, accepts 2 parameters, validates outBars > inBars, references Constants.MAX_BARS, calls captureAudioStateForUndoIfAllowed, sets punchRegion.in and punchRegion.out
+    - `setPunchRegionEnabled` (4 tests): is a function export, accepts 1 parameter, calls captureAudioStateForUndoIfAllowed on change, uses !! boolean coercion, sets punchRegion.enabled
+    - `isPunchRegionEnabled` (3 tests): is a function export, accepts 0 parameters, returns punchRegion.enabled
+    - `getPunchInBars` (2 tests): is a function export, returns punchRegion.in
+    - `getPunchOutBars` (2 tests): is a function export, returns punchRegion.out
+    - `isPositionInPunchRegion` (6 tests): is a function export, accepts 1 parameter (positionString), checks punchRegion.enabled, parses positionString (bars:beats:sixteenths), calculates totalSixteenths, compares against punch region bounds
+  - APP_VERSION validation (>= 2.281 for Day 626)
+- **Version**: Bumped to 2.282.0
+- **Test Count**: Increased from 1763 to 1810

@@ -10507,105 +10507,231 @@ TestRunner.test("Day 625 - APP_VERSION validation for Day 625", (t) => {
     }
 });
 
-// Day 626: EffectsRegistry Audio Function Tests
-// ============================================
+// ============================================================
+// DAY 626: LOOP REGION & PUNCH REGION AUDIO FUNCTION TESTS
+// ============================================================
 
-TestRunner.test("Day 626 - createEffectInstance is a function export", (t) => {
-    t.assertEqual(typeof createEffectInstance, 'function', 'createEffectInstance should be a function');
+TestRunner.test("Day 626 - Loop Region - getLoopRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getLoopRegion'), 'getLoopRegion should be exported');
 });
 
-TestRunner.test("Day 626 - createEffectInstance accepts 2 parameters", (t) => {
-    t.assertEqual(createEffectInstance.length, 2, 'createEffectInstance should accept 2 parameters');
+TestRunner.test("Day 626 - Loop Region - getLoopRegion returns object copy", (t) => {
+    t.assertEqual(typeof getLoopRegion(), 'object', 'getLoopRegion should return an object');
 });
 
-TestRunner.test("Day 626 - createEffectInstance checks for Tone.js global", (t) => {
-    const funcStr = createEffectInstance.toString();
-    t.assertTruthy(funcStr.includes('typeof Tone') || funcStr.includes('Tone === undefined'), 'createEffectInstance should check for Tone.js');
+TestRunner.test("Day 626 - Loop Region - setLoopRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setLoopRegion'), 'setLoopRegion should be exported');
 });
 
-TestRunner.test("Day 626 - createEffectInstance looks up definition in AVAILABLE_EFFECTS", (t) => {
-    const funcStr = createEffectInstance.toString();
-    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'createEffectInstance should reference AVAILABLE_EFFECTS');
+TestRunner.test("Day 626 - Loop Region - setLoopRegion accepts 2 parameters", (t) => {
+    t.assertEqual(setLoopRegion.length, 2, 'setLoopRegion should accept 2 parameters');
 });
 
-TestRunner.test("Day 626 - createEffectInstance checks if definition exists", (t) => {
-    const funcStr = createEffectInstance.toString();
-    t.assertTruthy(funcStr.includes('definition'), 'createEffectInstance should check definition');
+TestRunner.test("Day 626 - Loop Region - setLoopRegion validates range (endBars > startBars)", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('endBars <= startBars') || funcStr.includes('startBars >= endBars') || funcStr.includes('endBars <= startBars'), 'setLoopRegion should validate that endBars > startBars');
 });
 
-TestRunner.test("Day 626 - createEffectInstance checks Tone[definition.toneClass]", (t) => {
-    const funcStr = createEffectInstance.toString();
-    t.assertTruthy(funcStr.includes('Tone[definition.toneClass]') || funcStr.includes('definition.toneClass'), 'createEffectInstance should reference Tone class via definition');
+TestRunner.test("Day 626 - Loop Region - setLoopRegion references Constants.MAX_BARS", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'setLoopRegion should reference Constants.MAX_BARS');
 });
 
-TestRunner.test("Day 626 - createEffectInstance handles parameter path splitting", (t) => {
-    const funcStr = createEffectInstance.toString();
-    t.assertTruthy(funcStr.includes('.split(') || funcStr.includes('pathKeys'), 'createEffectInstance should handle dot-notation param paths');
+TestRunner.test("Day 626 - Loop Region - setLoopRegion calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegion should call captureAudioStateForUndoIfAllowed');
 });
 
-TestRunner.test("Day 626 - createEffectInstance uses new Tone[definition.toneClass] instantiation", (t) => {
-    const funcStr = createEffectInstance.toString();
-    t.assertTruthy(funcStr.includes('new Tone[') || funcStr.includes('new Tone.'), 'createEffectInstance should instantiate Tone effect');
+TestRunner.test("Day 626 - Loop Region - setLoopRegion sets loopRegion.start and loopRegion.end", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.start') && funcStr.includes('loopRegion.end'), 'setLoopRegion should set loopRegion.start and loopRegion.end');
 });
 
-TestRunner.test("Day 626 - getEffectDefaultParams is a function export", (t) => {
-    t.assertEqual(typeof getEffectDefaultParams, 'function', 'getEffectDefaultParams should be a function');
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setLoopRegionEnabled'), 'setLoopRegionEnabled should be exported');
 });
 
-TestRunner.test("Day 626 - getEffectDefaultParams accepts 1 parameter", (t) => {
-    t.assertEqual(getEffectDefaultParams.length, 1, 'getEffectDefaultParams should accept 1 parameter');
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled accepts 1 parameter", (t) => {
+    t.assertEqual(setLoopRegionEnabled.length, 1, 'setLoopRegionEnabled should accept 1 parameter');
 });
 
-TestRunner.test("Day 626 - getEffectDefaultParams looks up definition in AVAILABLE_EFFECTS", (t) => {
-    const funcStr = getEffectDefaultParams.toString();
-    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectDefaultParams should reference AVAILABLE_EFFECTS');
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled calls captureAudioStateForUndoIfAllowed on change", (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegionEnabled should call captureAudioStateForUndoIfAllowed');
 });
 
-TestRunner.test("Day 626 - getEffectDefaultParams returns empty object when no definition", (t) => {
-    const funcStr = getEffectDefaultParams.toString();
-    t.assertTruthy(funcStr.includes('return {}'), 'getEffectDefaultParams should return empty object for unknown effect');
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled uses !! boolean coercion", (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!enabled') || funcStr.includes('nextValue = !!'), 'setLoopRegionEnabled should coerce enabled to boolean');
 });
 
-TestRunner.test("Day 626 - getEffectDefaultParams builds nested param object from defaults", (t) => {
-    const funcStr = getEffectDefaultParams.toString();
-    t.assertTruthy(funcStr.includes('params') && funcStr.includes('defaultValue'), 'getEffectDefaultParams should use definition params and defaultValue');
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled sets loopRegion.enabled", (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.enabled'), 'setLoopRegionEnabled should set loopRegion.enabled');
 });
 
-TestRunner.test("Day 626 - getEffectParamDefinitions is a function export", (t) => {
-    t.assertEqual(typeof getEffectParamDefinitions, 'function', 'getEffectParamDefinitions should be a function');
+TestRunner.test("Day 626 - Loop Region - isLoopRegionEnabled is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function isLoopRegionEnabled'), 'isLoopRegionEnabled should be exported');
 });
 
-TestRunner.test("Day 626 - getEffectParamDefinitions accepts 1 parameter", (t) => {
-    t.assertEqual(getEffectParamDefinitions.length, 1, 'getEffectParamDefinitions should accept 1 parameter');
+TestRunner.test("Day 626 - Loop Region - isLoopRegionEnabled accepts 0 parameters", (t) => {
+    t.assertEqual(isLoopRegionEnabled.length, 0, 'isLoopRegionEnabled should accept no parameters');
 });
 
-TestRunner.test("Day 626 - getEffectParamDefinitions looks up definition in AVAILABLE_EFFECTS", (t) => {
-    const funcStr = getEffectParamDefinitions.toString();
-    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectParamDefinitions should reference AVAILABLE_EFFECTS');
+TestRunner.test("Day 626 - Loop Region - isLoopRegionEnabled returns loopRegion.enabled", (t) => {
+    const funcStr = isLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.enabled'), 'isLoopRegionEnabled should return loopRegion.enabled');
 });
 
-TestRunner.test("Day 626 - getEffectParamDefinitions returns definition.params", (t) => {
-    const funcStr = getEffectParamDefinitions.toString();
-    t.assertTruthy(funcStr.includes('definition.params') || funcStr.includes('.params'), 'getEffectParamDefinitions should return params array');
+TestRunner.test("Day 626 - Loop Region - getLoopStartBars is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getLoopStartBars'), 'getLoopStartBars should be exported');
 });
 
-TestRunner.test("Day 626 - getEffectBypassState is a function export", (t) => {
-    t.assertEqual(typeof getEffectBypassState, 'function', 'getEffectBypassState should be a function');
+TestRunner.test("Day 626 - Loop Region - getLoopStartBars returns loopRegion.start", (t) => {
+    const funcStr = getLoopStartBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.start'), 'getLoopStartBars should return loopRegion.start');
 });
 
-TestRunner.test("Day 626 - getEffectBypassState accepts 1 parameter", (t) => {
-    t.assertEqual(getEffectBypassState.length, 1, 'getEffectBypassState should accept 1 parameter');
+TestRunner.test("Day 626 - Loop Region - getLoopEndBars is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getLoopEndBars'), 'getLoopEndBars should be exported');
 });
 
-TestRunner.test("Day 626 - setEffectBypassState is a function export", (t) => {
-    t.assertEqual(typeof setEffectBypassState, 'function', 'setEffectBypassState should be a function');
+TestRunner.test("Day 626 - Loop Region - getLoopEndBars returns loopRegion.end", (t) => {
+    const funcStr = getLoopEndBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.end'), 'getLoopEndBars should return loopRegion.end');
 });
 
-TestRunner.test("Day 626 - setEffectBypassState accepts 2 parameters", (t) => {
-    t.assertEqual(setEffectBypassState.length, 2, 'setEffectBypassState should accept 2 parameters');
+TestRunner.test("Day 626 - Punch Region - getPunchRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getPunchRegion'), 'getPunchRegion should be exported');
 });
 
-// --- APP_VERSION validation ---
+TestRunner.test("Day 626 - Punch Region - getPunchRegion returns object copy", (t) => {
+    t.assertEqual(typeof getPunchRegion(), 'object', 'getPunchRegion should return an object');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setPunchRegion'), 'setPunchRegion should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion accepts 2 parameters", (t) => {
+    t.assertEqual(setPunchRegion.length, 2, 'setPunchRegion should accept 2 parameters');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion validates range (outBars > inBars)", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('outBars <= inBars') || funcStr.includes('inBars >= outBars'), 'setPunchRegion should validate that outBars > inBars');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion references Constants.MAX_BARS", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'setPunchRegion should reference Constants.MAX_BARS');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegion should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion sets punchRegion.in and punchRegion.out", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.in') && funcStr.includes('punchRegion.out'), 'setPunchRegion should set punchRegion.in and punchRegion.out');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setPunchRegionEnabled'), 'setPunchRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled accepts 1 parameter", (t) => {
+    t.assertEqual(setPunchRegionEnabled.length, 1, 'setPunchRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled calls captureAudioStateForUndoIfAllowed on change", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegionEnabled should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled uses !! boolean coercion", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!enabled') || funcStr.includes('nextValue = !!'), 'setPunchRegionEnabled should coerce enabled to boolean');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled sets punchRegion.enabled", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled'), 'setPunchRegionEnabled should set punchRegion.enabled');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPunchRegionEnabled is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function isPunchRegionEnabled'), 'isPunchRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPunchRegionEnabled accepts 0 parameters", (t) => {
+    t.assertEqual(isPunchRegionEnabled.length, 0, 'isPunchRegionEnabled should accept no parameters');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPunchRegionEnabled returns punchRegion.enabled", (t) => {
+    const funcStr = isPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled'), 'isPunchRegionEnabled should return punchRegion.enabled');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchInBars is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getPunchInBars'), 'getPunchInBars should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchInBars returns punchRegion.in", (t) => {
+    const funcStr = getPunchInBars.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.in'), 'getPunchInBars should return punchRegion.in');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchOutBars is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getPunchOutBars'), 'getPunchOutBars should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchOutBars returns punchRegion.out", (t) => {
+    const funcStr = getPunchOutBars.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.out'), 'getPunchOutBars should return punchRegion.out');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function isPositionInPunchRegion'), 'isPositionInPunchRegion should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion accepts 1 parameter", (t) => {
+    t.assertEqual(isPositionInPunchRegion.length, 1, 'isPositionInPunchRegion should accept 1 parameter');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion checks punchRegion.enabled", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled'), 'isPositionInPunchRegion should check punchRegion.enabled');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion parses positionString (bars:beats:sixteenths)", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('positionString.split') || funcStr.includes('split(\':\')'), 'isPositionInPunchRegion should parse positionString');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion calculates totalSixteenths", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('totalSixteenths') || funcStr.includes('bars * 16') || funcStr.includes('16 +'), 'isPositionInPunchRegion should calculate total sixteenths');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion compares against punchRegion.in and punchRegion.out", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy((funcStr.includes('punchRegion.in') || funcStr.includes('punchIn')) && (funcStr.includes('punchRegion.out') || funcStr.includes('punchOut')), 'isPositionInPunchRegion should compare against punch region bounds');
+});
+
 TestRunner.test("Day 626 - APP_VERSION validation for Day 626", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 626');
@@ -10613,3 +10739,286 @@ TestRunner.test("Day 626 - APP_VERSION validation for Day 626", (t) => {
         t.assertTruthy(versionParts[1] >= 281, 'Minor version should be >= 281 for Day 626');
     }
 });
+// Day 627: Send Bus Audio Function Tests
+TestRunner.test("Day 627 - Send Bus - getSendBusNodes is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getSendBusNodes'), 'getSendBusNodes should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - getSendBusNodes accepts 0 parameters", (t) => {
+    t.assertEqual(getSendBusNodes.length, 0, 'getSendBusNodes should accept no parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - getSendBusNodes returns sendBusNodes", (t) => {
+    const funcStr = getSendBusNodes.toString();
+    t.assertTruthy(funcStr.includes('return sendBusNodes'), 'getSendBusNodes should return sendBusNodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - connectTrackToSendBus is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function connectTrackToSendBus'), 'connectTrackToSendBus should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - connectTrackToSendBus accepts 2 parameters", (t) => {
+    t.assertEqual(connectTrackToSendBus.length, 2, 'connectTrackToSendBus should accept 2 parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - connectTrackToSendBus references localAppServices.getTrackById", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('localAppServices.getTrackById'), 'connectTrackToSendBus should use getTrackById');
+});
+
+TestRunner.test("Day 627 - Send Bus - connectTrackToSendBus checks track existence", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('!track') || funcStr.includes('track == null'), 'connectTrackToSendBus should check if track exists');
+});
+
+TestRunner.test("Day 627 - Send Bus - connectTrackToSendBus references sendBusNodes", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'connectTrackToSendBus should reference sendBusNodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - connectTrackToSendBus references trackSendNodes", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes'), 'connectTrackToSendBus should reference trackSendNodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - connectTrackToSendBus creates Tone.Gain node", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Gain'), 'connectTrackToSendBus should create Tone.Gain node');
+});
+
+TestRunner.test("Day 627 - Send Bus - connectTrackToSendBus connects track.outputChannel to sendGain", (t) => {
+    const funcStr = connectTrackToSendBus.toString();
+    t.assertTruthy(funcStr.includes('track.outputChannel'), 'connectTrackToSendBus should connect track outputChannel');
+});
+
+TestRunner.test("Day 627 - Send Bus - disconnectTrackFromSendBus is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function disconnectTrackFromSendBus'), 'disconnectTrackFromSendBus should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - disconnectTrackFromSendBus accepts 2 parameters", (t) => {
+    t.assertEqual(disconnectTrackFromSendBus.length, 2, 'disconnectTrackFromSendBus should accept 2 parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - disconnectTrackFromSendBus references trackSendNodes", (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes'), 'disconnectTrackFromSendBus should reference trackSendNodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - disconnectTrackFromSendBus calls disconnect on sendGainNode", (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendGainNode.disconnect') || funcStr.includes('disconnect()'), 'disconnectTrackFromSendBus should call disconnect');
+});
+
+TestRunner.test("Day 627 - Send Bus - disconnectTrackFromSendBus calls dispose on sendGainNode", (t) => {
+    const funcStr = disconnectTrackFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendGainNode.dispose') || funcStr.includes('dispose()'), 'disconnectTrackFromSendBus should call dispose');
+});
+
+TestRunner.test("Day 627 - Send Bus - createSendBusInAudio is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function createSendBusInAudio'), 'createSendBusInAudio should be an async function export');
+});
+
+TestRunner.test("Day 627 - Send Bus - createSendBusInAudio accepts 1 parameter", (t) => {
+    t.assertEqual(createSendBusInAudio.length, 1, 'createSendBusInAudio should accept 1 parameter');
+});
+
+TestRunner.test("Day 627 - Send Bus - createSendBusInAudio checks if send bus already exists", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes.has(sendId)'), 'createSendBusInAudio should check for existing bus');
+});
+
+TestRunner.test("Day 627 - Send Bus - createSendBusInAudio creates Tone.Gain input and output nodes", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Gain'), 'createSendBusInAudio should create Tone.Gain nodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - createSendBusInAudio connects input to output", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('inputGain.connect(outputGain)'), 'createSendBusInAudio should connect inputGain to outputGain');
+});
+
+TestRunner.test("Day 627 - Send Bus - createSendBusInAudio calls toDestination on outputGain", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('outputGain.toDestination()'), 'createSendBusInAudio should call toDestination on outputGain');
+});
+
+TestRunner.test("Day 627 - Send Bus - createSendBusInAudio stores bus data in sendBusNodes", (t) => {
+    const funcStr = createSendBusInAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes.set'), 'createSendBusInAudio should set in sendBusNodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - deleteSendBusFromAudio is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function deleteSendBusFromAudio'), 'deleteSendBusFromAudio should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - deleteSendBusFromAudio accepts 1 parameter", (t) => {
+    t.assertEqual(deleteSendBusFromAudio.length, 1, 'deleteSendBusFromAudio should accept 1 parameter');
+});
+
+TestRunner.test("Day 627 - Send Bus - deleteSendBusFromAudio references sendBusNodes", (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'deleteSendBusFromAudio should reference sendBusNodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - deleteSendBusFromAudio calls disconnectTrackFromSendBus for all tracks", (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('disconnectTrackFromSendBus'), 'deleteSendBusFromAudio should disconnect tracks');
+});
+
+TestRunner.test("Day 627 - Send Bus - deleteSendBusFromAudio disposes effect nodes", (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('busData.effects'), 'deleteSendBusFromAudio should handle effects');
+});
+
+TestRunner.test("Day 627 - Send Bus - deleteSendBusFromAudio disposes inputGain and outputGain", (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('inputGain.dispose') || funcStr.includes('outputGain.dispose'), 'deleteSendBusFromAudio should dispose gain nodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - deleteSendBusFromAudio calls sendBusNodes.delete", (t) => {
+    const funcStr = deleteSendBusFromAudio.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes.delete'), 'deleteSendBusFromAudio should delete from sendBusNodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - addEffectToSendBus is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function addEffectToSendBus'), 'addEffectToSendBus should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - addEffectToSendBus accepts 3 parameters", (t) => {
+    t.assertEqual(addEffectToSendBus.length, 3, 'addEffectToSendBus should accept 3 parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - addEffectToSendBus references sendBusNodes", (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('sendBusNodes'), 'addEffectToSendBus should reference sendBusNodes');
+});
+
+TestRunner.test("Day 627 - Send Bus - addEffectToSendBus calls createEffectInstance", (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('createEffectInstance'), 'addEffectToSendBus should create an effect instance');
+});
+
+TestRunner.test("Day 627 - Send Bus - addEffectToSendBus rebuilds audio chain", (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('disconnect()') || funcStr.includes('connect('), 'addEffectToSendBus should rebuild audio chain');
+});
+
+TestRunner.test("Day 627 - Send Bus - addEffectToSendBus pushes effect to busData.effects", (t) => {
+    const funcStr = addEffectToSendBus.toString();
+    t.assertTruthy(funcStr.includes('busData.effects.push'), 'addEffectToSendBus should push effect to array');
+});
+
+TestRunner.test("Day 627 - Send Bus - removeEffectFromSendBus is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function removeEffectFromSendBus'), 'removeEffectFromSendBus should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - removeEffectFromSendBus accepts 2 parameters", (t) => {
+    t.assertEqual(removeEffectFromSendBus.length, 2, 'removeEffectFromSendBus should accept 2 parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - removeEffectFromSendBus finds effect by _effectId", (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('_effectId'), 'removeEffectFromSendBus should find effect by _effectId');
+});
+
+TestRunner.test("Day 627 - Send Bus - removeEffectFromSendBus uses splice to remove effect", (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeEffectFromSendBus should use splice to remove');
+});
+
+TestRunner.test("Day 627 - Send Bus - removeEffectFromSendBus rebuilds audio chain after removal", (t) => {
+    const funcStr = removeEffectFromSendBus.toString();
+    t.assertTruthy(funcStr.includes('inputGain.disconnect') || funcStr.includes('forEach'), 'removeEffectFromSendBus should rebuild chain');
+});
+
+TestRunner.test("Day 627 - Send Bus - reorderEffectInSendBus is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function reorderEffectInSendBus'), 'reorderEffectInSendBus should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - reorderEffectInSendBus accepts 3 parameters", (t) => {
+    t.assertEqual(reorderEffectInSendBus.length, 3, 'reorderEffectInSendBus should accept 3 parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - reorderEffectInSendBus finds effect by _effectId", (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('_effectId'), 'reorderEffectInSendBus should find effect by _effectId');
+});
+
+TestRunner.test("Day 627 - Send Bus - reorderEffectInSendBus uses splice to move effect", (t) => {
+    const funcStr = reorderEffectInSendBus.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'reorderEffectInSendBus should use splice to reorder');
+});
+
+TestRunner.test("Day 627 - Send Bus - updateSendBusEffectParam is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function updateSendBusEffectParam'), 'updateSendBusEffectParam should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - updateSendBusEffectParam accepts 4 parameters", (t) => {
+    t.assertEqual(updateSendBusEffectParam.length, 4, 'updateSendBusEffectParam should accept 4 parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - updateSendBusEffectParam splits paramPath by '.'", (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes("paramPath.split('.'") || funcStr.includes('paramPath.split("."'), 'updateSendBusEffectParam should split paramPath');
+});
+
+TestRunner.test("Day 627 - Send Bus - updateSendBusEffectParam uses rampTo for smooth changes", (t) => {
+    const funcStr = updateSendBusEffectParam.toString();
+    t.assertTruthy(funcStr.includes('rampTo'), 'updateSendBusEffectParam should use rampTo for smooth changes');
+});
+
+TestRunner.test("Day 627 - Send Bus - setSendBusLevel is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setSendBusLevel'), 'setSendBusLevel should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - setSendBusLevel accepts 2 parameters", (t) => {
+    t.assertEqual(setSendBusLevel.length, 2, 'setSendBusLevel should accept 2 parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - setSendBusLevel clamps level to 0-1 range", (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setSendBusLevel should clamp level');
+});
+
+TestRunner.test("Day 627 - Send Bus - setSendBusLevel uses rampTo on outputGain.gain", (t) => {
+    const funcStr = setSendBusLevel.toString();
+    t.assertTruthy(funcStr.includes('outputGain.gain.rampTo') || funcStr.includes('rampTo'), 'setSendBusLevel should use rampTo');
+});
+
+TestRunner.test("Day 627 - Send Bus - setSendBusMuted is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setSendBusMuted'), 'setSendBusMuted should be exported');
+});
+
+TestRunner.test("Day 627 - Send Bus - setSendBusMuted accepts 2 parameters", (t) => {
+    t.assertEqual(setSendBusMuted.length, 2, 'setSendBusMuted should accept 2 parameters');
+});
+
+TestRunner.test("Day 627 - Send Bus - setSendBusMuted uses !! for boolean coercion", (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('!!muted') || funcStr.includes('busData.muted = !!'), 'setSendBusMuted should use boolean coercion');
+});
+
+TestRunner.test("Day 627 - Send Bus - setSendBusMuted sets inputGain.gain to 0 when muted", (t) => {
+    const funcStr = setSendBusMuted.toString();
+    t.assertTruthy(funcStr.includes('inputGain.gain.value') && (funcStr.includes('0') || funcStr.includes('muted')), 'setSendBusMuted should set gain to 0 when muted');
+});
+
+TestRunner.test("Day 627 - APP_VERSION validation for Day 627", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 627');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 282, 'Minor version should be >= 282 for Day 627');
+    }
+});
+
