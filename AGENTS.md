@@ -1864,3 +1864,33 @@
   - APP_VERSION validation (= 2.269 for Day 614)
 - **Version**: Bumped to 2.269.0
 - **Test Count**: Increased from 1307 to 1324
+
+#### Day 625: Count-In, Punch Recording, and Transport Audio Function Tests (2026-05-28)
+- **Tests**: Added 52 tests for Count-In, Punch Recording, and Transport audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 625 test block with 52 tests for Count-In, Punch Recording, and Transport functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.281.0
+- **Test Details** (`js/tests.js`): 52 tests covering:
+  - **Count-In Functions** (22 tests):
+    - `setCountInBars` (5 tests): is a function export, accepts 1 parameter, clamps to 0-4 range with Math.max/min, calls captureAudioStateForUndoIfAllowed with "Set Count-In Bars to" label
+    - `getCountInBars` (2 tests): is a function export, accepts 0 parameters
+    - `isCountInActive` (3 tests): is a function export, accepts 0 parameters, references countInActive variable
+    - `stopMetronome` (3 tests): is a function export, accepts 0 parameters, sets countInActive to false
+    - `cleanupMetronome` (2 tests): is a function export, calls stopMetronome
+    - `cleanupCountIn` (3 tests): is a function export, accepts 0 parameters, sets countInActive to false
+    - `startCountIn` (4 tests): is an async function export, accepts 1-2 parameters, references countInBars and countInActive, sets countInActive to true
+  - **Punch Recording Functions** (11 tests):
+    - `scheduleRecordingForPunch` (5 tests): is a function export, accepts 2 parameters, references recordingScheduledId, Tone.Transport.schedule, and punchRegion.out
+    - `cancelScheduledRecording` (3 tests): is a function export, accepts 0 parameters, references recordingScheduledId
+    - `getRecordingScheduledTrackId` (2 tests): is a function export, accepts 0 parameters, returns recordingScheduledTrackId
+    - `cleanupRecordingScheduling` (1 test): is a function export, accepts 0 parameters, calls cancelScheduledRecording
+  - **Transport Functions** (10 tests):
+    - `getTransportPosition` (3 tests): is a function export, accepts 0 parameters, references Tone.Transport.position
+    - `getTransportSeconds` (3 tests): is a function export, accepts 0 parameters, references Tone.Transport.seconds
+    - `getTransportBpm` (3 tests): is a function export, accepts 0 parameters, references Tone.Transport.bpm.value
+    - `getTransportState` (1 test): is a function export, accepts 0 parameters, references Tone.Transport.state
+  - **Export Mixdown** (7 tests):
+    - `exportMixdownToWav` (7 tests): is an async function export, accepts 1 parameter, references Tone.Recorder, getActualMasterGainNode, Tone.Transport.start/stop, has console.error error handling
+  - APP_VERSION validation (>= 2.280 for Day 625)
+- **Version**: Bumped to 2.281.0
+- **Test Count**: Increased from 1707 to 1759

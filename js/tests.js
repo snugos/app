@@ -10247,3 +10247,262 @@ TestRunner.test("Day 624 - APP_VERSION validation for Day 624", (t) => {
         t.assertTruthy(versionParts[1] >= 278, 'Minor version should be >= 278 for Day 624');
     }
 });
+
+// ============================================
+// Day 625: Count-In and Punch Region Audio Function Tests
+// ============================================
+
+TestRunner.test("Day 625 - setCountInBars is a function export", (t) => {
+    t.assertEqual(typeof setCountInBars, 'function', 'setCountInBars should be a function');
+});
+
+TestRunner.test("Day 625 - setCountInBars accepts 1 parameter", (t) => {
+    t.assertEqual(setCountInBars.length, 1, 'setCountInBars should accept 1 parameter');
+});
+
+TestRunner.test("Day 625 - setCountInBars clamps value to 0-4 range", (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0') && funcStr.includes('Math.min(4'), 'setCountInBars should clamp to 0-4 range');
+});
+
+TestRunner.test("Day 625 - setCountInBars calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setCountInBars should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 625 - setCountInBars has descriptive undo label 'Set Count-In Bars to'", (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Set Count-In Bars to'), 'setCountInBars should have "Set Count-In Bars to" undo label');
+});
+
+TestRunner.test("Day 625 - getCountInBars is a function export", (t) => {
+    t.assertEqual(typeof getCountInBars, 'function', 'getCountInBars should be a function');
+});
+
+TestRunner.test("Day 625 - getCountInBars accepts 0 parameters", (t) => {
+    t.assertEqual(getCountInBars.length, 0, 'getCountInBars should accept no parameters');
+});
+
+TestRunner.test("Day 625 - isCountInActive is a function export", (t) => {
+    t.assertEqual(typeof isCountInActive, 'function', 'isCountInActive should be a function');
+});
+
+TestRunner.test("Day 625 - isCountInActive accepts 0 parameters", (t) => {
+    t.assertEqual(isCountInActive.length, 0, 'isCountInActive should accept no parameters');
+});
+
+TestRunner.test("Day 625 - isCountInActive references countInActive variable", (t) => {
+    const funcStr = isCountInActive.toString();
+    t.assertTruthy(funcStr.includes('countInActive'), 'isCountInActive should reference countInActive variable');
+});
+
+TestRunner.test("Day 625 - stopMetronome is a function export", (t) => {
+    t.assertEqual(typeof stopMetronome, 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test("Day 625 - stopMetronome accepts 0 parameters", (t) => {
+    t.assertEqual(stopMetronome.length, 0, 'stopMetronome should accept no parameters');
+});
+
+TestRunner.test("Day 625 - stopMetronome sets countInActive to false", (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('countInActive = false'), 'stopMetronome should set countInActive to false');
+});
+
+TestRunner.test("Day 625 - cleanupMetronome is a function export", (t) => {
+    t.assertEqual(typeof cleanupMetronome, 'function', 'cleanupMetronome should be a function');
+});
+
+TestRunner.test("Day 625 - cleanupMetronome calls stopMetronome", (t) => {
+    const funcStr = cleanupMetronome.toString();
+    t.assertTruthy(funcStr.includes('stopMetronome'), 'cleanupMetronome should call stopMetronome');
+});
+
+TestRunner.test("Day 625 - cleanupCountIn is a function export", (t) => {
+    t.assertEqual(typeof cleanupCountIn, 'function', 'cleanupCountIn should be a function');
+});
+
+TestRunner.test("Day 625 - cleanupCountIn accepts 0 parameters", (t) => {
+    t.assertEqual(cleanupCountIn.length, 0, 'cleanupCountIn should accept no parameters');
+});
+
+TestRunner.test("Day 625 - cleanupCountIn sets countInActive to false", (t) => {
+    const funcStr = cleanupCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInActive = false'), 'cleanupCountIn should set countInActive to false');
+});
+
+TestRunner.test("Day 625 - startCountIn is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function startCountIn'), 'startCountIn should be async function export');
+});
+
+TestRunner.test("Day 625 - startCountIn accepts 1-2 parameters", (t) => {
+    t.assertTrue(startCountIn.length === 1 || startCountIn.length === 2, 'startCountIn should accept 1-2 parameters');
+});
+
+TestRunner.test("Day 625 - startCountIn references countInBars", (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInBars'), 'startCountIn should reference countInBars');
+});
+
+TestRunner.test("Day 625 - startCountIn references countInActive", (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInActive'), 'startCountIn should reference countInActive');
+});
+
+TestRunner.test("Day 625 - startCountIn sets countInActive to true", (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInActive = true'), 'startCountIn should set countInActive to true');
+});
+
+TestRunner.test("Day 625 - scheduleRecordingForPunch is a function export", (t) => {
+    t.assertEqual(typeof scheduleRecordingForPunch, 'function', 'scheduleRecordingForPunch should be a function');
+});
+
+TestRunner.test("Day 625 - scheduleRecordingForPunch accepts 2 parameters", (t) => {
+    t.assertEqual(scheduleRecordingForPunch.length, 2, 'scheduleRecordingForPunch should accept 2 parameters');
+});
+
+TestRunner.test("Day 625 - scheduleRecordingForPunch references recordingScheduledId", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledId'), 'scheduleRecordingForPunch should reference recordingScheduledId');
+});
+
+TestRunner.test("Day 625 - scheduleRecordingForPunch references Tone.Transport.schedule", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.schedule') || funcStr.includes('Transport.schedule'), 'scheduleRecordingForPunch should use Tone.Transport.schedule');
+});
+
+TestRunner.test("Day 625 - scheduleRecordingForPunch references punchRegion.out", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.out'), 'scheduleRecordingForPunch should reference punchRegion.out');
+});
+
+TestRunner.test("Day 625 - cancelScheduledRecording is a function export", (t) => {
+    t.assertEqual(typeof cancelScheduledRecording, 'function', 'cancelScheduledRecording should be a function');
+});
+
+TestRunner.test("Day 625 - cancelScheduledRecording accepts 0 parameters", (t) => {
+    t.assertEqual(cancelScheduledRecording.length, 0, 'cancelScheduledRecording should accept no parameters');
+});
+
+TestRunner.test("Day 625 - cancelScheduledRecording references recordingScheduledId", (t) => {
+    const funcStr = cancelScheduledRecording.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledId'), 'cancelScheduledRecording should reference recordingScheduledId');
+});
+
+TestRunner.test("Day 625 - getRecordingScheduledTrackId is a function export", (t) => {
+    t.assertEqual(typeof getRecordingScheduledTrackId, 'function', 'getRecordingScheduledTrackId should be a function');
+});
+
+TestRunner.test("Day 625 - getRecordingScheduledTrackId accepts 0 parameters", (t) => {
+    t.assertEqual(getRecordingScheduledTrackId.length, 0, 'getRecordingScheduledTrackId should accept no parameters');
+});
+
+TestRunner.test("Day 625 - getRecordingScheduledTrackId returns recordingScheduledTrackId", (t) => {
+    const funcStr = getRecordingScheduledTrackId.toString();
+    t.assertTruthy(funcStr.includes('return recordingScheduledTrackId'), 'getRecordingScheduledTrackId should return recordingScheduledTrackId');
+});
+
+TestRunner.test("Day 625 - cleanupRecordingScheduling is a function export", (t) => {
+    t.assertEqual(typeof cleanupRecordingScheduling, 'function', 'cleanupRecordingScheduling should be a function');
+});
+
+TestRunner.test("Day 625 - cleanupRecordingScheduling accepts 0 parameters", (t) => {
+    t.assertEqual(cleanupRecordingScheduling.length, 0, 'cleanupRecordingScheduling should accept no parameters');
+});
+
+TestRunner.test("Day 625 - cleanupRecordingScheduling calls cancelScheduledRecording", (t) => {
+    const funcStr = cleanupRecordingScheduling.toString();
+    t.assertTruthy(funcStr.includes('cancelScheduledRecording'), 'cleanupRecordingScheduling should call cancelScheduledRecording');
+});
+
+TestRunner.test("Day 625 - getTransportPosition is a function export", (t) => {
+    t.assertEqual(typeof getTransportPosition, 'function', 'getTransportPosition should be a function');
+});
+
+TestRunner.test("Day 625 - getTransportPosition accepts 0 parameters", (t) => {
+    t.assertEqual(getTransportPosition.length, 0, 'getTransportPosition should accept no parameters');
+});
+
+TestRunner.test("Day 625 - getTransportPosition references Tone.Transport.position", (t) => {
+    const funcStr = getTransportPosition.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.position') || funcStr.includes('Transport.position'), 'getTransportPosition should reference Tone.Transport.position');
+});
+
+TestRunner.test("Day 625 - getTransportSeconds is a function export", (t) => {
+    t.assertEqual(typeof getTransportSeconds, 'function', 'getTransportSeconds should be a function');
+});
+
+TestRunner.test("Day 625 - getTransportSeconds accepts 0 parameters", (t) => {
+    t.assertEqual(getTransportSeconds.length, 0, 'getTransportSeconds should accept no parameters');
+});
+
+TestRunner.test("Day 625 - getTransportSeconds references Tone.Transport.seconds", (t) => {
+    const funcStr = getTransportSeconds.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.seconds') || funcStr.includes('Transport.seconds'), 'getTransportSeconds should reference Tone.Transport.seconds');
+});
+
+TestRunner.test("Day 625 - getTransportBpm is a function export", (t) => {
+    t.assertEqual(typeof getTransportBpm, 'function', 'getTransportBpm should be a function');
+});
+
+TestRunner.test("Day 625 - getTransportBpm accepts 0 parameters", (t) => {
+    t.assertEqual(getTransportBpm.length, 0, 'getTransportBpm should accept no parameters');
+});
+
+TestRunner.test("Day 625 - getTransportBpm references Tone.Transport.bpm.value", (t) => {
+    const funcStr = getTransportBpm.toString();
+    t.assertTruthy(funcStr.includes('bpm.value'), 'getTransportBpm should reference Tone.Transport.bpm.value');
+});
+
+TestRunner.test("Day 625 - getTransportState is a function export", (t) => {
+    t.assertEqual(typeof getTransportState, 'function', 'getTransportState should be a function');
+});
+
+TestRunner.test("Day 625 - getTransportState accepts 0 parameters", (t) => {
+    t.assertEqual(getTransportState.length, 0, 'getTransportState should accept no parameters');
+});
+
+TestRunner.test("Day 625 - getTransportState references Tone.Transport.state", (t) => {
+    const funcStr = getTransportState.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.state') || funcStr.includes('Transport.state'), 'getTransportState should reference Tone.Transport.state');
+});
+
+TestRunner.test("Day 625 - exportMixdownToWav is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function exportMixdownToWav'), 'exportMixdownToWav should be async function export');
+});
+
+TestRunner.test("Day 625 - exportMixdownToWav accepts 1 parameter", (t) => {
+    t.assertEqual(exportMixdownToWav.length, 1, 'exportMixdownToWav should accept 1 parameter');
+});
+
+TestRunner.test("Day 625 - exportMixdownToWav references Tone.Recorder", (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('Tone.Recorder') || funcStr.includes('Recorder'), 'exportMixdownToWav should reference Tone.Recorder');
+});
+
+TestRunner.test("Day 625 - exportMixdownToWav references getActualMasterGainNode", (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('getActualMasterGainNode'), 'exportMixdownToWav should reference getActualMasterGainNode');
+});
+
+TestRunner.test("Day 625 - exportMixdownToWav references Tone.Transport.start and Tone.Transport.stop", (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy((funcStr.includes('Tone.Transport.start') || funcStr.includes('Transport.start')) && (funcStr.includes('Tone.Transport.stop') || funcStr.includes('Transport.stop')), 'exportMixdownToWav should reference both Transport.start and Transport.stop');
+});
+
+TestRunner.test("Day 625 - exportMixdownToWav has console.error error handling", (t) => {
+    const funcStr = exportMixdownToWav.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'exportMixdownToWav should have console.error for error handling');
+});
+
+// --- APP_VERSION validation ---
+TestRunner.test("Day 625 - APP_VERSION validation for Day 625", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 625');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 280, 'Minor version should be >= 280 for Day 625');
+    }
+});
