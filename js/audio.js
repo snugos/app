@@ -74,6 +74,23 @@ export function getSendBusNodes() {
     return sendBusNodes;
 }
 
+export function getTrackSendNodes() {
+    return trackSendNodes;
+}
+
+export function setTrackSendLevel(trackId, sendId, level) {
+    const trackMap = trackSendNodes.get(trackId);
+    if (!trackMap) return false;
+    const entry = trackMap.get(sendId);
+    if (!entry) return false;
+    const clamped = Math.max(0, Math.min(1, level));
+    if (entry.sendGainNode && !entry.sendGainNode.disposed) {
+        entry.sendGainNode.gain.rampTo(clamped, 0.05);
+    }
+    entry.sendLevel = clamped;
+    return true;
+}
+
 export function connectTrackToSendBus(trackId, sendId) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) {
