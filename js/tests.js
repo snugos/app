@@ -10506,3 +10506,236 @@ TestRunner.test("Day 625 - APP_VERSION validation for Day 625", (t) => {
         t.assertTruthy(versionParts[1] >= 280, 'Minor version should be >= 280 for Day 625');
     }
 });
+
+// ============================================================
+// DAY 626: LOOP REGION & PUNCH REGION AUDIO FUNCTION TESTS
+// ============================================================
+
+TestRunner.test("Day 626 - Loop Region - getLoopRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getLoopRegion'), 'getLoopRegion should be exported');
+});
+
+TestRunner.test("Day 626 - Loop Region - getLoopRegion returns object copy", (t) => {
+    t.assertEqual(typeof getLoopRegion(), 'object', 'getLoopRegion should return an object');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setLoopRegion'), 'setLoopRegion should be exported');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegion accepts 2 parameters", (t) => {
+    t.assertEqual(setLoopRegion.length, 2, 'setLoopRegion should accept 2 parameters');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegion validates range (endBars > startBars)", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('endBars <= startBars') || funcStr.includes('startBars >= endBars') || funcStr.includes('endBars <= startBars'), 'setLoopRegion should validate that endBars > startBars');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegion references Constants.MAX_BARS", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'setLoopRegion should reference Constants.MAX_BARS');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegion calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegion should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegion sets loopRegion.start and loopRegion.end", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.start') && funcStr.includes('loopRegion.end'), 'setLoopRegion should set loopRegion.start and loopRegion.end');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setLoopRegionEnabled'), 'setLoopRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled accepts 1 parameter", (t) => {
+    t.assertEqual(setLoopRegionEnabled.length, 1, 'setLoopRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled calls captureAudioStateForUndoIfAllowed on change", (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegionEnabled should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled uses !! boolean coercion", (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!enabled') || funcStr.includes('nextValue = !!'), 'setLoopRegionEnabled should coerce enabled to boolean');
+});
+
+TestRunner.test("Day 626 - Loop Region - setLoopRegionEnabled sets loopRegion.enabled", (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.enabled'), 'setLoopRegionEnabled should set loopRegion.enabled');
+});
+
+TestRunner.test("Day 626 - Loop Region - isLoopRegionEnabled is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function isLoopRegionEnabled'), 'isLoopRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 626 - Loop Region - isLoopRegionEnabled accepts 0 parameters", (t) => {
+    t.assertEqual(isLoopRegionEnabled.length, 0, 'isLoopRegionEnabled should accept no parameters');
+});
+
+TestRunner.test("Day 626 - Loop Region - isLoopRegionEnabled returns loopRegion.enabled", (t) => {
+    const funcStr = isLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.enabled'), 'isLoopRegionEnabled should return loopRegion.enabled');
+});
+
+TestRunner.test("Day 626 - Loop Region - getLoopStartBars is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getLoopStartBars'), 'getLoopStartBars should be exported');
+});
+
+TestRunner.test("Day 626 - Loop Region - getLoopStartBars returns loopRegion.start", (t) => {
+    const funcStr = getLoopStartBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.start'), 'getLoopStartBars should return loopRegion.start');
+});
+
+TestRunner.test("Day 626 - Loop Region - getLoopEndBars is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getLoopEndBars'), 'getLoopEndBars should be exported');
+});
+
+TestRunner.test("Day 626 - Loop Region - getLoopEndBars returns loopRegion.end", (t) => {
+    const funcStr = getLoopEndBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.end'), 'getLoopEndBars should return loopRegion.end');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getPunchRegion'), 'getPunchRegion should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchRegion returns object copy", (t) => {
+    t.assertEqual(typeof getPunchRegion(), 'object', 'getPunchRegion should return an object');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setPunchRegion'), 'setPunchRegion should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion accepts 2 parameters", (t) => {
+    t.assertEqual(setPunchRegion.length, 2, 'setPunchRegion should accept 2 parameters');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion validates range (outBars > inBars)", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('outBars <= inBars') || funcStr.includes('inBars >= outBars'), 'setPunchRegion should validate that outBars > inBars');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion references Constants.MAX_BARS", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'setPunchRegion should reference Constants.MAX_BARS');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegion should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegion sets punchRegion.in and punchRegion.out", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.in') && funcStr.includes('punchRegion.out'), 'setPunchRegion should set punchRegion.in and punchRegion.out');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function setPunchRegionEnabled'), 'setPunchRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled accepts 1 parameter", (t) => {
+    t.assertEqual(setPunchRegionEnabled.length, 1, 'setPunchRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled calls captureAudioStateForUndoIfAllowed on change", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegionEnabled should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled uses !! boolean coercion", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!enabled') || funcStr.includes('nextValue = !!'), 'setPunchRegionEnabled should coerce enabled to boolean');
+});
+
+TestRunner.test("Day 626 - Punch Region - setPunchRegionEnabled sets punchRegion.enabled", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled'), 'setPunchRegionEnabled should set punchRegion.enabled');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPunchRegionEnabled is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function isPunchRegionEnabled'), 'isPunchRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPunchRegionEnabled accepts 0 parameters", (t) => {
+    t.assertEqual(isPunchRegionEnabled.length, 0, 'isPunchRegionEnabled should accept no parameters');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPunchRegionEnabled returns punchRegion.enabled", (t) => {
+    const funcStr = isPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled'), 'isPunchRegionEnabled should return punchRegion.enabled');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchInBars is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getPunchInBars'), 'getPunchInBars should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchInBars returns punchRegion.in", (t) => {
+    const funcStr = getPunchInBars.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.in'), 'getPunchInBars should return punchRegion.in');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchOutBars is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getPunchOutBars'), 'getPunchOutBars should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - getPunchOutBars returns punchRegion.out", (t) => {
+    const funcStr = getPunchOutBars.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.out'), 'getPunchOutBars should return punchRegion.out');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function isPositionInPunchRegion'), 'isPositionInPunchRegion should be exported');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion accepts 1 parameter", (t) => {
+    t.assertEqual(isPositionInPunchRegion.length, 1, 'isPositionInPunchRegion should accept 1 parameter');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion checks punchRegion.enabled", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled'), 'isPositionInPunchRegion should check punchRegion.enabled');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion parses positionString (bars:beats:sixteenths)", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('positionString.split') || funcStr.includes('split(\':\')'), 'isPositionInPunchRegion should parse positionString');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion calculates totalSixteenths", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('totalSixteenths') || funcStr.includes('bars * 16') || funcStr.includes('16 +'), 'isPositionInPunchRegion should calculate total sixteenths');
+});
+
+TestRunner.test("Day 626 - Punch Region - isPositionInPunchRegion compares against punchRegion.in and punchRegion.out", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy((funcStr.includes('punchRegion.in') || funcStr.includes('punchIn')) && (funcStr.includes('punchRegion.out') || funcStr.includes('punchOut')), 'isPositionInPunchRegion should compare against punch region bounds');
+});
+
+TestRunner.test("Day 626 - APP_VERSION validation for Day 626", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 626');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 281, 'Minor version should be >= 281 for Day 626');
+    }
+});
