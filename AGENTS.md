@@ -1986,3 +1986,26 @@
   - APP_VERSION validation (>= 2.285 for Day 630)
 - **Version**: Bumped to 2.286.0
 - **Test Count**: Increased from 1903 to 1925
+#### Day 631: loadSampleFile Audio Function Tests (2026-05-28)
+- **Tests**: Added 14 tests for loadSampleFile audio function in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 631 test block with 14 tests for loadSampleFile
+  - `js/constants.js`: Bumped APP_VERSION to 2.287.0
+- **Test Details** (`js/tests.js`): 14 tests covering:
+  - **loadSampleFile** (13 tests):
+    - is a function export
+    - is async
+    - accepts 4 parameters (eventOrUrl, trackId, trackTypeHint, fileNameForUrl)
+    - references getTrackById from localAppServices
+    - validates track exists
+    - handles URL source (isUrlSource, fetch)
+    - handles File source (isDirectFile, instanceof File)
+    - handles Blob source (isBlobEvent, instanceof Blob)
+    - validates file type (type.startsWith('audio/'))
+    - validates file size (size === 0 check)
+    - calls commonLoadSampleLogic
+    - has error handling with console.error
+    - has showNotification for errors
+  - APP_VERSION validation (>= 2.286 for Day 631)
+- **Version**: Bumped to 2.287.0
+- **Test Count**: Increased from 1936 to 1950
