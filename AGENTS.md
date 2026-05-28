@@ -1,3 +1,24 @@
+#### Day 627: Send Bus Audio Function Tests (2026-05-28)
+- **Tests**: Added 60 tests for Send Bus audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 627 test block with 60 tests for Send Bus audio functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.283.0
+- **Test Details** (`js/tests.js`): 60 tests covering:
+  - **getSendBusNodes** (3 tests): is a function export, accepts 0 parameters, returns sendBusNodes Map
+  - **connectTrackToSendBus** (9 tests): is a function export, accepts 2 parameters (trackId, sendId), validates track exists via localAppServices.getTrackById, validates bus exists in sendBusNodes, creates Tone.Gain node, connects track.outputChannel to sendGain, stores in trackSendNodes Map
+  - **disconnectTrackFromSendBus** (4 tests): is a function export, accepts 2 parameters, references trackSendNodes, calls disconnect and dispose on sendGainNode
+  - **createSendBusInAudio** (7 tests): is an async function export, accepts 1 parameter (sendId), checks if bus already exists, creates Tone.Gain input and output nodes, connects inputGain to outputGain, calls toDestination on outputGain, stores bus data in sendBusNodes
+  - **deleteSendBusFromAudio** (4 tests): is a function export, accepts 1 parameter (sendId), disconnects all tracks from bus, disposes nodes, deletes from sendBusNodes
+  - **addEffectToSendBus** (3 tests): is a function export, creates effect via EffectsRegistry, stores in bus effects array
+  - **removeEffectFromSendBus** (3 tests): is a function export, finds effect by id, disposes, removes from array
+  - **reorderEffectInSendBus** (3 tests): is a function export, reorders effects array using splice
+  - **updateSendBusEffectParam** (5 tests): is a function export, finds effect by id, updates nested param via paramPath.split('.') and keys[keys.length-1], calls rampTo
+  - **setSendBusLevel** (4 tests): is a function export, accepts 2 parameters (sendId, level), clamps level to 0-1 range with Math.max/min, uses rampTo on outputGain.gain
+  - **setSendBusMuted** (4 tests): is a function export, accepts 2 parameters (sendId, muted), uses !! for boolean coercion, sets inputGain.gain to 0 when muted
+  - APP_VERSION validation (>= 2.282 for Day 627)
+- **Version**: Bumped to 2.283.0
+- **Test Count**: Increased from 1808 to 1868
+
 #### Day 623: Context Suspension & Sidechain Audio Function Tests (2026-05-27)
 - **Tests**: Added 51 tests for Context Suspension and Sidechain audio functions in audio.js
 - **Files Modified**:
