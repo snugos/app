@@ -11383,3 +11383,78 @@ TestRunner.test("Day 630 - APP_VERSION validation for Day 630", (t) => {
         t.assertTruthy(versionParts[1] >= 285, 'Minor version should be >= 285 for Day 630');
     }
 });
+
+// ============================================
+// Day 631: loadSampleFile Audio Function Tests
+// ============================================
+TestRunner.test("Day 631 - loadSampleFile is a function export", (t) => {
+    t.assertEqual(typeof loadSampleFile, 'function', 'loadSampleFile should be a function export');
+});
+
+TestRunner.test("Day 631 - loadSampleFile is async", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('async'), 'loadSampleFile should be async');
+});
+
+TestRunner.test("Day 631 - loadSampleFile accepts 4 parameters", (t) => {
+    t.assertEqual(loadSampleFile.length, 4, 'loadSampleFile should accept 4 parameters');
+});
+
+TestRunner.test("Day 631 - loadSampleFile references getTrackById from localAppServices", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'loadSampleFile should reference getTrackById from localAppServices');
+});
+
+TestRunner.test("Day 631 - loadSampleFile validates track exists", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('!track') || funcStr.includes('track === null') || funcStr.includes('track === undefined'), 'loadSampleFile should validate track exists');
+});
+
+TestRunner.test("Day 631 - loadSampleFile handles URL source", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('isUrlSource') || funcStr.includes('typeof eventOrUrl') || funcStr.includes('fetch'), 'loadSampleFile should handle URL source');
+});
+
+TestRunner.test("Day 631 - loadSampleFile handles File source", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('isDirectFile') || funcStr.includes('instanceof File'), 'loadSampleFile should handle File source');
+});
+
+TestRunner.test("Day 631 - loadSampleFile handles Blob source", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('isBlobEvent') || funcStr.includes('instanceof Blob'), 'loadSampleFile should handle Blob source');
+});
+
+TestRunner.test("Day 631 - loadSampleFile validates file type", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('type.startsWith') && funcStr.includes('audio/'), 'loadSampleFile should validate audio file type');
+});
+
+TestRunner.test("Day 631 - loadSampleFile validates file size", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('size === 0') || funcStr.includes('size > 0'), 'loadSampleFile should validate file size');
+});
+
+TestRunner.test("Day 631 - loadSampleFile calls commonLoadSampleLogic", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('commonLoadSampleLogic'), 'loadSampleFile should call commonLoadSampleLogic');
+});
+
+TestRunner.test("Day 631 - loadSampleFile has error handling with console.error", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'loadSampleFile should have error handling with console.error');
+});
+
+TestRunner.test("Day 631 - loadSampleFile has showNotification for errors", (t) => {
+    const funcStr = loadSampleFile.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'loadSampleFile should have showNotification for errors');
+});
+
+TestRunner.test("Day 631 - APP_VERSION validation for Day 631", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 631');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 286, 'Minor version should be >= 286 for Day 631');
+    }
+});
+});
