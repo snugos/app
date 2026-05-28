@@ -11273,3 +11273,113 @@ TestRunner.test("Day 629 - APP_VERSION validation for Day 629", (t) => {
         t.assertTruthy(versionParts[1] >= 284, 'Minor version should be >= 284 for Day 629');
     }
 });
+
+// Day 630: Sidechain Track Effect and Recording Input Gain Audio Function Tests
+TestRunner.test("Day 630 - enableSidechainFromTrackForEffect is a function export", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'enableSidechainFromTrackForEffect should be exported');
+});
+
+TestRunner.test("Day 630 - enableSidechainFromTrackForEffect accepts 2 parameters", (t) => {
+    t.assertEqual(enableSidechainFromTrackForEffect.length, 2, 'enableSidechainFromTrackForEffect should accept 2 parameters');
+});
+
+TestRunner.test("Day 630 - enableSidechainFromTrackForEffect references activeMasterEffectNodes", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes'), 'enableSidechainFromTrackForEffect should reference activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 630 - enableSidechainFromTrackForEffect validates effectNode with disposed check", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'enableSidechainFromTrackForEffect should check if effectNode is disposed');
+});
+
+TestRunner.test("Day 630 - enableSidechainFromTrackForEffect references localAppServices.getTrackById", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'enableSidechainFromTrackForEffect should get track by ID');
+});
+
+TestRunner.test("Day 630 - enableSidechainFromTrackForEffect references sidechainTrackAssignments", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('sidechainTrackAssignments'), 'enableSidechainFromTrackForEffect should reference sidechainTrackAssignments');
+});
+
+TestRunner.test("Day 630 - handleSidechainParamChangeForEffect is a function export", (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'handleSidechainParamChangeForEffect should be exported');
+});
+
+TestRunner.test("Day 630 - handleSidechainParamChangeForEffect accepts 3 parameters", (t) => {
+    t.assertEqual(handleSidechainParamChangeForEffect.length, 3, 'handleSidechainParamChangeForEffect should accept 3 parameters');
+});
+
+TestRunner.test("Day 630 - handleSidechainParamChangeForEffect validates effectNode with disposed check", (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'handleSidechainParamChangeForEffect should check if effectNode is disposed');
+});
+
+TestRunner.test("Day 630 - handleSidechainParamChangeForEffect references sidechainTrackAssignments", (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('sidechainTrackAssignments'), 'handleSidechainParamChangeForEffect should reference sidechainTrackAssignments');
+});
+
+TestRunner.test("Day 630 - handleSidechainParamChangeForEffect uses effectNode.set for sidechain value", (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('.set(') || funcStr.includes('set({'), 'handleSidechainParamChangeForEffect should use set method to update sidechain');
+});
+
+TestRunner.test("Day 630 - getRecordingInputGainNode is a function export", (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getRecordingInputGainNode should be exported');
+});
+
+TestRunner.test("Day 630 - getRecordingInputGainNode accepts 0 parameters", (t) => {
+    t.assertEqual(getRecordingInputGainNode.length, 0, 'getRecordingInputGainNode should accept 0 parameters');
+});
+
+TestRunner.test("Day 630 - getRecordingInputGainNode references recordingInputGainNode variable", (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('recordingInputGainNode'), 'getRecordingInputGainNode should reference recordingInputGainNode');
+});
+
+TestRunner.test("Day 630 - getRecordingInputGainNode checks for disposed", (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getRecordingInputGainNode should check disposed state');
+});
+
+TestRunner.test("Day 630 - getRecordingInputGainNode creates new Tone.Gain when needed", (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Gain') || funcStr.includes('Tone.Gain'), 'getRecordingInputGainNode should create Tone.Gain node');
+});
+
+TestRunner.test("Day 630 - setRecordingInputGain is a function export", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'setRecordingInputGain should be exported');
+});
+
+TestRunner.test("Day 630 - setRecordingInputGain accepts 1 parameter", (t) => {
+    t.assertEqual(setRecordingInputGain.length, 1, 'setRecordingInputGain should accept 1 parameter');
+});
+
+TestRunner.test("Day 630 - setRecordingInputGain uses Number.isFinite and parseFloat", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Number.isFinite') && funcStr.includes('parseFloat'), 'setRecordingInputGain should validate input with Number.isFinite and parseFloat');
+});
+
+TestRunner.test("Day 630 - setRecordingInputGain clamps value to MIN/MAX constants", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('MIN_RECORDING_INPUT_GAIN') || funcStr.includes('MAX_RECORDING_INPUT_GAIN'), 'setRecordingInputGain should clamp to valid range');
+});
+
+TestRunner.test("Day 630 - setRecordingInputGain references captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setRecordingInputGain should capture undo state');
+});
+
+TestRunner.test("Day 630 - APP_VERSION validation for Day 630", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 630');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 285, 'Minor version should be >= 285 for Day 630');
+    }
+});

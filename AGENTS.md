@@ -1972,3 +1972,17 @@
   - APP_VERSION validation (>= 2.284 for Day 629)
 - **Version**: Bumped to 2.285.0
 - **Test Count**: Increased from 1868 to 1903
+
+#### Day 630: Sidechain Track Effect and Recording Input Gain Audio Function Tests (2026-05-28)
+- **Tests**: Added 22 tests for Sidechain Track Effect and Recording Input Gain audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 630 test block with 22 tests for Sidechain Track Effect and Recording Input Gain functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.286.0
+- **Test Details** (`js/tests.js`): 22 tests covering:
+  - **enableSidechainFromTrackForEffect** (6 tests): is a function export, accepts 2 parameters, references activeMasterEffectNodes, validates effectNode with disposed check, references localAppServices.getTrackById, references sidechainTrackAssignments
+  - **handleSidechainParamChangeForEffect** (5 tests): is a function export, accepts 3 parameters, validates effectNode with disposed check, references sidechainTrackAssignments, uses effectNode.set for sidechain value
+  - **getRecordingInputGainNode** (4 tests): is a function export, accepts 0 parameters, references recordingInputGainNode variable, checks for disposed, creates new Tone.Gain when needed
+  - **setRecordingInputGain** (5 tests): is a function export, accepts 1 parameter, uses Number.isFinite and parseFloat, clamps value to MIN/MAX constants, references captureAudioStateForUndoIfAllowed
+  - APP_VERSION validation (>= 2.285 for Day 630)
+- **Version**: Bumped to 2.286.0
+- **Test Count**: Increased from 1903 to 1925
