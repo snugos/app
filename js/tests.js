@@ -12210,3 +12210,288 @@ TestRunner.test("Day 638 - APP_VERSION validation for Day 638", (t) => {
         t.assertTruthy(versionParts[1] >= 291, 'Minor version should be >= 291 for Day 638');
     }
 });
+
+// Day 639: Metronome, Count-In, and Automation State Audio Function Tests
+TestRunner.test("Day 639 - APP_VERSION validation for Day 639", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 639');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 292, 'Minor version should be >= 292 for Day 639');
+    }
+});
+
+TestRunner.test("Day 639 - getCountInBars is a function export", (t) => {
+    t.assertEqual(typeof getCountInBars, 'function', 'getCountInBars should be a function');
+});
+
+TestRunner.test("Day 639 - getCountInBars accepts 0 parameters", (t) => {
+    t.assertEqual(getCountInBars.length, 0, 'getCountInBars should accept no parameters');
+});
+
+TestRunner.test("Day 639 - getCountInBars references countInBars variable", (t) => {
+    const funcStr = getCountInBars.toString();
+    t.assertTruthy(funcStr.includes('countInBars'), 'getCountInBars should reference countInBars');
+});
+
+TestRunner.test("Day 639 - setCountInBars is a function export", (t) => {
+    t.assertEqual(typeof setCountInBars, 'function', 'setCountInBars should be a function');
+});
+
+TestRunner.test("Day 639 - setCountInBars accepts 1 parameter", (t) => {
+    t.assertEqual(setCountInBars.length, 1, 'setCountInBars should accept 1 parameter');
+});
+
+TestRunner.test("Day 639 - setCountInBars clamps value to 0-4 range with Math.max/min", (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0') && funcStr.includes('Math.min(4'), 'setCountInBars should clamp to 0-4 range');
+});
+
+TestRunner.test("Day 639 - setCountInBars calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setCountInBars should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 639 - setCountInBars has descriptive undo label with 'Set Count-In Bars to'", (t) => {
+    const funcStr = setCountInBars.toString();
+    t.assertTruthy(funcStr.includes('Set Count-In Bars to'), 'setCountInBars should have "Set Count-In Bars to" undo label');
+});
+
+TestRunner.test("Day 639 - isCountInActive is a function export", (t) => {
+    t.assertEqual(typeof isCountInActive, 'function', 'isCountInActive should be a function');
+});
+
+TestRunner.test("Day 639 - isCountInActive accepts 0 parameters", (t) => {
+    t.assertEqual(isCountInActive.length, 0, 'isCountInActive should accept no parameters');
+});
+
+TestRunner.test("Day 639 - isCountInActive references countInActive variable", (t) => {
+    const funcStr = isCountInActive.toString();
+    t.assertTruthy(funcStr.includes('countInActive'), 'isCountInActive should reference countInActive');
+});
+
+TestRunner.test("Day 639 - startCountIn is an async function export", (t) => {
+    t.assertEqual(startCountIn.constructor.name, 'AsyncFunction', 'startCountIn should be async');
+});
+
+TestRunner.test("Day 639 - startCountIn accepts 1-2 parameters", (t) => {
+    t.assertTrue(startCountIn.length === 1 || startCountIn.length === 2, 'startCountIn should accept 1-2 parameters');
+});
+
+TestRunner.test("Day 639 - startCountIn references countInActive variable", (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInActive'), 'startCountIn should reference countInActive');
+});
+
+TestRunner.test("Day 639 - startCountIn references countInBars variable", (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInBars'), 'startCountIn should reference countInBars');
+});
+
+TestRunner.test("Day 639 - startCountIn sets countInActive to true", (t) => {
+    const funcStr = startCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInActive = true'), 'startCountIn should set countInActive to true');
+});
+
+TestRunner.test("Day 639 - stopMetronome is a function export", (t) => {
+    t.assertEqual(typeof stopMetronome, 'function', 'stopMetronome should be a function');
+});
+
+TestRunner.test("Day 639 - stopMetronome accepts 0 parameters", (t) => {
+    t.assertEqual(stopMetronome.length, 0, 'stopMetronome should accept no parameters');
+});
+
+TestRunner.test("Day 639 - stopMetronome sets countInActive to false", (t) => {
+    const funcStr = stopMetronome.toString();
+    t.assertTruthy(funcStr.includes('countInActive = false'), 'stopMetronome should set countInActive to false');
+});
+
+TestRunner.test("Day 639 - cleanupMetronome is a function export", (t) => {
+    t.assertEqual(typeof cleanupMetronome, 'function', 'cleanupMetronome should be a function');
+});
+
+TestRunner.test("Day 639 - cleanupMetronome accepts 0 parameters", (t) => {
+    t.assertEqual(cleanupMetronome.length, 0, 'cleanupMetronome should accept no parameters');
+});
+
+TestRunner.test("Day 639 - cleanupMetronome calls stopMetronome", (t) => {
+    const funcStr = cleanupMetronome.toString();
+    t.assertTruthy(funcStr.includes('stopMetronome'), 'cleanupMetronome should call stopMetronome');
+});
+
+TestRunner.test("Day 639 - cleanupCountIn is a function export", (t) => {
+    t.assertEqual(typeof cleanupCountIn, 'function', 'cleanupCountIn should be a function');
+});
+
+TestRunner.test("Day 639 - cleanupCountIn accepts 0 parameters", (t) => {
+    t.assertEqual(cleanupCountIn.length, 0, 'cleanupCountIn should accept no parameters');
+});
+
+TestRunner.test("Day 639 - cleanupCountIn sets countInActive to false", (t) => {
+    const funcStr = cleanupCountIn.toString();
+    t.assertTruthy(funcStr.includes('countInActive = false'), 'cleanupCountIn should set countInActive to false');
+});
+
+TestRunner.test("Day 639 - getMetronomeVolume is a function export requiring import", (t) => {
+    t.assertEqual(typeof getMetronomeVolume, 'function', 'getMetronomeVolume should be a function');
+});
+
+TestRunner.test("Day 639 - getMetronomeVolume accepts 0 parameters", (t) => {
+    t.assertEqual(getMetronomeVolume.length, 0, 'getMetronomeVolume should accept no parameters');
+});
+
+TestRunner.test("Day 639 - setMetronomeVolume is a function export", (t) => {
+    t.assertEqual(typeof setMetronomeVolume, 'function', 'setMetronomeVolume should be a function');
+});
+
+TestRunner.test("Day 639 - setMetronomeVolume accepts 1 parameter", (t) => {
+    t.assertEqual(setMetronomeVolume.length, 1, 'setMetronomeVolume should accept 1 parameter');
+});
+
+TestRunner.test("Day 639 - setMetronomeVolume uses Math.max/min for clamping to 0-1 range", (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0') && funcStr.includes('Math.min(1'), 'setMetronomeVolume should clamp to 0-1 range');
+});
+
+TestRunner.test("Day 639 - setMetronomeVolume uses parseFloat for input conversion", (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setMetronomeVolume should use parseFloat for input conversion');
+});
+
+TestRunner.test("Day 639 - setMetronomeVolume calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMetronomeVolume should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 639 - setMetronomeVolume has descriptive undo label with 'Set Metronome Volume to'", (t) => {
+    const funcStr = setMetronomeVolume.toString();
+    t.assertTruthy(funcStr.includes('Set Metronome Volume to'), 'setMetronomeVolume should have "Set Metronome Volume to" undo label');
+});
+
+TestRunner.test("Day 639 - isMetronomeEnabled is a function export", (t) => {
+    t.assertEqual(typeof isMetronomeEnabled, 'function', 'isMetronomeEnabled should be a function');
+});
+
+TestRunner.test("Day 639 - isMetronomeEnabled accepts 0 parameters", (t) => {
+    t.assertEqual(isMetronomeEnabled.length, 0, 'isMetronomeEnabled should accept no parameters');
+});
+
+TestRunner.test("Day 639 - setMetronomeEnabled is a function export", (t) => {
+    t.assertEqual(typeof setMetronomeEnabled, 'function', 'setMetronomeEnabled should be a function');
+});
+
+TestRunner.test("Day 639 - setMetronomeEnabled accepts 1 parameter", (t) => {
+    t.assertEqual(setMetronomeEnabled.length, 1, 'setMetronomeEnabled should accept 1 parameter');
+});
+
+TestRunner.test("Day 639 - setMetronomeEnabled uses !! for boolean coercion", (t) => {
+    const funcStr = setMetronomeEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!'), 'setMetronomeEnabled should use !! for boolean coercion');
+});
+
+TestRunner.test("Day 639 - setMetronomeEnabled calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setMetronomeEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMetronomeEnabled should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 639 - startAutomation is a function export", (t) => {
+    t.assertEqual(typeof startAutomation, 'function', 'startAutomation should be a function');
+});
+
+TestRunner.test("Day 639 - startAutomation accepts 0 parameters", (t) => {
+    t.assertEqual(startAutomation.length, 0, 'startAutomation should accept no parameters');
+});
+
+TestRunner.test("Day 639 - startAutomation references automationActive variable", (t) => {
+    const funcStr = startAutomation.toString();
+    t.assertTruthy(funcStr.includes('automationActive'), 'startAutomation should reference automationActive');
+});
+
+TestRunner.test("Day 639 - startAutomation calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = startAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'startAutomation should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 639 - startAutomation has descriptive undo label 'Start Automation'", (t) => {
+    const funcStr = startAutomation.toString();
+    t.assertTruthy(funcStr.includes('Start Automation'), 'startAutomation should have "Start Automation" undo label');
+});
+
+TestRunner.test("Day 639 - stopAutomation is a function export", (t) => {
+    t.assertEqual(typeof stopAutomation, 'function', 'stopAutomation should be a function');
+});
+
+TestRunner.test("Day 639 - stopAutomation accepts 0 parameters", (t) => {
+    t.assertEqual(stopAutomation.length, 0, 'stopAutomation should accept no parameters');
+});
+
+TestRunner.test("Day 639 - stopAutomation references automationActive variable", (t) => {
+    const funcStr = stopAutomation.toString();
+    t.assertTruthy(funcStr.includes('automationActive'), 'stopAutomation should reference automationActive');
+});
+
+TestRunner.test("Day 639 - stopAutomation calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = stopAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'stopAutomation should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 639 - stopAutomation has descriptive undo label 'Stop Automation'", (t) => {
+    const funcStr = stopAutomation.toString();
+    t.assertTruthy(funcStr.includes('Stop Automation'), 'stopAutomation should have "Stop Automation" undo label');
+});
+
+TestRunner.test("Day 639 - cleanupAutomation is a function export", (t) => {
+    t.assertEqual(typeof cleanupAutomation, 'function', 'cleanupAutomation should be a function');
+});
+
+TestRunner.test("Day 639 - cleanupAutomation accepts 0 parameters", (t) => {
+    t.assertEqual(cleanupAutomation.length, 0, 'cleanupAutomation should accept no parameters');
+});
+
+TestRunner.test("Day 639 - cleanupAutomation calls stopAutomation", (t) => {
+    const funcStr = cleanupAutomation.toString();
+    t.assertTruthy(funcStr.includes('stopAutomation'), 'cleanupAutomation should call stopAutomation');
+});
+
+TestRunner.test("Day 639 - onTransportStart is a function export", (t) => {
+    t.assertEqual(typeof onTransportStart, 'function', 'onTransportStart should be a function');
+});
+
+TestRunner.test("Day 639 - onTransportStart accepts 0 parameters", (t) => {
+    t.assertEqual(onTransportStart.length, 0, 'onTransportStart should accept no parameters');
+});
+
+TestRunner.test("Day 639 - onTransportStart sets automationActive to true", (t) => {
+    const funcStr = onTransportStart.toString();
+    t.assertTruthy(funcStr.includes('automationActive = true'), 'onTransportStart should set automationActive to true');
+});
+
+TestRunner.test("Day 639 - onTransportStop is a function export", (t) => {
+    t.assertEqual(typeof onTransportStop, 'function', 'onTransportStop should be a function');
+});
+
+TestRunner.test("Day 639 - onTransportStop accepts 0 parameters", (t) => {
+    t.assertEqual(onTransportStop.length, 0, 'onTransportStop should accept no parameters');
+});
+
+TestRunner.test("Day 639 - onTransportStop sets automationActive to false", (t) => {
+    const funcStr = onTransportStop.toString();
+    t.assertTruthy(funcStr.includes('automationActive = false'), 'onTransportStop should set automationActive to false');
+});
+
+TestRunner.test("Day 639 - cleanupRecordingAudioResources is a function export", (t) => {
+    t.assertEqual(typeof cleanupRecordingAudioResources, 'function', 'cleanupRecordingAudioResources should be a function');
+});
+
+TestRunner.test("Day 639 - cleanupRecordingAudioResources accepts 0 parameters", (t) => {
+    t.assertEqual(cleanupRecordingAudioResources.length, 0, 'cleanupRecordingAudioResources should accept no parameters');
+});
+
+TestRunner.test("Day 639 - cleanupRecordingAudioResources handles mic cleanup with try/catch", (t) => {
+    const funcStr = cleanupRecordingAudioResources.toString();
+    t.assertTruthy(funcStr.includes('mic.disconnect') || funcStr.includes('mic.close') || funcStr.includes('mic.dispose'), 'cleanupRecordingAudioResources should handle mic cleanup');
+});
+
+TestRunner.test("Day 639 - cleanupRecordingAudioResources handles recorder cleanup with try/catch", (t) => {
+    const funcStr = cleanupRecordingAudioResources.toString();
+    t.assertTruthy(funcStr.includes('recorder.disconnect') || funcStr.includes('recorder.dispose'), 'cleanupRecordingAudioResources should handle recorder cleanup');
+});
