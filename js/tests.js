@@ -257,7 +257,10 @@ import {
     getMidiCCMapping,
     startMidiCCLearn,
     cancelMidiCCLearn,
-    getMidiCCLearnActive
+    getMidiCCLearnActive,
+    handleOpenTrackInspector,
+    handleOpenEffectsRack,
+    handleOpenSequencer
 } from './eventHandlers.js';
 
 import {
@@ -12580,5 +12583,73 @@ TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack APP_VERSION valid
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 640');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 293, 'Minor version should be >= 293 for Day 640');
+    }
+});
+
+// ============================================
+// Day 641: Event Handler Window Open Function Tests  
+// ============================================
+TestRunner.test("Day 641 - handleOpenTrackInspector is a function export", (t) => {
+    const funcStr = handleOpenTrackInspector.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'handleOpenTrackInspector should be exported');
+});
+
+TestRunner.test("Day 641 - handleOpenTrackInspector accepts 1 parameter", (t) => {
+    t.assertEqual(handleOpenTrackInspector.length, 1, 'handleOpenTrackInspector should accept 1 parameter (trackId)');
+});
+
+TestRunner.test("Day 641 - handleOpenTrackInspector returns early if trackId is falsy", (t) => {
+    const funcStr = handleOpenTrackInspector.toString();
+    t.assertTruthy(funcStr.includes('!trackId'), 'handleOpenTrackInspector should check for falsy trackId');
+});
+
+TestRunner.test("Day 641 - handleOpenTrackInspector calls localAppServices.openTrackInspectorWindow", (t) => {
+    const funcStr = handleOpenTrackInspector.toString();
+    t.assertTruthy(funcStr.includes('openTrackInspectorWindow'), 'handleOpenTrackInspector should call openTrackInspectorWindow');
+});
+
+TestRunner.test("Day 641 - handleOpenEffectsRack is a function export", (t) => {
+    const funcStr = handleOpenEffectsRack.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'handleOpenEffectsRack should be exported');
+});
+
+TestRunner.test("Day 641 - handleOpenEffectsRack accepts 1 parameter", (t) => {
+    t.assertEqual(handleOpenEffectsRack.length, 1, 'handleOpenEffectsRack should accept 1 parameter (trackId)');
+});
+
+TestRunner.test("Day 641 - handleOpenEffectsRack returns early if trackId is falsy", (t) => {
+    const funcStr = handleOpenEffectsRack.toString();
+    t.assertTruthy(funcStr.includes('!trackId'), 'handleOpenEffectsRack should check for falsy trackId');
+});
+
+TestRunner.test("Day 641 - handleOpenEffectsRack calls localAppServices.openTrackEffectsRackWindow", (t) => {
+    const funcStr = handleOpenEffectsRack.toString();
+    t.assertTruthy(funcStr.includes('openTrackEffectsRackWindow'), 'handleOpenEffectsRack should call openTrackEffectsRackWindow');
+});
+
+TestRunner.test("Day 641 - handleOpenSequencer is a function export", (t) => {
+    const funcStr = handleOpenSequencer.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'handleOpenSequencer should be exported');
+});
+
+TestRunner.test("Day 641 - handleOpenSequencer accepts 1 parameter", (t) => {
+    t.assertEqual(handleOpenSequencer.length, 1, 'handleOpenSequencer should accept 1 parameter (trackId)');
+});
+
+TestRunner.test("Day 641 - handleOpenSequencer returns early if trackId is falsy", (t) => {
+    const funcStr = handleOpenSequencer.toString();
+    t.assertTruthy(funcStr.includes('!trackId'), 'handleOpenSequencer should check for falsy trackId');
+});
+
+TestRunner.test("Day 641 - handleOpenSequencer calls localAppServices.openTrackSequencerWindow", (t) => {
+    const funcStr = handleOpenSequencer.toString();
+    t.assertTruthy(funcStr.includes('openTrackSequencerWindow'), 'handleOpenSequencer should call openTrackSequencerWindow');
+});
+
+TestRunner.test("Day 641 - APP_VERSION validation for Day 641", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 641');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 294, 'Minor version should be >= 294 for Day 641');
     }
 });

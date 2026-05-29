@@ -1,3 +1,16 @@
+#### Day 641: Event Handler Window Open Function Tests (2026-05-29)
+- **Tests**: Added 13 tests for handleOpenTrackInspector, handleOpenEffectsRack, and handleOpenSequencer functions in eventHandlers.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 641 test block with 13 tests for window open handler functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.295.0
+- **Test Details** (`js/tests.js`): 13 tests covering:
+  - **handleOpenTrackInspector** (4 tests): is a function export, accepts 1 parameter (trackId), returns early if trackId is falsy, calls localAppServices.openTrackInspectorWindow
+  - **handleOpenEffectsRack** (4 tests): is a function export, accepts 1 parameter (trackId), returns early if trackId is falsy, calls localAppServices.openTrackEffectsRackWindow
+  - **handleOpenSequencer** (4 tests): is a function export, accepts 1 parameter (trackId), returns early if trackId is falsy, calls localAppServices.openTrackSequencerWindow
+  - APP_VERSION validation (>= 2.294 for Day 641)
+- **Version**: Bumped to 2.295.0
+- **Test Count**: Increased from 2179 to 2192
+
 #### Day 640: resolveRecordingMicrophoneTestTrack Audio Function Tests (2026-05-29)
 - **Tests**: Added 17 tests for resolveRecordingMicrophoneTestTrack audio function in audio.js
 - **Files Modified**:
