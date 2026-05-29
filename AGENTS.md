@@ -1,3 +1,14 @@
+#### Day 640: resolveRecordingMicrophoneTestTrack Audio Function Tests (2026-05-29)
+- **Tests**: Added 17 tests for resolveRecordingMicrophoneTestTrack audio function in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 640 test block with 17 tests for resolveRecordingMicrophoneTestTrack
+  - `js/constants.js`: Bumped APP_VERSION to 2.294.0
+- **Test Details** (`js/tests.js`): 17 tests covering:
+  - **resolveRecordingMicrophoneTestTrack** (16 tests): is a function export, accepts 4 parameters (trackId, tracks, getTrackByIdFn, getArmedTrackIdFn), references trackId parameter, references tracks parameter as trackList, uses Array.isArray check for tracks parameter, references getTrackByIdFn/resolveTrackById parameter, references getArmedTrackIdFn/resolveArmedTrackId parameter, checks for null/undefined trackId, returns an object with track and trackSelectionSource properties, checks explicitTrack.type === 'Audio', handles 'explicit'/'armed'/'auto'/'none' trackSelectionSource, uses track.find for auto-selection
+  - APP_VERSION validation (>= 2.293 for Day 640)
+- **Version**: Bumped to 2.294.0
+- **Test Count**: Increased from 2162 to 2179
+
 #### Day 639: Metronome, Count-In, and Automation State Audio Function Tests (2026-05-29)
 - **Tests**: Added 63 tests for Metronome, Count-In, and Automation state audio functions in audio.js
 - **Files Modified**:
