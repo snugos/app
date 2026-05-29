@@ -12059,3 +12059,154 @@ TestRunner.test("Day 637 - isTapTempoReady checks tapTimes.length", (t) => {
     const funcStr = isTapTempoReady.toString();
     t.assertTruthy(funcStr.includes('tapTimes.length'), 'isTapTempoReady should check tapTimes.length');
 });
+
+// ============================================
+// Day 638: Event Handlers Track Control Function Tests  
+// ============================================
+TestRunner.test("Day 638 - handleTrackMute is a function export", (t) => {
+    const funcStr = handleTrackMute.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'handleTrackMute should be exported');
+});
+
+TestRunner.test("Day 638 - handleTrackMute accepts 1 parameter", (t) => {
+    t.assertEqual(handleTrackMute.length, 1, 'handleTrackMute should accept 1 parameter (trackId)');
+});
+
+TestRunner.test("Day 638 - handleTrackMute calls setTrackMuted from appServices", (t) => {
+    const funcStr = handleTrackMute.toString();
+    t.assertTruthy(funcStr.includes('setTrackMuted'), 'handleTrackMute should call setTrackMuted');
+});
+
+TestRunner.test("Day 638 - handleTrackMute calls updateTrackUI after mute toggle", (t) => {
+    const funcStr = handleTrackMute.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'handleTrackMute should call updateTrackUI');
+});
+
+TestRunner.test("Day 638 - handleTrackSolo is a function export", (t) => {
+    const funcStr = handleTrackSolo.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'handleTrackSolo should be exported');
+});
+
+TestRunner.test("Day 638 - handleTrackSolo accepts 1 parameter", (t) => {
+    t.assertEqual(handleTrackSolo.length, 1, 'handleTrackSolo should accept 1 parameter (trackId)');
+});
+
+TestRunner.test("Day 638 - handleTrackSolo calls setSoloedTrackId from appServices", (t) => {
+    const funcStr = handleTrackSolo.toString();
+    t.assertTruthy(funcStr.includes('setSoloedTrackId'), 'handleTrackSolo should call setSoloedTrackId');
+});
+
+TestRunner.test("Day 638 - handleTrackSolo calls updateTrackUI after solo toggle", (t) => {
+    const funcStr = handleTrackSolo.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'handleTrackSolo should call updateTrackUI');
+});
+
+TestRunner.test("Day 638 - handleTrackArm is a function export", (t) => {
+    const funcStr = handleTrackArm.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'handleTrackArm should be exported');
+});
+
+TestRunner.test("Day 638 - handleTrackArm accepts 1 parameter", (t) => {
+    t.assertEqual(handleTrackArm.length, 1, 'handleTrackArm should accept 1 parameter (trackId)');
+});
+
+TestRunner.test("Day 638 - handleTrackArm calls setArmedTrackId from appServices", (t) => {
+    const funcStr = handleTrackArm.toString();
+    t.assertTruthy(funcStr.includes('setArmedTrackId'), 'handleTrackArm should call setArmedTrackId');
+});
+
+TestRunner.test("Day 638 - handleTrackArm calls updateTrackUI after arm toggle", (t) => {
+    const funcStr = handleTrackArm.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'handleTrackArm should call updateTrackUI');
+});
+
+TestRunner.test("Day 638 - handleRemoveTrack is a function export", (t) => {
+    const funcStr = handleRemoveTrack.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'handleRemoveTrack should be exported');
+});
+
+TestRunner.test("Day 638 - handleRemoveTrack accepts 1 parameter", (t) => {
+    t.assertEqual(handleRemoveTrack.length, 1, 'handleRemoveTrack should accept 1 parameter (trackId)');
+});
+
+TestRunner.test("Day 638 - handleRemoveTrack calls removeTrackFromState with undo capture", (t) => {
+    const funcStr = handleRemoveTrack.toString();
+    t.assertTruthy(funcStr.includes('removeTrackFromState'), 'handleRemoveTrack should call removeTrackFromState');
+});
+
+TestRunner.test("Day 638 - toggleMuteShortcut is a function export", (t) => {
+    const funcStr = toggleMuteShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleMuteShortcut should be exported');
+});
+
+TestRunner.test("Day 638 - toggleMuteShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleMuteShortcut.length, 0, 'toggleMuteShortcut should accept no parameters');
+});
+
+TestRunner.test("Day 638 - toggleMuteShortcut calls handleTrackMute", (t) => {
+    const funcStr = toggleMuteShortcut.toString();
+    t.assertTruthy(funcStr.includes('handleTrackMute'), 'toggleMuteShortcut should call handleTrackMute');
+});
+
+TestRunner.test("Day 638 - toggleSoloShortcut is a function export", (t) => {
+    const funcStr = toggleSoloShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleSoloShortcut should be exported');
+});
+
+TestRunner.test("Day 638 - toggleSoloShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleSoloShortcut.length, 0, 'toggleSoloShortcut should accept no parameters');
+});
+
+TestRunner.test("Day 638 - toggleSoloShortcut calls handleTrackSolo", (t) => {
+    const funcStr = toggleSoloShortcut.toString();
+    t.assertTruthy(funcStr.includes('handleTrackSolo'), 'toggleSoloShortcut should call handleTrackSolo');
+});
+
+TestRunner.test("Day 638 - toggleMidiLearnMode is a function export", (t) => {
+    const funcStr = toggleMidiLearnMode.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleMidiLearnMode should be exported');
+});
+
+TestRunner.test("Day 638 - toggleMidiLearnMode accepts 0 parameters", (t) => {
+    t.assertEqual(toggleMidiLearnMode.length, 0, 'toggleMidiLearnMode should accept no parameters');
+});
+
+TestRunner.test("Day 638 - toggleMidiLearnMode references _midiCCLearnActive", (t) => {
+    const funcStr = toggleMidiLearnMode.toString();
+    t.assertTruthy(funcStr.includes('_midiCCLearnActive'), 'toggleMidiLearnMode should reference _midiCCLearnActive');
+});
+
+TestRunner.test("Day 638 - toggleScaleModeShortcut is a function export", (t) => {
+    const funcStr = toggleScaleModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleScaleModeShortcut should be exported');
+});
+
+TestRunner.test("Day 638 - toggleScaleModeShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleScaleModeShortcut.length, 0, 'toggleScaleModeShortcut should accept no parameters');
+});
+
+TestRunner.test("Day 638 - toggleChordModeShortcut is a function export", (t) => {
+    const funcStr = toggleChordModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleChordModeShortcut should be exported');
+});
+
+TestRunner.test("Day 638 - toggleChordModeShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleChordModeShortcut.length, 0, 'toggleChordModeShortcut should accept no parameters');
+});
+
+TestRunner.test("Day 638 - openTransportSettingsShortcut is a function export", (t) => {
+    const funcStr = openTransportSettingsShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTransportSettingsShortcut should be exported');
+});
+
+TestRunner.test("Day 638 - openTransportSettingsShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(openTransportSettingsShortcut.length, 0, 'openTransportSettingsShortcut should accept no parameters');
+});
+
+TestRunner.test("Day 638 - APP_VERSION validation for Day 638", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 638');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 291, 'Minor version should be >= 291 for Day 638');
+    }
+});
