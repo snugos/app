@@ -1,3 +1,22 @@
+#### Day 638: Event Handlers Track Control Function Tests (2026-05-29)
+- **Tests**: Added 31 tests for Event Handlers track control functions in eventHandlers.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 638 test block with 31 tests for Event Handler functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.293.0
+- **Test Details** (`js/tests.js`): 31 tests covering:
+  - **handleTrackMute** (4 tests): is a function export, accepts 1 parameter (trackId), calls setTrackMuted from appServices, calls updateTrackUI after mute toggle
+  - **handleTrackSolo** (4 tests): is a function export, accepts 1 parameter (trackId), calls setSoloedTrackId from appServices, calls updateTrackUI after solo toggle
+  - **handleTrackArm** (4 tests): is a function export, accepts 1 parameter (trackId), calls setArmedTrackId from appServices, calls updateTrackUI after arm toggle
+  - **handleRemoveTrack** (3 tests): is a function export, accepts 1 parameter (trackId), calls removeTrackFromState with undo capture
+  - **toggleMuteShortcut** (3 tests): is a function export, accepts 0 parameters, calls handleTrackMute
+  - **toggleSoloShortcut** (3 tests): is a function export, accepts 0 parameters, calls handleTrackSolo
+  - **toggleMidiLearnMode** (3 tests): is a function export, accepts 0 parameters, references _midiCCLearnActive
+  - **toggleScaleModeShortcut** (2 tests): is a function export, accepts 0 parameters
+  - **toggleChordModeShortcut** (2 tests): is a function export, accepts 0 parameters
+  - **openTransportSettingsShortcut** (2 tests): is a function export, accepts 0 parameters
+  - APP_VERSION validation (>= 2.291 for Day 638)
+- **Version**: Bumped to 2.293.0
+- **Test Count**: Increased from 2068 to 2099
 
 #### Day 633: fetchSoundLibrary Audio Function Tests (2026-05-28)
 - **Tests**: Added 20 tests for fetchSoundLibrary audio function in audio.js
@@ -9,6 +28,7 @@
   - APP_VERSION validation (>= 2.287 for Day 633)
 - **Version**: Bumped to 2.289.0
 - **Test Count**: Increased from 1962 to 1982
+
 #### Day 632: getMimeTypeFromFilename Function Tests (2026-05-28)
 - **Tests**: Added 12 tests for getMimeTypeFromFilename function in audio.js
 - **Files Modified**:
