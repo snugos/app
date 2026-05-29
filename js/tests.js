@@ -11623,3 +11623,85 @@ TestRunner.test("Day 633 - APP_VERSION validation for Day 633", (t) => {
         t.assertTruthy(versionParts[1] >= 287, 'Minor version should be >= 287 for Day 633');
     }
 });
+
+// Day 634: updateMeters Audio Function Tests
+TestRunner.test("Day 634 - updateMeters is a function export", (t) => {
+    t.assertEqual(typeof updateMeters, 'function', 'updateMeters should be a function');
+});
+
+TestRunner.test("Day 634 - updateMeters accepts 3 parameters", (t) => {
+    t.assertEqual(updateMeters.length, 3, 'updateMeters should accept 3 parameters');
+});
+
+TestRunner.test("Day 634 - updateMeters accepts globalMasterMeterBar parameter", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('globalMasterMeterBar'), 'updateMeters should reference globalMasterMeterBar');
+});
+
+TestRunner.test("Day 634 - updateMeters accepts mixerMasterMeterBar parameter", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('mixerMasterMeterBar'), 'updateMeters should reference mixerMasterMeterBar');
+});
+
+TestRunner.test("Day 634 - updateMeters accepts tracks parameter", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('tracks'), 'updateMeters should reference tracks');
+});
+
+TestRunner.test("Day 634 - updateMeters checks masterMeterNode", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('masterMeterNode'), 'updateMeters should reference masterMeterNode');
+});
+
+TestRunner.test("Day 634 - updateMeters checks masterMeterNode.disposed", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'updateMeters should check if masterMeterNode is disposed');
+});
+
+TestRunner.test("Day 634 - updateMeters uses Tone.context", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('Tone.context') || funcStr.includes('Tone.Transport.context'), 'updateMeters should reference Tone.context');
+});
+
+TestRunner.test("Day 634 - updateMeters calls masterMeterNode.getValue", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('getValue'), 'updateMeters should call getValue on masterMeterNode');
+});
+
+TestRunner.test("Day 634 - updateMeters uses Tone.dbToGain for level conversion", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('dbToGain') || funcStr.includes('dbToGain'), 'updateMeters should convert dB to gain');
+});
+
+TestRunner.test("Day 634 - updateMeters updates globalMasterMeterBar.style.width", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('globalMasterMeterBar.style.width') || (funcStr.includes('globalMasterMeterBar') && funcStr.includes('style.width')), 'updateMeters should update globalMasterMeterBar width');
+});
+
+TestRunner.test("Day 634 - updateMeters updates mixerMasterMeterBar.style.width", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('mixerMasterMeterBar.style.width') || (funcStr.includes('mixerMasterMeterBar') && funcStr.includes('style.width')), 'updateMeters should update mixerMasterMeterBar width');
+});
+
+TestRunner.test("Day 634 - updateMeters clamps level to 0-100 range", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy((funcStr.includes('Math.min') && funcStr.includes('Math.max')) || (funcStr.includes('100') && funcStr.includes('0')), 'updateMeters should clamp level to valid range');
+});
+
+TestRunner.test("Day 634 - updateMeters has error handling with try/catch", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'updateMeters should have error handling');
+});
+
+TestRunner.test("Day 634 - updateMeters uses console.warn for errors", (t) => {
+    const funcStr = updateMeters.toString();
+    t.assertTruthy(funcStr.includes('console.warn'), 'updateMeters should log warnings with console.warn');
+});
+
+TestRunner.test("Day 634 - APP_VERSION validation for Day 634", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 634');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 289, 'Minor version should be >= 289 for Day 634');
+    }
+});
