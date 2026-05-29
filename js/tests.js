@@ -11705,3 +11705,100 @@ TestRunner.test("Day 634 - APP_VERSION validation for Day 634", (t) => {
         t.assertTruthy(versionParts[1] >= 289, 'Minor version should be >= 289 for Day 634');
     }
 });
+
+// ============================================
+// Day 635: Automation Bus and Init Audio Function Tests
+// ============================================
+TestRunner.test("Day 635 - autoSliceSample is a function export", (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'autoSliceSample should be exported');
+});
+
+TestRunner.test("Day 635 - autoSliceSample accepts 1-2 parameters", (t) => {
+    t.assertEqual(autoSliceSample.length, 2, 'autoSliceSample should accept 1-2 parameters (trackId, numSlicesToCreate)');
+});
+
+TestRunner.test("Day 635 - autoSliceSample references localAppServices.getTrackById", (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'autoSliceSample should reference getTrackById from localAppServices');
+});
+
+TestRunner.test("Day 635 - autoSliceSample validates track type is Sampler", (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'Sampler'") || funcStr.includes("track.type === 'Sampler'"), 'autoSliceSample should validate track type');
+});
+
+TestRunner.test("Day 635 - autoSliceSample shows notification for non-Sampler tracks", (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'autoSliceSample should show notification for invalid track type');
+});
+
+TestRunner.test("Day 635 - initializeAudioModule is a function export", (t) => {
+    const funcStr = initializeAudioModule.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'initializeAudioModule should be exported');
+});
+
+TestRunner.test("Day 635 - initializeAudioModule accepts 1 parameter", (t) => {
+    t.assertEqual(initializeAudioModule.length, 1, 'initializeAudioModule should accept 1 parameter (appServicesFromMain)');
+});
+
+TestRunner.test("Day 635 - initializeAudioModule sets localAppServices", (t) => {
+    const funcStr = initializeAudioModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices ='), 'initializeAudioModule should set localAppServices');
+});
+
+TestRunner.test("Day 635 - getMasterEffectsBusInputNode is a function export", (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getMasterEffectsBusInputNode should be exported');
+});
+
+TestRunner.test("Day 635 - getMasterEffectsBusInputNode accepts 0 parameters", (t) => {
+    t.assertEqual(getMasterEffectsBusInputNode.length, 0, 'getMasterEffectsBusInputNode should accept no parameters');
+});
+
+TestRunner.test("Day 635 - getMasterEffectsBusInputNode checks masterEffectsBusInputNode", (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('masterEffectsBusInputNode'), 'getMasterEffectsBusInputNode should reference masterEffectsBusInputNode');
+});
+
+TestRunner.test("Day 635 - getMasterEffectsBusInputNode checks disposed state", (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getMasterEffectsBusInputNode should check disposed state');
+});
+
+TestRunner.test("Day 635 - getMasterEffectsBusInputNode calls setupMasterBus when needed", (t) => {
+    const funcStr = getMasterEffectsBusInputNode.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'getMasterEffectsBusInputNode should call setupMasterBus when node is not ready');
+});
+
+TestRunner.test("Day 635 - getActualMasterGainNode is a function export", (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getActualMasterGainNode should be exported');
+});
+
+TestRunner.test("Day 635 - getActualMasterGainNode accepts 0 parameters", (t) => {
+    t.assertEqual(getActualMasterGainNode.length, 0, 'getActualMasterGainNode should accept no parameters');
+});
+
+TestRunner.test("Day 635 - getActualMasterGainNode checks masterGainNodeActual", (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('masterGainNodeActual'), 'getActualMasterGainNode should reference masterGainNodeActual');
+});
+
+TestRunner.test("Day 635 - getActualMasterGainNode checks disposed state", (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getActualMasterGainNode should check disposed state');
+});
+
+TestRunner.test("Day 635 - getActualMasterGainNode calls setupMasterBus when needed", (t) => {
+    const funcStr = getActualMasterGainNode.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'getActualMasterGainNode should call setupMasterBus when node is not ready');
+});
+
+TestRunner.test("Day 635 - APP_VERSION validation for Day 635", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 635');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 290, 'Minor version should be >= 290 for Day 635');
+    }
+});

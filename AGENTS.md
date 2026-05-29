@@ -2042,3 +2042,17 @@
   - APP_VERSION validation (>= 2.289 for Day 634)
 - **Version**: Bumped to 2.290.0
 - **Test Count**: Increased from 1982 to 1998
+
+#### Day 635: Automation Bus and Init Audio Function Tests (2026-05-28)
+- **Tests**: Added 19 tests for Automation Bus and Init audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 635 test block with 19 tests for autoSliceSample, initializeAudioModule, getMasterEffectsBusInputNode, getActualMasterGainNode
+  - `js/constants.js`: Bumped APP_VERSION to 2.291.0
+- **Test Details** (`js/tests.js`): 19 tests covering:
+  - **autoSliceSample** (5 tests): is a function export, accepts 1-2 parameters, references localAppServices.getTrackById, validates track type is Sampler, shows notification for non-Sampler tracks
+  - **initializeAudioModule** (3 tests): is a function export, accepts 1 parameter (appServicesFromMain), sets localAppServices
+  - **getMasterEffectsBusInputNode** (5 tests): is a function export, accepts 0 parameters, checks masterEffectsBusInputNode and disposed state, calls setupMasterBus when needed
+  - **getActualMasterGainNode** (4 tests): is a function export, accepts 0 parameters, checks masterGainNodeActual and disposed state, calls setupMasterBus when needed
+  - APP_VERSION validation (>= 2.290 for Day 635)
+- **Version**: Bumped to 2.291.0
+- **Test Count**: Increased from 1998 to 2017
