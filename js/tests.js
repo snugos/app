@@ -11910,3 +11910,152 @@ TestRunner.test("Day 636 - APP_VERSION validation for Day 636", (t) => {
         t.assertTruthy(versionParts[1] >= 290, 'Minor version should be >= 290 for Day 636');
     }
 });
+
+// ============================================================
+// Day 637: Master Volume Automation and Tap Tempo Audio Function Tests
+// ============================================================
+TestRunner.test("Day 637 - APP_VERSION validation for Day 637", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 637');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 291, 'Minor version should be >= 291 for Day 637');
+    }
+});
+
+TestRunner.test("Day 637 - writeMasterVolumeAutomation is a function export", (t) => {
+    const audioStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(audioStr.includes('export'), 'writeMasterVolumeAutomation should be exported');
+});
+
+TestRunner.test("Day 637 - writeMasterVolumeAutomation accepts 2 parameters", (t) => {
+    t.assertEqual(writeMasterVolumeAutomation.length, 2, 'writeMasterVolumeAutomation should accept 2 parameters');
+});
+
+TestRunner.test("Day 637 - writeMasterVolumeAutomation references masterVolumeAutomation array", (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'writeMasterVolumeAutomation should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 637 - writeMasterVolumeAutomation uses push to add entry", (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('.push'), 'writeMasterVolumeAutomation should use push to add entries');
+});
+
+TestRunner.test("Day 637 - applyMasterVolumeAutomationAtTime is a function export", (t) => {
+    const audioStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(audioStr.includes('export'), 'applyMasterVolumeAutomationAtTime should be exported');
+});
+
+TestRunner.test("Day 637 - applyMasterVolumeAutomationAtTime accepts 1 parameter", (t) => {
+    t.assertEqual(applyMasterVolumeAutomationAtTime.length, 1, 'applyMasterVolumeAutomationAtTime should accept 1 parameter');
+});
+
+TestRunner.test("Day 637 - applyMasterVolumeAutomationAtTime references masterVolumeAutomation array", (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'applyMasterVolumeAutomationAtTime should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 637 - applyMasterVolumeAutomationAtTime iterates over automation entries", (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('forEach') || funcStr.includes('for ('), 'applyMasterVolumeAutomationAtTime should iterate over automation entries');
+});
+
+TestRunner.test("Day 637 - getMasterVolumeAutomation is a function export", (t) => {
+    const audioStr = getMasterVolumeAutomation.toString();
+    t.assertTruthy(audioStr.includes('export'), 'getMasterVolumeAutomation should be exported');
+});
+
+TestRunner.test("Day 637 - getMasterVolumeAutomation accepts 0 parameters", (t) => {
+    t.assertEqual(getMasterVolumeAutomation.length, 0, 'getMasterVolumeAutomation should accept no parameters');
+});
+
+TestRunner.test("Day 637 - getMasterVolumeAutomation references masterVolumeAutomation array", (t) => {
+    const funcStr = getMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'getMasterVolumeAutomation should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 637 - getMasterVolumeAutomation returns a copy using map", (t) => {
+    const funcStr = getMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('.map') || funcStr.includes('{ ...'), 'getMasterVolumeAutomation should return a copy');
+});
+
+TestRunner.test("Day 637 - setMasterVolumeAutomation is a function export", (t) => {
+    const audioStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(audioStr.includes('export'), 'setMasterVolumeAutomation should be exported');
+});
+
+TestRunner.test("Day 637 - setMasterVolumeAutomation accepts 1 parameter", (t) => {
+    t.assertEqual(setMasterVolumeAutomation.length, 1, 'setMasterVolumeAutomation should accept 1 parameter');
+});
+
+TestRunner.test("Day 637 - setMasterVolumeAutomation calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMasterVolumeAutomation should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 637 - setMasterVolumeAutomation uses Array.isArray check", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'setMasterVolumeAutomation should use Array.isArray check');
+});
+
+TestRunner.test("Day 637 - setMasterVolumeAutomation sets masterVolumeAutomation array", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation ='), 'setMasterVolumeAutomation should set masterVolumeAutomation');
+});
+
+TestRunner.test("Day 637 - resetTapTempo is a function export", (t) => {
+    const audioStr = resetTapTempo.toString();
+    t.assertTruthy(audioStr.includes('export'), 'resetTapTempo should be exported');
+});
+
+TestRunner.test("Day 637 - resetTapTempo accepts 0 parameters", (t) => {
+    t.assertEqual(resetTapTempo.length, 0, 'resetTapTempo should accept no parameters');
+});
+
+TestRunner.test("Day 637 - resetTapTempo sets tapTimes array to empty", (t) => {
+    const funcStr = resetTapTempo.toString();
+    t.assertTruthy(funcStr.includes('tapTimes = []'), 'resetTapTempo should reset tapTimes to empty array');
+});
+
+TestRunner.test("Day 637 - getTapTempoBpm is a function export", (t) => {
+    const audioStr = getTapTempoBpm.toString();
+    t.assertTruthy(audioStr.includes('export'), 'getTapTempoBpm should be exported');
+});
+
+TestRunner.test("Day 637 - getTapTempoBpm accepts 0 parameters", (t) => {
+    t.assertEqual(getTapTempoBpm.length, 0, 'getTapTempoBpm should accept no parameters');
+});
+
+TestRunner.test("Day 637 - getTapTempoBpm references tapTimes array", (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('tapTimes'), 'getTapTempoBpm should reference tapTimes array');
+});
+
+TestRunner.test("Day 637 - getTapTempoBpm checks minimum taps (TAP_TEMPO_MIN_TAPS)", (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('TAP_TEMPO_MIN_TAPS') || funcStr.includes('TAP_TEMPO_MIN'), 'getTapTempoBpm should check minimum taps');
+});
+
+TestRunner.test("Day 637 - getTapTempoBpm calculates BPM from deltas (60000 / avgMs)", (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('60000 /') || funcStr.includes('60000/'), 'getTapTempoBpm should calculate BPM using 60000');
+});
+
+TestRunner.test("Day 637 - getTapTempoBpm clamps BPM to valid range (TAP_TEMPO_MIN_BPM, TAP_TEMPO_MAX_BPM)", (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('TAP_TEMPO_MIN_BPM') || funcStr.includes('TAP_TEMPO_MAX_BPM'), 'getTapTempoBpm should clamp BPM to valid range');
+});
+
+TestRunner.test("Day 637 - isTapTempoReady is a function export", (t) => {
+    const audioStr = isTapTempoReady.toString();
+    t.assertTruthy(audioStr.includes('export'), '<empty>');
+});
+
+TestRunner.test("Day 637 - isTapTempoReady accepts 0 parameters", (t) => {
+    t.assertEqual(isTapTempoReady.length, 0, 'isTapTempoReady should accept no parameters');
+});
+
+TestRunner.test("Day 637 - isTapTempoReady checks tapTimes.length", (t) => {
+    const funcStr = isTapTempoReady.toString();
+    t.assertTruthy(funcStr.includes('tapTimes.length'), 'isTapTempoReady should check tapTimes.length');
+});
