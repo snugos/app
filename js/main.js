@@ -521,6 +521,35 @@ const appServices = {
             appServices.renderTimeline(); 
         }
     },
+    // Track Solo/Mute change handlers - called by state.js to update UI
+    onSoloedTrackChanged: (soloedTrackId, previousId) => {
+        const mixerWindow = getWindowByIdState ? getWindowByIdState('mixer') : null;
+        if (mixerWindow && typeof updateMixerWindow === 'function') {
+            updateMixerWindow();
+        }
+        const tracks = getTracksState ? getTracksState() : [];
+        tracks.forEach(track => {
+            const inspectorWindow = getWindowByIdState ? getWindowByIdState(`trackInspector-${track.id}`) : null;
+            if (inspectorWindow?.element) {
+                const soloBtn = inspectorWindow.element.querySelector(`#soloBtn-${track.id}`);
+                if (soloBtn) soloBtn.classList.toggle('soloed', soloedTrackId === track.id);
+            }
+        });
+    },
+    onMutedTracksChanged: (mutedTrackIds) => {
+        const mixerWindow = getWindowByIdState ? getWindowByIdState('mixer') : null;
+        if (mixerWindow && typeof updateMixerWindow === 'function') {
+            updateMixerWindow();
+        }
+        const tracks = getTracksState ? getTracksState() : [];
+        tracks.forEach(track => {
+            const inspectorWindow = getWindowByIdState ? getWindowByIdState(`trackInspector-${track.id}`) : null;
+            if (inspectorWindow?.element) {
+                const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
+                if (muteBtn) muteBtn.classList.toggle('muted', mutedTrackIds.includes(track.id));
+            }
+        });
+    },
     startMetronome: startMetronome,
     stopMetronome: stopMetronome,
     setMetronomeVolume: setMetronomeVolume,
