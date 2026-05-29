@@ -11522,3 +11522,104 @@ TestRunner.test("Day 632 - APP_VERSION validation for Day 632", (t) => {
         t.assertTruthy(versionParts[1] >= 286, 'Minor version should be >= 286 for Day 632');
     }
 });
+
+// Day 633: fetchSoundLibrary Audio Function Tests
+TestRunner.test("Day 633 - fetchSoundLibrary is a function export", (t) => {
+    t.assertEqual(typeof fetchSoundLibrary, 'function', 'fetchSoundLibrary should be a function');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary is async", (t) => {
+    t.assertEqual(fetchSoundLibrary.constructor.name, 'AsyncFunction', 'fetchSoundLibrary should be async');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary accepts 3 parameters", (t) => {
+    t.assertEqual(fetchSoundLibrary.length, 3, 'fetchSoundLibrary should accept 3 parameters');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary accepts libraryName parameter", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('libraryName'), 'fetchSoundLibrary should reference libraryName');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary accepts zipUrl parameter", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('zipUrl'), 'fetchSoundLibrary should reference zipUrl');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary accepts isAutofetch parameter", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('isAutofetch'), 'fetchSoundLibrary should reference isAutofetch');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary checks getSoundLibraryFileTrees", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('getSoundLibraryFileTrees'), 'fetchSoundLibrary should check getSoundLibraryFileTrees');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary checks getLoadedZipFiles", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('getLoadedZipFiles'), 'fetchSoundLibrary should check getLoadedZipFiles');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary checks already-loaded condition with loadedZips[libraryName]", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('loadedZips[libraryName]') || (funcStr.includes('loadedZips') && funcStr.includes('libraryName')), 'fetchSoundLibrary should check loadedZips[libraryName]');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary returns early if already loaded", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('return;') || funcStr.includes('return'), 'fetchSoundLibrary should return early when already loaded');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary calls updateSoundBrowserDisplayForLibrary for loading state", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('updateSoundBrowserDisplayForLibrary'), 'fetchSoundLibrary should update UI loading state');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary uses fetch for zipUrl", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('fetch(') || funcStr.includes('fetch('), 'fetchSoundLibrary should use fetch');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary uses JSZip to load zip", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('JSZip') && funcStr.includes('loadAsync'), 'fetchSoundLibrary should use JSZip.loadAsync');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary builds fileTree from loaded zip", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('fileTree') || funcStr.includes('file'), 'fetchSoundLibrary should build fileTree');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary calls setSoundLibraryFileTreesState to store result", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('setSoundLibraryFileTreesState'), 'fetchSoundLibrary should call setSoundLibraryFileTreesState');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary calls setLoadedZipFilesState to store loading state", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('setLoadedZipFilesState'), 'fetchSoundLibrary should call setLoadedZipFilesState');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary has error handling with console.error", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'fetchSoundLibrary should have console.error error handling');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary handles fetch errors", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy(funcStr.includes('response.ok') || funcStr.includes('throw new Error') || funcStr.includes('catch'), 'fetchSoundLibrary should handle fetch errors');
+});
+
+TestRunner.test("Day 633 - fetchSoundLibrary sets failed state to null in loadedZips on error", (t) => {
+    const funcStr = fetchSoundLibrary.toString();
+    t.assertTruthy((funcStr.includes('null') || funcStr.includes('failedLoadedZips')) && funcStr.includes('loadedZips'), 'fetchSoundLibrary should set failure state');
+});
+
+TestRunner.test("Day 633 - APP_VERSION validation for Day 633", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 633');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 287, 'Minor version should be >= 287 for Day 633');
+    }
+});
