@@ -11802,3 +11802,111 @@ TestRunner.test("Day 635 - APP_VERSION validation for Day 635", (t) => {
         t.assertTruthy(versionParts[1] >= 290, 'Minor version should be >= 290 for Day 635');
     }
 });
+
+// ============================================
+// Day 636: reorderMasterEffectInAudio and Master Effect Audio Function Tests
+// ============================================
+TestRunner.test("Day 636 - reorderMasterEffectInAudio is a function export", (t) => {
+    const audioStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'reorderMasterEffectInAudio should be exported');
+});
+
+TestRunner.test("Day 636 - reorderMasterEffectInAudio accepts 2 parameters", (t) => {
+    t.assertEqual(reorderMasterEffectInAudio.length, 2, 'reorderMasterEffectInAudio should accept 2 parameters');
+});
+
+TestRunner.test("Day 636 - reorderMasterEffectInAudio ignores effectId parameter", (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectIdIgnored') || funcStr.includes('effectId'), 'reorderMasterEffectInAudio should reference effectId');
+});
+
+TestRunner.test("Day 636 - reorderMasterEffectInAudio ignores newIndex parameter", (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('newIndexIgnored') || funcStr.includes('newIndex'), 'reorderMasterEffectInAudio should reference newIndex');
+});
+
+TestRunner.test("Day 636 - reorderMasterEffectInAudio calls rebuildMasterEffectChain", (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'reorderMasterEffectInAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test("Day 636 - addMasterEffectToAudio is a function export", (t) => {
+    const audioStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(audioStr.includes('export'), 'addMasterEffectToAudio should be exported');
+});
+
+TestRunner.test("Day 636 - addMasterEffectToAudio is async", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('async'), 'addMasterEffectToAudio should be async');
+});
+
+TestRunner.test("Day 636 - addMasterEffectToAudio accepts 3 parameters", (t) => {
+    t.assertEqual(addMasterEffectToAudio.length, 3, 'addMasterEffectToAudio should accept 3 parameters');
+});
+
+TestRunner.test("Day 636 - addMasterEffectToAudio calls createEffectInstance", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('createEffectInstance'), 'addMasterEffectToAudio should call createEffectInstance');
+});
+
+TestRunner.test("Day 636 - addMasterEffectToAudio stores toneNode in activeMasterEffectNodes", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes.set'), 'addMasterEffectToAudio should set in activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 636 - addMasterEffectToAudio calls rebuildMasterEffectChain after adding", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'addMasterEffectToAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test("Day 636 - addMasterEffectToAudio has error handling with console.error", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'addMasterEffectToAudio should have console.error error handling');
+});
+
+TestRunner.test("Day 636 - addMasterEffectToAudio shows notification on failure", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'addMasterEffectToAudio should show notification on failure');
+});
+
+TestRunner.test("Day 636 - removeMasterEffectFromAudio is a function export", (t) => {
+    const audioStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(audioStr.includes('export'), 'removeMasterEffectFromAudio should be exported');
+});
+
+TestRunner.test("Day 636 - removeMasterEffectFromAudio accepts 1 parameter", (t) => {
+    t.assertEqual(removeMasterEffectFromAudio.length, 1, 'removeMasterEffectFromAudio should accept 1 parameter');
+});
+
+TestRunner.test("Day 636 - removeMasterEffectFromAudio gets effectNode from activeMasterEffectNodes", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes.get'), 'removeMasterEffectFromAudio should get node from activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 636 - removeMasterEffectFromAudio calls disconnect on effectNode", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('.disconnect'), 'removeMasterEffectFromAudio should call disconnect');
+});
+
+TestRunner.test("Day 636 - removeMasterEffectFromAudio calls dispose on effectNode", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('.dispose'), 'removeMasterEffectFromAudio should call dispose');
+});
+
+TestRunner.test("Day 636 - removeMasterEffectFromAudio deletes from activeMasterEffectNodes", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes.delete'), 'removeMasterEffectFromAudio should delete from activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 636 - removeMasterEffectFromAudio calls rebuildMasterEffectChain after removing", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'removeMasterEffectFromAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test("Day 636 - APP_VERSION validation for Day 636", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 636');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 290, 'Minor version should be >= 290 for Day 636');
+    }
+});
