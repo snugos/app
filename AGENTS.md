@@ -1,3 +1,23 @@
+#### Day 642: MIDI CC Mapping and Learn Function Tests (2026-05-29)
+- **Tests**: Added 28 tests for MIDI CC mapping and learn functions in eventHandlers.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 642 test block with 28 tests for MIDI CC functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.296.0
+- **Test Details** (`js/tests.js`): 28 tests covering:
+  - **getMidiCCMappings** (2 tests): is a function export, returns _midiCCMappings
+  - **getMidiCCLearnActive** (2 tests): is a function export, returns _midiCCLearnActive
+  - **clearMidiCCMappings** (2 tests): is a function export, sets _midiCCMappings to empty object
+  - **removeMidiCCMapping** (3 tests): is a function export, accepts 1 parameter (targetId), deletes from _midiCCMappings
+  - **setMidiCCMapping** (3 tests): is a function export, accepts 2 parameters, sets _midiCCMappings[targetId] = mapping
+  - **getMidiCCMapping** (3 tests): is a function export, accepts 1 parameter, returns mapping or null
+  - **getMidiCCMappingsForProject** (3 tests): is a function export, uses Object.keys to iterate, returns mapped array
+  - **loadMidiCCMappingsFromProject** (3 tests): is a function export, accepts 1 parameter (mappingsData), assigns to _midiCCMappings
+  - **startMidiCCLearn** (4 tests): is a function export, accepts 5 parameters, sets _midiCCLearnActive object, references showNotification
+  - **cancelMidiCCLearn** (2 tests): is a function export, checks _midiCCLearnActive before setting null
+  - APP_VERSION validation (>= 2.295 for Day 642)
+- **Version**: Bumped to 2.296.0
+- **Test Count**: Increased from 2192 to 2220
+
 #### Day 641: Event Handler Window Open Function Tests (2026-05-29)
 - **Tests**: Added 13 tests for handleOpenTrackInspector, handleOpenEffectsRack, and handleOpenSequencer functions in eventHandlers.js
 - **Files Modified**:

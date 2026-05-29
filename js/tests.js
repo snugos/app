@@ -12653,3 +12653,143 @@ TestRunner.test("Day 641 - APP_VERSION validation for Day 641", (t) => {
         t.assertTruthy(versionParts[1] >= 294, 'Minor version should be >= 294 for Day 641');
     }
 });
+
+// Day 642: MIDI CC Mapping and Learn Function Tests  
+// ===========================================
+TestRunner.test("Day 642 - getMidiCCMappings is a function export", (t) => {
+    const funcStr = getMidiCCMappings.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getMidiCCMappings should be exported');
+});
+
+TestRunner.test("Day 642 - getMidiCCMappings returns _midiCCMappings", (t) => {
+    const funcStr = getMidiCCMappings.toString();
+    t.assertTruthy(funcStr.includes('_midiCCMappings'), 'getMidiCCMappings should return _midiCCMappings');
+});
+
+TestRunner.test("Day 642 - getMidiCCLearnActive is a function export", (t) => {
+    const funcStr = getMidiCCLearnActive.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getMidiCCLearnActive should be exported');
+});
+
+TestRunner.test("Day 642 - getMidiCCLearnActive returns _midiCCLearnActive", (t) => {
+    const funcStr = getMidiCCLearnActive.toString();
+    t.assertTruthy(funcStr.includes('_midiCCLearnActive'), 'getMidiCCLearnActive should return _midiCCLearnActive');
+});
+
+TestRunner.test("Day 642 - clearMidiCCMappings is a function export", (t) => {
+    const funcStr = clearMidiCCMappings.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'clearMidiCCMappings should be exported');
+});
+
+TestRunner.test("Day 642 - clearMidiCCMappings sets _midiCCMappings to empty object", (t) => {
+    const funcStr = clearMidiCCMappings.toString();
+    t.assertTruthy(funcStr.includes('_midiCCMappings = {}'), 'clearMidiCCMappings should reset _midiCCMappings to {}');
+});
+
+TestRunner.test("Day 642 - removeMidiCCMapping is a function export", (t) => {
+    const funcStr = removeMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'removeMidiCCMapping should be exported');
+});
+
+TestRunner.test("Day 642 - removeMidiCCMapping accepts 1 parameter", (t) => {
+    t.assertEqual(removeMidiCCMapping.length, 1, 'removeMidiCCMapping should accept 1 parameter (targetId)');
+});
+
+TestRunner.test("Day 642 - removeMidiCCMapping deletes from _midiCCMappings", (t) => {
+    const funcStr = removeMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('delete _midiCCMappings'), 'removeMidiCCMapping should delete from _midiCCMappings');
+});
+
+TestRunner.test("Day 642 - setMidiCCMapping is a function export", (t) => {
+    const funcStr = setMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'setMidiCCMapping should be exported');
+});
+
+TestRunner.test("Day 642 - setMidiCCMapping accepts 2 parameters", (t) => {
+    t.assertEqual(setMidiCCMapping.length, 2, 'setMidiCCMapping should accept 2 parameters (targetId, mapping)');
+});
+
+TestRunner.test("Day 642 - setMidiCCMapping sets _midiCCMappings targetId", (t) => {
+    const funcStr = setMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('_midiCCMappings[targetId] = mapping'), 'setMidiCCMapping should assign mapping');
+});
+
+TestRunner.test("Day 642 - getMidiCCMapping is a function export", (t) => {
+    const funcStr = getMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getMidiCCMapping should be exported');
+});
+
+TestRunner.test("Day 642 - getMidiCCMapping accepts 1 parameter", (t) => {
+    t.assertEqual(getMidiCCMapping.length, 1, 'getMidiCCMapping should accept 1 parameter (targetId)');
+});
+
+TestRunner.test("Day 642 - getMidiCCMapping returns _midiCCMappings targetId or null", (t) => {
+    const funcStr = getMidiCCMapping.toString();
+    t.assertTruthy(funcStr.includes('_midiCCMappings[targetId]') && funcStr.includes('null'), 'getMidiCCMapping should return mapping or null');
+});
+
+TestRunner.test("Day 642 - getMidiCCMappingsForProject is a function export", (t) => {
+    const funcStr = getMidiCCMappingsForProject.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getMidiCCMappingsForProject should be exported');
+});
+
+TestRunner.test("Day 642 - getMidiCCMappingsForProject uses Object.keys to iterate mappings", (t) => {
+    const funcStr = getMidiCCMappingsForProject.toString();
+    t.assertTruthy(funcStr.includes('Object.keys'), 'getMidiCCMappingsForProject should use Object.keys');
+});
+
+TestRunner.test("Day 642 - getMidiCCMappingsForProject returns mapped array", (t) => {
+    const funcStr = getMidiCCMappingsForProject.toString();
+    t.assertTruthy(funcStr.includes('return Object.keys'), 'getMidiCCMappingsForProject should return mapped array');
+});
+
+TestRunner.test("Day 642 - loadMidiCCMappingsFromProject is a function export", (t) => {
+    const funcStr = loadMidiCCMappingsFromProject.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'loadMidiCCMappingsFromProject should be exported');
+});
+
+TestRunner.test("Day 642 - loadMidiCCMappingsFromProject accepts 1 parameter", (t) => {
+    t.assertEqual(loadMidiCCMappingsFromProject.length, 1, 'loadMidiCCMappingsFromProject should accept 1 parameter (mappingsData)');
+});
+
+TestRunner.test("Day 642 - loadMidiCCMappingsFromProject assigns to _midiCCMappings", (t) => {
+    const funcStr = loadMidiCCMappingsFromProject.toString();
+    t.assertTruthy(funcStr.includes('_midiCCMappings = {}'), 'loadMidiCCMappingsFromProject should initialize _midiCCMappings');
+});
+
+TestRunner.test("Day 642 - startMidiCCLearn is a function export", (t) => {
+    const funcStr = startMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'startMidiCCLearn should be exported');
+});
+
+TestRunner.test("Day 642 - startMidiCCLearn accepts 5 parameters", (t) => {
+    t.assertEqual(startMidiCCLearn.length, 5, 'startMidiCCLearn should accept 5 parameters');
+});
+
+TestRunner.test("Day 642 - startMidiCCLearn sets _midiCCLearnActive object", (t) => {
+    const funcStr = startMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('_midiCCLearnActive = {'), 'startMidiCCLearn should set _midiCCLearnActive');
+});
+
+TestRunner.test("Day 642 - startMidiCCLearn references showNotification", (t) => {
+    const funcStr = startMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'startMidiCCLearn should call showNotification');
+});
+
+TestRunner.test("Day 642 - cancelMidiCCLearn is a function export", (t) => {
+    const funcStr = cancelMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'cancelMidiCCLearn should be exported');
+});
+
+TestRunner.test("Day 642 - cancelMidiCCLearn checks _midiCCLearnActive before setting null", (t) => {
+    const funcStr = cancelMidiCCLearn.toString();
+    t.assertTruthy(funcStr.includes('_midiCCLearnActive') && funcStr.includes('null'), 'cancelMidiCCLearn should check and clear _midiCCLearnActive');
+});
+
+TestRunner.test("Day 642 - APP_VERSION validation for Day 642", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 642');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 295, 'Minor version should be >= 295 for Day 642');
+    }
+});
