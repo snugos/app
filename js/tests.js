@@ -12495,3 +12495,90 @@ TestRunner.test("Day 639 - cleanupRecordingAudioResources handles recorder clean
     const funcStr = cleanupRecordingAudioResources.toString();
     t.assertTruthy(funcStr.includes('recorder.disconnect') || funcStr.includes('recorder.dispose'), 'cleanupRecordingAudioResources should handle recorder cleanup');
 });
+
+// Day 640: resolveRecordingMicrophoneTestTrack Audio Function Tests
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack is a function export", (t) => {
+    t.assertEqual(typeof resolveRecordingMicrophoneTestTrack, 'function', 'resolveRecordingMicrophoneTestTrack should be a function');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack accepts 4 parameters", (t) => {
+    t.assertEqual(resolveRecordingMicrophoneTestTrack.length, 4, 'resolveRecordingMicrophoneTestTrack should accept 4 parameters');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack references trackId parameter", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('trackId'), 'resolveRecordingMicrophoneTestTrack should reference trackId parameter');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack references tracks parameter", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('trackList'), 'resolveRecordingMicrophoneTestTrack should reference tracks parameter');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack uses Array.isArray check for tracks", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'resolveRecordingMicrophoneTestTrack should use Array.isArray for tracks parameter');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack references getTrackByIdFn parameter", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('getTrackByIdFn') || funcStr.includes('resolveTrackById'), 'resolveRecordingMicrophoneTestTrack should reference getTrackByIdFn parameter');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack references getArmedTrackIdFn parameter", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackIdFn') || funcStr.includes('resolveArmedTrackId'), 'resolveRecordingMicrophoneTestTrack should reference getArmedTrackIdFn parameter');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack checks for null/undefined trackId", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('trackId !== null') && funcStr.includes('trackId !== undefined'), 'resolveRecordingMicrophoneTestTrack should check for null/undefined trackId');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack returns an object with track property", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('track:') || funcStr.includes('track :'), 'resolveRecordingMicrophoneTestTrack should return an object with track property');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack returns an object with trackSelectionSource property", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('trackSelectionSource:') || funcStr.includes('trackSelectionSource :'), 'resolveRecordingMicrophoneTestTrack should return trackSelectionSource');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack checks explicitTrack.type === 'Audio'", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes("type === \"Audio\""), 'resolveRecordingMicrophoneTestTrack should check track type is Audio');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack handles 'explicit' trackSelectionSource", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes("'explicit'") || funcStr.includes('"explicit"'), 'resolveRecordingMicrophoneTestTrack should handle explicit track selection');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack handles 'armed' trackSelectionSource", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes("'armed'") || funcStr.includes('"armed"'), 'resolveRecordingMicrophoneTestTrack should handle armed track selection');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack handles 'auto' trackSelectionSource", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes("'auto'") || funcStr.includes('"auto"'), 'resolveRecordingMicrophoneTestTrack should handle auto track selection');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack handles 'none' trackSelectionSource when no Audio track found", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes("'none'") || funcStr.includes('"none"'), 'resolveRecordingMicrophoneTestTrack should handle none track selection');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack uses track.find for auto-selection", (t) => {
+    const funcStr = resolveRecordingMicrophoneTestTrack.toString();
+    t.assertTruthy(funcStr.includes('find(track =>') || funcStr.includes('find('), 'resolveRecordingMicrophoneTestTrack should use find for auto-selection');
+});
+
+TestRunner.test("Day 640 - resolveRecordingMicrophoneTestTrack APP_VERSION validation for Day 640", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 640');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 293, 'Minor version should be >= 293 for Day 640');
+    }
+});
