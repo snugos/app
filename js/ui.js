@@ -798,6 +798,124 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     return inspectorWindow;
 }
 
+export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) { console.error(`[UI] Track ${trackId} not found for clip editor.`); return null; }
+    const clip = track.timelineClips ? track.timelineClips.find(c => c.id === clipId) : null;
+    if (!clip) { console.error(`[UI] Clip ${clipId} not found in track ${trackId}.`); return null; }
+
+    const windowId = `audioClipEditor-${clipId}`;
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const clipName = clip.name || clipId;
+    const contentHTML = `
+        <div style="padding:15px;font-family:sans-serif;font-size:13px;color:#e0e0e0;height:100%;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
+            <h3 style="margin:0;color:#fff;">Edit Clip: ${clipName}</h3>
+            <div class="border border-slate-600 rounded p-3 bg-slate-800 space-y-3">
+                <div>
+                    <label class="text-xs text-slate-400">Clip Name</label>
+                    <input type="text" id="clipNameInput" value="${clipName}" class="w-full p-1 border border-slate-600 rounded bg-slate-700 text-slate-200 text-sm" />
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400">Color</label>
+                    <input type="color" id="clipColorInput" value="${clip.color || '#6366f1'}" class="w-full h-8 rounded cursor-pointer" />
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400">Gain (0-4)</label>
+                    <input type="range" id="clipGainInput" min="0" max="400" value="${Math.round((clip.gain !== undefined ? clip.gain : 1) * 100)}" class="w-full" />
+                    <span id="clipGainLabel" class="text-xs text-slate-400">${clip.gain !== undefined ? clip.gain.toFixed(2) : '1.00'}</span>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400">Playback Rate (0.25-4x)</label>
+                    <input type="range" id="clipRateInput" min="25" max="400" value="${Math.round((clip.playbackRate !== undefined ? clip.playbackRate : 1) * 100)}" class="w-full" />
+                    <span id="clipRateLabel" class="text-xs text-slate-400">${clip.playbackRate !== undefined ? clip.playbackRate.toFixed(2) : '1.00'}x</span>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400">Fade In (seconds)</label>
+                    <input type="number" id="clipFadeInInput" min="0" step="0.1" value="${clip.fadeIn !== undefined ? clip.fadeIn : 0}" class="w-full p-1 border border-slate-600 rounded bg-slate-700 text-slate-200 text-sm" />
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400">Fade Out (seconds)</label>
+                    <input type="number" id="clipFadeOutInput" min="0" step="0.1" value="${clip.fadeOut !== undefined ? clip.fadeOut : 0}" class="w-full p-1 border border-slate-600 rounded bg-slate-700 text-slate-200 text-sm" />
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400">Start Offset (seconds)</label>
+                    <input type="number" id="clipStartOffsetInput" min="0" step="0.01" value="${clip.startOffset || 0}" class="w-full p-1 border border-slate-600 rounded bg-slate-700 text-slate-200 text-sm" />
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400">End Offset (seconds)</label>
+                    <input type="number" id="clipEndOffsetInput" min="0" step="0.01" value="${clip.endOffset || 0}" class="w-full p-1 border border-slate-600 rounded bg-slate-700 text-slate-200 text-sm" />
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-auto">
+                <button id="clipEditorCloseBtn" class="px-4  py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded">Cancel</button>
+                <button id="clipEditorSaveBtn" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold rounded">Save</button>
+            </div>
+        </div>`;
+
+    const options = {
+        width: 360,
+        height: 480,
+        minWidth: 280,
+        minHeight: 350,
+        initialContentKey: windowId
+    };
+    if (savedState) { Object.assign(options, { x: parseInt(savedState.left, 10), y: parseInt(savedState.top, 10), width: parseInt(savedState.width, 10), height: parseInt(savedState.height, 10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized }); }
+
+    const win = localAppServices.createWindow(windowId, `Clip: ${clipName}`, contentHTML, options);
+
+    if (win && win.element) {
+        const gainSlider = win.element.querySelector('#clipGainInput');
+        const gainLabel = win.element.querySelector('#clipGainLabel');
+        gainSlider?.addEventListener('input', () => {
+            const val = parseInt(gainSlider.value, 10) / 100;
+            gainLabel.textContent = val.toFixed(2);
+        });
+
+        const rateSlider = win.element.querySelector('#clipRateInput');
+        const rateLabel = win.element.querySelector('#clipRateLabel');
+        rateSlider?.addEventListener('input', () => {
+            const val = parseInt(rateSlider.value, 10) / 100;
+            rateLabel.textContent = val.toFixed(2) + 'x';
+        });
+
+        win.element.querySelector('#clipEditorCloseBtn')?.addEventListener('click', () => {
+            try { win.close(true); } catch (e) {}
+        });
+
+        win.element.querySelector('#clipEditorSaveBtn')?.addEventListener('click', () => {
+            const nameInput = win.element.querySelector('#clipNameInput')?.value?.trim();
+            const colorInput = win.element.querySelector('#clipColorInput')?.value;
+            const gainVal = parseInt(gainSlider?.value || '100', 10) / 100;
+            const rateVal = parseInt(rateSlider?.value || '100', 10) / 100;
+            const fadeInVal = parseFloat(win.element.querySelector('#clipFadeInInput')?.value || '0');
+            const fadeOutVal = parseFloat(win.element.querySelector('#clipFadeOutInput')?.value || '0');
+            const startOffsetVal = parseFloat(win.element.querySelector('#clipStartOffsetInput')?.value || '0');
+            const endOffsetVal = parseFloat(win.element.querySelector('#clipEndOffsetInput')?.value || '0');
+
+            if (nameInput && track.setAudioClipName) track.setAudioClipName(clipId, nameInput);
+            if (colorInput && track.setAudioClipColor) track.setAudioClipColor(clipId, colorInput);
+            if (track.setAudioClipGain) track.setAudioClipGain(clipId, gainVal);
+            if (track.setAudioClipPlaybackRate) track.setAudioClipPlaybackRate(clipId, rateVal);
+            if (track.setAudioClipFadeIn) track.setAudioClipFadeIn(clipId, fadeInVal);
+            if (track.setAudioClipFadeOut) track.setAudioClipFadeOut(clipId, fadeOutVal);
+            if (track.setAudioClipStartOffset) track.setAudioClipStartOffset(clipId, startOffsetVal);
+            if (track.setAudioClipEndOffset) track.setAudioClipEndOffset(clipId, endOffsetVal);
+
+            if (localAppServices.renderTimeline) localAppServices.renderTimeline();
+            const { showNotification } = localAppServices;
+            if (showNotification) showNotification(`Clip "${nameInput || clipName}" saved.`, 1500);
+            try { win.close(true); } catch (e) {}
+        });
+    }
+
+    return win;
+}
+
 function initializeCommonInspectorControls(track, winEl) {
     winEl.querySelector(`#muteBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleTrackMute(track.id));
     winEl.querySelector(`#soloBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleTrackSolo(track.id));
