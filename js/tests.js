@@ -14098,3 +14098,101 @@ TestRunner.test("Day 651 - APP_VERSION validation for Day 651", (t) => {
         t.assertTruthy(versionParts[1] >= 304, 'Minor version should be >= 304 for Day 651');
     }
 });
+
+// Day 652: Performance Monitor and Preview Player State Function Tests
+// =====================================================================
+TestRunner.test("Day 652 - Performance Monitor - incrementDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function incrementDroppedCallbacksState'), 'incrementDroppedCallbacksState should be exported');
+});
+
+TestRunner.test("Day 652 - Performance Monitor - resetPerformanceMonitorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function resetPerformanceMonitorState'), 'resetPerformanceMonitorState should be exported');
+});
+
+TestRunner.test("Day 652 - Performance Monitor - resetPerformanceMonitorState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    const captureIdx = funcStr.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcStr.indexOf('function resetPerformanceMonitorState');
+    t.assertTruthy(captureIdx > fnIdx, 'resetPerformanceMonitorState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 652 - Performance Monitor - resetPerformanceMonitorState has descriptive undo label", (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('Reset Performance Monitor'), 'resetPerformanceMonitorState should have descriptive undo label');
+});
+
+TestRunner.test("Day 652 - Preview Player - setPreviewPlayerState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setPreviewPlayerState'), 'setPreviewPlayerState should be exported');
+});
+
+TestRunner.test("Day 652 - Preview Player - setPreviewPlayerState uses Object.is for change detection", (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('Object.is'), 'setPreviewPlayerState should use Object.is for change detection');
+});
+
+TestRunner.test("Day 652 - Preview Player - setPreviewPlayerState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    const captureIdx = funcStr.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcStr.indexOf('function setPreviewPlayerState');
+    t.assertTruthy(captureIdx > fnIdx, 'setPreviewPlayerState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 652 - Preview Player - setPreviewPlayerState has descriptive undo label", (t) => {
+    const funcStr = setPreviewPlayerState.toString();
+    t.assertTruthy(funcStr.includes('Set Preview Player'), 'setPreviewPlayerState should have descriptive undo label');
+});
+
+TestRunner.test("Day 652 - Library - setCurrentLibraryNameState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCurrentLibraryNameState'), 'setCurrentLibraryNameState should be exported');
+});
+
+TestRunner.test("Day 652 - Library - setCurrentLibraryNameState uses Object.is for change detection", (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('Object.is'), 'setCurrentLibraryNameState should use Object.is for change detection');
+});
+
+TestRunner.test("Day 652 - Library - setCurrentLibraryNameState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    const captureIdx = funcStr.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcStr.indexOf('function setCurrentLibraryNameState');
+    t.assertTruthy(captureIdx > fnIdx, 'setCurrentLibraryNameState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 652 - Library - setCurrentLibraryNameState has descriptive undo label", (t) => {
+    const funcStr = setCurrentLibraryNameState.toString();
+    t.assertTruthy(funcStr.includes('Set Current Library'), 'setCurrentLibraryNameState should have descriptive undo label');
+});
+
+TestRunner.test("Day 652 - Sound File Tree - setCurrentSoundFileTreeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCurrentSoundFileTreeState'), 'setCurrentSoundFileTreeState should be exported');
+});
+
+TestRunner.test("Day 652 - Sound File Tree - setCurrentSoundFileTreeState uses Object.is for change detection", (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('Object.is'), 'setCurrentSoundFileTreeState should use Object.is for change detection');
+});
+
+TestRunner.test("Day 652 - Sound File Tree - setCurrentSoundFileTreeState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    const captureIdx = funcStr.indexOf('captureStateForUndoIfAllowed');
+    const fnIdx = funcStr.indexOf('function setCurrentSoundFileTreeState');
+    t.assertTruthy(captureIdx > fnIdx, 'setCurrentSoundFileTreeState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 652 - Sound File Tree - setCurrentSoundFileTreeState has descriptive undo label", (t) => {
+    const funcStr = setCurrentSoundFileTreeState.toString();
+    t.assertTruthy(funcStr.includes('Set Sound File Tree'), 'setCurrentSoundFileTreeState should have descriptive undo label');
+});
+
+TestRunner.test("Day 652 - APP_VERSION validation for Day 652", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 652');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 305, 'Minor version should be >= 305 for Day 652');
+    }
+});
