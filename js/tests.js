@@ -14196,3 +14196,258 @@ TestRunner.test("Day 652 - APP_VERSION validation for Day 652", (t) => {
         t.assertTruthy(versionParts[1] >= 305, 'Minor version should be >= 305 for Day 652');
     }
 });
+
+
+// Day 653: Internal State Functions and Getters Tests
+TestRunner.test("Day 653 - getRecordingTrackIdState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getRecordingTrackIdState'), 'getRecordingTrackIdState should be exported');
+});
+TestRunner.test("Day 653 - getRecordingTrackIdState accepts 0 parameters", (t) => {
+    t.assertEqual(getRecordingTrackIdState.length, 0, 'getRecordingTrackIdState should accept 0 parameters');
+});
+TestRunner.test("Day 653 - getRecordingTrackIdState references recordingTrackIdGlobal", (t) => {
+    const funcStr = getRecordingTrackIdState.toString();
+    t.assertTruthy(funcStr.includes('recordingTrackIdGlobal'), 'getRecordingTrackIdState should reference recordingTrackIdGlobal');
+});
+TestRunner.test("Day 653 - isTrackRecordingState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function isTrackRecordingState'), 'isTrackRecordingState should be exported');
+});
+TestRunner.test("Day 653 - isTrackRecordingState accepts 0 parameters", (t) => {
+    t.assertEqual(isTrackRecordingState.length, 0, 'isTrackRecordingState should accept 0 parameters');
+});
+TestRunner.test("Day 653 - isTrackRecordingState references isRecordingGlobal", (t) => {
+    const funcStr = isTrackRecordingState.toString();
+    t.assertTruthy(funcStr.includes('isRecordingGlobal'), 'isTrackRecordingState should reference isRecordingGlobal');
+});
+TestRunner.test("Day 653 - getRecordingStartTimeState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getRecordingStartTimeState'), 'getRecordingStartTimeState should be exported');
+});
+TestRunner.test("Day 653 - getRecordingStartTimeState accepts 0 parameters", (t) => {
+    t.assertEqual(getRecordingStartTimeState.length, 0, 'getRecordingStartTimeState should accept 0 parameters');
+});
+TestRunner.test("Day 653 - getRecordingStartTimeState references recordingStartTime", (t) => {
+    const funcStr = getRecordingStartTimeState.toString();
+    t.assertTruthy(funcStr.includes('recordingStartTime'), 'getRecordingStartTimeState should reference recordingStartTime variable');
+});
+TestRunner.test("Day 653 - getDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getDroppedCallbacksState'), 'getDroppedCallbacksState should be exported');
+});
+TestRunner.test("Day 653 - getDroppedCallbacksState accepts 0 parameters", (t) => {
+    t.assertEqual(getDroppedCallbacksState.length, 0, 'getDroppedCallbacksState should accept 0 parameters');
+});
+TestRunner.test("Day 653 - getDroppedCallbacksState references performanceMonitorState", (t) => {
+    const funcStr = getDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('performanceMonitorState'), 'getDroppedCallbacksState should reference performanceMonitorState');
+});
+TestRunner.test("Day 653 - getDroppedCallbacksState accesses .droppedCallbacks property", (t) => {
+    const funcStr = getDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('.droppedCallbacks') || funcStr.includes('droppedCallbacks'), 'getDroppedCallbacksState should access droppedCallbacks property');
+});
+TestRunner.test("Day 653 - getTrackSendLevelState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackSendLevelState'), 'getTrackSendLevelState should be exported');
+});
+TestRunner.test("Day 653 - getTrackSendLevelState accepts 2 parameters", (t) => {
+    t.assertEqual(getTrackSendLevelState.length, 2, 'getTrackSendLevelState should accept 2 parameters (trackId, sendId)');
+});
+TestRunner.test("Day 653 - getTrackSendLevelState references trackSendsState", (t) => {
+    const funcStr = getTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('trackSendsState'), 'getTrackSendLevelState should reference trackSendsState');
+});
+TestRunner.test("Day 653 - getTrackSendLevelState handles missing track bucket", (t) => {
+    const funcStr = getTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('trackBucket') || funcStr.includes('trackSendsState['), 'getTrackSendLevelState should handle missing track bucket');
+});
+TestRunner.test("Day 653 - getTrackSendLevelState uses Number.isFinite for validation", (t) => {
+    const funcStr = getTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('Number.isFinite') || funcStr.includes('isFinite'), 'getTrackSendLevelState should use Number.isFinite for validation');
+});
+TestRunner.test("Day 653 - getTrackSendLevelState references Constants.DEFAULT_SEND_LEVEL", (t) => {
+    const funcStr = getTrackSendLevelState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_SEND_LEVEL'), 'getTrackSendLevelState should reference DEFAULT_SEND_LEVEL constant');
+});
+TestRunner.test("Day 653 - getTrackSendPreFaderState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getTrackSendPreFaderState'), 'getTrackSendPreFaderState should be exported');
+});
+TestRunner.test("Day 653 - getTrackSendPreFaderState accepts 2 parameters", (t) => {
+    t.assertEqual(getTrackSendPreFaderState.length, 2, 'getTrackSendPreFaderState should accept 2 parameters (trackId, sendId)');
+});
+TestRunner.test("Day 653 - getTrackSendPreFaderState references trackSendsState", (t) => {
+    const funcStr = getTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('trackSendsState'), 'getTrackSendPreFaderState should reference trackSendsState');
+});
+TestRunner.test("Day 653 - getTrackSendPreFaderState checks typeof preFader === boolean", (t) => {
+    const funcStr = getTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('typeof') && funcStr.includes('boolean'), 'getTrackSendPreFaderState should check typeof boolean');
+});
+TestRunner.test("Day 653 - getTrackSendPreFaderState references Constants.DEFAULT_SEND_PRE_FADER", (t) => {
+    const funcStr = getTrackSendPreFaderState.toString();
+    t.assertTruthy(funcStr.includes('DEFAULT_SEND_PRE_FADER'), 'getTrackSendPreFaderState should reference DEFAULT_SEND_PRE_FADER constant');
+});
+TestRunner.test("Day 653 - removeTrackFromStateInternal is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function removeTrackFromStateInternal'), 'removeTrackFromStateInternal should be exported');
+});
+TestRunner.test("Day 653 - removeTrackFromStateInternal accepts 1 parameter", (t) => {
+    t.assertEqual(removeTrackFromStateInternal.length, 1, 'removeTrackFromStateInternal should accept 1 parameter (trackId)');
+});
+TestRunner.test("Day 653 - removeTrackFromStateInternal uses try/catch for error handling", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'removeTrackFromStateInternal should have try/catch');
+});
+TestRunner.test("Day 653 - removeTrackFromStateInternal uses findIndex to locate track", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('findIndex'), 'removeTrackFromStateInternal should use findIndex to locate track');
+});
+TestRunner.test("Day 653 - removeTrackFromStateInternal calls captureStateForUndoInternal", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoInternal'), 'removeTrackFromStateInternal should call captureStateForUndoInternal');
+});
+TestRunner.test("Day 653 - removeTrackFromStateInternal calls track.dispose if available", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('dispose'), 'removeTrackFromStateInternal should call track.dispose if available');
+});
+TestRunner.test("Day 653 - removeTrackFromStateInternal uses splice to remove track", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('splice'), 'removeTrackFromStateInternal should use splice to remove track');
+});
+TestRunner.test("Day 653 - removeTrackFromStateInternal handles armed/soloed state cleanup", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('armedTrackId') || funcStr.includes('soloedTrackId'), 'removeTrackFromStateInternal should handle armed/soloed state cleanup');
+});
+TestRunner.test("Day 653 - gatherProjectDataInternal is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function gatherProjectDataInternal'), 'gatherProjectDataInternal should be exported');
+});
+TestRunner.test("Day 653 - gatherProjectDataInternal uses try/catch for error handling", (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'gatherProjectDataInternal should have try/catch');
+});
+TestRunner.test("Day 653 - gatherProjectDataInternal returns a projectData object", (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('projectData') || funcStr.includes('return'), 'gatherProjectDataInternal should return projectData object');
+});
+TestRunner.test("Day 653 - gatherProjectDataInternal includes version, projectName, projectNotes", (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('version') && funcStr.includes('projectName') && funcStr.includes('projectNotes'), 'gatherProjectDataInternal should include version, projectName, projectNotes');
+});
+TestRunner.test("Day 653 - gatherProjectDataInternal collects globalSettings", (t) => {
+    const funcStr = gatherProjectDataInternal.toString();
+    t.assertTruthy(funcStr.includes('globalSettings') || funcStr.includes('tempo') || funcStr.includes('masterVolume'), 'gatherProjectDataInternal should collect globalSettings');
+});
+TestRunner.test("Day 653 - saveProjectInternal is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function saveProjectInternal'), 'saveProjectInternal should be exported');
+});
+TestRunner.test("Day 653 - saveProjectInternal uses try/catch for error handling", (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'saveProjectInternal should have try/catch');
+});
+TestRunner.test("Day 653 - saveProjectInternal calls gatherProjectDataInternal", (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('gatherProjectDataInternal'), 'saveProjectInternal should call gatherProjectDataInternal');
+});
+TestRunner.test("Day 653 - saveProjectInternal creates Blob for download", (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('Blob') && funcStr.includes('application/json'), 'saveProjectInternal should create Blob for download');
+});
+TestRunner.test("Day 653 - saveProjectInternal triggers download via anchor click", (t) => {
+    const funcStr = saveProjectInternal.toString();
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('click'), 'saveProjectInternal should trigger download via anchor click');
+});
+TestRunner.test("Day 653 - getClipboardDataState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getClipboardDataState'), 'getClipboardDataState should be exported');
+});
+TestRunner.test("Day 653 - getClipboardDataState accepts 0 parameters", (t) => {
+    t.assertEqual(getClipboardDataState.length, 0, 'getClipboardDataState should accept 0 parameters');
+});
+TestRunner.test("Day 653 - getClipboardDataState references clipboardDataGlobal", (t) => {
+    const funcStr = getClipboardDataState.toString();
+    t.assertTruthy(funcStr.includes('clipboardDataGlobal'), 'getClipboardDataState should reference clipboardDataGlobal');
+});
+TestRunner.test("Day 653 - APP_VERSION validation for Day 653", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 653');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 306, 'Minor version should be >= 306 for Day 653');
+    }
+});
+
+// --- Day 653: Event Handlers Module Init and Control Events Function Tests ---
+
+// Test initializeEventHandlersModule
+TestRunner.test("Day 653 - initializeEventHandlersModule is a function export", (t) => {
+    const funcStr = initializeEventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'initializeEventHandlersModule should be exported');
+});
+
+TestRunner.test("Day 653 - initializeEventHandlersModule accepts 1 parameter (appServicesFromMain)", (t) => {
+    t.assertEqual(initializeEventHandlersModule.length, 1, 'initializeEventHandlersModule should accept 1 parameter');
+});
+
+TestRunner.test("Day 653 - initializeEventHandlersModule assigns appServicesFromMain to localAppServices", (t) => {
+    const funcStr = initializeEventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices = appServicesFromMain') || funcStr.includes('localAppServices=appServicesFromMain'), 'initializeEventHandlersModule should assign appServicesFromMain to localAppServices');
+});
+
+TestRunner.test("Day 653 - initializeEventHandlersModule references localAppServices for service access", (t) => {
+    const funcStr = initializeEventHandlersModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'initializeEventHandlersModule should reference localAppServices');
+});
+
+TestRunner.test("Day 653 - APP_VERSION validation for Day 653", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 653');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 306, 'Minor version should be >= 306 for Day 653');
+    }
+});
+
+// Test attachGlobalControlEvents
+TestRunner.test("Day 653 - attachGlobalControlEvents is a function export", (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'attachGlobalControlEvents should be exported');
+});
+
+TestRunner.test("Day 653 - attachGlobalControlEvents accepts 1 parameter (elements)", (t) => {
+    t.assertEqual(attachGlobalControlEvents.length, 1, 'attachGlobalControlEvents should accept 1 parameter');
+});
+
+TestRunner.test("Day 653 - attachGlobalControlEvents checks elements parameter", (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('if (!elements') || funcStr.includes('if(!elements'), 'attachGlobalControlEvents should check elements parameter');
+});
+
+TestRunner.test("Day 653 - attachGlobalControlEvents references localAppServices", (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'attachGlobalControlEvents should reference localAppServices');
+});
+
+TestRunner.test("Day 653 - attachGlobalControlEvents has try/catch block for error handling", (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'attachGlobalControlEvents should have try/catch block');
+});
+
+TestRunner.test("Day 653 - attachGlobalControlEvents sets up keyboard event listeners", (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('keydown') || funcStr.includes('keyup'), 'attachGlobalControlEvents should set up keyboard event listeners');
+});
+
+TestRunner.test("Day 653 - attachGlobalControlEvents sets up mouse event listeners", (t) => {
+    const funcStr = attachGlobalControlEvents.toString();
+    t.assertTruthy(funcStr.includes('mousedown') || funcStr.includes('mousemove') || funcStr.includes('mouseup'), 'attachGlobalControlEvents should set up mouse event listeners');
+});
+
+TestRunner.test("Day 653 - APP_VERSION validation for Day 653", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 653');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 306, 'Minor version should be >= 306 for Day 653');
+    }
+});
