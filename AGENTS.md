@@ -1,4 +1,16 @@
 #### Day 642: MIDI CC Mapping and Learn Function Tests (2026-05-29)
+#### Day 643: Track Send Nodes Audio Function Tests (2026-05-29)
+- **Tests**: Added 7 tests for Track Send Nodes audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 643 test block with 7 tests for getTrackSendNodes and setTrackSendLevel
+  - `js/constants.js`: Bumped APP_VERSION to 2.297.0
+- **Test Details** (`js/tests.js`): 7 tests covering:
+  - **getTrackSendNodes** (2 tests): is a function export, returns trackSendNodes Map
+  - **setTrackSendLevel** (4 tests): is a function export, accepts 3 parameters (trackId, sendId, level), clamps level to 0-1 range using Math.max/min, uses trackSendNodes.get and sendGainNode for routing
+  - APP_VERSION validation (>= 2.296 for Day 643)
+- **Version**: Bumped to 2.297.0
+- **Test Count**: Increased from 2220 to 2227
+
 - **Tests**: Added 28 tests for MIDI CC mapping and learn functions in eventHandlers.js
 - **Files Modified**:
   - `js/tests.js`: Added Day 642 test block with 28 tests for MIDI CC functions
