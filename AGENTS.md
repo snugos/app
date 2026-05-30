@@ -1,3 +1,19 @@
+#### Day 646: Transport Time Display and Tap Tempo Audio Function Tests (2026-05-29)
+- **Tests**: Added 20 tests for Transport Time Display and Tap Tempo audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 646 test block with 20 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.300.0
+- **Test Details** (`js/tests.js`): 20 tests covering:
+  - **getTransportPosition** (3 tests): is a function export, accepts 0 parameters, references Tone.Transport.position
+  - **getTransportSeconds** (3 tests): is a function export, accepts 0 parameters, references Tone.Transport.seconds
+  - **getTransportBpm** (3 tests): is a function export, accepts 0 parameters, references Tone.Transport.bpm.value
+  - **getTransportState** (3 tests): is a function export, accepts 0 parameters, references Tone.Transport.state
+  - **isTapTempoReady** (2 tests): is a function export, accepts 0 parameters
+  - **getTapTempoBpm** (4 tests): is a function export, accepts 0 parameters, references tapTimes array, clamps to TAP_TEMPO_MIN_BPM and TAP_TEMPO_MAX_BPM
+  - APP_VERSION validation (>= 2.300 for Day 646)
+- **Version**: Bumped to 2.300.0
+- **Test Count**: Increased from 2313 to 2333
+
 #### Day 642: MIDI CC Mapping and Learn Function Tests (2026-05-29)
 #### Day 643: Track Send Nodes Audio Function Tests (2026-05-29)
 - **Tests**: Added 7 tests for Track Send Nodes audio functions in audio.js

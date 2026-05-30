@@ -13251,3 +13251,78 @@ TestRunner.test("Day 645 - APP_VERSION validation for Day 645", (t) => {
         t.assertTruthy(versionParts[1] >= 299, 'Minor version should be >= 299 for Day 645');
     }
 });
+
+// Day 646: Transport Time Display Audio Function Tests
+TestRunner.test("Day 646 - getTransportPosition is a function export", (t) => {
+    const audioStr = getTransportPosition.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getTransportPosition should be exported');
+});
+TestRunner.test("Day 646 - getTransportPosition accepts 0 parameters", (t) => {
+    t.assertEqual(getTransportPosition.length, 0, 'getTransportPosition should accept no parameters');
+});
+TestRunner.test("Day 646 - getTransportPosition references Tone.Transport.position", (t) => {
+    const funcStr = getTransportPosition.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.position'), 'getTransportPosition should return Tone.Transport.position');
+});
+TestRunner.test("Day 646 - getTransportSeconds is a function export", (t) => {
+    const audioStr = getTransportSeconds.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getTransportSeconds should be exported');
+});
+TestRunner.test("Day 646 - getTransportSeconds accepts 0 parameters", (t) => {
+    t.assertEqual(getTransportSeconds.length, 0, 'getTransportSeconds should accept no parameters');
+});
+TestRunner.test("Day 646 - getTransportSeconds references Tone.Transport.seconds", (t) => {
+    const funcStr = getTransportSeconds.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.seconds'), 'getTransportSeconds should return Tone.Transport.seconds');
+});
+TestRunner.test("Day 646 - getTransportBpm is a function export", (t) => {
+    const audioStr = getTransportBpm.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getTransportBpm should be exported');
+});
+TestRunner.test("Day 646 - getTransportBpm accepts 0 parameters", (t) => {
+    t.assertEqual(getTransportBpm.length, 0, 'getTransportBpm should accept no parameters');
+});
+TestRunner.test("Day 646 - getTransportBpm references Tone.Transport.bpm.value", (t) => {
+    const funcStr = getTransportBpm.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.bpm.value'), 'getTransportBpm should return Tone.Transport.bpm.value');
+});
+TestRunner.test("Day 646 - getTransportState is a function export", (t) => {
+    const audioStr = getTransportState.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getTransportState should be exported');
+});
+TestRunner.test("Day 646 - getTransportState accepts 0 parameters", (t) => {
+    t.assertEqual(getTransportState.length, 0, 'getTransportState should accept no parameters');
+});
+TestRunner.test("Day 646 - getTransportState references Tone.Transport.state", (t) => {
+    const funcStr = getTransportState.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.state'), 'getTransportState should return Tone.Transport.state');
+});
+TestRunner.test("Day 646 - isTapTempoReady is a function export", (t) => {
+    const audioStr = isTapTempoReady.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'isTapTempoReady should be exported');
+});
+TestRunner.test("Day 646 - isTapTempoReady accepts 0 parameters", (t) => {
+    t.assertEqual(isTapTempoReady.length, 0, 'isTapTempoReady should accept no parameters');
+});
+TestRunner.test("Day 646 - getTapTempoBpm is a function export", (t) => {
+    const audioStr = getTapTempoBpm.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getTapTempoBpm should be exported');
+});
+TestRunner.test("Day 646 - getTapTempoBpm accepts 0 parameters", (t) => {
+    t.assertEqual(getTapTempoBpm.length, 0, 'getTapTempoBpm should accept no parameters');
+});
+TestRunner.test("Day 646 - getTapTempoBpm references tapTimes array", (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('tapTimes'), 'getTapTempoBpm should reference tapTimes');
+});
+TestRunner.test("Day 646 - getTapTempoBpm clamps to TAP_TEMPO_MIN_BPM and TAP_TEMPO_MAX_BPM", (t) => {
+    const funcStr = getTapTempoBpm.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'getTapTempoBpm should clamp the BPM value');
+});
+TestRunner.test("Day 646 - APP_VERSION validation for Day 646", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 646');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 300, 'Minor version should be >= 300 for Day 646');
+    }
+});
