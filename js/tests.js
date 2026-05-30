@@ -13012,3 +13012,242 @@ TestRunner.test("Day 644 - APP_VERSION validation for Day 644", (t) => {
 });
 
 
+
+// ============================================
+// Day 645: Loop Region, Punch Region, and Master Effects Audio Function Tests
+// ============================================
+
+TestRunner.test("Day 645 - getLoopRegion is a function export", (t) => {
+    const audioStr = getLoopRegion.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getLoopRegion should be exported');
+});
+
+TestRunner.test("Day 645 - getLoopRegion accepts 0 parameters", (t) => {
+    t.assertEqual(getLoopRegion.length, 0, 'getLoopRegion should accept no parameters');
+});
+
+TestRunner.test("Day 645 - getLoopRegion returns object copy", (t) => {
+    const funcStr = getLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('{ ...loopRegion') || funcStr.includes('loopRegion.start') || funcStr.includes('loopRegion.end'), 'getLoopRegion should return an object');
+});
+
+TestRunner.test("Day 645 - setLoopRegion is a function export", (t) => {
+    const audioStr = setLoopRegion.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'setLoopRegion should be exported');
+});
+
+TestRunner.test("Day 645 - setLoopRegion accepts 2 parameters", (t) => {
+    t.assertEqual(setLoopRegion.length, 2, 'setLoopRegion should accept 2 parameters (startBars, endBars)');
+});
+
+TestRunner.test("Day 645 - setLoopRegion validates range (endBars > startBars)", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('endBars <= startBars') || funcStr.includes('startBars >= endBars') || funcStr.includes('endBars > startBars'), 'setLoopRegion should validate that endBars > startBars');
+});
+
+TestRunner.test("Day 645 - setLoopRegion references Constants.MAX_BARS", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'setLoopRegion should reference Constants.MAX_BARS');
+});
+
+TestRunner.test("Day 645 - setLoopRegion calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegion should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 645 - setLoopRegion sets loopRegion.start and loopRegion.end", (t) => {
+    const funcStr = setLoopRegion.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.start =') && funcStr.includes('loopRegion.end ='), 'setLoopRegion should set both start and end');
+});
+
+TestRunner.test("Day 645 - setLoopRegionEnabled is a function export", (t) => {
+    const audioStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'setLoopRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 645 - setLoopRegionEnabled accepts 1 parameter", (t) => {
+    t.assertEqual(setLoopRegionEnabled.length, 1, 'setLoopRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test("Day 645 - setLoopRegionEnabled uses !! boolean coercion", (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!enabled') || funcStr.includes('!! nextValue'), 'setLoopRegionEnabled should use !! for boolean coercion');
+});
+
+TestRunner.test("Day 645 - setLoopRegionEnabled calls captureAudioStateForUndoIfAllowed on change", (t) => {
+    const funcStr = setLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setLoopRegionEnabled should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 645 - isLoopRegionEnabled is a function export", (t) => {
+    const audioStr = isLoopRegionEnabled.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'isLoopRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 645 - isLoopRegionEnabled accepts 0 parameters", (t) => {
+    t.assertEqual(isLoopRegionEnabled.length, 0, 'isLoopRegionEnabled should accept no parameters');
+});
+
+TestRunner.test("Day 645 - isLoopRegionEnabled returns loopRegion.enabled", (t) => {
+    const funcStr = isLoopRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.enabled'), 'isLoopRegionEnabled should return loopRegion.enabled');
+});
+
+TestRunner.test("Day 645 - getLoopStartBars is a function export", (t) => {
+    const audioStr = getLoopStartBars.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getLoopStartBars should be exported');
+});
+
+TestRunner.test("Day 645 - getLoopStartBars accepts 0 parameters", (t) => {
+    t.assertEqual(getLoopStartBars.length, 0, 'getLoopStartBars should accept no parameters');
+});
+
+TestRunner.test("Day 645 - getLoopStartBars returns loopRegion.start", (t) => {
+    const funcStr = getLoopStartBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.start'), 'getLoopStartBars should return loopRegion.start');
+});
+
+TestRunner.test("Day 645 - getLoopEndBars is a function export", (t) => {
+    const audioStr = getLoopEndBars.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getLoopEndBars should be exported');
+});
+
+TestRunner.test("Day 645 - getLoopEndBars accepts 0 parameters", (t) => {
+    t.assertEqual(getLoopEndBars.length, 0, 'getLoopEndBars should accept no parameters');
+});
+
+TestRunner.test("Day 645 - getLoopEndBars returns loopRegion.end", (t) => {
+    const funcStr = getLoopEndBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.end'), 'getLoopEndBars should return loopRegion.end');
+});
+
+TestRunner.test("Day 645 - getPunchRegion is a function export", (t) => {
+    const audioStr = getPunchRegion.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getPunchRegion should be exported');
+});
+
+TestRunner.test("Day 645 - getPunchRegion accepts 0 parameters", (t) => {
+    t.assertEqual(getPunchRegion.length, 0, 'getPunchRegion should accept no parameters');
+});
+
+TestRunner.test("Day 645 - getPunchRegion returns object copy", (t) => {
+    const funcStr = getPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('{ ...punchRegion') || funcStr.includes('punchRegion.in') || funcStr.includes('punchRegion.out'), 'getPunchRegion should return an object');
+});
+
+TestRunner.test("Day 645 - setPunchRegion is a function export", (t) => {
+    const audioStr = setPunchRegion.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'setPunchRegion should be exported');
+});
+
+TestRunner.test("Day 645 - setPunchRegion accepts 2 parameters", (t) => {
+    t.assertEqual(setPunchRegion.length, 2, 'setPunchRegion should accept 2 parameters (inBars, outBars)');
+});
+
+TestRunner.test("Day 645 - setPunchRegion validates range (outBars > inBars)", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('outBars <= inBars') || funcStr.includes('inBars >= outBars'), 'setPunchRegion should validate that outBars > inBars');
+});
+
+TestRunner.test("Day 645 - setPunchRegion references Constants.MAX_BARS", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('MAX_BARS'), 'setPunchRegion should reference Constants.MAX_BARS');
+});
+
+TestRunner.test("Day 645 - setPunchRegion calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegion should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 645 - setPunchRegionEnabled is a function export", (t) => {
+    const audioStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'setPunchRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 645 - setPunchRegionEnabled accepts 1 parameter", (t) => {
+    t.assertEqual(setPunchRegionEnabled.length, 1, 'setPunchRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test("Day 645 - setPunchRegionEnabled uses !! boolean coercion", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!enabled') || funcStr.includes('!! nextValue'), 'setPunchRegionEnabled should use !! for boolean coercion');
+});
+
+TestRunner.test("Day 645 - setPunchRegionEnabled calls captureAudioStateForUndoIfAllowed on change", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setPunchRegionEnabled should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 645 - isPunchRegionEnabled is a function export", (t) => {
+    const audioStr = isPunchRegionEnabled.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'isPunchRegionEnabled should be exported');
+});
+
+TestRunner.test("Day 645 - isPunchRegionEnabled accepts 0 parameters", (t) => {
+    t.assertEqual(isPunchRegionEnabled.length, 0, 'isPunchRegionEnabled should accept no parameters');
+});
+
+TestRunner.test("Day 645 - isPunchRegionEnabled returns punchRegion.enabled", (t) => {
+    const funcStr = isPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled'), 'isPunchRegionEnabled should return punchRegion.enabled');
+});
+
+TestRunner.test("Day 645 - getPunchInBars is a function export", (t) => {
+    const audioStr = getPunchInBars.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getPunchInBars should be exported');
+});
+
+TestRunner.test("Day 645 - getPunchInBars accepts 0 parameters", (t) => {
+    t.assertEqual(getPunchInBars.length, 0, 'getPunchInBars should accept no parameters');
+});
+
+TestRunner.test("Day 645 - getPunchInBars returns punchRegion.in", (t) => {
+    const funcStr = getPunchInBars.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.in'), 'getPunchInBars should return punchRegion.in');
+});
+
+TestRunner.test("Day 645 - getPunchOutBars is a function export", (t) => {
+    const audioStr = getPunchOutBars.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getPunchOutBars should be exported');
+});
+
+TestRunner.test("Day 645 - getPunchOutBars accepts 0 parameters", (t) => {
+    t.assertEqual(getPunchOutBars.length, 0, 'getPunchOutBars should accept no parameters');
+});
+
+TestRunner.test("Day 645 - getPunchOutBars returns punchRegion.out", (t) => {
+    const funcStr = getPunchOutBars.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.out'), 'getPunchOutBars should return punchRegion.out');
+});
+
+TestRunner.test("Day 645 - isPositionInPunchRegion is a function export", (t) => {
+    const audioStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'isPositionInPunchRegion should be exported');
+});
+
+TestRunner.test("Day 645 - isPositionInPunchRegion accepts 1 parameter", (t) => {
+    t.assertEqual(isPositionInPunchRegion.length, 1, 'isPositionInPunchRegion should accept 1 parameter (positionString)');
+});
+
+TestRunner.test("Day 645 - isPositionInPunchRegion checks punchRegion.enabled", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.enabled'), 'isPositionInPunchRegion should check if punchRegion is enabled');
+});
+
+TestRunner.test("Day 645 - isPositionInPunchRegion parses positionString", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('split') && funcStr.includes(':'), 'isPositionInPunchRegion should parse positionString');
+});
+
+TestRunner.test("Day 645 - isPositionInPunchRegion calculates totalSixteenths", (t) => {
+    const funcStr = isPositionInPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('totalSixteenths') || funcStr.includes('16'), 'isPositionInPunchRegion should calculate position in sixteenths');
+});
+
+TestRunner.test("Day 645 - APP_VERSION validation for Day 645", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 645');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 299, 'Minor version should be >= 299 for Day 645');
+    }
+});

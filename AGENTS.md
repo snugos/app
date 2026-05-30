@@ -2176,3 +2176,26 @@
 - **Bug Fix**: Fixed malformed Day 642 APP_VERSION validation block that had unclosed if statement and incorrect closing braces
 - **Version**: Bumped to 2.298.0
 - **Test Count**: Increased from 2227 to 2264
+
+#### Day 645: Loop Region and Punch Region Audio Function Tests (2026-05-29)
+- **Tests**: Added 47 tests for Loop Region and Punch Region audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 645 test block with 47 tests for Loop and Punch Region audio functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.299.0
+- **Test Details** (`js/tests.js`): 47 tests covering:
+  - **getLoopRegion** (3 tests): is a function export, accepts 0 parameters, returns object copy
+  - **setLoopRegion** (5 tests): is a function export, accepts 2 parameters (startBars, endBars), validates range (endBars > startBars), references MAX_BARS, calls captureAudioStateForUndoIfAllowed, sets loopRegion.start and loopRegion.end
+  - **setLoopRegionEnabled** (4 tests): is a function export, accepts 1 parameter, uses !! boolean coercion, calls captureAudioStateForUndoIfAllowed on change
+  - **isLoopRegionEnabled** (3 tests): is a function export, accepts 0 parameters, returns loopRegion.enabled
+  - **getLoopStartBars** (3 tests): is a function export, accepts 0 parameters, returns loopRegion.start
+  - **getLoopEndBars** (3 tests): is a function export, accepts 0 parameters, returns loopRegion.end
+  - **getPunchRegion** (3 tests): is a function export, accepts 0 parameters, returns object copy
+  - **setPunchRegion** (5 tests): is a function export, accepts 2 parameters (inBars, outBars), validates range (outBars > inBars), references MAX_BARS, calls captureAudioStateForUndoIfAllowed
+  - **setPunchRegionEnabled** (4 tests): is a function export, accepts 1 parameter, uses !! boolean coercion, calls captureAudioStateForUndoIfAllowed on change
+  - **isPunchRegionEnabled** (3 tests): is a function export, accepts 0 parameters, returns punchRegion.enabled
+  - **getPunchInBars** (3 tests): is a function export, accepts 0 parameters, returns punchRegion.in
+  - **getPunchOutBars** (3 tests): is a function export, accepts 0 parameters, returns punchRegion.out
+  - **isPositionInPunchRegion** (4 tests): is a function export, accepts 1 parameter (positionString), checks punchRegion.enabled, parses positionString, calculates totalSixteenths
+  - APP_VERSION validation (>= 2.298 for Day 645)
+- **Version**: Bumped to 2.299.0
+- **Test Count**: Increased from 2264 to 2311
