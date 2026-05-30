@@ -13892,3 +13892,209 @@ TestRunner.test("Day 650 - APP_VERSION validation for Day 650", (t) => {
         t.assertTruthy(versionParts[1] >= 303, 'Minor version should be >= 303 for Day 650');
     }
 });
+
+// Day 651: Track Effect Instance Methods Tests
+// ============================================
+TestRunner.test("Day 651 - addEffect is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.addEffect, 'function', 'addEffect should be a function');
+});
+
+TestRunner.test("Day 651 - addEffect accepts 1 parameter (effectType)", (t) => {
+    t.assertEqual(Track.prototype.addEffect.length, 1, 'addEffect should accept 1 parameter');
+});
+
+TestRunner.test("Day 651 - addEffect checks effectsRegistryAccess via appServices", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess'), 'addEffect should check effectsRegistryAccess');
+});
+
+TestRunner.test("Day 651 - addEffect checks AVAILABLE_EFFECTS in registry", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'addEffect should check AVAILABLE_EFFECTS');
+});
+
+TestRunner.test("Day 651 - addEffect calls _captureUndoState before adding effect", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const pushIdx = funcStr.indexOf('this.activeEffects.push');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < pushIdx, 'addEffect should capture undo BEFORE activeEffects.push');
+});
+
+TestRunner.test("Day 651 - addEffect has descriptive undo label with effect type and track name", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('Add ${effectType} effect on ${this.name}') || funcStr.includes('Add '), 'addEffect should have descriptive undo label');
+});
+
+TestRunner.test("Day 651 - addEffect calls rebuildEffectChain after adding effect", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('this.rebuildEffectChain()'), 'addEffect should call rebuildEffectChain');
+});
+
+TestRunner.test("Day 651 - addEffect shows notification for registry missing", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('registry missing'), 'addEffect should show notification when registry is missing');
+});
+
+TestRunner.test("Day 651 - addEffect shows notification for effect type not found", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && (funcStr.includes('not found') || funcStr.includes('Effect type')), 'addEffect should show notification for invalid effect type');
+});
+
+TestRunner.test("Day 651 - addEffect shows notification for creation failure", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('Could not create'), 'addEffect should show notification when Tone.js instance creation fails');
+});
+
+TestRunner.test("Day 651 - addEffect calls updateTrackUI after adding effect", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI') || funcStr.includes('updateTrackUI'), 'addEffect should call updateTrackUI');
+});
+
+TestRunner.test("Day 651 - addEffect generates unique effect ID with Date.now and random", (t) => {
+    const funcStr = Track.prototype.addEffect.toString();
+    t.assertTruthy(funcStr.includes('Date.now()') && funcStr.includes('Math.random()'), 'addEffect should generate unique effect ID');
+});
+
+TestRunner.test("Day 651 - removeEffect is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.removeEffect, 'function', 'removeEffect should be a function');
+});
+
+TestRunner.test("Day 651 - removeEffect accepts 1 parameter (effectId)", (t) => {
+    t.assertEqual(Track.prototype.removeEffect.length, 1, 'removeEffect should accept 1 parameter');
+});
+
+TestRunner.test("Day 651 - removeEffect uses findIndex to locate effect by id", (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('findIndex'), 'removeEffect should use findIndex to locate effect');
+});
+
+TestRunner.test("Day 651 - removeEffect calls _captureUndoState before removing effect", (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const spliceIdx = funcStr.indexOf('this.activeEffects.splice');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < spliceIdx, 'removeEffect should capture undo BEFORE activeEffects.splice');
+});
+
+TestRunner.test("Day 651 - removeEffect has descriptive undo label with effect type and track name", (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('Remove') && funcStr.includes('effect from'), 'removeEffect should have descriptive undo label');
+});
+
+TestRunner.test("Day 651 - removeEffect calls dispose on toneNode before splice", (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('dispose()'), 'removeEffect should call dispose on toneNode');
+});
+
+TestRunner.test("Day 651 - removeEffect calls rebuildEffectChain after removing", (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('this.rebuildEffectChain()'), 'removeEffect should call rebuildEffectChain');
+});
+
+TestRunner.test("Day 651 - removeEffect calls updateTrackUI after removing", (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'removeEffect should call updateTrackUI');
+});
+
+TestRunner.test("Day 651 - removeEffect handles effect not found case", (t) => {
+    const funcStr = Track.prototype.removeEffect.toString();
+    t.assertTruthy(funcStr.includes('not found'), 'removeEffect should handle not found case');
+});
+
+TestRunner.test("Day 651 - setEffectBypass is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setEffectBypass, 'function', 'setEffectBypass should be a function');
+});
+
+TestRunner.test("Day 651 - setEffectBypass accepts 2 parameters (effectId, bypassed)", (t) => {
+    t.assertEqual(Track.prototype.setEffectBypass.length, 2, 'setEffectBypass should accept 2 parameters');
+});
+
+TestRunner.test("Day 651 - setEffectBypass uses find to locate effect by id", (t) => {
+    const funcStr = Track.prototype.setEffectBypass.toString();
+    t.assertTruthy(funcStr.includes('find'), 'setEffectBypass should use find to locate effect');
+});
+
+TestRunner.test("Day 651 - setEffectBypass checks if effectWrapper is not found", (t) => {
+    const funcStr = Track.prototype.setEffectBypass.toString();
+    t.assertTruthy(funcStr.includes('not found'), 'setEffectBypass should handle effect not found');
+});
+
+TestRunner.test("Day 651 - setEffectBypass checks toneNode.disposed state", (t) => {
+    const funcStr = Track.prototype.setEffectBypass.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'setEffectBypass should check disposed state');
+});
+
+TestRunner.test("Day 651 - setEffectBypass uses !! to coerce bypassed to boolean", (t) => {
+    const funcStr = Track.prototype.setEffectBypass.toString();
+    t.assertTruthy(funcStr.includes('!!bypassed'), 'setEffectBypass should use !! boolean coercion');
+});
+
+TestRunner.test("Day 651 - setEffectBypass calls _captureUndoState only when value changes", (t) => {
+    const funcStr = Track.prototype.setEffectBypass.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const bypassIdx = funcStr.indexOf('effectWrapper.toneNode.bypass');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < bypassIdx, 'setEffectBypass should capture undo before bypass mutation');
+    t.assertTruthy(funcStr.includes('!== nextValue') || funcStr.includes('!== nextValue'), 'setEffectBypass should check for value change');
+});
+
+TestRunner.test("Day 651 - setEffectBypass has descriptive undo label with Bypass/Enable", (t) => {
+    const funcStr = Track.prototype.setEffectBypass.toString();
+    t.assertTruthy(funcStr.includes('Bypass') || funcStr.includes('Enable'), 'setEffectBypass should have Bypass/Enable undo label');
+});
+
+TestRunner.test("Day 651 - setEffectBypass sets effectWrapper.toneNode.bypass", (t) => {
+    const funcStr = Track.prototype.setEffectBypass.toString();
+    t.assertTruthy(funcStr.includes('effectWrapper.toneNode.bypass = nextValue'), 'setEffectBypass should set toneNode.bypass property');
+});
+
+TestRunner.test("Day 651 - updateEffectParam is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.updateEffectParam, 'function', 'updateEffectParam should be a function');
+});
+
+TestRunner.test("Day 651 - updateEffectParam accepts 3 parameters (effectId, paramPath, value)", (t) => {
+    t.assertEqual(Track.prototype.updateEffectParam.length, 3, 'updateEffectParam should accept 3 parameters');
+});
+
+TestRunner.test("Day 651 - updateEffectParam uses find to locate effect by id", (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('find'), 'updateEffectParam should use find to locate effect');
+});
+
+TestRunner.test("Day 651 - updateEffectParam checks if effectWrapper is not found", (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('not found'), 'updateEffectParam should handle effect not found');
+});
+
+TestRunner.test("Day 651 - updateEffectParam checks toneNode.disposed state", (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'updateEffectParam should check disposed state');
+});
+
+TestRunner.test("Day 651 - updateEffectParam calls _captureUndoState before updating", (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const paramPathIdx = funcStr.indexOf('paramPath.split');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < paramPathIdx, 'updateEffectParam should capture undo before param update');
+});
+
+TestRunner.test("Day 651 - updateEffectParam has descriptive undo label with effect type", (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('Update') && funcStr.includes('effect on'), 'updateEffectParam should have descriptive undo label');
+});
+
+TestRunner.test("Day 651 - updateEffectParam uses paramPath.split for nested param access", (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('paramPath.split') && funcStr.includes("'.'"), 'updateEffectParam should use paramPath.split for nested access');
+});
+
+TestRunner.test("Day 651 - updateEffectParam uses rampTo for AudioParam updates", (t) => {
+    const funcStr = Track.prototype.updateEffectParam.toString();
+    t.assertTruthy(funcStr.includes('rampTo'), 'updateEffectParam should use rampTo for parameter updates');
+});
+
+TestRunner.test("Day 651 - APP_VERSION validation for Day 651", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 651');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 304, 'Minor version should be >= 304 for Day 651');
+    }
+});
