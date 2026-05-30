@@ -13820,3 +13820,75 @@ TestRunner.test("Day 649 - APP_VERSION validation for Day 649", (t) => {
         t.assertTruthy(versionParts[1] >= 302, 'Minor version should be >= 302 for Day 649');
     }
 });
+
+// --- Day 650: Remaining Event Handler Function Tests ---
+TestRunner.test("Day 650 - toggleMetronomeShortcut is a function export", (t) => {
+    const funcStr = toggleMetronomeShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleMetronomeShortcut should be exported');
+});
+TestRunner.test("Day 650 - toggleMetronomeShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleMetronomeShortcut.length, 0, 'toggleMetronomeShortcut should accept 0 parameters');
+});
+TestRunner.test("Day 650 - toggleMetronomeShortcut references localAppServices.setMetronomeEnabled", (t) => {
+    const funcStr = toggleMetronomeShortcut.toString();
+    t.assertTruthy(funcStr.includes('localAppServices.setMetronomeEnabled'), 'toggleMetronomeShortcut should reference setMetronomeEnabled');
+});
+TestRunner.test("Day 650 - toggleMetronomeShortcut references localAppServices.isMetronomeEnabled", (t) => {
+    const funcStr = toggleMetronomeShortcut.toString();
+    t.assertTruthy(funcStr.includes('localAppServices.isMetronomeEnabled'), 'toggleMetronomeShortcut should reference isMetronomeEnabled');
+});
+TestRunner.test("Day 650 - toggleMetronomeShortcut shows notification with ON/OFF state", (t) => {
+    const funcStr = toggleMetronomeShortcut.toString();
+    t.assertTruthy(funcStr.includes('Metronome ON') && funcStr.includes('Metronome OFF'), 'toggleMetronomeShortcut should show ON/OFF notification');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners is a function export", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'initializePrimaryEventListeners should be exported');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners accepts 1 parameter (appContext)", (t) => {
+    t.assertEqual(initializePrimaryEventListeners.length, 1, 'initializePrimaryEventListeners should accept 1 parameter');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners uses appContext || localAppServices pattern", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('appContext || localAppServices'), 'initializePrimaryEventListeners should use fallback pattern');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners uses uiElementsCache from services", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('uiElementsCache'), 'initializePrimaryEventListeners should reference uiElementsCache');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners has try/catch block for error handling", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'initializePrimaryEventListeners should have error handling');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners sets up desktop click and contextmenu listeners", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('uiCache.desktop'), 'initializePrimaryEventListeners should reference uiCache.desktop');
+    t.assertTruthy(funcStr.includes("addEventListener('click'") || funcStr.includes('addEventListener("click"'), 'should add click listener');
+    t.assertTruthy(funcStr.includes("addEventListener('contextmenu'") || funcStr.includes('addEventListener("contextmenu"'), 'should add contextmenu listener');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners references createContextMenu for right-click menu", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('createContextMenu'), 'initializePrimaryEventListeners should reference createContextMenu');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners sets up menuActions for various menu items", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('menuActions'), 'initializePrimaryEventListeners should have menuActions object');
+    t.assertTruthy(funcStr.includes('menuAddSynthTrack') && funcStr.includes('menuOpenSoundBrowser'), 'should have menu item actions');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners handles loadProjectInput change event", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('uiCache.loadProjectInput'), 'should reference loadProjectInput');
+    t.assertTruthy(funcStr.includes("addEventListener('change'") || funcStr.includes('addEventListener("change"'), 'should add change listener');
+});
+TestRunner.test("Day 650 - initializePrimaryEventListeners calls services.addTrack for track creation", (t) => {
+    const funcStr = initializePrimaryEventListeners.toString();
+    t.assertTruthy(funcStr.includes('services.addTrack'), 'initializePrimaryEventListeners should call services.addTrack');
+    t.assertTruthy(funcStr.includes("'Synth'") && funcStr.includes("'Audio'"), 'should handle multiple track types');
+});
+TestRunner.test("Day 650 - APP_VERSION validation for Day 650", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 650');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 303, 'Minor version should be >= 303 for Day 650');
+    }
+});
