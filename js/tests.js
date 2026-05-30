@@ -13692,3 +13692,131 @@ TestRunner.test("Day 648 - APP_VERSION validation for Day 648", (t) => {
         t.assertTruthy(versionParts[1] >= 301, 'Minor version should be >= 301 for Day 648');
     }
 });
+
+// --- Day 649: Step Accessor/Setter Track Methods Tests ---
+TestRunner.test("Day 649 - setNoteLength is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setNoteLength, 'function', 'setNoteLength should be a function');
+});
+TestRunner.test("Day 649 - setNoteLength accepts 3 parameters (row, col, lengthInSteps)", (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    t.assertTruthy(funcStr.includes('setNoteLength(row, col, lengthInSteps)'), 'setNoteLength should accept row, col, lengthInSteps parameters');
+});
+TestRunner.test("Day 649 - setNoteLength captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('activeSeq.data[row][col].length =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setNoteLength should capture undo before mutating data');
+});
+TestRunner.test("Day 649 - setNoteLength has descriptive undo label with row/col", (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    t.assertTruthy(funcStr.includes('Set note length at row') && funcStr.includes('col'), 'setNoteLength should have descriptive undo label');
+});
+TestRunner.test("Day 649 - setNoteLength clamps to activeSeq.length - col", (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    t.assertTruthy(funcStr.includes('activeSeq.length - col'), 'setNoteLength should clamp to prevent overflow');
+});
+TestRunner.test("Day 649 - setNoteLength returns void (no return value)", (t) => {
+    const funcStr = Track.prototype.setNoteLength.toString();
+    const returnIdx = funcStr.indexOf('return');
+    t.assertTruthy(returnIdx < 0 || funcStr.lastIndexOf('return') < funcStr.indexOf('activeSeq.data'), 'setNoteLength should not return a value');
+});
+TestRunner.test("Day 649 - getNoteLength is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.getNoteLength, 'function', 'getNoteLength should be a function');
+});
+TestRunner.test("Day 649 - getNoteLength accepts 2 parameters (row, col)", (t) => {
+    const funcStr = Track.prototype.getNoteLength.toString();
+    t.assertTruthy(funcStr.includes('getNoteLength(row, col)'), 'getNoteLength should accept row, col parameters');
+});
+TestRunner.test("Day 649 - getNoteLength returns stepData.length or 1", (t) => {
+    const funcStr = Track.prototype.getNoteLength.toString();
+    t.assertTruthy(funcStr.includes('return stepData.length || 1') || funcStr.includes('return 1'), 'getNoteLength should return length or default 1');
+});
+TestRunner.test("Day 649 - getNoteLength returns 0 for inactive notes", (t) => {
+    const funcStr = Track.prototype.getNoteLength.toString();
+    t.assertTruthy(funcStr.includes('return 0'), 'getNoteLength should return 0 for inactive notes');
+});
+TestRunner.test("Day 649 - setStepVelocity is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setStepVelocity, 'function', 'setStepVelocity should be a function');
+});
+TestRunner.test("Day 649 - setStepVelocity accepts 3 parameters (row, col, velocity)", (t) => {
+    const funcStr = Track.prototype.setStepVelocity.toString();
+    t.assertTruthy(funcStr.includes('setStepVelocity(row, col, velocity)'), 'setStepVelocity should accept row, col, velocity parameters');
+});
+TestRunner.test("Day 649 - setStepVelocity captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setStepVelocity.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('activeSeq.data[row][col].velocity =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setStepVelocity should capture undo before mutating velocity');
+});
+TestRunner.test("Day 649 - setStepVelocity clamps to 0.05-1.0 range", (t) => {
+    const funcStr = Track.prototype.setStepVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0.05') && funcStr.includes('Math.min(1', 'setStepVelocity should clamp to 0.05-1.0 range'));
+});
+TestRunner.test("Day 649 - setStepVelocity rounds to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.setStepVelocity.toString();
+    t.assertTruthy(funcStr.includes('Math.round') && funcStr.includes('100) / 100'), 'setStepVelocity should round to 2 decimal places');
+});
+TestRunner.test("Day 649 - setStepVelocity returns void", (t) => {
+    const funcStr = Track.prototype.setStepVelocity.toString();
+    const returnIdx = funcStr.indexOf('return');
+    t.assertTruthy(returnIdx < 0 || funcStr.lastIndexOf('return') < funcStr.indexOf('activeSeq.data'), 'setStepVelocity should not return a value');
+});
+TestRunner.test("Day 649 - getStepVelocity is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.getStepVelocity, 'function', 'getStepVelocity should be a function');
+});
+TestRunner.test("Day 649 - getStepVelocity accepts 2 parameters (row, col)", (t) => {
+    const funcStr = Track.prototype.getStepVelocity.toString();
+    t.assertTruthy(funcStr.includes('getStepVelocity(row, col)'), 'getStepVelocity should accept row, col parameters');
+});
+TestRunner.test("Day 649 - getStepVelocity returns velocity or 1 default", (t) => {
+    const funcStr = Track.prototype.getStepVelocity.toString();
+    t.assertTruthy(funcStr.includes('return stepData.velocity ?? 1') || funcStr.includes('?? 1'), 'getStepVelocity should return velocity or 1 default');
+});
+TestRunner.test("Day 649 - getStepVelocity returns 1 for inactive notes", (t) => {
+    const funcStr = Track.prototype.getStepVelocity.toString();
+    t.assertTruthy(funcStr.includes('return 1') && funcStr.includes('!stepData || !stepData.active'), 'getStepVelocity should return 1 for inactive notes');
+});
+TestRunner.test("Day 649 - setStepProbability is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setStepProbability, 'function', 'setStepProbability should be a function');
+});
+TestRunner.test("Day 649 - setStepProbability accepts 3 parameters (row, col, probability)", (t) => {
+    const funcStr = Track.prototype.setStepProbability.toString();
+    t.assertTruthy(funcStr.includes('setStepProbability(row, col, probability)'), 'setStepProbability should accept row, col, probability parameters');
+});
+TestRunner.test("Day 649 - setStepProbability captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setStepProbability.toString();
+    const captureIdx = funcStr.indexOf('this._captureUndoState');
+    const mutationIdx = funcStr.indexOf('activeSeq.data[row][col].probability =');
+    t.assertTruthy(captureIdx >= 0 && captureIdx < mutationIdx, 'setStepProbability should capture undo before mutating probability');
+});
+TestRunner.test("Day 649 - setStepProbability clamps to 0-1 range", (t) => {
+    const funcStr = Track.prototype.setStepProbability.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0') && funcStr.includes('Math.min(1', 'setStepProbability should clamp to 0-1 range'));
+});
+TestRunner.test("Day 649 - setStepProbability returns void", (t) => {
+    const funcStr = Track.prototype.setStepProbability.toString();
+    const returnIdx = funcStr.indexOf('return');
+    t.assertTruthy(returnIdx < 0 || funcStr.lastIndexOf('return') < funcStr.indexOf('activeSeq.data'), 'setStepProbability should not return a value');
+});
+TestRunner.test("Day 649 - getStepProbability is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.getStepProbability, 'function', 'getStepProbability should be a function');
+});
+TestRunner.test("Day 649 - getStepProbability accepts 2 parameters (row, col)", (t) => {
+    const funcStr = Track.prototype.getStepProbability.toString();
+    t.assertTruthy(funcStr.includes('getStepProbability(row, col)'), 'getStepProbability should accept row, col parameters');
+});
+TestRunner.test("Day 649 - getStepProbability returns probability or 1 default", (t) => {
+    const funcStr = Track.prototype.getStepProbability.toString();
+    t.assertTruthy(funcStr.includes('return stepData.probability ?? 1') || funcStr.includes('?? 1'), 'getStepProbability should return probability or 1 default');
+});
+TestRunner.test("Day 649 - getStepProbability returns 1 for inactive notes", (t) => {
+    const funcStr = Track.prototype.getStepProbability.toString();
+    t.assertTruthy(funcStr.includes('return 1') && funcStr.includes('!stepData || !stepData.active'), 'getStepProbability should return 1 for inactive notes');
+});
+TestRunner.test("Day 649 - APP_VERSION validation for Day 649", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 649');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 302, 'Minor version should be >= 302 for Day 649');
+    }
+});
