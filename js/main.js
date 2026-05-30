@@ -7,14 +7,17 @@ import * as Constants from './constants.js';
 import { DESKTOP_BACKGROUND_KEY, DESKTOP_BG_TYPE_KEY } from './constants.js';
 import { getAudio as bgDbGetAudio, storeAudio as bgDbStoreAudio, deleteAudio as bgDbDeleteAudio } from './db.js';
 import { 
-    startMetronome, stopMetronome, setMetronomeVolume,
+    stopMetronome, setMetronomeVolume,
     isMetronomeEnabled, setMetronomeEnabled,
     initAudioContextAndMasterMeter, clearAllMasterEffectNodes, 
     addMasterEffectToAudio, getActualMasterGainNode,
     createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus,
     reorderEffectInSendBus, updateSendBusEffectParam, setSendBusLevel, setSendBusMuted,
     connectTrackToSendBus, disconnectTrackFromSendBus, setTrackSendLevel,
-    getSendBusNodes, getTrackSendNodes, getMasterEffectsBusInputNode, getMimeTypeFromFilename
+    getSendBusNodes, getTrackSendNodes, getMasterEffectsBusInputNode, getMimeTypeFromFilename,
+    removeMasterEffectFromAudio,
+    updateMasterEffectParamInAudio,
+    reorderMasterEffectInAudio
 } from './audio.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
@@ -34,7 +37,7 @@ import {
     openTrackSequencerWindow, openTrackInspectorWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openSendEffectsWindow, openGlobalControlsWindow,
     openSoundBrowserWindow, openMixerWindow, updateMixerWindow, openTrackTemplatesWindow,
-    openAudioClipEditorWindow, openTimelineWindow,
+    openTimelineWindow,
     showKeyboardShortcutsHelpWindow,
     renderTimeline,
     updatePlayheadPosition
@@ -137,9 +140,6 @@ import {
     removeMasterEffectFromState,
     updateMasterEffectParamInState,
     reorderMasterEffectInState,
-    removeMasterEffectFromAudio,
-    updateMasterEffectParamInAudio,
-    reorderMasterEffectInAudio,
     // Track Groups
     getTrackGroupsState,
     getTrackGroupByIdState,
@@ -550,7 +550,6 @@ const appServices = {
             }
         });
     },
-    startMetronome: startMetronome,
     stopMetronome: stopMetronome,
     setMetronomeVolume: setMetronomeVolume,
     isMetronomeEnabled: isMetronomeEnabled,
