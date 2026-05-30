@@ -2240,3 +2240,23 @@
   - APP_VERSION validation (>= 2.301 for Day 648)
 - **Version**: Bumped to 2.302.0
 - **Test Count**: Increased from 13554 to 13587
+
+#### Day 653: Internal State Functions and Getters Tests (2026-05-30)
+- **Tests**: Added 67 tests for internal state functions and getters in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 653 test block with 67 tests for internal state functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.307.0
+- **Test Details** (`js/tests.js`): 67 tests covering:
+  - **getRecordingTrackIdState** (3 tests): is a function export, accepts 0 parameters, references recordingTrackIdGlobal
+  - **isTrackRecordingState** (3 tests): is a function export, accepts 0 parameters, references isRecordingGlobal
+  - **getRecordingStartTimeState** (3 tests): is a function export, accepts 0 parameters, references recordingStartTime variable
+  - **getDroppedCallbacksState** (4 tests): is a function export, accepts 0 parameters, references performanceMonitorState, accesses .droppedCallbacks property
+  - **getTrackSendLevelState** (6 tests): is a function export, accepts 2 parameters (trackId, sendId), references trackSendsState, handles missing track bucket, uses Number.isFinite for validation, references Constants.DEFAULT_SEND_LEVEL
+  - **getTrackSendPreFaderState** (5 tests): is a function export, accepts 2 parameters (trackId, sendId), references trackSendsState, checks typeof preFader === boolean, references Constants.DEFAULT_SEND_PRE_FADER
+  - **removeTrackFromStateInternal** (9 tests): is a function export, accepts 1 parameter (trackId), uses try/catch for error handling, uses findIndex to locate track, calls captureStateForUndoInternal, calls track.dispose if available, uses splice to remove track, handles armed/soloed state cleanup
+  - **gatherProjectDataInternal** (5 tests): is a function export, uses try/catch for error handling, returns a projectData object, includes version/projectName/projectNotes, collects globalSettings
+  - **saveProjectInternal** (5 tests): is a function export, uses try/catch for error handling, calls gatherProjectDataInternal, creates Blob for download, triggers download via anchor click
+  - **getClipboardDataState** (3 tests): is a function export, accepts 0 parameters, references clipboardDataGlobal
+  - APP_VERSION validation (>= 2.306 for Day 653)
+- **Version**: Bumped to 2.307.0
+- **Test Count**: Increased from 2525 to 2592
