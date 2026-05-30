@@ -2159,3 +2159,20 @@
   - APP_VERSION validation (>= 2.290 for Day 635)
 - **Version**: Bumped to 2.291.0
 - **Test Count**: Increased from 1998 to 2017
+#### Day 644: Master Volume Automation and Automation Control Audio Function Tests (2026-05-29)
+- **Tests**: Added 37 tests for Master Volume Automation and Automation Control audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 644 test block with 37 tests for initAudioContextAndMasterMeter, writeMasterVolumeAutomation, applyMasterVolumeAutomationAtTime, getMasterVolumeAutomation, setMasterVolumeAutomation, resetTapTempo, and tapTempo
+  - `js/constants.js`: Bumped APP_VERSION to 2.298.0
+- **Test Details** (`js/tests.js`): 37 tests covering:
+  - **initAudioContextAndMasterMeter** (8 tests): is a function export, is async, accepts 1 parameter, references Tone.start, references audioContextInitialized, calls setupMasterBus when needed, has error handling with try/catch, shows notification on error
+  - **writeMasterVolumeAutomation** (4 tests): is a function export, accepts 2 parameters (time, value), references masterVolumeAutomation array, pushes time/value object to masterVolumeAutomation
+  - **applyMasterVolumeAutomationAtTime** (5 tests): is a function export, accepts 1 parameter (time), references masterVolumeAutomation, uses find to locate event by time, calls setMasterVolumeAutomation
+  - **getMasterVolumeAutomation** (4 tests): is a function export, accepts 0 parameters, references masterVolumeAutomation, returns a mapped copy of the automation data
+  - **setMasterVolumeAutomation** (6 tests): is a function export, accepts 1 parameter (automationData), calls captureAudioStateForUndoIfAllowed, has descriptive undo label, checks Array.isArray, assigns array copy to masterVolumeAutomation
+  - **resetTapTempo** (3 tests): is a function export, accepts 0 parameters, sets tapTimes to empty array
+  - **tapTempo** (6 tests): is a function export, accepts 0 parameters, references Date.now, pushes to tapTimes array, checks for timeout gap between taps, limits taps to maximum
+  - APP_VERSION validation (>= 2.297 for Day 644)
+- **Bug Fix**: Fixed malformed Day 642 APP_VERSION validation block that had unclosed if statement and incorrect closing braces
+- **Version**: Bumped to 2.298.0
+- **Test Count**: Increased from 2227 to 2264
