@@ -12791,6 +12791,8 @@ TestRunner.test("Day 642 - APP_VERSION validation for Day 642", (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 642');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 295, 'Minor version should be >= 295 for Day 642');
+    }
+});
 
 // --- Day 643: Track Send Nodes Audio Function Tests ---
 TestRunner.test("Day 643 - getTrackSendNodes is a function export", (t) => {
@@ -12829,5 +12831,184 @@ TestRunner.test("Day 643 - APP_VERSION validation for Day 643", (t) => {
         t.assertTruthy(versionParts[1] >= 296, 'Minor version should be >= 296 for Day 643');
     }
 });
+
+// ============================================
+// Day 644: Master Volume Automation and Automation Control Audio Function Tests
+// ============================================
+
+TestRunner.test("Day 644 - initAudioContextAndMasterMeter is a function export", (t) => {
+    const audioStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(audioStr.includes('export'), 'initAudioContextAndMasterMeter should be exported');
+});
+
+TestRunner.test("Day 644 - initAudioContextAndMasterMeter is async", (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('async'), 'initAudioContextAndMasterMeter should be async');
+});
+
+TestRunner.test("Day 644 - initAudioContextAndMasterMeter accepts 1 parameter", (t) => {
+    t.assertEqual(initAudioContextAndMasterMeter.length, 1, 'initAudioContextAndMasterMeter should accept 1 parameter');
+});
+
+TestRunner.test("Day 644 - initAudioContextAndMasterMeter references Tone.start", (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('Tone.start') || funcStr.includes('Tone.'), 'initAudioContextAndMasterMeter should reference Tone.start');
+});
+
+TestRunner.test("Day 644 - initAudioContextAndMasterMeter references audioContextInitialized", (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('audioContextInitialized'), 'initAudioContextAndMasterMeter should reference audioContextInitialized');
+});
+
+TestRunner.test("Day 644 - initAudioContextAndMasterMeter calls setupMasterBus when needed", (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('setupMasterBus'), 'initAudioContextAndMasterMeter should call setupMasterBus');
+});
+
+TestRunner.test("Day 644 - initAudioContextAndMasterMeter has error handling with try/catch", (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'initAudioContextAndMasterMeter should have try/catch error handling');
+});
+
+TestRunner.test("Day 644 - initAudioContextAndMasterMeter shows notification on error", (t) => {
+    const funcStr = initAudioContextAndMasterMeter.toString();
+    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('alert'), 'initAudioContextAndMasterMeter should show notification on error');
+});
+
+TestRunner.test("Day 644 - writeMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof writeMasterVolumeAutomation, 'function', 'writeMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 644 - writeMasterVolumeAutomation accepts 2 parameters", (t) => {
+    t.assertEqual(writeMasterVolumeAutomation.length, 2, 'writeMasterVolumeAutomation should accept 2 parameters (time, value)');
+});
+
+TestRunner.test("Day 644 - writeMasterVolumeAutomation references masterVolumeAutomation array", (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'writeMasterVolumeAutomation should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 644 - writeMasterVolumeAutomation pushes time/value object to masterVolumeAutomation", (t) => {
+    const funcStr = writeMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('push'), 'writeMasterVolumeAutomation should push to masterVolumeAutomation');
+});
+
+TestRunner.test("Day 644 - applyMasterVolumeAutomationAtTime is a function export", (t) => {
+    t.assertEqual(typeof applyMasterVolumeAutomationAtTime, 'function', 'applyMasterVolumeAutomationAtTime should be a function');
+});
+
+TestRunner.test("Day 644 - applyMasterVolumeAutomationAtTime accepts 1 parameter", (t) => {
+    t.assertEqual(applyMasterVolumeAutomationAtTime.length, 1, 'applyMasterVolumeAutomationAtTime should accept 1 parameter (time)');
+});
+
+TestRunner.test("Day 644 - applyMasterVolumeAutomationAtTime references masterVolumeAutomation", (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'applyMasterVolumeAutomationAtTime should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 644 - applyMasterVolumeAutomationAtTime uses find to locate event by time", (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('find'), 'applyMasterVolumeAutomationAtTime should use find to locate event');
+});
+
+TestRunner.test("Day 644 - applyMasterVolumeAutomationAtTime calls setMasterVolumeAutomation", (t) => {
+    const funcStr = applyMasterVolumeAutomationAtTime.toString();
+    t.assertTruthy(funcStr.includes('setMasterVolumeAutomation'), 'applyMasterVolumeAutomationAtTime should call setMasterVolumeAutomation');
+});
+
+TestRunner.test("Day 644 - getMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof getMasterVolumeAutomation, 'function', 'getMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 644 - getMasterVolumeAutomation accepts 0 parameters", (t) => {
+    t.assertEqual(getMasterVolumeAutomation.length, 0, 'getMasterVolumeAutomation should accept no parameters');
+});
+
+TestRunner.test("Day 644 - getMasterVolumeAutomation references masterVolumeAutomation", (t) => {
+    const funcStr = getMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation'), 'getMasterVolumeAutomation should reference masterVolumeAutomation');
+});
+
+TestRunner.test("Day 644 - getMasterVolumeAutomation returns a mapped copy of the automation data", (t) => {
+    const funcStr = getMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('map'), 'getMasterVolumeAutomation should use map to create a copy');
+});
+
+TestRunner.test("Day 644 - setMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof setMasterVolumeAutomation, 'function', 'setMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 644 - setMasterVolumeAutomation accepts 1 parameter", (t) => {
+    t.assertEqual(setMasterVolumeAutomation.length, 1, 'setMasterVolumeAutomation should accept 1 parameter (automationData)');
+});
+
+TestRunner.test("Day 644 - setMasterVolumeAutomation calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMasterVolumeAutomation should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 644 - setMasterVolumeAutomation has descriptive undo label", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('Automation'), 'setMasterVolumeAutomation should have Automation-related undo label');
+});
+
+TestRunner.test("Day 644 - setMasterVolumeAutomation checks Array.isArray", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('Array.isArray'), 'setMasterVolumeAutomation should check Array.isArray');
+});
+
+TestRunner.test("Day 644 - setMasterVolumeAutomation assigns array copy to masterVolumeAutomation", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomation ='), 'setMasterVolumeAutomation should assign to masterVolumeAutomation');
+});
+
+TestRunner.test("Day 644 - resetTapTempo is a function export", (t) => {
+    t.assertEqual(typeof resetTapTempo, 'function', 'resetTapTempo should be a function');
+});
+
+TestRunner.test("Day 644 - resetTapTempo accepts 0 parameters", (t) => {
+    t.assertEqual(resetTapTempo.length, 0, 'resetTapTempo should accept no parameters');
+});
+
+TestRunner.test("Day 644 - resetTapTempo sets tapTimes to empty array", (t) => {
+    const funcStr = resetTapTempo.toString();
+    t.assertTruthy(funcStr.includes('tapTimes = []') || funcStr.includes('tapTimes=[]'), 'resetTapTempo should set tapTimes to empty array');
+});
+
+TestRunner.test("Day 644 - tapTempo is a function export", (t) => {
+    t.assertEqual(typeof tapTempo, 'function', 'tapTempo should be a function');
+});
+
+TestRunner.test("Day 644 - tapTempo accepts 0 parameters", (t) => {
+    t.assertEqual(tapTempo.length, 0, 'tapTempo should accept no parameters');
+});
+
+TestRunner.test("Day 644 - tapTempo references Date.now", (t) => {
+    const funcStr = tapTempo.toString();
+    t.assertTruthy(funcStr.includes('Date.now'), 'tapTempo should reference Date.now');
+});
+
+TestRunner.test("Day 644 - tapTempo pushes to tapTimes array", (t) => {
+    const funcStr = tapTempo.toString();
+    t.assertTruthy(funcStr.includes('tapTimes.push') || funcStr.includes('push'), 'tapTempo should push to tapTimes array');
+});
+
+TestRunner.test("Day 644 - tapTempo checks for timeout gap between taps", (t) => {
+    const funcStr = tapTempo.toString();
+    t.assertTruthy(funcStr.includes('TAP_TEMPO_TIMEOUT_MS') || funcStr.includes('timeout') || funcStr.includes('lastDelta'), 'tapTempo should check for timeout gap between taps');
+});
+
+TestRunner.test("Day 644 - tapTempo limits taps to maximum", (t) => {
+    const funcStr = tapTempo.toString();
+    t.assertTruthy(funcStr.includes('TAP_TEMPO_MAX_TAPS') || funcStr.includes('slice'), 'tapTempo should limit taps to maximum');
+});
+
+TestRunner.test("Day 644 - APP_VERSION validation for Day 644", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 644');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 298, 'Minor version should be >= 298 for Day 644');
     }
 });
+
+
