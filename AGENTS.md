@@ -1,4 +1,16 @@
 #### Day 646: Transport Time Display and Tap Tempo Audio Function Tests (2026-05-29)
+#### Day 650: Remaining Event Handler Function Tests (2026-05-30)
+- **Tests**: Added 16 tests for remaining Event Handler functions in eventHandlers.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 650 test block with 16 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.304.0
+- **Test Details** (`js/tests.js`): 16 tests covering:
+  - **toggleMetronomeShortcut** (5 tests): is a function export, accepts 0 parameters, references localAppServices.setMetronomeEnabled, references localAppServices.isMetronomeEnabled, shows ON/OFF notification
+  - **initializePrimaryEventListeners** (10 tests): is a function export, accepts 1 parameter (appContext), uses appContext || localAppServices pattern, uses uiElementsCache from services, has try/catch block for error handling, sets up desktop click and contextmenu listeners, references createContextMenu for right-click menu, sets up menuActions for various menu items, handles loadProjectInput change event, calls services.addTrack for track creation
+  - APP_VERSION validation (>= 2.303 for Day 650)
+- **Version**: Bumped to 2.304.0
+- **Test Count**: Increased from 2452 to 2468
+
 - **Tests**: Added 20 tests for Transport Time Display and Tap Tempo audio functions in audio.js
 - **Files Modified**:
   - `js/tests.js`: Added Day 646 test block with 20 tests
