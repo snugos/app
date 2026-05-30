@@ -545,14 +545,14 @@ export class Track {
             return;
         }
         const nextValue = !!bypassed;
+        this._captureUndoState(`${nextValue ? 'Bypass' : 'Enable'} ${effectWrapper.type} on ${this.name}`);
         if (effectWrapper.toneNode.bypass !== nextValue) {
-            this._captureUndoState(`${nextValue ? 'Bypass' : 'Enable'} ${effectWrapper.type} on ${this.name}`);
-        }
-        try {
-            effectWrapper.toneNode.bypass = nextValue;
-            console.log(`[Track ${this.id}] Effect "${effectWrapper.type}" (ID: ${effectId}) bypass set to ${nextValue}`);
-        } catch (e) {
-            console.warn(`[Track ${this.id}] Error setting bypass on effect "${effectWrapper.type}":`, e.message);
+            try {
+                effectWrapper.toneNode.bypass = nextValue;
+                console.log(`[Track ${this.id}] Effect "${effectWrapper.type}" (ID: ${effectId}) bypass set to ${nextValue}`);
+            } catch (e) {
+                console.warn(`[Track ${this.id}] Error setting bypass on effect "${effectWrapper.type}":`, e.message);
+            }
         }
     }
 
