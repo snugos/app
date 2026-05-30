@@ -12791,5 +12791,43 @@ TestRunner.test("Day 642 - APP_VERSION validation for Day 642", (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 642');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 295, 'Minor version should be >= 295 for Day 642');
+
+// --- Day 643: Track Send Nodes Audio Function Tests ---
+TestRunner.test("Day 643 - getTrackSendNodes is a function export", (t) => {
+    const audioStr = getTrackSendNodes.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'getTrackSendNodes should be exported');
+});
+
+TestRunner.test("Day 643 - getTrackSendNodes returns trackSendNodes", (t) => {
+    const funcStr = getTrackSendNodes.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes'), 'getTrackSendNodes should return trackSendNodes');
+});
+
+TestRunner.test("Day 643 - setTrackSendLevel is a function export", (t) => {
+    const audioStr = setTrackSendLevel.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'setTrackSendLevel should be exported');
+});
+
+TestRunner.test("Day 643 - setTrackSendLevel accepts 3 parameters", (t) => {
+    t.assertEqual(setTrackSendLevel.length, 3, 'setTrackSendLevel should accept 3 parameters (trackId, sendId, level)');
+});
+
+TestRunner.test("Day 643 - setTrackSendLevel clamps level to 0-1 range", (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setTrackSendLevel should clamp level using Math.max and Math.min');
+});
+
+TestRunner.test("Day 643 - setTrackSendLevel references trackSendNodes with get and sendGainNode", (t) => {
+    const funcStr = setTrackSendLevel.toString();
+    t.assertTruthy(funcStr.includes('trackSendNodes.get') && funcStr.includes('sendGainNode'), 'setTrackSendLevel should use trackSendNodes.get and sendGainNode');
+});
+
+TestRunner.test("Day 643 - APP_VERSION validation for Day 643", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 643');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 296, 'Minor version should be >= 296 for Day 643');
+    }
+});
     }
 });
