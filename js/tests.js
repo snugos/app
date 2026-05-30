@@ -182,7 +182,9 @@ import {
     synthEngineControlDefinitions,
     createEffectInstance,
     getEffectDefaultParams,
-    getEffectParamDefinitions
+    getEffectParamDefinitions,
+    getEffectBypassState,
+    setEffectBypassState
 } from './effectsRegistry.js';
 
 import { Track } from './Track.js';
@@ -13324,5 +13326,229 @@ TestRunner.test("Day 646 - APP_VERSION validation for Day 646", (t) => {
     t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 646');
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 300, 'Minor version should be >= 300 for Day 646');
+    }
+});
+
+// Day 647: Recording Audio Function Tests
+// ============================================
+TestRunner.test("Day 647 - startAudioRecording is an async function export", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('export async function startAudioRecording') || funcStr.includes('export function startAudioRecording'), 'startAudioRecording should be exported');
+});
+TestRunner.test("Day 647 - startAudioRecording accepts 2 parameters", (t) => {
+    t.assertEqual(startAudioRecording.length, 2, 'startAudioRecording should accept 2 parameters (track, isMonitoringEnabled)');
+});
+TestRunner.test("Day 647 - startAudioRecording validates track type is Audio", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'Audio'") || funcStr.includes("track.type === 'Audio'"), 'startAudioRecording should validate track type');
+});
+TestRunner.test("Day 647 - startAudioRecording calls initAudioContextAndMasterMeter", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'startAudioRecording should call initAudioContextAndMasterMeter');
+});
+TestRunner.test("Day 647 - startAudioRecording creates Tone.UserMedia for microphone", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('Tone.UserMedia') || funcStr.includes('UserMedia'), 'startAudioRecording should create Tone.UserMedia for mic');
+});
+TestRunner.test("Day 647 - startAudioRecording creates Tone.Recorder", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('Tone.Recorder') || funcStr.includes('Recorder'), 'startAudioRecording should create Tone.Recorder');
+});
+TestRunner.test("Day 647 - startAudioRecording calls recorder.start", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('recorder.start') || funcStr.includes('.start('), 'startAudioRecording should call recorder.start');
+});
+TestRunner.test("Day 647 - startAudioRecording references getRecordingInputGainNode", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('getRecordingInputGainNode'), 'startAudioRecording should call getRecordingInputGainNode');
+});
+TestRunner.test("Day 647 - startAudioRecording sets recording state via setIsRecordingState", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setIsRecordingState'), 'startAudioRecording should call setIsRecordingState');
+});
+TestRunner.test("Day 647 - startAudioRecording sets recording track ID via setRecordingTrackIdState", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setRecordingTrackIdState'), 'startAudioRecording should call setRecordingTrackIdState');
+});
+TestRunner.test("Day 647 - startAudioRecording sets recording start time via setRecordingStartTimeState", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setRecordingStartTimeState'), 'startAudioRecording should call setRecordingStartTimeState');
+});
+TestRunner.test("Day 647 - startAudioRecording has error handling with console.error", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'startAudioRecording should have console.error error handling');
+});
+TestRunner.test("Day 647 - startAudioRecording calls cleanupRecordingAudioResources on error", (t) => {
+    const funcStr = startAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('cleanupRecordingAudioResources'), 'startAudioRecording should call cleanupRecordingAudioResources on error');
+});
+TestRunner.test("Day 647 - stopAudioRecording is an async function export", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('export async function stopAudioRecording') || funcStr.includes('export function stopAudioRecording'), 'stopAudioRecording should be exported');
+});
+TestRunner.test("Day 647 - stopAudioRecording accepts 0 parameters", (t) => {
+    t.assertEqual(stopAudioRecording.length, 0, 'stopAudioRecording should accept no parameters');
+});
+TestRunner.test("Day 647 - stopAudioRecording captures state at function entry (activeRecorder, activeMic, activeTrackId, activeStartTime)", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('activeRecorder') && funcStr.includes('activeMic') && funcStr.includes('activeTrackId') && funcStr.includes('activeStartTime'), 'stopAudioRecording should capture state at entry');
+});
+TestRunner.test("Day 647 - stopAudioRecording checks for null activeRecorder", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('!activeRecorder') || funcStr.includes('activeRecorder ===') || funcStr.includes('activeRecorder =='), 'stopAudioRecording should check for null recorder');
+});
+TestRunner.test("Day 647 - stopAudioRecording calls recorder.stop", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('recorder.stop') || funcStr.includes('.stop('), 'stopAudioRecording should call recorder.stop');
+});
+TestRunner.test("Day 647 - stopAudioRecording validates recording size (>1000 bytes)", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('1000') || funcStr.includes('size'), 'stopAudioRecording should validate recording size');
+});
+TestRunner.test("Day 647 - stopAudioRecording validates destination track type is Audio", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes("type !== 'Audio'"), 'stopAudioRecording should validate track type');
+});
+TestRunner.test("Day 647 - stopAudioRecording calls addAudioClip on valid track", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('addAudioClip'), 'stopAudioRecording should call addAudioClip');
+});
+TestRunner.test("Day 647 - stopAudioRecording clears recording state on success (setIsRecordingState(false), setRecordingTrackIdState(null), setRecordingStartTimeState(0))", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('setIsRecordingState') && funcStr.includes('setRecordingTrackIdState') && funcStr.includes('setRecordingStartTimeState'), 'stopAudioRecording should clear all recording state on success');
+});
+TestRunner.test("Day 647 - stopAudioRecording calls cleanupRecordingScheduling", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('cleanupRecordingScheduling'), 'stopAudioRecording should call cleanupRecordingScheduling');
+});
+TestRunner.test("Day 647 - stopAudioRecording has console.warn for empty recordings", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('console.warn'), 'stopAudioRecording should have console.warn for empty recordings');
+});
+TestRunner.test("Day 647 - stopAudioRecording has console.error for error handling", (t) => {
+    const funcStr = stopAudioRecording.toString();
+    t.assertTruthy(funcStr.includes('console.error'), 'stopAudioRecording should have console.error for errors');
+});
+TestRunner.test("Day 647 - APP_VERSION validation for Day 647", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 647');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= app.constants.APP_VERSION_MINOR || versionParts[1] >= 300, 'Minor version should be >= 300 for Day 647');
+    }
+});
+
+// Day 647: EffectsRegistry Function Tests
+TestRunner.test("Day 647 - getEffectBypassState is a function export", (t) => {
+    const funcStr = getEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getEffectBypassState should be exported');
+});
+TestRunner.test("Day 647 - getEffectBypassState accepts 1 parameter", (t) => {
+    t.assertEqual(getEffectBypassState.length, 1, 'getEffectBypassState should accept 1 parameter (effectId)');
+});
+TestRunner.test("Day 647 - getEffectBypassState references effectBypassStates Map", (t) => {
+    const funcStr = getEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('effectBypassStates'), 'getEffectBypassState should reference effectBypassStates');
+});
+TestRunner.test("Day 647 - getEffectBypassState returns boolean from Map get", (t) => {
+    const funcStr = getEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('.get(') && funcStr.includes('=== true'), 'getEffectBypassState should return Map.get result compared to true');
+});
+TestRunner.test("Day 647 - setEffectBypassState is a function export", (t) => {
+    const funcStr = setEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'setEffectBypassState should be exported');
+});
+TestRunner.test("Day 647 - setEffectBypassState accepts 2 parameters", (t) => {
+    t.assertEqual(setEffectBypassState.length, 2, 'setEffectBypassState should accept 2 parameters (effectId, bypassed)');
+});
+TestRunner.test("Day 647 - setEffectBypassState references effectBypassStates Map", (t) => {
+    const funcStr = setEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('effectBypassStates'), 'setEffectBypassState should reference effectBypassStates');
+});
+TestRunner.test("Day 647 - setEffectBypassState calls Map.set", (t) => {
+    const funcStr = setEffectBypassState.toString();
+    t.assertTruthy(funcStr.includes('.set('), 'setEffectBypassState should call Map.set');
+});
+TestRunner.test("Day 647 - createEffectInstance is a function export", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'createEffectInstance should be exported');
+});
+TestRunner.test("Day 647 - createEffectInstance accepts 2 parameters", (t) => {
+    t.assertEqual(createEffectInstance.length, 2, 'createEffectInstance should accept 2 parameters (effectType, initialParams)');
+});
+TestRunner.test("Day 647 - createEffectInstance checks Tone global", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes("typeof Tone") && funcStr.includes('undefined'), 'createEffectInstance should check if Tone is defined');
+});
+TestRunner.test("Day 647 - createEffectInstance looks up AVAILABLE_EFFECTS", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'createEffectInstance should look up AVAILABLE_EFFECTS');
+});
+TestRunner.test("Day 647 - createEffectInstance checks definition exists", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('definition'), 'createEffectInstance should use definition variable');
+});
+TestRunner.test("Day 647 - createEffectInstance checks Tone[definition.toneClass]", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('Tone[') && funcStr.includes('.toneClass'), 'createEffectInstance should check Tone class existence');
+});
+TestRunner.test("Day 647 - createEffectInstance instantiates with new Tone", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('new Tone[') || funcStr.includes('new Tone.'), 'createEffectInstance should instantiate Tone effect');
+});
+TestRunner.test("Day 647 - createEffectInstance handles error with try/catch", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'createEffectInstance should have error handling');
+});
+TestRunner.test("Day 647 - createEffectInstance returns null on failure", (t) => {
+    const funcStr = createEffectInstance.toString();
+    t.assertTruthy(funcStr.includes('return null'), 'createEffectInstance should return null on error');
+});
+TestRunner.test("Day 647 - getEffectDefaultParams is a function export", (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getEffectDefaultParams should be exported');
+});
+TestRunner.test("Day 647 - getEffectDefaultParams accepts 1 parameter", (t) => {
+    t.assertEqual(getEffectDefaultParams.length, 1, 'getEffectDefaultParams should accept 1 parameter (effectType)');
+});
+TestRunner.test("Day 647 - getEffectDefaultParams looks up AVAILABLE_EFFECTS", (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectDefaultParams should look up AVAILABLE_EFFECTS');
+});
+TestRunner.test("Day 647 - getEffectDefaultParams builds nested defaults object", (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('params') && (funcStr.includes('forEach') || funcStr.includes('.map')), 'getEffectDefaultParams should build defaults');
+});
+TestRunner.test("Day 647 - getEffectDefaultParams returns empty object when no definition", (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('return {}'), 'getEffectDefaultParams should return empty object for invalid effect');
+});
+TestRunner.test("Day 647 - getEffectDefaultParams uses defaultValue from params", (t) => {
+    const funcStr = getEffectDefaultParams.toString();
+    t.assertTruthy(funcStr.includes('defaultValue'), 'getEffectDefaultParams should use defaultValue');
+});
+TestRunner.test("Day 647 - getEffectParamDefinitions is a function export", (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getEffectParamDefinitions should be exported');
+});
+TestRunner.test("Day 647 - getEffectParamDefinitions accepts 1 parameter", (t) => {
+    t.assertEqual(getEffectParamDefinitions.length, 1, 'getEffectParamDefinitions should accept 1 parameter (effectType)');
+});
+TestRunner.test("Day 647 - getEffectParamDefinitions looks up AVAILABLE_EFFECTS", (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'getEffectParamDefinitions should look up AVAILABLE_EFFECTS');
+});
+TestRunner.test("Day 647 - getEffectParamDefinitions returns definition.params", (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('params'), 'getEffectParamDefinitions should return params array');
+});
+TestRunner.test("Day 647 - getEffectParamDefinitions returns empty array when no definition", (t) => {
+    const funcStr = getEffectParamDefinitions.toString();
+    t.assertTruthy(funcStr.includes('return []'), 'getEffectParamDefinitions should return empty array for invalid effect');
+});
+TestRunner.test("Day 647 - APP_VERSION validation for Day 647", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 647');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 300, 'Minor version should be >= 300 for Day 647');
     }
 });
