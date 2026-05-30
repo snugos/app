@@ -37,7 +37,7 @@ import {
     openTrackSequencerWindow, openTrackInspectorWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openSendEffectsWindow, openGlobalControlsWindow,
     openSoundBrowserWindow, openMixerWindow, updateMixerWindow, openTrackTemplatesWindow,
-    openTimelineWindow,
+    openAudioClipEditorWindow, openTimelineWindow,
     showKeyboardShortcutsHelpWindow,
     renderTimeline,
     updatePlayheadPosition
