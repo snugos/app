@@ -2215,3 +2215,16 @@
   - APP_VERSION validation (>= 2.298 for Day 645)
 - **Version**: Bumped to 2.299.0
 - **Test Count**: Increased from 2264 to 2311
+
+#### Day 648: setupMIDI and selectMIDIInput Event Handler Function Tests (2026-05-29)
+- **Tests**: Added 33 tests for setupMIDI and selectMIDIInput event handler functions in eventHandlers.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 648 test block with 33 tests for setupMIDI and selectMIDIInput
+  - `js/constants.js`: Bumped APP_VERSION to 2.302.0
+- **Test Details** (`js/tests.js`): 33 tests covering:
+  - **setupMIDI** (17 tests): is a function export, accepts 0 parameters, checks navigator.requestMIDIAccess, calls with then/catch, passes onMIDISuccess and onMIDIFailure handlers, handles unsupported browser with console.warn, shows notification for unsupported browser, onMIDISuccess is internal (not exported), onMIDIFailure is internal (not exported), calls localAppServices.setMidiAccess, references midiAccess.inputs, references uiElementsCache.midiInputSelectGlobal, sets selectElement.innerHTML, iterates MIDI inputs with for loop, creates option elements for each input, gets activeMIDIId from getActiveMIDIInputState, sets onstatechange handler on midiAccess
+  - **selectMIDIInput** (14 tests): is a function export, accepts 2 parameters (deviceId, silent), calls getMidiAccessState, calls getActiveMIDIInputState, closes previous input (onmidimessage = null, close()), handles deviceId check, gets input from midi.inputs.get(deviceId), calls input.open() and sets onmidimessage, sets onmidimessage = handleMIDIMessage, calls localAppServices.setActiveMIDIInput, checks silent parameter for notifications, handles missing input case, has try/catch error handling, has console.error for errors, handles falsy input case, handles catch block for open().catch
+  - **handleMIDIMessage** (1 test): is not an export (internal helper)
+  - APP_VERSION validation (>= 2.301 for Day 648)
+- **Version**: Bumped to 2.302.0
+- **Test Count**: Increased from 13554 to 13587

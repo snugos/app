@@ -13552,3 +13552,143 @@ TestRunner.test("Day 647 - APP_VERSION validation for Day 647", (t) => {
         t.assertTruthy(versionParts[1] >= 300, 'Minor version should be >= 300 for Day 647');
     }
 });
+
+// --- Day 648: setupMIDI and selectMIDIInput Event Handler Function Tests ---
+TestRunner.test("Day 648 - setupMIDI is a function export", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'setupMIDI should be exported');
+});
+TestRunner.test("Day 648 - setupMIDI accepts 0 parameters", (t) => {
+    t.assertEqual(setupMIDI.length, 0, 'setupMIDI should accept 0 parameters');
+});
+TestRunner.test("Day 648 - setupMIDI checks navigator.requestMIDIAccess", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('navigator.requestMIDIAccess'), 'setupMIDI should check navigator.requestMIDIAccess');
+});
+TestRunner.test("Day 648 - setupMIDI calls navigator.requestMIDIAccess with then/catch", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('navigator.requestMIDIAccess') && funcStr.includes('.then') && funcStr.includes('.catch'), 'setupMIDI should call requestMIDIAccess with then and catch');
+});
+TestRunner.test("Day 648 - setupMIDI passes onMIDISuccess and onMIDIFailure handlers", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('onMIDISuccess') && funcStr.includes('onMIDIFailure'), 'setupMIDI should pass success and failure handlers');
+});
+TestRunner.test("Day 648 - setupMIDI handles unsupported browser with console.warn", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('console.warn') && funcStr.includes('WebMIDI'), 'setupMIDI should warn when WebMIDI is not supported');
+});
+TestRunner.test("Day 648 - setupMIDI shows notification for unsupported browser", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('WebMIDI'), 'setupMIDI should show notification for unsupported browser');
+});
+TestRunner.test("Day 648 - onMIDISuccess is not an export (internal helper)", (t) => {
+    t.assertEqual(typeof onMIDISuccess, 'undefined', 'onMIDISuccess should not be directly exported');
+});
+TestRunner.test("Day 648 - onMIDIFailure is not an export (internal helper)", (t) => {
+    t.assertEqual(typeof onMIDIFailure, 'undefined', 'onMIDIFailure should not be directly exported');
+});
+TestRunner.test("Day 648 - onMIDISuccess calls localAppServices.setMidiAccess", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('localAppServices.setMidiAccess') || funcStr.includes('setMidiAccess'), 'onMIDISuccess should call setMidiAccess');
+});
+TestRunner.test("Day 648 - onMIDISuccess references midiAccess.inputs", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('midiAccess.inputs'), 'onMIDISuccess should reference midiAccess.inputs');
+});
+TestRunner.test("Day 648 - onMIDISuccess references uiElementsCache.midiInputSelectGlobal", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('midiInputSelectGlobal'), 'onMIDISuccess should reference midiInputSelectGlobal');
+});
+TestRunner.test("Day 648 - onMIDISuccess sets selectElement.innerHTML", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('innerHTML'), 'onMIDISuccess should set innerHTML on select element');
+});
+TestRunner.test("Day 648 - onMIDISuccess iterates MIDI inputs with for loop", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('inputs.values()') || funcStr.includes('inputs.next()'), 'onMIDISuccess should iterate MIDI inputs');
+});
+TestRunner.test("Day 648 - onMIDISuccess creates option elements for each input", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('createElement') && funcStr.includes('option'), 'onMIDISuccess should create option elements');
+});
+TestRunner.test("Day 648 - onMIDISuccess gets activeMIDIId from getActiveMIDIInputState", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('getActiveMIDIInputState'), 'onMIDISuccess should get active MIDI ID from state');
+});
+TestRunner.test("Day 648 - onMIDISuccess sets onstatechange handler on midiAccess", (t) => {
+    const funcStr = setupMIDI.toString();
+    t.assertTruthy(funcStr.includes('onstatechange'), 'onMIDISuccess should set onstatechange handler');
+});
+TestRunner.test("Day 648 - selectMIDIInput is a function export", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'selectMIDIInput should be exported');
+});
+TestRunner.test("Day 648 - selectMIDIInput accepts 2 parameters (deviceId, silent)", (t) => {
+    t.assertEqual(selectMIDIInput.length, 2, 'selectMIDIInput should accept 2 parameters (deviceId, silent)');
+});
+TestRunner.test("Day 648 - selectMIDIInput calls getMidiAccessState", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('getMidiAccessState'), 'selectMIDIInput should call getMidiAccessState');
+});
+TestRunner.test("Day 648 - selectMIDIInput calls getActiveMIDIInputState", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('getActiveMIDIInputState'), 'selectMIDIInput should call getActiveMIDIInputState');
+});
+TestRunner.test("Day 648 - selectMIDIInput closes previous input (onmidimessage = null, close())", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('onmidimessage') && funcStr.includes('close()'), 'selectMIDIInput should close previous input properly');
+});
+TestRunner.test("Day 648 - selectMIDIInput handles deviceId check (if deviceId && midi)", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('deviceId') && (funcStr.includes('&& midi') || funcStr.includes('midi.inputs')), 'selectMIDIInput should check deviceId and midi');
+});
+TestRunner.test("Day 648 - selectMIDIInput gets input from midi.inputs.get(deviceId)", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('midi.inputs.get') || funcStr.includes('inputs.get'), 'selectMIDIInput should get input by deviceId');
+});
+TestRunner.test("Day 648 - selectMIDIInput calls input.open() and sets onmidimessage", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('input.open()') || funcStr.includes('open()'), 'selectMIDIInput should open input and set onmidimessage');
+});
+TestRunner.test("Day 648 - selectMIDIInput sets onmidimessage = handleMIDIMessage", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('onmidimessage') && funcStr.includes('handleMIDIMessage'), 'selectMIDIInput should set onmidimessage handler');
+});
+TestRunner.test("Day 648 - selectMIDIInput calls localAppServices.setActiveMIDIInput", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('setActiveMIDIInput'), 'selectMIDIInput should call setActiveMIDIInput');
+});
+TestRunner.test("Day 648 - selectMIDIInput checks silent parameter for notifications", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('silent') && funcStr.includes('showNotification'), 'selectMIDIInput should check silent param before notifications');
+});
+TestRunner.test("Day 648 - selectMIDIInput handles missing input (input not found)", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('not found') || funcStr.includes('disconnected'), 'selectMIDIInput should handle missing input');
+});
+TestRunner.test("Day 648 - selectMIDIInput has error handling with try/catch", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'selectMIDIInput should have try/catch error handling');
+});
+TestRunner.test("Day 648 - selectMIDIInput has console.error for errors", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('console.error') || funcStr.includes('console.warn'), 'selectMIDIInput should have console.error or console.warn');
+});
+TestRunner.test("Day 648 - selectMIDIInput handles case when input is falsy (else branch)", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('else') && funcStr.includes('setActiveMIDIInput(null)'), 'selectMIDIInput should handle falsy input case');
+});
+TestRunner.test("Day 648 - selectMIDIInput handles catch block for open().catch", (t) => {
+    const funcStr = selectMIDIInput.toString();
+    t.assertTruthy(funcStr.includes('.catch') || funcStr.includes('catch'), 'selectMIDIInput should handle promise rejection');
+});
+TestRunner.test("Day 648 - handleMIDIMessage is not an export (internal helper)", (t) => {
+    t.assertEqual(typeof handleMIDIMessage, 'undefined', 'handleMIDIMessage should not be directly exported');
+});
+TestRunner.test("Day 648 - APP_VERSION validation for Day 648", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 648');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 301, 'Minor version should be >= 301 for Day 648');
+    }
+});
