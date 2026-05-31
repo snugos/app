@@ -15410,3 +15410,77 @@ TestRunner.test("Day 658 - APP_VERSION validation for Day 658 remaining UI windo
         t.assertTruthy(versionParts[1] >= 310, 'Minor version should be >= 310 for Day 658');
     }
 });
+
+TestRunner.test("Day 659 - playSlicePreview is a function export", (t) => {
+    t.assertEqual(typeof playSlicePreview, 'function', 'playSlicePreview should be a function');
+});
+
+TestRunner.test("Day 659 - playSlicePreview is an async function export", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('async'), 'playSlicePreview should be an async function');
+});
+
+TestRunner.test("Day 659 - playSlicePreview accepts 4 parameters with defaults", (t) => {
+    t.assertEqual(playSlicePreview.length, 4, 'playSlicePreview should accept 4 parameters');
+});
+
+TestRunner.test("Day 659 - playSlicePreview references initAudioContextAndMasterMeter", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'playSlicePreview should call initAudioContextAndMasterMeter');
+});
+
+TestRunner.test("Day 659 - playSlicePreview references getTrackById from appServices", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'playSlicePreview should reference getTrackById');
+});
+
+TestRunner.test("Day 659 - playSlicePreview validates track type is Sampler", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'Sampler'") || funcStr.includes("type === 'Sampler'"), 'playSlicePreview should validate track type is Sampler');
+});
+
+TestRunner.test("Day 659 - playSlicePreview references track.audioBuffer and track.slicerIsPolyphonic", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer') && funcStr.includes('slicerIsPolyphonic'), 'playSlicePreview should reference audioBuffer and slicerIsPolyphonic');
+});
+
+TestRunner.test("Day 659 - playSlicePreview references getActualMasterGainNode", (t) => {
+    const funcStr = playSlicePreview.toString();
+    t.assertTruthy(funcStr.includes('getActualMasterGainNode'), 'playSlicePreview should reference getActualMasterGainNode');
+});
+
+TestRunner.test("Day 659 - autoSliceSample is a function export", (t) => {
+    t.assertEqual(typeof autoSliceSample, 'function', 'autoSliceSample should be a function');
+});
+
+TestRunner.test("Day 659 - autoSliceSample accepts 2 parameters with defaults", (t) => {
+    t.assertEqual(autoSliceSample.length, 2, 'autoSliceSample should accept 2 parameters');
+});
+
+TestRunner.test("Day 659 - autoSliceSample references getTrackById from appServices", (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'autoSliceSample should reference getTrackById');
+});
+
+TestRunner.test("Day 659 - autoSliceSample validates track type is Sampler", (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'Sampler'") || funcStr.includes("type === 'Sampler'"), 'autoSliceSample should validate track type is Sampler');
+});
+
+TestRunner.test("Day 659 - autoSliceSample shows notification for non-Sampler tracks", (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'autoSliceSample should call showNotification for invalid track type');
+});
+
+TestRunner.test("Day 659 - autoSliceSample references Constants.numSlices default", (t) => {
+    const funcStr = autoSliceSample.toString();
+    t.assertTruthy(funcStr.includes('Constants.numSlices'), 'autoSliceSample should reference Constants.numSlices');
+});
+
+TestRunner.test("Day 659 - APP_VERSION validation for Day 659 audio function tests", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 659');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 312, 'Minor version should be >= 312 for Day 659');
+    }
+});
