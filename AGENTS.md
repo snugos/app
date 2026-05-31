@@ -2311,3 +2311,17 @@
   - APP_VERSION validation (>= 2.309 for Day 656)
 - **Version**: Bumped to 2.310.0
 - **Test Count**: Increased from 2683 to 2733
+
+#### Day 658: Remaining UI Window Open Function Tests (2026-05-31)
+- **Tests**: Added 20 tests for remaining UI window open functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 658 test block with 20 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.312.0
+- **Test Details** (`js/tests.js`): 20 tests covering:
+  - **openTrackEffectsRackWindow** (5 tests): is a function export, accepts 2 parameters (trackId, savedState), references localAppServices.getTrackById, references getOpenWindows, uses createWindow
+  - **openMasterEffectsRackWindow** (4 tests): is a function export, accepts 1 parameter with default (savedState), references getOpenWindows, uses createWindow, references getMasterEffectsState
+  - **openGlobalControlsWindow** (4 tests): is a function export, accepts 2 parameters (onReadyCallback, savedState), references getOpenWindows, uses createWindow
+  - **openSoundBrowserWindow** (5 tests): is a function export, accepts 1 parameter with default (savedState), references getOpenWindows, uses createWindow, references getLoadedZipFiles or getSoundLibraryFileTrees
+  - APP_VERSION validation (>= 2.310 for Day 658)
+- **Version**: Bumped to 2.312.0
+- **Test Count**: Increased from 2749 to 2769

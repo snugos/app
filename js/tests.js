@@ -15309,3 +15309,104 @@ TestRunner.test("Day 657 - APP_VERSION validation for Day 657 SnugWindow class t
         t.assertTruthy(versionParts[1] >= 310, 'Minor version should be >= 310 for Day 657');
     }
 });
+
+// --- Day 658: Remaining UI Window Open Function Tests ---
+
+TestRunner.test("Day 658 - openTrackEffectsRackWindow is a function export", (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTrackEffectsRackWindow should be exported');
+});
+
+TestRunner.test("Day 658 - openTrackEffectsRackWindow accepts 2 parameters (trackId, savedState)", (t) => {
+    t.assertEqual(openTrackEffectsRackWindow.length, 2, 'openTrackEffectsRackWindow should accept 2 parameters');
+});
+
+TestRunner.test("Day 658 - openTrackEffectsRackWindow references localAppServices.getTrackById", (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackEffectsRackWindow should use getTrackById');
+});
+
+TestRunner.test("Day 658 - openTrackEffectsRackWindow references getOpenWindows", (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackEffectsRackWindow should check open windows');
+});
+
+TestRunner.test("Day 658 - openTrackEffectsRackWindow uses createWindow for window creation", (t) => {
+    const funcStr = openTrackEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackEffectsRackWindow should use createWindow');
+});
+
+TestRunner.test("Day 658 - openMasterEffectsRackWindow is a function export", (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openMasterEffectsRackWindow should be exported');
+});
+
+TestRunner.test("Day 658 - openMasterEffectsRackWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openMasterEffectsRackWindow.length, 1, 'openMasterEffectsRackWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 658 - openMasterEffectsRackWindow references getOpenWindows", (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMasterEffectsRackWindow should check open windows');
+});
+
+TestRunner.test("Day 658 - openMasterEffectsRackWindow uses createWindow for window creation", (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMasterEffectsRackWindow should use createWindow');
+});
+
+TestRunner.test("Day 658 - openMasterEffectsRackWindow references getMasterEffectsState", (t) => {
+    const funcStr = openMasterEffectsRackWindow.toString();
+    t.assertTruthy(funcStr.includes('getMasterEffectsState'), 'openMasterEffectsRackWindow should reference master effects state');
+});
+
+TestRunner.test("Day 658 - openGlobalControlsWindow is a function export", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openGlobalControlsWindow should be exported');
+});
+
+TestRunner.test("Day 658 - openGlobalControlsWindow accepts 2 parameters (onReadyCallback, savedState)", (t) => {
+    t.assertEqual(openGlobalControlsWindow.length, 2, 'openGlobalControlsWindow should accept 2 parameters');
+});
+
+TestRunner.test("Day 658 - openGlobalControlsWindow references getOpenWindows", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openGlobalControlsWindow should check open windows');
+});
+
+TestRunner.test("Day 658 - openGlobalControlsWindow uses createWindow for window creation", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openGlobalControlsWindow should use createWindow');
+});
+
+TestRunner.test("Day 658 - openSoundBrowserWindow is a function export", (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openSoundBrowserWindow should be exported');
+});
+
+TestRunner.test("Day 658 - openSoundBrowserWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openSoundBrowserWindow.length, 1, 'openSoundBrowserWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 658 - openSoundBrowserWindow references getOpenWindows", (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openSoundBrowserWindow should check open windows');
+});
+
+TestRunner.test("Day 658 - openSoundBrowserWindow uses createWindow for window creation", (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openSoundBrowserWindow should use createWindow');
+});
+
+TestRunner.test("Day 658 - openSoundBrowserWindow references getLoadedZipFiles or getSoundLibraryFileTrees", (t) => {
+    const funcStr = openSoundBrowserWindow.toString();
+    t.assertTruthy(funcStr.includes('getLoadedZipFiles') || funcStr.includes('getSoundLibraryFileTrees'), 'openSoundBrowserWindow should reference sound library functions');
+});
+
+TestRunner.test("Day 658 - APP_VERSION validation for Day 658 remaining UI window tests", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 658');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 310, 'Minor version should be >= 310 for Day 658');
+    }
+});
