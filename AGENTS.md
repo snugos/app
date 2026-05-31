@@ -2293,3 +2293,21 @@
   - APP_VERSION validation (>= 2.307 for Day 654)
 - **Version**: Bumped to 2.308.0
 - **Test Count**: Increased from 2584 to 2658
+
+#### Day 656: Utils Module Function Tests (2026-05-30)
+- **Tests**: Added 50 tests for Utils module functions in utils.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 656 test block with 50 tests for utils.js functions
+  - `js/constants.js`: Bumped APP_VERSION to 2.310.0
+- **Test Details** (`js/tests.js`): 50 tests covering:
+  - **showNotification** (6 tests): is a function export, accepts 1-2 parameters, references notification-area div, creates notification-message div, uses setTimeout for fade-in and removal
+  - **showCustomModal** (6 tests): is a function export, accepts 3-4 parameters, references modalContainer div, creates modal-overlay and modal-dialog, creates modal-title-bar, uses buttonsConfig
+  - **showConfirmationDialog** (3 tests): is a function export, accepts 4 parameters, calls showCustomModal, passes onConfirm and onCancel callbacks
+  - **createDropZoneHTML** (6 tests): is a function export, accepts 5-6 parameters, generates dropZoneId with trackId and trackTypeHint, handles padOrSliceIndex, generates data attributes, handles existingAudioData status cases, returns HTML string
+  - **setupGenericDropZoneListeners** (8 tests): is a function export, accepts 7 parameters, validates dropZoneElement not null, adds dragover/dragleave/drop listeners, checks for application/json and dataTransfer.files
+  - **secondsToBBSTime** (5 tests): is a function export, accepts 1 parameter, checks for Tone undefined or invalid input, uses try/catch, calls Tone.Time(seconds).toBarsBeatsSixteenths, returns "0:0:0" on error
+  - **bbsTimeToSeconds** (5 tests): is a function export, accepts 1 parameter, checks for Tone undefined or invalid input, uses try/catch, calls Tone.Time(bbsString).toSeconds, returns null on error
+  - **createContextMenu** (5 tests): is a function export, accepts 3 parameters, validates event and menuItems, calls preventDefault and stopPropagation, removes activeContextMenu if exists, sets activeContextMenu
+  - APP_VERSION validation (>= 2.309 for Day 656)
+- **Version**: Bumped to 2.310.0
+- **Test Count**: Increased from 2683 to 2733
