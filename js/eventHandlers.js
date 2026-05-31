@@ -258,6 +258,58 @@ export function attachGlobalControlEvents(elements) {
         console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
         return;
     }
+
+    // MIDI CC Mappings list updater - assigned to appServices so UI can refresh the mappings window
+    function updateMidiLearnMappingsList() {
+        if (typeof openMidiCCMappingsWindow === 'function' && localAppServices.getWindowById) {
+            const win = localAppServices.getWindowById('midiCCMappings');
+            if (win && win.element) {
+                const listContainer = win.element.querySelector('#midiMappingsList');
+                if (listContainer) {
+                    const mappings = typeof getMidiCCMappings === 'function' ? getMidiCCMappings() : {};
+                    const entries = Object.entries(mappings);
+
+                    if (entries.length === 0) {
+                        listContainer.innerHTML = '<p class="text-slate-400 italic text-center py-4">No MIDI CC mappings configured. Right-click any knob and select "Assign MIDI CC..." to create a mapping.</p>';
+                    } else {
+                        listContainer.innerHTML = entries.map(([targetId, mapping]) => {
+                            const entry = window._midiCCKnobRegistry ? window._midiCCKnobRegistry[targetId] : null;
+                            const ownerInfo = entry ? `${entry.ownerType || 'unknown'} / ${entry.ownerId || 'unknown'} / ${entry.paramPath || 'unknown'}` : targetId;
+                            return `
+                                <div class="mapping-item p-2 border-b border-gray-600 dark:border-slate-600 hover:bg-slate-700/50" data-target-id="${targetId}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="cc-badge px-2 py-0.5 text-xs font-mono bg-purple-700 text-purple-200 rounded">CC ${mapping.cc}</span>
+                                            <span class="ch-badge text-xs text-slate-400">Ch ${(mapping.channel || 0) + 1}</span>
+                                            <span class="range-badge text-xs text-slate-500">${mapping.min?.toFixed(2) || 0} – ${mapping.max?.toFixed(2) || 1}</span>
+                                        </div>
+                                        <button class="remove-mapping-btn px-2 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded" data-target-id="${targetId}">Remove</button>
+                                    </div>
+                                    <div class="text-xs text-slate-400 mt-1 truncate" title="${ownerInfo}">${ownerInfo}</div>
+                                </div>
+                            `;
+                        }).join('');
+
+                        listContainer.querySelectorAll('.remove-mapping-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const targetId = btn.dataset.targetId;
+                                if (typeof removeMidiCCMapping === 'function') {
+                                    removeMidiCCMapping(targetId);
+                                    if (localAppServices.showNotification) localAppServices.showNotification(`MIDI CC mapping removed.`, 2000);
+                                }
+                                updateMidiLearnMappingsList();
+                            });
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // Expose via localAppServices so main.js can assign it
+    localAppServices.updateMidiLearnMappingsList = updateMidiLearnMappingsList;
+
     const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, micTestBtnGlobal, micTestStatusGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal, shortcutsBtnGlobal, exportBtnGlobal } = elements;
 
     function setMicTestStatus(text, state = 'idle') {

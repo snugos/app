@@ -41,6 +41,18 @@ const TestRunner = {
         }
     },
     
+    assertTrue(condition, message = 'Expected truthy value') {
+        if (!condition) {
+            throw new Error(message);
+        }
+    },
+    
+    assertFalse(condition, message = 'Expected falsy value') {
+        if (condition) {
+            throw new Error(message);
+        }
+    },
+    
     assertThrows(fn, message = 'Expected function to throw') {
         let threw = false;
         try {
