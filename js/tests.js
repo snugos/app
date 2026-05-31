@@ -14950,3 +14950,249 @@ TestRunner.test("Day 655 - APP_VERSION validation for Day 655 UI window function
         t.assertTruthy(versionParts[1] >= 308, 'Minor version should be >= 308 for Day 655');
     }
 });
+// --- Day 656: Utils Module Function Tests ---
+
+TestRunner.test("Day 656 - showNotification is a function export", (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'showNotification should be exported');
+});
+
+TestRunner.test("Day 656 - showNotification accepts 1-2 parameters with default", (t) => {
+    t.assertTrue(showNotification.length === 1 || showNotification.length === 2, 'showNotification should accept 1-2 parameters (message, optional duration)');
+});
+
+TestRunner.test("Day 656 - showNotification references notification-area div", (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes("getElementById('notification-area')"), 'showNotification should reference notification-area div');
+});
+
+TestRunner.test("Day 656 - showNotification creates notification div with class", (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('notification-message') && funcStr.includes('createElement'), 'showNotification should create div with notification-message class');
+});
+
+TestRunner.test("Day 656 - showNotification uses setTimeout for fade-in", (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('setTimeout') && funcStr.includes('classList.add'), 'showNotification should use setTimeout for fade-in animation');
+});
+
+TestRunner.test("Day 656 - showNotification uses setTimeout for removal", (t) => {
+    const funcStr = showNotification.toString();
+    t.assertTruthy(funcStr.includes('classList.remove') && funcStr.includes('removeChild'), 'showNotification should remove notification after duration');
+});
+
+TestRunner.test("Day 656 - showCustomModal is a function export", (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'showCustomModal should be exported');
+});
+
+TestRunner.test("Day 656 - showCustomModal accepts 3-4 parameters", (t) => {
+    t.assertTrue(showCustomModal.length === 3 || showCustomModal.length === 4, 'showCustomModal should accept 3-4 parameters (title, contentHTML, buttonsConfig, optional modalClass)');
+});
+
+TestRunner.test("Day 656 - showCustomModal references modalContainer div", (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes("getElementById('modalContainer')"), 'showCustomModal should reference modalContainer div');
+});
+
+TestRunner.test("Day 656 - showCustomModal creates modal-overlay and modal-dialog divs", (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('modal-overlay') && funcStr.includes('modal-dialog'), 'showCustomModal should create modal overlay and dialog elements');
+});
+
+TestRunner.test("Day 656 - showCustomModal creates modal-title-bar", (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('modal-title-bar'), 'showCustomModal should create title bar element');
+});
+
+TestRunner.test("Day 656 - showCustomModal uses buttonsConfig parameter", (t) => {
+    const funcStr = showCustomModal.toString();
+    t.assertTruthy(funcStr.includes('buttonsConfig'), 'showCustomModal should use buttonsConfig parameter');
+});
+
+TestRunner.test("Day 656 - showConfirmationDialog is a function export", (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'showConfirmationDialog should be exported');
+});
+
+TestRunner.test("Day 656 - showConfirmationDialog accepts 4 parameters", (t) => {
+    t.assertEqual(showConfirmationDialog.length, 4, 'showConfirmationDialog should accept 4 parameters (title, message, onConfirm, onCancel)');
+});
+
+TestRunner.test("Day 656 - showConfirmationDialog calls showCustomModal", (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('showCustomModal'), 'showConfirmationDialog should call showCustomModal');
+});
+
+TestRunner.test("Day 656 - showConfirmationDialog passes onConfirm and onCancel to showCustomModal", (t) => {
+    const funcStr = showConfirmationDialog.toString();
+    t.assertTruthy(funcStr.includes('onConfirm') && funcStr.includes('onCancel'), 'showConfirmationDialog should pass callback functions');
+});
+
+TestRunner.test("Day 656 - createDropZoneHTML is a function export", (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'createDropZoneHTML should be exported');
+});
+
+TestRunner.test("Day 656 - createDropZoneHTML accepts 5-6 parameters", (t) => {
+    t.assertTrue(createDropZoneHTML.length === 5 || createDropZoneHTML.length === 6, 'createDropZoneHTML should accept 5-6 parameters');
+});
+
+TestRunner.test("Day 656 - createDropZoneHTML generates dropZoneId with trackId and trackTypeHint", (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('dropZoneId') && funcStr.includes('trackId') && funcStr.includes('trackTypeHint'), 'createDropZoneHTML should generate dropZoneId');
+});
+
+TestRunner.test("Day 656 - createDropZoneHTML handles padOrSliceIndex parameter", (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('padOrSliceIndex'), 'createDropZoneHTML should handle padOrSliceIndex parameter');
+});
+
+TestRunner.test("Day 656 - createDropZoneHTML generates data attributes", (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('data-track-id') && funcStr.includes('data-track-type'), 'createDropZoneHTML should generate data attributes');
+});
+
+TestRunner.test("Day 656 - createDropZoneHTML handles existingAudioData status cases", (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('existingAudioData.status') && funcStr.includes('loaded') && funcStr.includes('missing') && funcStr.includes('error'), 'createDropZoneHTML should handle status cases');
+});
+
+TestRunner.test("Day 656 - createDropZoneHTML returns HTML string", (t) => {
+    const funcStr = createDropZoneHTML.toString();
+    t.assertTruthy(funcStr.includes('return') && funcStr.includes('drop-zone'), 'createDropZoneHTML should return HTML string');
+});
+
+TestRunner.test("Day 656 - setupGenericDropZoneListeners is a function export", (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'setupGenericDropZoneListeners should be exported');
+});
+
+TestRunner.test("Day 656 - setupGenericDropZoneListeners accepts 7 parameters", (t) => {
+    t.assertEqual(setupGenericDropZoneListeners.length, 7, 'setupGenericDropZoneListeners should accept 7 parameters');
+});
+
+TestRunner.test("Day 656 - setupGenericDropZoneListeners validates dropZoneElement not null", (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('!dropZoneElement') && funcStr.includes('console.error'), 'setupGenericDropZoneListeners should validate dropZoneElement');
+});
+
+TestRunner.test("Day 656 - setupGenericDropZoneListeners adds dragover listener", (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes("addEventListener('dragover'") && funcStr.includes('preventDefault'), 'setupGenericDropZoneListeners should add dragover listener');
+});
+
+TestRunner.test("Day 656 - setupGenericDropZoneListeners adds dragleave listener", (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes("addEventListener('dragleave'") && funcStr.includes('classList.remove'), 'setupGenericDropZoneListeners should add dragleave listener');
+});
+
+TestRunner.test("Day 656 - setupGenericDropZoneListeners adds drop listener", (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes("addEventListener('drop'") && funcStr.includes('preventDefault'), 'setupGenericDropZoneListeners should add drop listener');
+});
+
+TestRunner.test("Day 656 - setupGenericDropZoneListeners checks for application/json data", (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('application/json') && funcStr.includes('sound-browser-item'), 'setupGenericDropZoneListeners should check for sound browser data');
+});
+
+TestRunner.test("Day 656 - setupGenericDropZoneListeners checks for files dataTransfer", (t) => {
+    const funcStr = setupGenericDropZoneListeners.toString();
+    t.assertTruthy(funcStr.includes('dataTransfer.files') && funcStr.includes('loadFileCallback'), 'setupGenericDropZoneListeners should check for OS files');
+});
+
+TestRunner.test("Day 656 - secondsToBBSTime is a function export", (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'secondsToBBSTime should be exported');
+});
+
+TestRunner.test("Day 656 - secondsToBBSTime accepts 1 parameter", (t) => {
+    t.assertEqual(secondsToBBSTime.length, 1, 'secondsToBBSTime should accept 1 parameter (seconds)');
+});
+
+TestRunner.test("Day 656 - secondsToBBSTime checks for Tone undefined or invalid input", (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes("typeof Tone === 'undefined'") || funcStr.includes('Tone') && funcStr.includes('isNaN'), 'secondsToBBSTime should check for Tone availability and invalid input');
+});
+
+TestRunner.test("Day 656 - secondsToBBSTime uses try/catch", (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'secondsToBBSTime should have try/catch for error handling');
+});
+
+TestRunner.test("Day 656 - secondsToBBSTime calls Tone.Time(seconds).toBarsBeatsSixteenths", (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('Tone.Time') && funcStr.includes('toBarsBeatsSixteenths'), 'secondsToBBSTime should convert using Tone.Time');
+});
+
+TestRunner.test("Day 656 - secondsToBBSTime returns 0:0:0 on error", (t) => {
+    const funcStr = secondsToBBSTime.toString();
+    t.assertTruthy(funcStr.includes('return "0:0:0"') && funcStr.includes('catch'), 'secondsToBBSTime should return fallback string on error');
+});
+
+TestRunner.test("Day 656 - bbsTimeToSeconds is a function export", (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'bbsTimeToSeconds should be exported');
+});
+
+TestRunner.test("Day 656 - bbsTimeToSeconds accepts 1 parameter", (t) => {
+    t.assertEqual(bbsTimeToSeconds.length, 1, 'bbsTimeToSeconds should accept 1 parameter (bbsString)');
+});
+
+TestRunner.test("Day 656 - bbsTimeToSeconds checks for Tone undefined or invalid input", (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes("typeof Tone === 'undefined'") || funcStr.includes('Tone') && funcStr.includes('bbsString'), 'bbsTimeToSeconds should check for Tone availability and invalid input');
+});
+
+TestRunner.test("Day 656 - bbsTimeToSeconds uses try/catch", (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'bbsTimeToSeconds should have try/catch for error handling');
+});
+
+TestRunner.test("Day 656 - bbsTimeToSeconds calls Tone.Time(bbsString).toSeconds", (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('Tone.Time') && funcStr.includes('toSeconds'), 'bbsTimeToSeconds should convert using Tone.Time');
+});
+
+TestRunner.test("Day 656 - bbsTimeToSeconds returns null on error", (t) => {
+    const funcStr = bbsTimeToSeconds.toString();
+    t.assertTruthy(funcStr.includes('return null') && funcStr.includes('catch'), 'bbsTimeToSeconds should return null on error');
+});
+
+TestRunner.test("Day 656 - createContextMenu is a function export", (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'createContextMenu should be exported');
+});
+
+TestRunner.test("Day 656 - createContextMenu accepts 3 parameters", (t) => {
+    t.assertEqual(createContextMenu.length, 3, 'createContextMenu should accept 3 parameters (event, menuItems, appServicesForZIndex)');
+});
+
+TestRunner.test("Day 656 - createContextMenu validates event and menuItems", (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('!event') || funcStr.includes('!menuItems') && funcStr.includes('console.error'), 'createContextMenu should validate inputs');
+});
+
+TestRunner.test("Day 656 - createContextMenu calls preventDefault and stopPropagation", (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('preventDefault') && funcStr.includes('stopPropagation'), 'createContextMenu should prevent default and stop propagation');
+});
+
+TestRunner.test("Day 656 - createContextMenu removes activeContextMenu if exists", (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('activeContextMenu') && funcStr.includes('remove()'), 'createContextMenu should remove existing context menu');
+});
+
+TestRunner.test("Day 656 - createContextMenu sets activeContextMenu", (t) => {
+    const funcStr = createContextMenu.toString();
+    t.assertTruthy(funcStr.includes('activeContextMenu ='), 'createContextMenu should store reference to active context menu');
+});
+
+TestRunner.test("Day 656 - APP_VERSION validation for Day 656 Utils functions", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 656');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 309, 'Minor version should be >= 309 for Day 656');
+    }
+});
