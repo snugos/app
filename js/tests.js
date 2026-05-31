@@ -15696,3 +15696,168 @@ TestRunner.test("Day 660 - APP_VERSION validation for Day 660 window function te
         t.assertTruthy(versionParts[1] >= 313, 'Minor version should be >= 313 for Day 660');
     }
 });
+
+// --- Day 661: Sound Browser Render Function Tests ---
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered is a function export", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'renderSoundBrowserDirectoryFiltered should be exported');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered accepts 3 parameters (pathArray, treeNode, searchQuery)", (t) => {
+    t.assertEqual(renderSoundBrowserDirectoryFiltered.length, 3, 'renderSoundBrowserDirectoryFiltered should accept 3 parameters');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered references localAppServices.getWindowById", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'renderSoundBrowserDirectoryFiltered should check getWindowById');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered references getCurrentLibraryName", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('getCurrentLibraryName'), 'renderSoundBrowserDirectoryFiltered should use getCurrentLibraryName');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered references setSelectedSoundForPreview", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('setSelectedSoundForPreview'), 'renderSoundBrowserDirectoryFiltered should use setSelectedSoundForPreview');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered handles search filter (filterTreeBySearch)", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('filterTreeBySearch'), 'renderSoundBrowserDirectoryFiltered should use filterTreeBySearch for filtering');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered uses BROWSE_PER_PAGE for batch rendering", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('BROWSE_PER_PAGE'), 'renderSoundBrowserDirectoryFiltered should use BROWSE_PER_PAGE for pagination');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered references isFavorite for favorite star", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('isFavorite'), 'renderSoundBrowserDirectoryFiltered should check isFavorite');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectoryFiltered references toggleFavorite for star click", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('toggleFavorite'), 'renderSoundBrowserDirectoryFiltered should use toggleFavorite');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectory sets draggable for file items", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('draggable'), 'renderSoundBrowserDirectoryFiltered should set draggable on items');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectory sets dataTransfer data for drag", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('dataTransfer.setData'), 'renderSoundBrowserDirectoryFiltered should set dataTransfer data');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserDirectory references setCurrentSoundBrowserPath for folder navigation", (t) => {
+    const funcStr = renderSoundBrowserDirectoryFiltered.toString();
+    t.assertTruthy(funcStr.includes('setCurrentSoundBrowserPath'), 'renderSoundBrowserDirectoryFiltered should use setCurrentSoundBrowserPath');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserFavorites is a function export", (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'renderSoundBrowserFavorites should be exported');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserFavorites accepts 2 parameters (listDiv, previewBtn)", (t) => {
+    t.assertEqual(renderSoundBrowserFavorites.length, 2, 'renderSoundBrowserFavorites should accept 2 parameters');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserFavorites references getFavoriteSounds", (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('getFavoriteSounds'), 'renderSoundBrowserFavorites should use getFavoriteSounds');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserFavorites references isFavorite for star display", (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('isFavorite'), 'renderSoundBrowserFavorites should use isFavorite');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserFavorites references toggleFavorite for star click", (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('toggleFavorite'), 'renderSoundBrowserFavorites should use toggleFavorite');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserFavorites references setSelectedSoundForPreview", (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('setSelectedSoundForPreview'), 'renderSoundBrowserFavorites should use setSelectedSoundForPreview');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserFavorites sets draggable on items", (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('draggable'), 'renderSoundBrowserFavorites should set draggable');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserFavorites uses dataTransfer.setData for drag", (t) => {
+    const funcStr = renderSoundBrowserFavorites.toString();
+    t.assertTruthy(funcStr.includes('dataTransfer.setData'), 'renderSoundBrowserFavorites should set dataTransfer data');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserRecent is a function export", (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'renderSoundBrowserRecent should be exported');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserRecent accepts 2 parameters (listDiv, previewBtn)", (t) => {
+    t.assertEqual(renderSoundBrowserRecent.length, 2, 'renderSoundBrowserRecent should accept 2 parameters');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserRecent references getRecentlyPlayedSounds", (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('getRecentlyPlayedSounds'), 'renderSoundBrowserRecent should use getRecentlyPlayedSounds');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserRecent references isFavorite for star display", (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('isFavorite'), 'renderSoundBrowserRecent should use isFavorite');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserRecent references toggleFavorite for star click", (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('toggleFavorite'), 'renderSoundBrowserRecent should use toggleFavorite');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserRecent references setSelectedSoundForPreview", (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('setSelectedSoundForPreview'), 'renderSoundBrowserRecent should use setSelectedSoundForPreview');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserRecent sets draggable on items", (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('draggable'), 'renderSoundBrowserRecent should set draggable');
+});
+
+TestRunner.test("Day 661 - renderSoundBrowserRecent uses dataTransfer.setData for drag", (t) => {
+    const funcStr = renderSoundBrowserRecent.toString();
+    t.assertTruthy(funcStr.includes('dataTransfer.setData'), 'renderSoundBrowserRecent should set dataTransfer data');
+});
+
+TestRunner.test("Day 661 - updateMixerWindow is a function export", (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'updateMixerWindow should be exported');
+});
+
+TestRunner.test("Day 661 - updateMixerWindow accepts 0 parameters", (t) => {
+    t.assertEqual(updateMixerWindow.length, 0, 'updateMixerWindow should accept 0 parameters');
+});
+
+TestRunner.test("Day 661 - updateMixerWindow references getWindowById for mixer window", (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'updateMixerWindow should check getWindowById');
+});
+
+TestRunner.test("Day 661 - updateMixerWindow calls renderMixer for content update", (t) => {
+    const funcStr = updateMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('renderMixer'), 'updateMixerWindow should call renderMixer');
+});
+
+TestRunner.test("Day 661 - APP_VERSION validation for Day 661 Sound Browser render function tests", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 661');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 314, 'Minor version should be >= 314 for Day 661');
+    }
+});
