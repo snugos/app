@@ -1,4 +1,16 @@
 # SnugOS DAW - AGENTS.md
+#### Day 664: Waveform Draw Function Tests (2026-05-30)
+- **Tests**: Added 18 tests for drawWaveform and drawInstrumentWaveform functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 664 test block with 18 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.318.0
+- **Test Details** (`js/tests.js`): 18 tests covering:
+  - **drawWaveform** (10 tests): is a function export, accepts 1 parameter (track), checks for waveformCanvasCtx, checks for audioBuffer.loaded, returns early if no canvas context, gets channel data from buffer via getChannelData(0), uses Math.ceil for step calculation, iterates canvas width for drawing, handles slices with offset and duration
+  - **drawInstrumentWaveform** (8 tests): is a function export, accepts 1 parameter (track), checks for instrumentWaveformCanvasCtx, checks instrumentSamplerSettings.audioBuffer, gets channel data from buffer, handles loop markers (loopStart, loopEnd), calculates loop positions from buffer.duration
+  - APP_VERSION validation (>= 2.318 for Day 664)
+- **Version**: Bumped to 2.318.0
+- **Test Count**: Increased from 2900 to 2918
+
 #### Day 663: UI Module Init and Knob Function Tests (2026-06-01)
 - **Tests**: Added 16 tests for UI Module Init and Knob functions in ui.js
 - **Files Modified**:
