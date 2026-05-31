@@ -1,4 +1,16 @@
 # SnugOS DAW - AGENTS.md
+#### Day 663: UI Module Init and Knob Function Tests (2026-06-01)
+- **Tests**: Added 16 tests for UI Module Init and Knob functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 663 test block with 16 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.317.0
+- **Test Details** (`js/tests.js`): 16 tests covering:
+  - **initializeUIModule** (5 tests): is a function export, accepts 1 parameter (appServicesFromMain), spreads appServicesFromMain into localAppServices, checks for effectsRegistryAccess, sets default effectsRegistryAccess with AVAILABLE_EFFECTS, getEffectParamDefinitions, and getEffectDefaultParams
+  - **createKnob** (10 tests): is a function export, accepts 1 parameter (options), creates DOM elements (container, label, knob, handle, value), generates unique targetId for MIDI CC mapping, sets label from options.label, handles initialValue, min, max, step, maxDegrees options with defaults, has updateKnobVisual function that updates handle transform, has setValue function with Math.min/Math.max bounds checking, handles onValueChange callback
+  - APP_VERSION validation (>= 2.315 for Day 663)
+- **Version**: Bumped to 2.317.0
+- **Test Count**: Increased from 2884 to 2900
+
 #### Day 662: UI Sequencer Display Function Tests (2026-06-01)
 - **Tests**: Added 25 tests for UI Sequencer Display functions in ui.js
 - **Files Modified**:
