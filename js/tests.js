@@ -16005,3 +16005,106 @@ TestRunner.test("Day 662 - highlightPlayingStep APP_VERSION validation", (t) => 
         t.assertTruthy(versionParts[1] >= 314, 'Minor version should be >= 314 for Day 662');
     }
 });
+
+
+// --- Day 663: UI Module Init and Knob Function Tests ---
+TestRunner.test("Day 663 - initializeUIModule is a function export", (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'initializeUIModule should be exported');
+});
+
+TestRunner.test("Day 663 - initializeUIModule accepts 1 parameter (appServicesFromMain)", (t) => {
+    t.assertEqual(initializeUIModule.length, 1, 'initializeUIModule should accept 1 parameter');
+});
+
+TestRunner.test("Day 663 - initializeUIModule spreads appServicesFromMain into localAppServices", (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('...localAppServices'), 'initializeUIModule should use spread operator');
+    t.assertTruthy(funcStr.includes('...appServicesFromMain'), 'initializeUIModule should spread appServicesFromMain');
+});
+
+TestRunner.test("Day 663 - initializeUIModule checks for effectsRegistryAccess", (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess'), 'initializeUIModule should check effectsRegistryAccess');
+});
+
+TestRunner.test("Day 663 - initializeUIModule sets default effectsRegistryAccess if missing", (t) => {
+    const funcStr = initializeUIModule.toString();
+    t.assertTruthy(funcStr.includes('AVAILABLE_EFFECTS'), 'initializeUIModule should set AVAILABLE_EFFECTS default');
+    t.assertTruthy(funcStr.includes('getEffectParamDefinitions'), 'initializeUIModule should set getEffectParamDefinitions default');
+    t.assertTruthy(funcStr.includes('getEffectDefaultParams'), 'initializeUIModule should set getEffectDefaultParams default');
+});
+
+TestRunner.test("Day 663 - initializeUIModule APP_VERSION validation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 663');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 315, 'Minor version should be >= 315 for Day 663');
+    }
+});
+
+TestRunner.test("Day 663 - createKnob is a function export", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'createKnob should be exported');
+});
+
+TestRunner.test("Day 663 - createKnob accepts 1 parameter (options)", (t) => {
+    t.assertEqual(createKnob.length, 1, 'createKnob should accept 1 parameter');
+});
+
+TestRunner.test("Day 663 - createKnob creates DOM elements (container, label, knob, handle, value)", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes("createElement('div')"), 'createKnob should create div elements');
+    t.assertTruthy(funcStr.includes("'knob-container'"), 'createKnob should have knob-container class');
+    t.assertTruthy(funcStr.includes("'knob-label'"), 'createKnob should have knob-label class');
+    t.assertTruthy(funcStr.includes("'knob'"), 'createKnob should have knob class');
+    t.assertTruthy(funcStr.includes("'knob-handle'"), 'createKnob should have knob-handle class');
+    t.assertTruthy(funcStr.includes("'knob-value'"), 'createKnob should have knob-value class');
+});
+
+TestRunner.test("Day 663 - createKnob generates unique targetId for MIDI CC mapping", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('midiTargetId'), 'createKnob should set midiTargetId data attribute');
+    t.assertTruthy(funcStr.includes('targetId'), 'createKnob should reference targetId option');
+});
+
+TestRunner.test("Day 663 - createKnob sets label from options.label", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options.label'), 'createKnob should use options.label');
+    t.assertTruthy(funcStr.includes('textContent'), 'createKnob should set textContent');
+});
+
+TestRunner.test("Day 663 - createKnob handles initialValue, min, max options with defaults", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options.initialValue'), 'createKnob should handle initialValue');
+    t.assertTruthy(funcStr.includes('options.min'), 'createKnob should handle min option');
+    t.assertTruthy(funcStr.includes('options.max'), 'createKnob should handle max option');
+    t.assertTruthy(funcStr.includes('options.step'), 'createKnob should handle step option');
+    t.assertTruthy(funcStr.includes('maxDegrees'), 'createKnob should handle maxDegrees option');
+});
+
+TestRunner.test("Day 663 - createKnob has updateKnobVisual function", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('updateKnobVisual'), 'createKnob should have updateKnobVisual function');
+    t.assertTruthy(funcStr.includes('handleEl.style.transform'), 'updateKnobVisual should update handle transform');
+});
+
+TestRunner.test("Day 663 - createKnob has setValue function with bounds checking", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('function setValue'), 'createKnob should have setValue function');
+    t.assertTruthy(funcStr.includes('Math.min'), 'setValue should use Math.min for bounds');
+    t.assertTruthy(funcStr.includes('Math.max'), 'setValue should use Math.max for bounds');
+});
+
+TestRunner.test("Day 663 - createKnob handles onValueChange callback", (t) => {
+    const funcStr = createKnob.toString();
+    t.assertTruthy(funcStr.includes('options.onValueChange'), 'createKnob should handle onValueChange callback');
+});
+
+TestRunner.test("Day 663 - createKnob APP_VERSION validation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 663');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 315, 'Minor version should be >= 315 for Day 663');
+    }
+});
