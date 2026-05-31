@@ -15196,3 +15196,116 @@ TestRunner.test("Day 656 - APP_VERSION validation for Day 656 Utils functions", 
         t.assertTruthy(versionParts[1] >= 309, 'Minor version should be >= 309 for Day 656');
     }
 });
+
+// --- Day 657: SnugWindow Class Tests ---
+TestRunner.test("Day 657 - SnugWindow is an exported class", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('class SnugWindow'), 'SnugWindow should be a class');
+    t.assertTruthy(funcStr.includes('export'), 'SnugWindow should be exported');
+});
+
+TestRunner.test("Day 657 - SnugWindow constructor accepts 4-5 parameters", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('constructor(id, title, contentHTMLOrElement, options = {}, appServices = {})'), 'SnugWindow should accept id, title, contentHTMLOrElement, options, and appServices parameters');
+});
+
+TestRunner.test("Day 657 - SnugWindow stores id, title, and appServices properties", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('this.id = id'), 'SnugWindow should store id');
+    t.assertTruthy(funcStr.includes('this.title = title'), 'SnugWindow should store title');
+    t.assertTruthy(funcStr.includes('this.appServices = appServices'), 'SnugWindow should store appServices');
+});
+
+TestRunner.test("Day 657 - SnugWindow has isMinimized, isMaximized, and restoreState properties", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('this.isMinimized'), 'SnugWindow should have isMinimized');
+    t.assertTruthy(funcStr.includes('this.isMaximized'), 'SnugWindow should have isMaximized');
+    t.assertTruthy(funcStr.includes('this.restoreState'), 'SnugWindow should have restoreState');
+});
+
+TestRunner.test("Day 657 - SnugWindow calculates cascade offset based on open window count", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'SnugWindow should reference getOpenWindows for cascade');
+    t.assertTruthy(funcStr.includes('cascadeOffset'), 'SnugWindow should calculate cascade offset');
+    t.assertTruthy(funcStr.includes('cascadeIncrement'), 'SnugWindow should use cascade increment');
+});
+
+TestRunner.test("Day 657 - SnugWindow creates element div with window class", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('createElement'), 'SnugWindow should create element');
+    t.assertTruthy(funcStr.includes("element.id ="), 'SnugWindow should set element id');
+    t.assertTruthy(funcStr.includes("element.className = 'window'"), 'SnugWindow should set window class');
+});
+
+TestRunner.test("Day 657 - SnugWindow creates titleBar div with window-title-bar class", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('titleBar'), 'SnugWindow should create titleBar');
+    t.assertTruthy(funcStr.includes("className = 'window-title-bar'"), 'SnugWindow should set titleBar class');
+    t.assertTruthy(funcStr.includes('window-minimize-btn'), 'SnugWindow should create minimize button');
+    t.assertTruthy(funcStr.includes('window-maximize-btn'), 'SnugWindow should create maximize button');
+    t.assertTruthy(funcStr.includes('window-close-btn'), 'SnugWindow should create close button');
+});
+
+TestRunner.test("Day 657 - SnugWindow creates contentArea div with window-content class", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('contentArea'), 'SnugWindow should create contentArea');
+    t.assertTruthy(funcStr.includes("className = 'window-content'"), 'SnugWindow should set contentArea class');
+});
+
+TestRunner.test("Day 657 - SnugWindow appends titleBar and contentArea to element", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('appendChild(this.titleBar)'), 'SnugWindow should append titleBar');
+    t.assertTruthy(funcStr.includes('appendChild(this.contentArea)'), 'SnugWindow should append contentArea');
+});
+
+TestRunner.test("Day 657 - SnugWindow references desktop and taskbar elements", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('desktop'), 'SnugWindow should reference desktop');
+    t.assertTruthy(funcStr.includes('taskbar'), 'SnugWindow should reference taskbar');
+    t.assertTruthy(funcStr.includes('taskbarHeight'), 'SnugWindow should calculate taskbar height');
+});
+
+TestRunner.test("Day 657 - SnugWindow handles options for width, height, x, y", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('options.width'), 'SnugWindow should handle width option');
+    t.assertTruthy(funcStr.includes('options.height'), 'SnugWindow should handle height option');
+    t.assertTruthy(funcStr.includes('options.x'), 'SnugWindow should handle x option');
+    t.assertTruthy(funcStr.includes('options.y'), 'SnugWindow should handle y option');
+    t.assertTruthy(funcStr.includes('options.minWidth'), 'SnugWindow should handle minWidth option');
+    t.assertTruthy(funcStr.includes('options.minHeight'), 'SnugWindow should handle minHeight option');
+});
+
+TestRunner.test("Day 657 - SnugWindow clamps dimensions to desktop bounds", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('safeDesktopWidth'), 'SnugWindow should reference safeDesktopWidth');
+    t.assertTruthy(funcStr.includes('safeDesktopHeight'), 'SnugWindow should reference safeDesktopHeight');
+    t.assertTruthy(funcStr.includes('Math.min'), 'SnugWindow should use Math.min for clamping');
+    t.assertTruthy(funcStr.includes('Math.max'), 'SnugWindow should use Math.max for clamping');
+});
+
+TestRunner.test("Day 657 - SnugWindow sets zIndex and manages window stacking", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('zIndex'), 'SnugWindow should handle zIndex');
+    t.assertTruthy(funcStr.includes('incrementHighestZ'), 'SnugWindow should call incrementHighestZ');
+    t.assertTruthy(funcStr.includes('setHighestZ'), 'SnugWindow should call setHighestZ');
+});
+
+TestRunner.test("Day 657 - SnugWindow handles closable, minimizable, resizable options", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('closable'), 'SnugWindow should handle closable option');
+    t.assertTruthy(funcStr.includes('minimizable'), 'SnugWindow should handle minimizable option');
+    t.assertTruthy(funcStr.includes('resizable'), 'SnugWindow should handle resizable option');
+});
+
+TestRunner.test("Day 657 - SnugWindow has onCloseCallback option", (t) => {
+    const funcStr = SnugWindow.toString();
+    t.assertTruthy(funcStr.includes('onCloseCallback'), 'SnugWindow should have onCloseCallback');
+});
+
+TestRunner.test("Day 657 - APP_VERSION validation for Day 657 SnugWindow class tests", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 657');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 310, 'Minor version should be >= 310 for Day 657');
+    }
+});
