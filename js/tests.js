@@ -15484,3 +15484,109 @@ TestRunner.test("Day 659 - APP_VERSION validation for Day 659 audio function tes
         t.assertTruthy(versionParts[1] >= 312, 'Minor version should be >= 312 for Day 659');
     }
 });
+
+// --- Day 659: Mixer, Timeline, and Sequencer Window Function Tests ---
+
+TestRunner.test("Day 659 - openMixerWindow is a function export", (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openMixerWindow should be exported');
+});
+
+TestRunner.test("Day 659 - openMixerWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openMixerWindow.length, 1, 'openMixerWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 659 - openMixerWindow references getOpenWindows", (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMixerWindow should check open windows');
+});
+
+TestRunner.test("Day 659 - openMixerWindow uses createWindow for window creation", (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openMixerWindow should use createWindow');
+});
+
+TestRunner.test("Day 659 - openMixerWindow references desktop element for sizing", (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('desktop') || funcStr.includes('offsetWidth'), 'openMixerWindow should reference desktop for sizing');
+});
+
+TestRunner.test("Day 659 - openTimelineWindow is a function export", (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTimelineWindow should be exported');
+});
+
+TestRunner.test("Day 659 - openTimelineWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTimelineWindow.length, 1, 'openTimelineWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 659 - openTimelineWindow references getWindowById for duplicate check", (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'openTimelineWindow should check for existing window');
+});
+
+TestRunner.test("Day 659 - openTimelineWindow creates timeline container content", (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('timeline-container') || funcStr.includes('timelineContent'), 'openTimelineWindow should create timeline content');
+});
+
+TestRunner.test("Day 659 - openTimelineWindow uses createWindow for window creation", (t) => {
+    const funcStr = openTimelineWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTimelineWindow should use createWindow');
+});
+
+TestRunner.test("Day 659 - openTrackSequencerWindow is a function export", (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTrackSequencerWindow should be exported');
+});
+
+TestRunner.test("Day 659 - openTrackSequencerWindow accepts 3 parameters (trackId, forceRedraw, savedState)", (t) => {
+    t.assertEqual(openTrackSequencerWindow.length, 3, 'openTrackSequencerWindow should accept 3 parameters');
+});
+
+TestRunner.test("Day 659 - openTrackSequencerWindow references getTrackById for track lookup", (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackSequencerWindow should get track by ID');
+});
+
+TestRunner.test("Day 659 - openTrackSequencerWindow references getOpenWindows for window management", (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackSequencerWindow should manage open windows');
+});
+
+TestRunner.test("Day 659 - openTrackSequencerWindow uses createWindow for window creation", (t) => {
+    const funcStr = openTrackSequencerWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackSequencerWindow should use createWindow');
+});
+
+TestRunner.test("Day 659 - openTrackInspectorWindow is a function export", (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTrackInspectorWindow should be exported');
+});
+
+TestRunner.test("Day 659 - openTrackInspectorWindow accepts 2 parameters (trackId, savedState)", (t) => {
+    t.assertEqual(openTrackInspectorWindow.length, 2, 'openTrackInspectorWindow should accept 2 parameters');
+});
+
+TestRunner.test("Day 659 - openTrackInspectorWindow references getTrackById for track lookup", (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openTrackInspectorWindow should get track by ID');
+});
+
+TestRunner.test("Day 659 - openTrackInspectorWindow references getOpenWindows for window management", (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackInspectorWindow should manage open windows');
+});
+
+TestRunner.test("Day 659 - openTrackInspectorWindow uses createWindow for window creation", (t) => {
+    const funcStr = openTrackInspectorWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackInspectorWindow should use createWindow');
+});
+
+TestRunner.test("Day 659 - APP_VERSION validation for Day 659 mixer/timeline/sequencer tests", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 659');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 311, 'Minor version should be >= 311 for Day 659');
+    }
+});
