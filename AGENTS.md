@@ -1,3 +1,18 @@
+# SnugOS DAW - AGENTS.md
+#### Day 661: Sound Browser Render Function Tests (2026-05-31)
+- **Tests**: Added 33 tests for Sound Browser render functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 661 test block with 33 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.315.0
+- **Test Details** (`js/tests.js`): 33 tests covering:
+  - **renderSoundBrowserDirectoryFiltered** (12 tests): is a function export, accepts 3 parameters (pathArray, treeNode, searchQuery), references localAppServices.getWindowById, references getCurrentLibraryName, references setSelectedSoundForPreview, handles search filter (filterTreeBySearch), uses BROWSE_PER_PAGE for batch rendering, references isFavorite for favorite star, references toggleFavorite for star click, sets draggable for file items, uses dataTransfer.setData for drag, references setCurrentSoundBrowserPath for folder navigation
+  - **renderSoundBrowserFavorites** (8 tests): is a function export, accepts 2 parameters (listDiv, previewBtn), references getFavoriteSounds, references isFavorite for star display, references toggleFavorite for star click, references setSelectedSoundForPreview, sets draggable on items, uses dataTransfer.setData for drag
+  - **renderSoundBrowserRecent** (8 tests): is a function export, accepts 2 parameters (listDiv, previewBtn), references getRecentlyPlayedSounds, references isFavorite for star display, references toggleFavorite for star click, references setSelectedSoundForPreview, sets draggable on items, uses dataTransfer.setData for drag
+  - **updateMixerWindow** (4 tests): is a function export, accepts 0 parameters, references getWindowById for mixer window, calls renderMixer for content update
+  - APP_VERSION validation (>= 2.314 for Day 661)
+- **Version**: Bumped to 2.315.0
+- **Test Count**: Increased from 2826 to 2859
+
 #### Day 655: UI Window Function Tests (2026-05-30)
 - **Tests**: Added 25 tests for UI window functions in ui.js
 - **Files Modified**:
