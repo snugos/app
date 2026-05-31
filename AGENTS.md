@@ -1,3 +1,16 @@
+#### Day 655: UI Window Function Tests (2026-05-30)
+- **Tests**: Added 25 tests for UI window functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 655 test block with 25 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.309.0
+- **Test Details** (`js/tests.js`): 25 tests covering:
+  - **openProjectNotesWindow** (7 tests): is a function export, accepts 1 parameter with default, references localAppServices.getOpenWindows, references getProjectNotesState and setProjectNotesState, uses createWindow with "Project Notes" title, references showNotification
+  - **openAudioClipEditorWindow** (5 tests): is a function export, accepts 3 parameters (trackId, clipId, savedState), references localAppServices.getTrackById, finds clip in track.timelineClips using .find, creates window with audioClipEditor windowId, uses width and height options
+  - **renderMixer** (11 tests): is a function export, accepts 1 parameter (container), references localAppServices.getTracks, creates master track UI, uses createKnob for volume controls, iterates tracks with forEach, references handleTrackMute, handleTrackSolo, and handleTrackArm, references showTrackColorPicker and createContextMenu
+  - APP_VERSION validation (>= 2.308 for Day 655)
+- **Version**: Bumped to 2.309.0
+- **Test Count**: Increased from 2658 to 2683
+
 #### Day 646: Transport Time Display and Tap Tempo Audio Function Tests (2026-05-29)
 #### Day 650: Remaining Event Handler Function Tests (2026-05-30)
 - **Tests**: Added 16 tests for remaining Event Handler functions in eventHandlers.js
