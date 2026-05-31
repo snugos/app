@@ -16108,3 +16108,107 @@ TestRunner.test("Day 663 - createKnob APP_VERSION validation", (t) => {
         t.assertTruthy(versionParts[1] >= 315, 'Minor version should be >= 315 for Day 663');
     }
 });
+
+// --- Day 664: Waveform Draw Function Tests ---
+TestRunner.test("Day 664 - drawWaveform is a function export", (t) => {
+    t.assertTruthy(typeof drawWaveform === 'function', 'drawWaveform should be a function');
+});
+
+TestRunner.test("Day 664 - drawWaveform accepts 1 parameter (track)", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('function drawWaveform(track)'), 'drawWaveform should accept track parameter');
+});
+
+TestRunner.test("Day 664 - drawWaveform checks for waveformCanvasCtx", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('waveformCanvasCtx'), 'drawWaveform should check waveformCanvasCtx');
+});
+
+TestRunner.test("Day 664 - drawWaveform checks for audioBuffer.loaded", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('audioBuffer'), 'drawWaveform should check audioBuffer');
+    t.assertTruthy(funcStr.includes('loaded'), 'drawWaveform should check loaded status');
+});
+
+TestRunner.test("Day 664 - drawWaveform returns early if no canvas context", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('return'), 'drawWaveform should return early');
+    t.assertTruthy(funcStr.includes('clearRect'), 'drawWaveform should clear canvas when no audio');
+});
+
+TestRunner.test("Day 664 - drawWaveform gets channel data from buffer", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('getChannelData(0)'), 'drawWaveform should get channel data');
+});
+
+TestRunner.test("Day 664 - drawWaveform uses Math.ceil for step calculation", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('Math.ceil'), 'drawWaveform should use Math.ceil');
+    t.assertTruthy(funcStr.includes('data.length / canvas.width'), 'drawWaveform should calculate step from data length and canvas width');
+});
+
+TestRunner.test("Day 664 - drawWaveform iterates canvas width for drawing", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('canvas.width'), 'drawWaveform should iterate over canvas width');
+    t.assertTruthy(funcStr.includes('for (let i = 0; i < canvas.width; i++)'), 'drawWaveform should loop over width pixels');
+});
+
+TestRunner.test("Day 664 - drawWaveform handles slices with offset and duration", (t) => {
+    const funcStr = drawWaveform.toString();
+    t.assertTruthy(funcStr.includes('track.slices.forEach'), 'drawWaveform should iterate slices');
+    t.assertTruthy(funcStr.includes('slice.offset'), 'drawWaveform should use slice.offset');
+    t.assertTruthy(funcStr.includes('slice.duration'), 'drawWaveform should use slice.duration');
+});
+
+TestRunner.test("Day 664 - drawWaveform APP_VERSION validation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 664');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 318, 'Minor version should be >= 318 for Day 664');
+    }
+});
+
+TestRunner.test("Day 664 - drawInstrumentWaveform is a function export", (t) => {
+    t.assertTruthy(typeof drawInstrumentWaveform === 'function', 'drawInstrumentWaveform should be a function');
+});
+
+TestRunner.test("Day 664 - drawInstrumentWaveform accepts 1 parameter (track)", (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('function drawInstrumentWaveform(track)'), 'drawInstrumentWaveform should accept track parameter');
+});
+
+TestRunner.test("Day 664 - drawInstrumentWaveform checks for instrumentWaveformCanvasCtx", (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('instrumentWaveformCanvasCtx'), 'drawInstrumentWaveform should check instrumentWaveformCanvasCtx');
+});
+
+TestRunner.test("Day 664 - drawInstrumentWaveform checks instrumentSamplerSettings.audioBuffer", (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('instrumentSamplerSettings.audioBuffer'), 'drawInstrumentWaveform should check instrumentSamplerSettings.audioBuffer');
+});
+
+TestRunner.test("Day 664 - drawInstrumentWaveform gets channel data from buffer", (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('getChannelData(0)'), 'drawInstrumentWaveform should get channel data');
+});
+
+TestRunner.test("Day 664 - drawInstrumentWaveform handles loop markers", (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('track.instrumentSamplerSettings.loop'), 'drawInstrumentWaveform should check loop setting');
+    t.assertTruthy(funcStr.includes('loopStart'), 'drawInstrumentWaveform should use loopStart');
+    t.assertTruthy(funcStr.includes('loopEnd'), 'drawInstrumentWaveform should use loopEnd');
+});
+
+TestRunner.test("Day 664 - drawInstrumentWaveform calculates loop positions from buffer duration", (t) => {
+    const funcStr = drawInstrumentWaveform.toString();
+    t.assertTruthy(funcStr.includes('buffer.duration'), 'drawInstrumentWaveform should use buffer.duration');
+    t.assertTruthy(funcStr.includes('canvas.width'), 'drawInstrumentWaveform should scale to canvas width');
+});
+
+TestRunner.test("Day 664 - drawInstrumentWaveform APP_VERSION validation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 664');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 318, 'Minor version should be >= 318 for Day 664');
+    }
+});
