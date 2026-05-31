@@ -2260,3 +2260,23 @@
   - APP_VERSION validation (>= 2.306 for Day 653)
 - **Version**: Bumped to 2.307.0
 - **Test Count**: Increased from 2525 to 2592
+
+#### Day 654: State Rename, Playback Mode, and Audio Utility Function Tests (2026-05-30)
+- **Tests**: Added 74 tests for State Rename, Playback Mode, and Audio Utility functions
+- **Files Modified**:
+  - `js/tests.js`: Added Day 654 test block with 74 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.308.0
+- **Test Details** (`js/tests.js`): 74 tests covering:
+  - **renameTrackInState** (8 tests): is a function export, accepts 2 parameters, finds track by id, returns false for missing track, calls captureStateForUndoIfAllowed, sets track.name, calls appServices.updateTrackUI, has appServices guard
+  - **getPlaybackModeState** (3 tests): is a function export, accepts 0 parameters, returns globalPlaybackMode
+  - **setPlaybackModeStateInternal** (10 tests): is a function export, accepts 1 parameter, validates mode (sequencer/timeline), calls captureStateForUndo, references Tone.Transport, stops transport on mode change, calls Tone.Transport.cancel, has descriptive undo label
+  - **getLoopStartBars/getLoopEndBars** (6 tests): function exports, accept 0 parameters, reference loopRegion.start/end
+  - **scheduleRecordingForPunch** (3 tests): references recordingScheduledTrackId, calls Tone.Transport.clear for previous scheduling, schedules at punchRegion.out position
+  - **cancelScheduledRecording** (1 test): sets recordingScheduledTrackId to null
+  - **Context Suspension Monitoring** (12 tests): startContextSuspensionMonitoring is function export with 0-1 params, references resumeAttemptScheduled/Tone.context/contextSuspendedCount; stopContextSuspensionMonitoring accepts 0 params; getContextSuspensionCount accepts 0 params; getContextState accepts 0 params, references Tone.context.state
+  - **Sidechain Functions** (10 tests): getSidechainBusInput is function export with 0 params, references sidechainBus, checks bus disposed state; isMicOpenForSidechain accepts 0 params, references micForSidechain.state; disableSidechainBus accepts 0 params, calls disableSidechainFromMic
+  - **Master Volume Automation** (11 tests): getMasterVolumeAutomation accepts 0 params, references masterVolumeAutomationData; setMasterVolumeAutomation accepts 1 param, calls captureAudioStateForUndoIfAllowed; writeMasterVolumeAutomation accepts 2 params; applyMasterVolumeAutomationAtTime accepts 1 param
+  - **State Internal Functions** (8 tests): captureStateForUndoInternal is function export with 1 param, uses try/catch, references undoStack, clears redoStack on new action, uses MAX_HISTORY_STATES constant, calls gatherProjectDataInternal
+  - APP_VERSION validation (>= 2.307 for Day 654)
+- **Version**: Bumped to 2.308.0
+- **Test Count**: Increased from 2584 to 2658
