@@ -1,4 +1,17 @@
 # SnugOS DAW - AGENTS.md
+#### Day 662: UI Sequencer Display Function Tests (2026-06-01)
+- **Tests**: Added 25 tests for UI Sequencer Display functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 662 test block with 25 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.316.0
+- **Test Details** (`js/tests.js`): 25 tests covering:
+  - **toggleSequencerViewMode** (6 tests): is a function export, accepts 0 parameters, references localAppServices.getArmedTrackId, references localAppServices.openTrackSequencerWindow, references localAppServices.getOpenWindows for fallback
+  - **updateSequencerCellUI** (12 tests): is a function export, accepts 5 parameters (windowElement, trackType, row, col, isActive) plus velocity default, returns early if windowElement is falsy, uses querySelector for cell lookup with data-row and data-col, removes velocity classes (vel-100 through vel-10), removes active classes (active, active-synth, active-sampler, active-drum-sampler), adds track-type-specific active class based on trackType, applies velocity-based brightness via velClass/velPercent calculation, uses classList.add for adding classes
+  - **highlightPlayingStep** (7 tests): is a function export, accepts 3 parameters (trackId, stepIndex, isPlaying), references localAppServices.getTrackById, references localAppServices.getWindowById for sequencerWin- window, uses querySelectorAll to find and remove .playing class, uses classList.remove for .playing removal, uses classList.add for playing class, checks stepIndex >= 0 before adding class, uses data-col attribute for cell lookup
+  - APP_VERSION validation (>= 2.314 for Day 662)
+- **Version**: Bumped to 2.316.0
+- **Test Count**: Increased from 2859 to 2884
+
 #### Day 661: Sound Browser Render Function Tests (2026-05-31)
 - **Tests**: Added 33 tests for Sound Browser render functions in ui.js
 - **Files Modified**:
