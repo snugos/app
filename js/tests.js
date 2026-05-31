@@ -15590,3 +15590,109 @@ TestRunner.test("Day 659 - APP_VERSION validation for Day 659 mixer/timeline/seq
         t.assertTruthy(versionParts[1] >= 311, 'Minor version should be >= 311 for Day 659');
     }
 });
+
+// --- Day 660: Track Groups, Timeline Markers, and Transport Settings Window Function Tests ---
+TestRunner.test("Day 660 - openTrackGroupsWindow is a function export", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTrackGroupsWindow should be exported');
+});
+
+TestRunner.test("Day 660 - openTrackGroupsWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTrackGroupsWindow.length, 1, 'openTrackGroupsWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 660 - openTrackGroupsWindow references getOpenWindows", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackGroupsWindow should check open windows');
+});
+
+TestRunner.test("Day 660 - openTrackGroupsWindow references getTrackGroups", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackGroups'), 'openTrackGroupsWindow should use getTrackGroups');
+});
+
+TestRunner.test("Day 660 - openTrackGroupsWindow references getTracks", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'openTrackGroupsWindow should use getTracks');
+});
+
+TestRunner.test("Day 660 - openTrackGroupsWindow uses createWindow for window creation", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackGroupsWindow should use createWindow');
+});
+
+TestRunner.test("Day 660 - openTimelineMarkersWindow is a function export", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTimelineMarkersWindow should be exported');
+});
+
+TestRunner.test("Day 660 - openTimelineMarkersWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTimelineMarkersWindow.length, 1, 'openTimelineMarkersWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 660 - openTimelineMarkersWindow references getOpenWindows", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTimelineMarkersWindow should check open windows');
+});
+
+TestRunner.test("Day 660 - openTimelineMarkersWindow references getTimelineMarkers", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('getTimelineMarkers'), 'openTimelineMarkersWindow should use getTimelineMarkers');
+});
+
+TestRunner.test("Day 660 - openTimelineMarkersWindow references MARKER_COLORS", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('MARKER_COLORS'), 'openTimelineMarkersWindow should reference MARKER_COLORS');
+});
+
+TestRunner.test("Day 660 - openTimelineMarkersWindow uses createWindow for window creation", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTimelineMarkersWindow should use createWindow');
+});
+
+TestRunner.test("Day 660 - openTransportSettingsWindow is a function export", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTransportSettingsWindow should be exported');
+});
+
+TestRunner.test("Day 660 - openTransportSettingsWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTransportSettingsWindow.length, 1, 'openTransportSettingsWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 660 - openTransportSettingsWindow references getOpenWindows", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTransportSettingsWindow should check open windows');
+});
+
+TestRunner.test("Day 660 - openTransportSettingsWindow references isMetronomeEnabled", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('isMetronomeEnabled'), 'openTransportSettingsWindow should use isMetronomeEnabled');
+});
+
+TestRunner.test("Day 660 - openTransportSettingsWindow references getMetronomeVolume", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getMetronomeVolume'), 'openTransportSettingsWindow should use getMetronomeVolume');
+});
+
+TestRunner.test("Day 660 - openTransportSettingsWindow references getCountInBars", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getCountInBars'), 'openTransportSettingsWindow should use getCountInBars');
+});
+
+TestRunner.test("Day 660 - openTransportSettingsWindow references getSwingEnabled", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getSwingEnabled'), 'openTransportSettingsWindow should use getSwingEnabled');
+});
+
+TestRunner.test("Day 660 - openTransportSettingsWindow uses createWindow for window creation", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTransportSettingsWindow should use createWindow');
+});
+
+TestRunner.test("Day 660 - APP_VERSION validation for Day 660 window function tests", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 660');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 313, 'Minor version should be >= 313 for Day 660');
+    }
+});
