@@ -15861,3 +15861,147 @@ TestRunner.test("Day 661 - APP_VERSION validation for Day 661 Sound Browser rend
         t.assertTruthy(versionParts[1] >= 314, 'Minor version should be >= 314 for Day 661');
     }
 });
+
+// --- Day 662: UI Sequencer Display Function Tests ---
+TestRunner.test("Day 662 - toggleSequencerViewMode is a function export", (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleSequencerViewMode should be exported');
+});
+
+TestRunner.test("Day 662 - toggleSequencerViewMode accepts 0 parameters", (t) => {
+    t.assertEqual(toggleSequencerViewMode.length, 0, 'toggleSequencerViewMode should accept 0 parameters');
+});
+
+TestRunner.test("Day 662 - toggleSequencerViewMode references localAppServices.getArmedTrackId", (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId'), 'toggleSequencerViewMode should check getArmedTrackId');
+});
+
+TestRunner.test("Day 662 - toggleSequencerViewMode references localAppServices.openTrackSequencerWindow", (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('openTrackSequencerWindow'), 'toggleSequencerViewMode should call openTrackSequencerWindow');
+});
+
+TestRunner.test("Day 662 - toggleSequencerViewMode references localAppServices.getOpenWindows", (t) => {
+    const funcStr = toggleSequencerViewMode.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'toggleSequencerViewMode should check getOpenWindows for fallback');
+});
+
+TestRunner.test("Day 662 - toggleSequencerViewMode APP_VERSION validation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 662');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 314, 'Minor version should be >= 314 for Day 662');
+    }
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI is a function export", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'updateSequencerCellUI should be exported');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI accepts 5 parameters (windowElement, trackType, row, col, isActive) plus velocity default", (t) => {
+    t.assertEqual(updateSequencerCellUI.length, 5, 'updateSequencerCellUI should accept 5 parameters');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI returns early if windowElement is falsy", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('if (!windowElement)'), 'updateSequencerCellUI should check windowElement');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI uses querySelector for cell lookup with data-row and data-col", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('querySelector'), 'updateSequencerCellUI should use querySelector');
+    t.assertTruthy(funcStr.includes('data-row'), 'updateSequencerCellUI should use data-row attribute');
+    t.assertTruthy(funcStr.includes('data-col'), 'updateSequencerCellUI should use data-col attribute');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI removes velocity classes (vel-100, vel-90, etc.)", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('vel-100'), 'updateSequencerCellUI should remove vel-100 class');
+    t.assertTruthy(funcStr.includes('vel-90'), 'updateSequencerCellUI should remove vel-90 class');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI removes active classes (active, active-synth, active-sampler, active-drum-sampler)", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes("'active'"), 'updateSequencerCellUI should remove active class');
+    t.assertTruthy(funcStr.includes('active-synth'), 'updateSequencerCellUI should remove active-synth class');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI adds track-type-specific active class (active-synth, active-sampler, etc.)", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('activeClass'), 'updateSequencerCellUI should set activeClass based on trackType');
+    t.assertTruthy(funcStr.includes("trackType === 'Synth'"), 'updateSequencerCellUI should check Synth trackType');
+    t.assertTruthy(funcStr.includes("trackType === 'Sampler'"), 'updateSequencerCellUI should check Sampler trackType');
+    t.assertTruthy(funcStr.includes("trackType === 'DrumSampler'"), 'updateSequencerCellUI should check DrumSampler trackType');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI applies velocity-based brightness class (vel-100 through vel-10)", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('velClass'), 'updateSequencerCellUI should set velClass for brightness');
+    t.assertTruthy(funcStr.includes('velPercent'), 'updateSequencerCellUI should use velPercent for velocity calculation');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI uses cell.classList.add for adding classes", (t) => {
+    const funcStr = updateSequencerCellUI.toString();
+    t.assertTruthy(funcStr.includes('classList.add'), 'updateSequencerCellUI should use classList.add');
+});
+
+TestRunner.test("Day 662 - updateSequencerCellUI APP_VERSION validation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 662');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 314, 'Minor version should be >= 314 for Day 662');
+    }
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep is a function export", (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'highlightPlayingStep should be exported');
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep accepts 3 parameters (trackId, stepIndex, isPlaying)", (t) => {
+    t.assertEqual(highlightPlayingStep.length, 3, 'highlightPlayingStep should accept 3 parameters');
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep references localAppServices.getTrackById", (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'highlightPlayingStep should call getTrackById');
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep references localAppServices.getWindowById for sequencer window", (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('getWindowById'), 'highlightPlayingStep should call getWindowById');
+    t.assertTruthy(funcStr.includes('sequencerWin-'), 'highlightPlayingStep should look for sequencerWin- window');
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep uses querySelectorAll to find and remove .playing class", (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('querySelectorAll'), 'highlightPlayingStep should use querySelectorAll');
+    t.assertTruthy(funcStr.includes("'.playing'"), 'highlightPlayingStep should target .playing class');
+    t.assertTruthy(funcStr.includes('classList.remove'), 'highlightPlayingStep should remove .playing class');
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep adds .playing class to current step cell when isPlaying is true", (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('classList.add'), 'highlightPlayingStep should add .playing class');
+    t.assertTruthy(funcStr.includes("'playing'"), 'highlightPlayingStep should add playing class');
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep checks stepIndex >= 0 before adding class", (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('stepIndex >= 0'), 'highlightPlayingStep should check stepIndex >= 0');
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep uses data-col attribute for cell lookup", (t) => {
+    const funcStr = highlightPlayingStep.toString();
+    t.assertTruthy(funcStr.includes('data-col'), 'highlightPlayingStep should use data-col attribute');
+});
+
+TestRunner.test("Day 662 - highlightPlayingStep APP_VERSION validation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 662');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 314, 'Minor version should be >= 314 for Day 662');
+    }
+});
