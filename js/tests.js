@@ -14824,3 +14824,129 @@ TestRunner.test("Day 654 - APP_VERSION validation for Day 654 state internal fun
         t.assertTruthy(versionParts[1] >= 307, 'Minor version should be >= 307 for Day 654');
     }
 });
+// --- Day 655: UI Window Function Tests ---
+
+TestRunner.test("Day 655 - openProjectNotesWindow is a function export", (t) => {
+    const uiStr = uiModule.toString();
+    t.assertTruthy(uiStr.includes('export function openProjectNotesWindow'), 'openProjectNotesWindow should be exported');
+});
+
+TestRunner.test("Day 655 - openProjectNotesWindow accepts 1 parameter with default", (t) => {
+    t.assertEqual(openProjectNotesWindow.length, 1, 'openProjectNotesWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 655 - openProjectNotesWindow references localAppServices.getOpenWindows", (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openProjectNotesWindow should check open windows');
+});
+
+TestRunner.test("Day 655 - openProjectNotesWindow references getProjectNotesState", (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('getProjectNotesState'), 'openProjectNotesWindow should use getProjectNotesState');
+});
+
+TestRunner.test("Day 655 - openProjectNotesWindow references setProjectNotesState", (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('setProjectNotesState'), 'openProjectNotesWindow should use setProjectNotesState');
+});
+
+TestRunner.test("Day 655 - openProjectNotesWindow uses createWindow with 'Project Notes' title", (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes("'Project Notes'") || funcStr.includes('"Project Notes"'), 'openProjectNotesWindow should set title to Project Notes');
+});
+
+TestRunner.test("Day 655 - openProjectNotesWindow references showNotification", (t) => {
+    const funcStr = openProjectNotesWindow.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'openProjectNotesWindow should call showNotification');
+});
+
+TestRunner.test("Day 655 - openAudioClipEditorWindow is a function export", (t) => {
+    const uiStr = uiModule.toString();
+    t.assertTruthy(uiStr.includes('export function openAudioClipEditorWindow'), 'openAudioClipEditorWindow should be exported');
+});
+
+TestRunner.test("Day 655 - openAudioClipEditorWindow accepts 3 parameters", (t) => {
+    t.assertEqual(openAudioClipEditorWindow.length, 3, 'openAudioClipEditorWindow should accept 3 parameters');
+});
+
+TestRunner.test("Day 655 - openAudioClipEditorWindow references localAppServices.getTrackById", (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackById'), 'openAudioClipEditorWindow should call getTrackById');
+});
+
+TestRunner.test("Day 655 - openAudioClipEditorWindow finds clip in track.timelineClips", (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('timelineClips') && funcStr.includes('.find'), 'openAudioClipEditorWindow should find clip in timelineClips');
+});
+
+TestRunner.test("Day 655 - openAudioClipEditorWindow creates window with audioClipEditor windowId", (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('audioClipEditor') || funcStr.includes('clipEditor'), 'openAudioClipEditorWindow should use audioClipEditor windowId');
+});
+
+TestRunner.test("Day 655 - openAudioClipEditorWindow uses createWindow with width/height options", (t) => {
+    const funcStr = openAudioClipEditorWindow.toString();
+    t.assertTruthy(funcStr.includes('width') && funcStr.includes('height'), 'openAudioClipEditorWindow should set window dimensions');
+});
+
+TestRunner.test("Day 655 - renderMixer is a function export", (t) => {
+    const uiStr = uiModule.toString();
+    t.assertTruthy(uiStr.includes('export function renderMixer'), 'renderMixer should be exported');
+});
+
+TestRunner.test("Day 655 - renderMixer accepts 1 parameter", (t) => {
+    t.assertEqual(renderMixer.length, 1, 'renderMixer should accept 1 parameter');
+});
+
+TestRunner.test("Day 655 - renderMixer references localAppServices.getTracks", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'renderMixer should call getTracks');
+});
+
+TestRunner.test("Day 655 - renderMixer creates master track UI", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('master') || funcStr.includes('Master'), 'renderMixer should create master track');
+});
+
+TestRunner.test("Day 655 - renderMixer uses createKnob for volume controls", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('createKnob'), 'renderMixer should use createKnob');
+});
+
+TestRunner.test("Day 655 - renderMixer iterates tracks with forEach", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('forEach'), 'renderMixer should iterate over tracks');
+});
+
+TestRunner.test("Day 655 - renderMixer references localAppServices.handleTrackMute", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('handleTrackMute'), 'renderMixer should reference handleTrackMute');
+});
+
+TestRunner.test("Day 655 - renderMixer references localAppServices.handleTrackSolo", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('handleTrackSolo'), 'renderMixer should reference handleTrackSolo');
+});
+
+TestRunner.test("Day 655 - renderMixer references localAppServices.handleTrackArm", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('handleTrackArm'), 'renderMixer should reference handleTrackArm');
+});
+
+TestRunner.test("Day 655 - renderMixer references showTrackColorPicker", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('showTrackColorPicker'), 'renderMixer should reference showTrackColorPicker');
+});
+
+TestRunner.test("Day 655 - renderMixer references createContextMenu", (t) => {
+    const funcStr = renderMixer.toString();
+    t.assertTruthy(funcStr.includes('createContextMenu'), 'renderMixer should reference createContextMenu');
+});
+
+TestRunner.test("Day 655 - APP_VERSION validation for Day 655 UI window functions", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 655');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 308, 'Minor version should be >= 308 for Day 655');
+    }
+});
