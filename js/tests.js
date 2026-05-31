@@ -14451,3 +14451,376 @@ TestRunner.test("Day 653 - APP_VERSION validation for Day 653", (t) => {
         t.assertTruthy(versionParts[1] >= 306, 'Minor version should be >= 306 for Day 653');
     }
 });
+
+// Day 654: State Rename, Playback Mode, and Audio Utility Function Tests
+// ============================================
+
+TestRunner.test("Day 654 - renameTrackInState is a function export", (t) => {
+    const stateStr = stateModule.toString();
+    t.assertTruthy(stateStr.includes('export function renameTrackInState'), 'renameTrackInState should be exported');
+});
+
+TestRunner.test("Day 654 - renameTrackInState accepts 2 parameters", (t) => {
+    t.assertEqual(renameTrackInState.length, 2, 'renameTrackInState should accept 2 parameters');
+});
+
+TestRunner.test("Day 654 - renameTrackInState finds track by id", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('tracks.find') || funcStr.includes('find(t => t.id'), 'renameTrackInState should find track by id');
+});
+
+TestRunner.test("Day 654 - renameTrackInState returns false for missing track", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('Track not found') || funcStr.includes('!track'), 'renameTrackInState should handle missing track');
+});
+
+TestRunner.test("Day 654 - renameTrackInState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed') || funcStr.includes('appServices.captureStateForUndo'), 'renameTrackInState should capture undo state');
+});
+
+TestRunner.test("Day 654 - renameTrackInState sets track.name", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('track.name') || funcStr.includes('.name ='), 'renameTrackInState should set track.name');
+});
+
+TestRunner.test("Day 654 - renameTrackInState calls appServices.updateTrackUI", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'renameTrackInState should call updateTrackUI');
+});
+
+TestRunner.test("Day 654 - renameTrackInState has appServices guard for updateTrackUI", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('appServices &&') || funcStr.includes('if (appServices'), 'renameTrackInState should guard updateTrackUI call');
+});
+
+TestRunner.test("Day 654 - getPlaybackModeState is a function export", (t) => {
+    const stateStr = stateModule.toString();
+    t.assertTruthy(stateStr.includes('export function getPlaybackModeState'), 'getPlaybackModeState should be exported');
+});
+
+TestRunner.test("Day 654 - getPlaybackModeState accepts 0 parameters", (t) => {
+    t.assertEqual(getPlaybackModeState.length, 0, 'getPlaybackModeState should accept no parameters');
+});
+
+TestRunner.test("Day 654 - getPlaybackModeState returns globalPlaybackMode", (t) => {
+    const funcStr = getPlaybackModeState.toString();
+    t.assertTruthy(funcStr.includes('return globalPlaybackMode'), 'getPlaybackModeState should return globalPlaybackMode');
+});
+
+TestRunner.test("Day 654 - setPlaybackModeStateInternal is a function export", (t) => {
+    const stateStr = stateModule.toString();
+    t.assertTruthy(stateStr.includes('export function setPlaybackModeStateInternal') || stateStr.includes('setPlaybackModeState'), 'setPlaybackModeStateInternal should be exported');
+});
+
+TestRunner.test("Day 654 - setPlaybackModeStateInternal accepts 1 parameter", (t) => {
+    t.assertEqual(setPlaybackModeStateInternal.length, 1, 'setPlaybackModeStateInternal should accept 1 parameter');
+});
+
+TestRunner.test("Day 654 - setPlaybackModeStateInternal validates mode (sequencer/timeline)", (t) => {
+    const funcStr = setPlaybackModeStateInternal.toString();
+    t.assertTruthy(funcStr.includes("sequencer") && funcStr.includes("timeline"), 'setPlaybackModeStateInternal should validate mode');
+});
+
+TestRunner.test("Day 654 - setPlaybackModeStateInternal calls captureStateForUndo", (t) => {
+    const funcStr = setPlaybackModeStateInternal.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo') || funcStr.includes('captureStateForUndoInternal'), 'setPlaybackModeStateInternal should capture undo');
+});
+
+TestRunner.test("Day 654 - setPlaybackModeStateInternal references Tone.Transport", (t) => {
+    const funcStr = setPlaybackModeStateInternal.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport'), 'setPlaybackModeStateInternal should reference Tone.Transport');
+});
+
+TestRunner.test("Day 654 - setPlaybackModeStateInternal stops transport on mode change", (t) => {
+    const funcStr = setPlaybackModeStateInternal.toString();
+    t.assertTruthy(funcStr.includes('Transport.stop') || funcStr.includes('stop()'), 'setPlaybackModeStateInternal should stop transport');
+});
+
+TestRunner.test("Day 654 - setPlaybackModeStateInternal calls Tone.Transport.cancel", (t) => {
+    const funcStr = setPlaybackModeStateInternal.toString();
+    t.assertTruthy(funcStr.includes('Transport.cancel') || funcStr.includes('cancel('), 'setPlaybackModeStateInternal should cancel transport events');
+});
+
+TestRunner.test("Day 654 - setPlaybackModeStateInternal has descriptive undo label", (t) => {
+    const funcStr = setPlaybackModeStateInternal.toString();
+    t.assertTruthy(funcStr.includes('Set Playback Mode'), 'setPlaybackModeStateInternal should have descriptive undo label');
+});
+
+TestRunner.test("Day 654 - APP_VERSION validation for Day 654", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 654');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 307, 'Minor version should be >= 307 for Day 654');
+    }
+});
+
+// --- Audio Utility Function Tests ---
+
+TestRunner.test("Day 654 - getLoopStartBars is a function export", (t) => {
+    const funcStr = getLoopStartBars.toString();
+    t.assertTruthy(funcStr.includes('export function') || getLoopStartBars.length === 0, 'getLoopStartBars should be a function');
+});
+
+TestRunner.test("Day 654 - getLoopStartBars accepts 0 parameters", (t) => {
+    t.assertEqual(getLoopStartBars.length, 0, 'getLoopStartBars should accept no parameters');
+});
+
+TestRunner.test("Day 654 - getLoopStartBars references loopRegion.start", (t) => {
+    const funcStr = getLoopStartBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.start') || funcStr.includes('loopRegion['), 'getLoopStartBars should reference loopRegion.start');
+});
+
+TestRunner.test("Day 654 - getLoopEndBars is a function export", (t) => {
+    t.assertEqual(typeof getLoopEndBars, 'function', 'getLoopEndBars should be a function');
+});
+
+TestRunner.test("Day 654 - getLoopEndBars accepts 0 parameters", (t) => {
+    t.assertEqual(getLoopEndBars.length, 0, 'getLoopEndBars should accept no parameters');
+});
+
+TestRunner.test("Day 654 - getLoopEndBars references loopRegion.end", (t) => {
+    const funcStr = getLoopEndBars.toString();
+    t.assertTruthy(funcStr.includes('loopRegion.end') || funcStr.includes('loopRegion['), 'getLoopEndBars should reference loopRegion.end');
+});
+
+TestRunner.test("Day 654 - scheduleRecordingForPunch references recordingScheduledTrackId", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledTrackId'), 'scheduleRecordingForPunch should set recordingScheduledTrackId');
+});
+
+TestRunner.test("Day 654 - scheduleRecordingForPunch calls Tone.Transport.clear for previous scheduling", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('Transport.clear') || funcStr.includes('clear('), 'scheduleRecordingForPunch should clear previous scheduling');
+});
+
+TestRunner.test("Day 654 - scheduleRecordingForPunch schedules at punchRegion.out position", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('punchRegion.out') && funcStr.includes('schedule'), 'scheduleRecordingForPunch should schedule at punch-out position');
+});
+
+TestRunner.test("Day 654 - cancelScheduledRecording sets recordingScheduledTrackId to null", (t) => {
+    const funcStr = cancelScheduledRecording.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledTrackId = null') || funcStr.includes('recordingScheduledTrackId=null'), 'cancelScheduledRecording should clear track ID');
+});
+
+TestRunner.test("Day 654 - APP_VERSION validation for Day 654 audio utilities", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 654');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 307, 'Minor version should be >= 307 for Day 654');
+    }
+});
+
+// --- Context Suspension Monitoring Tests ---
+
+TestRunner.test("Day 654 - startContextSuspensionMonitoring is a function export", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('export function') || typeof startContextSuspensionMonitoring === 'function', 'startContextSuspensionMonitoring should be a function');
+});
+
+TestRunner.test("Day 654 - startContextSuspensionMonitoring accepts 0-1 parameters", (t) => {
+    t.assertTrue(startContextSuspensionMonitoring.length === 0 || startContextSuspensionMonitoring.length === 1, 'startContextSuspensionMonitoring should accept 0-1 parameters');
+});
+
+TestRunner.test("Day 654 - startContextSuspensionMonitoring references resumeAttemptScheduled", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('resumeAttemptScheduled'), 'startContextSuspensionMonitoring should reference resumeAttemptScheduled');
+});
+
+TestRunner.test("Day 654 - startContextSuspensionMonitoring references Tone.context", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('Tone.context') || funcStr.includes('context.state'), 'startContextSuspensionMonitoring should reference Tone.context');
+});
+
+TestRunner.test("Day 654 - startContextSuspensionMonitoring references contextSuspendedCount", (t) => {
+    const funcStr = startContextSuspensionMonitoring.toString();
+    t.assertTruthy(funcStr.includes('contextSuspendedCount'), 'startContextSuspensionMonitoring should reference contextSuspendedCount');
+});
+
+TestRunner.test("Day 654 - stopContextSuspensionMonitoring is a function export", (t) => {
+    t.assertEqual(typeof stopContextSuspensionMonitoring, 'function', 'stopContextSuspensionMonitoring should be a function');
+});
+
+TestRunner.test("Day 654 - stopContextSuspensionMonitoring accepts 0 parameters", (t) => {
+    t.assertEqual(stopContextSuspensionMonitoring.length, 0, 'stopContextSuspensionMonitoring should accept no parameters');
+});
+
+TestRunner.test("Day 654 - getContextSuspensionCount is a function export", (t) => {
+    t.assertEqual(typeof getContextSuspensionCount, 'function', 'getContextSuspensionCount should be a function');
+});
+
+TestRunner.test("Day 654 - getContextSuspensionCount accepts 0 parameters", (t) => {
+    t.assertEqual(getContextSuspensionCount.length, 0, 'getContextSuspensionCount should accept no parameters');
+});
+
+TestRunner.test("Day 654 - getContextState is a function export", (t) => {
+    t.assertEqual(typeof getContextState, 'function', 'getContextState should be a function');
+});
+
+TestRunner.test("Day 654 - getContextState accepts 0 parameters", (t) => {
+    t.assertEqual(getContextState.length, 0, 'getContextState should accept no parameters');
+});
+
+TestRunner.test("Day 654 - getContextState references Tone.context.state", (t) => {
+    const funcStr = getContextState.toString();
+    t.assertTruthy(funcStr.includes('Tone.context.state') || funcStr.includes('context.state'), 'getContextState should reference Tone.context.state');
+});
+
+TestRunner.test("Day 654 - APP_VERSION validation for Day 654 context monitoring", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 654');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 307, 'Minor version should be >= 307 for Day 654');
+    }
+});
+
+// --- Additional Audio Function Tests ---
+
+TestRunner.test("Day 654 - getSidechainBusInput is a function export", (t) => {
+    t.assertEqual(typeof getSidechainBusInput, 'function', 'getSidechainBusInput should be a function');
+});
+
+TestRunner.test("Day 654 - getSidechainBusInput accepts 0 parameters", (t) => {
+    t.assertEqual(getSidechainBusInput.length, 0, 'getSidechainBusInput should accept no parameters');
+});
+
+TestRunner.test("Day 654 - getSidechainBusInput references sidechainBus variable", (t) => {
+    const funcStr = getSidechainBusInput.toString();
+    t.assertTruthy(funcStr.includes('sidechainBus'), 'getSidechainBusInput should reference sidechainBus');
+});
+
+TestRunner.test("Day 654 - getSidechainBusInput checks bus disposed state", (t) => {
+    const funcStr = getSidechainBusInput.toString();
+    t.assertTruthy(funcStr.includes('disposed'), 'getSidechainBusInput should check bus disposed state');
+});
+
+TestRunner.test("Day 654 - isMicOpenForSidechain is a function export", (t) => {
+    t.assertEqual(typeof isMicOpenForSidechain, 'function', 'isMicOpenForSidechain should be a function');
+});
+
+TestRunner.test("Day 654 - isMicOpenForSidechain accepts 0 parameters", (t) => {
+    t.assertEqual(isMicOpenForSidechain.length, 0, 'isMicOpenForSidechain should accept no parameters');
+});
+
+TestRunner.test("Day 654 - isMicOpenForSidechain references micForSidechain.state", (t) => {
+    const funcStr = isMicOpenForSidechain.toString();
+    t.assertTruthy(funcStr.includes('micForSidechain.state') || funcStr.includes('state === '), 'isMicOpenForSidechain should check mic state');
+});
+
+TestRunner.test("Day 654 - disableSidechainBus is a function export", (t) => {
+    t.assertEqual(typeof disableSidechainBus, 'function', 'disableSidechainBus should be a function');
+});
+
+TestRunner.test("Day 654 - disableSidechainBus accepts 0 parameters", (t) => {
+    t.assertEqual(disableSidechainBus.length, 0, 'disableSidechainBus should accept no parameters');
+});
+
+TestRunner.test("Day 654 - disableSidechainBus calls disableSidechainFromMic", (t) => {
+    const funcStr = disableSidechainBus.toString();
+    t.assertTruthy(funcStr.includes('disableSidechainFromMic'), 'disableSidechainBus should call disableSidechainFromMic');
+});
+
+TestRunner.test("Day 654 - APP_VERSION validation for Day 654 sidechain functions", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 654');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 307, 'Minor version should be >= 307 for Day 654');
+    }
+});
+
+// --- Master Volume Automation Function Tests ---
+
+TestRunner.test("Day 654 - getMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof getMasterVolumeAutomation, 'function', 'getMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 654 - getMasterVolumeAutomation accepts 0 parameters", (t) => {
+    t.assertEqual(getMasterVolumeAutomation.length, 0, 'getMasterVolumeAutomation should accept no parameters');
+});
+
+TestRunner.test("Day 654 - getMasterVolumeAutomation references masterVolumeAutomationData", (t) => {
+    const funcStr = getMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('masterVolumeAutomationData'), 'getMasterVolumeAutomation should reference masterVolumeAutomationData');
+});
+
+TestRunner.test("Day 654 - setMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof setMasterVolumeAutomation, 'function', 'setMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 654 - setMasterVolumeAutomation accepts 1 parameter", (t) => {
+    t.assertEqual(setMasterVolumeAutomation.length, 1, 'setMasterVolumeAutomation should accept 1 parameter');
+});
+
+TestRunner.test("Day 654 - setMasterVolumeAutomation calls captureAudioStateForUndoIfAllowed", (t) => {
+    const funcStr = setMasterVolumeAutomation.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setMasterVolumeAutomation should capture undo');
+});
+
+TestRunner.test("Day 654 - writeMasterVolumeAutomation is a function export", (t) => {
+    t.assertEqual(typeof writeMasterVolumeAutomation, 'function', 'writeMasterVolumeAutomation should be a function');
+});
+
+TestRunner.test("Day 654 - writeMasterVolumeAutomation accepts 2 parameters", (t) => {
+    t.assertEqual(writeMasterVolumeAutomation.length, 2, 'writeMasterVolumeAutomation should accept 2 parameters');
+});
+
+TestRunner.test("Day 654 - applyMasterVolumeAutomationAtTime is a function export", (t) => {
+    t.assertEqual(typeof applyMasterVolumeAutomationAtTime, 'function', 'applyMasterVolumeAutomationAtTime should be a function');
+});
+
+TestRunner.test("Day 654 - applyMasterVolumeAutomationAtTime accepts 1 parameter", (t) => {
+    t.assertEqual(applyMasterVolumeAutomationAtTime.length, 1, 'applyMasterVolumeAutomationAtTime should accept 1 parameter');
+});
+
+TestRunner.test("Day 654 - APP_VERSION validation for Day 654 master volume automation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 654');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 307, 'Minor version should be >= 307 for Day 654');
+    }
+});
+
+// --- State Module Internal Functions Tests ---
+
+TestRunner.test("Day 654 - captureStateForUndoInternal is a function export", (t) => {
+    const stateStr = stateModule.toString();
+    t.assertTruthy(stateStr.includes('export function captureStateForUndoInternal'), 'captureStateForUndoInternal should be exported');
+});
+
+TestRunner.test("Day 654 - captureStateForUndoInternal accepts 1 parameter with default", (t) => {
+    t.assertTrue(captureStateForUndoInternal.length === 1, 'captureStateForUndoInternal should accept 1 parameter');
+});
+
+TestRunner.test("Day 654 - captureStateForUndoInternal uses try/catch for error handling", (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'captureStateForUndoInternal should have try/catch');
+});
+
+TestRunner.test("Day 654 - captureStateForUndoInternal references undoStack", (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack'), 'captureStateForUndoInternal should reference undoStack');
+});
+
+TestRunner.test("Day 654 - captureStateForUndoInternal clears redoStack on new action", (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('redoStack = []') || funcStr.includes('redoStack=[]'), 'captureStateForUndoInternal should clear redo stack');
+});
+
+TestRunner.test("Day 654 - captureStateForUndoInternal uses MAX_HISTORY_STATES constant", (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('MAX_HISTORY_STATES') || funcStr.includes('Constants.MAX'), 'captureStateForUndoInternal should use MAX_HISTORY_STATES');
+});
+
+TestRunner.test("Day 654 - captureStateForUndoInternal calls gatherProjectDataInternal", (t) => {
+    const funcStr = captureStateForUndoInternal.toString();
+    t.assertTruthy(funcStr.includes('gatherProjectDataInternal'), 'captureStateForUndoInternal should gather project data');
+});
+
+TestRunner.test("Day 654 - APP_VERSION validation for Day 654 state internal functions", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 654');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 307, 'Minor version should be >= 307 for Day 654');
+    }
+});
