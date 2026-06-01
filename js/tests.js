@@ -16749,7 +16749,7 @@ TestRunner.test("Day 668 - handleProjectFileLoadInternal calls captureStateForUn
 
 TestRunner.test("Day 668 - handleProjectFileLoadInternal shows notification on error", (t) => {
     const funcStr = handleProjectFileLoadInternal.toString();
-    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('showNotification', 'handleProjectFileLoadInternal should show notification');
+    t.assertTruthy(funcStr.includes('showNotification'), 'handleProjectFileLoadInternal should show notification');
 });
 
 TestRunner.test("Day 668 - handleProjectFileLoadInternal resets file input after processing", (t) => {
