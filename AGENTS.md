@@ -2391,3 +2391,19 @@
   - APP_VERSION validation (>= 2.310 for Day 658)
 - **Version**: Bumped to 2.312.0
 - **Test Count**: Increased from 2749 to 2769
+
+#### Day 666: Sidechain Audio Function Tests (2026-06-01)
+- **Tests**: Added 24 tests for Sidechain audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 666 test block with 24 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.320.0
+- **Test Details** (`js/tests.js`): 24 tests covering:
+  - **getSidechainBusInput** (2 tests): is a function export, creates Tone.Gain when sidechainBus is disposed
+  - **enableSidechainFromMic** (6 tests): is an async function export, validates compressorNode, checks micForSidechain state, uses navigator.mediaDevices.getUserMedia for microphone, has console.warn and console.error, has try/catch block
+  - **disableSidechainFromMic** (4 tests): is a function export, references micForSidechain, calls disconnect and close, sets micForSidechain to null
+  - **enableSidechainFromTrackIn** (4 tests): is an async function export, validates compressorNode, references localAppServices.getTrackById, references track.inputChannel, has console.warn for missing track
+  - **disableSidechainBus** (3 tests): is a function export, calls disableSidechainFromMic, references sidechainBus
+  - **isMicOpenForSidechain** (3 tests): is a function export, references micForSidechain, checks state === 'started'
+  - APP_VERSION validation (>= 2.320 for Day 666)
+- **Version**: Bumped to 2.320.0
+- **Test Count**: Increased from 2937 to 2961

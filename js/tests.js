@@ -16316,3 +16316,170 @@ TestRunner.test("Day 665 - APP_VERSION validation", (t) => {
         t.assertTruthy(versionParts[1] >= 319, 'Minor version should be >= 319 for Day 665');
     }
 });
+
+// Day 666: Sidechain Audio Function Tests
+TestRunner.test("Day 666 - Sidechain - getSidechainBusInput is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getSidechainBusInput'), 'getSidechainBusInput should be exported');
+});
+
+TestRunner.test("Day 666 - Sidechain - getSidechainBusInput creates Tone.Gain when sidechainBus is disposed", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getSidechainBusInput');
+    const toneGainIdx = audioStr.indexOf('new Tone.Gain', fnIdx);
+    t.assertTruthy(toneGainIdx > fnIdx && toneGainIdx < fnIdx + 300, 'getSidechainBusInput should create new Tone.Gain when sidechainBus is disposed');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromMic is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function enableSidechainFromMic'), 'enableSidechainFromMic should be an async exported function');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromMic validates compressorNode", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromMic');
+    const validIdx = audioStr.indexOf('compressorNode || compressorNode.disposed', fnIdx);
+    t.assertTruthy(validIdx > fnIdx && validIdx < fnIdx + 200, 'enableSidechainFromMic should validate compressorNode');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromMic checks micForSidechain state", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromMic');
+    const micIdx = audioStr.indexOf('micForSidechain', fnIdx);
+    const stateIdx = audioStr.indexOf("state === 'started'", fnIdx);
+    t.assertTruthy(micIdx > fnIdx && micIdx < fnIdx + 400, 'enableSidechainFromMic should reference micForSidechain');
+    t.assertTruthy(stateIdx > fnIdx && stateIdx < fnIdx + 500, 'enableSidechainFromMic should check mic state');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromMic uses getUserMedia for microphone", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromMic');
+    const mediaIdx = audioStr.indexOf('navigator.mediaDevices.getUserMedia', fnIdx);
+    t.assertTruthy(mediaIdx > fnIdx && mediaIdx < fnIdx + 600, 'enableSidechainFromMic should use navigator.mediaDevices.getUserMedia');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromMic has console.warn and console.error", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromMic');
+    const warnIdx = audioStr.indexOf('console.warn', fnIdx);
+    const errorIdx = audioStr.indexOf('console.error', fnIdx);
+    t.assertTruthy(warnIdx > fnIdx && warnIdx < fnIdx + 400, 'enableSidechainFromMic should have console.warn');
+    t.assertTruthy(errorIdx > fnIdx && errorIdx < fnIdx + 500, 'enableSidechainFromMic should have console.error');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromMic has try/catch block", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromMic');
+    const tryIdx = audioStr.indexOf('try {', fnIdx);
+    const catchIdx = audioStr.indexOf('catch', fnIdx);
+    t.assertTruthy(tryIdx > fnIdx && tryIdx < fnIdx + 400, 'enableSidechainFromMic should have try block');
+    t.assertTruthy(catchIdx > fnIdx && catchIdx < fnIdx + 600, 'enableSidechainFromMic should have catch block');
+});
+
+TestRunner.test("Day 666 - Sidechain - disableSidechainFromMic is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function disableSidechainFromMic'), 'disableSidechainFromMic should be exported');
+});
+
+TestRunner.test("Day 666 - Sidechain - disableSidechainFromMic references micForSidechain", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function disableSidechainFromMic');
+    const micIdx = audioStr.indexOf('micForSidechain', fnIdx);
+    t.assertTruthy(micIdx > fnIdx && micIdx < fnIdx + 100, 'disableSidechainFromMic should reference micForSidechain');
+});
+
+TestRunner.test("Day 666 - Sidechain - disableSidechainFromMic calls disconnect and close", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function disableSidechainFromMic');
+    const disIdx = audioStr.indexOf('.disconnect()', fnIdx);
+    const closeIdx = audioStr.indexOf('.close()', fnIdx);
+    t.assertTruthy(disIdx > fnIdx && disIdx < fnIdx + 200, 'disableSidechainFromMic should call disconnect');
+    t.assertTruthy(closeIdx > fnIdx && closeIdx < fnIdx + 200, 'disableSidechainFromMic should call close');
+});
+
+TestRunner.test("Day 666 - Sidechain - disableSidechainFromMic sets micForSidechain to null", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function disableSidechainFromMic');
+    const nullIdx = audioStr.indexOf('= null', fnIdx);
+    t.assertTruthy(nullIdx > fnIdx && nullIdx < fnIdx + 200, 'disableSidechainFromMic should set micForSidechain to null');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromTrackIn is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function enableSidechainFromTrackIn'), 'enableSidechainFromTrackIn should be an async exported function');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromTrackIn validates compressorNode", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromTrackIn');
+    const validIdx = audioStr.indexOf('compressorNode || compressorNode.disposed', fnIdx);
+    t.assertTruthy(validIdx > fnIdx && validIdx < fnIdx + 200, 'enableSidechainFromTrackIn should validate compressorNode');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromTrackIn references localAppServices.getTrackById", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromTrackIn');
+    const trackIdx = audioStr.indexOf('localAppServices.getTrackById', fnIdx);
+    t.assertTruthy(trackIdx > fnIdx && trackIdx < fnIdx + 400, 'enableSidechainFromTrackIn should reference localAppServices.getTrackById');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromTrackIn references track.inputChannel", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromTrackIn');
+    const inputIdx = audioStr.indexOf('track.inputChannel', fnIdx);
+    t.assertTruthy(inputIdx > fnIdx && inputIdx < fnIdx + 500, 'enableSidechainFromTrackIn should reference track.inputChannel');
+});
+
+TestRunner.test("Day 666 - Sidechain - enableSidechainFromTrackIn has console.warn for missing track", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function enableSidechainFromTrackIn');
+    const warnIdx = audioStr.indexOf('console.warn', fnIdx);
+    t.assertTruthy(warnIdx > fnIdx && warnIdx < fnIdx + 500, 'enableSidechainFromTrackIn should have console.warn for missing track');
+});
+
+TestRunner.test("Day 666 - Sidechain - disableSidechainBus is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function disableSidechainBus'), 'disableSidechainBus should be exported');
+});
+
+TestRunner.test("Day 666 - Sidechain - disableSidechainBus calls disableSidechainFromMic", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function disableSidechainBus');
+    const callIdx = audioStr.indexOf('disableSidechainFromMic', fnIdx);
+    t.assertTruthy(callIdx > fnIdx && callIdx < fnIdx + 100, 'disableSidechainBus should call disableSidechainFromMic');
+});
+
+TestRunner.test("Day 666 - Sidechain - disableSidechainBus references sidechainBus", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function disableSidechainBus');
+    const busIdx = audioStr.indexOf('sidechainBus', fnIdx);
+    t.assertTruthy(busIdx > fnIdx && busIdx < fnIdx + 200, 'disableSidechainBus should reference sidechainBus');
+});
+
+TestRunner.test("Day 666 - Sidechain - isMicOpenForSidechain is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function isMicOpenForSidechain'), 'isMicOpenForSidechain should be exported');
+});
+
+TestRunner.test("Day 666 - Sidechain - isMicOpenForSidechain references micForSidechain", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function isMicOpenForSidechain');
+    const micIdx = audioStr.indexOf('micForSidechain', fnIdx);
+    t.assertTruthy(micIdx > fnIdx && micIdx < fnIdx + 100, 'isMicOpenForSidechain should reference micForSidechain');
+});
+
+TestRunner.test("Day 666 - Sidechain - isMicOpenForSidechain checks state === 'started'", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function isMicOpenForSidechain');
+    const stateIdx = audioStr.indexOf("state === 'started'", fnIdx);
+    t.assertTruthy(stateIdx > fnIdx && stateIdx < fnIdx + 100, 'isMicOpenForSidechain should check state === started');
+});
+
+TestRunner.test("Day 666 - APP_VERSION validation for Day 666", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 666");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 320, "Minor version should be >= 320 for Day 666");
+    }
+});
