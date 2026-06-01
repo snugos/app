@@ -1,4 +1,16 @@
 # SnugOS DAW - AGENTS.md
+#### Day 668: Project Load and Track Add State Function Tests (2026-06-01)
+- **Tests**: Added 31 tests for Project Load and Track Add state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 668 test block with 31 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.322.0
+- **Test Details** (`js/tests.js`): 31 tests covering:
+  - **handleProjectFileLoadInternal** (10 tests): is an async function export, validates event.target.files, checks for .snug file extension, uses FileReader, calls JSON.parse, clears undo/redo stacks on load, calls reconstructDAWInternal, calls captureStateForUndoInternal after load, shows notification on error, resets file input after processing
+  - **addTrackToStateInternal** (20 tests): is an async function export, accepts 3 parameters (type, initialData, isUserAction), checks isUserAction for undo capture, assigns trackAppServices with required functions (getSoloedTrackId, setSoloedTrackId, captureStateForUndo, updateTrackUI), creates new Track instance, pushes to tracks array, calls initializeAudioNodes, calls fullyInitializeAudioResources, has try/catch for error handling, handles track creation failure
+  - APP_VERSION validation (>= 2.322 for Day 668)
+- **Version**: Bumped to 2.322.0
+- **Test Count**: Increased from 16515 to 16546
+
 #### Day 667: Master Bus Node and Meter Functions Tests (2026-06-01)
 - **Tests**: Added 30 tests for Master Bus node accessor and meter functions in audio.js
 - **Files Modified**:

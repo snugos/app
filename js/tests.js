@@ -16698,3 +16698,124 @@ TestRunner.test("Day 667 - APP_VERSION validation for Day 667", (t) => {
         t.assertTruthy(versionParts[1] >= 321, "Minor version should be >= 321 for Day 667");
     }
 });
+
+
+// ============================================
+// Day 668: Project Load and Track Add State Function Tests
+// ============================================
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal is an async function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export async function handleProjectFileLoadInternal'), 'handleProjectFileLoadInternal should be async function export');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal validates event and files", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('event.target.files'), 'handleProjectFileLoadInternal should check event.target.files');
+    t.assertTruthy(funcStr.includes('event.target.files.length === 0') || funcStr.includes('!event.target.files.length'), 'handleProjectFileLoadInternal should check files length');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal checks for .snug file extension", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('.snug'), 'handleProjectFileLoadInternal should check for .snug extension');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal uses FileReader", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('FileReader'), 'handleProjectFileLoadInternal should use FileReader');
+    t.assertTruthy(funcStr.includes('reader.onload'), 'handleProjectFileLoadInternal should have onload handler');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal calls JSON.parse on file content", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('JSON.parse'), 'handleProjectFileLoadInternal should parse JSON');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal clears undo/redo stacks on load", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('undoStack = []'), 'handleProjectFileLoadInternal should clear undoStack');
+    t.assertTruthy(funcStr.includes('redoStack = []'), 'handleProjectFileLoadInternal should clear redoStack');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal calls reconstructDAWInternal", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('reconstructDAWInternal'), 'handleProjectFileLoadInternal should call reconstructDAWInternal');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal calls captureStateForUndoInternal after load", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoInternal'), 'handleProjectFileLoadInternal should capture undo state');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal shows notification on error", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification') || funcStr.includes('showNotification', 'handleProjectFileLoadInternal should show notification');
+});
+
+TestRunner.test("Day 668 - handleProjectFileLoadInternal resets file input after processing", (t) => {
+    const funcStr = handleProjectFileLoadInternal.toString();
+    t.assertTruthy(funcStr.includes('event.target.value = null') || funcStr.includes('event.target.value=null'), 'handleProjectFileLoadInternal should reset file input');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal is an async function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export async function addTrackToStateInternal'), 'addTrackToStateInternal should be async function export');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal accepts 3 parameters (type, initialData, isUserAction)", (t) => {
+    t.assertEqual(addTrackToStateInternal.length, 3, 'addTrackToStateInternal should accept 3 parameters');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal checks isUserAction for undo capture", (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('isUserAction'), 'addTrackToStateInternal should check isUserAction');
+    t.assertTruthy(funcStr.includes('captureStateForUndoInternal'), 'addTrackToStateInternal should call captureStateForUndoInternal');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal assigns trackAppServices with required functions", (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('trackAppServices'), 'addTrackToStateInternal should create trackAppServices');
+    t.assertTruthy(funcStr.includes('getSoloedTrackId'), 'addTrackToStateInternal should include getSoloedTrackId');
+    t.assertTruthy(funcStr.includes('setSoloedTrackId'), 'addTrackToStateInternal should include setSoloedTrackId');
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'addTrackToStateInternal should include captureStateForUndo');
+    t.assertTruthy(funcStr.includes('updateTrackUI'), 'addTrackToStateInternal should include updateTrackUI');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal creates new Track instance", (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('new Track'), 'addTrackToStateInternal should create new Track');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal pushes new track to tracks array", (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('tracks.push'), 'addTrackToStateInternal should push to tracks array');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal calls initializeAudioNodes on new track", (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('initializeAudioNodes'), 'addTrackToStateInternal should call initializeAudioNodes');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal calls fullyInitializeAudioResources on new track", (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('fullyInitializeAudioResources'), 'addTrackToStateInternal should call fullyInitializeAudioResources');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal has try/catch for error handling", (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'addTrackToStateInternal should have try/catch');
+});
+
+TestRunner.test("Day 668 - addTrackToStateInternal handles track creation failure", (t) => {
+    const funcStr = addTrackToStateInternal.toString();
+    t.assertTruthy(funcStr.includes('showNotification') && funcStr.includes('Failed to add'), 'addTrackToStateInternal should show error notification');
+});
+
+TestRunner.test("Day 668 - APP_VERSION validation for Day 668", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 668");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 322, "Minor version should be >= 322 for Day 668");
+    }
+});
