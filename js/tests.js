@@ -17027,3 +17027,200 @@ TestRunner.test("Day 670 - APP_VERSION validation for Day 670", (t) => {
         t.assertTruthy(versionParts[1] >= 323, "Minor version should be >= 323 for Day 670");
     }
 });
+
+// Day 671: exportToWavInternal and exportStemsInternal State Function Tests
+TestRunner.test("Day 671 - exportToWavInternal is a function export", (t) => {
+    t.assertEqual(typeof exportToWavInternal, 'function', 'exportToWavInternal should be a function export');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal is an async function", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('async'), 'exportToWavInternal should be an async function');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal accepts 0 parameters", (t) => {
+    t.assertEqual(exportToWavInternal.length, 0, 'exportToWavInternal should accept 0 parameters');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal checks appServices.showNotification", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices.showNotification'), 'exportToWavInternal should check appServices.showNotification');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal checks appServices.getActualMasterGainNode", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices.getActualMasterGainNode'), 'exportToWavInternal should check appServices.getActualMasterGainNode');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal checks audioInitAudioContextAndMasterMeter", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('audioInitAudioContextAndMasterMeter'), 'exportToWavInternal should check audioInitAudioContextAndMasterMeter');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal calls audioInitAudioContextAndMasterMeter", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('audioInitAudioContextAndMasterMeter(true)'), 'exportToWavInternal should call audioInitAudioContextAndMasterMeter with true');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal gets playback mode via getPlaybackModeState", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('getPlaybackModeState()'), 'exportToWavInternal should call getPlaybackModeState');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal gets tracks via getTracksState", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState()'), 'exportToWavInternal should call getTracksState');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal handles timeline mode", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes("currentPlaybackMode === 'timeline'"), 'exportToWavInternal should check for timeline playback mode');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal iterates timelineClips", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('timelineClips'), 'exportToWavInternal should iterate timelineClips');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal checks clip.startTime and clip.duration", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('clip.startTime') && funcStr.includes('clip.duration'), 'exportToWavInternal should check clip.startTime and clip.duration');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal handles sequence mode", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'exportToWavInternal should call getActiveSequence for sequence mode');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal uses Tone.Time for sixteenth note", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('Tone.Time'), 'exportToWavInternal should reference Tone.Time');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal shows notification on empty export", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('Nothing to export') || funcStr.includes('Nothing to export'), 'exportToWavInternal should notify when nothing to export');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal uses Tone.Transport.stop", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.stop'), 'exportToWavInternal should call Tone.Transport.stop');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal uses Tone.Recorder", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Recorder'), 'exportToWavInternal should create Tone.Recorder instance');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal connects masterGain to recorder", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('masterGain.connect(recorder)'), 'exportToWavInternal should connect master gain to recorder');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal checks masterGain.disposed", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('masterGain.disposed'), 'exportToWavInternal should check masterGain.disposed');
+});
+
+TestRunner.test("Day 671 - exportToWavInternal handles errors with try/catch", (t) => {
+    const funcStr = exportToWavInternal.toString();
+    t.assertTruthy(funcStr.includes('try {') && funcStr.includes('catch'), 'exportToWavInternal should have try/catch for error handling');
+});
+
+TestRunner.test("Day 671 - APP_VERSION validation for Day 671", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 671");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 324, "Minor version should be >= 324 for Day 671");
+    }
+});
+
+// Day 671b: exportStemsInternal State Function Tests
+TestRunner.test("Day 671b - exportStemsInternal is a function export", (t) => {
+    t.assertEqual(typeof exportStemsInternal, 'function', 'exportStemsInternal should be a function export');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal is an async function", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('async'), 'exportStemsInternal should be an async function');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal accepts 0 parameters", (t) => {
+    t.assertEqual(exportStemsInternal.length, 0, 'exportStemsInternal should accept 0 parameters');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal imports from state.js", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes("import('./state.js')") || funcStr.includes('getTracksState'), 'exportStemsInternal should import from state.js');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal imports initAudioContextAndMasterMeter", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter'), 'exportStemsInternal should import initAudioContextAndMasterMeter');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal calls initAudioContextAndMasterMeter", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('initAudioContextAndMasterMeter(true)'), 'exportStemsInternal should call initAudioContextAndMasterMeter with true');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal gets tracks via getTracksState", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState()'), 'exportStemsInternal should call getTracksState');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal gets playback mode via getPlaybackModeState", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('getPlaybackModeState()'), 'exportStemsInternal should call getPlaybackModeState');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal iterates tracks", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('tracks.forEach') || funcStr.includes('tracks.length'), 'exportStemsInternal should iterate tracks');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal checks track.type for Audio tracks", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'Audio'"), 'exportStemsInternal should check track.type');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal handles timelineClips", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('timelineClips'), 'exportStemsInternal should handle timelineClips');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal uses Tone.Time for sixteenth note", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('Tone.Time'), 'exportStemsInternal should reference Tone.Time');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal shows notification for empty export", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('Nothing to export') || funcStr.includes('Add some notes'), 'exportStemsInternal should notify when nothing to export');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal uses Tone.Transport.stop", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.stop'), 'exportStemsInternal should call Tone.Transport.stop');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal uses Tone.Recorder", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Recorder'), 'exportStemsInternal should create Tone.Recorder instance');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal iterates tracks in a loop", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('for (let i = 0') || funcStr.includes('for(let i'), 'exportStemsInternal should iterate tracks in a loop');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal shows per-track notification", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('Exporting stem') || funcStr.includes('track.name'), 'exportStemsInternal should show per-track notifications');
+});
+
+TestRunner.test("Day 671b - exportStemsInternal has try/catch error handling", (t) => {
+    const funcStr = exportStemsInternal.toString();
+    t.assertTruthy(funcStr.includes('try {') && funcStr.includes('catch'), 'exportStemsInternal should have try/catch for error handling');
+});
