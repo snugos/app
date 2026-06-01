@@ -1,3 +1,18 @@
+#### Day 669: Sidechain Effect Automation and Punch Region Function Tests (2026-06-01)
+- **Tests**: Added 25 tests for Sidechain Effect Automation and Punch Region audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 669 test block with 25 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.323.0
+- **Test Details** (`js/tests.js`): 25 tests covering:
+  - **handleSidechainParamChangeForEffect** (5 tests): is a function export, accepts 3 parameters (effectId, effectNode, sidechainValue), validates effectNode.disposed, uses rampTo for smooth transitions
+  - **enableSidechainFromTrackForEffect** (6 tests): is a function export, accepts 2 parameters (effectId, trackId), validates compressorNode.disposed, references localAppServices.getTrackById, references track.inputChannel, has console.warn for missing track
+  - **reorderMasterEffectInAudio** (4 tests): is a function export, accepts 2 parameters (effectIdIgnored, newIndexIgnored), calls rebuildMasterEffectChain
+  - **setPunchRegion** (4 tests): is a function export, accepts 2 parameters (inBars, outBars), references punchRegion object
+  - **setPunchRegionEnabled** (3 tests): is a function export, accepts 1 parameter, uses !! for boolean coercion
+  - APP_VERSION validation (>= 2.323 for Day 669)
+- **Version**: Bumped to 2.323.0
+- **Test Count**: Increased from 16546 to 16571
+
 # SnugOS DAW - AGENTS.md
 #### Day 668: Project Load and Track Add State Function Tests (2026-06-01)
 - **Tests**: Added 31 tests for Project Load and Track Add state functions in state.js

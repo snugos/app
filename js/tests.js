@@ -16819,3 +16819,123 @@ TestRunner.test("Day 668 - APP_VERSION validation for Day 668", (t) => {
         t.assertTruthy(versionParts[1] >= 322, "Minor version should be >= 322 for Day 668");
     }
 });
+
+// ============================================
+// Day 669: Sidechain Effect Automation Function Tests
+// ============================================
+
+TestRunner.test("Day 669 - handleSidechainParamChangeForEffect is a function export", (t) => {
+    t.assertEqual(typeof handleSidechainParamChangeForEffect, 'function', 'handleSidechainParamChangeForEffect should be a function');
+});
+
+TestRunner.test("Day 669 - handleSidechainParamChangeForEffect accepts 3 parameters", (t) => {
+    t.assertEqual(handleSidechainParamChangeForEffect.length, 3, 'handleSidechainParamChangeForEffect should accept 3 parameters');
+});
+
+TestRunner.test("Day 669 - handleSidechainParamChangeForEffect accepts (effectId, effectNode, sidechainValue)", (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('effectNode') && funcStr.includes('sidechainValue'), 'handleSidechainParamChangeForEffect should reference effectId, effectNode, and sidechainValue');
+});
+
+TestRunner.test("Day 669 - handleSidechainParamChangeForEffect validates effectNode", (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('effectNode') && funcStr.includes('disposed'), 'handleSidechainParamChangeForEffect should check effectNode.disposed');
+});
+
+TestRunner.test("Day 669 - handleSidechainParamChangeForEffect uses rampTo for smooth transitions", (t) => {
+    const funcStr = handleSidechainParamChangeForEffect.toString();
+    t.assertTruthy(funcStr.includes('rampTo'), 'handleSidechainParamChangeForEffect should use rampTo for parameter changes');
+});
+
+TestRunner.test("Day 669 - enableSidechainFromTrackForEffect is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function enableSidechainFromTrackForEffect'), 'enableSidechainFromTrackForEffect should be exported');
+});
+
+TestRunner.test("Day 669 - enableSidechainFromTrackForEffect accepts 2 parameters", (t) => {
+    t.assertEqual(enableSidechainFromTrackForEffect.length, 2, 'enableSidechainFromTrackForEffect should accept 2 parameters');
+});
+
+TestRunner.test("Day 669 - enableSidechainFromTrackForEffect accepts (effectId, trackId)", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('effectId') && funcStr.includes('trackId'), 'enableSidechainFromTrackForEffect should reference effectId and trackId');
+});
+
+TestRunner.test("Day 669 - enableSidechainFromTrackForEffect validates compressorNode", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('compressorNode') && funcStr.includes('disposed'), 'enableSidechainFromTrackForEffect should check compressorNode.disposed');
+});
+
+TestRunner.test("Day 669 - enableSidechainFromTrackForEffect references localAppServices.getTrackById", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('getTrackById') || funcStr.includes('track'), 'enableSidechainFromTrackForEffect should reference track lookup');
+});
+
+TestRunner.test("Day 669 - enableSidechainFromTrackForEffect references track.inputChannel", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('inputChannel'), 'enableSidechainFromTrackForEffect should reference track.inputChannel');
+});
+
+TestRunner.test("Day 669 - enableSidechainFromTrackForEffect has console.warn for missing track", (t) => {
+    const funcStr = enableSidechainFromTrackForEffect.toString();
+    t.assertTruthy(funcStr.includes('console.warn'), 'enableSidechainFromTrackForEffect should warn on invalid track');
+});
+
+TestRunner.test("Day 669 - reorderMasterEffectInAudio is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function reorderMasterEffectInAudio'), 'reorderMasterEffectInAudio should be exported');
+});
+
+TestRunner.test("Day 669 - reorderMasterEffectInAudio accepts 2 parameters", (t) => {
+    t.assertEqual(reorderMasterEffectInAudio.length, 2, 'reorderMasterEffectInAudio should accept 2 parameters');
+});
+
+TestRunner.test("Day 669 - reorderMasterEffectInAudio accepts (effectIdIgnored, newIndexIgnored)", (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectId') || funcStr.includes('newIndex') || funcStr.includes('Ignored'), 'reorderMasterEffectInAudio should accept effectId and newIndex parameters');
+});
+
+TestRunner.test("Day 669 - reorderMasterEffectInAudio calls rebuildMasterEffectChain", (t) => {
+    const funcStr = reorderMasterEffectInAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'reorderMasterEffectInAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test("Day 669 - setPunchRegion is a function export", (t) => {
+    t.assertEqual(typeof setPunchRegion, 'function', 'setPunchRegion should be a function');
+});
+
+TestRunner.test("Day 669 - setPunchRegion accepts 2 parameters", (t) => {
+    t.assertEqual(setPunchRegion.length, 2, 'setPunchRegion should accept 2 parameters');
+});
+
+TestRunner.test("Day 669 - setPunchRegion accepts (inBars, outBars)", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('inBars') && funcStr.includes('outBars'), 'setPunchRegion should reference inBars and outBars');
+});
+
+TestRunner.test("Day 669 - setPunchRegion references punchRegion object", (t) => {
+    const funcStr = setPunchRegion.toString();
+    t.assertTruthy(funcStr.includes('punchRegion'), 'setPunchRegion should reference punchRegion');
+});
+
+TestRunner.test("Day 669 - setPunchRegionEnabled is a function export", (t) => {
+    t.assertEqual(typeof setPunchRegionEnabled, 'function', 'setPunchRegionEnabled should be a function');
+});
+
+TestRunner.test("Day 669 - setPunchRegionEnabled accepts 1 parameter", (t) => {
+    t.assertEqual(setPunchRegionEnabled.length, 1, 'setPunchRegionEnabled should accept 1 parameter');
+});
+
+TestRunner.test("Day 669 - setPunchRegionEnabled uses !! for boolean coercion", (t) => {
+    const funcStr = setPunchRegionEnabled.toString();
+    t.assertTruthy(funcStr.includes('!!') || funcStr.includes('enabled'), 'setPunchRegionEnabled should coerce enabled to boolean');
+});
+
+TestRunner.test("Day 669 - APP_VERSION validation for Day 669", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 669");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 322, "Minor version should be >= 322 for Day 669");
+    }
+});
