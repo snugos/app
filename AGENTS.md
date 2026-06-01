@@ -1,4 +1,18 @@
 # SnugOS DAW - AGENTS.md
+#### Day 665: Additional State Functions - Synth Presets and Track Templates Tests (2026-06-01)
+- **Tests**: Added 19 tests for Synth Presets and Track Templates state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 665 test block with 19 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.319.0
+- **Test Details** (`js/tests.js`): 19 tests covering:
+  - **saveSynthPreset** (5 tests): is a function export, calls captureStateForUndoIfAllowed, has descriptive "Save Synth Preset" undo label, guards capture with Object.is comparison, calls saveSynthPresetsToStorage
+  - **deleteSynthPreset** (5 tests): is a function export, calls captureStateForUndoIfAllowed, has descriptive "Delete Synth Preset" undo label, returns boolean (true if deleted, false if not found), calls saveSynthPresetsToStorage
+  - **addTrackTemplateState** (5 tests): is a function export, captures undo with "Add Track Template" label, respects MAX_TRACK_TEMPLATES limit, returns null when limit reached, increments trackTemplateIdCounter, pushes to trackTemplatesState
+  - **clearTrackTemplatesState** (3 tests): is a function export, has appServices guard for captureStateForUndo, has descriptive "Clear All Track Templates" undo label, clears trackTemplatesState array
+  - APP_VERSION validation (>= 2.319 for Day 665)
+- **Version**: Bumped to 2.319.0
+- **Test Count**: Increased from 2918 to 2937
+
 #### Day 664: Waveform Draw Function Tests (2026-05-30)
 - **Tests**: Added 18 tests for drawWaveform and drawInstrumentWaveform functions in ui.js
 - **Files Modified**:
