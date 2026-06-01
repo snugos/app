@@ -16212,3 +16212,107 @@ TestRunner.test("Day 664 - drawInstrumentWaveform APP_VERSION validation", (t) =
         t.assertTruthy(versionParts[1] >= 318, 'Minor version should be >= 318 for Day 664');
     }
 });
+
+// ============================================
+// Day 665: Additional State Functions - Synth Presets and Track Templates
+// ============================================
+TestRunner.test("Day 665 - Synth Presets - saveSynthPreset is a function export", (t) => {
+    const stateStr = state.toString();
+    t.assertTruthy(stateStr.includes('export function saveSynthPreset'), 'saveSynthPreset should be exported');
+});
+
+TestRunner.test("Day 665 - Synth Presets - saveSynthPreset calls captureStateForUndoIfAllowed for changes", (t) => {
+    const funcStr = saveSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'saveSynthPreset should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 665 - Synth Presets - saveSynthPreset has descriptive undo label", (t) => {
+    const funcStr = saveSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('Save Synth Preset'), 'saveSynthPreset undo label should include "Save Synth Preset"');
+});
+
+TestRunner.test("Day 665 - Synth Presets - saveSynthPreset guards capture with Object.is comparison", (t) => {
+    const funcStr = saveSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('Object.is'), 'saveSynthPreset should use Object.is to compare old and new values');
+});
+
+TestRunner.test("Day 665 - Synth Presets - saveSynthPreset calls saveSynthPresetsToStorage", (t) => {
+    const funcStr = saveSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('saveSynthPresetsToStorage'), 'saveSynthPreset should call saveSynthPresetsToStorage');
+});
+
+TestRunner.test("Day 665 - Synth Presets - deleteSynthPreset is a function export", (t) => {
+    const stateStr = state.toString();
+    t.assertTruthy(stateStr.includes('export function deleteSynthPreset'), 'deleteSynthPreset should be exported');
+});
+
+TestRunner.test("Day 665 - Synth Presets - deleteSynthPreset calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = deleteSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'deleteSynthPreset should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 665 - Synth Presets - deleteSynthPreset has descriptive undo label", (t) => {
+    const funcStr = deleteSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('Delete Synth Preset'), 'deleteSynthPreset undo label should include "Delete Synth Preset"');
+});
+
+TestRunner.test("Day 665 - Synth Presets - deleteSynthPreset returns boolean", (t) => {
+    const funcStr = deleteSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('return true') && funcStr.includes('return false'), 'deleteSynthPreset should return boolean (true if deleted, false if not found)');
+});
+
+TestRunner.test("Day 665 - Synth Presets - deleteSynthPreset calls saveSynthPresetsToStorage", (t) => {
+    const funcStr = deleteSynthPreset.toString();
+    t.assertTruthy(funcStr.includes('saveSynthPresetsToStorage'), 'deleteSynthPreset should call saveSynthPresetsToStorage');
+});
+
+TestRunner.test("Day 665 - Track Templates - addTrackTemplateState is a function export", (t) => {
+    const stateStr = state.toString();
+    t.assertTruthy(stateStr.includes('export function addTrackTemplateState'), 'addTrackTemplateState should be exported');
+});
+
+TestRunner.test("Day 665 - Track Templates - addTrackTemplateState captures undo with descriptive label", (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'addTrackTemplateState should call captureStateForUndoIfAllowed');
+    t.assertTruthy(funcStr.includes('Add Track Template'), 'addTrackTemplateState undo label should include "Add Track Template"');
+});
+
+TestRunner.test("Day 665 - Track Templates - addTrackTemplateState respects MAX_TRACK_TEMPLATES limit", (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('MAX_TRACK_TEMPLATES'), 'addTrackTemplateState should check MAX_TRACK_TEMPLATES limit');
+    t.assertTruthy(funcStr.includes('return null'), 'addTrackTemplateState should return null when limit reached');
+});
+
+TestRunner.test("Day 665 - Track Templates - addTrackTemplateState increments trackTemplateIdCounter", (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('trackTemplateIdCounter++') || funcStr.includes('nextId = trackTemplateIdCounter++'), 'addTrackTemplateState should increment trackTemplateIdCounter');
+});
+
+TestRunner.test("Day 665 - Track Templates - addTrackTemplateState pushes to trackTemplatesState", (t) => {
+    const funcStr = addTrackTemplateState.toString();
+    t.assertTruthy(funcStr.includes('trackTemplatesState.push'), 'addTrackTemplateState should push new template to trackTemplatesState');
+});
+
+TestRunner.test("Day 665 - Track Templates - clearTrackTemplatesState is a function export", (t) => {
+    const stateStr = state.toString();
+    t.assertTruthy(stateStr.includes('export function clearTrackTemplatesState'), 'clearTrackTemplatesState should be exported');
+});
+
+TestRunner.test("Day 665 - Track Templates - clearTrackTemplatesState has appServices guard for capture", (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('captureStateForUndo'), 'clearTrackTemplatesState should have appServices guard for undo capture');
+    t.assertTruthy(funcStr.includes('Clear All Track Templates'), 'clearTrackTemplatesState undo label should include "Clear All Track Templates"');
+});
+
+TestRunner.test("Day 665 - Track Templates - clearTrackTemplatesState clears trackTemplatesState array", (t) => {
+    const funcStr = clearTrackTemplatesState.toString();
+    t.assertTruthy(funcStr.includes('trackTemplatesState.length = 0') || funcStr.includes('trackTemplatesState = []'), 'clearTrackTemplatesState should clear the array');
+});
+
+TestRunner.test("Day 665 - APP_VERSION validation", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 665');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 319, 'Minor version should be >= 319 for Day 665');
+    }
+});
