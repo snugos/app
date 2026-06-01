@@ -1,4 +1,19 @@
 # SnugOS DAW - AGENTS.md
+#### Day 667: Master Bus Node and Meter Functions Tests (2026-06-01)
+- **Tests**: Added 30 tests for Master Bus node accessor and meter functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 667 test block with 30 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.321.0
+- **Test Details** (`js/tests.js`): 30 tests covering:
+  - **getMasterEffectsBusInputNode** (5 tests): is a function export, references masterEffectsBusInputNode, checks .disposed, calls setupMasterBus, returns masterEffectsBusInputNode
+  - **getActualMasterGainNode** (5 tests): is a function export, references masterGainNodeActual, checks .disposed, calls setupMasterBus, returns masterGainNodeActual
+  - **initAudioContextAndMasterMeter** (9 tests): is an async function export, accepts isUserInitiated parameter, references Tone.start, Tone.context, Tone.context.state === running, checks audioContextInitialized, calls setupMasterBus, has try/catch block, references localAppServices.showNotification, checks masterMeterNode.disposed
+  - **updateMeters** (8 tests): is a function export, accepts 3 parameters, references masterMeterNode, checks .disposed, calls masterMeterNode.getValue, uses Tone.dbToGain, uses Math.min/Math.max for bounds, has try/catch block
+  - **getActiveMasterEffectNodes** (2 tests): is a function export, returns activeMasterEffectNodes
+  - APP_VERSION validation (>= 2.321 for Day 667)
+- **Version**: Bumped to 2.321.0
+- **Test Count**: Increased from 16485 to 16515
+
 #### Day 665: Additional State Functions - Synth Presets and Track Templates Tests (2026-06-01)
 - **Tests**: Added 19 tests for Synth Presets and Track Templates state functions in state.js
 - **Files Modified**:

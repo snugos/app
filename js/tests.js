@@ -16483,3 +16483,218 @@ TestRunner.test("Day 666 - APP_VERSION validation for Day 666", (t) => {
         t.assertTruthy(versionParts[1] >= 320, "Minor version should be >= 320 for Day 666");
     }
 });
+
+TestRunner.test("Day 667 - Master Bus - getMasterEffectsBusInputNode is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getMasterEffectsBusInputNode'), 'getMasterEffectsBusInputNode should be exported');
+});
+
+TestRunner.test("Day 667 - Master Bus - getMasterEffectsBusInputNode references masterEffectsBusInputNode", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getMasterEffectsBusInputNode');
+    const refIdx = audioStr.indexOf('masterEffectsBusInputNode', fnIdx);
+    t.assertTruthy(refIdx > fnIdx && refIdx < fnIdx + 200, 'getMasterEffectsBusInputNode should reference masterEffectsBusInputNode');
+});
+
+TestRunner.test("Day 667 - Master Bus - getMasterEffectsBusInputNode checks .disposed", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getMasterEffectsBusInputNode');
+    const dispIdx = audioStr.indexOf('.disposed', fnIdx);
+    t.assertTruthy(dispIdx > fnIdx && dispIdx < fnIdx + 200, 'getMasterEffectsBusInputNode should check .disposed property');
+});
+
+TestRunner.test("Day 667 - Master Bus - getMasterEffectsBusInputNode calls setupMasterBus", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getMasterEffectsBusInputNode');
+    const setupIdx = audioStr.indexOf('setupMasterBus', fnIdx);
+    t.assertTruthy(setupIdx > fnIdx && setupIdx < fnIdx + 200, 'getMasterEffectsBusInputNode should call setupMasterBus');
+});
+
+TestRunner.test("Day 667 - Master Bus - getMasterEffectsBusInputNode returns masterEffectsBusInputNode", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getMasterEffectsBusInputNode');
+    const retIdx = audioStr.indexOf('return masterEffectsBusInputNode', fnIdx);
+    t.assertTruthy(retIdx > fnIdx, 'getMasterEffectsBusInputNode should return masterEffectsBusInputNode');
+});
+
+TestRunner.test("Day 667 - Master Bus - getActualMasterGainNode is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getActualMasterGainNode'), 'getActualMasterGainNode should be exported');
+});
+
+TestRunner.test("Day 667 - Master Bus - getActualMasterGainNode references masterGainNodeActual", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getActualMasterGainNode');
+    const refIdx = audioStr.indexOf('masterGainNodeActual', fnIdx);
+    t.assertTruthy(refIdx > fnIdx && refIdx < fnIdx + 200, 'getActualMasterGainNode should reference masterGainNodeActual');
+});
+
+TestRunner.test("Day 667 - Master Bus - getActualMasterGainNode checks .disposed", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getActualMasterGainNode');
+    const dispIdx = audioStr.indexOf('.disposed', fnIdx);
+    t.assertTruthy(dispIdx > fnIdx && dispIdx < fnIdx + 200, 'getActualMasterGainNode should check .disposed property');
+});
+
+TestRunner.test("Day 667 - Master Bus - getActualMasterGainNode calls setupMasterBus", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getActualMasterGainNode');
+    const setupIdx = audioStr.indexOf('setupMasterBus', fnIdx);
+    t.assertTruthy(setupIdx > fnIdx && setupIdx < fnIdx + 200, 'getActualMasterGainNode should call setupMasterBus');
+});
+
+TestRunner.test("Day 667 - Master Bus - getActualMasterGainNode returns masterGainNodeActual", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getActualMasterGainNode');
+    const retIdx = audioStr.indexOf('return masterGainNodeActual', fnIdx);
+    t.assertTruthy(retIdx > fnIdx, 'getActualMasterGainNode should return masterGainNodeActual');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function initAudioContextAndMasterMeter'), 'initAudioContextAndMasterMeter should be exported as async');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter accepts isUserInitiated parameter", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const paramIdx = audioStr.indexOf('isUserInitiated', fnIdx);
+    t.assertTruthy(paramIdx > fnIdx && paramIdx < fnIdx + 100, 'initAudioContextAndMasterMeter should accept isUserInitiated parameter');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter references Tone.start", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const toneIdx = audioStr.indexOf('Tone.start', fnIdx);
+    t.assertTruthy(toneIdx > fnIdx && toneIdx < fnIdx + 300, 'initAudioContextAndMasterMeter should reference Tone.start');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter references Tone.context", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const ctxIdx = audioStr.indexOf('Tone.context', fnIdx);
+    t.assertTruthy(ctxIdx > fnIdx && ctxIdx < fnIdx + 300, 'initAudioContextAndMasterMeter should reference Tone.context');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter checks audioContextInitialized", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const initIdx = audioStr.indexOf('audioContextInitialized', fnIdx);
+    t.assertTruthy(initIdx > fnIdx && initIdx < fnIdx + 400, 'initAudioContextAndMasterMeter should check audioContextInitialized');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter calls setupMasterBus", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const setupIdx = audioStr.indexOf('setupMasterBus', fnIdx);
+    t.assertTruthy(setupIdx > fnIdx && setupIdx < fnIdx + 500, 'initAudioContextAndMasterMeter should call setupMasterBus');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter has try/catch block", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const tryIdx = audioStr.indexOf('try {', fnIdx);
+    const catchIdx = audioStr.indexOf('} catch', fnIdx);
+    t.assertTruthy(tryIdx > fnIdx && tryIdx < fnIdx + 200, 'initAudioContextAndMasterMeter should have try block');
+    t.assertTruthy(catchIdx > fnIdx && catchIdx < fnIdx + 500, 'initAudioContextAndMasterMeter should have catch block');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter references localAppServices.showNotification", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const notifyIdx = audioStr.indexOf('localAppServices.showNotification', fnIdx);
+    t.assertTruthy(notifyIdx > fnIdx && notifyIdx < fnIdx + 600, 'initAudioContextAndMasterMeter should reference showNotification for error messages');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter checks masterMeterNode.disposed", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const dispIdx = audioStr.indexOf('masterMeterNode.disposed', fnIdx);
+    t.assertTruthy(dispIdx > fnIdx, 'initAudioContextAndMasterMeter should check masterMeterNode.disposed');
+});
+
+TestRunner.test("Day 667 - Master Bus - initAudioContextAndMasterMeter references Tone.context.state", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export async function initAudioContextAndMasterMeter');
+    const stateIdx = audioStr.indexOf("state === 'running'", fnIdx);
+    t.assertTruthy(stateIdx > fnIdx && stateIdx < fnIdx + 400, 'initAudioContextAndMasterMeter should check Tone.context.state === running');
+});
+
+TestRunner.test("Day 667 - Master Bus - updateMeters is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function updateMeters'), 'updateMeters should be exported');
+});
+
+TestRunner.test("Day 667 - Master Bus - updateMeters accepts 3 parameters (globalMasterMeterBar, mixerMasterMeterBar, tracks)", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function updateMeters');
+    const params = audioStr.substring(fnIdx, fnIdx + 100);
+    t.assertTruthy(params.includes('globalMasterMeterBar') && params.includes('mixerMasterMeterBar') && params.includes('tracks'), 'updateMeters should accept globalMasterMeterBar, mixerMasterMeterBar, and tracks parameters');
+});
+
+TestRunner.test("Day 667 - Master Bus - updateMeters references masterMeterNode", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function updateMeters');
+    const refIdx = audioStr.indexOf('masterMeterNode', fnIdx);
+    t.assertTruthy(refIdx > fnIdx && refIdx < fnIdx + 100, 'updateMeters should reference masterMeterNode');
+});
+
+TestRunner.test("Day 667 - Master Bus - updateMeters checks masterMeterNode.disposed", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function updateMeters');
+    const dispIdx = audioStr.indexOf('.disposed', fnIdx);
+    t.assertTruthy(dispIdx > fnIdx && dispIdx < fnIdx + 100, 'updateMeters should check .disposed');
+});
+
+TestRunner.test("Day 667 - Master Bus - updateMeters uses masterMeterNode.getValue", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function updateMeters');
+    const getValIdx = audioStr.indexOf('masterMeterNode.getValue', fnIdx);
+    t.assertTruthy(getValIdx > fnIdx && getValIdx < fnIdx + 200, 'updateMeters should call masterMeterNode.getValue');
+});
+
+TestRunner.test("Day 667 - Master Bus - updateMeters uses Tone.dbToGain", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function updateMeters');
+    const dbIdx = audioStr.indexOf('Tone.dbToGain', fnIdx);
+    t.assertTruthy(dbIdx > fnIdx && dbIdx < fnIdx + 200, 'updateMeters should use Tone.dbToGain');
+});
+
+TestRunner.test("Day 667 - Master Bus - updateMeters uses Math.min and Math.max for level bounds", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function updateMeters');
+    const minIdx = audioStr.indexOf('Math.min', fnIdx);
+    const maxIdx = audioStr.indexOf('Math.max', fnIdx);
+    t.assertTruthy(minIdx > fnIdx && minIdx < fnIdx + 250, 'updateMeters should use Math.min for bounds');
+    t.assertTruthy(maxIdx > fnIdx && maxIdx < fnIdx + 250, 'updateMeters should use Math.max for bounds');
+});
+
+TestRunner.test("Day 667 - Master Bus - updateMeters has try/catch block", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function updateMeters');
+    const tryIdx = audioStr.indexOf('try {', fnIdx);
+    const catchIdx = audioStr.indexOf('} catch', fnIdx);
+    t.assertTruthy(tryIdx > fnIdx && tryIdx < fnIdx + 50, 'updateMeters should have try block');
+    t.assertTruthy(catchIdx > fnIdx && catchIdx < fnIdx + 100, 'updateMeters should have catch block');
+});
+
+TestRunner.test("Day 667 - Master Bus - getActiveMasterEffectNodes is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function getActiveMasterEffectNodes'), 'getActiveMasterEffectNodes should be exported');
+});
+
+TestRunner.test("Day 667 - Master Bus - getActiveMasterEffectNodes returns activeMasterEffectNodes", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const fnIdx = audioStr.indexOf('export function getActiveMasterEffectNodes');
+    const retIdx = audioStr.indexOf('return activeMasterEffectNodes', fnIdx);
+    t.assertTruthy(retIdx > fnIdx, 'getActiveMasterEffectNodes should return activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 667 - APP_VERSION validation for Day 667", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 667");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 321, "Minor version should be >= 321 for Day 667");
+    }
+});
