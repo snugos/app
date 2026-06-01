@@ -1,3 +1,14 @@
+#### Day 671: exportToWavInternal and exportStemsInternal State Function Tests (2026-06-01)
+- **Tests**: Added 43 tests for audio export functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 671 test blocks with 43 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.325.0
+- **Test Details** (`js/tests.js`): 43 tests covering:
+  - **exportToWavInternal** (21 tests): is an async function export, accepts 0 parameters, checks appServices.showNotification, checks appServices.getActualMasterGainNode, checks audioInitAudioContextAndMasterMeter, calls audioInitAudioContextAndMasterMeter(true), gets playback mode via getPlaybackModeState, gets tracks via getTracksState, handles timeline mode (currentPlaybackMode === 'timeline'), iterates timelineClips, checks clip.startTime and clip.duration, handles sequence mode with getActiveSequence, uses Tone.Time for sixteenth note calculation, shows notification for empty export, uses Tone.Transport.stop, creates Tone.Recorder instance, connects masterGain to recorder, checks masterGain.disposed, has try/catch error handling
+  - **exportStemsInternal** (22 tests): is an async function export, accepts 0 parameters, imports from state.js and audio.js, imports initAudioContextAndMasterMeter, calls initAudioContextAndMasterMeter(true), gets tracks via getTracksState, gets playback mode via getPlaybackModeState, iterates tracks with forEach, checks track.type !== 'Audio', handles timelineClips, uses Tone.Time for sixteenth note, shows notification for empty export, uses Tone.Transport.stop, creates Tone.Recorder instance, iterates tracks in for loop, shows per-track notifications with track.name, has try/catch error handling
+- **Version**: Bumped to 2.325.0
+- **Test Count**: Increased from 16941 to 16984
+
 #### Day 669: Sidechain Effect Automation and Punch Region Function Tests (2026-06-01)
 - **Tests**: Added 25 tests for Sidechain Effect Automation and Punch Region audio functions in audio.js
 - **Files Modified**:
