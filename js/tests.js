@@ -16939,3 +16939,91 @@ TestRunner.test("Day 669 - APP_VERSION validation for Day 669", (t) => {
         t.assertTruthy(versionParts[1] >= 322, "Minor version should be >= 322 for Day 669");
     }
 });
+// Day 670: Recording Scheduling Audio Function Tests
+// Testing scheduleRecordingForPunch, cancelScheduledRecording, getRecordingScheduledTrackId, cleanupRecordingScheduling
+
+TestRunner.test("Day 670 - scheduleRecordingForPunch is a function export", (t) => {
+    t.assertEqual(typeof scheduleRecordingForPunch, 'function', 'scheduleRecordingForPunch should be a function');
+});
+
+TestRunner.test("Day 670 - scheduleRecordingForPunch accepts 2 parameters", (t) => {
+    t.assertEqual(scheduleRecordingForPunch.length, 2, 'scheduleRecordingForPunch should accept 2 parameters');
+});
+
+TestRunner.test("Day 670 - scheduleRecordingForPunch accepts (trackId, onPunchOutTriggered)", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('trackId') && funcStr.includes('onPunchOutTriggered'), 'scheduleRecordingForPunch should reference trackId and onPunchOutTriggered');
+});
+
+TestRunner.test("Day 670 - scheduleRecordingForPunch clears previous scheduling", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.clear') || funcStr.includes('recordingScheduledId'), 'scheduleRecordingForPunch should clear previous scheduling');
+});
+
+TestRunner.test("Day 670 - scheduleRecordingForPunch sets recordingScheduledTrackId", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledTrackId'), 'scheduleRecordingForPunch should set recordingScheduledTrackId');
+});
+
+TestRunner.test("Day 670 - scheduleRecordingForPunch references punchRegion.out", (t) => {
+    const funcStr = scheduleRecordingForPunch.toString();
+    t.assertTruthy(funcStr.includes('punchRegion'), 'scheduleRecordingForPunch should reference punchRegion for punch-out position');
+});
+
+TestRunner.test("Day 670 - cancelScheduledRecording is a function export", (t) => {
+    t.assertEqual(typeof cancelScheduledRecording, 'function', 'cancelScheduledRecording should be a function');
+});
+
+TestRunner.test("Day 670 - cancelScheduledRecording accepts 0 parameters", (t) => {
+    t.assertEqual(cancelScheduledRecording.length, 0, 'cancelScheduledRecording should accept 0 parameters');
+});
+
+TestRunner.test("Day 670 - cancelScheduledRecording clears recordingScheduledId", (t) => {
+    const funcStr = cancelScheduledRecording.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.clear') || funcStr.includes('recordingScheduledId'), 'cancelScheduledRecording should clear recordingScheduledId');
+});
+
+TestRunner.test("Day 670 - cancelScheduledRecording sets recordingScheduledId to null", (t) => {
+    const funcStr = cancelScheduledRecording.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledId') && (funcStr.includes('null') || funcStr.includes('= null')), 'cancelScheduledRecording should set recordingScheduledId to null');
+});
+
+TestRunner.test("Day 670 - cancelScheduledRecording clears recordingScheduledTrackId", (t) => {
+    const funcStr = cancelScheduledRecording.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledTrackId'), 'cancelScheduledRecording should clear recordingScheduledTrackId');
+});
+
+TestRunner.test("Day 670 - getRecordingScheduledTrackId is a function export", (t) => {
+    t.assertEqual(typeof getRecordingScheduledTrackId, 'function', 'getRecordingScheduledTrackId should be a function');
+});
+
+TestRunner.test("Day 670 - getRecordingScheduledTrackId accepts 0 parameters", (t) => {
+    t.assertEqual(getRecordingScheduledTrackId.length, 0, 'getRecordingScheduledTrackId should accept 0 parameters');
+});
+
+TestRunner.test("Day 670 - getRecordingScheduledTrackId returns recordingScheduledTrackId", (t) => {
+    const funcStr = getRecordingScheduledTrackId.toString();
+    t.assertTruthy(funcStr.includes('recordingScheduledTrackId'), 'getRecordingScheduledTrackId should return recordingScheduledTrackId');
+});
+
+TestRunner.test("Day 670 - cleanupRecordingScheduling is a function export", (t) => {
+    t.assertEqual(typeof cleanupRecordingScheduling, 'function', 'cleanupRecordingScheduling should be a function');
+});
+
+TestRunner.test("Day 670 - cleanupRecordingScheduling accepts 0 parameters", (t) => {
+    t.assertEqual(cleanupRecordingScheduling.length, 0, 'cleanupRecordingScheduling should accept 0 parameters');
+});
+
+TestRunner.test("Day 670 - cleanupRecordingScheduling calls cancelScheduledRecording", (t) => {
+    const funcStr = cleanupRecordingScheduling.toString();
+    t.assertTruthy(funcStr.includes('cancelScheduledRecording'), 'cleanupRecordingScheduling should call cancelScheduledRecording');
+});
+
+TestRunner.test("Day 670 - APP_VERSION validation for Day 670", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 670");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 323, "Minor version should be >= 323 for Day 670");
+    }
+});

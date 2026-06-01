@@ -2449,3 +2449,17 @@
   - APP_VERSION validation (>= 2.320 for Day 666)
 - **Version**: Bumped to 2.320.0
 - **Test Count**: Increased from 2937 to 2961
+
+#### Day 670: Recording Scheduling Audio Function Tests (2026-06-01)
+- **Tests**: Added 18 tests for Recording Scheduling audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 670 test block with 18 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.324.0
+- **Test Details** (`js/tests.js`): 18 tests covering:
+  - **scheduleRecordingForPunch** (6 tests): is a function export, accepts 2 parameters (trackId, onPunchOutTriggered), clears previous scheduling, sets recordingScheduledTrackId, references punchRegion.out for punch-out position
+  - **cancelScheduledRecording** (5 tests): is a function export, accepts 0 parameters, clears recordingScheduledId, sets recordingScheduledId to null, clears recordingScheduledTrackId
+  - **getRecordingScheduledTrackId** (3 tests): is a function export, accepts 0 parameters, returns recordingScheduledTrackId
+  - **cleanupRecordingScheduling** (3 tests): is a function export, accepts 0 parameters, calls cancelScheduledRecording
+  - APP_VERSION validation (>= 2.323 for Day 670)
+- **Version**: Bumped to 2.324.0
+- **Test Count**: Increased from 16923 to 16941
