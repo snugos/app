@@ -1,3 +1,16 @@
+#### Day 677: Keyboard Shortcuts Help and Effects Render UI Function Tests (2026-06-02)
+- **Tests**: Added 22 tests for showKeyboardShortcutsHelpWindow and renderEffectsList/renderEffectControls in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 677 test block with 22 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.331.0
+- **Test Details** (`js/tests.js`): 22 tests covering:
+  - **showKeyboardShortcutsHelpWindow** (7 tests): is a function export, accepts 0 parameters, references getOpenWindows, uses single-instance window management with keyboardShortcutsHelp windowId, references KEYBOARD_SHORTCUTS_HELP_WIDTH, KEYBOARD_SHORTCUTS_HELP_HEIGHT, KEYBOARD_SHORTCUTS_HELP_TITLE constants, uses createWindow
+  - **renderEffectsList** (8 tests): is a function export, accepts 4 parameters (owner, ownerType, listDiv, controlsContainer), checks ownerType === 'track', references localAppServices.getMasterEffects, effectsRegistryAccess, captureStateForUndo for undo on effect actions, showNotification for effect bypass/enable
+  - **renderEffectControls** (6 tests): is a function export, accepts 4 parameters (owner, ownerType, effectId, controlsContainer), checks ownerType === 'track', references localAppServices.getMasterEffects, effectsRegistryAccess, uses .find to locate effect by effectId
+  - APP_VERSION validation (>= 2.331 for Day 677)
+- **Version**: Bumped to 2.331.0
+- **Test Count**: Increased from 3218 to 3240
+
 #### Day 675: Track Templates, Scale Mode, MIDI CC, Chord Mode, and Send Effects Window Function Tests (2026-06-02)
 - **Tests**: Added 36 tests for Track Templates, Scale Mode, MIDI CC Mappings, Chord Mode, and Send Effects window UI functions in ui.js
 - **Files Modified**:
