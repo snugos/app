@@ -2474,3 +2474,21 @@
   - APP_VERSION validation (>= 2.323 for Day 670)
 - **Version**: Bumped to 2.324.0
 - **Test Count**: Increased from 16923 to 16941
+
+#### Day 672: Slice and Drum Pad Setter Function Tests (2026-06-01)
+- **Tests**: Added 29 tests for Slice and Drum Pad setter methods on Track.prototype
+- **Files Modified**:
+  - `js/tests.js`: Added Day 672 test block with 29 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.326.0
+- **Test Details** (`js/tests.js`): 29 tests covering:
+  - **setSliceVolume** (5 tests): is a function on Track.prototype, accepts 2 parameters (sliceIndex, volume), captures undo BEFORE mutation, has descriptive "Set Slice" undo label, uses parseFloat for volume
+  - **setSlicePitchShift** (4 tests): is a function on Track.prototype, accepts 2 parameters (sliceIndex, semitones), captures undo BEFORE mutation, uses parseInt for semitones
+  - **setSliceLoop** (2 tests): is a function on Track.prototype, captures undo BEFORE mutation, uses !! for boolean coercion
+  - **setSliceReverse** (2 tests): is a function on Track.prototype, captures undo BEFORE mutation
+  - **setSliceEnvelopeParam** (2 tests): is a function on Track.prototype, captures undo BEFORE mutation, uses parseFloat for value
+  - **setDrumSamplerPadVolume** (3 tests): is a function on Track.prototype, accepts 2 parameters (padIndex, volume), captures undo BEFORE mutation, uses parseFloat for volume
+  - **setDrumSamplerPadPitch** (2 tests): is a function on Track.prototype, captures undo BEFORE mutation, uses parseInt for pitch
+  - **setDrumSamplerPadEnv** (2 tests): is a function on Track.prototype, captures undo BEFORE mutation, uses parseFloat for value
+  - APP_VERSION validation (>= 2.326 for Day 672)
+- **Version**: Bumped to 2.326.0
+- **Test Count**: Increased from 3094 to 3123
