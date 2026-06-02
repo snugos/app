@@ -18080,3 +18080,93 @@ TestRunner.test("Day 678 - APP_VERSION validation for Day 678", (t) => {
         t.assertTruthy(versionParts[1] >= 332, "Minor version should be >= 332 for Day 678");
     }
 });
+
+// --- Day 679: openGlobalControlsWindow UI Function Tests ---
+TestRunner.test("Day 679 - openGlobalControlsWindow is a function export", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openGlobalControlsWindow should be exported');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow accepts 2 parameters (onReadyCallback, savedState)", (t) => {
+    t.assertEqual(openGlobalControlsWindow.length, 2, 'openGlobalControlsWindow should accept 2 parameters');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow uses single-instance window management with globalControls windowId", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes("'globalControls'") || funcStr.includes('"globalControls"'), 'openGlobalControlsWindow should use globalControls windowId');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow references localAppServices.getOpenWindows", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openGlobalControlsWindow should reference getOpenWindows');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow has restore logic for existing windows", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('win.restore()') || funcStr.includes('restore()'), 'openGlobalControlsWindow should call restore() on existing window');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow references localAppServices.createWindow", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openGlobalControlsWindow should call createWindow');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow creates window with title 'Global Controls'", (t) => {
+    const lines = openGlobalControlsWindow.toString().split('\n');
+    const foundCreateWindow = lines.some(line => line.includes('createWindow') && line.includes("'Global Controls'"));
+    t.assertTruthy(foundCreateWindow, 'openGlobalControlsWindow should create window with Global Controls title');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow includes play/stop/record buttons in HTML content", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('playBtnGlobal') && funcStr.includes('stopBtnGlobal') && funcStr.includes('recordBtnGlobal'), 'openGlobalControlsWindow should include play, stop, and record buttons');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow references tempoGlobalInput for BPM input", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('tempoGlobalInput'), 'openGlobalControlsWindow should reference tempoGlobalInput');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow references midiInputSelectGlobal for MIDI selection", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('midiInputSelectGlobal'), 'openGlobalControlsWindow should reference midiInputSelectGlobal');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow references masterMeterContainerGlobal and masterMeterBarGlobal", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('masterMeterContainerGlobal') && funcStr.includes('masterMeterBarGlobal'), 'openGlobalControlsWindow should reference master meter elements');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow references playbackModeToggleBtnGlobal", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('playbackModeToggleBtnGlobal'), 'openGlobalControlsWindow should reference playbackModeToggleBtnGlobal');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow uses querySelector to get elements from window", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('querySelector'), 'openGlobalControlsWindow should use querySelector to get elements');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow has options object with width and height", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy((funcStr.includes('width: 280') || funcStr.includes('width:280')) && (funcStr.includes('height: 360') || funcStr.includes('height:360')), 'openGlobalControlsWindow should set width: 280 and height: 360');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow handles savedState for window restoration", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') && (funcStr.includes('left') || funcStr.includes('.left')), 'openGlobalControlsWindow should handle savedState for position restoration');
+});
+
+TestRunner.test("Day 679 - openGlobalControlsWindow calls onReadyCallback when window is created", (t) => {
+    const funcStr = openGlobalControlsWindow.toString();
+    t.assertTruthy(funcStr.includes('onReadyCallback'), 'openGlobalControlsWindow should call onReadyCallback');
+});
+
+TestRunner.test("Day 679 - APP_VERSION validation for Day 679", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 679");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 333, "Minor version should be >= 333 for Day 679");
+    }
+});
