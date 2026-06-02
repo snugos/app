@@ -17224,3 +17224,153 @@ TestRunner.test("Day 671b - exportStemsInternal has try/catch error handling", (
     const funcStr = exportStemsInternal.toString();
     t.assertTruthy(funcStr.includes('try {') && funcStr.includes('catch'), 'exportStemsInternal should have try/catch for error handling');
 });
+
+// Day 672: Slice and Drum Pad Setter Function Tests
+TestRunner.test("Day 672 - setSliceVolume is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceVolume, 'function', 'setSliceVolume should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 672 - setSliceVolume accepts 2 parameters (sliceIndex, volume)", (t) => {
+    t.assertEqual(Track.prototype.setSliceVolume.length, 2, 'setSliceVolume should accept 2 parameters');
+});
+
+TestRunner.test("Day 672 - setSliceVolume captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setSliceVolume.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.slices');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < mutationIdx, 'setSliceVolume should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 672 - setSliceVolume has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('Set Slice'), 'setSliceVolume should have descriptive undo label');
+});
+
+TestRunner.test("Day 672 - setSliceVolume uses parseFloat for volume", (t) => {
+    const funcStr = Track.prototype.setSliceVolume.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setSliceVolume should use parseFloat for volume');
+});
+
+TestRunner.test("Day 672 - setSlicePitchShift is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setSlicePitchShift, 'function', 'setSlicePitchShift should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 672 - setSlicePitchShift accepts 2 parameters (sliceIndex, semitones)", (t) => {
+    t.assertEqual(Track.prototype.setSlicePitchShift.length, 2, 'setSlicePitchShift should accept 2 parameters');
+});
+
+TestRunner.test("Day 672 - setSlicePitchShift captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setSlicePitchShift.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.slices');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < mutationIdx, 'setSlicePitchShift should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 672 - setSlicePitchShift uses parseInt for semitones", (t) => {
+    const funcStr = Track.prototype.setSlicePitchShift.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setSlicePitchShift should use parseInt for semitones');
+});
+
+TestRunner.test("Day 672 - setSliceLoop is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceLoop, 'function', 'setSliceLoop should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 672 - setSliceLoop captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setSliceLoop.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.slices');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < mutationIdx, 'setSliceLoop should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 672 - setSliceLoop uses !! for boolean coercion", (t) => {
+    const funcStr = Track.prototype.setSliceLoop.toString();
+    t.assertTruthy(funcStr.includes('!!loop'), 'setSliceLoop should use !! for boolean coercion');
+});
+
+TestRunner.test("Day 672 - setSliceReverse is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceReverse, 'function', 'setSliceReverse should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 672 - setSliceReverse captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setSliceReverse.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.slices');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < mutationIdx, 'setSliceReverse should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 672 - setSliceEnvelopeParam is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setSliceEnvelopeParam, 'function', 'setSliceEnvelopeParam should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 672 - setSliceEnvelopeParam captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setSliceEnvelopeParam.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.slices');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < mutationIdx, 'setSliceEnvelopeParam should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 672 - setSliceEnvelopeParam uses parseFloat for value", (t) => {
+    const funcStr = Track.prototype.setSliceEnvelopeParam.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setSliceEnvelopeParam should use parseFloat for value');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadVolume is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadVolume, 'function', 'setDrumSamplerPadVolume should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadVolume accepts 2 parameters (padIndex, volume)", (t) => {
+    t.assertEqual(Track.prototype.setDrumSamplerPadVolume.length, 2, 'setDrumSamplerPadVolume should accept 2 parameters');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadVolume captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadVolume.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.drumSamplerPads');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < mutationIdx, 'setDrumSamplerPadVolume should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadVolume uses parseFloat for volume", (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadVolume.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setDrumSamplerPadVolume should use parseFloat for volume');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadPitch is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadPitch, 'function', 'setDrumSamplerPadPitch should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadPitch captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadPitch.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.drumSamplerPads');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < mutationIdx, 'setDrumSamplerPadPitch should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadPitch uses parseInt for pitch", (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadPitch.toString();
+    t.assertTruthy(funcStr.includes('parseInt'), 'setDrumSamplerPadPitch should use parseInt for pitch');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadEnv is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.setDrumSamplerPadEnv, 'function', 'setDrumSamplerPadEnv should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadEnv captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadEnv.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('this.drumSamplerPads');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < mutationIdx, 'setDrumSamplerPadEnv should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 672 - setDrumSamplerPadEnv uses parseFloat for value", (t) => {
+    const funcStr = Track.prototype.setDrumSamplerPadEnv.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setDrumSamplerPadEnv should use parseFloat for value');
+});
+
+TestRunner.test("Day 672 - APP_VERSION validation for Day 672", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 672");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 326, "Minor version should be >= 326 for Day 672");
+    }
+});
