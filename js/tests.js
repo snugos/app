@@ -18422,3 +18422,133 @@ TestRunner.test("Day 681 - APP_VERSION validation for Day 681", (t) => {
         t.assertTruthy(versionParts[1] >= 335, "Minor version should be >= 335 for Day 681");
     }
 });
+
+// --- Day 682: renderTimeline and updateSoundBrowserDisplayForLibrary UI Function Tests ---
+
+TestRunner.test("Day 682 - renderTimeline is a function export", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'renderTimeline should be exported');
+});
+
+TestRunner.test("Day 682 - renderTimeline accepts 0 parameters", (t) => {
+    t.assertEqual(renderTimeline.length, 0, 'renderTimeline should accept 0 parameters');
+});
+
+TestRunner.test("Day 682 - renderTimeline references timeline-tracks-area element", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timeline-tracks-area'), 'renderTimeline should reference timeline-tracks-area element');
+});
+
+TestRunner.test("Day 682 - renderTimeline calls renderTimelineRuler", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('renderTimelineRuler'), 'renderTimeline should call renderTimelineRuler');
+});
+
+TestRunner.test("Day 682 - renderTimeline uses localAppServices.getTracks", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'renderTimeline should use getTracks');
+});
+
+TestRunner.test("Day 682 - renderTimeline iterates tracks with forEach", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('tracks.forEach') || funcStr.includes('tracks && tracks.length'), 'renderTimeline should iterate tracks');
+});
+
+TestRunner.test("Day 682 - renderTimeline uses TRACK_NAME_WIDTH constant (120)", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('TRACK_NAME_WIDTH = 120') || funcStr.includes('TRACK_NAME_WIDTH=120'), 'renderTimeline should use TRACK_NAME_WIDTH of 120');
+});
+
+TestRunner.test("Day 682 - renderTimeline calculates PIXELS_PER_SECOND using timelineZoomLevel", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('PIXELS_PER_SECOND') && funcStr.includes('timelineZoomLevel'), 'renderTimeline should calculate PIXELS_PER_SECOND using timelineZoomLevel');
+});
+
+TestRunner.test("Day 682 - renderTimeline generates timeline-track-lane HTML elements", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('timeline-track-lane'), 'renderTimeline should generate timeline-track-lane HTML');
+});
+
+TestRunner.test("Day 682 - renderTimeline calls attachClipEventHandlers", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('attachClipEventHandlers'), 'renderTimeline should call attachClipEventHandlers');
+});
+
+TestRunner.test("Day 682 - renderTimeline calls updatePlayheadPosition", (t) => {
+    const funcStr = renderTimeline.toString();
+    t.assertTruthy(funcStr.includes('updatePlayheadPosition'), 'renderTimeline should call updatePlayheadPosition');
+});
+
+TestRunner.test("Day 682 - APP_VERSION validation for Day 682", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 682");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 336, "Minor version should be >= 336 for Day 682");
+    }
+});
+
+// --- updateSoundBrowserDisplayForLibrary ---
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary is a function export", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'updateSoundBrowserDisplayForLibrary should be exported');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary accepts 3 parameters (libraryName, isLoading, hasError)", (t) => {
+    t.assertEqual(updateSoundBrowserDisplayForLibrary.length, 3, 'updateSoundBrowserDisplayForLibrary should accept 3 parameters');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary gets browserWindowEl via getWindowById", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('getWindowById') && funcStr.includes("'soundBrowser'"), 'updateSoundBrowserDisplayForLibrary should get browserWindowEl via getWindowById');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary gets listDiv element", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('soundBrowserList'), 'updateSoundBrowserDisplayForLibrary should get listDiv element');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary gets librarySelect element", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('librarySelect'), 'updateSoundBrowserDisplayForLibrary should get libSelect element');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary checks isWindowVisible", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('isWindowVisible'), 'updateSoundBrowserDisplayForLibrary should check isWindowVisible');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary calls setCurrentLibraryName", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('setCurrentLibraryName'), 'updateSoundBrowserDisplayForLibrary should call setCurrentLibraryName');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary calls setCurrentSoundBrowserPath", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('setCurrentSoundBrowserPath'), 'updateSoundBrowserDisplayForLibrary should call setCurrentSoundBrowserPath');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary calls renderSoundBrowserDirectory", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('renderSoundBrowserDirectory'), 'updateSoundBrowserDisplayForLibrary should call renderSoundBrowserDirectory');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary updates preview button state", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('previewBtn'), 'updateSoundBrowserDisplayForLibrary should update preview button state');
+});
+
+TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary uses getSoundLibraryFileTrees", (t) => {
+    const funcStr = updateSoundBrowserDisplayForLibrary.toString();
+    t.assertTruthy(funcStr.includes('getSoundLibraryFileTrees'), 'updateSoundBrowserDisplayForLibrary should use getSoundLibraryFileTrees');
+});
+
+TestRunner.test("Day 682 - APP_VERSION validation for Day 682 - updateSoundBrowserDisplayForLibrary", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 682");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 336, "Minor version should be >= 336 for Day 682");
+    }
+});
