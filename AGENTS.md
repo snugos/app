@@ -1,3 +1,15 @@
+#### Day 678: Track State renameTrackInState and removeTrackFromStateInternal Function Tests (2026-06-02)
+- **Tests**: Added 21 tests for Track State rename and remove functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 678 test block with 21 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.332.0
+- **Test Details** (`js/tests.js`): 21 tests covering:
+  - **renameTrackInState** (10 tests): is a function export, accepts 2 parameters (trackId, newName), finds track by ID via tracks.find, validates track exists, validates newName is non-empty string, returns early when oldName === newName, calls captureStateForUndoInternal before mutation, has descriptive undo label with old and new name, mutates track.name, calls appServices.onTrackNameChange callback
+  - **removeTrackFromStateInternal** (10 tests): is an async function export, accepts 1 parameter (trackId), finds track by index, validates track found, calls captureStateForUndoInternal, has descriptive undo label with track name, removes track via splice, calls appServices.removeTrackFromState, has try/catch error handling
+  - APP_VERSION validation (>= 2.332 for Day 678)
+- **Version**: Bumped to 2.332.0
+- **Test Count**: Increased from 3240 to 3261
+
 #### Day 677: Keyboard Shortcuts Help and Effects Render UI Function Tests (2026-06-02)
 - **Tests**: Added 22 tests for showKeyboardShortcutsHelpWindow and renderEffectsList/renderEffectControls in ui.js
 - **Files Modified**:

@@ -17975,3 +17975,108 @@ TestRunner.test("Day 677 - APP_VERSION validation for Day 677", (t) => {
         t.assertTruthy(versionParts[1] >= 331, "Minor version should be >= 331 for Day 677");
     }
 });
+
+// --- Day 678: Track State renameTrackInState and removeTrackFromStateInternal Function Tests ---
+TestRunner.test("Day 678 - renameTrackInState is a function export", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('export function') || funcStr.includes('function renameTrackInState'), 'renameTrackInState should be exported');
+});
+
+TestRunner.test("Day 678 - renameTrackInState accepts 2 parameters (trackId, newName)", (t) => {
+    t.assertEqual(renameTrackInState.length, 2, 'renameTrackInState should accept 2 parameters');
+});
+
+TestRunner.test("Day 678 - renameTrackInState finds track by ID via tracks.find", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('tracks.find') || funcStr.includes('find(t => t.id'), 'renameTrackInState should find track by ID');
+});
+
+TestRunner.test("Day 678 - renameTrackInState validates track exists", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('Track not found') || funcStr.includes('!track'), 'renameTrackInState should validate track exists');
+});
+
+TestRunner.test("Day 678 - renameTrackInState validates newName is non-empty string", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('Invalid name') || funcStr.includes('newName.trim') || funcStr.includes('!newName'), 'renameTrackInState should validate newName');
+});
+
+TestRunner.test("Day 678 - renameTrackInState returns early when oldName === newName", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('oldName === newName') || funcStr.includes('=== newName') || funcStr.includes('return true'), 'renameTrackInState should return early when name unchanged');
+});
+
+TestRunner.test("Day 678 - renameTrackInState calls captureStateForUndoInternal before mutation", (t) => {
+    const funcStr = renameTrackInState.toString();
+    const captureIdx = funcStr.indexOf('captureStateForUndoInternal');
+    const mutationIdx = funcStr.indexOf('track.name =');
+    t.assertTruthy(captureIdx >= 0 && (mutationIdx < 0 || captureIdx < mutationIdx), 'renameTrackInState should capture undo before mutation');
+});
+
+TestRunner.test("Day 678 - renameTrackInState has descriptive undo label with old and new name", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('Rename track') || funcStr.includes('oldName') || funcStr.includes('newName'), 'renameTrackInState undo label should include track names');
+});
+
+TestRunner.test("Day 678 - renameTrackInState mutates track.name", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('track.name =') || funcStr.includes('name = newName'), 'renameTrackInState should mutate track.name');
+});
+
+TestRunner.test("Day 678 - renameTrackInState calls appServices.onTrackNameChange callback", (t) => {
+    const funcStr = renameTrackInState.toString();
+    t.assertTruthy(funcStr.includes('onTrackNameChange'), 'renameTrackInState should call onTrackNameChange callback');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal is an async function export", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('export async function') || funcStr.includes('async function removeTrackFromStateInternal'), 'removeTrackFromStateInternal should be async exported');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal accepts 1 parameter (trackId)", (t) => {
+    t.assertEqual(removeTrackFromStateInternal.length, 1, 'removeTrackFromStateInternal should accept 1 parameter');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal finds track by index", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('findIndex') || funcStr.includes('tracks['), 'removeTrackFromStateInternal should find track by index');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal validates track found", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('not found') || funcStr.includes('=== -1') || funcStr.includes('!='), 'removeTrackFromStateInternal should validate track found');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal calls captureStateForUndoInternal", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoInternal'), 'removeTrackFromStateInternal should capture undo state');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal has descriptive undo label with track name", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('Remove track') || funcStr.includes('track.name') || funcStr.includes('trackNames'), 'removeTrackFromStateInternal undo label should include track name');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal removes track via splice", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('splice') || funcStr.includes('filter'), 'removeTrackFromStateInternal should remove track via splice or filter');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal calls appServices.removeTrackFromState", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices.removeTrackFromState') || funcStr.includes('removeTrackFromState'), 'removeTrackFromStateInternal should call removeTrackFromState on appServices');
+});
+
+TestRunner.test("Day 678 - removeTrackFromStateInternal has try/catch error handling", (t) => {
+    const funcStr = removeTrackFromStateInternal.toString();
+    t.assertTruthy(funcStr.includes('try') && funcStr.includes('catch'), 'removeTrackFromStateInternal should have try/catch error handling');
+});
+
+TestRunner.test("Day 678 - APP_VERSION validation for Day 678", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 678");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 332, "Minor version should be >= 332 for Day 678");
+    }
+});
