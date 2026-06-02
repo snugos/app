@@ -17374,3 +17374,88 @@ TestRunner.test("Day 672 - APP_VERSION validation for Day 672", (t) => {
         t.assertTruthy(versionParts[1] >= 326, "Minor version should be >= 326 for Day 672");
     }
 });
+
+// Day 673: Drum Pad Editor UI Function Tests
+// ============================================
+
+TestRunner.test("Day 673 - getDrumSamplerPadExistingAudioData is a function export", (t) => {
+    t.assertEqual(typeof getDrumSamplerPadExistingAudioData, 'function', 'getDrumSamplerPadExistingAudioData should be a function');
+});
+
+TestRunner.test("Day 673 - getDrumSamplerPadExistingAudioData accepts 2 parameters (track, padIndex)", (t) => {
+    t.assertEqual(getDrumSamplerPadExistingAudioData.length, 2, 'getDrumSamplerPadExistingAudioData should accept 2 parameters');
+});
+
+TestRunner.test("Day 673 - getDrumSamplerPadExistingAudioData returns early for null track", (t) => {
+    const funcStr = getDrumSamplerPadExistingAudioData.toString();
+    t.assertTruthy(funcStr.includes('if (!track)'), 'getDrumSamplerPadExistingAudioData should check for null track');
+});
+
+TestRunner.test("Day 673 - getDrumSamplerPadExistingAudioData returns status 'empty' when no padData", (t) => {
+    const funcStr = getDrumSamplerPadExistingAudioData.toString();
+    t.assertTruthy(funcStr.includes("status: 'empty'"), 'getDrumSamplerPadExistingAudioData should return empty status for missing pad');
+});
+
+TestRunner.test("Day 673 - getDrumSamplerPadExistingAudioData returns originalFileName from padData", (t) => {
+    const funcStr = getDrumSamplerPadExistingAudioData.toString();
+    t.assertTruthy(funcStr.includes('originalFileName') || funcStr.includes('sampleName'), 'getDrumSamplerPadExistingAudioData should return originalFileName');
+});
+
+TestRunner.test("Day 673 - getDrumSamplerPadExistingAudioData checks drumSamplerPads array", (t) => {
+    const funcStr = getDrumSamplerPadExistingAudioData.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads'), 'getDrumSamplerPadExistingAudioData should check drumSamplerPads array');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls is a function export", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'renderDrumPadEditorControls should be exported');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls returns early for null track", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('if (!track)'), 'renderDrumPadEditorControls should check for null track');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls validates track.type is DrumSampler", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'DrumSampler'") || funcStr.includes("track.type === 'DrumSampler'"), 'renderDrumPadEditorControls should validate DrumSampler type');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls references getNormalizedDrumSamplerPadIndex", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('getNormalizedDrumSamplerPadIndex'), 'renderDrumPadEditorControls should get normalized pad index');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls calls getDrumSamplerPadExistingAudioData", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('getDrumSamplerPadExistingAudioData'), 'renderDrumPadEditorControls should get existing audio data');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls creates drop zone container with track id and pad index", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('drumPadDropZoneContainer') || funcStr.includes('dropZone'), 'renderDrumPadEditorControls should create drop zone');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls uses createDropZoneHTML", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('createDropZoneHTML'), 'renderDrumPadEditorControls should use createDropZoneHTML');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls sets up drop zone listeners", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('setupGenericDropZoneListeners') || funcStr.includes('dropZone'), 'renderDrumPadEditorControls should set up listeners');
+});
+
+TestRunner.test("Day 673 - renderDrumPadEditorControls references localAppServices.loadDrumSamplerPadFile", (t) => {
+    const funcStr = renderDrumPadEditorControls.toString();
+    t.assertTruthy(funcStr.includes('loadDrumSamplerPadFile'), 'renderDrumPadEditorControls should reference loadDrumSamplerPadFile');
+});
+
+TestRunner.test("Day 673 - APP_VERSION validation for Day 673", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 673");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 326, "Minor version should be >= 326 for Day 673");
+    }
+});
