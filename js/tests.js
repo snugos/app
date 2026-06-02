@@ -18259,3 +18259,166 @@ TestRunner.test("Day 680 - APP_VERSION validation for Day 680", (t) => {
         t.assertTruthy(versionParts[1] >= 334, "Minor version should be >= 334 for Day 680");
     }
 });
+
+// --- Day 681: Timeline Markers and Transport Settings Window Function Tests ---
+TestRunner.test("Day 681 - openTimelineMarkersWindow is a function export", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTimelineMarkersWindow should be exported');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTimelineMarkersWindow.length, 1, 'openTimelineMarkersWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow uses single-instance window management with timelineMarkers windowId", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes("'timelineMarkers'") || funcStr.includes('"timelineMarkers"'), 'openTimelineMarkersWindow should use timelineMarkers windowId');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow references getOpenWindows", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTimelineMarkersWindow should reference getOpenWindows');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow has restore logic for existing windows", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('restore()'), 'openTimelineMarkersWindow should have restore logic');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow references MARKER_COLORS_LIST", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('MARKER_COLORS_LIST'), 'openTimelineMarkersWindow should reference MARKER_COLORS_LIST');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow references getTimelineMarkers", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('getTimelineMarkers'), 'openTimelineMarkersWindow should reference getTimelineMarkers');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow builds markersListHTML with marker-item class", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('marker-item') && funcStr.includes('buildMarkersListHTML'), 'openTimelineMarkersWindow should build markersListHTML with marker-item class');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow has addMarkerBtn, clearAllMarkersBtn, and closeMarkersBtn buttons", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('addMarkerBtn') && funcStr.includes('clearAllMarkersBtn') && funcStr.includes('closeMarkersBtn'), 'openTimelineMarkersWindow should have addMarkerBtn, clearAllMarkersBtn, and closeMarkersBtn buttons');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow references localAppServices.addTimelineMarker", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('addTimelineMarker'), 'openTimelineMarkersWindow should reference addTimelineMarker');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow references localAppServices.setTimelineMarker", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('setTimelineMarker'), 'openTimelineMarkersWindow should reference setTimelineMarker');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow references localAppServices.removeTimelineMarker", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('removeTimelineMarker'), 'openTimelineMarkersWindow should reference removeTimelineMarker');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow references localAppServices.clearTimelineMarkers", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('clearTimelineMarkers'), 'openTimelineMarkersWindow should reference clearTimelineMarkers');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow creates window with 'Timeline Markers' title", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes("'Timeline Markers'") || funcStr.includes('"Timeline Markers"'), 'openTimelineMarkersWindow should create window with Timeline Markers title');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow calls localAppServices.createWindow", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTimelineMarkersWindow should call createWindow');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow handles savedState for window restoration", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') && (funcStr.includes('left') || funcStr.includes('x:')), 'openTimelineMarkersWindow should handle savedState for window restoration');
+});
+
+TestRunner.test("Day 681 - openTimelineMarkersWindow has options object with width:520 and height:450", (t) => {
+    const funcStr = openTimelineMarkersWindow.toString();
+    t.assertTruthy(funcStr.includes('width: 520') && funcStr.includes('height: 450'), 'openTimelineMarkersWindow should have options with width:520 and height:450');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow is a function export", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTransportSettingsWindow should be exported');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTransportSettingsWindow.length, 1, 'openTransportSettingsWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow uses single-instance window management with transportSettings windowId", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes("'transportSettings'") || funcStr.includes('"transportSettings"'), 'openTransportSettingsWindow should use transportSettings windowId');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow references getOpenWindows", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTransportSettingsWindow should reference getOpenWindows');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow has restore logic for existing windows", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('restore()'), 'openTransportSettingsWindow should have restore logic');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow references getCurrentSettings", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getCurrentSettings'), 'openTransportSettingsWindow should reference getCurrentSettings');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow references metronome functions (isMetronomeEnabled, getMetronomeVolume, setMetronomeEnabled, setMetronomeVolume)", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('isMetronomeEnabled') && funcStr.includes('getMetronomeVolume') && funcStr.includes('setMetronomeEnabled') && funcStr.includes('setMetronomeVolume'), 'openTransportSettingsWindow should reference metronome functions');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow references countInBars functions (getCountInBars, setCountInBars)", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getCountInBars') && funcStr.includes('setCountInBars'), 'openTransportSettingsWindow should reference countInBars functions');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow references swing functions (getSwingEnabled, getSwingAmount, setSwingEnabled, setSwingAmount)", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getSwingEnabled') && funcStr.includes('getSwingAmount') && funcStr.includes('setSwingEnabled') && funcStr.includes('setSwingAmount'), 'openTransportSettingsWindow should reference swing functions');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow references tap tempo functions (isTapTempoReady, getTapTempoBpm, tapTempo, resetTapTempo)", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('isTapTempoReady') && funcStr.includes('getTapTempoBpm') && funcStr.includes('tapTempo') && funcStr.includes('resetTapTempo'), 'openTransportSettingsWindow should reference tap tempo functions');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow creates window with 'Transport Settings' title", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes("'Transport Settings'") || funcStr.includes('"Transport Settings"'), 'openTransportSettingsWindow should create window with Transport Settings title');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow calls localAppServices.createWindow", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTransportSettingsWindow should call createWindow');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow handles savedState for window restoration", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') && (funcStr.includes('left') || funcStr.includes('x:')), 'openTransportSettingsWindow should handle savedState for window restoration');
+});
+
+TestRunner.test("Day 681 - openTransportSettingsWindow has options object with width:380 and height:480", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('width: 380') && funcStr.includes('height: 480'), 'openTransportSettingsWindow should have options with width:380 and height:480');
+});
+
+TestRunner.test("Day 681 - APP_VERSION validation for Day 681", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 681");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 335, "Minor version should be >= 335 for Day 681");
+    }
+});
