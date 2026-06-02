@@ -1,3 +1,25 @@
+#### Day 680: openTrackGroupsWindow UI Function Tests (2026-06-02)
+- **Tests**: Added 17 tests for openTrackGroupsWindow UI function in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 680 test block with 17 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.334.0
+- **Test Details** (`js/tests.js`): 17 tests covering:
+  - **openTrackGroupsWindow** (16 tests): is a function export, accepts 1 parameter with default (savedState), uses single-instance window management with trackGroups windowId, references getOpenWindows, has restore logic, references getTrackGroups and getTracks, creates window with "Track Groups" title, builds groupsListHTML with group-item class, includes newGroupBtn and closeGroupsBtn buttons, calls createWindow, handles savedState for window restoration, has options object with width:500 and height:400, includes group-color and group-name-input elements, references addTrackGroup for creating new groups
+  - APP_VERSION validation (>= 2.334 for Day 680)
+- **Version**: Bumped to 2.334.0
+- **Test Count**: Increased from 3277 to 3294
+
+#### Day 679: openGlobalControlsWindow UI Function Tests (2026-06-02)
+- **Tests**: Added 17 tests for openGlobalControlsWindow UI function in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 679 test block with 17 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.333.0
+- **Test Details** (`js/tests.js`): 17 tests covering:
+  - **openGlobalControlsWindow** (16 tests): is a function export, accepts 2 parameters (onReadyCallback, savedState), uses single-instance window management with globalControls windowId, references getOpenWindows/createWindow, has restore() logic, creates window with "Global Controls" title, includes play/stop/record buttons (playBtnGlobal, stopBtnGlobal, recordBtnGlobal), references tempoGlobalInput and midiInputSelectGlobal, references masterMeterContainerGlobal and masterMeterBarGlobal, references playbackModeToggleBtnGlobal, uses querySelector, has options with width:280/height:360, handles savedState for position restoration, calls onReadyCallback
+  - APP_VERSION validation (>= 2.333 for Day 679)
+- **Version**: Bumped to 2.333.0
+- **Test Count**: Increased from 3261 to 3277
+
 #### Day 678: Track State renameTrackInState and removeTrackFromStateInternal Function Tests (2026-06-02)
 - **Tests**: Added 21 tests for Track State rename and remove functions in state.js
 - **Files Modified**:
