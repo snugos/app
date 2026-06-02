@@ -1,3 +1,15 @@
+#### Day 681: Timeline Markers and Transport Settings Window Function Tests (2026-06-02)
+- **Tests**: Added 32 tests for Timeline Markers and Transport Settings window UI functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 681 test block with 32 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.335.0
+- **Test Details** (`js/tests.js`): 32 tests covering:
+  - **openTimelineMarkersWindow** (17 tests): is a function export, accepts 1 parameter with default (savedState), uses single-instance window management with timelineMarkers windowId, references getOpenWindows, has restore() logic, references MARKER_COLORS_LIST, references getTimelineMarkers, builds markersListHTML with marker-item class, has addMarkerBtn/clearAllMarkersBtn/closeMarkersBtn buttons, references addTimelineMarker/setTimelineMarker/removeTimelineMarker/clearTimelineMarkers, creates window with "Timeline Markers" title, calls createWindow, handles savedState for window restoration, has options object with width:520 and height:450
+  - **openTransportSettingsWindow** (14 tests): is a function export, accepts 1 parameter with default (savedState), uses single-instance window management with transportSettings windowId, references getOpenWindows, has restore() logic, references getCurrentSettings, references metronome/countInBars/swing/tap tempo functions, creates window with "Transport Settings" title, calls createWindow, handles savedState for window restoration, has options object with width:380 and height:480
+  - APP_VERSION validation (>= 2.335 for Day 681)
+- **Version**: Bumped to 2.335.0
+- **Test Count**: Increased from 3294 to 3326
+
 #### Day 680: openTrackGroupsWindow UI Function Tests (2026-06-02)
 - **Tests**: Added 17 tests for openTrackGroupsWindow UI function in ui.js
 - **Files Modified**:
