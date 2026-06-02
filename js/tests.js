@@ -18170,3 +18170,92 @@ TestRunner.test("Day 679 - APP_VERSION validation for Day 679", (t) => {
         t.assertTruthy(versionParts[1] >= 333, "Minor version should be >= 333 for Day 679");
     }
 });
+
+// --- Day 680: openTrackGroupsWindow UI Function Tests ---
+TestRunner.test("Day 680 - openTrackGroupsWindow is a function export", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTrackGroupsWindow should be exported');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTrackGroupsWindow.length, 1, 'openTrackGroupsWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow uses single-instance window management with trackGroups windowId", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes("'trackGroups'") || funcStr.includes('"trackGroups"'), 'openTrackGroupsWindow should use trackGroups windowId');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow references localAppServices.getOpenWindows", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackGroupsWindow should reference getOpenWindows');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow has restore logic for existing windows", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('win.restore()') || funcStr.includes('restore()'), 'openTrackGroupsWindow should call restore() on existing window');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow references localAppServices.getTrackGroups", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackGroups'), 'openTrackGroupsWindow should reference getTrackGroups');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow references localAppServices.getTracks", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('getTracks'), 'openTrackGroupsWindow should reference getTracks');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow creates window with title 'Track Groups'", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('Track Groups'), 'openTrackGroupsWindow should create window with Track Groups title');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow includes groupsListHTML with group-item class", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('group-item') || funcStr.includes('groupsListHTML'), 'openTrackGroupsWindow should build groups list HTML');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow has newGroupBtn button element", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('newGroupBtn'), 'openTrackGroupsWindow should include newGroupBtn button');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow has closeGroupsBtn button element", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('closeGroupsBtn'), 'openTrackGroupsWindow should include closeGroupsBtn button');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow calls localAppServices.createWindow", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'openTrackGroupsWindow should call createWindow');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow handles savedState for window restoration", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('savedState') && (funcStr.includes('left') || funcStr.includes('.left')), 'openTrackGroupsWindow should handle savedState for position restoration');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow has options object with width:500 and height:400", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy((funcStr.includes('width: 500') || funcStr.includes('width:500')) && (funcStr.includes('height: 400') || funcStr.includes('height:400')), 'openTrackGroupsWindow should set width: 500 and height: 400');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow includes group-color, group-name-input, and group-item elements", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('group-color') && funcStr.includes('group-name-input'), 'openTrackGroupsWindow should include group styling and input elements');
+});
+
+TestRunner.test("Day 680 - openTrackGroupsWindow references localAppServices.addTrackGroup", (t) => {
+    const funcStr = openTrackGroupsWindow.toString();
+    t.assertTruthy(funcStr.includes('addTrackGroup'), 'openTrackGroupsWindow should reference addTrackGroup for creating new groups');
+});
+
+TestRunner.test("Day 680 - APP_VERSION validation for Day 680", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 680");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 334, "Minor version should be >= 334 for Day 680");
+    }
+});
