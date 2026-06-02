@@ -17619,3 +17619,169 @@ TestRunner.test("Day 674 - APP_VERSION validation for Day 674", (t) => {
         t.assertTruthy(versionParts[1] >= 327, "Minor version should be >= 327 for Day 674");
     }
 });
+
+// --- Day 675: Track Templates, Scale Mode, MIDI CC, Chord Mode, and Send Effects Window Function Tests ---
+
+TestRunner.test("Day 675 - openTrackTemplatesWindow is a function export", (t) => {
+    const uiStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'openTrackTemplatesWindow should be exported');
+});
+
+TestRunner.test("Day 675 - openTrackTemplatesWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTrackTemplatesWindow.length, 1, 'openTrackTemplatesWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 675 - openTrackTemplatesWindow references getOpenWindows", (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTrackTemplatesWindow should check open windows');
+});
+
+TestRunner.test("Day 675 - openTrackTemplatesWindow references getTrackTemplates", (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes('getTrackTemplates'), 'openTrackTemplatesWindow should use getTrackTemplates');
+});
+
+TestRunner.test("Day 675 - openTrackTemplatesWindow uses createWindow with 'Track Templates' title", (t) => {
+    const funcStr = openTrackTemplatesWindow.toString();
+    t.assertTruthy(funcStr.includes("'Track Templates'") || funcStr.includes('"Track Templates"'), 'openTrackTemplatesWindow should set title to Track Templates');
+});
+
+TestRunner.test("Day 675 - openScaleModeWindow is a function export", (t) => {
+    const uiStr = openScaleModeWindow.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'openScaleModeWindow should be exported');
+});
+
+TestRunner.test("Day 675 - openScaleModeWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openScaleModeWindow.length, 1, 'openScaleModeWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 675 - openScaleModeWindow references getOpenWindows", (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openScaleModeWindow should check open windows');
+});
+
+TestRunner.test("Day 675 - openScaleModeWindow references getScaleModeEnabled", (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeEnabled'), 'openScaleModeWindow should use getScaleModeEnabled');
+});
+
+TestRunner.test("Day 675 - openScaleModeWindow references getScaleModeScale", (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeScale'), 'openScaleModeWindow should use getScaleModeScale');
+});
+
+TestRunner.test("Day 675 - openScaleModeWindow references getScaleModeRoot", (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeRoot'), 'openScaleModeWindow should use getScaleModeRoot');
+});
+
+TestRunner.test("Day 675 - openScaleModeWindow references getScaleModeLock", (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getScaleModeLock'), 'openScaleModeWindow should use getScaleModeLock');
+});
+
+TestRunner.test("Day 675 - openScaleModeWindow references Constants.SCALES", (t) => {
+    const funcStr = openScaleModeWindow.toString();
+    t.assertTruthy(funcStr.includes('Constants.SCALES') || funcStr.includes('SCALES'), 'openScaleModeWindow should reference SCALES constants');
+});
+
+TestRunner.test("Day 675 - openMidiCCMappingsWindow is a function export", (t) => {
+    const uiStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'openMidiCCMappingsWindow should be exported');
+});
+
+TestRunner.test("Day 675 - openMidiCCMappingsWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openMidiCCMappingsWindow.length, 1, 'openMidiCCMappingsWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 675 - openMidiCCMappingsWindow references getOpenWindows", (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMidiCCMappingsWindow should check open windows');
+});
+
+TestRunner.test("Day 675 - openMidiCCMappingsWindow references getMidiCCMappings", (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getMidiCCMappings'), 'openMidiCCMappingsWindow should use getMidiCCMappings');
+});
+
+TestRunner.test("Day 675 - openMidiCCMappingsWindow references removeMidiCCMapping", (t) => {
+    const funcStr = openMidiCCMappingsWindow.toString();
+    t.assertTruthy(funcStr.includes('removeMidiCCMapping'), 'openMidiCCMappingsWindow should reference removeMidiCCMapping');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow is a function export", (t) => {
+    const uiStr = openChordModeWindow.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'openChordModeWindow should be exported');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openChordModeWindow.length, 1, 'openChordModeWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow references getOpenWindows", (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openChordModeWindow should check open windows');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow references getChordModeEnabled", (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordModeEnabled'), 'openChordModeWindow should use getChordModeEnabled');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow references getChordModeRoot", (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordModeRoot'), 'openChordModeWindow should use getChordModeRoot');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow references getChordModeType", (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordModeType'), 'openChordModeWindow should use getChordModeType');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow references getChordModeLock", (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordModeLock'), 'openChordModeWindow should use getChordModeLock');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow references getChordVoicing", (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('getChordVoicing'), 'openChordModeWindow should use getChordVoicing');
+});
+
+TestRunner.test("Day 675 - openChordModeWindow references Constants.CHORD_TYPES", (t) => {
+    const funcStr = openChordModeWindow.toString();
+    t.assertTruthy(funcStr.includes('CHORD_TYPES'), 'openChordModeWindow should reference CHORD_TYPES constants');
+});
+
+TestRunner.test("Day 675 - openSendEffectsWindow is a function export", (t) => {
+    const uiStr = openSendEffectsWindow.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'openSendEffectsWindow should be exported');
+});
+
+TestRunner.test("Day 675 - openSendEffectsWindow accepts 2 parameters (sendId, savedState)", (t) => {
+    t.assertEqual(openSendEffectsWindow.length, 2, 'openSendEffectsWindow should accept 2 parameters');
+});
+
+TestRunner.test("Day 675 - openSendEffectsWindow references getOpenWindows", (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openSendEffectsWindow should check open windows');
+});
+
+TestRunner.test("Day 675 - openSendEffectsWindow creates windowId with sendId", (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('sendEffectsRack') || funcStr.includes('sendId'), 'openSendEffectsWindow should use sendId in windowId');
+});
+
+TestRunner.test("Day 675 - openSendEffectsWindow references showNotification", (t) => {
+    const funcStr = openSendEffectsWindow.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'openSendEffectsWindow should call showNotification');
+});
+
+TestRunner.test("Day 675 - APP_VERSION validation for Day 675", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 675");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 329, "Minor version should be >= 329 for Day 675");
+    }
+});

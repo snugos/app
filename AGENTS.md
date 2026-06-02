@@ -1,3 +1,18 @@
+#### Day 675: Track Templates, Scale Mode, MIDI CC, Chord Mode, and Send Effects Window Function Tests (2026-06-02)
+- **Tests**: Added 36 tests for Track Templates, Scale Mode, MIDI CC Mappings, Chord Mode, and Send Effects window UI functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 675 test block with 36 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.329.0
+- **Test Details** (`js/tests.js`): 36 tests covering:
+  - **openTrackTemplatesWindow** (5 tests): is a function export, accepts 1 parameter with default, references getOpenWindows, references getTrackTemplates, uses createWindow with "Track Templates" title
+  - **openScaleModeWindow** (8 tests): is a function export, accepts 1 parameter with default, references getOpenWindows, references getScaleModeEnabled, getScaleModeScale, getScaleModeRoot, getScaleModeLock, references Constants.SCALES
+  - **openMidiCCMappingsWindow** (5 tests): is a function export, accepts 1 parameter with default, references getOpenWindows, references getMidiCCMappings, references removeMidiCCMapping
+  - **openChordModeWindow** (8 tests): is a function export, accepts 1 parameter with default, references getOpenWindows, references getChordModeEnabled, getChordModeRoot, getChordModeType, getChordModeLock, getChordVoicing, references Constants.CHORD_TYPES
+  - **openSendEffectsWindow** (4 tests): is a function export, accepts 2 parameters (sendId, savedState), references getOpenWindows, creates windowId with sendId, references showNotification
+  - APP_VERSION validation (>= 2.329 for Day 675)
+- **Version**: Bumped to 2.329.0
+- **Test Count**: Increased from 3170 to 3206
+
 #### Day 674: Timeline Playhead and Drum Pad UI Function Tests (2026-06-02)
 - **Tests**: Added 32 tests for Timeline Playhead and Drum Pad UI functions in ui.js
 - **Files Modified**:
