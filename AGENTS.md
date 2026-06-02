@@ -1,4 +1,16 @@
 #### Day 681: Timeline Markers and Transport Settings Window Function Tests (2026-06-02)
+#### Day 682: renderTimeline and updateSoundBrowserDisplayForLibrary UI Function Tests (2026-06-02)
+- **Tests**: Added 24 tests for renderTimeline and updateSoundBrowserDisplayForLibrary UI functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 682 test block with 24 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.336.0
+- **Test Details** (`js/tests.js`): 24 tests covering:
+  - **renderTimeline** (12 tests): is a function export, accepts 0 parameters, references timeline-tracks-area element, calls renderTimelineRuler, uses localAppServices.getTracks, iterates tracks with forEach, uses TRACK_NAME_WIDTH constant (120), calculates PIXELS_PER_SECOND using timelineZoomLevel, generates timeline-track-lane HTML elements, calls attachClipEventHandlers, calls updatePlayheadPosition
+  - **updateSoundBrowserDisplayForLibrary** (12 tests): is a function export, accepts 3 parameters (libraryName, isLoading, hasError), gets browserWindowEl via getWindowById('soundBrowser'), gets listDiv element (soundBrowserList), gets librarySelect element, checks isWindowVisible, calls setCurrentLibraryName, calls setCurrentSoundBrowserPath, calls renderSoundBrowserDirectory, updates preview button state, uses getSoundLibraryFileTrees
+  - APP_VERSION validation (>= 2.336 for Day 682)
+- **Version**: Bumped to 2.336.0
+- **Test Count**: Increased from 3326 to 3350
+
 - **Tests**: Added 32 tests for Timeline Markers and Transport Settings window UI functions in ui.js
 - **Files Modified**:
   - `js/tests.js`: Added Day 681 test block with 32 tests
