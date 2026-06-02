@@ -1,3 +1,20 @@
+#### Day 674: Timeline Playhead and Drum Pad UI Function Tests (2026-06-02)
+- **Tests**: Added 32 tests for Timeline Playhead and Drum Pad UI functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 674 test block with 32 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.328.0
+- **Test Details** (`js/tests.js`): 32 tests covering:
+  - **updatePlayheadPosition** (13 tests): is a function export, accepts 1 parameter (progress), references timeline-playhead element, references timeline-tracks-area element, handles undefined progress parameter, references Tone.Transport.position and Tone.Transport.bpm.value, calculates bars/beats/sixteenths from position, uses Math.max/min for bounds, references TRACK_NAME_WIDTH constant (120), references timelineZoomLevel, updates playhead.style.left, sets playhead.style.display to block
+  - **renderDrumSamplerPads** (9 tests): is a function export, accepts 1 parameter (track), references drumPadsGridContainer element, iterates over numPads (8 pads), references getNormalizedDrumSamplerPadIndex, checks drumSamplerPads array, adds data-pad-index and data-track-id attributes, calls querySelectorAll/forEach for drum pads, references localAppServices.selectDrumPad, handles selected pad styling
+  - **renderSamplePads** (2 tests): is a function export, accepts 1 parameter (track), uses samplePadsContainer element
+  - **updateSliceEditorUI** (1 test): is a function export, accepts 1 parameter (track)
+  - **updateDrumPadControlsUI** (2 tests): is a function export, accepts 1 parameter (track)
+  - APP_VERSION validation (>= 2.328 for Day 674)
+- **Version**: Bumped to 2.328.0
+- **Test Count**: Increased from 3138 to 3170
+
+
+# SnugOS DAW - AGENTS.md
 #### Day 671: exportToWavInternal and exportStemsInternal State Function Tests (2026-06-01)
 - **Tests**: Added 43 tests for audio export functions in state.js
 - **Files Modified**:
