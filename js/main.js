@@ -37,7 +37,9 @@ import {
     openTrackSequencerWindow, openTrackInspectorWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openSendEffectsWindow, openGlobalControlsWindow,
     openSoundBrowserWindow, openMixerWindow, updateMixerWindow, openTrackTemplatesWindow,
-    openAudioClipEditorWindow, openTimelineWindow,
+    openAudioClipEditorWindow, openTimelineWindow, openScaleModeWindow,
+    openMidiCCMappingsWindow, openChordModeWindow, openProjectNotesWindow,
+    openTrackGroupsWindow, openTimelineMarkersWindow, openTransportSettingsWindow,
     showKeyboardShortcutsHelpWindow,
     renderTimeline,
     updatePlayheadPosition
@@ -679,6 +681,34 @@ const appServices = {
 
     openAudioClipEditorWindow: (trackId, clipId, savedState = null) => {
         openAudioClipEditorWindow(trackId, clipId, savedState);
+    },
+
+    openScaleModeWindow: (savedState = null) => {
+        openScaleModeWindow(savedState);
+    },
+
+    openMidiCCMappingsWindow: (savedState = null) => {
+        openMidiCCMappingsWindow(savedState);
+    },
+
+    openChordModeWindow: (savedState = null) => {
+        openChordModeWindow(savedState);
+    },
+
+    openProjectNotesWindow: (savedState = null) => {
+        openProjectNotesWindow(savedState);
+    },
+
+    openTrackGroupsWindow: (savedState = null) => {
+        openTrackGroupsWindow(savedState);
+    },
+
+    openTimelineMarkersWindow: (savedState = null) => {
+        openTimelineMarkersWindow(savedState);
+    },
+
+    openTransportSettingsWindow: (savedState = null) => {
+        openTransportSettingsWindow(savedState);
     },
 
     // Scale Mode state
