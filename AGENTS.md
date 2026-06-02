@@ -2582,3 +2582,14 @@
   - APP_VERSION validation (>= 2.326 for Day 672)
 - **Version**: Bumped to 2.326.0
 - **Test Count**: Increased from 3094 to 3123
+#### Day 681: Timeline Markers and Transport Settings Window Function Tests (2026-06-02)
+- **Tests**: Added 34 tests for Timeline Markers and Transport Settings window UI functions in ui.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 681 test block with 34 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.335.0
+- **Test Details** (`js/tests.js`): 34 tests covering:
+  - **openTimelineMarkersWindow** (18 tests): is a function export, accepts 1 parameter with default (savedState), uses single-instance window management with timelineMarkers windowId, references getOpenWindows, has restore() logic, references MARKER_COLORS_LIST and getTimelineMarkers, builds markersListHTML with marker-item class, has addMarkerBtn/clearAllMarkersBtn/closeMarkersBtn buttons, references addTimelineMarker/setTimelineMarker/removeTimelineMarker/clearTimelineMarkers, creates window with "Timeline Markers" title, calls createWindow, handles savedState for window restoration, has options with width:520/height:450
+  - **openTransportSettingsWindow** (15 tests): is a function export, accepts 1 parameter with default (savedState), uses single-instance window management with transportSettings windowId, references getOpenWindows and restore() logic, references getCurrentSettings, references metronome functions (isMetronomeEnabled, getMetronomeVolume, setMetronomeEnabled, setMetronomeVolume), references countInBars functions, references swing functions, references tap tempo functions (isTapTempoReady, getTapTempoBpm, tapTempo, resetTapTempo), creates window with "Transport Settings" title, calls createWindow, handles savedState, has options with width:380/height:480
+  - APP_VERSION validation (>= 2.335 for Day 681)
+- **Version**: Bumped to 2.335.0
+- **Test Count**: Increased from 3294 to 3328
