@@ -17862,3 +17862,116 @@ TestRunner.test("Day 676 - APP_VERSION validation for Day 676", (t) => {
         t.assertTruthy(versionParts[1] >= 330, "Minor version should be >= 330 for Day 676");
     }
 });
+
+// --- Day 677: Keyboard Shortcuts Help and Effects Render UI Function Tests ---
+
+TestRunner.test("Day 677 - showKeyboardShortcutsHelpWindow is a function export", (t) => {
+    const uiStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'showKeyboardShortcutsHelpWindow should be exported');
+});
+
+TestRunner.test("Day 677 - showKeyboardShortcutsHelpWindow accepts 0 parameters", (t) => {
+    t.assertEqual(showKeyboardShortcutsHelpWindow.length, 0, 'showKeyboardShortcutsHelpWindow should accept 0 parameters');
+});
+
+TestRunner.test("Day 677 - showKeyboardShortcutsHelpWindow references getOpenWindows", (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'showKeyboardShortcutsHelpWindow should check open windows');
+});
+
+TestRunner.test("Day 677 - showKeyboardShortcutsHelpWindow uses single-instance window management", (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes("'keyboardShortcutsHelp'") || funcStr.includes('"keyboardShortcutsHelp"'), 'showKeyboardShortcutsHelpWindow should use keyboardShortcutsHelp windowId');
+});
+
+TestRunner.test("Day 677 - showKeyboardShortcutsHelpWindow references Constants.KEYBOARD_SHORTCUTS_HELP_WIDTH", (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_WIDTH'), 'showKeyboardShortcutsHelpWindow should reference KEYBOARD_SHORTCUTS_HELP_WIDTH');
+});
+
+TestRunner.test("Day 677 - showKeyboardShortcutsHelpWindow references Constants.KEYBOARD_SHORTCUTS_HELP_HEIGHT", (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_HEIGHT'), 'showKeyboardShortcutsHelpWindow should reference KEYBOARD_SHORTCUTS_HELP_HEIGHT');
+});
+
+TestRunner.test("Day 677 - showKeyboardShortcutsHelpWindow references Constants.KEYBOARD_SHORTCUTS_HELP_TITLE", (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('KEYBOARD_SHORTCUTS_HELP_TITLE'), 'showKeyboardShortcutsHelpWindow should reference KEYBOARD_SHORTCUTS_HELP_TITLE');
+});
+
+TestRunner.test("Day 677 - showKeyboardShortcutsHelpWindow uses createWindow", (t) => {
+    const funcStr = showKeyboardShortcutsHelpWindow.toString();
+    t.assertTruthy(funcStr.includes('createWindow'), 'showKeyboardShortcutsHelpWindow should call createWindow');
+});
+
+TestRunner.test("Day 677 - renderEffectsList is a function export", (t) => {
+    const uiStr = renderEffectsList.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'renderEffectsList should be exported');
+});
+
+TestRunner.test("Day 677 - renderEffectsList accepts 4 parameters (owner, ownerType, listDiv, controlsContainer)", (t) => {
+    t.assertEqual(renderEffectsList.length, 4, 'renderEffectsList should accept 4 parameters');
+});
+
+TestRunner.test("Day 677 - renderEffectsList references ownerType === 'track'", (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes("ownerType === 'track'") || funcStr.includes('ownerType === "track"'), 'renderEffectsList should check ownerType');
+});
+
+TestRunner.test("Day 677 - renderEffectsList references localAppServices.getMasterEffects", (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('getMasterEffects'), 'renderEffectsList should reference getMasterEffects');
+});
+
+TestRunner.test("Day 677 - renderEffectsList references localAppServices.effectsRegistryAccess", (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess'), 'renderEffectsList should reference effectsRegistryAccess');
+});
+
+TestRunner.test("Day 677 - renderEffectsList references localAppServices.captureStateForUndo", (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndo'), 'renderEffectsList should reference captureStateForUndo for undo on effect actions');
+});
+
+TestRunner.test("Day 677 - renderEffectsList references localAppServices.showNotification", (t) => {
+    const funcStr = renderEffectsList.toString();
+    t.assertTruthy(funcStr.includes('showNotification'), 'renderEffectsList should call showNotification for effect bypass/enable');
+});
+
+TestRunner.test("Day 677 - renderEffectControls is a function export", (t) => {
+    const uiStr = renderEffectControls.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'renderEffectControls should be exported');
+});
+
+TestRunner.test("Day 677 - renderEffectControls accepts 4 parameters (owner, ownerType, effectId, controlsContainer)", (t) => {
+    t.assertEqual(renderEffectControls.length, 4, 'renderEffectControls should accept 4 parameters');
+});
+
+TestRunner.test("Day 677 - renderEffectControls references ownerType === 'track'", (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes("ownerType === 'track'") || funcStr.includes('ownerType === "track"'), 'renderEffectControls should check ownerType');
+});
+
+TestRunner.test("Day 677 - renderEffectControls references localAppServices.getMasterEffects", (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('getMasterEffects'), 'renderEffectControls should reference getMasterEffects');
+});
+
+TestRunner.test("Day 677 - renderEffectControls references localAppServices.effectsRegistryAccess", (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('effectsRegistryAccess'), 'renderEffectControls should reference effectsRegistryAccess');
+});
+
+TestRunner.test("Day 677 - renderEffectControls uses find to locate effect by effectId", (t) => {
+    const funcStr = renderEffectControls.toString();
+    t.assertTruthy(funcStr.includes('.find(') && funcStr.includes('effectId'), 'renderEffectControls should use find to locate effect');
+});
+
+TestRunner.test("Day 677 - APP_VERSION validation for Day 677", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 677");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 331, "Minor version should be >= 331 for Day 677");
+    }
+});
