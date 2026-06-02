@@ -17785,3 +17785,80 @@ TestRunner.test("Day 675 - APP_VERSION validation for Day 675", (t) => {
         t.assertTruthy(versionParts[1] >= 329, "Minor version should be >= 329 for Day 675");
     }
 });
+
+TestRunner.test("Day 676 - openMixerWindow is a function export", (t) => {
+    const uiStr = openMixerWindow.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'openMixerWindow should be exported');
+});
+
+TestRunner.test("Day 676 - openMixerWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openMixerWindow.length, 1, 'openMixerWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 676 - openMixerWindow references getOpenWindows", (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openMixerWindow should check open windows');
+});
+
+TestRunner.test("Day 676 - openMixerWindow creates mixer windowId", (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes("'mixer'") || funcStr.includes('"mixer"'), 'openMixerWindow should use "mixer" windowId');
+});
+
+TestRunner.test("Day 676 - openMixerWindow references updateMixerWindow", (t) => {
+    const funcStr = openMixerWindow.toString();
+    t.assertTruthy(funcStr.includes('updateMixerWindow'), 'openMixerWindow should call updateMixerWindow');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow is a function export", (t) => {
+    const uiStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(uiStr.includes('export function'), 'openTransportSettingsWindow should be exported');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow accepts 1 parameter with default (savedState)", (t) => {
+    t.assertEqual(openTransportSettingsWindow.length, 1, 'openTransportSettingsWindow should accept 1 parameter');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow references getOpenWindows", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getOpenWindows'), 'openTransportSettingsWindow should check open windows');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow references getCurrentSettings", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getCurrentSettings'), 'openTransportSettingsWindow should use getCurrentSettings');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow references isMetronomeEnabled", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('isMetronomeEnabled'), 'openTransportSettingsWindow should reference isMetronomeEnabled');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow references getMetronomeVolume", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getMetronomeVolume'), 'openTransportSettingsWindow should reference getMetronomeVolume');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow references getCountInBars", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getCountInBars'), 'openTransportSettingsWindow should reference getCountInBars');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow references getSwingEnabled", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getSwingEnabled'), 'openTransportSettingsWindow should reference getSwingEnabled');
+});
+
+TestRunner.test("Day 676 - openTransportSettingsWindow references getSwingAmount", (t) => {
+    const funcStr = openTransportSettingsWindow.toString();
+    t.assertTruthy(funcStr.includes('getSwingAmount'), 'openTransportSettingsWindow should reference getSwingAmount');
+});
+
+TestRunner.test("Day 676 - APP_VERSION validation for Day 676", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 676");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 330, "Minor version should be >= 330 for Day 676");
+    }
+});
