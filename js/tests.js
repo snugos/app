@@ -17459,3 +17459,163 @@ TestRunner.test("Day 673 - APP_VERSION validation for Day 673", (t) => {
         t.assertTruthy(versionParts[1] >= 326, "Minor version should be >= 326 for Day 673");
     }
 });
+
+// Day 674: updatePlayheadPosition and renderDrumSamplerPads Function Tests
+TestRunner.test("Day 674 - updatePlayheadPosition is a function export", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'updatePlayheadPosition should be exported');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition accepts 1 parameter (progress)", (t) => {
+    t.assertEqual(updatePlayheadPosition.length, 1, 'updatePlayheadPosition should accept 1 parameter');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition references timeline-playhead element", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes("'timeline-playhead'") || funcStr.includes('"timeline-playhead"'), 'updatePlayheadPosition should reference timeline-playhead');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition references timeline-tracks-area element", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes("'timeline-tracks-area'") || funcStr.includes('"timeline-tracks-area"'), 'updatePlayheadPosition should reference timeline-tracks-area');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition handles undefined progress parameter", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('progress === undefined') || funcStr.includes('progress === undefined'), 'updatePlayheadPosition should check for undefined progress');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition references Tone.Transport.position", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.position'), 'updatePlayheadPosition should reference Tone.Transport.position');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition references Tone.Transport.bpm.value", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('Tone.Transport.bpm.value'), 'updatePlayheadPosition should reference Tone.Transport.bpm.value');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition calculates bars, beats, sixteenths from position", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes("bars") && funcStr.includes("beats") && funcStr.includes("sixteenths"), 'updatePlayheadPosition should parse position into bars/beats/sixteenths');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition uses Math.max for bounds in bar calculation", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('Math.max') || funcStr.includes('Math.min'), 'updatePlayheadPosition should use bounds checking');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition references TRACK_NAME_WIDTH constant", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('TRACK_NAME_WIDTH') || funcStr.includes('120'), 'updatePlayheadPosition should reference TRACK_NAME_WIDTH or 120');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition references timelineZoomLevel", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('timelineZoomLevel'), 'updatePlayheadPosition should reference timelineZoomLevel');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition updates playhead.style.left", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes('playhead.style.left') || funcStr.includes('playhead.style'), 'updatePlayheadPosition should update playhead style');
+});
+
+TestRunner.test("Day 674 - updatePlayheadPosition sets playhead.style.display to block", (t) => {
+    const funcStr = updatePlayheadPosition.toString();
+    t.assertTruthy(funcStr.includes("'block'") || funcStr.includes('"block"'), 'updatePlayheadPosition should set display to block');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads is a function export", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'renderDrumSamplerPads should be exported');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads accepts 1 parameter (track)", (t) => {
+    t.assertEqual(renderDrumSamplerPads.length, 1, 'renderDrumSamplerPads should accept 1 parameter');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads references drumPadsGridContainer element", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('drumPadsGridContainer') || funcStr.includes('gridContainer'), 'renderDrumSamplerPads should reference grid container');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads iterates over numPads (8 pads)", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('numPads') || funcStr.includes('i < 8') || funcStr.includes('for (let i'), 'renderDrumSamplerPads should iterate over pads');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads references getNormalizedDrumSamplerPadIndex", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('getNormalizedDrumSamplerPadIndex'), 'renderDrumSamplerPads should get normalized pad index');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads checks drumSamplerPads array", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('drumSamplerPads'), 'renderDrumSamplerPads should check drumSamplerPads array');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads adds data-pad-index attribute", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('data-pad-index') || funcStr.includes('padIndex'), 'renderDrumSamplerPads should set pad index attribute');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads adds data-track-id attribute", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('data-track-id') || funcStr.includes('track.id'), 'renderDrumSamplerPads should set track id attribute');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads calls querySelectorAll for drum pads", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('querySelectorAll') || funcStr.includes('forEach'), 'renderDrumSamplerPads should query pads');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads references localAppServices.selectDrumPad", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('selectDrumPad') || funcStr.includes('updateDrumPadControlsUI'), 'renderDrumSamplerPads should handle pad selection');
+});
+
+TestRunner.test("Day 674 - renderDrumSamplerPads handles selected pad styling", (t) => {
+    const funcStr = renderDrumSamplerPads.toString();
+    t.assertTruthy(funcStr.includes('selected') || funcStr.includes('isSelected'), 'renderDrumSamplerPads should handle selected state');
+});
+
+TestRunner.test("Day 674 - renderSamplePads is a function export", (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'renderSamplePads should be exported');
+});
+
+TestRunner.test("Day 674 - renderSamplePads accepts 1 parameter (track)", (t) => {
+    t.assertEqual(renderSamplePads.length, 1, 'renderSamplePads should accept 1 parameter');
+});
+
+TestRunner.test("Day 674 - renderSamplePads uses samplePadsContainer element", (t) => {
+    const funcStr = renderSamplePads.toString();
+    t.assertTruthy(funcStr.includes('samplePadsContainer') || funcStr.includes('samplePads'), 'renderSamplePads should reference samplePadsContainer');
+});
+
+TestRunner.test("Day 674 - updateSliceEditorUI is a function export", (t) => {
+    const funcStr = updateSliceEditorUI.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'updateSliceEditorUI should be exported');
+});
+
+TestRunner.test("Day 674 - updateSliceEditorUI accepts 1 parameter (track)", (t) => {
+    t.assertEqual(updateSliceEditorUI.length, 1, 'updateSliceEditorUI should accept 1 parameter');
+});
+
+TestRunner.test("Day 674 - updateDrumPadControlsUI is a function export", (t) => {
+    const funcStr = updateDrumPadControlsUI.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'updateDrumPadControlsUI should be exported');
+});
+
+TestRunner.test("Day 674 - updateDrumPadControlsUI accepts 1 parameter (track)", (t) => {
+    t.assertEqual(updateDrumPadControlsUI.length, 1, 'updateDrumPadControlsUI should accept 1 parameter');
+});
+
+TestRunner.test("Day 674 - APP_VERSION validation for Day 674", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 674");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 327, "Minor version should be >= 327 for Day 674");
+    }
+});
