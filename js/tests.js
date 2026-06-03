@@ -18551,4 +18551,107 @@ TestRunner.test("Day 682 - APP_VERSION validation for Day 682 - updateSoundBrows
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 336, "Minor version should be >= 336 for Day 682");
     }
+// --- Day 683: handleTimelineLaneDrop Event Handler Function Tests ---
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop is a function export", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('export async function'), 'handleTimelineLaneDrop should be exported');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop accepts 4 parameters (event, targetTrackId, startTime, appServicesPassed)", (t) => {
+    t.assertEqual(handleTimelineLaneDrop.length, 4, 'handleTimelineLaneDrop should accept 4 parameters');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop uses appServicesPassed parameter first", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('const services = appServicesPassed || localAppServices'), 'handleTimelineLaneDrop should use appServicesPassed parameter');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop validates required services (getTrackById, showNotification, captureStateForUndo, renderTimeline)", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('services.getTrackById') && funcStr.includes('services.showNotification') && funcStr.includes('services.captureStateForUndo') && funcStr.includes('services.renderTimeline'), 'handleTimelineLaneDrop should validate required services');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop gets target track via services.getTrackById", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('services.getTrackById(targetTrackId)'), 'handleTimelineLaneDrop should get target track');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop returns early when target track not found", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('Target track not found') || funcStr.includes('!targetTrack'), 'handleTimelineLaneDrop should return early when track not found');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop checks for application/json dataTransfer type", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('event.dataTransfer.getData(\'application/json\')') || funcStr.includes('event.dataTransfer.getData("application/json")'), 'handleTimelineLaneDrop should check for JSON data');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop checks for files dataTransfer type", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('event.dataTransfer.files'), 'handleTimelineLaneDrop should check for files');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop handles sequence-timeline-drag drop type", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('sequence-timeline-drag'), 'handleTimelineLaneDrop should handle sequence-timeline-drag type');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop blocks sequence clips on Audio tracks", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('Cannot place sequence clips on Audio tracks'), 'handleTimelineLaneDrop should block sequence clips on Audio tracks');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop calls targetTrack.addSequenceClipToTimeline for sequence drops", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('addSequenceClipToTimeline'), 'handleTimelineLaneDrop should call addSequenceClipToTimeline');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop handles sound-browser-item drop type", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('sound-browser-item'), 'handleTimelineLaneDrop should handle sound-browser-item type');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop blocks sound browser items on non-Audio tracks", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('Sound browser audio files can only be dropped onto Audio Track'), 'handleTimelineLaneDrop should block sound browser items on non-Audio tracks');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop calls services.getAudioBlobFromSoundBrowserItem for sound items", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('getAudioBlobFromSoundBrowserItem'), 'handleTimelineLaneDrop should call getAudioBlobFromSoundBrowserItem');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop calls targetTrack.addExternalAudioFileAsClip for audio drops", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('addExternalAudioFileAsClip'), 'handleTimelineLaneDrop should call addExternalAudioFileAsClip');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop handles file drops (event.dataTransfer.files)", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('files[0]') && funcStr.includes('targetTrack.type !== \'Audio\''), 'handleTimelineLaneDrop should handle file drops');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop blocks audio files on non-Audio tracks", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('Audio files can only be dropped onto Audio Track'), 'handleTimelineLaneDrop should block audio files on non-Audio tracks');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop has try/catch error handling", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('try {') && funcStr.includes('catch (e)'), 'handleTimelineLaneDrop should have try/catch error handling');
+});
+
+TestRunner.test("Day 683 - handleTimelineLaneDrop calls services.showNotification on errors", (t) => {
+    const funcStr = handleTimelineLaneDrop.toString();
+    t.assertTruthy(funcStr.includes('catch (e)') && funcStr.includes('services.showNotification'), 'handleTimelineLaneDrop should show notification on error');
+});
+
+TestRunner.test("Day 683 - APP_VERSION validation for Day 683", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 683");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 337, "Minor version should be >= 337 for Day 683");
+    }
 });
