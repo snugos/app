@@ -2657,3 +2657,14 @@
   - APP_VERSION validation (>= 2.338 for Day 684)
 - **Version**: Bumped to 2.338.0
 - **Test Count**: Increased from 3370 to 3402
+
+#### Day 686: rebuildMasterEffectChain Audio Function Tests (2026-06-03)
+- **Tests**: Added 14 tests for rebuildMasterEffectChain audio function in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 686 test block with 14 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.340.0
+- **Test Details** (`js/tests.js`): 14 tests covering:
+  - **rebuildMasterEffectChain** (13 tests): is a function export, accepts 0 parameters, checks masterEffectsBusInputNode.disposed, checks masterGainNodeActual.disposed, checks masterMeterNode.disposed, calls setupMasterBus when components not ready, references localAppServices.getMasterEffects, has try/catch error handling, calls disconnect on masterEffectsBusInputNode, iterates over activeMasterEffectNodes with forEach, references activeMasterEffectNodes Map, checks node.disposed before disconnecting, calls disconnect on masterGainNodeActual
+  - APP_VERSION validation (>= 2.340 for Day 686)
+- **Version**: Bumped to 2.340.0
+- **Test Count**: Increased from 3416 to 3430
