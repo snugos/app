@@ -1,3 +1,14 @@
+#### Day 683: handleTimelineLaneDrop Event Handler Function Tests (2026-06-03)
+- **Tests**: Added 21 tests for handleTimelineLaneDrop function in eventHandlers.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 683 test block with 21 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.337.0
+- **Test Details** (`js/tests.js`): 21 tests covering:
+  - **handleTimelineLaneDrop** (20 tests): is a function export, accepts 4 parameters (event, targetTrackId, startTime, appServicesPassed), uses appServicesPassed parameter first with localAppServices fallback, validates required services (getTrackById, showNotification, captureStateForUndo, renderTimeline), gets target track via services.getTrackById, returns early when target track not found, checks for application/json dataTransfer type, checks for files dataTransfer type, handles sequence-timeline-drag drop type, blocks sequence clips on Audio tracks, calls targetTrack.addSequenceClipToTimeline for sequence drops, handles sound-browser-item drop type, blocks sound browser items on non-Audio tracks, calls services.getAudioBlobFromSoundBrowserItem for sound items, calls targetTrack.addExternalAudioFileAsClip for audio drops, handles file drops (event.dataTransfer.files), blocks audio files on non-Audio tracks, has try/catch error handling, calls services.showNotification on errors
+  - APP_VERSION validation (>= 2.337 for Day 683)
+- **Version**: Bumped to 2.337.0
+- **Test Count**: Increased from 3350 to 3370
+
 #### Day 681: Timeline Markers and Transport Settings Window Function Tests (2026-06-02)
 #### Day 682: renderTimeline and updateSoundBrowserDisplayForLibrary UI Function Tests (2026-06-02)
 - **Tests**: Added 24 tests for renderTimeline and updateSoundBrowserDisplayForLibrary UI functions in ui.js
