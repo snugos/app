@@ -9,6 +9,19 @@
 - **Version**: Bumped to 2.337.0
 - **Test Count**: Increased from 3350 to 3370
 
+#### Day 685: Recording Input Gain Audio Function Tests (2026-06-03)
+- **Tests**: Added 15 tests for Recording Input Gain audio functions in audio.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 685 test block with 15 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.339.0
+- **Test Details** (`js/tests.js`): 15 tests covering:
+  - **getRecordingInputGainNode** (4 tests): is a function export, accepts 0 parameters, checks if node is disposed, creates Tone.Gain when disposed or null
+  - **setRecordingInputGain** (10 tests): is a function export, accepts 1 parameter, uses parseFloat for input conversion, clamps value to MIN_RECORDING_INPUT_GAIN and MAX_RECORDING_INPUT_GAIN range, uses Number.isFinite validation, calls captureAudioStateForUndoIfAllowed on value change, has descriptive "Set Recording Input Gain to" undo label, updates recordingInputGainNode.gain.value, returns the gain value
+  - APP_VERSION validation (>= 2.339 for Day 685)
+- **Version**: Bumped to 2.339.0
+- **Test Count**: Increased from 3401 to 3416
+
+
 #### Day 681: Timeline Markers and Transport Settings Window Function Tests (2026-06-02)
 #### Day 682: renderTimeline and updateSoundBrowserDisplayForLibrary UI Function Tests (2026-06-02)
 - **Tests**: Added 24 tests for renderTimeline and updateSoundBrowserDisplayForLibrary UI functions in ui.js
