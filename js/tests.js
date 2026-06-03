@@ -19143,3 +19143,128 @@ TestRunner.test("Day 687 - APP_VERSION validation for Day 687", (t) => {
         t.assertTruthy(versionParts[1] >= 340, "Minor version should be >= 340 for Day 687");
     }
 });
+
+// Day 688: MIDI Export and Import State Function Tests
+TestRunner.test("Day 688 - exportToMidiInternal is an async function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export async function exportToMidiInternal'), 'exportToMidiInternal should be exported');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal imports from state.js", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState') && funcStr.includes('getPlaybackModeState') && funcStr.includes('getTempoState'), 'exportToMidiInternal should import state functions');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal checks appServices availability", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('showNotification'), 'exportToMidiInternal should check appServices');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal checks for tracks", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState()') && funcStr.includes('tracks.length === 0'), 'exportToMidiInternal should check for tracks');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal uses Constants for MIDI export settings", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('MIDI_EXPORT_TicksPerQuarterNote') && funcStr.includes('MIDI_DEFAULT_CHANNEL') && funcStr.includes('MIDI_EXPORT_VELOCITY_SCALE'), 'exportToMidiInternal should use Constants');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal iterates over tracks", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('for (const track of tracks)'), 'exportToMidiInternal should iterate over tracks');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal skips Audio tracks", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes("track.type === 'Audio'"), 'exportToMidiInternal should skip Audio tracks');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal only processes Synth, DrumSampler, and Sampler tracks", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes("track.type !== 'Synth'") && funcStr.includes("track.type !== 'DrumSampler'") && funcStr.includes("track.type !== 'Sampler'"), 'exportToMidiInternal should check track types');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal gets active sequence from tracks", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('track.getActiveSequence()'), 'exportToMidiInternal should get active sequence');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal uses pitchToRow for MIDI pitch conversion", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('pitchToRow(note.row') || funcStr.includes('pitchToRow('), 'exportToMidiInternal should use pitchToRow');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal uses buildMidiFile", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('buildMidiFile(events'), 'exportToMidiInternal should use buildMidiFile');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal sorts events by time", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('allEvents.sort(') && funcStr.includes('a.time - b.time'), 'exportToMidiInternal should sort events');
+});
+
+TestRunner.test("Day 688 - exportToMidiInternal handles empty export case", (t) => {
+    const funcStr = exportToMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('No notes to export') || funcStr.includes('allEvents.length === 0'), 'exportToMidiInternal should handle empty export');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal is an async function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export async function importFromMidiInternal'), 'importFromMidiInternal should be exported');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal imports from state.js", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState') && funcStr.includes('getTempoState') && funcStr.includes('setTempoState'), 'importFromMidiInternal should import state functions');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal checks appServices availability", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('appServices') && funcStr.includes('showNotification'), 'importFromMidiInternal should check appServices');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal uses createFileInputForMidiImport", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('createFileInputForMidiImport()'), 'importFromMidiInternal should use createFileInputForMidiImport');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal parses MIDI file", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('parseMidiFile(arrayBuffer)'), 'importFromMidiInternal should parse MIDI file');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal checks for note events", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('noteOnEvents') && funcStr.includes('MIDI_IMPORT_MIN_NOTES'), 'importFromMidiInternal should check for note events');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal finds or creates a target track", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('getTracksState()') && funcStr.includes("track.type === 'Synth'"), 'importFromMidiInternal should find a Synth track');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal handles snap to grid", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('snapToGrid') && funcStr.includes('ticksPer16th'), 'importFromMidiInternal should handle snap to grid');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal converts note events to sequence", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('pendingNoteOns') && funcStr.includes('noteOn') && funcStr.includes('noteOff'), 'importFromMidiInternal should convert note events');
+});
+
+TestRunner.test("Day 688 - importFromMidiInternal has error handling with try/catch", (t) => {
+    const funcStr = importFromMidiInternal.toString();
+    t.assertTruthy(funcStr.includes('try {') && funcStr.includes('catch'), 'importFromMidiInternal should have error handling');
+});
+
+TestRunner.test("Day 688 - APP_VERSION validation for Day 688", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 688");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 342, "Minor version should be >= 342 for Day 688");
+    }
+});

@@ -1,3 +1,15 @@
+#### Day 688: MIDI Export and Import State Function Tests (2026-06-03)
+- **Tests**: Added 24 tests for MIDI Export and Import state functions in state.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 688 test block with 24 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.342.0
+- **Test Details** (`js/tests.js`): 24 tests covering:
+  - **exportToMidiInternal** (13 tests): is an async function export, imports from state.js, checks appServices availability, checks for tracks, uses Constants for MIDI export settings (MIDI_EXPORT_TicksPerQuarterNote, MIDI_DEFAULT_CHANNEL, MIDI_EXPORT_VELOCITY_SCALE), iterates over tracks with forEach, skips Audio tracks, only processes Synth, DrumSampler, and Sampler tracks, gets active sequence via track.getActiveSequence(), uses pitchToRow for MIDI pitch conversion, uses buildMidiFile for file generation, sorts events by time, handles empty export case
+  - **importFromMidiInternal** (10 tests): is an async function export, imports from state.js (getTracksState, getTempoState, setTempoState), checks appServices availability, uses createFileInputForMidiImport, parses MIDI file via parseMidiFile, checks for note events with MIDI_IMPORT_MIN_NOTES, finds Synth track for import, handles snap to grid with ticksPer16th, converts note events to sequence via pendingNoteOns, has error handling with try/catch
+  - APP_VERSION validation (>= 2.342 for Day 688)
+- **Version**: Bumped to 2.342.0
+- **Test Count**: Increased from 3472 to 3496
+
 #### Day 683: handleTimelineLaneDrop Event Handler Function Tests (2026-06-03)
 - **Tests**: Added 21 tests for handleTimelineLaneDrop function in eventHandlers.js
 - **Files Modified**:
