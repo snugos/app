@@ -18655,3 +18655,131 @@ TestRunner.test("Day 683 - APP_VERSION validation for Day 683", (t) => {
         t.assertTruthy(versionParts[1] >= 337, "Minor version should be >= 337 for Day 683");
     }
 });
+
+// --- Day 684: Event Handler Keyboard Shortcut Function Tests ---
+TestRunner.test("Day 684 - toggleMidiLearnMode is a function export", (t) => {
+    const funcStr = toggleMidiLearnMode.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleMidiLearnMode should be exported');
+});
+TestRunner.test("Day 684 - toggleMidiLearnMode accepts 0 parameters", (t) => {
+    t.assertEqual(toggleMidiLearnMode.length, 0, 'toggleMidiLearnMode should accept 0 parameters');
+});
+TestRunner.test("Day 684 - toggleMidiLearnMode references localAppServices.getMidiLearnMode", (t) => {
+    const funcStr = toggleMidiLearnMode.toString();
+    t.assertTruthy(funcStr.includes('getMidiLearnMode'), 'toggleMidiLearnMode should reference getMidiLearnMode');
+});
+TestRunner.test("Day 684 - toggleMidiLearnMode references localAppServices.setMidiLearnMode", (t) => {
+    const funcStr = toggleMidiLearnMode.toString();
+    t.assertTruthy(funcStr.includes('setMidiLearnMode'), 'toggleMidiLearnMode should reference setMidiLearnMode');
+});
+TestRunner.test("Day 684 - toggleMidiLearnMode shows notification with ON/OFF state", (t) => {
+    const funcStr = toggleMidiLearnMode.toString();
+    t.assertTruthy(funcStr.includes('MIDI Learn ON') && funcStr.includes('MIDI Learn OFF'), 'toggleMidiLearnMode should show ON/OFF notification');
+});
+TestRunner.test("Day 684 - toggleScaleModeShortcut is a function export", (t) => {
+    const funcStr = toggleScaleModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleScaleModeShortcut should be exported');
+});
+TestRunner.test("Day 684 - toggleScaleModeShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleScaleModeShortcut.length, 0, 'toggleScaleModeShortcut should accept 0 parameters');
+});
+TestRunner.test("Day 684 - toggleScaleModeShortcut gets armed track via getArmedTrackId", (t) => {
+    const funcStr = toggleScaleModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId'), 'toggleScaleModeShortcut should get armed track');
+});
+TestRunner.test("Day 684 - toggleScaleModeShortcut checks track type (Synth/Sampler/DrumSampler/InstrumentSampler)", (t) => {
+    const funcStr = toggleScaleModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('Synth') && funcStr.includes('DrumSampler'), 'toggleScaleModeShortcut should check track type');
+});
+TestRunner.test("Day 684 - toggleScaleModeShortcut calls openScaleModeWindow when available", (t) => {
+    const funcStr = toggleScaleModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('openScaleModeWindow'), 'toggleScaleModeShortcut should call openScaleModeWindow');
+});
+TestRunner.test("Day 684 - toggleScaleModeShortcut shows ON/OFF notification", (t) => {
+    const funcStr = toggleScaleModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('Scale Mode ON') && funcStr.includes('Scale Mode OFF'), 'toggleScaleModeShortcut should show ON/OFF notification');
+});
+TestRunner.test("Day 684 - toggleChordModeShortcut is a function export", (t) => {
+    const funcStr = toggleChordModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleChordModeShortcut should be exported');
+});
+TestRunner.test("Day 684 - toggleChordModeShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleChordModeShortcut.length, 0, 'toggleChordModeShortcut should accept 0 parameters');
+});
+TestRunner.test("Day 684 - toggleChordModeShortcut gets armed track via getArmedTrackId", (t) => {
+    const funcStr = toggleChordModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId'), 'toggleChordModeShortcut should get armed track');
+});
+TestRunner.test("Day 684 - toggleChordModeShortcut checks track type (Synth/Sampler/DrumSampler/InstrumentSampler)", (t) => {
+    const funcStr = toggleChordModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('Synth') && funcStr.includes('InstrumentSampler'), 'toggleChordModeShortcut should check track type');
+});
+TestRunner.test("Day 684 - toggleChordModeShortcut calls openChordModeWindow when available", (t) => {
+    const funcStr = toggleChordModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('openChordModeWindow'), 'toggleChordModeShortcut should call openChordModeWindow');
+});
+TestRunner.test("Day 684 - toggleChordModeShortcut shows ON/OFF notification", (t) => {
+    const funcStr = toggleChordModeShortcut.toString();
+    t.assertTruthy(funcStr.includes('Chord Mode ON') && funcStr.includes('Chord Mode OFF'), 'toggleChordModeShortcut should show ON/OFF notification');
+});
+TestRunner.test("Day 684 - openTransportSettingsShortcut is a function export", (t) => {
+    const funcStr = openTransportSettingsShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'openTransportSettingsShortcut should be exported');
+});
+TestRunner.test("Day 684 - openTransportSettingsShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(openTransportSettingsShortcut.length, 0, 'openTransportSettingsShortcut should accept 0 parameters');
+});
+TestRunner.test("Day 684 - openTransportSettingsShortcut calls localAppServices.openTransportSettingsWindow", (t) => {
+    const funcStr = openTransportSettingsShortcut.toString();
+    t.assertTruthy(funcStr.includes('openTransportSettingsWindow'), 'openTransportSettingsShortcut should call openTransportSettingsWindow');
+});
+TestRunner.test("Day 684 - toggleMuteShortcut is a function export", (t) => {
+    const funcStr = toggleMuteShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleMuteShortcut should be exported');
+});
+TestRunner.test("Day 684 - toggleMuteShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleMuteShortcut.length, 0, 'toggleMuteShortcut should accept 0 parameters');
+});
+TestRunner.test("Day 684 - toggleMuteShortcut gets armed track via getArmedTrackId", (t) => {
+    const funcStr = toggleMuteShortcut.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId'), 'toggleMuteShortcut should get armed track');
+});
+TestRunner.test("Day 684 - toggleMuteShortcut checks localAppServices.isTrackMuted", (t) => {
+    const funcStr = toggleMuteShortcut.toString();
+    t.assertTruthy(funcStr.includes('isTrackMuted'), 'toggleMuteShortcut should check isTrackMuted');
+});
+TestRunner.test("Day 684 - toggleMuteShortcut calls localAppServices.setTrackMuted", (t) => {
+    const funcStr = toggleMuteShortcut.toString();
+    t.assertTruthy(funcStr.includes('setTrackMuted'), 'toggleMuteShortcut should call setTrackMuted');
+});
+TestRunner.test("Day 684 - toggleMuteShortcut shows notification with track name", (t) => {
+    const funcStr = toggleMuteShortcut.toString();
+    t.assertTruthy(funcStr.includes('Muted:') && funcStr.includes('Unmuted:'), 'toggleMuteShortcut should show mute notification with track name');
+});
+TestRunner.test("Day 684 - toggleSoloShortcut is a function export", (t) => {
+    const funcStr = toggleSoloShortcut.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'toggleSoloShortcut should be exported');
+});
+TestRunner.test("Day 684 - toggleSoloShortcut accepts 0 parameters", (t) => {
+    t.assertEqual(toggleSoloShortcut.length, 0, 'toggleSoloShortcut should accept 0 parameters');
+});
+TestRunner.test("Day 684 - toggleSoloShortcut gets armed track via getArmedTrackId", (t) => {
+    const funcStr = toggleSoloShortcut.toString();
+    t.assertTruthy(funcStr.includes('getArmedTrackId'), 'toggleSoloShortcut should get armed track');
+});
+TestRunner.test("Day 684 - toggleSoloShortcut calls localAppServices.setSoloedTrackId", (t) => {
+    const funcStr = toggleSoloShortcut.toString();
+    t.assertTruthy(funcStr.includes('setSoloedTrackId'), 'toggleSoloShortcut should call setSoloedTrackId');
+});
+TestRunner.test("Day 684 - toggleSoloShortcut shows notification with track name", (t) => {
+    const funcStr = toggleSoloShortcut.toString();
+    t.assertTruthy(funcStr.includes('Solo:') && funcStr.includes('Unsolo:'), 'toggleSoloShortcut should show solo notification with track name');
+});
+TestRunner.test("Day 684 - APP_VERSION validation for Day 684", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 684");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 338, "Minor version should be >= 338 for Day 684");
+    }
+});
