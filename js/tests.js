@@ -18927,3 +18927,219 @@ TestRunner.test("Day 686 - APP_VERSION validation for Day 686", (t) => {
         t.assertTruthy(versionParts[1] >= 339, "Minor version should be >= 339 for Day 686");
     }
 });
+
+
+// --- Day 687: Performance Monitor and Dropped Callbacks State Function Tests ---
+TestRunner.test("Day 687 - getPerformanceMonitorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getPerformanceMonitorState'), 'getPerformanceMonitorState should be exported');
+});
+
+TestRunner.test("Day 687 - getPerformanceMonitorState returns object copy", (t) => {
+    const funcStr = getPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('{...performanceMonitorState}') || funcStr.includes('return { ...performanceMonitorState }'), 'getPerformanceMonitorState should return object copy');
+});
+
+TestRunner.test("Day 687 - getPerformanceMonitorEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getPerformanceMonitorEnabledState'), 'getPerformanceMonitorEnabledState should be exported');
+});
+
+TestRunner.test("Day 687 - getPerformanceMonitorEnabledState uses !! for boolean coercion", (t) => {
+    const funcStr = getPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcStr.includes('!!performanceMonitorState.enabled'), 'getPerformanceMonitorEnabledState should use !! boolean coercion');
+});
+
+TestRunner.test("Day 687 - setPerformanceMonitorEnabledState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setPerformanceMonitorEnabledState'), 'setPerformanceMonitorEnabledState should be exported');
+});
+
+TestRunner.test("Day 687 - setPerformanceMonitorEnabledState uses !! for boolean coercion", (t) => {
+    const funcStr = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcStr.includes('const nextValue = !!value'), 'setPerformanceMonitorEnabledState should use !! for boolean coercion');
+});
+
+TestRunner.test("Day 687 - setPerformanceMonitorEnabledState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setPerformanceMonitorEnabledState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 687 - setPerformanceMonitorEnabledState has descriptive undo label", (t) => {
+    const funcStr = setPerformanceMonitorEnabledState.toString();
+    t.assertTruthy(funcStr.includes('Toggle Performance Monitor'), 'setPerformanceMonitorEnabledState should have descriptive undo label');
+});
+
+TestRunner.test("Day 687 - getAudioContextStateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getAudioContextStateState'), 'getAudioContextStateState should be exported');
+});
+
+TestRunner.test("Day 687 - setAudioContextStateState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setAudioContextStateState'), 'setAudioContextStateState should be exported');
+});
+
+TestRunner.test("Day 687 - setAudioContextStateState validates against validValues", (t) => {
+    const funcStr = setAudioContextStateState.toString();
+    t.assertTruthy(funcStr.includes('validValues') && funcStr.includes('running') && funcStr.includes('suspended'), 'setAudioContextStateState should validate against validValues');
+});
+
+TestRunner.test("Day 687 - setAudioContextStateState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = setAudioContextStateState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setAudioContextStateState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 687 - getCPUUsageState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getCPUUsageState'), 'getCPUUsageState should be exported');
+});
+
+TestRunner.test("Day 687 - getCPUUsageState references performanceMonitorState.cpuUsage", (t) => {
+    const funcStr = getCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('performanceMonitorState.cpuUsage'), 'getCPUUsageState should reference performanceMonitorState.cpuUsage');
+});
+
+TestRunner.test("Day 687 - setCPUUsageState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setCPUUsageState'), 'setCPUUsageState should be exported');
+});
+
+TestRunner.test("Day 687 - setCPUUsageState uses parseFloat for input conversion", (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('parseFloat(value)'), 'setCPUUsageState should use parseFloat for input conversion');
+});
+
+TestRunner.test("Day 687 - setCPUUsageState uses Number.isFinite validation", (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('Number.isFinite(num)'), 'setCPUUsageState should use Number.isFinite validation');
+});
+
+TestRunner.test("Day 687 - setCPUUsageState clamps value to 0-100 range", (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('Math.max(0') && funcStr.includes('Math.min(100', 'setCPUUsageState should clamp value to 0-100 range'));
+});
+
+TestRunner.test("Day 687 - setCPUUsageState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setCPUUsageState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 687 - setCPUUsageState has descriptive undo label", (t) => {
+    const funcStr = setCPUUsageState.toString();
+    t.assertTruthy(funcStr.includes('Set CPU Usage to'), 'setCPUUsageState should have descriptive undo label');
+});
+
+TestRunner.test("Day 687 - getMemoryPressureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getMemoryPressureState'), 'getMemoryPressureState should be exported');
+});
+
+TestRunner.test("Day 687 - setMemoryPressureState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setMemoryPressureState'), 'setMemoryPressureState should be exported');
+});
+
+TestRunner.test("Day 687 - setMemoryPressureState validates against validValues", (t) => {
+    const funcStr = setMemoryPressureState.toString();
+    t.assertTruthy(funcStr.includes('validValues') && funcStr.includes('none') && funcStr.includes('low') && funcStr.includes('medium') && funcStr.includes('high'), 'setMemoryPressureState should validate against valid memory pressure values');
+});
+
+TestRunner.test("Day 687 - setMemoryPressureState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = setMemoryPressureState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setMemoryPressureState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 687 - getActiveVoicesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getActiveVoicesState'), 'getActiveVoicesState should be exported');
+});
+
+TestRunner.test("Day 687 - setActiveVoicesState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setActiveVoicesState'), 'setActiveVoicesState should be exported');
+});
+
+TestRunner.test("Day 687 - setActiveVoicesState uses parseInt for input conversion", (t) => {
+    const funcStr = setActiveVoicesState.toString();
+    t.assertTruthy(funcStr.includes('parseInt(value)'), 'setActiveVoicesState should use parseInt for input conversion');
+});
+
+TestRunner.test("Day 687 - setActiveVoicesState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = setActiveVoicesState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'setActiveVoicesState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 687 - getAudioLatencyState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getAudioLatencyState'), 'getAudioLatencyState should be exported');
+});
+
+TestRunner.test("Day 687 - setAudioLatencyState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setAudioLatencyState'), 'setAudioLatencyState should be exported');
+});
+
+TestRunner.test("Day 687 - setAudioLatencyState uses parseFloat for input conversion", (t) => {
+    const funcStr = setAudioLatencyState.toString();
+    t.assertTruthy(funcStr.includes('parseFloat(value)'), 'setAudioLatencyState should use parseFloat for input conversion');
+});
+
+TestRunner.test("Day 687 - setAudioLatencyState has descriptive undo label with ms", (t) => {
+    const funcStr = setAudioLatencyState.toString();
+    t.assertTruthy(funcStr.includes('Set Audio Latency to') && funcStr.includes('ms'), 'setAudioLatencyState should have descriptive undo label with ms');
+});
+
+TestRunner.test("Day 687 - getDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function getDroppedCallbacksState'), 'getDroppedCallbacksState should be exported');
+});
+
+TestRunner.test("Day 687 - setDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function setDroppedCallbacksState'), 'setDroppedCallbacksState should be exported');
+});
+
+TestRunner.test("Day 687 - setDroppedCallbacksState uses parseInt for input conversion", (t) => {
+    const funcStr = setDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('parseInt(value)'), 'setDroppedCallbacksState should use parseInt for input conversion');
+});
+
+TestRunner.test("Day 687 - incrementDroppedCallbacksState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function incrementDroppedCallbacksState'), 'incrementDroppedCallbacksState should be exported');
+});
+
+TestRunner.test("Day 687 - incrementDroppedCallbacksState increments counter", (t) => {
+    const funcStr = incrementDroppedCallbacksState.toString();
+    t.assertTruthy(funcStr.includes('performanceMonitorState.droppedCallbacks++') || funcStr.includes('droppedCallbacks++'), 'incrementDroppedCallbacksState should increment the counter');
+});
+
+TestRunner.test("Day 687 - resetPerformanceMonitorState is a function export", (t) => {
+    const stateStr = require('fs').readFileSync('./js/state.js', 'utf8');
+    t.assertTruthy(stateStr.includes('export function resetPerformanceMonitorState'), 'resetPerformanceMonitorState should be exported');
+});
+
+TestRunner.test("Day 687 - resetPerformanceMonitorState calls captureStateForUndoIfAllowed", (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('captureStateForUndoIfAllowed'), 'resetPerformanceMonitorState should call captureStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 687 - resetPerformanceMonitorState has descriptive Reset Performance Monitor undo label", (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('Reset Performance Monitor'), 'resetPerformanceMonitorState should have descriptive undo label');
+});
+
+TestRunner.test("Day 687 - resetPerformanceMonitorState resets all performance monitor fields", (t) => {
+    const funcStr = resetPerformanceMonitorState.toString();
+    t.assertTruthy(funcStr.includes('enabled = false') && funcStr.includes('audioContextState = ') && funcStr.includes('cpuUsage = 0') && funcStr.includes('memoryPressure = ') && funcStr.includes('activeVoices = 0'), 'resetPerformanceMonitorState should reset all fields');
+});
+
+TestRunner.test("Day 687 - APP_VERSION validation for Day 687", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 687");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 340, "Minor version should be >= 340 for Day 687");
+    }
+});
