@@ -19374,3 +19374,27 @@ TestRunner.test("Day 689 - APP_VERSION validation for Day 689", (t) => {
         t.assertTruthy(versionParts[1] >= 343, "Minor version should be >= 343 for Day 689");
     }
 });
+
+// Day 690: initializeAudioModule Audio Function Tests
+TestRunner.test("Day 690 - initializeAudioModule is a function export", (t) => {
+    const audioStr = initializeAudioModule.toString();
+    t.assertTruthy(audioStr.includes('export function'), 'initializeAudioModule should be exported');
+});
+TestRunner.test("Day 690 - initializeAudioModule accepts 1 parameter", (t) => {
+    t.assertEqual(initializeAudioModule.length, 1, 'initializeAudioModule should accept 1 parameter');
+});
+TestRunner.test("Day 690 - initializeAudioModule references appServicesFromMain parameter", (t) => {
+    const funcStr = initializeAudioModule.toString();
+    t.assertTruthy(funcStr.includes('appServicesFromMain'), 'initializeAudioModule should reference appServicesFromMain');
+});
+TestRunner.test("Day 690 - initializeAudioModule sets localAppServices", (t) => {
+    const funcStr = initializeAudioModule.toString();
+    t.assertTruthy(funcStr.includes('localAppServices'), 'initializeAudioModule should set localAppServices');
+});
+TestRunner.test("Day 690 - APP_VERSION validation for Day 690", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 690');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 343, 'Minor version should be >= 343 for Day 690');
+    }
+});
