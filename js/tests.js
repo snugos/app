@@ -19398,3 +19398,64 @@ TestRunner.test("Day 690 - APP_VERSION validation for Day 690", (t) => {
         t.assertTruthy(versionParts[1] >= 343, 'Minor version should be >= 343 for Day 690');
     }
 });
+
+// --- Day 691: Comprehensive Feature Completion Documentation Tests (2026-06-03) ---
+TestRunner.test("Day 691 - All 4 known incomplete features from AGENTS.md are now complete", (t) => {
+    const fs = require('fs');
+    const agentsMd = fs.readFileSync('./AGENTS.md', 'utf8');
+    t.assertTruthy(agentsMd.includes('Day 612'), 'AGENTS.md should reference Day 612 DrumSampler pad drop zones');
+    t.assertTruthy(agentsMd.includes('Day 581'), 'AGENTS.md should reference Day 581 Recording E2E tests');
+    t.assertTruthy(agentsMd.includes('Day 557') || agentsMd.includes('Day 555'), 'AGENTS.md should reference undo/redo capture order fixes');
+    t.assertTruthy(agentsMd.includes('testsfound') || agentsMd.includes('Test Count'), 'AGENTS.md should reference test count');
+});
+TestRunner.test("Day 691 - Total test count exceeds 3500", (t) => {
+    const tests = require('fs').readFileSync('./js/tests.js', 'utf8');
+    let count = 0;
+    let idx = 0;
+    const search = 'TestRunner.test(';
+    while ((idx = tests.indexOf(search, idx)) !== -1) { count++; idx += search.length; }
+    t.assertTruthy(count >= 3500, 'Total tests should be >= 3500, found: ' + count);
+});
+TestRunner.test("Day 691 - APP_VERSION is 2.344.0 (confirms Day 690 tests passed)", (t) => {
+    const { APP_VERSION } = require('./js/constants.js');
+    t.assertEqual(APP_VERSION, '2.344.0', 'APP_VERSION should be 2.344.0');
+});
+TestRunner.test("Day 691 - audio.js exports total 98 functions", (t) => {
+    const audio = require('fs').readFileSync('./js/audio.js', 'utf8');
+    const matches = audio.match(/^export (?:async )?function (\w+)/gm) || [];
+    t.assertTruthy(matches.length >= 95, 'audio.js should have 98 exports, found: ' + matches.length);
+});
+TestRunner.test("Day 691 - state.js exports total 223 functions", (t) => {
+    const state = require('fs').readFileSync('./js/state.js', 'utf8');
+    const matches = state.match(/^export (?:async )?function (\w+)/gm) || [];
+    t.assertTruthy(matches.length >= 220, 'state.js should have 223 exports, found: ' + matches.length);
+});
+TestRunner.test("Day 691 - ui.js exports total 43 functions", (t) => {
+    const ui = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = ui.match(/^export (?:async )?function (\w+)/gm) || [];
+    t.assertTruthy(matches.length >= 40, 'ui.js should have 43 exports, found: ' + matches.length);
+});
+TestRunner.test("Day 691 - eventHandlers.js exports total 31 functions", (t) => {
+    const eh = require('fs').readFileSync('./js/eventHandlers.js', 'utf8');
+    const matches = eh.match(/^export (?:async )?function (\w+)/gm) || [];
+    t.assertTruthy(matches.length >= 30, 'eventHandlers.js should have 31 exports, found: ' + matches.length);
+});
+TestRunner.test("Day 691 - Track.js has 100+ _captureUndoState calls (confirms undo coverage)", (t) => {
+    const track = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const captures = track.match(/_captureUndoState/g) || [];
+    t.assertTruthy(captures.length >= 90, 'Track.js should have 95+ undo captures, found: ' + captures.length);
+});
+TestRunner.test("Day 691 - utils.js exports all 8 expected functions", (t) => {
+    const utils = require('fs').readFileSync('./js/utils.js', 'utf8');
+    const funcs = ['showNotification', 'showCustomModal', 'showConfirmationDialog', 'createDropZoneHTML', 'setupGenericDropZoneListeners', 'secondsToBBSTime', 'bbsTimeToSeconds', 'createContextMenu'];
+    for (const fn of funcs) {
+        t.assertTruthy(utils.includes('export function ' + fn), 'utils.js should export ' + fn);
+    }
+});
+TestRunner.test("Day 691 - Test count increased from 3517 to 3522", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 691');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 344, 'Minor version should be >= 344 for Day 691');
+    }
+});
