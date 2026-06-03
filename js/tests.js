@@ -19268,3 +19268,109 @@ TestRunner.test("Day 688 - APP_VERSION validation for Day 688", (t) => {
         t.assertTruthy(versionParts[1] >= 342, "Minor version should be >= 342 for Day 688");
     }
 });
+// --- Day 689: Master Effect Audio Functions Tests ---
+TestRunner.test("Day 689 - addMasterEffectToAudio is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function addMasterEffectToAudio'), 'addMasterEffectToAudio should be exported');
+});
+
+TestRunner.test("Day 689 - addMasterEffectToAudio accepts 3 parameters", (t) => {
+    t.assertEqual(addMasterEffectToAudio.length, 3, 'addMasterEffectToAudio should accept 3 parameters');
+});
+
+TestRunner.test("Day 689 - addMasterEffectToAudio calls createEffectInstance", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('createEffectInstance'), 'addMasterEffectToAudio should call createEffectInstance');
+});
+
+TestRunner.test("Day 689 - addMasterEffectToAudio stores result in activeMasterEffectNodes", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes.set'), 'addMasterEffectToAudio should store result in activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 689 - addMasterEffectToAudio calls rebuildMasterEffectChain", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'addMasterEffectToAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test("Day 689 - addMasterEffectToAudio shows notification on failure", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('localAppServices.showNotification'), 'addMasterEffectToAudio should show notification on failure');
+});
+
+TestRunner.test("Day 689 - addMasterEffectToAudio has error handling with try/catch", (t) => {
+    const funcStr = addMasterEffectToAudio.toString();
+    t.assertTruthy(funcStr.includes('try {') && funcStr.includes('catch'), 'addMasterEffectToAudio should have try/catch');
+});
+
+TestRunner.test("Day 689 - removeMasterEffectFromAudio is an async function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export async function removeMasterEffectFromAudio'), 'removeMasterEffectFromAudio should be exported');
+});
+
+TestRunner.test("Day 689 - removeMasterEffectFromAudio accepts 1 parameter", (t) => {
+    t.assertEqual(removeMasterEffectFromAudio.length, 1, 'removeMasterEffectFromAudio should accept 1 parameter');
+});
+
+TestRunner.test("Day 689 - removeMasterEffectFromAudio gets node from activeMasterEffectNodes", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes.get'), 'removeMasterEffectFromAudio should get node from activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 689 - removeMasterEffectFromAudio calls disconnect on effectNode", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('effectNode.disconnect()'), 'removeMasterEffectFromAudio should call disconnect');
+});
+
+TestRunner.test("Day 689 - removeMasterEffectFromAudio calls dispose on effectNode", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('effectNode.dispose()'), 'removeMasterEffectFromAudio should call dispose');
+});
+
+TestRunner.test("Day 689 - removeMasterEffectFromAudio deletes from activeMasterEffectNodes", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes.delete'), 'removeMasterEffectFromAudio should delete from activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 689 - removeMasterEffectFromAudio calls rebuildMasterEffectChain", (t) => {
+    const funcStr = removeMasterEffectFromAudio.toString();
+    t.assertTruthy(funcStr.includes('rebuildMasterEffectChain'), 'removeMasterEffectFromAudio should call rebuildMasterEffectChain');
+});
+
+TestRunner.test("Day 689 - updateMasterEffectParamInAudio is a function export", (t) => {
+    const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
+    t.assertTruthy(audioStr.includes('export function updateMasterEffectParamInAudio'), 'updateMasterEffectParamInAudio should be exported');
+});
+
+TestRunner.test("Day 689 - updateMasterEffectParamInAudio accepts 3 parameters", (t) => {
+    t.assertEqual(updateMasterEffectParamInAudio.length, 3, 'updateMasterEffectParamInAudio should accept 3 parameters');
+});
+
+TestRunner.test("Day 689 - updateMasterEffectParamInAudio gets effectNode from activeMasterEffectNodes", (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('activeMasterEffectNodes.get'), 'updateMasterEffectParamInAudio should get node from activeMasterEffectNodes');
+});
+
+TestRunner.test("Day 689 - updateMasterEffectParamInAudio checks node.disposed", (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('effectNode.disposed'), 'updateMasterEffectParamInAudio should check disposed');
+});
+
+TestRunner.test("Day 689 - updateMasterEffectParamInAudio uses rampTo for smooth transitions", (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('rampTo'), 'updateMasterEffectParamInAudio should use rampTo for smooth transitions');
+});
+
+TestRunner.test("Day 689 - updateMasterEffectParamInAudio has try/catch error handling", (t) => {
+    const funcStr = updateMasterEffectParamInAudio.toString();
+    t.assertTruthy(funcStr.includes('try {') && funcStr.includes('catch'), 'updateMasterEffectParamInAudio should have try/catch');
+});
+
+TestRunner.test("Day 689 - APP_VERSION validation for Day 689", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 689");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 343, "Minor version should be >= 343 for Day 689");
+    }
+});
