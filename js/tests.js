@@ -18783,3 +18783,76 @@ TestRunner.test("Day 684 - APP_VERSION validation for Day 684", (t) => {
         t.assertTruthy(versionParts[1] >= 338, "Minor version should be >= 338 for Day 684");
     }
 });
+
+// --- Day 685: Recording Input Gain Audio Function Tests ---
+TestRunner.test("Day 685 - getRecordingInputGainNode is a function export", (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'getRecordingInputGainNode should be exported');
+});
+
+TestRunner.test("Day 685 - getRecordingInputGainNode accepts 0 parameters", (t) => {
+    t.assertEqual(getRecordingInputGainNode.length, 0, 'getRecordingInputGainNode should accept 0 parameters');
+});
+
+TestRunner.test("Day 685 - getRecordingInputGainNode checks if node is disposed", (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('.disposed'), 'getRecordingInputGainNode should check .disposed property');
+});
+
+TestRunner.test("Day 685 - getRecordingInputGainNode creates Tone.Gain when disposed or null", (t) => {
+    const funcStr = getRecordingInputGainNode.toString();
+    t.assertTruthy(funcStr.includes('new Tone.Gain'), 'getRecordingInputGainNode should create new Tone.Gain node');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain is a function export", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('export function'), 'setRecordingInputGain should be exported');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain accepts 1 parameter", (t) => {
+    t.assertEqual(setRecordingInputGain.length, 1, 'setRecordingInputGain should accept 1 parameter');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain uses parseFloat for input conversion", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('parseFloat'), 'setRecordingInputGain should use parseFloat for conversion');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain clamps value to MIN_RECORDING_INPUT_GAIN and MAX_RECORDING_INPUT_GAIN range", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'setRecordingInputGain should clamp value with Math.max/min');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain uses Number.isFinite validation", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Number.isFinite'), 'setRecordingInputGain should use Number.isFinite validation');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain calls captureAudioStateForUndoIfAllowed on value change", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('captureAudioStateForUndoIfAllowed'), 'setRecordingInputGain should call captureAudioStateForUndoIfAllowed');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain has descriptive undo label with gain value", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('Set Recording Input Gain to'), 'setRecordingInputGain undo label should mention gain value');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain updates recordingInputGainNode.gain.value", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('.gain.value'), 'setRecordingInputGain should update .gain.value');
+});
+
+TestRunner.test("Day 685 - setRecordingInputGain returns the gain value", (t) => {
+    const funcStr = setRecordingInputGain.toString();
+    t.assertTruthy(funcStr.includes('return recordingInputGainValue'), 'setRecordingInputGain should return recordingInputGainValue');
+});
+
+TestRunner.test("Day 685 - APP_VERSION validation for Day 685", (t) => {
+    const version = require("./js/constants.js").APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 685");
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 338, "Minor version should be >= 338 for Day 685");
+    }
+});
