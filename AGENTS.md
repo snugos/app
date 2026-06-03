@@ -2628,3 +2628,19 @@
   - APP_VERSION validation (>= 2.335 for Day 681)
 - **Version**: Bumped to 2.335.0
 - **Test Count**: Increased from 3294 to 3328
+
+#### Day 684: Event Handler Keyboard Shortcut Function Tests (2026-06-03)
+- **Tests**: Added 32 tests for Event Handler keyboard shortcut functions in eventHandlers.js
+- **Files Modified**:
+  - `js/tests.js`: Added Day 684 test block with 32 tests
+  - `js/constants.js`: Bumped APP_VERSION to 2.338.0
+- **Test Details** (`js/tests.js`): 32 tests covering:
+  - **toggleMidiLearnMode** (5 tests): is a function export, accepts 0 parameters, references localAppServices.getMidiLearnMode, references localAppServices.setMidiLearnMode, shows notification with ON/OFF state
+  - **toggleScaleModeShortcut** (6 tests): is a function export, accepts 0 parameters, gets armed track via getArmedTrackId, checks track type (Synth/Sampler/DrumSampler/InstrumentSampler), calls openScaleModeWindow when available, shows ON/OFF notification
+  - **toggleChordModeShortcut** (6 tests): is a function export, accepts 0 parameters, gets armed track via getArmedTrackId, checks track type (Synth/Sampler/DrumSampler/InstrumentSampler), calls openChordModeWindow when available, shows ON/OFF notification
+  - **openTransportSettingsShortcut** (3 tests): is a function export, accepts 0 parameters, calls localAppServices.openTransportSettingsWindow
+  - **toggleMuteShortcut** (6 tests): is a function export, accepts 0 parameters, gets armed track via getArmedTrackId, checks localAppServices.isTrackMuted, calls localAppServices.setTrackMuted, shows notification with track name
+  - **toggleSoloShortcut** (5 tests): is a function export, accepts 0 parameters, gets armed track via getArmedTrackId, calls localAppServices.setSoloedTrackId, shows notification with track name
+  - APP_VERSION validation (>= 2.338 for Day 684)
+- **Version**: Bumped to 2.338.0
+- **Test Count**: Increased from 3370 to 3402
