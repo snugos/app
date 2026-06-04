@@ -1876,6 +1876,166 @@ export class Track {
         return removedCount;
     }
 
+    // Fill empty cells that are surrounded by active notes on both sides
+    // factor: 0.0 to 1.0, probability of filling an empty cell (1.0 = fill all qualifying)
+    // velocity: optional velocity to use for filled cells (defaults to a softer velocity)
+    fillGaps(factor = 0.5, velocity = null) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} fillGaps] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp factor to valid range
+        const minFactor = Constants.FILL_GAPS_MIN_FACTOR || 0.1;
+        const maxFactor = Constants.FILL_GAPS_MAX_FACTOR || 1.0;
+        const clampedFactor = Math.max(minFactor, Math.min(maxFactor, factor));
+
+        // Determine default velocity from neighbors or from a default
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const velocityScale = Constants.FILL_GAPS_VELOCITY_SCALE || 0.8;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Fill Gaps (${Math.round(clampedFactor * 100)}%) on ${activeSeq.name}`);
+
+        let filledCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+                continue;
+            }
+            const row = activeSeq.data[rowIndex];
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (cell && cell.active) continue; // Already active, skip
+
+                // Check if there are active notes on both sides within 3 steps
+                let leftActive = false;
+                let rightActive = false;
+                let leftVel = 0;
+                let rightVel = 0;
+                let leftCount = 0;
+                let rightCount = 0;
+
+                // Check left side (1-3 steps back)
+                for (let offset = 1; offset <= 3; offset++) {
+                    const leftCol = col - offset;
+                    if (leftCol < 0) break;
+                    if (row[leftCol] && row[leftCol].active) {
+                        leftActive = true;
+                        leftVel += (row[leftCol].velocity || defaultVel);
+                        leftCount++;
+                    }
+                }
+                // Check right side (1-3 steps ahead)
+                for (let offset = 1; offset <= 3; offset++) {
+                    const rightCol = col + offset;
+                    if (rightCol >= totalSteps) break;
+                    if (row[rightCol] && row[rightCol].active) {
+                        rightActive = true;
+                        rightVel += (row[rightCol].velocity || defaultVel);
+                        rightCount++;
+                    }
+                }
+
+                // Only fill if there are active notes on both sides
+                if (leftActive && rightActive && Math.random() < clampedFactor) {
+                    const avgLeft = leftCount > 0 ? leftVel / leftCount : defaultVel;
+                    const avgRight = rightCount > 0 ? rightVel / rightCount : defaultVel;
+                    const useVel = velocity !== null ? velocity : ((avgLeft + avgRight) / 2) * velocityScale;
+                    const clampedVel = Math.max(0.05, Math.min(1.0, useVel));
+                    row[col] = { active: true, velocity: Math.round(clampedVel * 100) / 100 };
+                    filledCount++;
+                }
+            }
+        }
+
+        return filledCount;
+    }
+
+    // Prune redundant consecutive duplicate note patterns to simplify the sequence
+    // maxRepeats: maximum allowed consecutive identical notes per row before pruning
+    // mode: 'remove-all-but-first', 'thin-out', 'decrement-velocity'
+    pruneRedundancy(maxRepeats = 4, mode = 'remove-all-but-first') {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} pruneRedundancy] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp maxRepeats
+        const minR = Constants.PRUNE_REDUNDANCY_MIN_REPEATS || 2;
+        const maxR = Constants.PRUNE_REDUNDANCY_MAX_REPEATS || 16;
+        const clampedRepeats = Math.max(minR, Math.min(maxR, maxRepeats));
+
+        // Validate mode
+        const validModes = ['remove-all-but-first', 'thin-out', 'decrement-velocity'];
+        const useMode = validModes.includes(mode) ? mode : 'remove-all-but-first';
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Prune Redundancy (${useMode}, max ${clampedRepeats}) on ${activeSeq.name}`);
+
+        let prunedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) continue;
+            const row = activeSeq.data[rowIndex];
+            let runStart = -1;
+            let runLength = 0;
+
+            for (let col = 0; col <= totalSteps; col++) {
+                const isActive = col < totalSteps && row[col] && row[col].active;
+                if (isActive) {
+                    if (runStart === -1) {
+                        runStart = col;
+                        runLength = 1;
+                    } else {
+                        runLength++;
+                    }
+                } else {
+                    if (runLength > clampedRepeats) {
+                        // Found a long run of consecutive active notes
+                        if (useMode === 'remove-all-but-first') {
+                            for (let k = runStart + 1; k < runStart + runLength; k++) {
+                                row[k] = null;
+                                prunedCount++;
+                            }
+                        } else if (useMode === 'thin-out') {
+                            // Keep every other note in the run
+                            for (let k = runStart + 1; k < runStart + runLength; k++) {
+                                if ((k - runStart) % 2 === 0) {
+                                    row[k] = null;
+                                    prunedCount++;
+                                }
+                            }
+                        } else if (useMode === 'decrement-velocity') {
+                            // Reduce velocity of later notes in the run
+                            for (let k = runStart + 1; k < runStart + runLength; k++) {
+                                if (row[k] && row[k].velocity !== undefined) {
+                                    const reduction = 0.1 * (k - runStart);
+                                    const newVel = Math.max(0.05, (row[k].velocity || 0.7) - reduction);
+                                    row[k].velocity = Math.round(newVel * 100) / 100;
+                                    prunedCount++;
+                                }
+                            }
+                        }
+                    }
+                    runStart = -1;
+                    runLength = 0;
+                }
+            }
+        }
+
+        return prunedCount;
+    }
+
     reverseSequence() {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();

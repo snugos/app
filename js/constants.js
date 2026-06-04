@@ -43,6 +43,17 @@ export const MAX_TEMPO = 999; // Maximum tempo in BPM
 export const RANDOMIZE_DENSITY_MIN = 0.05; // Minimum density (5% chance per cell)
 export const RANDOMIZE_DENSITY_MAX = 0.95; // Maximum density (95% chance per cell)
 export const RANDOMIZE_DENSITY_DEFAULT = 0.25; // Default density (25% chance per cell)
+
+// Fill Gaps Sequence Constants
+export const FILL_GAPS_MIN_FACTOR = 0.1; // Minimum fill factor (10% chance to fill an empty cell)
+export const FILL_GAPS_MAX_FACTOR = 1.0; // Maximum fill factor (100% chance)
+export const FILL_GAPS_DEFAULT_FACTOR = 0.5; // Default fill factor (50% chance)
+export const FILL_GAPS_VELOCITY_SCALE = 0.8; // Filled notes get 80% of surrounding average velocity
+
+// Prune Redundancy Sequence Constants
+export const PRUNE_REDUNDANCY_MIN_REPEATS = 2; // Minimum consecutive repeats to trigger pruning
+export const PRUNE_REDUNDANCY_MAX_REPEATS = 16; // Maximum consecutive repeats to keep
+
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 
 // Transport State Constants
