@@ -1554,6 +1554,7 @@ TestRunner.test('DrumSampler Pad - createDropZoneHTML handles all status types',
         const html = createDropZoneHTML('track1', 'input1', 'DrumSampler', 0, { originalFileName: 'test.wav', status: status });
         t.assertTruthy(html.includes('drop-zone'), `Should create drop zone HTML for status: ${status}`);
     });
+});
 
 TestRunner.test('DrumSampler Pad - setupGenericDropZoneListeners passes correct pad index', (t) => {
     // Test that the setup function passes pad index correctly
@@ -8653,6 +8654,7 @@ TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline is a function export",
 TestRunner.test("Day 616 - Timeline Zoom - zoomInTimeline calls setTimelineZoomLevelState", (t) => {
     const funcBody = zoomInTimeline.toString();
     t.assertTruthy(funcBody.includes('setTimelineZoomLevelState'), 'zoomInTimeline should call setTimelineZoomLevelState');
+});
 TestRunner.test("Day 616 - Track Armed/Solo/Mute - APP_VERSION validation for Day 616", (t) => {
     const versionParts = APP_VERSION.split('.').map(Number); t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 616'); if (versionParts[0] === 2) { t.assertTruthy(versionParts[1] >= 271, 'Minor version should be >= 271 for Day 616'); }
 });
@@ -18549,6 +18551,7 @@ TestRunner.test("Day 682 - APP_VERSION validation for Day 682 - updateSoundBrows
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 336, "Minor version should be >= 336 for Day 682");
     }
+});
 // --- Day 683: handleTimelineLaneDrop Event Handler Function Tests ---
 
 TestRunner.test("Day 683 - handleTimelineLaneDrop is a function export", (t) => {
@@ -18853,7 +18856,7 @@ TestRunner.test("Day 685 - APP_VERSION validation for Day 685", (t) => {
     if (versionParts[0] === 2) {
         t.assertTruthy(versionParts[1] >= 338, "Minor version should be >= 338 for Day 685");
     }
-}
+});
 // --- Day 686: rebuildMasterEffectChain Audio Function Tests ---
 TestRunner.test("Day 686 - rebuildMasterEffectChain is a function export", (t) => {
     const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
