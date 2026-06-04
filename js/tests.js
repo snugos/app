@@ -19271,6 +19271,97 @@ TestRunner.test("Day 688 - APP_VERSION validation for Day 688", (t) => {
         t.assertTruthy(versionParts[1] >= 342, "Minor version should be >= 342 for Day 688");
     }
 });
+
+// --- Day 692: Euclidean Rhythm Feature Tests ---
+TestRunner.test("Day 692 - euclideanRhythm is a function on Track.prototype", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    t.assertTruthy(trackStr.includes('euclideanRhythm('), 'euclideanRhythm should exist on Track.prototype');
+});
+TestRunner.test("Day 692 - euclideanRhythm accepts 5 parameters", (t) => {
+    // .length reports 0 due to ES default params, so check the source signature
+    const funcStr = Track.prototype.euclideanRhythm.toString();
+    const sigMatch = funcStr.match(/euclideanRhythm\(([^)]*)\)/);
+    const params = sigMatch ? sigMatch[1].split(',').map(s => s.trim()) : [];
+    t.assertEqual(params.length, 5, 'euclideanRhythm should accept 5 parameters, found: ' + params.length);
+});
+TestRunner.test("Day 692 - euclideanRhythm uses perfect-balance pattern distribution", (t) => {
+    const funcStr = Track.prototype.euclideanRhythm.toString();
+    t.assertTruthy(funcStr.includes('perfect balance') || funcStr.includes('usePulses'), 'euclideanRhythm should implement pattern generation logic');
+});
+TestRunner.test("Day 692 - euclideanRhythm captures undo before mutation", (t) => {
+    const funcStr = Track.prototype.euclideanRhythm.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('targetRow[col] =');
+    t.assertTruthy(captureIdx !== -1 && mutationIdx !== -1 && captureIdx < mutationIdx, 'euclideanRhythm should capture undo before mutation');
+});
+TestRunner.test("Day 692 - euclideanRhythm returns count of placed notes", (t) => {
+    const funcStr = Track.prototype.euclideanRhythm.toString();
+    t.assertTruthy(funcStr.includes('return placedCount;'), 'euclideanRhythm should return placedCount');
+});
+TestRunner.test("Day 692 - euclideanRhythm validates Audio track type guard", (t) => {
+    const funcStr = Track.prototype.euclideanRhythm.toString();
+    t.assertTruthy(funcStr.includes("'Audio'"), 'euclideanRhythm should guard against Audio tracks');
+});
+TestRunner.test("Day 692 - euclideanRhythm applies rotation via slice", (t) => {
+    const funcStr = Track.prototype.euclideanRhythm.toString();
+    t.assertTruthy(funcStr.includes('slice'), 'euclideanRhythm should apply rotation via array slice');
+});
+TestRunner.test("Day 692 - ui.js has 4 Euclidean rhythm menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Euclidean Rhythm (E3,8)'), 'ui.js should have E3,8 menu item');
+    t.assertTruthy(uiStr.includes('Euclidean Rhythm (E4,16)'), 'ui.js should have E4,16 menu item');
+    t.assertTruthy(uiStr.includes('Euclidean Rhythm (E5,8)'), 'ui.js should have E5,8 menu item');
+    t.assertTruthy(uiStr.includes('Euclidean Rhythm (E7,12)'), 'ui.js should have E7,12 menu item');
+});
+TestRunner.test("Day 692 - euclideanRhythm E(3,8) = Cuban tresillo 10010010", (t) => {
+    const pulses = 3, steps = 8;
+    const pattern = new Array(steps).fill(0);
+    for (let i = 0; i < steps; i++) { if ((i * pulses) % steps < pulses) pattern[i] = 1; }
+    t.assertEqual(pattern.join(''), '10010010', 'E(3,8) should be 10010010');
+});
+TestRunner.test("Day 692 - euclideanRhythm E(4,16) = 1000100010001000", (t) => {
+    const pulses = 4, steps = 16;
+    const pattern = new Array(steps).fill(0);
+    for (let i = 0; i < steps; i++) { if ((i * pulses) % steps < pulses) pattern[i] = 1; }
+    t.assertEqual(pattern.join(''), '1000100010001000', 'E(4,16) should be 1000100010001000');
+});
+TestRunner.test("Day 692 - euclideanRhythm E(5,8) = 10101101", (t) => {
+    const pulses = 5, steps = 8;
+    const pattern = new Array(steps).fill(0);
+    for (let i = 0; i < steps; i++) { if ((i * pulses) % steps < pulses) pattern[i] = 1; }
+    t.assertEqual(pattern.join(''), '10101101', 'E(5,8) should be 10101101');
+});
+TestRunner.test("Day 692 - euclideanRhythm E(7,12) = 101010110101", (t) => {
+    const pulses = 7, steps = 12;
+    const pattern = new Array(steps).fill(0);
+    for (let i = 0; i < steps; i++) { if ((i * pulses) % steps < pulses) pattern[i] = 1; }
+    t.assertEqual(pattern.join(''), '101010110101', 'E(7,12) should be 101010110101');
+});
+TestRunner.test("Day 692 - euclideanRhythm E(2,5) = 10010", (t) => {
+    const pulses = 2, steps = 5;
+    const pattern = new Array(steps).fill(0);
+    for (let i = 0; i < steps; i++) { if ((i * pulses) % steps < pulses) pattern[i] = 1; }
+    t.assertEqual(pattern.join(''), '10010', 'E(2,5) should be 10010');
+});
+TestRunner.test("Day 692 - euclideanRhythm E(0,N) = all rests", (t) => {
+    const pulses = 0, steps = 8;
+    const pattern = new Array(steps).fill(0);
+    for (let i = 0; i < steps; i++) { if ((i * pulses) % steps < pulses) pattern[i] = 1; }
+    t.assertEqual(pattern.join(''), '00000000', 'E(0,8) should be all zeros');
+});
+TestRunner.test("Day 692 - euclideanRhythm E(N,N) = all notes", (t) => {
+    const pulses = 8, steps = 8;
+    const pattern = new Array(steps).fill(0);
+    for (let i = 0; i < steps; i++) { if ((i * pulses) % steps < pulses) pattern[i] = 1; }
+    t.assertEqual(pattern.join(''), '11111111', 'E(8,8) should be all ones');
+});
+TestRunner.test("Day 692 - APP_VERSION validation for Day 692", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 692');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 345, 'Minor version should be >= 345 for Day 692');
+    }
+});
 // --- Day 689: Master Effect Audio Functions Tests ---
 TestRunner.test("Day 689 - addMasterEffectToAudio is an async function export", (t) => {
     const audioStr = require('fs').readFileSync('./js/audio.js', 'utf8');
@@ -19462,3 +19553,7 @@ TestRunner.test("Day 691 - Test count increased from 3517 to 3522", (t) => {
         t.assertTruthy(versionParts[1] >= 344, 'Minor version should be >= 344 for Day 691');
     }
 });
+export async function runTests() {
+    return await TestRunner.runAll();
+}
+

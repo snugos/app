@@ -4429,4 +4429,72 @@ export class Track {
 
         return ghostedCount;
     }
+
+    // Euclidean rhythm generator - distribute N pulses across M steps as evenly as possible
+    // Uses Bjorklund's algorithm to create classic world-music-style rhythms (e.g. E(3,8) = Cuban tresillo)
+    // pulses: number of notes to place (0 to total)
+    // totalSteps: total length of pattern in steps (clamped to sequence length)
+    // rotation: shifts the pattern start (0 = no shift)
+    // rowIndex: which row of the sequencer to apply the rhythm to (default: 0)
+    // velocity: optional velocity for the placed notes (defaults to Constants.defaultVelocity)
+    euclideanRhythm(pulses = Constants.EUCLIDEAN_DEFAULT_PULSES, totalSteps = null, rotation = 0, rowIndex = 0, velocity = null) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} euclideanRhythm] No active sequence found.`);
+            return 0;
+        }
+
+        // Determine total steps (default to sequence length)
+        const seqLength = activeSeq.length;
+        const useTotalSteps = totalSteps === null || totalSteps === undefined
+            ? seqLength
+            : Math.max(1, Math.min(totalSteps, seqLength));
+        const usePulses = Math.max(Constants.EUCLIDEAN_MIN_PULSES, Math.min(pulses, useTotalSteps));
+        const useRotation = ((rotation % useTotalSteps) + useTotalSteps) % useTotalSteps;
+        const useRow = Math.max(0, Math.min(rowIndex, activeSeq.data.length - 1));
+        const useVelocity = velocity === null || velocity === undefined
+            ? (Constants.defaultVelocity || 0.7)
+            : Math.max(0.05, Math.min(1.0, velocity));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Euclidean rhythm (E${usePulses},${useTotalSteps}) on ${activeSeq.name}`);
+
+        // Generate the Euclidean rhythm using the canonical "perfect balance"
+        // distribution: for each step i, place a pulse if (i * pulses) mod totalSteps < pulses.
+        // This produces the canonical Toussaint 2005 Bjorklund rhythm.
+        // E(3,8) = 10010010 (Cuban tresillo), E(5,8) = 10101101, etc.
+        const pattern = new Array(useTotalSteps).fill(0);
+        for (let i = 0; i < useTotalSteps; i++) {
+            if ((i * usePulses) % useTotalSteps < usePulses) {
+                pattern[i] = 1;
+            }
+        }
+
+        // Apply rotation
+        let rotatedPattern;
+        if (useRotation === 0) {
+            rotatedPattern = pattern;
+        } else {
+            rotatedPattern = pattern.slice(useRotation).concat(pattern.slice(0, useRotation));
+        }
+
+        // Ensure the target row exists
+        if (!activeSeq.data[useRow]) {
+            activeSeq.data[useRow] = Array(activeSeq.length).fill(null);
+        }
+        const targetRow = activeSeq.data[useRow];
+
+        let placedCount = 0;
+        for (let col = 0; col < useTotalSteps; col++) {
+            if (rotatedPattern[col] === 1) {
+                targetRow[col] = { active: true, velocity: useVelocity };
+                placedCount++;
+            } else {
+                targetRow[col] = null;
+            }
+        }
+
+        return placedCount;
+    }
 }

@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.344.0';
+export const APP_VERSION = '2.345.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -53,6 +53,14 @@ export const FILL_GAPS_VELOCITY_SCALE = 0.8; // Filled notes get 80% of surround
 // Prune Redundancy Sequence Constants
 export const PRUNE_REDUNDANCY_MIN_REPEATS = 2; // Minimum consecutive repeats to trigger pruning
 export const PRUNE_REDUNDANCY_MAX_REPEATS = 16; // Maximum consecutive repeats to keep
+
+// Euclidean Rhythm Constants (Bjorklund's algorithm)
+export const EUCLIDEAN_MIN_PULSES = 0; // 0 pulses = all rests
+export const EUCLIDEAN_MAX_PULSES = 64; // Upper bound for total steps
+export const EUCLIDEAN_DEFAULT_TOTAL = 16; // Default total steps (1 bar at 1/16)
+export const EUCLIDEAN_DEFAULT_PULSES = 4; // Default pulse count (4-on-the-floor)
+export const EUCLIDEAN_ROTATION_MIN = 0;
+export const EUCLIDEAN_ROTATION_MAX = 63;
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 
