@@ -18,6 +18,8 @@ import {
     removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio,
     reorderMasterEffectInAudio,
+    getCountInBars,
+    setCountInBars,
     initializeAudioModule
 } from './audio.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
@@ -829,9 +831,9 @@ const appServices = {
     setLoopRegionStartBar: setLoopRegionStartBarState,
     setLoopRegionEndBar: setLoopRegionEndBarState,
 
-    // Count-in
-    getCountInBars: () => typeof state_CountInState !== 'undefined' ? state_CountInState : 0,
-    setCountInBars: (bars) => { state_CountInState = bars; },
+    // Count-in (delegated to audio.js which has proper undo + clamp support)
+    getCountInBars: () => (typeof getCountInBars === 'function' ? getCountInBars() : 0),
+    setCountInBars: (bars) => { if (typeof setCountInBars === 'function') setCountInBars(bars); },
 
     // Master Automation
     getMasterAutomationArmed: getMasterAutomationArmedState,
