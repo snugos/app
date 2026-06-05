@@ -17,7 +17,8 @@ import {
     getSendBusNodes, getTrackSendNodes, getMasterEffectsBusInputNode, getMimeTypeFromFilename,
     removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio,
-    reorderMasterEffectInAudio
+    reorderMasterEffectInAudio,
+    initializeAudioModule
 } from './audio.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
@@ -42,7 +43,8 @@ import {
     openTrackGroupsWindow, openTimelineMarkersWindow, openTransportSettingsWindow,
     showKeyboardShortcutsHelpWindow,
     renderTimeline,
-    updatePlayheadPosition
+    updatePlayheadPosition,
+    initializeUIModule
 } from './ui.js';
 import {
     initializeStateModule, 
@@ -120,8 +122,21 @@ import {
     setChordModeRootState,
     setChordModeTypeState,
     setChordModeLockState,
+    setChordVoicingState,
     // Ghost Track state setters
     setGhostTrackIdState,
+    // Master Automation Arm state
+    getMasterAutomationArmedState,
+    setMasterAutomationArmedState,
+    // Loop Region state
+    getLoopRegionState,
+    getLoopRegionEnabledState,
+    getLoopRegionStartBarState,
+    getLoopRegionEndBarState,
+    setLoopRegionState,
+    setLoopRegionEnabledState,
+    setLoopRegionStartBarState,
+    setLoopRegionEndBarState,
     // Swing state setters
     setSwingState,
     setSwingEnabledState,
@@ -806,17 +821,21 @@ const appServices = {
     getRecordingTrackId: getRecordingTrackIdState,
 
     // Loop Region state
-    getLoopStartBars: () => { const s = state_LoopRegionState; return s ? s.startBar : null; },
-    getLoopEndBars: () => { const s = state_LoopRegionState; return s ? s.endBar : null; },
-    isLoopRegionEnabled: () => { const s = state_LoopRegionState; return s ? s.enabled : false; },
+    getLoopStartBars: getLoopRegionStartBarState,
+    getLoopEndBars: getLoopRegionEndBarState,
+    isLoopRegionEnabled: getLoopRegionEnabledState,
+    setLoopRegion: setLoopRegionState,
+    setLoopRegionEnabled: setLoopRegionEnabledState,
+    setLoopRegionStartBar: setLoopRegionStartBarState,
+    setLoopRegionEndBar: setLoopRegionEndBarState,
 
     // Count-in
-    getCountInBars: () => state_CountInState,
+    getCountInBars: () => typeof state_CountInState !== 'undefined' ? state_CountInState : 0,
     setCountInBars: (bars) => { state_CountInState = bars; },
 
     // Master Automation
-    masterAutomationArmed: (() => { const s = state_MasterAutomationArmedState; return s ? s.armed : false; })(),
-    setMasterAutomationArmed: (val) => { if (state_MasterAutomationArmedState) state_MasterAutomationArmedState.armed = val; },
+    getMasterAutomationArmed: getMasterAutomationArmedState,
+    setMasterAutomationArmed: setMasterAutomationArmedState,
 
     // Tap Tempo
     getTapTempoBpm: () => { return typeof getTapTempoBpmValue === 'function' ? getTapTempoBpmValue() : null; },
