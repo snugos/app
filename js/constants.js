@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.345.0';
+export const APP_VERSION = '2.346.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -61,6 +61,16 @@ export const EUCLIDEAN_DEFAULT_TOTAL = 16; // Default total steps (1 bar at 1/16
 export const EUCLIDEAN_DEFAULT_PULSES = 4; // Default pulse count (4-on-the-floor)
 export const EUCLIDEAN_ROTATION_MIN = 0;
 export const EUCLIDEAN_ROTATION_MAX = 63;
+
+// Stutter Notes Constants
+export const STUTTER_MIN_REPEATS = 2; // Minimum repeat count (2x = original + 1 repeat)
+export const STUTTER_MAX_REPEATS = 8; // Maximum repeat count (8x)
+export const STUTTER_DEFAULT_REPEATS = 4; // Default 4x stutter
+export const STUTTER_VELOCITY_DECAY_MIN = 0.3; // Minimum decay (0.3 = each repeat at 30% of prev)
+export const STUTTER_VELOCITY_DECAY_MAX = 1.0; // Maximum decay (1.0 = no decay)
+export const STUTTER_VELOCITY_DECAY_DEFAULT = 0.7; // Default velocity decay (70% per repeat)
+export const STUTTER_MIN_VELOCITY = 0.1; // Floor velocity for last repeat
+
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 

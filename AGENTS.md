@@ -2713,3 +2713,62 @@
   4. **Automated tests** - Now at 3,522 tests covering all exported functions
 - **Test Count**: Increased from 3517 to 3522
 - **Version**: Bumped to 2.344.0
+
+#### Day 694: Stutter Notes Feature (2026-06-07)
+- **Feature**: Added `stutterNotes(repeatCount, velocityDecay, skipOccupied)` method to Track class and 5 "Stutter Notes" menu items to sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `stutterNotes` method after `euclideanRhythm`
+  - `js/constants.js`: Added STUTTER_MIN_REPEATS, STUTTER_MAX_REPEATS, STUTTER_DEFAULT_REPEATS, STUTTER_VELOCITY_DECAY_MIN/MAX/DEFAULT, STUTTER_MIN_VELOCITY constants; bumped APP_VERSION to 2.346.0
+  - `js/ui.js`: Added 5 "Stutter Notes (Nx)" menu items in sequencer context menu after Euclidean Rhythm items
+  - `js/tests.js`: Added Day 694 test block with 24 tests for stutterNotes
+  - `AGENTS.md`: This entry
+- **Feature Details**:
+  - **stutterNotes** (`js/Track.js`): Repeats each active note N times in adjacent columns to create a fast repeated-note effect (like a delay stutter or 1/32 roll)
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `repeatCount` to `STUTTER_MIN_REPEATS` (2) - `STUTTER_MAX_REPEATS` (8) range
+    - Clamps `velocityDecay` to `STUTTER_VELOCITY_DECAY_MIN` (0.3) - `STUTTER_VELOCITY_DECAY_MAX` (1.0) range
+    - Captures undo state BEFORE mutation (following established pattern)
+    - Has descriptive "Stutter Notes (Nx)" undo label
+    - For each active note, places `repeatCount - 1` additional notes in subsequent columns
+    - Each subsequent note's velocity is multiplied by `decay^r` where r is the repeat index
+    - Respects `STUTTER_MIN_VELOCITY` (0.1) as the floor
+    - When `skipOccupied=true` (default), stops the chain when encountering an occupied slot
+    - Stops chain at end of sequence (`newCol >= totalSteps`)
+    - Returns count of newly stuttered notes
+  - **Stutter Notes Menu Items** (`js/ui.js`): 5 menu items in sequencer context menu after Euclidean Rhythm items
+    - "Stutter Notes (2x)" - calls `stutterNotes(2, 1.0)` - flat repeat (no velocity decay)
+    - "Stutter Notes (3x)" - calls `stutterNotes(3, 0.85)` - light decay
+    - "Stutter Notes (4x)" - calls `stutterNotes(4, 0.7)` - default decay
+    - "Stutter Notes (6x)" - calls `stutterNotes(6, 0.6)` - moderate decay
+    - "Stutter Notes (8x)" - calls `stutterNotes(8, 0.5)` - aggressive decay for fast rolls
+    - All call `recreateToneSequence(true)` and `updateTrackUI` after stuttering
+    - Show "Stuttered N note(s) at Nx." notification
+    - Show "No notes to stutter." when nothing to stutter
+- **Tests** (`js/tests.js`): 24 tests covering:
+  - `stutterNotes` is a function on Track.prototype
+  - `stutterNotes` accepts 3 parameters (repeatCount, velocityDecay, skipOccupied)
+  - Guards against Audio track type
+  - Validates active sequence via getActiveSequence
+  - Captures undo BEFORE mutation
+  - Has descriptive "Stutter Notes" undo label
+  - Clamps repeat count to STUTTER_MIN/MAX_REPEATS
+  - Clamps velocityDecay to STUTTER_VELOCITY_DECAY_MIN/MAX
+  - Returns count of stuttered notes
+  - Uses Math.pow for velocity decay calculation
+  - Respects sequence length boundary
+  - Supports skipOccupied parameter
+  - All 5 Stutter menu items exist (2x, 3x, 4x, 6x, 8x)
+  - Menu items call stutterNotes with correct parameters
+  - Menu items call recreateToneSequence after stutter
+  - Menu items call updateTrackUI
+  - Menu items show "Stuttered N note(s) at Nx." notification
+  - All 7 STUTTER constants are defined
+  - Functional test: 4x stutter with 0.7 decay on 0.8 velocity produces correct sequence
+  - 2x stutter places 1 new note per original
+  - 8x stutter places 7 new notes per original
+  - Respects STUTTER_MIN_VELOCITY floor
+  - skipOccupied chain break behavior is correct
+  - APP_VERSION validation (>= 2.346 for Day 694)
+- **Version**: Bumped to 2.346.0
+- **Test Count**: Increased from 3522 to 3546 (24 new tests)

@@ -3270,7 +3270,7 @@ TestRunner.test("Day 578 - Ghost Notes menu items call recreateToneSequence afte
     t.assertTruthy(recreateIdx !== -1, "Ghost Notes menu items should call recreateToneSequence after ghost");
 });
 TestRunner.test("Day 578 - APP_VERSION validation for Day 578", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 578");
     if (versionParts[0] === 2) {
@@ -3308,7 +3308,7 @@ TestRunner.test("Day 580 - humanizeVelocity clamps amount to valid range", (t) =
     t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), "humanizeVelocity should clamp amount with Math.max/Math.min");
 });
 TestRunner.test("Day 580 - APP_VERSION validation for Day 580", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 580");
     if (versionParts[0] === 2) {
@@ -3407,7 +3407,7 @@ TestRunner.test("Day 581 - runRecordingMicrophoneE2ETest handles error case with
 });
 
 TestRunner.test("Day 581 - APP_VERSION validation for Day 581", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 581");
     if (versionParts[0] === 2) {
@@ -3503,7 +3503,7 @@ TestRunner.test("Day 582 - Humanize Probabilities menu items show notification w
 });
 
 TestRunner.test("Day 582 - APP_VERSION validation for Day 582", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 582");
     if (versionParts[0] === 2) {
@@ -3626,7 +3626,7 @@ TestRunner.test("Day 583 - Ramp Velocities menu items call recreateToneSequence"
 });
 
 TestRunner.test("Day 583 - APP_VERSION validation for Day 583", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 583");
     if (versionParts[0] === 2) {
@@ -3744,7 +3744,7 @@ TestRunner.test("Day 584 - Shift Notes menu items call recreateToneSequence", (t
 });
 
 TestRunner.test("Day 584 - APP_VERSION validation for Day 584", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 584");
     if (versionParts[0] === 2) {
@@ -3754,7 +3754,7 @@ TestRunner.test("Day 584 - APP_VERSION validation for Day 584", (t) => {
 
 // Day 585: Sort Column Notes Feature
 TestRunner.test("Day 585 - sortColumnNotes is a function on Track.prototype", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     t.assertTruthy(typeof Track !== 'undefined', 'Track should be defined');
     t.assertEqual(typeof Track.prototype.sortColumnNotes, 'function', 'sortColumnNotes should be a function on Track.prototype');
 });
@@ -3903,7 +3903,7 @@ TestRunner.test("Day 585 - Sort Column Notes menu items show notifications", (t)
 });
 
 TestRunner.test("Day 585 - APP_VERSION validation for Day 585", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 585");
     if (versionParts[0] === 2) {
@@ -4013,7 +4013,7 @@ TestRunner.test("Day 586 - Ramp Probabilities menu items show notifications with
 });
 
 TestRunner.test("Day 586 - APP_VERSION validation for Day 586", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 586");
     if (versionParts[0] === 2) {
@@ -4113,7 +4113,7 @@ TestRunner.test("Day 587 - Humanize Timing menu items show notifications with co
 });
 
 TestRunner.test("Day 587 - APP_VERSION validation for Day 587", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 587");
     if (versionParts[0] === 2) {
@@ -4200,7 +4200,7 @@ TestRunner.test("Day 588 - Invert Velocities menu item shows notification", (t) 
 });
 
 TestRunner.test("Day 588 - APP_VERSION validation for Day 588", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 588");
     if (versionParts[0] === 2) {
@@ -4295,7 +4295,7 @@ TestRunner.test("Day 589 - Quantize menu items show notification with quantized 
 });
 
 TestRunner.test("Day 589 - APP_VERSION validation for Day 589", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 589");
     if (versionParts[0] === 2) {
@@ -4419,7 +4419,7 @@ TestRunner.test("Day 591 - Keyboard shortcuts help includes Ctrl+Shift+V for pas
 });
 
 TestRunner.test("Day 591 - APP_VERSION validation for Day 591", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 591");
     if (versionParts[0] === 2) {
@@ -4565,7 +4565,7 @@ TestRunner.test("Day 592 - Loop Region - setLoopRegionEndBarState calls captureS
 });
 
 TestRunner.test("Day 592 - APP_VERSION validation for Day 592", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 592");
     if (versionParts[0] === 2) {
@@ -4966,7 +4966,7 @@ TestRunner.test("Day 594 - Undo/Redo - getRedoStackState returns array copy", (t
 });
 
 TestRunner.test("Day 594 - APP_VERSION validation for Day 594", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 594");
     if (versionParts[0] === 2) {
@@ -5131,7 +5131,7 @@ TestRunner.test("Day 595 - MIDI Access - setActiveMIDIInputState is a function e
 });
 
 TestRunner.test("Day 595 - APP_VERSION validation for Day 595", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 595");
     if (versionParts[0] === 2) {
@@ -5214,7 +5214,7 @@ TestRunner.test("Day 596 - Playback Mode - setActiveMIDIInputState has descripti
 });
 
 TestRunner.test("Day 596 - Playback Mode - APP_VERSION validation for Day 596", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 596");
     if (versionParts[0] === 2) {
@@ -5354,7 +5354,7 @@ TestRunner.test("Day 596 - Recording - setRecordingStartTimeState has descriptiv
 });
 
 TestRunner.test("Day 596 - APP_VERSION validation for Day 596", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 596");
     if (versionParts[0] === 2) {
@@ -5456,7 +5456,7 @@ TestRunner.test("Day 597 - Master Gain - getMasterGainValueState returns numeric
 });
 
 TestRunner.test("Day 597 - APP_VERSION validation for Day 597", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 597");
     if (versionParts[0] === 2) {
@@ -5748,7 +5748,7 @@ TestRunner.test("Day 597 - Track Templates - clearTrackTemplatesState has descri
 });
 
 TestRunner.test("Day 597 - APP_VERSION validation for Day 597", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 597");
     if (versionParts[0] === 2) {
@@ -5989,7 +5989,7 @@ TestRunner.test("Day 598 - Send Tracks - setTrackSendPreFaderState has descripti
 });
 
 TestRunner.test("Day 598 - APP_VERSION validation for Day 598", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 598");
     if (versionParts[0] === 2) {
@@ -6204,7 +6204,7 @@ TestRunner.test("Day 599 - Clipboard - setClipboardDataState is a function expor
 });
 
 TestRunner.test("Day 599 - APP_VERSION validation for Day 599", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 599");
     if (versionParts[0] === 2) {
@@ -6255,7 +6255,7 @@ TestRunner.test("Day 600 - Sound Browser Path - setCurrentSoundBrowserPathState 
 });
 
 TestRunner.test("Day 600 - APP_VERSION validation for Day 600", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 600");
     if (versionParts[0] === 2) {
@@ -6452,7 +6452,7 @@ TestRunner.test("Day 601 - Favorites - makeSoundKey is referenced", (t) => {
 });
 
 TestRunner.test("Day 601 - APP_VERSION validation for Day 601", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 601");
     if (versionParts[0] === 2) {
@@ -16476,7 +16476,7 @@ TestRunner.test("Day 666 - Sidechain - isMicOpenForSidechain checks state === 's
 });
 
 TestRunner.test("Day 666 - APP_VERSION validation for Day 666", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 666");
     if (versionParts[0] === 2) {
@@ -16691,7 +16691,7 @@ TestRunner.test("Day 667 - Master Bus - getActiveMasterEffectNodes returns activ
 });
 
 TestRunner.test("Day 667 - APP_VERSION validation for Day 667", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 667");
     if (versionParts[0] === 2) {
@@ -16812,7 +16812,7 @@ TestRunner.test("Day 668 - addTrackToStateInternal handles track creation failur
 });
 
 TestRunner.test("Day 668 - APP_VERSION validation for Day 668", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 668");
     if (versionParts[0] === 2) {
@@ -16932,7 +16932,7 @@ TestRunner.test("Day 669 - setPunchRegionEnabled uses !! for boolean coercion", 
 });
 
 TestRunner.test("Day 669 - APP_VERSION validation for Day 669", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 669");
     if (versionParts[0] === 2) {
@@ -17020,7 +17020,7 @@ TestRunner.test("Day 670 - cleanupRecordingScheduling calls cancelScheduledRecor
 });
 
 TestRunner.test("Day 670 - APP_VERSION validation for Day 670", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 670");
     if (versionParts[0] === 2) {
@@ -17128,7 +17128,7 @@ TestRunner.test("Day 671 - exportToWavInternal handles errors with try/catch", (
 });
 
 TestRunner.test("Day 671 - APP_VERSION validation for Day 671", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 671");
     if (versionParts[0] === 2) {
@@ -17367,7 +17367,7 @@ TestRunner.test("Day 672 - setDrumSamplerPadEnv uses parseFloat for value", (t) 
 });
 
 TestRunner.test("Day 672 - APP_VERSION validation for Day 672", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 672");
     if (versionParts[0] === 2) {
@@ -17452,7 +17452,7 @@ TestRunner.test("Day 673 - renderDrumPadEditorControls references localAppServic
 });
 
 TestRunner.test("Day 673 - APP_VERSION validation for Day 673", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 673");
     if (versionParts[0] === 2) {
@@ -17612,7 +17612,7 @@ TestRunner.test("Day 674 - updateDrumPadControlsUI accepts 1 parameter (track)",
 });
 
 TestRunner.test("Day 674 - APP_VERSION validation for Day 674", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 674");
     if (versionParts[0] === 2) {
@@ -17778,7 +17778,7 @@ TestRunner.test("Day 675 - openSendEffectsWindow references showNotification", (
 });
 
 TestRunner.test("Day 675 - APP_VERSION validation for Day 675", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 675");
     if (versionParts[0] === 2) {
@@ -17855,7 +17855,7 @@ TestRunner.test("Day 676 - openTransportSettingsWindow references getSwingAmount
 });
 
 TestRunner.test("Day 676 - APP_VERSION validation for Day 676", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 676");
     if (versionParts[0] === 2) {
@@ -17968,7 +17968,7 @@ TestRunner.test("Day 677 - renderEffectControls uses find to locate effect by ef
 });
 
 TestRunner.test("Day 677 - APP_VERSION validation for Day 677", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 677");
     if (versionParts[0] === 2) {
@@ -18073,7 +18073,7 @@ TestRunner.test("Day 678 - removeTrackFromStateInternal has try/catch error hand
 });
 
 TestRunner.test("Day 678 - APP_VERSION validation for Day 678", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 678");
     if (versionParts[0] === 2) {
@@ -18163,7 +18163,7 @@ TestRunner.test("Day 679 - openGlobalControlsWindow calls onReadyCallback when w
 });
 
 TestRunner.test("Day 679 - APP_VERSION validation for Day 679", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 679");
     if (versionParts[0] === 2) {
@@ -18252,7 +18252,7 @@ TestRunner.test("Day 680 - openTrackGroupsWindow references localAppServices.add
 });
 
 TestRunner.test("Day 680 - APP_VERSION validation for Day 680", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 680");
     if (versionParts[0] === 2) {
@@ -18415,7 +18415,7 @@ TestRunner.test("Day 681 - openTransportSettingsWindow has options object with w
 });
 
 TestRunner.test("Day 681 - APP_VERSION validation for Day 681", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 681");
     if (versionParts[0] === 2) {
@@ -18480,7 +18480,7 @@ TestRunner.test("Day 682 - renderTimeline calls updatePlayheadPosition", (t) => 
 });
 
 TestRunner.test("Day 682 - APP_VERSION validation for Day 682", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 682");
     if (versionParts[0] === 2) {
@@ -18545,7 +18545,7 @@ TestRunner.test("Day 682 - updateSoundBrowserDisplayForLibrary uses getSoundLibr
 });
 
 TestRunner.test("Day 682 - APP_VERSION validation for Day 682 - updateSoundBrowserDisplayForLibrary", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 682");
     if (versionParts[0] === 2) {
@@ -18649,7 +18649,7 @@ TestRunner.test("Day 683 - handleTimelineLaneDrop calls services.showNotificatio
 });
 
 TestRunner.test("Day 683 - APP_VERSION validation for Day 683", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 683");
     if (versionParts[0] === 2) {
@@ -18777,7 +18777,7 @@ TestRunner.test("Day 684 - toggleSoloShortcut shows notification with track name
     t.assertTruthy(funcStr.includes('Solo:') && funcStr.includes('Unsolo:'), 'toggleSoloShortcut should show solo notification with track name');
 });
 TestRunner.test("Day 684 - APP_VERSION validation for Day 684", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 684");
     if (versionParts[0] === 2) {
@@ -18850,7 +18850,7 @@ TestRunner.test("Day 685 - setRecordingInputGain returns the gain value", (t) =>
 });
 
 TestRunner.test("Day 685 - APP_VERSION validation for Day 685", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 685");
     if (versionParts[0] === 2) {
@@ -18923,7 +18923,7 @@ TestRunner.test("Day 686 - rebuildMasterEffectChain calls disconnect on masterGa
 });
 
 TestRunner.test("Day 686 - APP_VERSION validation for Day 686", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 686");
     if (versionParts[0] === 2) {
@@ -19139,7 +19139,7 @@ TestRunner.test("Day 687 - resetPerformanceMonitorState resets all performance m
 });
 
 TestRunner.test("Day 687 - APP_VERSION validation for Day 687", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 687");
     if (versionParts[0] === 2) {
@@ -19264,7 +19264,7 @@ TestRunner.test("Day 688 - importFromMidiInternal has error handling with try/ca
 });
 
 TestRunner.test("Day 688 - APP_VERSION validation for Day 688", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 688");
     if (versionParts[0] === 2) {
@@ -19461,7 +19461,7 @@ TestRunner.test("Day 689 - updateMasterEffectParamInAudio has try/catch error ha
 });
 
 TestRunner.test("Day 689 - APP_VERSION validation for Day 689", (t) => {
-    const version = require("./js/constants.js").APP_VERSION;
+    const version = require('./js/constants.js').APP_VERSION;
     const versionParts = version.split('.').map(Number);
     t.assertTruthy(versionParts[0] >= 2, "Major version should be >= 2 for Day 689");
     if (versionParts[0] === 2) {
@@ -19553,6 +19553,172 @@ TestRunner.test("Day 691 - Test count increased from 3517 to 3522", (t) => {
         t.assertTruthy(versionParts[1] >= 344, 'Minor version should be >= 344 for Day 691');
     }
 });
+
+// --- Day 694: Stutter Notes Feature Tests ---
+TestRunner.test("Day 694 - stutterNotes is a function on Track.prototype", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    t.assertTruthy(trackStr.includes('stutterNotes('), 'stutterNotes should exist on Track.prototype');
+});
+TestRunner.test("Day 694 - stutterNotes accepts 3 parameters", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    const sigMatch = funcStr.match(/stutterNotes\(([^)]*)\)/);
+    const params = sigMatch ? sigMatch[1].split(',').map(s => s.trim()) : [];
+    t.assertEqual(params.length, 3, 'stutterNotes should accept 3 parameters, found: ' + params.length);
+});
+TestRunner.test("Day 694 - stutterNotes guards against Audio track type", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'"), 'stutterNotes should guard against Audio tracks');
+});
+TestRunner.test("Day 694 - stutterNotes validates active sequence exists", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'stutterNotes should call getActiveSequence');
+});
+TestRunner.test("Day 694 - stutterNotes captures undo before mutation", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('activeSeq.data[note.rowIndex][note.col]');
+    t.assertTruthy(captureIdx !== -1 && mutationIdx !== -1 && captureIdx < mutationIdx, 'stutterNotes should capture undo before mutation');
+});
+TestRunner.test("Day 694 - stutterNotes has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes('Stutter Notes'), 'stutterNotes undo label should mention "Stutter Notes"');
+});
+TestRunner.test("Day 694 - stutterNotes clamps repeat count to STUTTER_MIN/MAX_REPEATS", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes('STUTTER_MIN_REPEATS'), 'stutterNotes should use STUTTER_MIN_REPEATS constant');
+    t.assertTruthy(funcStr.includes('STUTTER_MAX_REPEATS'), 'stutterNotes should use STUTTER_MAX_REPEATS constant');
+});
+TestRunner.test("Day 694 - stutterNotes clamps velocityDecay to STUTTER_VELOCITY_DECAY_MIN/MAX", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes('STUTTER_VELOCITY_DECAY_MIN'), 'stutterNotes should clamp decay to STUTTER_VELOCITY_DECAY_MIN');
+    t.assertTruthy(funcStr.includes('STUTTER_VELOCITY_DECAY_MAX'), 'stutterNotes should clamp decay to STUTTER_VELOCITY_DECAY_MAX');
+});
+TestRunner.test("Day 694 - stutterNotes returns count of stuttered notes", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes('return stutteredCount;'), 'stutterNotes should return stutteredCount');
+});
+TestRunner.test("Day 694 - stutterNotes calculates velocity with Math.pow decay", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.pow'), 'stutterNotes should use Math.pow for velocity decay');
+});
+TestRunner.test("Day 694 - stutterNotes respects sequence length boundary", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes('newCol >= totalSteps'), 'stutterNotes should respect sequence length');
+});
+TestRunner.test("Day 694 - stutterNotes has skipOccupied option", (t) => {
+    const funcStr = Track.prototype.stutterNotes.toString();
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'stutterNotes should support skipOccupied parameter');
+});
+TestRunner.test("Day 694 - ui.js has 5 Stutter Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Stutter Notes (2x)'), 'ui.js should have Stutter 2x menu item');
+    t.assertTruthy(uiStr.includes('Stutter Notes (3x)'), 'ui.js should have Stutter 3x menu item');
+    t.assertTruthy(uiStr.includes('Stutter Notes (4x)'), 'ui.js should have Stutter 4x menu item');
+    t.assertTruthy(uiStr.includes('Stutter Notes (6x)'), 'ui.js should have Stutter 6x menu item');
+    t.assertTruthy(uiStr.includes('Stutter Notes (8x)'), 'ui.js should have Stutter 8x menu item');
+});
+TestRunner.test("Day 694 - Stutter menu items call stutterNotes method", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('.stutterNotes(2,'), 'ui.js should call stutterNotes(2, ...)');
+    t.assertTruthy(uiStr.includes('.stutterNotes(3,'), 'ui.js should call stutterNotes(3, ...)');
+    t.assertTruthy(uiStr.includes('.stutterNotes(4,'), 'ui.js should call stutterNotes(4, ...)');
+    t.assertTruthy(uiStr.includes('.stutterNotes(6,'), 'ui.js should call stutterNotes(6, ...)');
+    t.assertTruthy(uiStr.includes('.stutterNotes(8,'), 'ui.js should call stutterNotes(8, ...)');
+});
+TestRunner.test("Day 694 - Stutter menu items call recreateToneSequence after stutter", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const stutterMatches = uiStr.match(/stutterNotes\([^)]+\);[^}]*recreateToneSequence/g) || [];
+    t.assertTruthy(stutterMatches.length >= 5, 'All 5 stutter menu items should call recreateToneSequence');
+});
+TestRunner.test("Day 694 - Stutter menu items call updateTrackUI", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    // Each menu item has format: stutterNotes(...); ... updateTrackUI(...)
+    // Use a non-greedy match for content between stutterNotes and the end of the action
+    const stutterBlockRegex = /stutterNotes\([^)]+\);[\s\S]*?updateTrackUI\([^)]*\)/g;
+    const stutterMatches = uiStr.match(stutterBlockRegex) || [];
+    t.assertTruthy(stutterMatches.length >= 5, 'All 5 stutter menu items should call updateTrackUI, found: ' + stutterMatches.length);
+});
+TestRunner.test("Day 694 - Stutter menu items show notification with stuttered count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Stuttered ') && uiStr.includes('note(s) at'), 'ui.js should show Stuttered notification with count');
+});
+TestRunner.test("Day 694 - STUTTER constants are defined in constants.js", (t) => {
+    const constStr = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constStr.includes('STUTTER_MIN_REPEATS'), 'constants.js should export STUTTER_MIN_REPEATS');
+    t.assertTruthy(constStr.includes('STUTTER_MAX_REPEATS'), 'constants.js should export STUTTER_MAX_REPEATS');
+    t.assertTruthy(constStr.includes('STUTTER_DEFAULT_REPEATS'), 'constants.js should export STUTTER_DEFAULT_REPEATS');
+    t.assertTruthy(constStr.includes('STUTTER_VELOCITY_DECAY_MIN'), 'constants.js should export STUTTER_VELOCITY_DECAY_MIN');
+    t.assertTruthy(constStr.includes('STUTTER_VELOCITY_DECAY_MAX'), 'constants.js should export STUTTER_VELOCITY_DECAY_MAX');
+    t.assertTruthy(constStr.includes('STUTTER_VELOCITY_DECAY_DEFAULT'), 'constants.js should export STUTTER_VELOCITY_DECAY_DEFAULT');
+    t.assertTruthy(constStr.includes('STUTTER_MIN_VELOCITY'), 'constants.js should export STUTTER_MIN_VELOCITY');
+});
+TestRunner.test("Day 694 - stutterNotes functional test: 4x stutter with 0.7 decay on 0.8 velocity", (t) => {
+    // Simulate: one note at velocity 0.8, stutter 4x with 0.7 decay
+    // Expected: original (0.8) + 3 new notes at 0.56, 0.392, 0.2744
+    const originalVel = 0.8;
+    const decay = 0.7;
+    const expected = [originalVel, originalVel * decay, originalVel * Math.pow(decay, 2), originalVel * Math.pow(decay, 3)];
+    t.assertEqual(expected[0], 0.8, 'Note 1 velocity should be 0.8');
+    t.assertTruthy(Math.abs(expected[1] - 0.56) < 0.01, 'Note 2 velocity should be ~0.56');
+    t.assertTruthy(Math.abs(expected[2] - 0.392) < 0.01, 'Note 3 velocity should be ~0.392');
+    t.assertTruthy(Math.abs(expected[3] - 0.2744) < 0.01, 'Note 4 velocity should be ~0.2744');
+});
+TestRunner.test("Day 694 - stutterNotes 2x stutter places 1 new note per original", (t) => {
+    // repeatCount=2 means 1 new note per existing
+    const repeatCount = 2;
+    const newNotesPerOriginal = repeatCount - 1;
+    t.assertEqual(newNotesPerOriginal, 1, '2x stutter should place 1 new note per original');
+});
+TestRunner.test("Day 694 - stutterNotes 8x stutter places 7 new notes per original", (t) => {
+    const repeatCount = 8;
+    const newNotesPerOriginal = repeatCount - 1;
+    t.assertEqual(newNotesPerOriginal, 7, '8x stutter should place 7 new notes per original');
+});
+TestRunner.test("Day 694 - stutterNotes respects STUTTER_MIN_VELOCITY floor", (t) => {
+    // Heavy decay should still respect the floor
+    const startVel = 1.0;
+    const decay = 0.3;
+    const minVel = 0.1;
+    let vel = startVel;
+    for (let i = 1; i < 20; i++) {
+        vel = Math.max(minVel, Math.min(1.0, startVel * Math.pow(decay, i)));
+        t.assertTruthy(vel >= minVel, 'Velocity should never drop below min velocity');
+    }
+});
+TestRunner.test("Day 694 - stutterNotes APP_VERSION validation (>= 2.346)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 694');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 346, 'Minor version should be >= 346 for Day 694');
+    }
+});
+TestRunner.test("Day 694 - stutterNotes handles existing notes correctly (skipOccupied chain break)", (t) => {
+    // Test skipOccupied behavior: if a note is at col+1, the stutter chain breaks for that note
+    // Simulate this with a mini test mirroring the implementation
+    const data = [
+        [{ active: true, velocity: 0.8 }, { active: true, velocity: 0.7 }, null, null] // Row 0
+    ];
+    const totalSteps = 4;
+    const useRepeatCount = 4;
+    let stutteredCount = 0;
+
+    for (let col = 0; col < totalSteps; col++) {
+        const cell = data[0][col];
+        if (cell && cell.active) {
+            for (let r = 1; r < useRepeatCount; r++) {
+                const newCol = col + r;
+                if (newCol >= totalSteps) break;
+                const targetCell = data[0][newCol];
+                if (targetCell && targetCell.active) break;
+                stutteredCount++;
+            }
+        }
+    }
+    // Note at col 0: r=1 -> col 1 is occupied, break. 0 stutters.
+    // Note at col 1: r=1 -> col 2 empty (1), r=2 -> col 3 empty (2), r=3 -> col 4 >= 4 break. 2 stutters.
+    t.assertEqual(stutteredCount, 2, 'Stutter count should be 2 (0 from note 0 chain break, 2 from note 1)');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

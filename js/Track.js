@@ -4497,4 +4497,82 @@ export class Track {
 
         return placedCount;
     }
+    // Stutter Notes - repeat each active note N times in adjacent steps
+    // Creates a fast repeated-note effect (like a delay stutter or 1/32 roll)
+    // repeatCount: total number of times each note should appear (2-8). 1 = no change
+    // velocityDecay: factor to multiply velocity by for each subsequent repeat (0.0-1.0)
+    //                1.0 = no decay (all repeats at same velocity)
+    //                0.7 = each repeat at 70% of previous (default for natural taper)
+    // skipOccupied: if true, skip slots that already have notes (don't overwrite)
+    stutterNotes(repeatCount = Constants.STUTTER_DEFAULT_REPEATS, velocityDecay = Constants.STUTTER_VELOCITY_DECAY_DEFAULT, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} stutterNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters to valid ranges
+        const useRepeatCount = Math.max(Constants.STUTTER_MIN_REPEATS,
+            Math.min(Constants.STUTTER_MAX_REPEATS, Math.floor(repeatCount)));
+        const useDecay = Math.max(Constants.STUTTER_VELOCITY_DECAY_MIN,
+            Math.min(Constants.STUTTER_VELOCITY_DECAY_MAX, velocityDecay));
+        const minVel = Constants.STUTTER_MIN_VELOCITY;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Stutter Notes (${useRepeatCount}x) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let stutteredCount = 0;
+
+        // First, collect all active notes to process (iterate backwards to avoid shift issues if we extend)
+        // Actually, we process left-to-right but track new placements
+        const newNotes = []; // {row, col, velocity} to add
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+                continue;
+            }
+            const row = activeSeq.data[rowIndex];
+
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (cell && cell.active) {
+                    // For this active note, add (useRepeatCount - 1) more copies to the right
+                    for (let r = 1; r < useRepeatCount; r++) {
+                        const newCol = col + r;
+                        // Stop if we've moved past the end of the sequence
+                        if (newCol >= totalSteps) break;
+                        // Check if the target slot is empty or we can overwrite
+                        const targetCell = row[newCol];
+                        if (skipOccupied && targetCell && targetCell.active) {
+                            break; // Stop this note's stutter chain
+                        }
+                        // Calculate decayed velocity
+                        const decayedVel = Math.max(minVel,
+                            Math.min(1.0, (cell.velocity || Constants.defaultVelocity || 0.7) * Math.pow(useDecay, r)));
+                        newNotes.push({ rowIndex, col: newCol, velocity: decayedVel });
+                    }
+                }
+            }
+        }
+
+        // Apply the new notes
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity
+                };
+                stutteredCount++;
+            }
+        }
+
+        return stutteredCount;
+    }
 }
