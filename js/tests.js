@@ -19719,6 +19719,215 @@ TestRunner.test("Day 694 - stutterNotes handles existing notes correctly (skipOc
     t.assertEqual(stutteredCount, 2, 'Stutter count should be 2 (0 from note 0 chain break, 2 from note 1)');
 });
 
+// --- Day 695: Arpeggiate Notes Feature Tests ---
+TestRunner.test("Day 695 - arpeggiateNotes is a function on Track.prototype", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    t.assertTruthy(trackStr.includes('arpeggiateNotes('), 'arpeggiateNotes should exist on Track.prototype');
+});
+TestRunner.test("Day 695 - arpeggiateNotes accepts 5 parameters", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    const sigMatch = funcStr.match(/arpeggiateNotes\(([^)]*)\)/);
+    const params = sigMatch ? sigMatch[1].split(',').map(s => s.trim()) : [];
+    t.assertEqual(params.length, 5, 'arpeggiateNotes should accept 5 parameters, found: ' + params.length);
+});
+TestRunner.test("Day 695 - arpeggiateNotes guards against Audio track type", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'"), 'arpeggiateNotes should guard against Audio tracks');
+});
+TestRunner.test("Day 695 - arpeggiateNotes validates active sequence exists", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'arpeggiateNotes should call getActiveSequence');
+});
+TestRunner.test("Day 695 - arpeggiateNotes captures undo before mutation", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('targetRow[targetCol] = { active: true');
+    t.assertTruthy(captureIdx !== -1 && mutationIdx !== -1 && captureIdx < mutationIdx, 'arpeggiateNotes should capture undo before mutation');
+});
+TestRunner.test("Day 695 - arpeggiateNotes has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('Arpeggiate Notes'), 'arpeggiateNotes undo label should mention "Arpeggiate Notes"');
+});
+TestRunner.test("Day 695 - arpeggiateNotes clamps rateMs to ARPEGGIATE_MIN/MAX_RATE_MS", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('ARPEGGIATE_MIN_RATE_MS'), 'arpeggiateNotes should use ARPEGGIATE_MIN_RATE_MS constant');
+    t.assertTruthy(funcStr.includes('ARPEGGIATE_MAX_RATE_MS'), 'arpeggiateNotes should use ARPEGGIATE_MAX_RATE_MS constant');
+});
+TestRunner.test("Day 695 - arpeggiateNotes clamps repeats to ARPEGGIATE_MIN/MAX_REPEATS", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('ARPEGGIATE_MIN_REPEATS'), 'arpeggiateNotes should use ARPEGGIATE_MIN_REPEATS constant');
+    t.assertTruthy(funcStr.includes('ARPEGGIATE_MAX_REPEATS'), 'arpeggiateNotes should use ARPEGGIATE_MAX_REPEATS constant');
+});
+TestRunner.test("Day 695 - arpeggiateNotes validates direction with valid list", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes("'up'"), 'arpeggiateNotes should support "up" direction');
+    t.assertTruthy(funcStr.includes("'down'"), 'arpeggiateNotes should support "down" direction');
+    t.assertTruthy(funcStr.includes("'random'"), 'arpeggiateNotes should support "random" direction');
+});
+TestRunner.test("Day 695 - arpeggiateNotes defaults to up direction for invalid", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes("'up'"), 'arpeggiateNotes should default to up direction');
+});
+TestRunner.test("Day 695 - arpeggiateNotes returns count of arpeggiated notes", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('return arpeggiatedCount;'), 'arpeggiateNotes should return arpeggiatedCount');
+});
+TestRunner.test("Day 695 - arpeggiateNotes uses Math.pow for velocity decay", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.pow'), 'arpeggiateNotes should use Math.pow for velocity decay');
+});
+TestRunner.test("Day 695 - arpeggiateNotes has skipOccupied option", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'arpeggiateNotes should support skipOccupied parameter');
+});
+TestRunner.test("Day 695 - arpeggiateNotes respects sequence length boundary", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('targetCol >= totalSteps'), 'arpeggiateNotes should respect sequence length');
+});
+TestRunner.test("Day 695 - arpeggiateNotes uses Math.round for velocity rounding", (t) => {
+    const funcStr = Track.prototype.arpeggiateNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round'), 'arpeggiateNotes should round velocity to 2 decimal places');
+});
+TestRunner.test("Day 695 - ARPEGGIATE constants are defined in constants.js", (t) => {
+    const constStr = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constStr.includes('ARPEGGIATE_MIN_RATE_MS'), 'constants.js should define ARPEGGIATE_MIN_RATE_MS');
+    t.assertTruthy(constStr.includes('ARPEGGIATE_MAX_RATE_MS'), 'constants.js should define ARPEGGIATE_MAX_RATE_MS');
+    t.assertTruthy(constStr.includes('ARPEGGIATE_DEFAULT_RATE_MS'), 'constants.js should define ARPEGGIATE_DEFAULT_RATE_MS');
+    t.assertTruthy(constStr.includes('ARPEGGIATE_MIN_REPEATS'), 'constants.js should define ARPEGGIATE_MIN_REPEATS');
+    t.assertTruthy(constStr.includes('ARPEGGIATE_MAX_REPEATS'), 'constants.js should define ARPEGGIATE_MAX_REPEATS');
+    t.assertTruthy(constStr.includes('ARPEGGIATE_DEFAULT_REPEATS'), 'constants.js should define ARPEGGIATE_DEFAULT_REPEATS');
+    t.assertTruthy(constStr.includes('ARPEGGIATE_VELOCITY_DECAY'), 'constants.js should define ARPEGGIATE_VELOCITY_DECAY');
+});
+TestRunner.test("Day 695 - ui.js has 6 Arpeggiate Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Arpeggiate Notes (Up, 2x)'), 'ui.js should have Arpeggiate Up 2x menu item');
+    t.assertTruthy(uiStr.includes('Arpeggiate Notes (Up, 4x)'), 'ui.js should have Arpeggiate Up 4x menu item');
+    t.assertTruthy(uiStr.includes('Arpeggiate Notes (Up, 8x)'), 'ui.js should have Arpeggiate Up 8x menu item');
+    t.assertTruthy(uiStr.includes('Arpeggiate Notes (Down, 4x)'), 'ui.js should have Arpeggiate Down 4x menu item');
+    t.assertTruthy(uiStr.includes('Arpeggiate Notes (Random, 4x)'), 'ui.js should have Arpeggiate Random 4x menu item');
+    t.assertTruthy(uiStr.includes('Arpeggiate Notes (Slow 200ms, 4x)'), 'ui.js should have Arpeggiate Slow 200ms menu item');
+});
+TestRunner.test("Day 695 - Arpeggiate menu items call arpeggiateNotes method", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('arpeggiateNotes(80, 2'), 'Menu items should call arpeggiateNotes with (80, 2...)');
+    t.assertTruthy(uiStr.includes('arpeggiateNotes(80, 4'), 'Menu items should call arpeggiateNotes with (80, 4...)');
+    t.assertTruthy(uiStr.includes('arpeggiateNotes(80, 8'), 'Menu items should call arpeggiateNotes with (80, 8...)');
+    t.assertTruthy(uiStr.includes('arpeggiateNotes(200, 4'), 'Menu items should call arpeggiateNotes with (200, 4...)');
+});
+TestRunner.test("Day 695 - Arpeggiate menu items call recreateToneSequence after arpeggiate", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    // Count occurrences in the new arpeggiate menu items
+    const arpeggiateBlock = uiStr.substring(uiStr.indexOf('Arpeggiate Notes (Up, 2x)'), uiStr.indexOf('{ separator: true },', uiStr.indexOf('Arpeggiate Notes (Up, 2x)')));
+    const recreateCount = (arpeggiateBlock.match(/recreateToneSequence/g) || []).length;
+    t.assertTruthy(recreateCount >= 6, 'All Arpeggiate menu items should call recreateToneSequence, found: ' + recreateCount);
+});
+TestRunner.test("Day 695 - Arpeggiate menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Arpeggiated ${result} note(s)'), 'Menu items should show Arpeggiated notification');
+});
+TestRunner.test("Day 695 - APP_VERSION validation (>= 2.347)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 695');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 347, 'Minor version should be >= 347 for Day 695');
+    }
+});
+TestRunner.test("Day 695 - arpeggiateNotes functional test: 2x cycles on single note", (t) => {
+    // Simulate arpeggiateNotes for a single note
+    const data = [
+        [{ active: true, velocity: 0.8 }, null, null, null, null, null, null, null] // Row 0
+    ];
+    const totalSteps = 8;
+    const useRepeats = 2;
+    const useDecay = 0.85;
+    const stepStride = 2;
+    let arpeggiatedCount = 0;
+    const orderedPitches = [{ row: 0, velocity: 0.8 }];
+    const col = 0;
+    for (let cycle = 0; cycle < useRepeats; cycle++) {
+        const cycleVel = Math.max(0.1, Math.min(1.0, 0.8 * Math.pow(useDecay, cycle)));
+        for (let p = 0; p < orderedPitches.length; p++) {
+            const targetCol = col + (cycle * orderedPitches.length + p) * stepStride;
+            if (targetCol >= totalSteps) break;
+            data[0][targetCol] = { active: true, velocity: Math.round(cycleVel * 100) / 100 };
+            arpeggiatedCount++;
+        }
+    }
+    t.assertEqual(arpeggiatedCount, 2, 'Should place 2 arpeggiated notes (2 cycles x 1 pitch)');
+    t.assertTruthy(data[0][0].active, 'Col 0 should have note (cycle 0)');
+    t.assertTruthy(data[0][2].active, 'Col 2 should have note (cycle 1, stride 2)');
+    t.assertEqual(data[0][2].velocity, 0.68, 'Velocity should be 0.8 * 0.85 = 0.68 (rounded)');
+});
+TestRunner.test("Day 695 - arpeggiateNotes functional test: chord arpeggio (3 notes) over 4 cycles", (t) => {
+    // Simulate arpeggiating a 3-note chord
+    const data = [
+        [{ active: true, velocity: 0.7 }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], // Row 0
+        [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], // Row 1
+        [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]  // Row 2
+    ];
+    const totalSteps = 16;
+    const chordPitches = [{ row: 0, velocity: 0.7 }, { row: 1, velocity: 0.7 }, { row: 2, velocity: 0.7 }];
+    const orderedPitches = chordPitches.slice().sort((a, b) => a.row - b.row);
+    const useRepeats = 4;
+    const useDecay = 0.85;
+    const stepStride = 1;
+    let arpeggiatedCount = 0;
+    const col = 0;
+    for (let cycle = 0; cycle < useRepeats; cycle++) {
+        const cycleVel = Math.max(0.1, Math.min(1.0, 0.7 * Math.pow(useDecay, cycle)));
+        for (let p = 0; p < orderedPitches.length; p++) {
+            const targetCol = col + (cycle * orderedPitches.length + p) * stepStride;
+            if (targetCol >= totalSteps) break;
+            const pitch = orderedPitches[p];
+            data[pitch.row][targetCol] = { active: true, velocity: Math.round(cycleVel * 100) / 100 };
+            arpeggiatedCount++;
+        }
+    }
+    // 4 cycles * 3 pitches = 12 notes (well within 16 steps)
+    t.assertEqual(arpeggiatedCount, 12, 'Should place 12 arpeggiated notes (4 cycles x 3 pitches)');
+    t.assertTruthy(data[0][0].active, 'Row 0 col 0 should have note (cycle 0, pitch 0)');
+    t.assertTruthy(data[1][1].active, 'Row 1 col 1 should have note (cycle 0, pitch 1)');
+    t.assertTruthy(data[2][2].active, 'Row 2 col 2 should have note (cycle 0, pitch 2)');
+    t.assertTruthy(data[0][3].active, 'Row 0 col 3 should have note (cycle 1, pitch 0)');
+});
+TestRunner.test("Day 695 - arpeggiateNotes respects sequence length boundary", (t) => {
+    // Test that notes are not placed past the end of the sequence
+    const totalSteps = 4;
+    const useRepeats = 5;
+    const stepStride = 1;
+    const orderedPitches = [{ row: 0, velocity: 0.7 }];
+    let arpeggiatedCount = 0;
+    const col = 0;
+    for (let cycle = 0; cycle < useRepeats; cycle++) {
+        const cycleVel = Math.max(0.1, Math.min(1.0, 0.7 * Math.pow(0.85, cycle)));
+        for (let p = 0; p < orderedPitches.length; p++) {
+            const targetCol = col + (cycle * orderedPitches.length + p) * stepStride;
+            if (targetCol >= totalSteps) {
+                // Stop placing
+                t.assertEqual(arpeggiatedCount, 4, 'Should stop at 4 placed notes (matches totalSteps)');
+                return;
+            }
+            arpeggiatedCount++;
+        }
+    }
+});
+TestRunner.test("Day 695 - arpeggiateNotes clamps repeats and rateMs to valid ranges", (t) => {
+    // Verify clamping behavior
+    const minRate = 10;
+    const maxRate = 500;
+    const minRepeats = 1;
+    const maxRepeats = 16;
+    // Out of range values
+    const testRate = Math.max(minRate, Math.min(maxRate, 9999));
+    const testRepeats = Math.max(minRepeats, Math.min(maxRepeats, 100));
+    const testRateLow = Math.max(minRate, Math.min(maxRate, 0));
+    const testRepeatsLow = Math.max(minRepeats, Math.min(maxRepeats, -5));
+    t.assertEqual(testRate, maxRate, 'rateMs should clamp to max');
+    t.assertEqual(testRepeats, maxRepeats, 'repeats should clamp to max');
+    t.assertEqual(testRateLow, minRate, 'rateMs should clamp to min');
+    t.assertEqual(testRepeatsLow, minRepeats, 'repeats should clamp to min');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

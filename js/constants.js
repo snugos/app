@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.346.0';
+export const APP_VERSION = '2.347.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -69,6 +69,15 @@ export const STUTTER_DEFAULT_REPEATS = 4; // Default 4x stutter
 export const STUTTER_VELOCITY_DECAY_MIN = 0.3; // Minimum decay (0.3 = each repeat at 30% of prev)
 export const STUTTER_VELOCITY_DECAY_MAX = 1.0; // Maximum decay (1.0 = no decay)
 export const STUTTER_VELOCITY_DECAY_DEFAULT = 0.7; // Default velocity decay (70% per repeat)
+// Arpeggiate Notes Constants (per-track arp that cycles overlapping notes N times at a chosen rate)
+export const ARPEGGIATE_MIN_RATE_MS = 10; // Minimum ms between arpeggiated notes
+export const ARPEGGIATE_MAX_RATE_MS = 500; // Maximum ms between arpeggiated notes
+export const ARPEGGIATE_DEFAULT_RATE_MS = 80; // Default 80ms (12.5 notes/sec)
+export const ARPEGGIATE_MIN_REPEATS = 1; // Minimum cycle repeats
+export const ARPEGGIATE_MAX_REPEATS = 16; // Maximum cycle repeats
+export const ARPEGGIATE_DEFAULT_REPEATS = 4; // Default cycle the pattern 4 times
+export const ARPEGGIATE_VELOCITY_DECAY = 0.85; // Each repeat slightly softer
+
 export const STUTTER_MIN_VELOCITY = 0.1; // Floor velocity for last repeat
 
 

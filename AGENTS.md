@@ -1,3 +1,73 @@
+#### Day 695: Arpeggiate Notes Feature (2026-06-08)
+- **Feature**: Added `arpeggiateNotes(rateMs, repeats, velocityDecay, direction, skipOccupied)` method to Track class and 6 "Arpeggiate Notes" menu items to the sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `arpeggiateNotes` method after `stutterNotes`
+  - `js/constants.js`: Added 7 ARPEGGIATE_* constants + bumped APP_VERSION to 2.347.0
+  - `js/ui.js`: Added 6 Arpeggiate Notes menu items in the sequencer context menu
+  - `js/tests.js`: Added Day 695 test block with 22 tests
+- **Feature Details**:
+  - **arpeggiateNotes** (`js/Track.js`): Expands each chord/column of overlapping notes into a cycle of repeated steps. Useful for turning static chords into repeating arpeggio patterns that span the sequence.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `rateMs` to ARPEGGIATE_MIN_RATE_MS (10) / ARPEGGIATE_MAX_RATE_MS (500) range
+    - Clamps `repeats` to ARPEGGIATE_MIN_REPEATS (1) / ARPEGGIATE_MAX_REPEATS (16) range
+    - Clamps `velocityDecay` to 0.1-1.0 range (each cycle a bit softer)
+    - Validates `direction` against ['up', 'down', 'random'] (default 'up')
+    - Captures undo state BEFORE mutation
+    - Step stride computed from rate in ms vs sixteenth note duration (120 BPM baseline)
+    - Sorts chord pitches by direction (low-to-high for 'up', high-to-low for 'down', shuffle for 'random')
+    - Places notes in cycles with `targetCol = col + (cycle * pitches.length + p) * stepStride`
+    - Stops placing when `targetCol >= totalSteps` (respects sequence length)
+    - Supports `skipOccupied` parameter to skip slots that already have notes
+    - Rounds velocity to 2 decimal places
+    - Returns count of arpeggiated notes
+  - **Arpeggiate Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Stutter Notes
+    - "Arpeggiate Notes (Up, 2x)" - calls `arpeggiateNotes(80, 2, 0.85, 'up', true)`
+    - "Arpeggiate Notes (Up, 4x)" - calls `arpeggiateNotes(80, 4, 0.85, 'up', true)`
+    - "Arpeggiate Notes (Up, 8x)" - calls `arpeggiateNotes(80, 8, 0.85, 'up', true)`
+    - "Arpeggiate Notes (Down, 4x)" - calls `arpeggiateNotes(80, 4, 0.85, 'down', true)`
+    - "Arpeggiate Notes (Random, 4x)" - calls `arpeggiateNotes(80, 4, 0.85, 'random', true)`
+    - "Arpeggiate Notes (Slow 200ms, 4x)" - calls `arpeggiateNotes(200, 4, 0.85, 'up', true)`
+    - All call `recreateToneSequence(true)` after arpeggiating
+    - Show notifications: "Arpeggiated {count} note(s) (...)" with direction and cycle count
+    - Show "No notes to arpeggiate." when nothing to arpeggiate
+- **Constants** (`js/constants.js`): 7 new constants
+  - `ARPEGGIATE_MIN_RATE_MS = 10` - Minimum ms between arpeggiated notes
+  - `ARPEGGIATE_MAX_RATE_MS = 500` - Maximum ms between arpeggiated notes
+  - `ARPEGGIATE_DEFAULT_RATE_MS = 80` - Default 80ms (12.5 notes/sec)
+  - `ARPEGGIATE_MIN_REPEATS = 1` - Minimum cycle repeats
+  - `ARPEGGIATE_MAX_REPEATS = 16` - Maximum cycle repeats
+  - `ARPEGGIATE_DEFAULT_REPEATS = 4` - Default cycle the pattern 4 times
+  - `ARPEGGIATE_VELOCITY_DECAY = 0.85` - Each repeat slightly softer
+- **Tests** (`js/tests.js`): 22 tests covering:
+  - `arpeggiateNotes` is a function on Track.prototype
+  - arpeggiateNotes accepts 5 parameters
+  - arpeggiateNotes guards against Audio tracks
+  - arpeggiateNotes validates active sequence exists
+  - arpeggiateNotes captures undo BEFORE mutation
+  - arpeggiateNotes has descriptive "Arpeggiate Notes" undo label
+  - arpeggiateNotes clamps rateMs to ARPEGGIATE_MIN/MAX_RATE_MS
+  - arpeggiateNotes clamps repeats to ARPEGGIATE_MIN/MAX_REPEATS
+  - arpeggiateNotes validates direction with valid list ('up'/'down'/'random')
+  - arpeggiateNotes defaults to up direction for invalid
+  - arpeggiateNotes returns count of arpeggiated notes
+  - arpeggiateNotes uses Math.pow for velocity decay
+  - arpeggiateNotes has skipOccupied option
+  - arpeggiateNotes respects sequence length boundary
+  - arpeggiateNotes uses Math.round for velocity rounding
+  - All 7 ARPEGGIATE constants are defined in constants.js
+  - ui.js has 6 Arpeggiate Notes menu items
+  - Arpeggiate menu items call arpeggiateNotes method with correct params
+  - Arpeggiate menu items call recreateToneSequence
+  - Arpeggiate menu items show notification with count
+  - APP_VERSION validation (>= 2.347 for Day 695)
+  - arpeggiateNotes functional test: 2x cycles on single note
+  - arpeggiateNotes functional test: chord arpeggio (3 notes) over 4 cycles
+  - arpeggiateNotes respects sequence length boundary (functional)
+  - arpeggiateNotes clamps repeats and rateMs to valid ranges (functional)
+- **Version**: Bumped to 2.347.0
+- **Test Count**: Increased from 3576 to 3598
+
 #### Day 689: Master Effect Audio Functions Tests (2026-06-03)
 - **Tests**: Added 21 tests for Master Effect audio functions in audio.js
 - **Files Modified**:

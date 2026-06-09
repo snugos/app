@@ -4575,4 +4575,109 @@ export class Track {
 
         return stutteredCount;
     }
+
+    // Arpeggiate Notes - expand each chord/column of overlapping notes into a cycle of repeated steps
+    // Useful for turning static chords into repeating arpeggio patterns that span the sequence
+    // rateMs: milliseconds between each arpeggiated note in the cycle
+    // repeats: number of full cycles to write (1-16)
+    // velocityDecay: per-cycle velocity multiplier (default 0.85 = each cycle a bit softer)
+    // direction: 'up' (low to high), 'down' (high to low), or 'random' (shuffled)
+    // skipOccupied: if true, skip slots that already have notes (don't overwrite)
+    arpeggiateNotes(rateMs = Constants.ARPEGGIATE_DEFAULT_RATE_MS, repeats = Constants.ARPEGGIATE_DEFAULT_REPEATS, velocityDecay = Constants.ARPEGGIATE_VELOCITY_DECAY, direction = 'up', skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} arpeggiateNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters to valid ranges
+        const useRateMs = Math.max(Constants.ARPEGGIATE_MIN_RATE_MS, Math.min(Constants.ARPEGGIATE_MAX_RATE_MS, rateMs));
+        const useRepeats = Math.max(Constants.ARPEGGIATE_MIN_REPEATS, Math.min(Constants.ARPEGGIATE_MAX_REPEATS, Math.floor(repeats)));
+        const useDecay = Math.max(0.1, Math.min(1.0, velocityDecay));
+        const validDirections = ['up', 'down', 'random'];
+        const useDirection = validDirections.includes(direction) ? direction : 'up';
+        const minVel = Constants.defaultVelocity ? Constants.defaultVelocity * 0.2 : 0.1;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Arpeggiate Notes (${useRepeats}x ${useDirection}, ${useRateMs}ms) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let arpeggiatedCount = 0;
+
+        // Compute step stride from rate in ms vs sixteenth note duration.
+        // Defaults: 120 BPM -> sixteenth = 125ms, so rate 80ms = ~0.64 of a sixteenth (sub-step).
+        // We map rateMs to a step width in 16th-note units (approximated to 1..8 steps).
+        const sixteenthMs = (60 / 120) * 1000 / 4; // 125ms at 120 BPM
+        const stepStride = Math.max(1, Math.min(8, Math.round(useRateMs / (sixteenthMs / 4))));
+        // stepStride is 1..8 "sub-steps" per placed note; with repeats N and a single chord we
+        // spread across up to useRepeats * stepStride columns per note.
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+                continue;
+            }
+            const row = activeSeq.data[rowIndex];
+
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (!cell || !cell.active) continue;
+
+                // Collect pitches (rows with active notes at this column) that form the "chord" to arpeggiate
+                const chordPitches = [];
+                for (let r = 0; r < numRows; r++) {
+                    const otherRow = activeSeq.data[r];
+                    if (!otherRow) continue;
+                    const otherCell = otherRow[col];
+                    if (otherCell && otherCell.active) {
+                        chordPitches.push({ row: r, velocity: otherCell.velocity || Constants.defaultVelocity || 0.7 });
+                    }
+                }
+                if (chordPitches.length === 0) continue;
+
+                // Order chord pitches by direction
+                let orderedPitches = chordPitches.slice();
+                if (useDirection === 'up') {
+                    orderedPitches.sort((a, b) => a.row - b.row); // low to high (top-to-bottom in piano roll? we treat row index as pitch class)
+                } else if (useDirection === 'down') {
+                    orderedPitches.sort((a, b) => b.row - a.row);
+                } else {
+                    // 'random' - shuffle
+                    for (let i = orderedPitches.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [orderedPitches[i], orderedPitches[j]] = [orderedPitches[j], orderedPitches[i]];
+                    }
+                }
+
+                // Remove the original cell (we are replacing it with the cycle)
+                // Keep it but suppress in the cycle: only skip if skipOccupied and target is occupied
+                let velocity = orderedPitches[0].velocity;
+
+                for (let cycle = 0; cycle < useRepeats; cycle++) {
+                    const cycleVel = Math.max(minVel, Math.min(1.0, velocity * Math.pow(useDecay, cycle)));
+                    for (let p = 0; p < orderedPitches.length; p++) {
+                        const targetCol = col + (cycle * orderedPitches.length + p) * stepStride;
+                        if (targetCol >= totalSteps) {
+                            // Out of bounds - stop placing
+                            return arpeggiatedCount;
+                        }
+                        const pitch = orderedPitches[p];
+                        const targetRow = activeSeq.data[pitch.row];
+                        if (!targetRow) {
+                            activeSeq.data[pitch.row] = Array(totalSteps).fill(null);
+                        }
+                        if (skipOccupied && targetRow[col] && targetRow[col].active && (cycle > 0 || p > 0)) {
+                            continue;
+                        }
+                        targetRow[targetCol] = { active: true, velocity: Math.round(cycleVel * 100) / 100 };
+                        arpeggiatedCount++;
+                    }
+                }
+            }
+        }
+
+        return arpeggiatedCount;
+    }
 }
