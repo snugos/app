@@ -78,6 +78,17 @@ export const ARPEGGIATE_MAX_REPEATS = 16; // Maximum cycle repeats
 export const ARPEGGIATE_DEFAULT_REPEATS = 4; // Default cycle the pattern 4 times
 export const ARPEGGIATE_VELOCITY_DECAY = 0.85; // Each repeat slightly softer
 
+// Burst Notes Constants (ratchet: subdivide each note into N rapid micro-notes)
+export const BURST_MIN_DIVISIONS = 2; // Minimum number of sub-notes per burst (2x)
+export const BURST_MAX_DIVISIONS = 8; // Maximum sub-notes per burst (8x)
+export const BURST_DEFAULT_DIVISIONS = 4; // Default 4 sub-notes per burst
+export const BURST_MIN_VELOCITY = 0.1; // Floor velocity for last sub-note
+export const BURST_VELOCITY_CURVE_FLAT = 'flat'; // All sub-notes at same velocity
+export const BURST_VELOCITY_CURVE_DECAY = 'decay'; // Linear decay (machine gun effect)
+export const BURST_VELOCITY_CURVE_ATTACK = 'attack'; // Crescendo (ramp up)
+export const BURST_VELOCITY_CURVE_PYRAMID = 'pyramid'; // Crescendo then decay (accent in middle)
+export const BURST_VELOCITY_CURVES = [BURST_VELOCITY_CURVE_FLAT, BURST_VELOCITY_CURVE_DECAY, BURST_VELOCITY_CURVE_ATTACK, BURST_VELOCITY_CURVE_PYRAMID];
+
 export const STUTTER_MIN_VELOCITY = 0.1; // Floor velocity for last repeat
 
 

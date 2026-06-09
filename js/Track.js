@@ -4680,4 +4680,98 @@ export class Track {
 
         return arpeggiatedCount;
     }
+
+    // Burst Notes - subdivide each note into N rapid micro-notes (ratchet)
+    // Useful for hi-hat rolls, snare flam bursts, or machine-gun-like rhythmic effects
+    // divisions: number of sub-notes per burst (2-8). Each sub-note gets 1/divisions of the original length
+    // velocityCurve: 'flat', 'decay' (machine gun), 'attack' (ramp up), or 'pyramid' (accent in middle)
+    // skipOccupied: if true, skip slots that already have notes
+    burstNotes(divisions = Constants.BURST_DEFAULT_DIVISIONS, velocityCurve = Constants.BURST_VELOCITY_CURVE_FLAT, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} burstNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters to valid ranges
+        const useDivisions = Math.max(Constants.BURST_MIN_DIVISIONS,
+            Math.min(Constants.BURST_MAX_DIVISIONS, Math.floor(divisions)));
+        const validCurves = Constants.BURST_VELOCITY_CURVES;
+        const useCurve = validCurves.includes(velocityCurve) ? velocityCurve : Constants.BURST_VELOCITY_CURVE_FLAT;
+        const minVel = Constants.BURST_MIN_VELOCITY;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Burst Notes (${useDivisions}x ${useCurve}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let burstedCount = 0;
+
+        // For each row, walk left-to-right and find the original note to "consume"
+        // We then place (useDivisions - 1) extra sub-notes immediately after, each at a calculated velocity
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+                continue;
+            }
+            const row = activeSeq.data[rowIndex];
+
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (!cell || !cell.active) continue;
+                const originalVel = cell.velocity || Constants.defaultVelocity || 0.7;
+                // How many sub-steps wide is the original note? Use its length if available; default to 1.
+                const originalLength = (cell.length && cell.length > 0) ? cell.length : 1;
+                const subStep = Math.max(1, Math.floor(originalLength / useDivisions));
+                // Iterate sub-divisions; first sub-note replaces the original cell, rest are appended
+                for (let s = 1; s < useDivisions; s++) {
+                    const newCol = col + s * subStep;
+                    if (newCol >= totalSteps) break;
+                    const targetCell = row[newCol];
+                    if (skipOccupied && targetCell && targetCell.active) {
+                        break; // Stop this note's burst chain
+                    }
+                    // Compute velocity for this sub-step based on the curve
+                    // Curve parameter t = s / useDivisions (0..1, exclusive of 0)
+                    const t = useDivisions > 1 ? s / useDivisions : 1;
+                    let curveVel;
+                    if (useCurve === Constants.BURST_VELOCITY_CURVE_DECAY) {
+                        // Linear decay: each sub-note softer
+                        curveVel = originalVel * (1 - t);
+                    } else if (useCurve === Constants.BURST_VELOCITY_CURVE_ATTACK) {
+                        // Linear attack: each sub-note louder
+                        curveVel = originalVel * t;
+                    } else if (useCurve === Constants.BURST_VELOCITY_CURVE_PYRAMID) {
+                        // Triangle: ramp up then down, peak in the middle
+                        const tri = t < 0.5 ? t * 2 : (1 - t) * 2;
+                        curveVel = originalVel * tri;
+                    } else {
+                        // Flat: all at the original velocity
+                        curveVel = originalVel;
+                    }
+                    const clampedVel = Math.max(minVel, Math.min(1.0, curveVel));
+                    newNotes.push({ rowIndex, col: newCol, velocity: clampedVel });
+                }
+            }
+        }
+
+        // Apply the new sub-notes
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity
+                };
+                burstedCount++;
+            }
+        }
+
+        return burstedCount;
+    }
 }
