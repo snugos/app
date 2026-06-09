@@ -4697,8 +4697,10 @@ export class Track {
         // Clamp parameters to valid ranges
         const useDivisions = Math.max(Constants.BURST_MIN_DIVISIONS,
             Math.min(Constants.BURST_MAX_DIVISIONS, Math.floor(divisions)));
+        // Valid velocity curve values: 'flat' (all same), 'decay' (linear decay),
+        // 'attack' (ramp up), or 'pyramid' (accent in middle)
         const validCurves = Constants.BURST_VELOCITY_CURVES;
-        const useCurve = validCurves.includes(velocityCurve) ? velocityCurve : Constants.BURST_VELOCITY_CURVE_FLAT;
+        const useCurve = validCurves.includes(velocityCurve) ? velocityCurve : 'flat';
         const minVel = Constants.BURST_MIN_VELOCITY;
 
         // Capture undo state BEFORE mutation
