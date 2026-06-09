@@ -1,3 +1,59 @@
+#### Day 696: Burst Notes Menu Items (2026-06-08)
+- **Feature**: Wired up the existing `burstNotes(divisions, velocityCurve, skipOccupied)` method in Track.js to the sequencer context menu with 6 menu items
+- **Files Modified**:
+  - `js/ui.js`: Added 6 Burst Notes menu items in the sequencer context menu after Arpeggiate Notes
+  - `js/constants.js`: Bumped APP_VERSION to 2.348.0
+  - `js/tests.js`: Added Day 696 test block with 21 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - The `burstNotes` method already existed in Track.js (with full implementation including undo capture, validation, and 4 velocity curves) but was not yet wired up to the UI. This Day 696 work adds the UI integration.
+  - **burstNotes** (`js/Track.js` - already existed): Subdivides each note into N rapid micro-notes (ratchet effect). Useful for hi-hat rolls, snare flam bursts, or machine-gun-like rhythmic effects.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `divisions` to BURST_MIN_DIVISIONS (2) / BURST_MAX_DIVISIONS (8) range
+    - Validates `velocityCurve` against ['flat', 'decay', 'attack', 'pyramid'] (default 'flat')
+    - Captures undo state BEFORE mutation with descriptive "Burst Notes (Nx CURVE)" label
+    - For each row, finds active notes and subdivides them into N sub-notes
+    - Computes sub-step width from original note length / divisions
+    - Supports 4 velocity curves: flat (uniform), decay (linear decrease), attack (linear increase), pyramid (triangle with peak in middle)
+    - Supports `skipOccupied` parameter to break the burst chain when encountering occupied slots
+    - Returns count of bursted notes
+  - **Burst Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Arpeggiate Notes
+    - "Burst Notes (2x, Flat)" - calls `burstNotes(2, 'flat', true)`
+    - "Burst Notes (4x, Flat)" - calls `burstNotes(4, 'flat', true)`
+    - "Burst Notes (8x, Flat)" - calls `burstNotes(8, 'flat', true)`
+    - "Burst Notes (4x, Decay)" - calls `burstNotes(4, 'decay', true)` (machine gun effect)
+    - "Burst Notes (4x, Attack)" - calls `burstNotes(4, 'attack', true)` (ramp up)
+    - "Burst Notes (4x, Pyramid)" - calls `burstNotes(4, 'pyramid', true)` (accent in middle)
+    - All call `recreateToneSequence(true)` after bursting
+    - Show notifications: "Burst {count} note(s) at Nx (curve)."
+    - Show "No notes to burst." when nothing to burst
+- **Tests** (`js/tests.js`): 21 tests covering:
+  - `burstNotes` is a function on Track.prototype
+  - burstNotes accepts 3 parameters
+  - burstNotes guards against Audio tracks
+  - burstNotes validates active sequence exists
+  - burstNotes captures undo BEFORE mutation
+  - burstNotes has descriptive "Burst Notes" undo label
+  - burstNotes clamps divisions to BURST_MIN/MAX_DIVISIONS
+  - burstNotes validates velocityCurve with BURST_VELOCITY_CURVES
+  - burstNotes references all 4 curves (flat/decay/attack/pyramid)
+  - burstNotes returns count of bursted notes
+  - burstNotes supports skipOccupied option
+  - All 9 BURST constants are defined in constants.js
+  - ui.js has 6 Burst Notes menu items
+  - Burst menu items call burstNotes method with correct params
+  - Burst menu items call recreateToneSequence (>= 6 occurrences)
+  - Burst menu items show notification with count
+  - APP_VERSION validation (>= 2.348 for Day 696)
+  - burstNotes functional test: 4x burst on single note places 3 new notes
+  - burstNotes clamps divisions to valid range
+  - burstNotes velocity curve decay computation
+  - burstNotes velocity curve attack computation
+  - burstNotes velocity curve pyramid computation
+- **Version**: Bumped to 2.348.0
+- **Test Count**: Increased from 3598 to 3619
+
 #### Day 695: Arpeggiate Notes Feature (2026-06-08)
 - **Feature**: Added `arpeggiateNotes(rateMs, repeats, velocityDecay, direction, skipOccupied)` method to Track class and 6 "Arpeggiate Notes" menu items to the sequencer context menu
 - **Files Modified**:

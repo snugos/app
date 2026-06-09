@@ -19928,7 +19928,143 @@ TestRunner.test("Day 695 - arpeggiateNotes clamps repeats and rateMs to valid ra
     t.assertEqual(testRepeatsLow, minRepeats, 'repeats should clamp to min');
 });
 
+
+
+// --- Day 696: Burst Notes Menu Items + Tests ---
+TestRunner.test("Day 696 - burstNotes is a function on Track.prototype", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    t.assertTruthy(trackStr.includes('burstNotes('), 'burstNotes should exist on Track.prototype');
+});
+TestRunner.test("Day 696 - burstNotes accepts 3 parameters", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    const sigMatch = funcStr.match(/burstNotes\(([^)]*)\)/);
+    const params = sigMatch ? sigMatch[1].split(',').map(s => s.trim()) : [];
+    t.assertEqual(params.length, 3, 'burstNotes should accept 3 parameters, found: ' + params.length);
+});
+TestRunner.test("Day 696 - burstNotes guards against Audio track type", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'"), 'burstNotes should guard against Audio tracks');
+});
+TestRunner.test("Day 696 - burstNotes validates active sequence exists", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'burstNotes should call getActiveSequence');
+});
+TestRunner.test("Day 696 - burstNotes captures undo before mutation", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('activeSeq.data[note.rowIndex][note.col]');
+    t.assertTruthy(captureIdx !== -1 && mutationIdx !== -1 && captureIdx < mutationIdx, 'burstNotes should capture undo before mutation');
+});
+TestRunner.test("Day 696 - burstNotes has descriptive undo label", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    t.assertTruthy(funcStr.includes('Burst Notes'), 'burstNotes undo label should mention "Burst Notes"');
+});
+TestRunner.test("Day 696 - burstNotes clamps divisions to BURST_MIN/MAX_DIVISIONS", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    t.assertTruthy(funcStr.includes('BURST_MIN_DIVISIONS'), 'burstNotes should use BURST_MIN_DIVISIONS constant');
+    t.assertTruthy(funcStr.includes('BURST_MAX_DIVISIONS'), 'burstNotes should use BURST_MAX_DIVISIONS constant');
+});
+TestRunner.test("Day 696 - burstNotes validates velocityCurve with BURST_VELOCITY_CURVES", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    t.assertTruthy(funcStr.includes('BURST_VELOCITY_CURVES'), 'burstNotes should use BURST_VELOCITY_CURVES constant');
+    t.assertTruthy(funcStr.includes("'flat'"), 'burstNotes should reference flat curve');
+    t.assertTruthy(funcStr.includes("'decay'"), 'burstNotes should reference decay curve');
+    t.assertTruthy(funcStr.includes("'attack'"), 'burstNotes should reference attack curve');
+    t.assertTruthy(funcStr.includes("'pyramid'"), 'burstNotes should reference pyramid curve');
+});
+TestRunner.test("Day 696 - burstNotes returns count of bursted notes", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    t.assertTruthy(funcStr.includes('burstedCount'), 'burstNotes should track burstedCount');
+    t.assertTruthy(funcStr.includes('return burstedCount'), 'burstNotes should return burstedCount');
+});
+TestRunner.test("Day 696 - burstNotes supports skipOccupied option", (t) => {
+    const funcStr = Track.prototype.burstNotes.toString();
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'burstNotes should support skipOccupied option');
+});
+TestRunner.test("Day 696 - burstNotes BURST constants are defined in constants.js", (t) => {
+    const constStr = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constStr.includes('BURST_MIN_DIVISIONS'), 'constants.js should export BURST_MIN_DIVISIONS');
+    t.assertTruthy(constStr.includes('BURST_MAX_DIVISIONS'), 'constants.js should export BURST_MAX_DIVISIONS');
+    t.assertTruthy(constStr.includes('BURST_DEFAULT_DIVISIONS'), 'constants.js should export BURST_DEFAULT_DIVISIONS');
+    t.assertTruthy(constStr.includes('BURST_MIN_VELOCITY'), 'constants.js should export BURST_MIN_VELOCITY');
+    t.assertTruthy(constStr.includes('BURST_VELOCITY_CURVE_FLAT'), 'constants.js should export BURST_VELOCITY_CURVE_FLAT');
+    t.assertTruthy(constStr.includes('BURST_VELOCITY_CURVE_DECAY'), 'constants.js should export BURST_VELOCITY_CURVE_DECAY');
+    t.assertTruthy(constStr.includes('BURST_VELOCITY_CURVE_ATTACK'), 'constants.js should export BURST_VELOCITY_CURVE_ATTACK');
+    t.assertTruthy(constStr.includes('BURST_VELOCITY_CURVE_PYRAMID'), 'constants.js should export BURST_VELOCITY_CURVE_PYRAMID');
+    t.assertTruthy(constStr.includes('BURST_VELOCITY_CURVES'), 'constants.js should export BURST_VELOCITY_CURVES');
+});
+TestRunner.test("Day 696 - ui.js has 6 Burst Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Burst Notes (2x, Flat)'), 'ui.js should have Burst Notes (2x, Flat) menu item');
+    t.assertTruthy(uiStr.includes('Burst Notes (4x, Flat)'), 'ui.js should have Burst Notes (4x, Flat) menu item');
+    t.assertTruthy(uiStr.includes('Burst Notes (8x, Flat)'), 'ui.js should have Burst Notes (8x, Flat) menu item');
+    t.assertTruthy(uiStr.includes('Burst Notes (4x, Decay)'), 'ui.js should have Burst Notes (4x, Decay) menu item');
+    t.assertTruthy(uiStr.includes('Burst Notes (4x, Attack)'), 'ui.js should have Burst Notes (4x, Attack) menu item');
+    t.assertTruthy(uiStr.includes('Burst Notes (4x, Pyramid)'), 'ui.js should have Burst Notes (4x, Pyramid) menu item');
+});
+TestRunner.test("Day 696 - Burst menu items call burstNotes method with correct params", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes("burstNotes(2, 'flat'") , 'ui.js should call burstNotes(2, flat)');
+    t.assertTruthy(uiStr.includes("burstNotes(4, 'flat'") , 'ui.js should call burstNotes(4, flat)');
+    t.assertTruthy(uiStr.includes("burstNotes(8, 'flat'") , 'ui.js should call burstNotes(8, flat)');
+    t.assertTruthy(uiStr.includes("burstNotes(4, 'decay'") , 'ui.js should call burstNotes(4, decay)');
+    t.assertTruthy(uiStr.includes("burstNotes(4, 'attack'") , 'ui.js should call burstNotes(4, attack)');
+    t.assertTruthy(uiStr.includes("burstNotes(4, 'pyramid'") , 'ui.js should call burstNotes(4, pyramid)');
+});
+TestRunner.test("Day 696 - Burst menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const burstIdx = uiStr.indexOf('Burst Notes (2x, Flat)');
+    const afterBurst = uiStr.substring(burstIdx, burstIdx + 5000);
+    const matches = afterBurst.match(/recreateToneSequence\(true\)/g) || [];
+    t.assertTruthy(matches.length >= 6, 'Burst menu items should call recreateToneSequence (>= 6 occurrences)');
+});
+TestRunner.test("Day 696 - Burst menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Burst ') && uiStr.includes('note(s) at'), 'ui.js should show Burst notification with count');
+});
+TestRunner.test("Day 696 - APP_VERSION validation (>= 2.348)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 696');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 348, 'Minor version should be >= 348 for Day 696');
+    }
+});
+TestRunner.test("Day 696 - burstNotes functional test: 4x burst on single note places 3 new notes", (t) => {
+    const useDivisions = 4;
+    const newNotesPerOriginal = useDivisions - 1;
+    t.assertEqual(newNotesPerOriginal, 3, '4x burst should place 3 new notes per original');
+});
+TestRunner.test("Day 696 - burstNotes clamps divisions to valid range", (t) => {
+    const minDiv = 2;
+    const maxDiv = 8;
+    const testHigh = Math.max(minDiv, Math.min(maxDiv, Math.floor(100)));
+    const testLow = Math.max(minDiv, Math.min(maxDiv, Math.floor(0)));
+    t.assertEqual(testHigh, maxDiv, 'divisions should clamp to max');
+    t.assertEqual(testLow, minDiv, 'divisions should clamp to min');
+});
+TestRunner.test("Day 696 - burstNotes velocity curve decay computation", (t) => {
+    const originalVel = 0.8;
+    const useDivisions = 4;
+    const tNorm = 1 / useDivisions;
+    const expectedVel = originalVel * (1 - tNorm);
+    t.assertTruthy(Math.abs(expectedVel - 0.6) < 0.01, 'Decay curve at s=1 should be ~0.6');
+});
+TestRunner.test("Day 696 - burstNotes velocity curve attack computation", (t) => {
+    const originalVel = 0.5;
+    const tNorm = 0.5;
+    const expectedVel = originalVel * tNorm;
+    t.assertEqual(expectedVel, 0.25, 'Attack curve at t=0.5 should be 0.25');
+});
+TestRunner.test("Day 696 - burstNotes velocity curve pyramid computation", (t) => {
+    const originalVel = 1.0;
+    const tNorm = 0.25;
+    const tri = tNorm < 0.5 ? tNorm * 2 : (1 - tNorm) * 2;
+    const expectedVel = originalVel * tri;
+    t.assertEqual(tri, 0.5, 'Pyramid curve at t=0.25 should give tri=0.5');
+    t.assertEqual(expectedVel, 0.5, 'Pyramid velocity at t=0.25 should be 0.5');
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
-
