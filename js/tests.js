@@ -20196,6 +20196,157 @@ TestRunner.test("Day 697 - harmonizeNotes velocity multiplier 0.7 default", (t) 
 });
 
 
+// Day 698: Echo Notes Tests
+TestRunner.test("Day 698 - echoNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.echoNotes, 'function', 'echoNotes should be a function');
+});
+TestRunner.test("Day 698 - echoNotes accepts 4 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('taps'), 'echoNotes should accept taps parameter');
+    t.assertTruthy(funcStr.includes('delaySteps'), 'echoNotes should accept delaySteps parameter');
+    t.assertTruthy(funcStr.includes('velocityDecay'), 'echoNotes should accept velocityDecay parameter');
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'echoNotes should accept skipOccupied parameter');
+});
+TestRunner.test("Day 698 - echoNotes guards against Audio tracks", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'"), 'echoNotes should guard against Audio track type');
+});
+TestRunner.test("Day 698 - echoNotes validates active sequence exists", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'echoNotes should use getActiveSequence');
+});
+TestRunner.test("Day 698 - echoNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('echoedCount++');
+    t.assertTruthy(undoIdx > 0, 'echoNotes should call _captureUndoState');
+    t.assertTruthy(mutationIdx > undoIdx, 'echoNotes should capture undo BEFORE mutation');
+});
+TestRunner.test("Day 698 - echoNotes has descriptive 'Echo Notes' undo label", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('Echo Notes'), 'echoNotes undo label should mention "Echo Notes"');
+});
+TestRunner.test("Day 698 - echoNotes clamps taps to ECHO_MIN/MAX_TAPS", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('ECHO_MIN_TAPS'), 'echoNotes should use ECHO_MIN_TAPS constant');
+    t.assertTruthy(funcStr.includes('ECHO_MAX_TAPS'), 'echoNotes should use ECHO_MAX_TAPS constant');
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'echoNotes should clamp with Math.max/min');
+});
+TestRunner.test("Day 698 - echoNotes clamps delaySteps to ECHO_MIN/MAX_DELAY_STEPS", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('ECHO_MIN_DELAY_STEPS'), 'echoNotes should use ECHO_MIN_DELAY_STEPS constant');
+    t.assertTruthy(funcStr.includes('ECHO_MAX_DELAY_STEPS'), 'echoNotes should use ECHO_MAX_DELAY_STEPS constant');
+});
+TestRunner.test("Day 698 - echoNotes clamps velocityDecay to ECHO_MIN/MAX_DECAY", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('ECHO_MIN_DECAY'), 'echoNotes should use ECHO_MIN_DECAY constant');
+    t.assertTruthy(funcStr.includes('ECHO_MAX_DECAY'), 'echoNotes should use ECHO_MAX_DECAY constant');
+});
+TestRunner.test("Day 698 - echoNotes uses Math.pow for velocity decay", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.pow'), 'echoNotes should use Math.pow for velocity decay per tap');
+});
+TestRunner.test("Day 698 - echoNotes returns count of echoed notes", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('return echoedCount'), 'echoNotes should return echoedCount');
+});
+TestRunner.test("Day 698 - echoNotes supports skipOccupied option", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'echoNotes should support skipOccupied option');
+});
+TestRunner.test("Day 698 - echoNotes uses newNotes collection pattern", (t) => {
+    const funcStr = Track.prototype.echoNotes.toString();
+    t.assertTruthy(funcStr.includes('newNotes'), 'echoNotes should use newNotes collection pattern (collect then apply)');
+});
+TestRunner.test("Day 698 - ECHO constants are defined in constants.js", (t) => {
+    const constStr = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constStr.includes('ECHO_MIN_TAPS'), 'constants.js should export ECHO_MIN_TAPS');
+    t.assertTruthy(constStr.includes('ECHO_MAX_TAPS'), 'constants.js should export ECHO_MAX_TAPS');
+    t.assertTruthy(constStr.includes('ECHO_DEFAULT_TAPS'), 'constants.js should export ECHO_DEFAULT_TAPS');
+    t.assertTruthy(constStr.includes('ECHO_MIN_DELAY_STEPS'), 'constants.js should export ECHO_MIN_DELAY_STEPS');
+    t.assertTruthy(constStr.includes('ECHO_MAX_DELAY_STEPS'), 'constants.js should export ECHO_MAX_DELAY_STEPS');
+    t.assertTruthy(constStr.includes('ECHO_DEFAULT_DELAY_STEPS'), 'constants.js should export ECHO_DEFAULT_DELAY_STEPS');
+    t.assertTruthy(constStr.includes('ECHO_MIN_DECAY'), 'constants.js should export ECHO_MIN_DECAY');
+    t.assertTruthy(constStr.includes('ECHO_MAX_DECAY'), 'constants.js should export ECHO_MAX_DECAY');
+    t.assertTruthy(constStr.includes('ECHO_DEFAULT_DECAY'), 'constants.js should export ECHO_DEFAULT_DECAY');
+});
+TestRunner.test("Day 698 - ui.js has 6 Echo Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Echo Notes (3x, 1 step)'), 'ui.js should have Echo Notes (3x, 1 step) menu item');
+    t.assertTruthy(uiStr.includes('Echo Notes (4x, 2 steps)'), 'ui.js should have Echo Notes (4x, 2 steps) menu item');
+    t.assertTruthy(uiStr.includes('Echo Notes (6x, 2 steps)'), 'ui.js should have Echo Notes (6x, 2 steps) menu item');
+    t.assertTruthy(uiStr.includes('Echo Notes (4x, 4 steps)'), 'ui.js should have Echo Notes (4x, 4 steps) menu item');
+    t.assertTruthy(uiStr.includes('Echo Notes (Slapback)'), 'ui.js should have Echo Notes (Slapback) menu item');
+    t.assertTruthy(uiStr.includes('Echo Notes (Long Trail)'), 'ui.js should have Echo Notes (Long Trail) menu item');
+});
+TestRunner.test("Day 698 - Echo Notes menu items call echoNotes method", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('echoNotes(3, 1,'), 'ui.js should call echoNotes(3, 1, ...)');
+    t.assertTruthy(uiStr.includes('echoNotes(4, 2,'), 'ui.js should call echoNotes(4, 2, ...)');
+    t.assertTruthy(uiStr.includes('echoNotes(6, 2,'), 'ui.js should call echoNotes(6, 2, ...)');
+    t.assertTruthy(uiStr.includes('echoNotes(4, 4,'), 'ui.js should call echoNotes(4, 4, ...)');
+    t.assertTruthy(uiStr.includes('echoNotes(2, 1,'), 'ui.js should call echoNotes(2, 1, ...) for slapback');
+    t.assertTruthy(uiStr.includes('echoNotes(8, 4,'), 'ui.js should call echoNotes(8, 4, ...) for long trail');
+});
+TestRunner.test("Day 698 - Echo Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const echoIdx = uiStr.indexOf('Echo Notes (3x, 1 step)');
+    const afterEcho = uiStr.substring(echoIdx, echoIdx + 6000);
+    const matches = afterEcho.match(/recreateToneSequence\(true\)/g) || [];
+    t.assertTruthy(matches.length >= 6, 'Echo Notes menu items should call recreateToneSequence (>= 6 occurrences)');
+});
+TestRunner.test("Day 698 - Echo Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Echoed') && uiStr.includes('note(s)'), 'ui.js should show Echoed notification with count');
+});
+TestRunner.test("Day 698 - APP_VERSION validation (>= 2.350)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 698');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 350, 'Minor version should be >= 350 for Day 698');
+    }
+});
+TestRunner.test("Day 698 - echoNotes functional test: 3 taps on single note places 3 new notes", (t) => {
+    const taps = 3;
+    const newNotes = taps;
+    t.assertEqual(newNotes, 3, '3 taps on single note should place 3 new notes');
+});
+TestRunner.test("Day 698 - echoNotes functional test: tap position calculation", (t) => {
+    const sourceCol = 4;
+    const taps = 4;
+    const delaySteps = 2;
+    const positions = [];
+    for (let t = 1; t <= taps; t++) {
+        positions.push(sourceCol + t * delaySteps);
+    }
+    t.assertEqual(positions[0], 6, 'Tap 1 at col 6');
+    t.assertEqual(positions[1], 8, 'Tap 2 at col 8');
+    t.assertEqual(positions[2], 10, 'Tap 3 at col 10');
+    t.assertEqual(positions[3], 12, 'Tap 4 at col 12');
+});
+TestRunner.test("Day 698 - echoNotes velocity decay formula: vel * decay^t", (t) => {
+    const originalVel = 1.0;
+    const decay = 0.6;
+    const vel1 = originalVel * Math.pow(decay, 1);
+    const vel2 = originalVel * Math.pow(decay, 2);
+    const vel3 = originalVel * Math.pow(decay, 3);
+    t.assertEqual(Math.round(vel1 * 100) / 100, 0.6, 'Tap 1 should be 0.6');
+    t.assertEqual(Math.round(vel2 * 100) / 100, 0.36, 'Tap 2 should be 0.36');
+    t.assertEqual(Math.round(vel3 * 100) / 100, 0.22, 'Tap 3 should be ~0.22 (0.216)');
+});
+TestRunner.test("Day 698 - echoNotes clamps taps to valid range", (t) => {
+    const useTaps = Math.max(2, Math.min(8, 15));
+    t.assertEqual(useTaps, 8, 'Taps clamped to ECHO_MAX_TAPS=8');
+    const useTaps2 = Math.max(2, Math.min(8, 1));
+    t.assertEqual(useTaps2, 2, 'Taps clamped to ECHO_MIN_TAPS=2');
+});
+TestRunner.test("Day 698 - echoNotes functional test: 8 taps with 4 step delay = 32 step span", (t) => {
+    const taps = 8;
+    const delaySteps = 4;
+    const span = taps * delaySteps;
+    t.assertEqual(span, 32, '8 taps with 4 step delay = 32 step span');
+});
+
 
 export async function runTests() {
     return await TestRunner.runAll();

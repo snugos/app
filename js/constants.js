@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.349.0';
+export const APP_VERSION = '2.350.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -99,6 +99,16 @@ export const HARMONIZE_DEFAULT_VELOCITY_FACTOR = 0.7; // Default velocity factor
 export const HARMONIZE_VOICING_CLOSED = 'closed'; // Closed voicing (tight chord in same octave)
 export const HARMONIZE_VOICING_WIDE = 'wide'; // Wide voicing (spread across two octaves)
 export const HARMONIZE_VOICINGS = [HARMONIZE_VOICING_CLOSED, HARMONIZE_VOICING_WIDE];
+
+export const ECHO_MIN_TAPS = 2; // Minimum number of delay taps per source note
+export const ECHO_MAX_TAPS = 8; // Maximum number of delay taps per source note
+export const ECHO_DEFAULT_TAPS = 4; // Default number of delay taps
+export const ECHO_MIN_DELAY_STEPS = 1; // Minimum steps between delay taps
+export const ECHO_MAX_DELAY_STEPS = 16; // Maximum steps between delay taps
+export const ECHO_DEFAULT_DELAY_STEPS = 2; // Default 2 steps (1/8 note) between taps
+export const ECHO_MIN_DECAY = 0.1; // Minimum velocity decay (each tap at 10% of prev)
+export const ECHO_MAX_DECAY = 1.0; // Maximum decay (1.0 = no decay)
+export const ECHO_DEFAULT_DECAY = 0.6; // Default 60% decay per tap (natural echo taper)
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 

@@ -1,3 +1,74 @@
+#### Day 698: Echo Notes Feature (2026-06-10)
+- **Feature**: Added `echoNotes(taps, delaySteps, velocityDecay, skipOccupied)` method to Track class and 6 "Echo Notes" menu items to the sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `echoNotes` method after `burstNotes` (line ~4878)
+  - `js/constants.js`: Added 9 ECHO_* constants + bumped APP_VERSION to 2.350.0
+  - `js/ui.js`: Added 6 Echo Notes menu items in the sequencer context menu after Chord Harmonize
+  - `js/tests.js`: Added Day 698 test block with 24 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **echoNotes** (`js/Track.js`): Delay-repeats each active note N times at a fixed step offset with velocity decay. Creates a classic dotted-eighth echo or slapback effect at the sequencer (note) level — distinct from the audio effect echo running on the master bus. Useful for adding rhythmic echo tails to melodies, kick patterns, or percussion.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `taps` to ECHO_MIN_TAPS (2) / ECHO_MAX_TAPS (8) range (default ECHO_DEFAULT_TAPS=4)
+    - Clamps `delaySteps` to ECHO_MIN_DELAY_STEPS (1) / ECHO_MAX_DELAY_STEPS (16) range (default ECHO_DEFAULT_DELAY_STEPS=2)
+    - Clamps `velocityDecay` to ECHO_MIN_DECAY (0.1) / ECHO_MAX_DECAY (1.0) range (default ECHO_DEFAULT_DECAY=0.6)
+    - Captures undo state BEFORE mutation with descriptive "Echo Notes (Nx @ Y steps)" label
+    - Collects new echo notes into `newNotes` array before applying (avoids mutating while iterating)
+    - For each active note, places N delayed echoes at `col + t * delaySteps` with velocity `originalVel * decay^t`
+    - Math.pow for exponential velocity decay: tap 1 = vel * decay, tap 2 = vel * decay^2, etc.
+    - Stops placing when `newCol >= totalSteps` (respects sequence length)
+    - `skipOccupied=true` breaks the echo chain when target slot is occupied
+    - Velocity clamped to ECHO_MIN_DECAY (0.1) - 1.0 range
+    - Returns count of echoed notes added
+  - **Echo Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Chord Harmonize (with separator)
+    - "Echo Notes (3x, 1 step)" - calls `echoNotes(3, 1, 0.6, true)` - quick 3-tap echo at 1/16 spacing
+    - "Echo Notes (4x, 2 steps)" - calls `echoNotes(4, 2, 0.6, true)` - standard 4-tap echo at 1/8 spacing
+    - "Echo Notes (6x, 2 steps)" - calls `echoNotes(6, 2, 0.6, true)` - longer 6-tap echo
+    - "Echo Notes (4x, 4 steps)" - calls `echoNotes(4, 4, 0.7, true)` - quarter-note echo spacing
+    - "Echo Notes (Slapback)" - calls `echoNotes(2, 1, 0.5, true)` - 2-tap tight slapback
+    - "Echo Notes (Long Trail)" - calls `echoNotes(8, 4, 0.8, true)` - 8-tap long trail
+    - All call `recreateToneSequence(true)` after echoing
+    - Show notifications: "Echoed {count} note(s) ({variant})."
+    - Show "No notes to echo." when nothing to echo
+- **Constants** (`js/constants.js`): 9 new constants
+  - `ECHO_MIN_TAPS = 2` - Minimum delay taps per source note
+  - `ECHO_MAX_TAPS = 8` - Maximum delay taps per source note
+  - `ECHO_DEFAULT_TAPS = 4` - Default number of delay taps
+  - `ECHO_MIN_DELAY_STEPS = 1` - Minimum steps between delay taps
+  - `ECHO_MAX_DELAY_STEPS = 16` - Maximum steps between delay taps
+  - `ECHO_DEFAULT_DELAY_STEPS = 2` - Default 2 steps (1/8 note) between taps
+  - `ECHO_MIN_DECAY = 0.1` - Minimum velocity decay per tap
+  - `ECHO_MAX_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `ECHO_DEFAULT_DECAY = 0.6` - Default 60% decay per tap (natural echo taper)
+- **Tests** (`js/tests.js`): 24 tests covering:
+  - `echoNotes` is a function on Track.prototype
+  - `echoNotes` accepts 4 parameters with defaults (taps, delaySteps, velocityDecay, skipOccupied)
+  - `echoNotes` guards against Audio tracks
+  - `echoNotes` validates active sequence exists
+  - `echoNotes` captures undo BEFORE mutation
+  - `echoNotes` has descriptive "Echo Notes" undo label
+  - `echoNotes` clamps taps to ECHO_MIN/MAX_TAPS with Math.max/min
+  - `echoNotes` clamps delaySteps to ECHO_MIN/MAX_DELAY_STEPS
+  - `echoNotes` clamps velocityDecay to ECHO_MIN/MAX_DECAY
+  - `echoNotes` uses Math.pow for velocity decay
+  - `echoNotes` returns count of echoed notes
+  - `echoNotes` supports skipOccupied option
+  - `echoNotes` uses newNotes collection pattern (collect then apply)
+  - All 9 ECHO constants are defined in constants.js
+  - ui.js has 6 Echo Notes menu items
+  - Menu items call echoNotes method with correct params
+  - Menu items call recreateToneSequence (>= 6 occurrences)
+  - Menu items show notification with count
+  - APP_VERSION validation (>= 2.350 for Day 698)
+  - Functional test: 3 taps on single note places 3 new notes
+  - Functional test: tap position calculation (col + t * delaySteps)
+  - Functional test: velocity decay formula (vel * decay^t)
+  - Functional test: clamps taps to valid range
+  - Functional test: 8 taps with 4 step delay = 32 step span
+- **Version**: Bumped to 2.350.0
+- **Test Count**: Increased from 3646 to 3666
+
 #### Day 697: Chord Harmonize Feature (2026-06-09)
 - **Feature**: Added `harmonizeNotes(velocityFactor, voicing, skipOccupied)` method to Track class and 6 "Chord Harmonize" menu items to the sequencer context menu
 - **Files Modified**:

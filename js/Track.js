@@ -4875,4 +4875,79 @@ export class Track {
 
         return burstedCount;
     }
+
+    // Echo Notes - delay-repeat each active note N times at a fixed step offset with velocity decay
+    // Creates a classic dotted-eighth echo or slapback effect at the sequencer (note) level
+    // (distinct from the audio effect echo, which runs on the master bus)
+    // taps: total number of repeats per source note (2-8). Original note is kept, taps are placed AFTER it
+    // delaySteps: how many steps between each tap (1-16)
+    // velocityDecay: factor to multiply velocity by for each subsequent tap (0.1-1.0)
+    //                1.0 = no decay (constant echo), 0.6 = natural taper (default)
+    // skipOccupied: if true, stop placing taps when a target slot already has a note
+    echoNotes(taps = Constants.ECHO_DEFAULT_TAPS, delaySteps = Constants.ECHO_DEFAULT_DELAY_STEPS, velocityDecay = Constants.ECHO_DEFAULT_DECAY, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} echoNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters to valid ranges
+        const useTaps = Math.max(Constants.ECHO_MIN_TAPS, Math.min(Constants.ECHO_MAX_TAPS, Math.floor(taps)));
+        const useDelaySteps = Math.max(Constants.ECHO_MIN_DELAY_STEPS,
+            Math.min(Constants.ECHO_MAX_DELAY_STEPS, Math.floor(delaySteps)));
+        const useDecay = Math.max(Constants.ECHO_MIN_DECAY, Math.min(Constants.ECHO_MAX_DECAY, velocityDecay));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Echo Notes (${useTaps}x @ ${useDelaySteps} steps) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let echoedCount = 0;
+
+        // Collect source notes that already have echoes (we won't re-echo them)
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+                continue;
+            }
+            const row = activeSeq.data[rowIndex];
+
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (!cell || !cell.active) continue;
+                const originalVel = cell.velocity || Constants.defaultVelocity || 0.7;
+                // Place (useTaps) delayed echoes after this source note, each at originalVel * decay^i
+                for (let t = 1; t <= useTaps; t++) {
+                    const newCol = col + t * useDelaySteps;
+                    if (newCol >= totalSteps) break;
+                    const targetCell = row[newCol];
+                    if (skipOccupied && targetCell && targetCell.active) {
+                        break; // Stop this source note's echo chain
+                    }
+                    const decayedVel = originalVel * Math.pow(useDecay, t);
+                    const clampedVel = Math.max(Constants.ECHO_MIN_DECAY, Math.min(1.0, decayedVel));
+                    newNotes.push({ rowIndex, col: newCol, velocity: clampedVel });
+                }
+            }
+        }
+
+        // Apply the new echoes
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity
+                };
+                echoedCount++;
+            }
+        }
+
+        return echoedCount;
+    }
 }
