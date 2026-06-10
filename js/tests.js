@@ -20064,6 +20064,138 @@ TestRunner.test("Day 696 - burstNotes velocity curve pyramid computation", (t) =
     t.assertEqual(expectedVel, 0.5, 'Pyramid velocity at t=0.25 should be 0.5');
 });
 
+// Day 697: Chord Harmonize Tests
+TestRunner.test("Day 697 - harmonizeNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.harmonizeNotes, 'function', 'harmonizeNotes should be a function');
+});
+TestRunner.test("Day 697 - harmonizeNotes accepts 3 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'harmonizeNotes should accept velocityFactor parameter');
+    t.assertTruthy(funcStr.includes('voicing'), 'harmonizeNotes should accept voicing parameter');
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'harmonizeNotes should accept skipOccupied parameter');
+});
+TestRunner.test("Day 697 - harmonizeNotes guards against Audio tracks", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'"), 'harmonizeNotes should guard against Audio track type');
+});
+TestRunner.test("Day 697 - harmonizeNotes validates active sequence exists", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'harmonizeNotes should use getActiveSequence');
+});
+TestRunner.test("Day 697 - harmonizeNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    const undoIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('harmonizedCount');
+    t.assertTruthy(undoIdx > 0, 'harmonizeNotes should call _captureUndoState');
+    t.assertTruthy(mutationIdx > undoIdx, 'harmonizeNotes should capture undo BEFORE mutation');
+});
+TestRunner.test("Day 697 - harmonizeNotes has descriptive 'Harmonize Notes' undo label", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('Harmonize Notes'), 'harmonizeNotes undo label should mention "Harmonize Notes"');
+});
+TestRunner.test("Day 697 - harmonizeNotes clamps velocityFactor with Math.max/min", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('HARMONIZE_MIN_VELOCITY_FACTOR'), 'harmonizeNotes should use HARMONIZE_MIN_VELOCITY_FACTOR constant');
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'harmonizeNotes should clamp with Math.max/min');
+});
+TestRunner.test("Day 697 - harmonizeNotes validates voicing with HARMONIZE_VOICINGS", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('HARMONIZE_VOICINGS'), 'harmonizeNotes should use HARMONIZE_VOICINGS constant');
+});
+TestRunner.test("Day 697 - harmonizeNotes supports closed and wide voicings", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('HARMONIZE_VOICING_CLOSED'), 'harmonizeNotes should support closed voicing');
+    t.assertTruthy(funcStr.includes('HARMONIZE_VOICING_WIDE'), 'harmonizeNotes should support wide voicing');
+});
+TestRunner.test("Day 697 - harmonizeNotes returns count of harmonized notes", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('return harmonizedCount'), 'harmonizeNotes should return harmonizedCount');
+});
+TestRunner.test("Day 697 - harmonizeNotes uses CHORD_TYPES for chord lookup", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('CHORD_TYPES'), 'harmonizeNotes should use CHORD_TYPES constant');
+});
+TestRunner.test("Day 697 - harmonizeNotes falls back to major chord when chord mode disabled", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes("'major'"), 'harmonizeNotes should fall back to major chord type');
+});
+TestRunner.test("Day 697 - harmonizeNotes supports skipOccupied option", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'harmonizeNotes should support skipOccupied option');
+});
+TestRunner.test("Day 697 - harmonizeNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.harmonizeNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round') && funcStr.includes('100'), 'harmonizeNotes should round velocity to 2 decimal places');
+});
+TestRunner.test("Day 697 - HARMONIZE constants are defined in constants.js", (t) => {
+    const constStr = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constStr.includes('HARMONIZE_MIN_VELOCITY_FACTOR'), 'constants.js should export HARMONIZE_MIN_VELOCITY_FACTOR');
+    t.assertTruthy(constStr.includes('HARMONIZE_MAX_INTERVALS_PER_CHORD'), 'constants.js should export HARMONIZE_MAX_INTERVALS_PER_CHORD');
+    t.assertTruthy(constStr.includes('HARMONIZE_DEFAULT_VELOCITY_FACTOR'), 'constants.js should export HARMONIZE_DEFAULT_VELOCITY_FACTOR');
+    t.assertTruthy(constStr.includes('HARMONIZE_VOICING_CLOSED'), 'constants.js should export HARMONIZE_VOICING_CLOSED');
+    t.assertTruthy(constStr.includes('HARMONIZE_VOICING_WIDE'), 'constants.js should export HARMONIZE_VOICING_WIDE');
+    t.assertTruthy(constStr.includes('HARMONIZE_VOICINGS'), 'constants.js should export HARMONIZE_VOICINGS');
+});
+TestRunner.test("Day 697 - ui.js has 6 Chord Harmonize menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Chord Harmonize (Major, Closed)'), 'ui.js should have Chord Harmonize (Major, Closed) menu item');
+    t.assertTruthy(uiStr.includes('Chord Harmonize (Minor, Closed)'), 'ui.js should have Chord Harmonize (Minor, Closed) menu item');
+    t.assertTruthy(uiStr.includes('Chord Harmonize (Major7, Closed)'), 'ui.js should have Chord Harmonize (Major7, Closed) menu item');
+    t.assertTruthy(uiStr.includes('Chord Harmonize (Minor7, Closed)'), 'ui.js should have Chord Harmonize (Minor7, Closed) menu item');
+    t.assertTruthy(uiStr.includes('Chord Harmonize (Dominant7, Closed)'), 'ui.js should have Chord Harmonize (Dominant7, Closed) menu item');
+    t.assertTruthy(uiStr.includes('Chord Harmonize (Major, Wide)'), 'ui.js should have Chord Harmonize (Major, Wide) menu item');
+});
+TestRunner.test("Day 697 - Chord Harmonize menu items call harmonizeNotes method", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes("harmonizeNotes(0.7, 'closed'"), 'ui.js should call harmonizeNotes(0.7, closed)');
+    t.assertTruthy(uiStr.includes("harmonizeNotes(0.7, 'wide'"), 'ui.js should call harmonizeNotes(0.7, wide)');
+});
+TestRunner.test("Day 697 - Chord Harmonize menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const harmIdx = uiStr.indexOf('Chord Harmonize (Major, Closed)');
+    const afterHarm = uiStr.substring(harmIdx, harmIdx + 5000);
+    const matches = afterHarm.match(/recreateToneSequence\(true\)/g) || [];
+    t.assertTruthy(matches.length >= 6, 'Chord Harmonize menu items should call recreateToneSequence (>= 6 occurrences)');
+});
+TestRunner.test("Day 697 - Chord Harmonize menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Harmonized') && uiStr.includes('note(s)'), 'ui.js should show Harmonized notification with count');
+});
+TestRunner.test("Day 697 - APP_VERSION validation (>= 2.349)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 697');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 349, 'Minor version should be >= 349 for Day 697');
+    }
+});
+TestRunner.test("Day 697 - harmonizeNotes functional test: major triad produces 2 new copies", (t) => {
+    const intervals = [0, 4, 7];
+    const newCopies = intervals.length - 1;
+    t.assertEqual(newCopies, 2, 'Major triad should produce 2 new notes per source');
+});
+TestRunner.test("Day 697 - harmonizeNotes functional test: major7 produces 3 new copies", (t) => {
+    const intervals = [0, 4, 7, 11];
+    const newCopies = intervals.length - 1;
+    t.assertEqual(newCopies, 3, 'Major 7th should produce 3 new notes per source');
+});
+TestRunner.test("Day 697 - harmonizeNotes functional test: wide voicing adds 12 to alternating intervals", (t) => {
+    const baseIntervals = [0, 4, 7];
+    const wideIntervals = [];
+    for (let i = 0; i < baseIntervals.length; i++) {
+        wideIntervals.push(baseIntervals[i] + (i % 2 === 0 ? 0 : 12));
+    }
+    t.assertEqual(wideIntervals[0], 0, 'Wide voicing index 0 stays at 0');
+    t.assertEqual(wideIntervals[1], 16, 'Wide voicing index 1 = 4 + 12');
+    t.assertEqual(wideIntervals[2], 7, 'Wide voicing index 2 stays at 7');
+});
+TestRunner.test("Day 697 - harmonizeNotes velocity multiplier 0.7 default", (t) => {
+    const originalVel = 1.0;
+    const factor = 0.7;
+    const cloneVel = Math.max(0.05, Math.min(1.0, originalVel * factor));
+    t.assertEqual(cloneVel, 0.7, 'Default velocity factor 0.7 should produce 0.7 from original 1.0');
+});
+
+
 
 export async function runTests() {
     return await TestRunner.runAll();

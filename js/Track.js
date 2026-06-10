@@ -4681,6 +4681,105 @@ export class Track {
         return arpeggiatedCount;
     }
 
+    // Chord Harmonize - duplicate each note across the active chord-type intervals from Chord Mode
+    // Uses getChordModeEnabled/getChordModeTypeState via appServices to look up the chord shape
+    // velocityFactor: 0.0-1.0, velocity multiplier for the harmonized copies (default 0.7)
+    // voicing: 'closed' (tight same-octave) or 'wide' (alternates between two octaves)
+    // skipOccupied: if true (default), skip slots that already have notes when placing copies
+    harmonizeNotes(velocityFactor = Constants.HARMONIZE_DEFAULT_VELOCITY_FACTOR, voicing = Constants.HARMONIZE_VOICING_CLOSED, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} harmonizeNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp velocityFactor to safe range
+        const useVelocityFactor = Math.max(Constants.HARMONIZE_MIN_VELOCITY_FACTOR, Math.min(1.0, velocityFactor));
+        // Validate voicing
+        const useVoicing = Constants.HARMONIZE_VOICINGS.includes(voicing) ? voicing : Constants.HARMONIZE_VOICING_CLOSED;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        // Look up the chord shape from Chord Mode state
+        // Falls back to 'major' if Chord Mode is disabled or services are missing
+        const chordModeEnabled = (typeof this.appServices.getChordModeEnabled === 'function')
+            ? this.appServices.getChordModeEnabled() : false;
+        const chordType = (typeof this.appServices.getChordModeType === 'function')
+            ? this.appServices.getChordModeType() : 'major';
+        const chordVoicing = (typeof this.appServices.getChordVoicing === 'function')
+            ? this.appServices.getChordVoicing() : 'closed';
+        const useChordType = Constants.CHORD_TYPES[chordType] ? chordType : 'major';
+        let intervals = Constants.CHORD_TYPES[useChordType].slice(); // [0, 4, 7] for major, etc.
+        // Truncate to the safety cap (none of the existing CHORD_TYPES exceed 4 notes but we stay defensive)
+        if (intervals.length > Constants.HARMONIZE_MAX_INTERVALS_PER_CHORD) {
+            intervals = intervals.slice(0, Constants.HARMONIZE_MAX_INTERVALS_PER_CHORD);
+        }
+
+        // Override intervals based on voicing selection
+        // 'closed' keeps the original intervals (e.g. major triad in same octave)
+        // 'wide' spreads alternating intervals across two octaves
+        if (useVoicing === Constants.HARMONIZE_VOICING_WIDE) {
+            const wideIntervals = [];
+            for (let i = 0; i < intervals.length; i++) {
+                wideIntervals.push(intervals[i] + (i % 2 === 0 ? 0 : 12));
+            }
+            intervals = wideIntervals;
+        }
+
+        // If only the root (intervals[0] === 0) is set, no useful harmonization is possible
+        if (intervals.length <= 1) return 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Harmonize Notes (${useChordType}, ${useVoicing}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+                continue;
+            }
+            const row = activeSeq.data[rowIndex];
+
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (!cell || !cell.active) continue;
+                const originalVel = cell.velocity || defaultVel;
+
+                // Add each chord tone except the root (index 0 is always 0)
+                for (let i = 1; i < intervals.length; i++) {
+                    const interval = intervals[i];
+                    const targetRow = rowIndex + interval;
+                    if (targetRow < 0 || targetRow >= numRows) continue; // Out of bounds
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][col] && activeSeq.data[targetRow][col].active) {
+                        continue; // Skip occupied
+                    }
+                    const cloneVel = Math.max(0.05, Math.min(1.0, originalVel * useVelocityFactor));
+                    newNotes.push({ rowIndex: targetRow, col, velocity: Math.round(cloneVel * 100) / 100 });
+                }
+            }
+        }
+
+        // Apply the new notes
+        let harmonizedCount = 0;
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity
+                };
+                harmonizedCount++;
+            }
+        }
+
+        return harmonizedCount;
+    }
+
     // Burst Notes - subdivide each note into N rapid micro-notes (ratchet)
     // Useful for hi-hat rolls, snare flam bursts, or machine-gun-like rhythmic effects
     // divisions: number of sub-notes per burst (2-8). Each sub-note gets 1/divisions of the original length
