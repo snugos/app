@@ -222,6 +222,13 @@ export function initializePrimaryEventListeners(appContext) {
             menuKeyboardShortcuts: () => { if(services.showKeyboardShortcutsHelpWindow) services.showKeyboardShortcutsHelpWindow(); },
             menuSaveTrackAsTemplate: () => { if(services.showNotification) services.showNotification("Save Track as Template: Right-click a track header.", 3000); },
             menuOpenTrackTemplates: () => { if(services.openTrackTemplatesWindow) services.openTrackTemplatesWindow(); },
+            menuOpenScaleMode: () => { if(services.openScaleModeWindow) services.openScaleModeWindow(); },
+            menuOpenChordMode: () => { if(services.openChordModeWindow) services.openChordModeWindow(); },
+            menuOpenMidiCCMappings: () => { if(services.openMidiCCMappingsWindow) services.openMidiCCMappingsWindow(); },
+            menuOpenTrackGroups: () => { if(services.openTrackGroupsWindow) services.openTrackGroupsWindow(); },
+            menuOpenProjectNotes: () => { if(services.openProjectNotesWindow) services.openProjectNotesWindow(); },
+            menuOpenTimelineMarkers: () => { if(services.openTimelineMarkersWindow) services.openTimelineMarkersWindow(); },
+            menuOpenTransportSettings: () => { if(services.openTransportSettingsWindow) services.openTransportSettingsWindow(); },
         };
 
         for (const menuItemId in menuActions) {
