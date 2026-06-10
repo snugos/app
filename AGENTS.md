@@ -1,3 +1,72 @@
+#### Day 697: Chord Harmonize Feature (2026-06-09)
+- **Feature**: Added `harmonizeNotes(velocityFactor, voicing, skipOccupied)` method to Track class and 6 "Chord Harmonize" menu items to the sequencer context menu
+- **Files Modified**:
+  - `js/Track.js`: Added `harmonizeNotes` method after `arpeggiateNotes` (line ~4684)
+  - `js/constants.js`: Added 6 HARMONIZE_* constants + bumped APP_VERSION to 2.349.0
+  - `js/ui.js`: Added 6 Chord Harmonize menu items in the sequencer context menu after Burst Notes
+  - `js/tests.js`: Added Day 697 test block with 27 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **harmonizeNotes** (`js/Track.js`): Duplicates each note across the active chord-type intervals from Chord Mode state. Useful for turning single-note melodies into chord harmonies that follow a chosen chord shape (major, minor, 7th, etc.).
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `velocityFactor` to HARMONIZE_MIN_VELOCITY_FACTOR (0.1) / 1.0 range (default 0.7)
+    - Validates `voicing` against HARMONIZE_VOICINGS = ['closed', 'wide'] (default 'closed')
+    - Looks up chord intervals from Constants.CHORD_TYPES[chordType] (falls back to 'major' if Chord Mode disabled)
+    - Truncates intervals to HARMONIZE_MAX_INTERVALS_PER_CHORD (7) for safety
+    - 'closed' voicing keeps original intervals (same octave)
+    - 'wide' voicing adds 12 semitones to alternating intervals (spread across two octaves)
+    - Captures undo state BEFORE mutation with descriptive "Harmonize Notes (type, voicing)" label
+    - For each active note, adds chord-tone copies (excluding the root which is interval[0]=0)
+    - Skips occupied target slots when skipOccupied=true
+    - Clones velocity via `originalVel * useVelocityFactor` (clamped to 0.05-1.0)
+    - Rounds velocity to 2 decimal places
+    - Returns count of harmonized notes
+  - **Chord Harmonize Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Burst Notes
+    - "Chord Harmonize (Major, Closed)" - calls `harmonizeNotes(0.7, 'closed', true)`
+    - "Chord Harmonize (Minor, Closed)" - calls `harmonizeNotes(0.7, 'closed', true)`
+    - "Chord Harmonize (Major7, Closed)" - calls `harmonizeNotes(0.7, 'closed', true)`
+    - "Chord Harmonize (Minor7, Closed)" - calls `harmonizeNotes(0.7, 'closed', true)`
+    - "Chord Harmonize (Dominant7, Closed)" - calls `harmonizeNotes(0.7, 'closed', true)`
+    - "Chord Harmonize (Major, Wide)" - calls `harmonizeNotes(0.7, 'wide', true)`
+    - All call `recreateToneSequence(true)` after harmonizing
+    - Show notifications: "Harmonized {count} note(s) with {chordType} ({voicing}) chord."
+    - Show "No notes to harmonize." when nothing to harmonize
+- **Constants** (`js/constants.js`): 6 new constants
+  - `HARMONIZE_MIN_VELOCITY_FACTOR = 0.1` - Minimum velocity factor for harmonized copies
+  - `HARMONIZE_MAX_INTERVALS_PER_CHORD = 7` - Safety cap for chord intervals
+  - `HARMONIZE_DEFAULT_VELOCITY_FACTOR = 0.7` - Default 70% of original velocity
+  - `HARMONIZE_VOICING_CLOSED = 'closed'` - Closed voicing (tight same-octave)
+  - `HARMONIZE_VOICING_WIDE = 'wide'` - Wide voicing (spreads across two octaves)
+  - `HARMONIZE_VOICINGS = [CLOSED, WIDE]` - Valid voicing values
+- **Tests** (`js/tests.js`): 27 tests covering:
+  - `harmonizeNotes` is a function on Track.prototype
+  - `harmonizeNotes` accepts 3 parameters with defaults (velocityFactor, voicing, skipOccupied)
+  - `harmonizeNotes` guards against Audio tracks
+  - `harmonizeNotes` validates active sequence exists
+  - `harmonizeNotes` captures undo BEFORE mutation
+  - `harmonizeNotes` has descriptive "Harmonize Notes" undo label
+  - `harmonizeNotes` clamps velocityFactor with HARMONIZE_MIN_VELOCITY_FACTOR and Math.max/min
+  - `harmonizeNotes` validates voicing with HARMONIZE_VOICINGS
+  - `harmonizeNotes` supports closed and wide voicings
+  - `harmonizeNotes` returns count of harmonized notes
+  - `harmonizeNotes` uses CHORD_TYPES for chord lookup
+  - `harmonizeNotes` falls back to 'major' chord when chord mode disabled
+  - `harmonizeNotes` supports skipOccupied option
+  - `harmonizeNotes` rounds velocity to 2 decimal places
+  - All 6 HARMONIZE constants are defined in constants.js
+  - ui.js has 6 Chord Harmonize menu items
+  - Menu items call harmonizeNotes method with correct params
+  - Menu items call recreateToneSequence (>= 6 occurrences)
+  - Menu items show notification with count
+  - APP_VERSION validation (>= 2.349 for Day 697)
+  - Functional test: major triad produces 2 new copies (intervals.length - 1)
+  - Functional test: major7 produces 3 new copies (intervals.length - 1)
+  - Functional test: wide voicing adds 12 to alternating intervals
+  - Functional test: velocity multiplier 0.7 default produces 0.7 from original 1.0
+- **Version**: Bumped to 2.349.0
+- **Test Count**: Increased from 3619 to 3646
+
 #### Day 696: Burst Notes Menu Items (2026-06-08)
 - **Feature**: Wired up the existing `burstNotes(divisions, velocityCurve, skipOccupied)` method in Track.js to the sequencer context menu with 6 menu items
 - **Files Modified**:
