@@ -1785,6 +1785,44 @@ export class Track {
         return rampedCount;
     }
 
+    // Scale probabilities - multiply each note's probability by a factor
+    // Creates denser or sparser triggering patterns (0.5 = half as likely, 2.0 = twice as likely)
+    // factor: SCALE_PROB_MIN_FACTOR to SCALE_PROB_MAX_FACTOR (0.1 to 3.0)
+    scaleProbabilities(factor = Constants.SCALE_PROB_DEFAULT_FACTOR) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} scaleProbabilities] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp factor to valid range
+        const clampedFactor = Math.max(Constants.SCALE_PROB_MIN_FACTOR, Math.min(Constants.SCALE_PROB_MAX_FACTOR, factor));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Scale probabilities by ${Math.round(clampedFactor * 100)}% on ${activeSeq.name}`);
+
+        let scaledCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.probability !== undefined) {
+                    const newProbability = Math.max(0, Math.min(1, stepData.probability * clampedFactor));
+                    row[col].probability = Math.round(newProbability * 100) / 100;
+                    scaledCount++;
+                }
+            }
+        }
+
+        return scaledCount;
+    }
+
     // Randomize the sequence - fill cells with random notes based on density
     // density: 0.0 to 1.0, where 1.0 = 100% chance of a note in each cell
     randomizeSequence(density = Constants.RANDOMIZE_DENSITY_DEFAULT) {

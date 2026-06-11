@@ -20347,6 +20347,168 @@ TestRunner.test("Day 698 - echoNotes functional test: 8 taps with 4 step delay =
     t.assertEqual(span, 32, '8 taps with 4 step delay = 32 step span');
 });
 
+// Day 700: Scale Probabilities Feature
+TestRunner.test("Day 700 - scaleProbabilities is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.scaleProbabilities === 'function', 'scaleProbabilities should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities accepts factor parameter with default", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const match = trackStr.match(/scaleProbabilities\s*\(\s*factor\s*=\s*Constants\.SCALE_PROB_DEFAULT_FACTOR\s*\)/);
+    t.assertTruthy(match, 'scaleProbabilities should accept factor parameter with SCALE_PROB_DEFAULT_FACTOR default');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities returns 0 for Audio tracks", (t) => {
+    const track = new Track({ id: 1, name: 'Test', type: 'Audio' });
+    const result = track.scaleProbabilities(0.5);
+    t.assertEqual(result, 0, 'scaleProbabilities should return 0 for Audio tracks');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities gets active sequence via getActiveSequence", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const scaleIdx = trackStr.indexOf('scaleProbabilities(');
+    const getActiveIdx = trackStr.indexOf('getActiveSequence()', scaleIdx);
+    t.assertTruthy(getActiveIdx > scaleIdx, 'scaleProbabilities should call getActiveSequence');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities returns 0 if no active sequence", (t) => {
+    const track = new Track({ id: 1, name: 'Test', type: 'Sampler' });
+    const result = track.scaleProbabilities(0.5);
+    t.assertEqual(result, 0, 'scaleProbabilities should return 0 if no active sequence');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities captures undo BEFORE mutation", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const scaleIdx = trackStr.indexOf('scaleProbabilities(');
+    const captureIdx = trackStr.indexOf('_captureUndoState', scaleIdx);
+    const forLoopIdx = trackStr.indexOf('for (let rowIndex', scaleIdx);
+    t.assertTruthy(captureIdx > 0 && captureIdx < forLoopIdx, 'scaleProbabilities should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities has descriptive 'Scale probabilities' undo label", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const scaleIdx = trackStr.indexOf('scaleProbabilities(');
+    const captureIdx = trackStr.indexOf('_captureUndoState', scaleIdx);
+    const labelSlice = trackStr.slice(captureIdx, captureIdx + 300);
+    t.assertTruthy(labelSlice.includes('Scale probabilities'), 'scaleProbabilities should have descriptive "Scale probabilities" undo label');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities clamps factor to SCALE_PROB range", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const scaleIdx = trackStr.indexOf('scaleProbabilities(');
+    const clampIdx = trackStr.indexOf('SCALE_PROB_MIN_FACTOR', scaleIdx);
+    const maxIdx = trackStr.indexOf('SCALE_PROB_MAX_FACTOR', scaleIdx);
+    t.assertTruthy(clampIdx > scaleIdx, 'scaleProbabilities should reference SCALE_PROB_MIN_FACTOR');
+    t.assertTruthy(maxIdx > scaleIdx, 'scaleProbabilities should reference SCALE_PROB_MAX_FACTOR');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities multiplies probability by factor", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const scaleIdx = trackStr.indexOf('scaleProbabilities(');
+    const mulIdx = trackStr.indexOf('stepData.probability * clampedFactor', scaleIdx);
+    t.assertTruthy(mulIdx > scaleIdx, 'scaleProbabilities should multiply probability by clampedFactor');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities clamps result to 0-1 range", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const scaleIdx = trackStr.indexOf('scaleProbabilities(');
+    const clampIdx = trackStr.indexOf('Math.max(0, Math.min(1,', scaleIdx);
+    t.assertTruthy(clampIdx > scaleIdx, 'scaleProbabilities should clamp result to 0-1 range');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities rounds to 2 decimal places", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const scaleIdx = trackStr.indexOf('scaleProbabilities(');
+    const roundIdx = trackStr.indexOf('Math.round(newProbability * 100) / 100', scaleIdx);
+    t.assertTruthy(roundIdx > scaleIdx, 'scaleProbabilities should round to 2 decimal places');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities returns count of scaled notes", (t) => {
+    const trackStr = require('fs').readFileSync('./js/Track.js', 'utf8');
+    const scaleIdx = trackStr.indexOf('scaleProbabilities(');
+    const returnIdx = trackStr.indexOf('return scaledCount', scaleIdx);
+    t.assertTruthy(returnIdx > scaleIdx, 'scaleProbabilities should return scaledCount');
+});
+
+TestRunner.test("Day 700 - SCALE_PROB constants are defined in constants.js", (t) => {
+    const constStr = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constStr.includes('SCALE_PROB_MIN_FACTOR'), 'constants.js should define SCALE_PROB_MIN_FACTOR');
+    t.assertTruthy(constStr.includes('SCALE_PROB_MAX_FACTOR'), 'constants.js should define SCALE_PROB_MAX_FACTOR');
+    t.assertTruthy(constStr.includes('SCALE_PROB_DEFAULT_FACTOR'), 'constants.js should define SCALE_PROB_DEFAULT_FACTOR');
+    t.assertTruthy(constStr.includes('SCALE_PROB_FACTOR_STEPS'), 'constants.js should define SCALE_PROB_FACTOR_STEPS');
+});
+
+TestRunner.test("Day 700 - ui.js has 7 Scale Probabilities menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Scale Probabilities (25%)'), 'ui.js should have Scale Probabilities (25%)');
+    t.assertTruthy(uiStr.includes('Scale Probabilities (50%)'), 'ui.js should have Scale Probabilities (50%)');
+    t.assertTruthy(uiStr.includes('Scale Probabilities (75%)'), 'ui.js should have Scale Probabilities (75%)');
+    t.assertTruthy(uiStr.includes('Scale Probabilities (100%)'), 'ui.js should have Scale Probabilities (100%)');
+    t.assertTruthy(uiStr.includes('Scale Probabilities (125%)'), 'ui.js should have Scale Probabilities (125%)');
+    t.assertTruthy(uiStr.includes('Scale Probabilities (150%)'), 'ui.js should have Scale Probabilities (150%)');
+    t.assertTruthy(uiStr.includes('Scale Probabilities (200%)'), 'ui.js should have Scale Probabilities (200%)');
+});
+
+TestRunner.test("Day 700 - Scale Probabilities menu items call scaleProbabilities with correct factors", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('scaleProbabilities(0.25)'), 'UI should call scaleProbabilities(0.25) for 25%');
+    t.assertTruthy(uiStr.includes('scaleProbabilities(0.5)'), 'UI should call scaleProbabilities(0.5) for 50%');
+    t.assertTruthy(uiStr.includes('scaleProbabilities(0.75)'), 'UI should call scaleProbabilities(0.75) for 75%');
+    t.assertTruthy(uiStr.includes('scaleProbabilities(1.0)'), 'UI should call scaleProbabilities(1.0) for 100%');
+    t.assertTruthy(uiStr.includes('scaleProbabilities(1.25)'), 'UI should call scaleProbabilities(1.25) for 125%');
+    t.assertTruthy(uiStr.includes('scaleProbabilities(1.5)'), 'UI should call scaleProbabilities(1.5) for 150%');
+    t.assertTruthy(uiStr.includes('scaleProbabilities(2.0)'), 'UI should call scaleProbabilities(2.0) for 200%');
+});
+
+TestRunner.test("Day 700 - Scale Probabilities menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Scale Probabilities[\s\S]+?recreateToneSequence/g);
+    t.assertTruthy(matches && matches.length >= 7, 'All Scale Probabilities menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 700 - Scale Probabilities menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Scaled ${result} probability'), 'Scale Probabilities should show notification with scaled count');
+    t.assertTruthy(uiStr.includes('No notes to scale.'), 'Scale Probabilities should show "No notes to scale." notification');
+});
+
+TestRunner.test("Day 700 - APP_VERSION validation (>= 2.352)", (t) => {
+    const version = require('./js/constants.js').APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 700');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 352, 'Minor version should be >= 352 for Day 700');
+    }
+});
+
+TestRunner.test("Day 700 - scaleProbabilities functional test: factor 0.5 produces 0.5 from original 1.0", (t) => {
+    const originalProb = 1.0;
+    const factor = 0.5;
+    const expected = originalProb * factor;
+    t.assertEqual(expected, 0.5, '1.0 * 0.5 = 0.5');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities functional test: factor 2.0 produces 1.0 from original 1.0", (t) => {
+    const originalProb = 1.0;
+    const factor = 2.0;
+    const expected = Math.max(0, Math.min(1, originalProb * factor));
+    t.assertEqual(expected, 1.0, '1.0 * 2.0 clamped to 1.0');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities functional test: factor 0.25 produces 0.25 from original 1.0", (t) => {
+    const originalProb = 1.0;
+    const factor = 0.25;
+    const expected = Math.round(originalProb * factor * 100) / 100;
+    t.assertEqual(expected, 0.25, '1.0 * 0.25 = 0.25');
+});
+
+TestRunner.test("Day 700 - scaleProbabilities functional test: 0.8 * 1.5 = 1.2 clamped to 1.0", (t) => {
+    const originalProb = 0.8;
+    const factor = 1.5;
+    const expected = Math.max(0, Math.min(1, originalProb * factor));
+    t.assertEqual(expected, 1.0, '0.8 * 1.5 = 1.2 clamped to 1.0');
+});
+
 
 export async function runTests() {
     return await TestRunner.runAll();

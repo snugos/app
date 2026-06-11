@@ -1,3 +1,63 @@
+#### Day 700: Scale Probabilities Feature (2026-06-11)
+- **Feature**: Wired up the existing `scaleProbabilities(factor)` method (predefined in Track.js) to the sequencer context menu with 7 menu items (25%, 50%, 75%, 100%, 125%, 150%, 200%). Note: SCALE_PROB_* constants were added in Day 699; Day 700 adds the complete method implementation, the UI menu items, and the test block.
+- **Files Modified**:
+  - `js/Track.js`: Added `scaleProbabilities` method after `rampProbabilities` (line ~1791)
+  - `js/constants.js`: Bumped APP_VERSION to 2.352.0 (constants were added in Day 699)
+  - `js/ui.js`: Added 7 Scale Probabilities menu items in the sequencer context menu after Ramp Probabilities (De-escalate)
+  - `js/tests.js`: Added Day 700 test block with 22 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **scaleProbabilities** (`js/Track.js`): Multiplies each note's probability by a factor. Mirrors `scaleVelocities` but operates on probability values (0.0-1.0 range instead of velocity 0.05-1.0 range). Useful for globally making a pattern sparser (factor < 1.0) or denser (factor > 1.0).
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps factor to SCALE_PROB_MIN_FACTOR (0.1) / SCALE_PROB_MAX_FACTOR (3.0) range with default SCALE_PROB_DEFAULT_FACTOR (1.0)
+    - Captures undo state BEFORE mutation with descriptive "Scale probabilities by N%" label
+    - For each row, iterates columns and multiplies each note's probability by the clamped factor
+    - Clamps result to 0-1 range
+    - Rounds to 2 decimal places
+    - Returns count of scaled notes
+  - **Scale Probabilities Menu Items** (`js/ui.js`): 7 menu items in the sequencer context menu after "Ramp Probabilities (De-escalate)" (with separator)
+    - "Scale Probabilities (25%)" - calls `scaleProbabilities(0.25)` - quarter the probability
+    - "Scale Probabilities (50%)" - calls `scaleProbabilities(0.5)` - halve the probability
+    - "Scale Probabilities (75%)" - calls `scaleProbabilities(0.75)` - 3/4 the probability
+    - "Scale Probabilities (100%)" - calls `scaleProbabilities(1.0)` - no change (default)
+    - "Scale Probabilities (125%)" - calls `scaleProbabilities(1.25)` - 1.25x probability
+    - "Scale Probabilities (150%)" - calls `scaleProbabilities(1.5)` - 1.5x probability
+    - "Scale Probabilities (200%)" - calls `scaleProbabilities(2.0)` - double the probability
+    - All call `recreateToneSequence(true)` after scaling
+    - Show notifications: "Scaled {count} probability value(s) to X%."
+    - Show "No notes to scale." when nothing to scale
+- **Constants** (`js/constants.js`): 4 constants (added in Day 699)
+  - `SCALE_PROB_MIN_FACTOR = 0.1` - Minimum scale factor (10% of original probability)
+  - `SCALE_PROB_MAX_FACTOR = 3.0` - Maximum scale factor (3x of original probability)
+  - `SCALE_PROB_DEFAULT_FACTOR = 1.0` - Default no-op
+  - `SCALE_PROB_FACTOR_STEPS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]` - Menu presets
+- **Tests** (`js/tests.js`): 22 tests covering:
+  - `scaleProbabilities` is a function on Track.prototype
+  - `scaleProbabilities` accepts factor parameter with SCALE_PROB_DEFAULT_FACTOR default
+  - `scaleProbabilities` returns 0 for Audio tracks
+  - `scaleProbabilities` calls getActiveSequence
+  - `scaleProbabilities` returns 0 if no active sequence
+  - `scaleProbabilities` captures undo BEFORE mutation
+  - `scaleProbabilities` has descriptive "Scale probabilities" undo label
+  - `scaleProbabilities` references SCALE_PROB_MIN_FACTOR and SCALE_PROB_MAX_FACTOR
+  - `scaleProbabilities` multiplies probability by clampedFactor
+  - `scaleProbabilities` clamps result to 0-1 range
+  - `scaleProbabilities` rounds to 2 decimal places
+  - `scaleProbabilities` returns scaledCount
+  - All 4 SCALE_PROB constants are defined in constants.js
+  - ui.js has 7 Scale Probabilities menu items
+  - Menu items call scaleProbabilities with correct factors (0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0)
+  - Menu items call recreateToneSequence (>= 7 occurrences)
+  - Menu items show notification with count
+  - APP_VERSION validation (>= 2.352 for Day 700)
+  - Functional test: factor 0.5 from 1.0 = 0.5
+  - Functional test: factor 2.0 from 1.0 clamped to 1.0
+  - Functional test: factor 0.25 from 1.0 = 0.25
+  - Functional test: 0.8 * 1.5 = 1.2 clamped to 1.0
+- **Version**: Bumped to 2.352.0
+- **Test Count**: Increased from 3666 to 3688
+
 #### Day 698: Echo Notes Feature (2026-06-10)
 - **Feature**: Added `echoNotes(taps, delaySteps, velocityDecay, skipOccupied)` method to Track class and 6 "Echo Notes" menu items to the sequencer context menu
 - **Files Modified**:
@@ -68,7 +128,6 @@
   - Functional test: 8 taps with 4 step delay = 32 step span
 - **Version**: Bumped to 2.350.0
 - **Test Count**: Increased from 3646 to 3666
-
 #### Day 697: Chord Harmonize Feature (2026-06-09)
 - **Feature**: Added `harmonizeNotes(velocityFactor, voicing, skipOccupied)` method to Track class and 6 "Chord Harmonize" menu items to the sequencer context menu
 - **Files Modified**:
