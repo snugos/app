@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.350.0';
+export const APP_VERSION = '2.351.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -109,6 +109,13 @@ export const ECHO_DEFAULT_DELAY_STEPS = 2; // Default 2 steps (1/8 note) between
 export const ECHO_MIN_DECAY = 0.1; // Minimum velocity decay (each tap at 10% of prev)
 export const ECHO_MAX_DECAY = 1.0; // Maximum decay (1.0 = no decay)
 export const ECHO_DEFAULT_DECAY = 0.6; // Default 60% decay per tap (natural echo taper)
+
+// Scale Probabilities Constants (Day 699) - mirrors Scale Velocities but for probability values
+// Scale each note's probability by a factor. 1.0 = no change, 0.5 = halve probability, 1.5 = boost 1.5x
+export const SCALE_PROB_MIN_FACTOR = 0.1; // Minimum scale factor (10% of original probability)
+export const SCALE_PROB_MAX_FACTOR = 3.0; // Maximum scale factor (3x of original probability)
+export const SCALE_PROB_DEFAULT_FACTOR = 1.0; // Default no-op
+export const SCALE_PROB_FACTOR_STEPS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]; // Menu presets
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 
