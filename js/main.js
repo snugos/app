@@ -9,6 +9,8 @@ import { getAudio as bgDbGetAudio, storeAudio as bgDbStoreAudio, deleteAudio as 
 import { 
     stopMetronome, setMetronomeVolume,
     isMetronomeEnabled, setMetronomeEnabled,
+    getMetronomeVolume as audioGetMetronomeVolume,
+    setMetronomeVolume as audioSetMetronomeVolume,
     initAudioContextAndMasterMeter, clearAllMasterEffectNodes, 
     addMasterEffectToAudio, getActualMasterGainNode,
     createSendBusInAudio, deleteSendBusFromAudio, addEffectToSendBus, removeEffectFromSendBus,
@@ -20,7 +22,14 @@ import {
     reorderMasterEffectInAudio,
     getCountInBars,
     setCountInBars,
-    initializeAudioModule
+    initializeAudioModule,
+    // Tap tempo
+    tapTempo as audioTapTempo,
+    resetTapTempo as audioResetTapTempo,
+    getTapTempoBpm as audioGetTapTempoBpm,
+    isTapTempoReady as audioIsTapTempoReady,
+    // Recording input gain
+    setRecordingInputGain as audioSetRecordingInputGain
 } from './audio.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
@@ -189,6 +198,17 @@ import {
     undoLastActionInternal,
     redoLastActionInternal,
     captureStateForUndoInternal,
+    // Synth Presets
+    getSynthPresets as stateGetSynthPresets,
+    saveSynthPreset as stateSaveSynthPreset,
+    deleteSynthPreset as stateDeleteSynthPreset,
+    // Favorites
+    getFavoriteSounds as stateGetFavoriteSounds,
+    isFavorite as stateIsFavorite,
+    toggleFavorite as stateToggleFavorite,
+    // Recently played
+    addToRecentlyPlayed as stateAddToRecentlyPlayed,
+    getRecentlyPlayedSounds as stateGetRecentlyPlayedSounds
 } from './state.js';
 
 // --- Global UI Elements Cache ---
@@ -211,6 +231,10 @@ const appServices = {
     getTracks: getTracksState, // Expose tracks for Track.js and other modules
     getSoloedTrackId: getSoloedTrackIdState, // Expose solo state for Track.js
     getArmedTrackId: getArmedTrackIdState, // Expose armed state for Track.js
+
+    // Expose UI rendering helpers so Track.js and other modules can trigger redraws
+    renderTimeline: renderTimeline,
+    updatePlayheadPosition: updatePlayheadPosition,
 
     // Add Track - orchestrator that calls state.js function and opens sequencer if needed
     addTrack: async (type, options = {}) => {
@@ -573,6 +597,7 @@ const appServices = {
     setMetronomeVolume: setMetronomeVolume,
     isMetronomeEnabled: isMetronomeEnabled,
     setMetronomeEnabled: setMetronomeEnabled,
+    getMetronomeVolume: audioGetMetronomeVolume,
     // Send Bus functions
     createSendBusInAudio,
     deleteSendBusFromAudio,
@@ -805,6 +830,8 @@ const appServices = {
     getCurrentSoundFileTree: getCurrentSoundFileTreeState,
     getCurrentSoundBrowserPath: getCurrentSoundBrowserPathState,
     getPreviewPlayer: getPreviewPlayerState,
+    getSelectedSoundForPreview: getSelectedSoundForPreviewState,
+    setSelectedSoundForPreview: setSelectedSoundForPreviewState,
     setCurrentLibraryName: setCurrentLibraryNameState,
     setCurrentSoundFileTree: setCurrentSoundFileTreeState,
     setCurrentSoundBrowserPath: setCurrentSoundBrowserPathState,
@@ -840,13 +867,13 @@ const appServices = {
     setMasterAutomationArmed: setMasterAutomationArmedState,
 
     // Tap Tempo
-    getTapTempoBpm: () => { return typeof getTapTempoBpmValue === 'function' ? getTapTempoBpmValue() : null; },
-    isTapTempoReady: () => { return typeof isTapTempoReadyValue === 'function' ? isTapTempoReadyValue() : false; },
+    getTapTempoBpm: () => audioGetTapTempoBpm(),
+    isTapTempoReady: () => audioIsTapTempoReady(),
 
     // Synth Presets
-    getSynthPresets: () => { return typeof getSynthPresetsData === 'function' ? getSynthPresetsData() : {}; },
-    saveSynthPreset: (name, params) => { return typeof saveSynthPresetData === 'function' ? saveSynthPresetData(name, params) : false; },
-    deleteSynthPreset: (name) => { return typeof deleteSynthPresetData === 'function' ? deleteSynthPresetData(name) : false; },
+    getSynthPresets: () => stateGetSynthPresets(),
+    saveSynthPreset: (name, params) => stateSaveSynthPreset(name, params),
+    deleteSynthPreset: (name) => stateDeleteSynthPreset(name),
 
     // Undo/Redo clipboard
     getClipboardData: getClipboardDataState,
@@ -865,12 +892,17 @@ const appServices = {
     setTrackMonitoring: (trackId, enabled) => { const track = getTrackByIdState(trackId); if (track && typeof track.setMonitoringEnabled === 'function') return track.setMonitoringEnabled(enabled); },
 
     // Tap Tempo controls
-    tapTempo: () => { return typeof doTapTempo === 'function' ? doTapTempo() : null; },
-    resetTapTempo: () => { return typeof resetTapTempoValue === 'function' ? resetTapTempoValue() : null; },
+    tapTempo: () => audioTapTempo(),
+    resetTapTempo: () => audioResetTapTempo(),
 
     // Favorites
-    isFavorite: (soundId) => { return typeof checkIsFavorite === 'function' ? checkIsFavorite(soundId) : false; },
-    toggleFavorite: (soundId) => { return typeof doToggleFavorite === 'function' ? doToggleFavorite(soundId) : false; },
+    isFavorite: (sound) => stateIsFavorite(sound),
+    toggleFavorite: (sound) => stateToggleFavorite(sound),
+    getFavoriteSounds: () => stateGetFavoriteSounds(),
+
+    // Recently Played
+    addToRecentlyPlayed: (sound) => stateAddToRecentlyPlayed(sound),
+    getRecentlyPlayedSounds: () => stateGetRecentlyPlayedSounds(),
 
     // Audio file loading for drum pads
     loadDrumSamplerPadFile: async (e, trackId, padIndex) => {
@@ -889,7 +921,7 @@ const appServices = {
 
     // Recording input gain
     setRecordingInputGain: (val) => {
-        if (typeof setRecordingInputGainValue === 'function') setRecordingInputGainValue(val);
+        audioSetRecordingInputGain(val);
     },
 
     // Track template CRUD
@@ -898,7 +930,8 @@ const appServices = {
     updateTrackTemplate: (id, updates) => updateTrackTemplateState(id, updates),
 
     // Track group CRUD
-    addTrackGroup: (group) => addTrackGroupState(group),
+    // addTrackGroupState takes a name string, not a group object — wrapper preserves that contract
+    addTrackGroup: (groupOrName) => addTrackGroupState(groupOrName),
     removeTrackGroup: (id) => removeTrackGroupState(id),
 };
 
