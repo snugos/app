@@ -1701,6 +1701,66 @@ export class Track {
         return humanizedCount;
     }
 
+    // Invert probabilities - mirror probability values around the center point between min and max
+    // Creates an inversion effect where rare notes become common and common notes become rare
+    invertProbabilities() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} invertProbabilities] No active sequence found.`);
+            return 0;
+        }
+
+        // Capture undo state BEFORE any mutation
+        this._captureUndoState(`Invert probabilities on ${activeSeq.name}`);
+
+        // First pass: find min and max probabilities
+        const minProb = (typeof Constants.INVERT_PROB_MIN !== 'undefined') ? Constants.INVERT_PROB_MIN : 0.0;
+        const maxProb = (typeof Constants.INVERT_PROB_MAX !== 'undefined') ? Constants.INVERT_PROB_MAX : 1.0;
+        let foundMin = 1.0;
+        let foundMax = 0.0;
+        let foundAny = false;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.probability !== undefined) {
+                    foundAny = true;
+                    if (stepData.probability < foundMin) foundMin = stepData.probability;
+                    if (stepData.probability > foundMax) foundMax = stepData.probability;
+                }
+            }
+        }
+
+        if (!foundAny) return 0;
+
+        // Second pass: invert probabilities around center point
+        // newProbability = foundMin + foundMax - currentProbability
+        // This mirrors around (foundMin + foundMax) / 2
+        const centerPoint = foundMin + foundMax;
+        let invertedCount = 0;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.probability !== undefined) {
+                    const raw = centerPoint - stepData.probability;
+                    const newProbability = Math.max(minProb, Math.min(maxProb, raw));
+                    row[col].probability = Math.round(newProbability * 100) / 100;
+                    invertedCount++;
+                }
+            }
+        }
+
+        return invertedCount;
+    }
+
     // Ramp velocities - apply a linear ramp from startVelocity to endVelocity across the sequence
     // Creates a crescendo (startVelocity < endVelocity) or diminuendo (startVelocity > endVelocity) effect
     // startVelocity: 0.05 to 1.0, velocity at the start of the sequence

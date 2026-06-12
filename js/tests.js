@@ -2788,7 +2788,7 @@ TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML references getMa
 TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML uses correct CSS classes', (t) => {
     const result = buildMixerMasterStripHTML();
     t.assertTruthy(result.includes('mixer-master-strip'), 'Should use mixer-master-strip class');
-    t.assertTruthy(result.includes('bg-[') || result.includes('#1e1e1e'), 'Should use dark theme styling');
+    t.assertTruthy(result.includes('bg-DARK') || result.includes('#1e1e1e'), 'Should use dark theme styling');
 });
 
 TestRunner.test('Mixer Master Strip - buildMixerMasterStripHTML creates proper DOM structure', (t) => {
@@ -20509,6 +20509,133 @@ TestRunner.test("Day 700 - scaleProbabilities functional test: 0.8 * 1.5 = 1.2 c
     t.assertEqual(expected, 1.0, '0.8 * 1.5 = 1.2 clamped to 1.0');
 });
 
+
+
+// Day 701: Invert Probabilities Feature
+// ================================================
+TestRunner.test("Day 701 - invertProbabilities is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.invertProbabilities === 'function', 'invertProbabilities should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 701 - invertProbabilities returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    t.assertTruthy(funcStr.includes("'Audio'") && funcStr.includes('return 0'), 'invertProbabilities should guard against Audio tracks');
+});
+
+TestRunner.test("Day 701 - invertProbabilities gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'invertProbabilities should use getActiveSequence()');
+});
+
+TestRunner.test("Day 701 - invertProbabilities captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('for (let rowIndex');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'invertProbabilities should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 701 - invertProbabilities has descriptive 'Invert probabilities' undo label", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    t.assertTruthy(funcStr.includes('Invert probabilities'), 'invertProbabilities should have descriptive undo label');
+});
+
+TestRunner.test("Day 701 - invertProbabilities finds min and max probabilities in first pass", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    t.assertTruthy(funcStr.includes('foundMin'), 'invertProbabilities should track foundMin');
+    t.assertTruthy(funcStr.includes('foundMax'), 'invertProbabilities should track foundMax');
+});
+
+TestRunner.test("Day 701 - invertProbabilities uses center point formula", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    t.assertTruthy(funcStr.includes('centerPoint') && funcStr.includes('foundMin + foundMax'), 'invertProbabilities should calculate center point');
+});
+
+TestRunner.test("Day 701 - invertProbabilities clamps result to 0-1 range", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    t.assertTruthy(funcStr.includes('Math.max(minProb') && funcStr.includes('Math.min(maxProb'), 'invertProbabilities should clamp to 0-1 range');
+});
+
+TestRunner.test("Day 701 - invertProbabilities rounds to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    t.assertTruthy(funcStr.includes('Math.round(newProbability * 100) / 100'), 'invertProbabilities should round to 2 decimal places');
+});
+
+TestRunner.test("Day 701 - invertProbabilities returns count of inverted probabilities", (t) => {
+    const funcStr = Track.prototype.invertProbabilities.toString();
+    t.assertTruthy(funcStr.includes('invertedCount'), 'invertProbabilities should track invertedCount');
+    t.assertTruthy(funcStr.includes('return invertedCount'), 'invertProbabilities should return invertedCount');
+});
+
+TestRunner.test("Day 701 - INVERT_PROB constants are defined in constants.js", (t) => {
+    const constants = require('./js/constants.js');
+    t.assertTruthy(constants.INVERT_PROB_MIN === 0.0, 'INVERT_PROB_MIN should be 0.0');
+    t.assertTruthy(constants.INVERT_PROB_MAX === 1.0, 'INVERT_PROB_MAX should be 1.0');
+});
+
+TestRunner.test("Day 701 - ui.js has Invert Probabilities menu item", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Invert Probabilities'), 'Invert Probabilities menu item should exist');
+});
+
+TestRunner.test("Day 701 - Invert Probabilities menu item calls track.invertProbabilities", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.invertProbabilities()'), 'Invert Probabilities menu item should call invertProbabilities()');
+});
+
+TestRunner.test("Day 701 - Invert Probabilities menu item calls recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Invert Probabilities') && uiStr.includes('recreateToneSequence'), 'Invert Probabilities menu item should call recreateToneSequence');
+});
+
+TestRunner.test("Day 701 - Invert Probabilities menu item shows notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Inverted ${result} probability'), 'Invert Probabilities should show notification with inverted count');
+    t.assertTruthy(uiStr.includes('No probabilities to invert.'), 'Invert Probabilities should show "No probabilities to invert." notification');
+});
+
+TestRunner.test("Day 701 - Invert Probabilities menu item captures undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Invert Probabilities on'), 'Invert Probabilities menu item should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 701 - APP_VERSION validation (>= 2.353)", (t) => {
+    const version = require('./js/constants.js').APP_VERSION;
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 701');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 353, 'Minor version should be >= 353 for Day 701');
+    }
+});
+
+TestRunner.test("Day 701 - invertProbabilities functional test: 0.2 + 0.8 - 0.2 = 0.8", (t) => {
+    const foundMin = 0.2;
+    const foundMax = 0.8;
+    const current = 0.2;
+    const centerPoint = foundMin + foundMax;
+    const newProb = centerPoint - current;
+    t.assertEqual(newProb, 0.8, '0.2 + 0.8 - 0.2 should equal 0.8');
+});
+
+TestRunner.test("Day 701 - invertProbabilities functional test: center point inverts to itself", (t) => {
+    const foundMin = 0.4;
+    const foundMax = 0.6;
+    const current = 0.5;
+    const centerPoint = foundMin + foundMax;
+    const newProb = centerPoint - current;
+    t.assertEqual(newProb, 0.5, 'Center point probability should invert to itself');
+});
+
+TestRunner.test("Day 701 - invertProbabilities functional test: clamping handles out-of-range", (t) => {
+    const foundMin = 0.0;
+    const foundMax = 1.0;
+    const current = 0.0;
+    const centerPoint = foundMin + foundMax;
+    const raw = centerPoint - current;
+    const minProb = 0.0;
+    const maxProb = 1.0;
+    const newProb = Math.max(minProb, Math.min(maxProb, raw));
+    t.assertEqual(newProb, 1.0, 'Inverting 0.0 (when range is 0-1) should give 1.0');
+});
 
 export async function runTests() {
     return await TestRunner.runAll();

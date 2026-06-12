@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.352.0';
+export const APP_VERSION = '2.353.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -109,6 +109,12 @@ export const ECHO_DEFAULT_DELAY_STEPS = 2; // Default 2 steps (1/8 note) between
 export const ECHO_MIN_DECAY = 0.1; // Minimum velocity decay (each tap at 10% of prev)
 export const ECHO_MAX_DECAY = 1.0; // Maximum decay (1.0 = no decay)
 export const ECHO_DEFAULT_DECAY = 0.6; // Default 60% decay per tap (natural echo taper)
+
+// Day 701: Invert Probabilities Constants - mirror of invertVelocities for probability values
+// Inverts note probabilities around the center point of their current range.
+// Rare notes become common, common notes become rare.
+export const INVERT_PROB_MIN = 0.0; // Minimum probability value (0% chance of triggering)
+export const INVERT_PROB_MAX = 1.0; // Maximum probability value (100% chance of triggering)
 
 // Scale Probabilities Constants (Day 699) - mirrors Scale Velocities but for probability values
 // Scale each note's probability by a factor. 1.0 = no change, 0.5 = halve probability, 1.5 = boost 1.5x

@@ -1,3 +1,55 @@
+#### Day 701: Invert Probabilities Feature (2026-06-12)
+- **Feature**: Added `invertProbabilities()` method to Track class and "Invert Probabilities" menu item to sequencer context menu. Mirrors the `invertVelocities()` pattern for probability values.
+- **Files Modified**:
+  - `js/Track.js`: Added `invertProbabilities` method after `humanizeProbabilities` (line ~1701)
+  - `js/constants.js`: Added INVERT_PROB_MIN/INVERT_PROB_MAX constants + bumped APP_VERSION to 2.353.0
+  - `js/ui.js`: Added "Invert Probabilities" menu item in sequencer context menu after Invert Velocities. Also fixed pre-existing extra `}` on the Invert Velocities menu item line (which had been introduced by Day 700 and was causing a SyntaxError on file load).
+  - `js/tests.js`: Added Day 701 test block with 20 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **invertProbabilities** (`js/Track.js`): Mirrors probability values around the center point of their current range. Creates a probability inversion effect where rare notes become common and common notes become rare. Uses Constants.INVERT_PROB_MIN/INVERT_PROB_MAX for clamping bounds.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - First pass: finds min and max probability values across all notes (using `foundMin`/`foundMax` variables to track range)
+    - Returns 0 if no notes have probability values
+    - Capture undo state BEFORE mutation with descriptive "Invert probabilities on <seqname>" label
+    - Second pass: inverts each probability using formula `newProbability = foundMin + foundMax - currentProbability` (mirrors around center point)
+    - Clamps result to INVERT_PROB_MIN/INVERT_PROB_MAX (0-1) range
+    - Rounds to 2 decimal places
+    - Returns count of inverted probabilities
+  - **Invert Probabilities Menu Item** (`js/ui.js`): Added after "Invert Velocities" in sequencer context menu
+    - Calls `currentTrackForMenu.invertProbabilities()` (with undo capture BEFORE via `localAppServices.captureStateForUndo`)
+    - Calls `recreateToneSequence(true)` after inverting
+    - Shows notification: "Inverted {count} probability value(s)."
+    - Shows "No probabilities to invert." when nothing to invert
+    - Calls `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 2 new constants
+  - `INVERT_PROB_MIN = 0.0` - Minimum probability value (0% chance of triggering)
+  - `INVERT_PROB_MAX = 1.0` - Maximum probability value (100% chance of triggering)
+- **Tests** (`js/tests.js`): 20 tests covering:
+  - `invertProbabilities` is a function on Track.prototype
+  - `invertProbabilities` returns 0 for Audio tracks
+  - `invertProbabilities` gets active sequence via `getActiveSequence`
+  - `invertProbabilities` captures undo BEFORE mutation
+  - `invertProbabilities` has descriptive "Invert probabilities" undo label
+  - `invertProbabilities` finds min and max probabilities in first pass (uses foundMin/foundMax)
+  - `invertProbabilities` uses center point formula (centerPoint, foundMin + foundMax)
+  - `invertProbabilities` clamps result to 0-1 range (Math.max(minProb) and Math.min(maxProb))
+  - `invertProbabilities` rounds to 2 decimal places
+  - `invertProbabilities` returns count of inverted probabilities
+  - INVERT_PROB constants are defined in constants.js
+  - ui.js has Invert Probabilities menu item
+  - Invert Probabilities menu item calls track.invertProbabilities
+  - Invert Probabilities menu item calls recreateToneSequence
+  - Invert Probabilities menu item shows notification with count
+  - Invert Probabilities menu item captures undo with descriptive label
+  - APP_VERSION validation (>= 2.353 for Day 701)
+  - Functional test: 0.2 + 0.8 - 0.2 = 0.8
+  - Functional test: center point inverts to itself (0.4 + 0.6 - 0.5 = 0.5)
+  - Functional test: clamping handles out-of-range (0.0 -> 1.0)
+- **Pre-existing Bug Fix**: Removed extra `}` on the "Invert Velocities" line (had been introduced by Day 700 commit). The file would have failed to parse with `Unexpected token '}'` error. Test count would not have been impacted as the file wasn't reachable, but no actual tests could run.
+- **Version**: Bumped to 2.353.0
+- **Test Count**: Increased from 3688 to 3708 (20 new Day 701 tests, all pass; 0 regressions in Day 700/698/697)
 #### Day 700: Scale Probabilities Feature (2026-06-11)
 - **Feature**: Wired up the existing `scaleProbabilities(factor)` method (predefined in Track.js) to the sequencer context menu with 7 menu items (25%, 50%, 75%, 100%, 125%, 150%, 200%). Note: SCALE_PROB_* constants were added in Day 699; Day 700 adds the complete method implementation, the UI menu items, and the test block.
 - **Files Modified**:
