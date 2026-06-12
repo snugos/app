@@ -2,6 +2,10 @@
 // Run tests by opening browser console and calling: (await import('./js/tests.js')).runTests()
 
 import { TestRunner } from './testRunner.js';
+
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 import {
     MAX_EFFECT_PRESETS,
     DEFAULT_PRESET_NAME_PREFIX,
@@ -3206,7 +3210,7 @@ TestRunner.test("Day 578 - ghostNotes accepts velocityFactor and onOddColumns pa
 TestRunner.test("Day 578 - ghostNotes returns 0 for Audio tracks", (t) => {
     const track = new Track({ id: 'test', type: 'Audio', name: 'Audio Track' });
     const result = track.ghostNotes(0.3, true);
-    t.assertEquals(0, result, "ghostNotes should return 0 for Audio tracks");
+    t.assertEqual(0, result, "ghostNotes should return 0 for Audio tracks");
 });
 TestRunner.test("Day 578 - ghostNotes gets active sequence via getActiveSequence", (t) => {
     const funcStr = Track.prototype.ghostNotes.toString();
@@ -3215,7 +3219,7 @@ TestRunner.test("Day 578 - ghostNotes gets active sequence via getActiveSequence
 TestRunner.test("Day 578 - ghostNotes returns 0 if no active sequence", (t) => {
     const track = new Track({ id: 'test', type: 'Synth', name: 'Test Track' });
     const result = track.ghostNotes(0.3, true);
-    t.assertEquals(0, result, "ghostNotes should return 0 when no active sequence");
+    t.assertEqual(0, result, "ghostNotes should return 0 when no active sequence");
 });
 TestRunner.test("Day 578 - ghostNotes captures undo BEFORE mutation", (t) => {
     const funcStr = Track.prototype.ghostNotes.toString();
@@ -3925,7 +3929,7 @@ TestRunner.test("Day 586 - rampProbabilities accepts startProbability and endPro
 TestRunner.test("Day 586 - rampProbabilities returns 0 for Audio tracks", (t) => {
     const track = new Track({ id: 1, name: 'Test', type: 'Audio' });
     const result = track.rampProbabilities(0.3, 1.0);
-    t.assertEquals(0, result, 'rampProbabilities should return 0 for Audio tracks');
+    t.assertEqual(0, result, 'rampProbabilities should return 0 for Audio tracks');
 });
 
 TestRunner.test("Day 586 - rampProbabilities gets active sequence via getActiveSequence", (t) => {
@@ -3939,7 +3943,7 @@ TestRunner.test("Day 586 - rampProbabilities returns 0 if no active sequence", (
     const track = new Track({ id: 1, name: 'Test', type: 'Sampler' });
     // No sequences added - getActiveSequence should return null/undefined
     const result = track.rampProbabilities(0.3, 1.0);
-    t.assertEquals(0, result, 'rampProbabilities should return 0 if no active sequence');
+    t.assertEqual(0, result, 'rampProbabilities should return 0 if no active sequence');
 });
 
 TestRunner.test("Day 586 - rampProbabilities captures undo BEFORE mutation", (t) => {
