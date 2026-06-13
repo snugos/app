@@ -1,3 +1,73 @@
+#### Day 703: Shuffle Notes Feature (2026-06-13)
+- **Feature**: Added `shuffleNotes(windowSteps, skipChance, velocityFactor)` method to Track class and 5 "Shuffle Notes" menu items to the sequencer context menu. Each note randomly shifts its position by -windowSteps..+windowSteps, creating organic, less-repetitive timing while preserving note count, density, and average velocity.
+- **Files Modified**:
+  - `js/Track.js`: Added `shuffleNotes` method after `bounceNotes` (line ~1946)
+  - `js/constants.js`: Added 9 SHUFFLE_* constants + bumped APP_VERSION to 2.355.0
+  - `js/ui.js`: Added 5 Shuffle Notes menu items in the sequencer context menu after Bounce Notes (Wild ±6, 10% skip), with separator after
+  - `js/tests.js`: Added Day 703 test block with 25 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **shuffleNotes** (`js/Track.js`): For each active note, randomly shifts its position by -windowSteps..+windowSteps, preserving note count, density, and average velocity. Creates organic, less-repetitive timing while keeping the rhythmic character of the pattern.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `windowSteps` to SHUFFLE_MIN_WINDOW_STEPS (1) / SHUFFLE_MAX_WINDOW_STEPS (8) range (default SHUFFLE_DEFAULT_WINDOW_STEPS=2)
+    - Clamps `skipChance` to SHUFFLE_MIN_SKIP_CHANCE (0.0) / SHUFFLE_MAX_SKIP_CHANCE (0.9) range (default SHUFFLE_DEFAULT_SKIP_CHANCE=0.0)
+    - Clamps `velocityFactor` to SHUFFLE_MIN_VELOCITY_FACTOR (0.1) / SHUFFLE_MAX_VELOCITY_FACTOR (1.0) range (default SHUFFLE_DEFAULT_VELOCITY_FACTOR=1.0)
+    - Captures undo state BEFORE mutation with descriptive "Shuffle Notes (window ±X)" label
+    - For each row, for each column, for each active note: rolls skip chance, then picks random shift in -windowSteps..+windowSteps (excluding 0 to ensure movement), calculates target column (col + shift)
+    - Skips if target is out of bounds (< 0 or >= totalSteps) or already occupied
+    - Moves the note to the target column, scaling velocity by velocityFactor (clamped to 0.05-1.0 range), preserves the original probability
+    - Rounds velocity to 2 decimal places
+    - Returns count of shuffled notes
+  - **Shuffle Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Bounce Notes (Wild ±6, 10% skip) with separator after
+    - "Shuffle Notes (Tight ±1)" - calls `shuffleNotes(1, 0.0, 1.0)` - subtle 1-step shift
+    - "Shuffle Notes (Medium ±2)" - calls `shuffleNotes(2, 0.0, 1.0)` - default 2-step shift (1/8 note)
+    - "Shuffle Notes (Wide ±4)" - calls `shuffleNotes(4, 0.0, 1.0)` - 4-step shift (1/4 note)
+    - "Shuffle Notes (Loose ±8)" - calls `shuffleNotes(8, 0.0, 1.0)` - dramatic 8-step shift (1/2 note)
+    - "Shuffle Notes (±3, 25% skip)" - calls `shuffleNotes(3, 0.25, 0.95)` - 25% of notes stay, velocity attenuated
+    - All call `recreateToneSequence(true)` after shuffling
+    - All capture undo with descriptive "Shuffle Notes on <name> (<seqname>)" label
+    - Show notifications: "Shuffled {count} note(s) (variant)."
+    - Show "No notes to shuffle." when nothing to shuffle
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 9 new constants
+  - `SHUFFLE_MIN_WINDOW_STEPS = 1` - Minimum window size (±1 step)
+  - `SHUFFLE_MAX_WINDOW_STEPS = 8` - Maximum window size (±8 steps = ±1/2 note)
+  - `SHUFFLE_DEFAULT_WINDOW_STEPS = 2` - Default 2-step window (±1/8 note)
+  - `SHUFFLE_MIN_SKIP_CHANCE = 0.0` - Minimum probability of leaving a note in place
+  - `SHUFFLE_MAX_SKIP_CHANCE = 0.9` - Maximum skip chance (10% would shuffle)
+  - `SHUFFLE_DEFAULT_SKIP_CHANCE = 0.0` - Default: all notes shuffle
+  - `SHUFFLE_MIN_VELOCITY_FACTOR = 0.1` - Minimum velocity factor
+  - `SHUFFLE_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity factor (1.0 = no change)
+  - `SHUFFLE_DEFAULT_VELOCITY_FACTOR = 1.0` - Default preserve velocity exactly
+- **Tests** (`js/tests.js`): 25 tests covering:
+  - `shuffleNotes` is a function on Track.prototype
+  - `shuffleNotes` accepts 3 parameters with defaults (windowSteps, skipChance, velocityFactor)
+  - `shuffleNotes` returns 0 for Audio tracks
+  - `shuffleNotes` gets active sequence via `getActiveSequence`
+  - `shuffleNotes` captures undo BEFORE mutation
+  - `shuffleNotes` has descriptive "Shuffle Notes" undo label
+  - `shuffleNotes` clamps windowSteps to SHUFFLE_MIN/MAX_WINDOW_STEPS
+  - `shuffleNotes` clamps skipChance to SHUFFLE_MIN/MAX_SKIP_CHANCE
+  - `shuffleNotes` clamps velocityFactor to SHUFFLE_MIN/MAX_VELOCITY_FACTOR
+  - `shuffleNotes` uses random shift (Math.random, Math.floor)
+  - `shuffleNotes` respects sequence length boundary (targetCol < 0 or >= totalSteps)
+  - `shuffleNotes` skips occupied target slots
+  - `shuffleNotes` scales velocity by velocityFactor and preserves probability
+  - `shuffleNotes` rounds velocity to 2 decimal places
+  - `shuffleNotes` returns count of shuffled notes
+  - All 9 SHUFFLE constants are defined in constants.js
+  - ui.js has 5 Shuffle Notes menu items
+  - Shuffle Notes menu items call track.shuffleNotes
+  - Shuffle Notes menu items call recreateToneSequence
+  - Shuffle Notes menu items show notification with count
+  - Shuffle Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.355 for Day 703)
+  - Functional test: shift range is -windowSteps..+windowSteps (2*windowSteps+1 values)
+  - Functional test: velocity preserved at velocityFactor=1.0 (0.7 * 1.0 = 0.7)
+  - Functional test: velocity scaled at velocityFactor=0.9 (1.0 * 0.9 = 0.9)
+- **Version**: Bumped to 2.355.0
+- **Test Count**: Increased from 2356 to 2356 (25 new Day 703 tests, all pass; 0 regressions in Day 702/701/700/698/697 test blocks)
 #### Day 702: Bounce Notes Feature (2026-06-13)
 - **Feature**: Added `bounceNotes(maxOffsetSteps, skipChance, velocityFactor)` method to Track class and 5 "Bounce Notes" menu items to the sequencer context menu. Each note ricochets in a random direction by 1..maxOffsetSteps, with optional skip chance and velocity attenuation.
 - **Files Modified**:

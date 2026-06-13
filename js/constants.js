@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.354.0';
+export const APP_VERSION = '2.355.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -135,6 +135,19 @@ export const BOUNCE_DEFAULT_SKIP_CHANCE = 0.0; // Default no skip (all notes bou
 export const BOUNCE_MIN_VELOCITY_FACTOR = 0.1; // Minimum velocity factor (preserves 10% velocity at floor)
 export const BOUNCE_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no change)
 export const BOUNCE_DEFAULT_VELOCITY_FACTOR = 0.9; // Default 90% velocity (slight attenuation per bounce)
+
+// Day 703: Shuffle Notes Constants - randomly redistribute notes within a window
+// For each active note, randomly shifts its position by -windowSteps..+windowSteps
+// Preserves note count, density, and average velocity but creates organic, less-repetitive timing
+export const SHUFFLE_MIN_WINDOW_STEPS = 1; // Minimum window size (1 step = ±1)
+export const SHUFFLE_MAX_WINDOW_STEPS = 8; // Maximum window size (8 steps = ±1/2 note)
+export const SHUFFLE_DEFAULT_WINDOW_STEPS = 2; // Default 2 step window (±1/8 note)
+export const SHUFFLE_MIN_SKIP_CHANCE = 0.0; // Minimum probability of leaving a note in place
+export const SHUFFLE_MAX_SKIP_CHANCE = 0.9; // Maximum skip chance (10% would shuffle)
+export const SHUFFLE_DEFAULT_SKIP_CHANCE = 0.0; // Default: all notes shuffle
+export const SHUFFLE_MIN_VELOCITY_FACTOR = 0.1; // Minimum velocity factor
+export const SHUFFLE_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no change)
+export const SHUFFLE_DEFAULT_VELOCITY_FACTOR = 1.0; // Default: preserve velocity exactly
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 

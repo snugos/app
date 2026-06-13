@@ -1945,6 +1945,70 @@ export class Track {
         return bouncedCount;
     }
 
+    // Shuffle Notes - randomly redistribute each active note's position within a window
+    // For each active note, randomly shifts its position by -windowSteps..+windowSteps
+    // Preserves note count, density, and average velocity but creates organic, less-repetitive timing
+    // windowSteps: maximum |shift| in steps (clamped to SHUFFLE_MIN/MAX_WINDOW_STEPS)
+    // skipChance: probability of leaving a note in place (0.0 = all notes move)
+    // velocityFactor: scales the velocity of shuffled notes (1.0 = no change)
+    shuffleNotes(windowSteps = Constants.SHUFFLE_DEFAULT_WINDOW_STEPS, skipChance = Constants.SHUFFLE_DEFAULT_SKIP_CHANCE, velocityFactor = Constants.SHUFFLE_DEFAULT_VELOCITY_FACTOR) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} shuffleNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedWindow = Math.max(Constants.SHUFFLE_MIN_WINDOW_STEPS, Math.min(Constants.SHUFFLE_MAX_WINDOW_STEPS, windowSteps));
+        const clampedSkip = Math.max(Constants.SHUFFLE_MIN_SKIP_CHANCE, Math.min(Constants.SHUFFLE_MAX_SKIP_CHANCE, skipChance));
+        const clampedVel = Math.max(Constants.SHUFFLE_MIN_VELOCITY_FACTOR, Math.min(Constants.SHUFFLE_MAX_VELOCITY_FACTOR, velocityFactor));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Shuffle Notes (window ±${clampedWindow}) on ${activeSeq.name}`);
+
+        let shuffledCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                // Roll skip chance
+                if (Math.random() < clampedSkip) continue;
+
+                // Randomly pick shift in -clampedWindow..+clampedWindow (excluding 0 to ensure movement)
+                // If clampedWindow is 1, shifts are -1 or +1
+                let shift = Math.floor(Math.random() * (clampedWindow * 2 + 1)) - clampedWindow;
+                if (shift === 0) shift = (Math.random() < 0.5 ? -1 : 1); // Force non-zero movement
+                const targetCol = col + shift;
+
+                // Skip if target is out of bounds or already occupied
+                if (targetCol < 0 || targetCol >= totalSteps) continue;
+                if (row[targetCol] && row[targetCol].active) continue;
+
+                // Move the note, scaling velocity by velocityFactor
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+                const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
+                row[targetCol] = {
+                    active: true,
+                    velocity: Math.round(newVel * 100) / 100,
+                    probability: stepData.probability
+                };
+                row[col] = null;
+                shuffledCount++;
+            }
+        }
+
+        return shuffledCount;
+    }
+
     // Randomize the sequence - fill cells with random notes based on density
     // density: 0.0 to 1.0, where 1.0 = 100% chance of a note in each cell
     randomizeSequence(density = Constants.RANDOMIZE_DENSITY_DEFAULT) {

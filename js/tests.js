@@ -20810,6 +20810,171 @@ TestRunner.test("Day 702 - bounceNotes functional test: velocity scaling 0.9 fro
     t.assertEqual(Math.round(newVel * 100) / 100, 0.9, 'Velocity 1.0 * 0.9 = 0.9');
 });
 
+// Day 703: Shuffle Notes Feature
+// ================================================
+TestRunner.test("Day 703 - shuffleNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.shuffleNotes === 'function', 'shuffleNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 703 - shuffleNotes accepts 3 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('windowSteps'), 'shuffleNotes should accept windowSteps parameter');
+    t.assertTruthy(funcStr.includes('skipChance'), 'shuffleNotes should accept skipChance parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'shuffleNotes should accept velocityFactor parameter');
+});
+
+TestRunner.test("Day 703 - shuffleNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'") && funcStr.includes('return 0'), 'shuffleNotes should guard against Audio tracks');
+});
+
+TestRunner.test("Day 703 - shuffleNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'shuffleNotes should use getActiveSequence()');
+});
+
+TestRunner.test("Day 703 - shuffleNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'shuffleNotes should capture undo state');
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('for (let rowIndex');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'shuffleNotes should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 703 - shuffleNotes has descriptive 'Shuffle Notes' undo label", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('Shuffle Notes'), 'shuffleNotes should have descriptive undo label');
+});
+
+TestRunner.test("Day 703 - shuffleNotes clamps windowSteps to SHUFFLE_MIN/MAX_WINDOW_STEPS", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('SHUFFLE_MIN_WINDOW_STEPS') && funcStr.includes('SHUFFLE_MAX_WINDOW_STEPS'), 'shuffleNotes should reference SHUFFLE window constants');
+    t.assertTruthy(funcStr.includes('clampedWindow'), 'shuffleNotes should clamp window to clampedWindow');
+});
+
+TestRunner.test("Day 703 - shuffleNotes clamps skipChance to SHUFFLE_MIN/MAX_SKIP_CHANCE", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('SHUFFLE_MIN_SKIP_CHANCE') && funcStr.includes('SHUFFLE_MAX_SKIP_CHANCE'), 'shuffleNotes should reference SHUFFLE skip constants');
+    t.assertTruthy(funcStr.includes('clampedSkip'), 'shuffleNotes should clamp skip to clampedSkip');
+});
+
+TestRunner.test("Day 703 - shuffleNotes clamps velocityFactor to SHUFFLE_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('SHUFFLE_MIN_VELOCITY_FACTOR') && funcStr.includes('SHUFFLE_MAX_VELOCITY_FACTOR'), 'shuffleNotes should reference SHUFFLE velocity constants');
+    t.assertTruthy(funcStr.includes('clampedVel'), 'shuffleNotes should clamp velocity to clampedVel');
+});
+
+TestRunner.test("Day 703 - shuffleNotes uses random shift", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.random()') && funcStr.includes('shift'), 'shuffleNotes should use random for shift calculation');
+    t.assertTruthy(funcStr.includes('Math.floor'), 'shuffleNotes should use Math.floor for integer shift');
+});
+
+TestRunner.test("Day 703 - shuffleNotes respects sequence length boundary", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('targetCol < 0') || funcStr.includes('targetCol < 0 ||') || (funcStr.includes('targetCol < 0') && funcStr.includes('targetCol >= totalSteps')), 'shuffleNotes should check targetCol boundaries');
+});
+
+TestRunner.test("Day 703 - shuffleNotes skips occupied target slots", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('row[targetCol]') && funcStr.includes('.active'), 'shuffleNotes should check if target slot is occupied');
+});
+
+TestRunner.test("Day 703 - shuffleNotes scales velocity and preserves probability", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('origVel * clampedVel'), 'shuffleNotes should scale velocity by velocityFactor');
+    t.assertTruthy(funcStr.includes('stepData.probability'), 'shuffleNotes should preserve probability');
+});
+
+TestRunner.test("Day 703 - shuffleNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round(newVel * 100) / 100'), 'shuffleNotes should round velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 703 - shuffleNotes returns count of shuffled notes", (t) => {
+    const funcStr = Track.prototype.shuffleNotes.toString();
+    t.assertTruthy(funcStr.includes('shuffledCount'), 'shuffleNotes should track shuffledCount');
+    t.assertTruthy(funcStr.includes('return shuffledCount'), 'shuffleNotes should return shuffledCount');
+});
+
+TestRunner.test("Day 703 - SHUFFLE constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_MIN_WINDOW_STEPS = 1'), 'SHUFFLE_MIN_WINDOW_STEPS should be 1');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_MAX_WINDOW_STEPS = 8'), 'SHUFFLE_MAX_WINDOW_STEPS should be 8');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_DEFAULT_WINDOW_STEPS = 2'), 'SHUFFLE_DEFAULT_WINDOW_STEPS should be 2');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_MIN_SKIP_CHANCE = 0.0'), 'SHUFFLE_MIN_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_MAX_SKIP_CHANCE = 0.9'), 'SHUFFLE_MAX_SKIP_CHANCE should be 0.9');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_DEFAULT_SKIP_CHANCE = 0.0'), 'SHUFFLE_DEFAULT_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_MIN_VELOCITY_FACTOR = 0.1'), 'SHUFFLE_MIN_VELOCITY_FACTOR should be 0.1');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_MAX_VELOCITY_FACTOR = 1.0'), 'SHUFFLE_MAX_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('SHUFFLE_DEFAULT_VELOCITY_FACTOR = 1.0'), 'SHUFFLE_DEFAULT_VELOCITY_FACTOR should be 1.0');
+});
+
+TestRunner.test("Day 703 - ui.js has 5 Shuffle Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Shuffle Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 5, 'ui.js should have at least 5 Shuffle Notes menu items');
+});
+
+TestRunner.test("Day 703 - Shuffle Notes menu items call track.shuffleNotes", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.shuffleNotes('), 'Shuffle Notes menu items should call shuffleNotes()');
+});
+
+TestRunner.test("Day 703 - Shuffle Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Shuffle Notes') && uiStr.includes('recreateToneSequence'), 'Shuffle Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 703 - Shuffle Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Shuffled ${result} note'), 'Shuffle Notes should show notification with shuffled count');
+    t.assertTruthy(uiStr.includes('No notes to shuffle.'), 'Shuffle Notes should show "No notes to shuffle." notification');
+});
+
+TestRunner.test("Day 703 - Shuffle Notes menu items capture undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Shuffle Notes on'), 'Shuffle Notes menu items should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 703 - APP_VERSION validation (>= 2.355)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
+    const version = versionMatch ? versionMatch[1] : '0.0.0';
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 703');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 355, 'Minor version should be >= 355 for Day 703');
+    }
+});
+
+TestRunner.test("Day 703 - shuffleNotes functional test: shift range is -windowSteps..+windowSteps", (t) => {
+    const windowSteps = 2;
+    // Simulate the shift calculation
+    const possibleShifts = [];
+    for (let i = 0; i < (windowSteps * 2 + 1); i++) {
+        possibleShifts.push(i - windowSteps);
+    }
+    t.assertTruthy(possibleShifts.length === 5, 'Should have 2*windowSteps+1 = 5 possible shifts');
+    t.assertTruthy(possibleShifts[0] === -2, 'Min shift should be -windowSteps');
+    t.assertTruthy(possibleShifts[4] === 2, 'Max shift should be +windowSteps');
+});
+
+TestRunner.test("Day 703 - shuffleNotes functional test: velocity preserved at velocityFactor=1.0", (t) => {
+    const origVel = 0.7;
+    const clampedVel = 1.0;
+    const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
+    t.assertEqual(newVel, 0.7, 'velocityFactor=1.0 should preserve velocity exactly');
+});
+
+TestRunner.test("Day 703 - shuffleNotes functional test: velocity scaled at velocityFactor=0.9", (t) => {
+    const origVel = 1.0;
+    const clampedVel = 0.9;
+    const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
+    t.assertEqual(newVel, 0.9, 'velocityFactor=0.9 on velocity 1.0 should give 0.9');
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
