@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.353.0';
+export const APP_VERSION = '2.354.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -122,6 +122,19 @@ export const SCALE_PROB_MIN_FACTOR = 0.1; // Minimum scale factor (10% of origin
 export const SCALE_PROB_MAX_FACTOR = 3.0; // Maximum scale factor (3x of original probability)
 export const SCALE_PROB_DEFAULT_FACTOR = 1.0; // Default no-op
 export const SCALE_PROB_FACTOR_STEPS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]; // Menu presets
+
+// Day 702: Bounce Notes Constants - ricochets notes in random directions within a step range
+// Creates bouncing, scattered patterns. Each note moves by a random shift within maxOffsetSteps.
+// Each bounce independently chooses left or right.
+export const BOUNCE_MIN_OFFSET_STEPS = 1; // Minimum step shift (1 step = 1/16 note at 16th grid)
+export const BOUNCE_MAX_OFFSET_STEPS = 8; // Maximum step shift (8 steps = 1/2 note)
+export const BOUNCE_DEFAULT_OFFSET_STEPS = 4; // Default 4 steps (1/4 note max shift)
+export const BOUNCE_MIN_SKIP_CHANCE = 0.0; // Minimum probability of skipping a note
+export const BOUNCE_MAX_SKIP_CHANCE = 0.9; // Maximum probability of skipping a note
+export const BOUNCE_DEFAULT_SKIP_CHANCE = 0.0; // Default no skip (all notes bounce)
+export const BOUNCE_MIN_VELOCITY_FACTOR = 0.1; // Minimum velocity factor (preserves 10% velocity at floor)
+export const BOUNCE_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no change)
+export const BOUNCE_DEFAULT_VELOCITY_FACTOR = 0.9; // Default 90% velocity (slight attenuation per bounce)
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 

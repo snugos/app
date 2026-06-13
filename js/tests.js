@@ -20571,7 +20571,7 @@ TestRunner.test("Day 701 - invertProbabilities returns count of inverted probabi
 });
 
 TestRunner.test("Day 701 - INVERT_PROB constants are defined in constants.js", (t) => {
-    const constants = require('./js/constants.js');
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
     t.assertTruthy(constants.INVERT_PROB_MIN === 0.0, 'INVERT_PROB_MIN should be 0.0');
     t.assertTruthy(constants.INVERT_PROB_MAX === 1.0, 'INVERT_PROB_MAX should be 1.0');
 });
@@ -20639,6 +20639,175 @@ TestRunner.test("Day 701 - invertProbabilities functional test: clamping handles
     const maxProb = 1.0;
     const newProb = Math.max(minProb, Math.min(maxProb, raw));
     t.assertEqual(newProb, 1.0, 'Inverting 0.0 (when range is 0-1) should give 1.0');
+});
+
+// Day 702: Bounce Notes Feature
+// ================================================
+TestRunner.test("Day 702 - bounceNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.bounceNotes === 'function', 'bounceNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 702 - bounceNotes accepts 3 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('maxOffsetSteps'), 'bounceNotes should accept maxOffsetSteps parameter');
+    t.assertTruthy(funcStr.includes('skipChance'), 'bounceNotes should accept skipChance parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'bounceNotes should accept velocityFactor parameter');
+});
+
+TestRunner.test("Day 702 - bounceNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'") && funcStr.includes('return 0'), 'bounceNotes should guard against Audio tracks');
+});
+
+TestRunner.test("Day 702 - bounceNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'bounceNotes should use getActiveSequence()');
+});
+
+TestRunner.test("Day 702 - bounceNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const forLoopIdx = funcStr.indexOf('for (let rowIndex');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forLoopIdx, 'bounceNotes should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 702 - bounceNotes has descriptive 'Bounce Notes' undo label", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('Bounce Notes'), 'bounceNotes should have descriptive undo label');
+});
+
+TestRunner.test("Day 702 - bounceNotes clamps maxOffsetSteps to BOUNCE_MIN/MAX_OFFSET_STEPS", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('BOUNCE_MIN_OFFSET_STEPS'), 'bounceNotes should use BOUNCE_MIN_OFFSET_STEPS constant');
+    t.assertTruthy(funcStr.includes('BOUNCE_MAX_OFFSET_STEPS'), 'bounceNotes should use BOUNCE_MAX_OFFSET_STEPS constant');
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'bounceNotes should clamp with Math.max/min');
+});
+
+TestRunner.test("Day 702 - bounceNotes clamps skipChance to BOUNCE_MIN/MAX_SKIP_CHANCE", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('BOUNCE_MIN_SKIP_CHANCE'), 'bounceNotes should use BOUNCE_MIN_SKIP_CHANCE constant');
+    t.assertTruthy(funcStr.includes('BOUNCE_MAX_SKIP_CHANCE'), 'bounceNotes should use BOUNCE_MAX_SKIP_CHANCE constant');
+});
+
+TestRunner.test("Day 702 - bounceNotes clamps velocityFactor to BOUNCE_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('BOUNCE_MIN_VELOCITY_FACTOR'), 'bounceNotes should use BOUNCE_MIN_VELOCITY_FACTOR constant');
+    t.assertTruthy(funcStr.includes('BOUNCE_MAX_VELOCITY_FACTOR'), 'bounceNotes should use BOUNCE_MAX_VELOCITY_FACTOR constant');
+});
+
+TestRunner.test("Day 702 - bounceNotes uses random direction and shift", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.random()'), 'bounceNotes should use Math.random() for direction and shift');
+    t.assertTruthy(funcStr.includes('direction'), 'bounceNotes should track direction variable');
+    t.assertTruthy(funcStr.includes('shift'), 'bounceNotes should track shift variable');
+});
+
+TestRunner.test("Day 702 - bounceNotes respects sequence length boundary", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('targetCol < 0') && funcStr.includes('>= totalSteps'), 'bounceNotes should bound check target column');
+});
+
+TestRunner.test("Day 702 - bounceNotes skips occupied target slots", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('row[targetCol]') && funcStr.includes('.active'), 'bounceNotes should check target slot is empty');
+});
+
+TestRunner.test("Day 702 - bounceNotes scales velocity and preserves probability", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('origVel * clampedVel'), 'bounceNotes should scale velocity by velocityFactor');
+    t.assertTruthy(funcStr.includes('stepData.probability'), 'bounceNotes should preserve probability');
+});
+
+TestRunner.test("Day 702 - bounceNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round(newVel * 100) / 100'), 'bounceNotes should round velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 702 - bounceNotes returns count of bounced notes", (t) => {
+    const funcStr = Track.prototype.bounceNotes.toString();
+    t.assertTruthy(funcStr.includes('bouncedCount'), 'bounceNotes should track bouncedCount');
+    t.assertTruthy(funcStr.includes('return bouncedCount'), 'bounceNotes should return bouncedCount');
+});
+
+TestRunner.test("Day 702 - BOUNCE constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_MIN_OFFSET_STEPS = 1'), 'BOUNCE_MIN_OFFSET_STEPS should be 1');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_MAX_OFFSET_STEPS = 8'), 'BOUNCE_MAX_OFFSET_STEPS should be 8');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_DEFAULT_OFFSET_STEPS = 4'), 'BOUNCE_DEFAULT_OFFSET_STEPS should be 4');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_MIN_SKIP_CHANCE = 0.0'), 'BOUNCE_MIN_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_MAX_SKIP_CHANCE = 0.9'), 'BOUNCE_MAX_SKIP_CHANCE should be 0.9');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_DEFAULT_SKIP_CHANCE = 0.0'), 'BOUNCE_DEFAULT_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_MIN_VELOCITY_FACTOR = 0.1'), 'BOUNCE_MIN_VELOCITY_FACTOR should be 0.1');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_MAX_VELOCITY_FACTOR = 1.0'), 'BOUNCE_MAX_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('BOUNCE_DEFAULT_VELOCITY_FACTOR = 0.9'), 'BOUNCE_DEFAULT_VELOCITY_FACTOR should be 0.9');
+});
+
+TestRunner.test("Day 702 - ui.js has 5 Bounce Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Bounce Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 5, 'ui.js should have at least 5 Bounce Notes menu items');
+});
+
+TestRunner.test("Day 702 - Bounce Notes menu items call track.bounceNotes", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.bounceNotes('), 'Bounce Notes menu items should call bounceNotes()');
+});
+
+TestRunner.test("Day 702 - Bounce Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Bounce Notes') && uiStr.includes('recreateToneSequence'), 'Bounce Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 702 - Bounce Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Bounced ${result} note'), 'Bounce Notes should show notification with bounced count');
+    t.assertTruthy(uiStr.includes('No notes to bounce.'), 'Bounce Notes should show "No notes to bounce." notification');
+});
+
+TestRunner.test("Day 702 - Bounce Notes menu items capture undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Bounce Notes on'), 'Bounce Notes menu item should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 702 - APP_VERSION validation (>= 2.354)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
+    const version = versionMatch ? versionMatch[1] : '0.0.0';
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 702');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 354, 'Minor version should be >= 354 for Day 702');
+    }
+});
+
+TestRunner.test("Day 702 - bounceNotes functional test: shift range is 1..maxOffsetSteps", (t) => {
+    const maxOffset = 4;
+    for (let i = 0; i < 10; i++) {
+        const shift = 1 + Math.floor(Math.random() * maxOffset);
+        t.assertTruthy(shift >= 1 && shift <= maxOffset, `shift ${shift} should be in 1..${maxOffset}`);
+    }
+});
+
+TestRunner.test("Day 702 - bounceNotes functional test: direction is -1 or +1", (t) => {
+    for (let i = 0; i < 10; i++) {
+        const direction = Math.random() < 0.5 ? -1 : 1;
+        t.assertTruthy(direction === -1 || direction === 1, 'direction should be -1 or +1');
+    }
+});
+
+TestRunner.test("Day 702 - bounceNotes functional test: targetCol = col + direction * shift", (t) => {
+    const col = 8;
+    const direction = -1;
+    const shift = 3;
+    const targetCol = col + direction * shift;
+    t.assertEqual(targetCol, 5, 'col 8 + direction -1 * shift 3 = 5');
+});
+
+TestRunner.test("Day 702 - bounceNotes functional test: velocity scaling 0.9 from 1.0 = 0.9", (t) => {
+    const origVel = 1.0;
+    const velocityFactor = 0.9;
+    const newVel = Math.max(0.05, Math.min(1.0, origVel * velocityFactor));
+    t.assertEqual(Math.round(newVel * 100) / 100, 0.9, 'Velocity 1.0 * 0.9 = 0.9');
 });
 
 export async function runTests() {

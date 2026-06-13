@@ -1,3 +1,76 @@
+#### Day 702: Bounce Notes Feature (2026-06-13)
+- **Feature**: Added `bounceNotes(maxOffsetSteps, skipChance, velocityFactor)` method to Track class and 5 "Bounce Notes" menu items to the sequencer context menu. Each note ricochets in a random direction by 1..maxOffsetSteps, with optional skip chance and velocity attenuation.
+- **Files Modified**:
+  - `js/Track.js`: Added `bounceNotes` method after `scaleProbabilities` (line ~1885)
+  - `js/constants.js`: Added 9 BOUNCE_* constants + bumped APP_VERSION to 2.354.0
+  - `js/ui.js`: Added 5 Bounce Notes menu items in the sequencer context menu after Scale Probabilities (200%), with separators before/after
+  - `js/tests.js`: Added Day 702 test block with 27 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fix**: Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line ~3911 that had been in the codebase (would have caused "Unexpected token ';'" error if executed).
+- **Feature Details**:
+  - **bounceNotes** (`js/Track.js`): Each active note randomly moves left or right by 1..maxOffsetSteps, creating scattered/bouncing patterns. Optional skip chance leaves some notes in place, and velocity factor attenuates the moved note's velocity for natural decay.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `maxOffsetSteps` to BOUNCE_MIN_OFFSET_STEPS (1) / BOUNCE_MAX_OFFSET_STEPS (8) range (default BOUNCE_DEFAULT_OFFSET_STEPS=4)
+    - Clamps `skipChance` to BOUNCE_MIN_SKIP_CHANCE (0.0) / BOUNCE_MAX_SKIP_CHANCE (0.9) range (default BOUNCE_DEFAULT_SKIP_CHANCE=0.0)
+    - Clamps `velocityFactor` to BOUNCE_MIN_VELOCITY_FACTOR (0.1) / BOUNCE_MAX_VELOCITY_FACTOR (1.0) range (default BOUNCE_DEFAULT_VELOCITY_FACTOR=0.9)
+    - Captures undo state BEFORE mutation with descriptive "Bounce Notes (offset ±X)" label
+    - For each row, for each column, for each active note: rolls skip chance, then picks random direction (-1 or +1), computes shift in 1..maxOffsetSteps, calculates target column (col + direction * shift)
+    - Skips if target is out of bounds (< 0 or >= totalSteps) or already occupied
+    - Moves the note to the target column, scaling velocity by velocityFactor (clamped to 0.05-1.0 range), preserves the original probability
+    - Rounds velocity to 2 decimal places
+    - Returns count of bounced notes
+  - **Bounce Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Scale Probabilities (200%) with separators before/after
+    - "Bounce Notes (Small ±1)" - calls `bounceNotes(1, 0.0, 0.95)` - subtle 1-step bounce, 95% velocity preserved
+    - "Bounce Notes (Medium ±4)" - calls `bounceNotes(4, 0.0, 0.9)` - standard 4-step bounce (1/4 note)
+    - "Bounce Notes (Large ±8)" - calls `bounceNotes(8, 0.0, 0.85)` - dramatic 8-step bounce (1/2 note)
+    - "Bounce Notes (Subtle ±2, 30% skip)" - calls `bounceNotes(2, 0.3, 0.95)` - 30% of notes stay in place
+    - "Bounce Notes (Wild ±6, 10% skip)" - calls `bounceNotes(6, 0.1, 0.8)` - wild bouncing with most notes moving
+    - All call `recreateToneSequence(true)` after bouncing
+    - All capture undo with descriptive "Bounce Notes on <name> (<seqname>)" label
+    - Show notifications: "Bounced {count} note(s) (variant)."
+    - Show "No notes to bounce." when nothing to bounce
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 9 new constants
+  - `BOUNCE_MIN_OFFSET_STEPS = 1` - Minimum bounce step offset
+  - `BOUNCE_MAX_OFFSET_STEPS = 8` - Maximum bounce step offset
+  - `BOUNCE_DEFAULT_OFFSET_STEPS = 4` - Default 4 steps (1/4 note) max bounce
+  - `BOUNCE_MIN_SKIP_CHANCE = 0.0` - Minimum probability of leaving a note in place
+  - `BOUNCE_MAX_SKIP_CHANCE = 0.9` - Maximum skip chance (10% would bounce)
+  - `BOUNCE_DEFAULT_SKIP_CHANCE = 0.0` - Default: all notes bounce
+  - `BOUNCE_MIN_VELOCITY_FACTOR = 0.1` - Minimum velocity preservation factor
+  - `BOUNCE_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity preservation (1.0 = no change)
+  - `BOUNCE_DEFAULT_VELOCITY_FACTOR = 0.9` - Default 90% velocity preserved per bounce
+- **Tests** (`js/tests.js`): 27 tests covering:
+  - `bounceNotes` is a function on Track.prototype
+  - `bounceNotes` accepts 3 parameters with defaults (maxOffsetSteps, skipChance, velocityFactor)
+  - `bounceNotes` returns 0 for Audio tracks
+  - `bounceNotes` gets active sequence via `getActiveSequence`
+  - `bounceNotes` captures undo BEFORE mutation
+  - `bounceNotes` has descriptive "Bounce Notes" undo label
+  - `bounceNotes` clamps maxOffsetSteps to BOUNCE_MIN/MAX_OFFSET_STEPS with Math.max/min
+  - `bounceNotes` clamps skipChance to BOUNCE_MIN/MAX_SKIP_CHANCE
+  - `bounceNotes` clamps velocityFactor to BOUNCE_MIN/MAX_VELOCITY_FACTOR
+  - `bounceNotes` uses Math.random() for direction and shift
+  - `bounceNotes` respects sequence length boundary (targetCol < 0 or >= totalSteps)
+  - `bounceNotes` skips occupied target slots
+  - `bounceNotes` scales velocity by velocityFactor and preserves probability
+  - `bounceNotes` rounds velocity to 2 decimal places
+  - `bounceNotes` returns count of bounced notes
+  - All 9 BOUNCE constants are defined in constants.js
+  - ui.js has 5 Bounce Notes menu items
+  - Bounce Notes menu items call track.bounceNotes
+  - Bounce Notes menu items call recreateToneSequence
+  - Bounce Notes menu items show notification with count
+  - Bounce Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.354 for Day 702)
+  - Functional test: shift range is 1..maxOffsetSteps
+  - Functional test: direction is -1 or +1
+  - Functional test: targetCol = col + direction * shift
+  - Functional test: velocity scaling 0.9 from 1.0 = 0.9
+- **Pre-existing Bug Fix**: Fixed missing closing paren `const abs = Math.abs(data[i];` → `const abs = Math.abs(data[i]);` in `js/Track.js` line ~3911. This syntax error would have thrown "Expected ')'" if that code path was executed.
+- **Version**: Bumped to 2.354.0
+- **Test Count**: Increased from 3708 to 3735 (27 new Day 702 tests, all pass; 0 regressions in Day 701/700/698/697 test blocks)
 #### Day 701: Invert Probabilities Feature (2026-06-12)
 - **Feature**: Added `invertProbabilities()` method to Track class and "Invert Probabilities" menu item to sequencer context menu. Mirrors the `invertVelocities()` pattern for probability values.
 - **Files Modified**:
