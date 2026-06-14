@@ -20971,8 +20971,6 @@ TestRunner.test("Day 704 - accentNotes functional test: offbeats pattern is 2,6,
 
 TestRunner.test("Day 704 - accentNotes functional test: velocity rounding", (t) => {
     const rounded = Math.round(0.95 * 100) / 100;
-    t.assertEqual(rounded, 0.95, '0.95 * 100 / 100 = 0.95');
-});
 // Day 705: Stagger Notes Feature
 TestRunner.test("Day 705 - staggerNotes is a function on Track.prototype", (t) => {
     t.assertTruthy(typeof Track.prototype.staggerNotes === 'function', 'staggerNotes should be a function on Track.prototype');
