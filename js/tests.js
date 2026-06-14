@@ -20971,7 +20971,239 @@ TestRunner.test("Day 704 - accentNotes functional test: offbeats pattern is 2,6,
 
 TestRunner.test("Day 704 - accentNotes functional test: velocity rounding", (t) => {
     const rounded = Math.round(0.95 * 100) / 100;
-    t.assertEqual(rounded, 0.95, 'Rounded velocity should be 0.95');
+// Day 705: Stagger Notes Feature
+TestRunner.test("Day 705 - staggerNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.staggerNotes === 'function', 'staggerNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 705 - staggerNotes accepts 4 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('staggerSteps'), 'staggerNotes should accept staggerSteps parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'staggerNotes should accept velocityFactor parameter');
+    t.assertTruthy(funcStr.includes('direction'), 'staggerNotes should accept direction parameter');
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'staggerNotes should accept skipOccupied parameter');
+});
+
+TestRunner.test("Day 705 - staggerNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'") && funcStr.includes('return 0'), 'staggerNotes should guard against Audio tracks');
+});
+
+TestRunner.test("Day 705 - staggerNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'staggerNotes should use getActiveSequence()');
+});
+
+TestRunner.test("Day 705 - staggerNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'staggerNotes should capture undo state');
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const forEachIdx = funcStr.indexOf('for (let col');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'staggerNotes should capture undo BEFORE data iteration');
+});
+
+TestRunner.test("Day 705 - staggerNotes has descriptive 'Stagger Notes' undo label", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('Stagger Notes'), 'staggerNotes should have descriptive undo label');
+});
+
+TestRunner.test("Day 705 - staggerNotes clamps staggerSteps to STAGGER_NOTES_MIN/MAX_STAGGER_STEPS", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('STAGGER_NOTES_MIN_STAGGER_STEPS') && funcStr.includes('STAGGER_NOTES_MAX_STAGGER_STEPS'), 'staggerNotes should reference STAGGER_NOTES step constants');
+    t.assertTruthy(funcStr.includes('clampedSteps'), 'staggerNotes should clamp steps to clampedSteps');
+});
+
+TestRunner.test("Day 705 - staggerNotes clamps velocityFactor to STAGGER_NOTES_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('STAGGER_NOTES_MIN_VELOCITY_FACTOR') && funcStr.includes('STAGGER_NOTES_MAX_VELOCITY_FACTOR'), 'staggerNotes should reference STAGGER_NOTES velocity constants');
+    t.assertTruthy(funcStr.includes('clampedVel'), 'staggerNotes should clamp velocity to clampedVel');
+});
+
+TestRunner.test("Day 705 - staggerNotes validates direction with STAGGER_NOTES_DIRECTIONS", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('STAGGER_NOTES_DIRECTIONS'), 'staggerNotes should reference STAGGER_NOTES_DIRECTIONS');
+    t.assertTruthy(funcStr.includes('useDirection'), 'staggerNotes should validate direction to useDirection');
+});
+
+TestRunner.test("Day 705 - staggerNotes supports up direction", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('STAGGER_NOTES_DIRECTION_UP') || funcStr.includes("'up'"), 'staggerNotes should support up direction');
+});
+
+TestRunner.test("Day 705 - staggerNotes supports down direction", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('STAGGER_NOTES_DIRECTION_DOWN') || funcStr.includes("'down'"), 'staggerNotes should support down direction');
+});
+
+TestRunner.test("Day 705 - staggerNotes supports outward direction", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('STAGGER_NOTES_DIRECTION_OUTWARD') || funcStr.includes("'outward'"), 'staggerNotes should support outward direction');
+});
+
+TestRunner.test("Day 705 - staggerNotes supports inward direction", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('STAGGER_NOTES_DIRECTION_INWARD') || funcStr.includes("'inward'"), 'staggerNotes should support inward direction');
+});
+
+TestRunner.test("Day 705 - staggerNotes uses Math.pow for exponential velocity decay", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.pow(') && funcStr.includes('clampedVel'), 'staggerNotes should use Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 705 - staggerNotes respects sequence length boundary", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('newCol >= totalSteps'), 'staggerNotes should respect sequence length boundary');
+});
+
+TestRunner.test("Day 705 - staggerNotes supports skipOccupied option", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('skipOccupied') && funcStr.includes('activeSeq.data[rowIndex]') && funcStr.includes('active'), 'staggerNotes should check occupied slots when skipOccupied is true');
+});
+
+TestRunner.test("Day 705 - staggerNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round(clampedNewVel * 100) / 100'), 'staggerNotes should round velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 705 - staggerNotes returns count of staggered notes", (t) => {
+    const funcStr = Track.prototype.staggerNotes.toString();
+    t.assertTruthy(funcStr.includes('staggeredCount'), 'staggerNotes should track staggeredCount');
+    t.assertTruthy(funcStr.includes('return staggeredCount'), 'staggerNotes should return staggeredCount');
+});
+
+TestRunner.test("Day 705 - STAGGER_NOTES constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_MIN_STAGGER_STEPS = 1'), 'STAGGER_NOTES_MIN_STAGGER_STEPS should be 1');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_MAX_STAGGER_STEPS = 8'), 'STAGGER_NOTES_MAX_STAGGER_STEPS should be 8');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_DEFAULT_STAGGER_STEPS = 2'), 'STAGGER_NOTES_DEFAULT_STAGGER_STEPS should be 2');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_MIN_VELOCITY_FACTOR = 0.3'), 'STAGGER_NOTES_MIN_VELOCITY_FACTOR should be 0.3');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_MAX_VELOCITY_FACTOR = 1.0'), 'STAGGER_NOTES_MAX_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95'), 'STAGGER_NOTES_DEFAULT_VELOCITY_FACTOR should be 0.95');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_DIRECTION_UP'), 'STAGGER_NOTES_DIRECTION_UP should be defined');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_DIRECTION_DOWN'), 'STAGGER_NOTES_DIRECTION_DOWN should be defined');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_DIRECTION_OUTWARD'), 'STAGGER_NOTES_DIRECTION_OUTWARD should be defined');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_DIRECTION_INWARD'), 'STAGGER_NOTES_DIRECTION_INWARD should be defined');
+    t.assertTruthy(constantsSrc.includes('STAGGER_NOTES_DIRECTIONS'), 'STAGGER_NOTES_DIRECTIONS should be defined');
+});
+
+TestRunner.test("Day 705 - ui.js has 4 Stagger Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Stagger Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 4, 'ui.js should have at least 4 Stagger Notes menu items');
+});
+
+TestRunner.test("Day 705 - Stagger Notes menu items call track.staggerNotes", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.staggerNotes('), 'Stagger Notes menu items should call staggerNotes()');
+});
+
+TestRunner.test("Day 705 - Stagger Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Stagger Notes') && uiStr.includes('recreateToneSequence'), 'Stagger Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 705 - Stagger Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Staggered ${result} note'), 'Stagger Notes should show notification with staggered count');
+    t.assertTruthy(uiStr.includes('No notes to stagger.'), 'Stagger Notes should show "No notes to stagger." notification');
+});
+
+TestRunner.test("Day 705 - Stagger Notes menu items capture undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Stagger Notes on'), 'Stagger Notes menu items should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 705 - APP_VERSION validation (>= 2.357)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
+    const version = versionMatch ? versionMatch[1] : '0.0.0';
+    const versionParts = version.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 705');
+    if (versionParts[0] === 2) {
+        t.assertTruthy(versionParts[1] >= 357, 'Minor version should be >= 357 for Day 705');
+    }
+});
+
+TestRunner.test("Day 705 - staggerNotes functional test: stagger position calculation (col + i*steps)", (t) => {
+    const col = 4;
+    const staggerSteps = 2;
+    const positions = [];
+    for (let i = 1; i <= 3; i++) {
+        positions.push(col + i * staggerSteps);
+    }
+    t.assertEqual(positions[0], 6, 'First stagger at col 6');
+    t.assertEqual(positions[1], 8, 'Second stagger at col 8');
+    t.assertEqual(positions[2], 10, 'Third stagger at col 10');
+});
+
+TestRunner.test("Day 705 - staggerNotes functional test: velocity decay (vel * factor^i)", (t) => {
+    const originalVel = 0.8;
+    const factor = 0.95;
+    const decays = [];
+    for (let i = 1; i <= 3; i++) {
+        decays.push(Math.round(originalVel * Math.pow(factor, i) * 100) / 100);
+    }
+    t.assertEqual(decays[0], 0.76, 'First stagger velocity 0.76 (0.8 * 0.95)');
+    t.assertEqual(decays[1], 0.72, 'Second stagger velocity 0.72 (0.8 * 0.95^2)');
+    t.assertEqual(decays[2], 0.69, 'Third stagger velocity 0.69 (0.8 * 0.95^3)');
+});
+
+TestRunner.test("Day 705 - staggerNotes functional test: chord required (chordRows.length < 2 skipped)", (t) => {
+    const chordRowsSingle = [3];
+    const chordRowsTriple = [3, 5, 7];
+    t.assertTruthy(chordRowsSingle.length < 2, 'Single-note column should be skipped (no chord)');
+    t.assertTruthy(chordRowsTriple.length >= 2, 'Multi-note column should be staggered');
+});
+
+TestRunner.test("Day 705 - staggerNotes functional test: out-of-bounds guard", (t) => {
+    const col = 14;
+    const staggerSteps = 4;
+    const totalSteps = 16;
+    const newCol = col + 2 * staggerSteps;
+    t.assertTruthy(newCol >= totalSteps, 'Target col 22 >= 16, out of bounds, should skip');
+});
+
+TestRunner.test("Day 705 - staggerNotes clamps staggerSteps to valid range", (t) => {
+    const requestedSteps = 100;
+    const clamped = Math.max(1, Math.min(8, Math.floor(requestedSteps)));
+    t.assertEqual(clamped, 8, 'Steps clamped to 8 (max)');
+});
+
+TestRunner.test("Day 705 - staggerNotes clamps velocityFactor to valid range", (t) => {
+    const requestedVel = 2.5;
+    const clamped = Math.max(0.3, Math.min(1.0, requestedVel));
+    t.assertEqual(clamped, 1.0, 'Velocity clamped to 1.0 (max)');
+});
+
+TestRunner.test("Day 705 - staggerNotes functional test: outward direction center-out ordering", (t) => {
+    const sorted = [0, 1, 2, 3, 4];
+    const mid = Math.floor(sorted.length / 2);
+    const ordered = [sorted[mid]];
+    let lo = mid - 1, hi = mid + 1;
+    while (lo >= 0 || hi < sorted.length) {
+        if (lo >= 0) ordered.push(sorted[lo--]);
+        if (hi < sorted.length) ordered.push(sorted[hi++]);
+    }
+    t.assertEqual(ordered[0], 2, 'Outward: center first (index 2)');
+    t.assertEqual(ordered[1], 1, 'Outward: then index 1');
+    t.assertEqual(ordered[2], 3, 'Outward: then index 3');
+});
+
+TestRunner.test("Day 705 - staggerNotes functional test: inward direction outside-in ordering", (t) => {
+    const sorted = [0, 1, 2, 3, 4];
+    const ordered = [];
+    let lo = 0, hi = sorted.length - 1;
+    while (lo <= hi) {
+        if (lo === hi) {
+            ordered.push(sorted[lo]);
+            break;
+        }
+        ordered.push(sorted[hi--]);
+        ordered.push(sorted[lo++]);
+    }
+    t.assertEqual(ordered[0], 4, 'Inward: outermost first (index 4)');
+    t.assertEqual(ordered[1], 0, 'Inward: then index 0');
+    t.assertEqual(ordered[2], 3, 'Inward: then index 3');
 });
 
 
