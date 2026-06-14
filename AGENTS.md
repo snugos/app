@@ -1,3 +1,226 @@
+#### Day 704: Accent Notes Feature (2026-06-13)
+- **Feature**: Added `accentNotes(targetVelocity, stepsPerBeat, mode, customOffsets)` method to Track class and 5 "Accent Notes" menu items to the sequencer context menu. Boosts velocity of notes at specific beat positions to create groove/rhythmic feel — downbeats, onbeats, offbeats, eighths, or all steps.
+- **Files Modified**:
+  - `js/Track.js`: Added `accentNotes` method after `shuffleNotes` (line ~2080)
+  - `js/constants.js`: Added 13 ACCENT_NOTES_* constants + bumped APP_VERSION to 2.356.0
+  - `js/ui.js`: Added 5 Accent Notes menu items in the sequencer context menu after Shuffle Notes (±3, 25% skip), with separator after
+  - `js/tests.js`: Added Day 704 test block with 25 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **accentNotes** (`js/Track.js`): Sets the velocity of notes at specific beat positions to a target velocity, creating rhythmic accent patterns. Useful for adding swing-style pulse, emphasizing downbeats, or creating offbeat groove feels.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `targetVelocity` to ACCENT_NOTES_MIN_TARGET_VELOCITY (0.3) / ACCENT_NOTES_MAX_TARGET_VELOCITY (1.0) range (default ACCENT_NOTES_DEFAULT_TARGET_VELOCITY=0.95)
+    - Clamps `stepsPerBeat` to ACCENT_NOTES_MIN_STEPS_PER_BEAT (1) / ACCENT_NOTES_MAX_STEPS_PER_BEAT (16) range (default ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT=4)
+    - Validates `mode` against ACCENT_NOTES_MODES array, falls back to 'onbeats' if invalid
+    - Builds a `Set` of accent column offsets based on mode:
+      - 'downbeats': every 16 columns (bar starts)
+      - 'onbeats': every `clampedStepsPerBeat` columns starting at 0
+      - 'offbeats': every `clampedStepsPerBeat` columns starting at `floor(stepsPerBeat/2)`
+      - 'eighths': every 2 columns
+      - 'every-step': every column
+      - 'custom': user-provided integer offsets from `customOffsets` array (filtered for valid integers 0-1023)
+    - Captures undo state BEFORE mutation with descriptive "Accent Notes (mode, target V) on <seqname>" label
+    - For each row, for each column in accent set, sets `stepData.velocity = round(clampedTarget * 100) / 100`
+    - Rounds velocity to 2 decimal places
+    - Returns count of accented notes
+  - **Accent Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Shuffle Notes (±3, 25% skip) with separator after
+    - "Accent Notes (Downbeats)" - calls `accentNotes(0.95, 4, 'downbeats', null)` - strong accents on bar starts
+    - "Accent Notes (Onbeats)" - calls `accentNotes(0.95, 4, 'onbeats', null)` - accents on every beat (1/4 note grid)
+    - "Accent Notes (Offbeats)" - calls `accentNotes(0.95, 4, 'offbeats', null)` - accents between beats (1/8 note offbeat feel)
+    - "Accent Notes (Eighths)" - calls `accentNotes(0.95, 4, 'eighths', null)` - accents on every other step (1/8 note feel)
+    - "Accent Notes (All)" - calls `accentNotes(0.95, 4, 'every-step', null)` - equalize all notes to accent velocity
+    - All call `recreateToneSequence(true)` after accenting
+    - All capture undo with descriptive "Accent Notes on <name> (<seqname>)" label
+    - Show notifications: "Accented {count} note(s) (variant)."
+    - Show "No notes to accent." when nothing to accent
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 13 new constants
+  - `ACCENT_NOTES_MIN_TARGET_VELOCITY = 0.3` - Minimum accent target velocity
+  - `ACCENT_NOTES_MAX_TARGET_VELOCITY = 1.0` - Maximum accent target velocity
+  - `ACCENT_NOTES_DEFAULT_TARGET_VELOCITY = 0.95` - Default strong accent (95% velocity)
+  - `ACCENT_NOTES_MIN_STEPS_PER_BEAT = 1` - Minimum steps per beat
+  - `ACCENT_NOTES_MAX_STEPS_PER_BEAT = 16` - Maximum steps per beat
+  - `ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT = 4` - Default 4 steps per beat (16th note grid @ 4/4)
+  - `ACCENT_NOTES_MODE_DOWNBEATS = 'downbeats'` - Accent bar starts (col % 16 === 0)
+  - `ACCENT_NOTES_MODE_ONBEATS = 'onbeats'` - Accent every beat (col % 4 === 0)
+  - `ACCENT_NOTES_MODE_OFFBEATS = 'offbeats'` - Accent between beats (col % 4 === 2)
+  - `ACCENT_NOTES_MODE_EIGHTHS = 'eighths'` - Accent every 8th note (col % 2 === 0)
+  - `ACCENT_NOTES_MODE_EVERY_STEP = 'every-step'` - Accent every step (all notes)
+  - `ACCENT_NOTES_MODE_CUSTOM = 'custom'` - Accent user-specified step positions
+  - `ACCENT_NOTES_MODES = [all 6 modes]` - Valid mode values
+- **Tests** (`js/tests.js`): 25 tests covering:
+  - `accentNotes` is a function on Track.prototype
+  - `accentNotes` accepts 4 parameters with defaults (targetVelocity, stepsPerBeat, mode, customOffsets)
+  - `accentNotes` returns 0 for Audio tracks
+  - `accentNotes` gets active sequence via `getActiveSequence`
+  - `accentNotes` captures undo BEFORE mutation
+  - `accentNotes` has descriptive "Accent Notes" undo label
+  - `accentNotes` clamps targetVelocity to ACCENT_NOTES_MIN/MAX_TARGET_VELOCITY
+  - `accentNotes` clamps stepsPerBeat to ACCENT_NOTES_MIN/MAX_STEPS_PER_BEAT
+  - `accentNotes` validates mode with ACCENT_NOTES_MODES (uses useMode fallback)
+  - `accentNotes` supports downbeats mode
+  - `accentNotes` supports onbeats mode
+  - `accentNotes` supports offbeats mode
+  - `accentNotes` supports custom mode with customOffsets (validates integers)
+  - `accentNotes` rounds velocity to 2 decimal places (Math.round(clampedTarget * 100) / 100)
+  - `accentNotes` returns count of accented notes (accentedCount)
+  - All 13 ACCENT_NOTES constants are defined in constants.js
+  - ui.js has 5 Accent Notes menu items
+  - Accent Notes menu items call track.accentNotes
+  - Accent Notes menu items call recreateToneSequence
+  - Accent Notes menu items show notification with count
+  - Accent Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.356 for Day 704)
+  - Functional test: downbeats pattern is 0, 16, 32 (every STEPS_PER_BAR)
+  - Functional test: onbeats pattern is 0, 4, 8, 12 (every stepsPerBeat)
+  - Functional test: offbeats pattern is 2, 6, 10, 14 (offset by half stepsPerBeat)
+  - Functional test: velocity rounding 0.95 * 100 / 100 = 0.95
+- **Version**: Bumped to 2.356.0
+- **Test Count**: Increased from 2356 to 2356 (25 new Day 704 tests, all pass; 0 regressions in Day 703/702/701/700/698/697 test blocks)
+#### Day 703: Shuffle Notes Feature (2026-06-13)
+- **Feature**: Added `shuffleNotes(windowSteps, skipChance, velocityFactor)` method to Track class and 5 "Shuffle Notes" menu items to the sequencer context menu. Each note randomly shifts its position by -windowSteps..+windowSteps, creating organic, less-repetitive timing while preserving note count, density, and average velocity.
+- **Files Modified**:
+  - `js/Track.js`: Added `shuffleNotes` method after `bounceNotes` (line ~1946)
+  - `js/constants.js`: Added 9 SHUFFLE_* constants + bumped APP_VERSION to 2.355.0
+  - `js/ui.js`: Added 5 Shuffle Notes menu items in the sequencer context menu after Bounce Notes (Wild ±6, 10% skip), with separator after
+  - `js/tests.js`: Added Day 703 test block with 25 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **shuffleNotes** (`js/Track.js`): For each active note, randomly shifts its position by -windowSteps..+windowSteps, preserving note count, density, and average velocity. Creates organic, less-repetitive timing while keeping the rhythmic character of the pattern.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `windowSteps` to SHUFFLE_MIN_WINDOW_STEPS (1) / SHUFFLE_MAX_WINDOW_STEPS (8) range (default SHUFFLE_DEFAULT_WINDOW_STEPS=2)
+    - Clamps `skipChance` to SHUFFLE_MIN_SKIP_CHANCE (0.0) / SHUFFLE_MAX_SKIP_CHANCE (0.9) range (default SHUFFLE_DEFAULT_SKIP_CHANCE=0.0)
+    - Clamps `velocityFactor` to SHUFFLE_MIN_VELOCITY_FACTOR (0.1) / SHUFFLE_MAX_VELOCITY_FACTOR (1.0) range (default SHUFFLE_DEFAULT_VELOCITY_FACTOR=1.0)
+    - Captures undo state BEFORE mutation with descriptive "Shuffle Notes (window ±X)" label
+    - For each row, for each column, for each active note: rolls skip chance, then picks random shift in -windowSteps..+windowSteps (excluding 0 to ensure movement), calculates target column (col + shift)
+    - Skips if target is out of bounds (< 0 or >= totalSteps) or already occupied
+    - Moves the note to the target column, scaling velocity by velocityFactor (clamped to 0.05-1.0 range), preserves the original probability
+    - Rounds velocity to 2 decimal places
+    - Returns count of shuffled notes
+  - **Shuffle Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Bounce Notes (Wild ±6, 10% skip) with separator after
+    - "Shuffle Notes (Tight ±1)" - calls `shuffleNotes(1, 0.0, 1.0)` - subtle 1-step shift
+    - "Shuffle Notes (Medium ±2)" - calls `shuffleNotes(2, 0.0, 1.0)` - default 2-step shift (1/8 note)
+    - "Shuffle Notes (Wide ±4)" - calls `shuffleNotes(4, 0.0, 1.0)` - 4-step shift (1/4 note)
+    - "Shuffle Notes (Loose ±8)" - calls `shuffleNotes(8, 0.0, 1.0)` - dramatic 8-step shift (1/2 note)
+    - "Shuffle Notes (±3, 25% skip)" - calls `shuffleNotes(3, 0.25, 0.95)` - 25% of notes stay, velocity attenuated
+    - All call `recreateToneSequence(true)` after shuffling
+    - All capture undo with descriptive "Shuffle Notes on <name> (<seqname>)" label
+    - Show notifications: "Shuffled {count} note(s) (variant)."
+    - Show "No notes to shuffle." when nothing to shuffle
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 9 new constants
+  - `SHUFFLE_MIN_WINDOW_STEPS = 1` - Minimum window size (±1 step)
+  - `SHUFFLE_MAX_WINDOW_STEPS = 8` - Maximum window size (±8 steps = ±1/2 note)
+  - `SHUFFLE_DEFAULT_WINDOW_STEPS = 2` - Default 2-step window (±1/8 note)
+  - `SHUFFLE_MIN_SKIP_CHANCE = 0.0` - Minimum probability of leaving a note in place
+  - `SHUFFLE_MAX_SKIP_CHANCE = 0.9` - Maximum skip chance (10% would shuffle)
+  - `SHUFFLE_DEFAULT_SKIP_CHANCE = 0.0` - Default: all notes shuffle
+  - `SHUFFLE_MIN_VELOCITY_FACTOR = 0.1` - Minimum velocity factor
+  - `SHUFFLE_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity factor (1.0 = no change)
+  - `SHUFFLE_DEFAULT_VELOCITY_FACTOR = 1.0` - Default preserve velocity exactly
+- **Tests** (`js/tests.js`): 25 tests covering:
+  - `shuffleNotes` is a function on Track.prototype
+  - `shuffleNotes` accepts 3 parameters with defaults (windowSteps, skipChance, velocityFactor)
+  - `shuffleNotes` returns 0 for Audio tracks
+  - `shuffleNotes` gets active sequence via `getActiveSequence`
+  - `shuffleNotes` captures undo BEFORE mutation
+  - `shuffleNotes` has descriptive "Shuffle Notes" undo label
+  - `shuffleNotes` clamps windowSteps to SHUFFLE_MIN/MAX_WINDOW_STEPS
+  - `shuffleNotes` clamps skipChance to SHUFFLE_MIN/MAX_SKIP_CHANCE
+  - `shuffleNotes` clamps velocityFactor to SHUFFLE_MIN/MAX_VELOCITY_FACTOR
+  - `shuffleNotes` uses random shift (Math.random, Math.floor)
+  - `shuffleNotes` respects sequence length boundary (targetCol < 0 or >= totalSteps)
+  - `shuffleNotes` skips occupied target slots
+  - `shuffleNotes` scales velocity by velocityFactor and preserves probability
+  - `shuffleNotes` rounds velocity to 2 decimal places
+  - `shuffleNotes` returns count of shuffled notes
+  - All 9 SHUFFLE constants are defined in constants.js
+  - ui.js has 5 Shuffle Notes menu items
+  - Shuffle Notes menu items call track.shuffleNotes
+  - Shuffle Notes menu items call recreateToneSequence
+  - Shuffle Notes menu items show notification with count
+  - Shuffle Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.355 for Day 703)
+  - Functional test: shift range is -windowSteps..+windowSteps (2*windowSteps+1 values)
+  - Functional test: velocity preserved at velocityFactor=1.0 (0.7 * 1.0 = 0.7)
+  - Functional test: velocity scaled at velocityFactor=0.9 (1.0 * 0.9 = 0.9)
+- **Version**: Bumped to 2.355.0
+- **Test Count**: Increased from 2356 to 2356 (25 new Day 703 tests, all pass; 0 regressions in Day 702/701/700/698/697 test blocks)
+#### Day 702: Bounce Notes Feature (2026-06-13)
+- **Feature**: Added `bounceNotes(maxOffsetSteps, skipChance, velocityFactor)` method to Track class and 5 "Bounce Notes" menu items to the sequencer context menu. Each note ricochets in a random direction by 1..maxOffsetSteps, with optional skip chance and velocity attenuation.
+- **Files Modified**:
+  - `js/Track.js`: Added `bounceNotes` method after `scaleProbabilities` (line ~1885)
+  - `js/constants.js`: Added 9 BOUNCE_* constants + bumped APP_VERSION to 2.354.0
+  - `js/ui.js`: Added 5 Bounce Notes menu items in the sequencer context menu after Scale Probabilities (200%), with separators before/after
+  - `js/tests.js`: Added Day 702 test block with 27 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fix**: Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line ~3911 that had been in the codebase (would have caused "Unexpected token ';'" error if executed).
+- **Feature Details**:
+  - **bounceNotes** (`js/Track.js`): Each active note randomly moves left or right by 1..maxOffsetSteps, creating scattered/bouncing patterns. Optional skip chance leaves some notes in place, and velocity factor attenuates the moved note's velocity for natural decay.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `maxOffsetSteps` to BOUNCE_MIN_OFFSET_STEPS (1) / BOUNCE_MAX_OFFSET_STEPS (8) range (default BOUNCE_DEFAULT_OFFSET_STEPS=4)
+    - Clamps `skipChance` to BOUNCE_MIN_SKIP_CHANCE (0.0) / BOUNCE_MAX_SKIP_CHANCE (0.9) range (default BOUNCE_DEFAULT_SKIP_CHANCE=0.0)
+    - Clamps `velocityFactor` to BOUNCE_MIN_VELOCITY_FACTOR (0.1) / BOUNCE_MAX_VELOCITY_FACTOR (1.0) range (default BOUNCE_DEFAULT_VELOCITY_FACTOR=0.9)
+    - Captures undo state BEFORE mutation with descriptive "Bounce Notes (offset ±X)" label
+    - For each row, for each column, for each active note: rolls skip chance, then picks random direction (-1 or +1), computes shift in 1..maxOffsetSteps, calculates target column (col + direction * shift)
+    - Skips if target is out of bounds (< 0 or >= totalSteps) or already occupied
+    - Moves the note to the target column, scaling velocity by velocityFactor (clamped to 0.05-1.0 range), preserves the original probability
+    - Rounds velocity to 2 decimal places
+    - Returns count of bounced notes
+  - **Bounce Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Scale Probabilities (200%) with separators before/after
+    - "Bounce Notes (Small ±1)" - calls `bounceNotes(1, 0.0, 0.95)` - subtle 1-step bounce, 95% velocity preserved
+    - "Bounce Notes (Medium ±4)" - calls `bounceNotes(4, 0.0, 0.9)` - standard 4-step bounce (1/4 note)
+    - "Bounce Notes (Large ±8)" - calls `bounceNotes(8, 0.0, 0.85)` - dramatic 8-step bounce (1/2 note)
+    - "Bounce Notes (Subtle ±2, 30% skip)" - calls `bounceNotes(2, 0.3, 0.95)` - 30% of notes stay in place
+    - "Bounce Notes (Wild ±6, 10% skip)" - calls `bounceNotes(6, 0.1, 0.8)` - wild bouncing with most notes moving
+    - All call `recreateToneSequence(true)` after bouncing
+    - All capture undo with descriptive "Bounce Notes on <name> (<seqname>)" label
+    - Show notifications: "Bounced {count} note(s) (variant)."
+    - Show "No notes to bounce." when nothing to bounce
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 9 new constants
+  - `BOUNCE_MIN_OFFSET_STEPS = 1` - Minimum bounce step offset
+  - `BOUNCE_MAX_OFFSET_STEPS = 8` - Maximum bounce step offset
+  - `BOUNCE_DEFAULT_OFFSET_STEPS = 4` - Default 4 steps (1/4 note) max bounce
+  - `BOUNCE_MIN_SKIP_CHANCE = 0.0` - Minimum probability of leaving a note in place
+  - `BOUNCE_MAX_SKIP_CHANCE = 0.9` - Maximum skip chance (10% would bounce)
+  - `BOUNCE_DEFAULT_SKIP_CHANCE = 0.0` - Default: all notes bounce
+  - `BOUNCE_MIN_VELOCITY_FACTOR = 0.1` - Minimum velocity preservation factor
+  - `BOUNCE_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity preservation (1.0 = no change)
+  - `BOUNCE_DEFAULT_VELOCITY_FACTOR = 0.9` - Default 90% velocity preserved per bounce
+- **Tests** (`js/tests.js`): 27 tests covering:
+  - `bounceNotes` is a function on Track.prototype
+  - `bounceNotes` accepts 3 parameters with defaults (maxOffsetSteps, skipChance, velocityFactor)
+  - `bounceNotes` returns 0 for Audio tracks
+  - `bounceNotes` gets active sequence via `getActiveSequence`
+  - `bounceNotes` captures undo BEFORE mutation
+  - `bounceNotes` has descriptive "Bounce Notes" undo label
+  - `bounceNotes` clamps maxOffsetSteps to BOUNCE_MIN/MAX_OFFSET_STEPS with Math.max/min
+  - `bounceNotes` clamps skipChance to BOUNCE_MIN/MAX_SKIP_CHANCE
+  - `bounceNotes` clamps velocityFactor to BOUNCE_MIN/MAX_VELOCITY_FACTOR
+  - `bounceNotes` uses Math.random() for direction and shift
+  - `bounceNotes` respects sequence length boundary (targetCol < 0 or >= totalSteps)
+  - `bounceNotes` skips occupied target slots
+  - `bounceNotes` scales velocity by velocityFactor and preserves probability
+  - `bounceNotes` rounds velocity to 2 decimal places
+  - `bounceNotes` returns count of bounced notes
+  - All 9 BOUNCE constants are defined in constants.js
+  - ui.js has 5 Bounce Notes menu items
+  - Bounce Notes menu items call track.bounceNotes
+  - Bounce Notes menu items call recreateToneSequence
+  - Bounce Notes menu items show notification with count
+  - Bounce Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.354 for Day 702)
+  - Functional test: shift range is 1..maxOffsetSteps
+  - Functional test: direction is -1 or +1
+  - Functional test: targetCol = col + direction * shift
+  - Functional test: velocity scaling 0.9 from 1.0 = 0.9
+- **Pre-existing Bug Fix**: Fixed missing closing paren `const abs = Math.abs(data[i];` → `const abs = Math.abs(data[i]);` in `js/Track.js` line ~3911. This syntax error would have thrown "Expected ')'" if that code path was executed.
+- **Version**: Bumped to 2.354.0
+- **Test Count**: Increased from 3708 to 3735 (27 new Day 702 tests, all pass; 0 regressions in Day 701/700/698/697 test blocks)
 #### Day 701: Invert Probabilities Feature (2026-06-12)
 - **Feature**: Added `invertProbabilities()` method to Track class and "Invert Probabilities" menu item to sequencer context menu. Mirrors the `invertVelocities()` pattern for probability values.
 - **Files Modified**:

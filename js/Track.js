@@ -1883,6 +1883,204 @@ export class Track {
         return scaledCount;
     }
 
+    // Bounce Notes - ricochet notes in random directions within a step range
+    // Each active note randomly moves left or right by 1..maxOffsetSteps.
+    // skipChance adds a probability of leaving a note in place (0.0 = all notes move).
+    // velocityFactor scales the velocity of bounced notes (1.0 = no change).
+    // Useful for creating scattered, randomized patterns with rhythmic character preserved.
+    bounceNotes(maxOffsetSteps = Constants.BOUNCE_DEFAULT_OFFSET_STEPS, skipChance = Constants.BOUNCE_DEFAULT_SKIP_CHANCE, velocityFactor = Constants.BOUNCE_DEFAULT_VELOCITY_FACTOR) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} bounceNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedOffset = Math.max(Constants.BOUNCE_MIN_OFFSET_STEPS, Math.min(Constants.BOUNCE_MAX_OFFSET_STEPS, maxOffsetSteps));
+        const clampedSkip = Math.max(Constants.BOUNCE_MIN_SKIP_CHANCE, Math.min(Constants.BOUNCE_MAX_SKIP_CHANCE, skipChance));
+        const clampedVel = Math.max(Constants.BOUNCE_MIN_VELOCITY_FACTOR, Math.min(Constants.BOUNCE_MAX_VELOCITY_FACTOR, velocityFactor));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Bounce Notes (offset ±${clampedOffset}) on ${activeSeq.name}`);
+
+        let bouncedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                // Roll skip chance
+                if (Math.random() < clampedSkip) continue;
+
+                // Randomly pick direction: -1 (left) or +1 (right)
+                const direction = Math.random() < 0.5 ? -1 : 1;
+                const shift = 1 + Math.floor(Math.random() * clampedOffset);
+                const targetCol = col + direction * shift;
+
+                // Skip if target is out of bounds or already occupied
+                if (targetCol < 0 || targetCol >= totalSteps) continue;
+                if (row[targetCol] && row[targetCol].active) continue;
+
+                // Move the note, scaling velocity by velocityFactor (clamped to Tone.js 0.05-1.0 range)
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+                const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
+                row[targetCol] = {
+                    active: true,
+                    velocity: Math.round(newVel * 100) / 100,
+                    probability: stepData.probability
+                };
+                row[col] = null;
+                bouncedCount++;
+            }
+        }
+
+        return bouncedCount;
+    }
+
+    // Shuffle Notes - randomly redistribute each active note's position within a window
+    // For each active note, randomly shifts its position by -windowSteps..+windowSteps
+    // Preserves note count, density, and average velocity but creates organic, less-repetitive timing
+    // windowSteps: maximum |shift| in steps (clamped to SHUFFLE_MIN/MAX_WINDOW_STEPS)
+    // skipChance: probability of leaving a note in place (0.0 = all notes move)
+    // velocityFactor: scales the velocity of shuffled notes (1.0 = no change)
+    shuffleNotes(windowSteps = Constants.SHUFFLE_DEFAULT_WINDOW_STEPS, skipChance = Constants.SHUFFLE_DEFAULT_SKIP_CHANCE, velocityFactor = Constants.SHUFFLE_DEFAULT_VELOCITY_FACTOR) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} shuffleNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedWindow = Math.max(Constants.SHUFFLE_MIN_WINDOW_STEPS, Math.min(Constants.SHUFFLE_MAX_WINDOW_STEPS, windowSteps));
+        const clampedSkip = Math.max(Constants.SHUFFLE_MIN_SKIP_CHANCE, Math.min(Constants.SHUFFLE_MAX_SKIP_CHANCE, skipChance));
+        const clampedVel = Math.max(Constants.SHUFFLE_MIN_VELOCITY_FACTOR, Math.min(Constants.SHUFFLE_MAX_VELOCITY_FACTOR, velocityFactor));
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Shuffle Notes (window ±${clampedWindow}) on ${activeSeq.name}`);
+
+        let shuffledCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                // Roll skip chance
+                if (Math.random() < clampedSkip) continue;
+
+                // Randomly pick shift in -clampedWindow..+clampedWindow (excluding 0 to ensure movement)
+                // If clampedWindow is 1, shifts are -1 or +1
+                let shift = Math.floor(Math.random() * (clampedWindow * 2 + 1)) - clampedWindow;
+                if (shift === 0) shift = (Math.random() < 0.5 ? -1 : 1); // Force non-zero movement
+                const targetCol = col + shift;
+
+                // Skip if target is out of bounds or already occupied
+                if (targetCol < 0 || targetCol >= totalSteps) continue;
+                if (row[targetCol] && row[targetCol].active) continue;
+
+                // Move the note, scaling velocity by velocityFactor
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+                const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
+                row[targetCol] = {
+                    active: true,
+                    velocity: Math.round(newVel * 100) / 100,
+                    probability: stepData.probability
+                };
+                row[col] = null;
+                shuffledCount++;
+            }
+        }
+
+        return shuffledCount;
+    }
+
+    // Accent Notes - boost velocity of notes at specific beat positions
+    // Creates groove and rhythmic feel by accenting downbeats, onbeats, offbeats, or custom positions
+    // targetVelocity: 0.3-1.0 velocity to set on accented notes (clamped to ACCENT_NOTES_MIN/MAX_TARGET_VELOCITY)
+    // stepsPerBeat: 1-16 steps per beat (4 = 16th note grid at 4/4)
+    // mode: 'downbeats' | 'onbeats' | 'offbeats' | 'eighths' | 'every-step' | 'custom'
+    // customOffsets: array of column offsets to accent (only used when mode='custom')
+    accentNotes(targetVelocity = Constants.ACCENT_NOTES_DEFAULT_TARGET_VELOCITY, stepsPerBeat = Constants.ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT, mode = Constants.ACCENT_NOTES_MODE_ONBEATS, customOffsets = null) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} accentNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp target velocity
+        const clampedTarget = Math.max(Constants.ACCENT_NOTES_MIN_TARGET_VELOCITY, Math.min(Constants.ACCENT_NOTES_MAX_TARGET_VELOCITY, targetVelocity));
+        const clampedStepsPerBeat = Math.max(Constants.ACCENT_NOTES_MIN_STEPS_PER_BEAT, Math.min(Constants.ACCENT_NOTES_MAX_STEPS_PER_BEAT, stepsPerBeat));
+
+        // Validate mode (fall back to 'onbeats')
+        const validModes = Constants.ACCENT_NOTES_MODES;
+        const useMode = validModes.includes(mode) ? mode : Constants.ACCENT_NOTES_MODE_ONBEATS;
+
+        // Build the set of column offsets that should be accented based on mode
+        const accentCols = new Set();
+        if (useMode === Constants.ACCENT_NOTES_MODE_DOWNBEATS) {
+            // Accent bar starts (every 16 steps = bar)
+            const stepsPerBar = Constants.STEPS_PER_BAR || 16;
+            for (let c = 0; c < 1024; c += stepsPerBar) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_ONBEATS) {
+            // Accent every beat
+            for (let c = 0; c < 1024; c += clampedStepsPerBeat) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_OFFBEATS) {
+            // Accent between beats (offset by half the beat)
+            const half = Math.floor(clampedStepsPerBeat / 2);
+            for (let c = half; c < 1024; c += clampedStepsPerBeat) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_EIGHTHS) {
+            // Accent every other step (eighth-note feel)
+            for (let c = 0; c < 1024; c += 2) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_EVERY_STEP) {
+            // Accent every step (essentially equalize all notes to accent velocity)
+            for (let c = 0; c < 1024; c++) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_CUSTOM) {
+            // Accent user-specified column offsets
+            if (Array.isArray(customOffsets)) {
+                for (const off of customOffsets) {
+                    if (Number.isInteger(off) && off >= 0 && off < 1024) accentCols.add(off);
+                }
+            }
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Accent Notes (${useMode}, target ${clampedTarget}) on ${activeSeq.name}`);
+
+        let accentedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+                if (!accentCols.has(col)) continue;
+                stepData.velocity = Math.round(clampedTarget * 100) / 100;
+                accentedCount++;
+            }
+        }
+
+        return accentedCount;
+    }
+
     // Randomize the sequence - fill cells with random notes based on density
     // density: 0.0 to 1.0, where 1.0 = 100% chance of a note in each cell
     randomizeSequence(density = Constants.RANDOMIZE_DENSITY_DEFAULT) {

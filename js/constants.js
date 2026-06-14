@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.353.0';
+export const APP_VERSION = '2.356.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -122,6 +122,56 @@ export const SCALE_PROB_MIN_FACTOR = 0.1; // Minimum scale factor (10% of origin
 export const SCALE_PROB_MAX_FACTOR = 3.0; // Maximum scale factor (3x of original probability)
 export const SCALE_PROB_DEFAULT_FACTOR = 1.0; // Default no-op
 export const SCALE_PROB_FACTOR_STEPS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]; // Menu presets
+
+// Day 702: Bounce Notes Constants - ricochets notes in random directions within a step range
+// Creates bouncing, scattered patterns. Each note moves by a random shift within maxOffsetSteps.
+// Each bounce independently chooses left or right.
+export const BOUNCE_MIN_OFFSET_STEPS = 1; // Minimum step shift (1 step = 1/16 note at 16th grid)
+export const BOUNCE_MAX_OFFSET_STEPS = 8; // Maximum step shift (8 steps = 1/2 note)
+export const BOUNCE_DEFAULT_OFFSET_STEPS = 4; // Default 4 steps (1/4 note max shift)
+export const BOUNCE_MIN_SKIP_CHANCE = 0.0; // Minimum probability of skipping a note
+export const BOUNCE_MAX_SKIP_CHANCE = 0.9; // Maximum probability of skipping a note
+export const BOUNCE_DEFAULT_SKIP_CHANCE = 0.0; // Default no skip (all notes bounce)
+export const BOUNCE_MIN_VELOCITY_FACTOR = 0.1; // Minimum velocity factor (preserves 10% velocity at floor)
+export const BOUNCE_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no change)
+export const BOUNCE_DEFAULT_VELOCITY_FACTOR = 0.9; // Default 90% velocity (slight attenuation per bounce)
+
+// Day 703: Shuffle Notes Constants - randomly redistribute notes within a window
+// For each active note, randomly shifts its position by -windowSteps..+windowSteps
+// Preserves note count, density, and average velocity but creates organic, less-repetitive timing
+export const SHUFFLE_MIN_WINDOW_STEPS = 1; // Minimum window size (1 step = ±1)
+export const SHUFFLE_MAX_WINDOW_STEPS = 8; // Maximum window size (8 steps = ±1/2 note)
+export const SHUFFLE_DEFAULT_WINDOW_STEPS = 2; // Default 2 step window (±1/8 note)
+export const SHUFFLE_MIN_SKIP_CHANCE = 0.0; // Minimum probability of leaving a note in place
+export const SHUFFLE_MAX_SKIP_CHANCE = 0.9; // Maximum skip chance (10% would shuffle)
+export const SHUFFLE_DEFAULT_SKIP_CHANCE = 0.0; // Default: all notes shuffle
+export const SHUFFLE_MIN_VELOCITY_FACTOR = 0.1; // Minimum velocity factor
+export const SHUFFLE_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no change)
+export const SHUFFLE_DEFAULT_VELOCITY_FACTOR = 1.0; // Default: preserve velocity exactly
+
+// Day 704: Accent Notes Constants - boost velocity of notes on specific beat positions
+// Creates groove and rhythmic feel by accenting downbeats, onbeats, or offbeats
+// Useful for adding swing-style pulse or emphasizing certain steps in the pattern
+export const ACCENT_NOTES_MIN_TARGET_VELOCITY = 0.3; // Minimum accent target velocity
+export const ACCENT_NOTES_MAX_TARGET_VELOCITY = 1.0; // Maximum accent target velocity
+export const ACCENT_NOTES_DEFAULT_TARGET_VELOCITY = 0.95; // Default target velocity for accented notes (strong but not maxed)
+export const ACCENT_NOTES_MIN_STEPS_PER_BEAT = 1; // Minimum steps per beat
+export const ACCENT_NOTES_MAX_STEPS_PER_BEAT = 16; // Maximum steps per beat
+export const ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT = 4; // Default 4 steps per beat (16th note grid @ 4/4)
+export const ACCENT_NOTES_MODE_DOWNBEATS = 'downbeats'; // Accent only bar starts (col % 16 === 0)
+export const ACCENT_NOTES_MODE_ONBEATS = 'onbeats'; // Accent every beat (col % 4 === 0)
+export const ACCENT_NOTES_MODE_OFFBEATS = 'offbeats'; // Accent between beats (col % 4 === 2)
+export const ACCENT_NOTES_MODE_EIGHTHS = 'eighths'; // Accent every 8th note (col % 2 === 0)
+export const ACCENT_NOTES_MODE_EVERY_STEP = 'every-step'; // Accent every step (all notes)
+export const ACCENT_NOTES_MODE_CUSTOM = 'custom'; // Accent user-specified step positions
+export const ACCENT_NOTES_MODES = [
+    ACCENT_NOTES_MODE_DOWNBEATS,
+    ACCENT_NOTES_MODE_ONBEATS,
+    ACCENT_NOTES_MODE_OFFBEATS,
+    ACCENT_NOTES_MODE_EIGHTHS,
+    ACCENT_NOTES_MODE_EVERY_STEP,
+    ACCENT_NOTES_MODE_CUSTOM
+];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 
