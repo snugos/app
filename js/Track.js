@@ -5246,4 +5246,109 @@ export class Track {
 
         return echoedCount;
     }
+
+    // Stagger Notes - spread simultaneous notes in a chord across multiple columns
+    // Creates a cascading, rippling pattern by placing each note in a chord at a later column
+    // staggerSteps: how many steps to add per note index in the chord (1-8, default 2)
+    // velocityFactor: velocity multiplier applied per stagger position (default 0.95, exponential decay)
+    // direction: 'up' (low to high), 'down' (high to low), 'outward' (middle out), 'inward' (outside in)
+    // skipOccupied: skip target column if already has a note (true = don't overwrite)
+    staggerNotes(staggerSteps = Constants.STAGGER_NOTES_DEFAULT_STAGGER_STEPS, velocityFactor = Constants.STAGGER_NOTES_DEFAULT_VELOCITY_FACTOR, direction = Constants.STAGGER_NOTES_DIRECTION_UP, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} staggerNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedSteps = Math.max(Constants.STAGGER_NOTES_MIN_STAGGER_STEPS, Math.min(Constants.STAGGER_NOTES_MAX_STAGGER_STEPS, Math.floor(staggerSteps)));
+        const clampedVel = Math.max(Constants.STAGGER_NOTES_MIN_VELOCITY_FACTOR, Math.min(Constants.STAGGER_NOTES_MAX_VELOCITY_FACTOR, velocityFactor));
+        const useDirection = Constants.STAGGER_NOTES_DIRECTIONS.includes(direction) ? direction : Constants.STAGGER_NOTES_DIRECTION_UP;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Stagger Notes (${useDirection}, ${clampedSteps} steps) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let staggeredCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        for (let col = 0; col < totalSteps; col++) {
+            // Collect active notes at this column
+            const chordRows = [];
+            for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+                const cell = activeSeq.data[rowIndex]?.[col];
+                if (cell && cell.active) {
+                    chordRows.push(rowIndex);
+                }
+            }
+            if (chordRows.length < 2) continue; // Need at least 2 notes for a stagger
+
+            // Sort chord rows based on direction
+            let orderedRows;
+            if (useDirection === Constants.STAGGER_NOTES_DIRECTION_UP) {
+                // Low row index (high pitch) first; ascending row index = ascending pitch from top of piano roll
+                // Per constants: 'up' = stagger from bottom row up; bottom = highest rowIndex in this code
+                orderedRows = chordRows.slice().sort((a, b) => b - a);
+            } else if (useDirection === Constants.STAGGER_NOTES_DIRECTION_DOWN) {
+                orderedRows = chordRows.slice().sort((a, b) => a - b);
+            } else if (useDirection === Constants.STAGGER_NOTES_DIRECTION_OUTWARD) {
+                // Middle out: start with middle, alternate out
+                const sorted = chordRows.slice().sort((a, b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+                orderedRows = [sorted[mid]];
+                let lo = mid - 1, hi = mid + 1;
+                while (lo >= 0 || hi < sorted.length) {
+                    if (lo >= 0) orderedRows.push(sorted[lo--]);
+                    if (hi < sorted.length) orderedRows.push(sorted[hi++]);
+                }
+            } else { // 'inward' - outside in
+                const sorted = chordRows.slice().sort((a, b) => a - b);
+                orderedRows = [];
+                let lo = 0, hi = sorted.length - 1;
+                while (lo <= hi) {
+                    if (lo === hi) {
+                        orderedRows.push(sorted[lo]);
+                        break;
+                    }
+                    orderedRows.push(sorted[hi--]);
+                    orderedRows.push(sorted[lo++]);
+                }
+            }
+
+            // Index 0 is the "anchor" (stays in place). Each subsequent note moves by i*staggerSteps.
+            for (let i = 1; i < orderedRows.length; i++) {
+                const rowIndex = orderedRows[i];
+                const originalCell = activeSeq.data[rowIndex]?.[col];
+                if (!originalCell) continue;
+                const originalVel = originalCell.velocity || defaultVel;
+                const newCol = col + i * clampedSteps;
+                if (newCol >= totalSteps) continue; // Out of bounds; skip (don't break chain)
+                if (skipOccupied && activeSeq.data[rowIndex]?.[newCol] && activeSeq.data[rowIndex][newCol].active) {
+                    continue; // Skip occupied slot
+                }
+                const decayedVel = originalVel * Math.pow(clampedVel, i);
+                const clampedNewVel = Math.max(0.05, Math.min(1.0, decayedVel));
+                newNotes.push({ rowIndex, col: newCol, velocity: Math.round(clampedNewVel * 100) / 100 });
+            }
+        }
+
+        // Apply the new staggered notes
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity
+                };
+                staggeredCount++;
+            }
+        }
+
+        return staggeredCount;
+    }
 }

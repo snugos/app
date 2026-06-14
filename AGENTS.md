@@ -1,3 +1,91 @@
+#### Day 705: Stagger Notes Feature (2026-06-13)
+- **Feature**: Added `staggerNotes(staggerSteps, velocityFactor, direction, skipOccupied)` method to Track class and 4 "Stagger Notes" menu items to the sequencer context menu. Spreads simultaneous notes in a chord across multiple columns to create cascading, rippling patterns at the sequencer (note) level. Complements the existing `strumNotes` (per-chord strum) with direction-aware multi-step spreading.
+- **Files Modified**:
+  - `js/Track.js`: Added `staggerNotes` method after `echoNotes` (line ~5249)
+  - `js/constants.js`: Added 11 STAGGER_NOTES_* constants + bumped APP_VERSION to 2.357.0
+  - `js/ui.js`: Added 4 Stagger Notes menu items in the sequencer context menu after Strum Notes (Large), with separator after
+  - `js/tests.js`: Added Day 705 test block with 35 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fix**: Fixed missing closing parenthesis `const abs = Math.abs(data[i];` → `const abs = Math.abs(data[i]);` in `js/Track.js` line ~4047. This syntax error had been in the codebase (introduced in the working changes) and would have caused "Expected ')'" error when the audio buffer analysis code path was executed.
+- **Feature Details**:
+  - **staggerNotes** (`js/Track.js`): Spreads simultaneous notes in a chord across multiple columns. Each note in the chord (after the first "anchor") is placed at `col + i * staggerSteps` with an exponentially decayed velocity. The "anchor" (first note in the ordered chord) stays in place.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `staggerSteps` to STAGGER_NOTES_MIN_STAGGER_STEPS (1) / STAGGER_NOTES_MAX_STAGGER_STEPS (8) range with Math.floor (default STAGGER_NOTES_DEFAULT_STAGGER_STEPS=2)
+    - Clamps `velocityFactor` to STAGGER_NOTES_MIN_VELOCITY_FACTOR (0.3) / STAGGER_NOTES_MAX_VELOCITY_FACTOR (1.0) range (default STAGGER_NOTES_DEFAULT_VELOCITY_FACTOR=0.95)
+    - Validates `direction` against STAGGER_NOTES_DIRECTIONS array, falls back to STAGGER_NOTES_DIRECTION_UP if invalid
+    - Captures undo state BEFORE mutation with descriptive "Stagger Notes (direction, steps) on <seqname>" label
+    - Skips columns with fewer than 2 active notes (no chord to stagger)
+    - Sorts chord rows based on direction:
+      - 'up': chord ordered from highest rowIndex to lowest (descending)
+      - 'down': chord ordered from lowest rowIndex to highest (ascending)
+      - 'outward': middle-out — start with center, alternate to outside
+      - 'inward': outside-in — start with extremes, alternate to center
+    - For each row in the ordered chord (starting at index 1), calculates `newCol = col + i * clampedSteps`
+    - Skips if `newCol >= totalSteps` (out of bounds) or if target slot is already occupied and skipOccupied is true
+    - Calculates `decayedVel = originalVel * Math.pow(clampedVel, i)` for exponential velocity decay
+    - Clamps decayed velocity to 0.05-1.0 range
+    - Rounds velocity to 2 decimal places
+    - Returns count of staggered notes added
+  - **Stagger Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Strum Notes (Large) with separator after
+    - "Stagger Notes (Up)" - calls `staggerNotes(2, 0.95, 'up', true)` - cascading upward chord
+    - "Stagger Notes (Down)" - calls `staggerNotes(2, 0.95, 'down', true)` - cascading downward chord
+    - "Stagger Notes (Outward)" - calls `staggerNotes(2, 0.95, 'outward', true)` - middle-out ripple
+    - "Stagger Notes (Inward)" - calls `staggerNotes(2, 0.95, 'inward', true)` - outside-in collapse
+    - All call `recreateToneSequence(true)` after staggering
+    - All capture undo with descriptive "Stagger Notes on <name> (<seqname>)" label
+    - Show notifications: "Staggered {count} note(s) (variant)."
+    - Show "No notes to stagger." when nothing to stagger
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 11 new constants
+  - `STAGGER_NOTES_MIN_STAGGER_STEPS = 1` - Minimum 1 step between staggered notes
+  - `STAGGER_NOTES_MAX_STAGGER_STEPS = 8` - Maximum 8 steps (1/2 note) between staggered notes
+  - `STAGGER_NOTES_DEFAULT_STAGGER_STEPS = 2` - Default 2 steps (1/8 note) between staggered notes
+  - `STAGGER_NOTES_MIN_VELOCITY_FACTOR = 0.3` - Minimum velocity factor (preserves 30% velocity at floor)
+  - `STAGGER_NOTES_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity factor (1.0 = no change)
+  - `STAGGER_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95` - Default slight attenuation per stagger position
+  - `STAGGER_NOTES_DIRECTION_UP = 'up'` - Stagger from bottom row up
+  - `STAGGER_NOTES_DIRECTION_DOWN = 'down'` - Stagger from top row down
+  - `STAGGER_NOTES_DIRECTION_OUTWARD = 'outward'` - Stagger from middle outward
+  - `STAGGER_NOTES_DIRECTION_INWARD = 'inward'` - Stagger from outside inward
+  - `STAGGER_NOTES_DIRECTIONS = [all 4 directions]` - Valid direction values
+- **Tests** (`js/tests.js`): 35 tests covering:
+  - `staggerNotes` is a function on Track.prototype
+  - `staggerNotes` accepts 4 parameters with defaults (staggerSteps, velocityFactor, direction, skipOccupied)
+  - `staggerNotes` returns 0 for Audio tracks
+  - `staggerNotes` gets active sequence via `getActiveSequence`
+  - `staggerNotes` captures undo BEFORE mutation
+  - `staggerNotes` has descriptive "Stagger Notes" undo label
+  - `staggerNotes` clamps staggerSteps to STAGGER_NOTES_MIN/MAX_STAGGER_STEPS
+  - `staggerNotes` clamps velocityFactor to STAGGER_NOTES_MIN/MAX_VELOCITY_FACTOR
+  - `staggerNotes` validates direction with STAGGER_NOTES_DIRECTIONS (uses useDirection fallback)
+  - `staggerNotes` supports up direction
+  - `staggerNotes` supports down direction
+  - `staggerNotes` supports outward direction
+  - `staggerNotes` supports inward direction
+  - `staggerNotes` uses Math.pow for exponential velocity decay
+  - `staggerNotes` respects sequence length boundary (newCol >= totalSteps)
+  - `staggerNotes` supports skipOccupied option
+  - `staggerNotes` rounds velocity to 2 decimal places (Math.round(clampedNewVel * 100) / 100)
+  - `staggerNotes` returns count of staggered notes (staggeredCount)
+  - All 11 STAGGER_NOTES constants are defined in constants.js
+  - ui.js has 4 Stagger Notes menu items
+  - Stagger Notes menu items call track.staggerNotes
+  - Stagger Notes menu items call recreateToneSequence
+  - Stagger Notes menu items show notification with count
+  - Stagger Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.357 for Day 705)
+  - Functional test: stagger position calculation (col + i*steps)
+  - Functional test: velocity decay (vel * factor^i)
+  - Functional test: chord required (chordRows.length < 2 skipped)
+  - Functional test: out-of-bounds guard
+  - Functional test: staggerSteps clamped to 8 (max)
+  - Functional test: velocityFactor clamped to 1.0 (max)
+  - Functional test: outward direction center-out ordering
+  - Functional test: inward direction outside-in ordering
+- **Pre-existing Bug Fix**: Fixed missing closing paren `const abs = Math.abs(data[i];` → `const abs = Math.abs(data[i]);` in `js/Track.js` line ~4047. This syntax error had been present and would have thrown "Expected ')'" if the audio buffer analysis code path was executed.
+- **Version**: Bumped to 2.357.0
+- **Test Count**: Increased from 2356 to 2391 (35 new Day 705 tests)
 #### Day 704: Accent Notes Feature (2026-06-13)
 - **Feature**: Added `accentNotes(targetVelocity, stepsPerBeat, mode, customOffsets)` method to Track class and 5 "Accent Notes" menu items to the sequencer context menu. Boosts velocity of notes at specific beat positions to create groove/rhythmic feel — downbeats, onbeats, offbeats, eighths, or all steps.
 - **Files Modified**:

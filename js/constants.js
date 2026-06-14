@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.356.0';
+export const APP_VERSION = '2.357.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -171,6 +171,26 @@ export const ACCENT_NOTES_MODES = [
     ACCENT_NOTES_MODE_EIGHTHS,
     ACCENT_NOTES_MODE_EVERY_STEP,
     ACCENT_NOTES_MODE_CUSTOM
+];
+
+// Day 705: Stagger Notes Constants - spread simultaneous notes in a chord across multiple columns
+// Creates cascading, rippling patterns at the sequencer (note) level
+// Complements strumNotes (per-chord strum) with direction-aware multi-step spreading
+export const STAGGER_NOTES_MIN_STAGGER_STEPS = 1; // Minimum 1 step between staggered notes
+export const STAGGER_NOTES_MAX_STAGGER_STEPS = 8; // Maximum 8 steps (1/2 note) between staggered notes
+export const STAGGER_NOTES_DEFAULT_STAGGER_STEPS = 2; // Default 2 steps (1/8 note) between staggered notes
+export const STAGGER_NOTES_MIN_VELOCITY_FACTOR = 0.3; // Minimum velocity factor (preserves 30% velocity at floor)
+export const STAGGER_NOTES_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no change)
+export const STAGGER_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95; // Default slight attenuation per stagger position
+export const STAGGER_NOTES_DIRECTION_UP = 'up'; // Stagger from bottom row up
+export const STAGGER_NOTES_DIRECTION_DOWN = 'down'; // Stagger from top row down
+export const STAGGER_NOTES_DIRECTION_OUTWARD = 'outward'; // Stagger from middle outward
+export const STAGGER_NOTES_DIRECTION_INWARD = 'inward'; // Stagger from outside inward
+export const STAGGER_NOTES_DIRECTIONS = [
+    STAGGER_NOTES_DIRECTION_UP,
+    STAGGER_NOTES_DIRECTION_DOWN,
+    STAGGER_NOTES_DIRECTION_OUTWARD,
+    STAGGER_NOTES_DIRECTION_INWARD
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
