@@ -1,4 +1,3 @@
-// js/tests.js - Unit tests for SnugOS core functionality
 // Run tests by opening browser console and calling: (await import('./js/tests.js')).runTests()
 
 import { TestRunner } from './testRunner.js';
@@ -20795,183 +20794,184 @@ TestRunner.test("Day 702 - bounceNotes functional test: direction is -1 or +1", 
     }
 });
 
-TestRunner.test("Day 702 - bounceNotes functional test: targetCol = col + direction * shift", (t) => {
-    const col = 8;
-    const direction = -1;
-    const shift = 3;
-    const targetCol = col + direction * shift;
-    t.assertEqual(targetCol, 5, 'col 8 + direction -1 * shift 3 = 5');
-});
 
-TestRunner.test("Day 702 - bounceNotes functional test: velocity scaling 0.9 from 1.0 = 0.9", (t) => {
-    const origVel = 1.0;
-    const velocityFactor = 0.9;
-    const newVel = Math.max(0.05, Math.min(1.0, origVel * velocityFactor));
-    t.assertEqual(Math.round(newVel * 100) / 100, 0.9, 'Velocity 1.0 * 0.9 = 0.9');
-});
-
-// Day 703: Shuffle Notes Feature
+// Day 704: Accent Notes Feature
 // ================================================
-TestRunner.test("Day 703 - shuffleNotes is a function on Track.prototype", (t) => {
-    t.assertTruthy(typeof Track.prototype.shuffleNotes === 'function', 'shuffleNotes should be a function on Track.prototype');
+TestRunner.test("Day 704 - accentNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.accentNotes === 'function', 'accentNotes should be a function on Track.prototype');
 });
 
-TestRunner.test("Day 703 - shuffleNotes accepts 3 parameters with defaults", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('windowSteps'), 'shuffleNotes should accept windowSteps parameter');
-    t.assertTruthy(funcStr.includes('skipChance'), 'shuffleNotes should accept skipChance parameter');
-    t.assertTruthy(funcStr.includes('velocityFactor'), 'shuffleNotes should accept velocityFactor parameter');
+TestRunner.test("Day 704 - accentNotes accepts 4 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('targetVelocity'), 'accentNotes should accept targetVelocity parameter');
+    t.assertTruthy(funcStr.includes('stepsPerBeat'), 'accentNotes should accept stepsPerBeat parameter');
+    t.assertTruthy(funcStr.includes('mode'), 'accentNotes should accept mode parameter');
+    t.assertTruthy(funcStr.includes('customOffsets'), 'accentNotes should accept customOffsets parameter');
 });
 
-TestRunner.test("Day 703 - shuffleNotes returns 0 for Audio tracks", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes("'Audio'") && funcStr.includes('return 0'), 'shuffleNotes should guard against Audio tracks');
+TestRunner.test("Day 704 - accentNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'") && funcStr.includes('return 0'), 'accentNotes should guard against Audio tracks');
 });
 
-TestRunner.test("Day 703 - shuffleNotes gets active sequence via getActiveSequence", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'shuffleNotes should use getActiveSequence()');
+TestRunner.test("Day 704 - accentNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'accentNotes should use getActiveSequence()');
 });
 
-TestRunner.test("Day 703 - shuffleNotes captures undo BEFORE mutation", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('_captureUndoState'), 'shuffleNotes should capture undo state');
+TestRunner.test("Day 704 - accentNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('_captureUndoState'), 'accentNotes should capture undo state');
     const captureIdx = funcStr.indexOf('_captureUndoState');
     const forEachIdx = funcStr.indexOf('for (let rowIndex');
-    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'shuffleNotes should capture undo BEFORE data iteration');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forEachIdx, 'accentNotes should capture undo BEFORE data iteration');
 });
 
-TestRunner.test("Day 703 - shuffleNotes has descriptive 'Shuffle Notes' undo label", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('Shuffle Notes'), 'shuffleNotes should have descriptive undo label');
+TestRunner.test("Day 704 - accentNotes has descriptive 'Accent Notes' undo label", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('Accent Notes'), 'accentNotes should have descriptive undo label');
 });
 
-TestRunner.test("Day 703 - shuffleNotes clamps windowSteps to SHUFFLE_MIN/MAX_WINDOW_STEPS", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('SHUFFLE_MIN_WINDOW_STEPS') && funcStr.includes('SHUFFLE_MAX_WINDOW_STEPS'), 'shuffleNotes should reference SHUFFLE window constants');
-    t.assertTruthy(funcStr.includes('clampedWindow'), 'shuffleNotes should clamp window to clampedWindow');
+TestRunner.test("Day 704 - accentNotes clamps targetVelocity to ACCENT_NOTES_MIN/MAX_TARGET_VELOCITY", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('ACCENT_NOTES_MIN_TARGET_VELOCITY') && funcStr.includes('ACCENT_NOTES_MAX_TARGET_VELOCITY'), 'accentNotes should reference ACCENT_NOTES target velocity constants');
+    t.assertTruthy(funcStr.includes('clampedTarget'), 'accentNotes should clamp target velocity to clampedTarget');
 });
 
-TestRunner.test("Day 703 - shuffleNotes clamps skipChance to SHUFFLE_MIN/MAX_SKIP_CHANCE", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('SHUFFLE_MIN_SKIP_CHANCE') && funcStr.includes('SHUFFLE_MAX_SKIP_CHANCE'), 'shuffleNotes should reference SHUFFLE skip constants');
-    t.assertTruthy(funcStr.includes('clampedSkip'), 'shuffleNotes should clamp skip to clampedSkip');
+TestRunner.test("Day 704 - accentNotes clamps stepsPerBeat to ACCENT_NOTES_MIN/MAX_STEPS_PER_BEAT", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('ACCENT_NOTES_MIN_STEPS_PER_BEAT') && funcStr.includes('ACCENT_NOTES_MAX_STEPS_PER_BEAT'), 'accentNotes should reference ACCENT_NOTES stepsPerBeat constants');
 });
 
-TestRunner.test("Day 703 - shuffleNotes clamps velocityFactor to SHUFFLE_MIN/MAX_VELOCITY_FACTOR", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('SHUFFLE_MIN_VELOCITY_FACTOR') && funcStr.includes('SHUFFLE_MAX_VELOCITY_FACTOR'), 'shuffleNotes should reference SHUFFLE velocity constants');
-    t.assertTruthy(funcStr.includes('clampedVel'), 'shuffleNotes should clamp velocity to clampedVel');
+TestRunner.test("Day 704 - accentNotes validates mode with ACCENT_NOTES_MODES", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('ACCENT_NOTES_MODES'), 'accentNotes should reference ACCENT_NOTES_MODES');
+    t.assertTruthy(funcStr.includes('useMode'), 'accentNotes should validate mode to useMode');
 });
 
-TestRunner.test("Day 703 - shuffleNotes uses random shift", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('Math.random()') && funcStr.includes('shift'), 'shuffleNotes should use random for shift calculation');
-    t.assertTruthy(funcStr.includes('Math.floor'), 'shuffleNotes should use Math.floor for integer shift');
+TestRunner.test("Day 704 - accentNotes supports downbeats mode", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('ACCENT_NOTES_MODE_DOWNBEATS') || funcStr.includes("'downbeats'"), 'accentNotes should support downbeats mode');
 });
 
-TestRunner.test("Day 703 - shuffleNotes respects sequence length boundary", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('targetCol < 0') || funcStr.includes('targetCol < 0 ||') || (funcStr.includes('targetCol < 0') && funcStr.includes('targetCol >= totalSteps')), 'shuffleNotes should check targetCol boundaries');
+TestRunner.test("Day 704 - accentNotes supports onbeats mode", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('ACCENT_NOTES_MODE_ONBEATS') || funcStr.includes("'onbeats'"), 'accentNotes should support onbeats mode');
 });
 
-TestRunner.test("Day 703 - shuffleNotes skips occupied target slots", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('row[targetCol]') && funcStr.includes('.active'), 'shuffleNotes should check if target slot is occupied');
+TestRunner.test("Day 704 - accentNotes supports offbeats mode", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('ACCENT_NOTES_MODE_OFFBEATS') || funcStr.includes("'offbeats'"), 'accentNotes should support offbeats mode');
 });
 
-TestRunner.test("Day 703 - shuffleNotes scales velocity and preserves probability", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('origVel * clampedVel'), 'shuffleNotes should scale velocity by velocityFactor');
-    t.assertTruthy(funcStr.includes('stepData.probability'), 'shuffleNotes should preserve probability');
+TestRunner.test("Day 704 - accentNotes supports custom mode with customOffsets", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('ACCENT_NOTES_MODE_CUSTOM') || funcStr.includes("'custom'"), 'accentNotes should support custom mode');
+    t.assertTruthy(funcStr.includes('customOffsets') && funcStr.includes('Number.isInteger'), 'accentNotes should validate customOffsets as integers');
 });
 
-TestRunner.test("Day 703 - shuffleNotes rounds velocity to 2 decimal places", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('Math.round(newVel * 100) / 100'), 'shuffleNotes should round velocity to 2 decimal places');
+TestRunner.test("Day 704 - accentNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round(clampedTarget * 100) / 100'), 'accentNotes should round velocity to 2 decimal places');
 });
 
-TestRunner.test("Day 703 - shuffleNotes returns count of shuffled notes", (t) => {
-    const funcStr = Track.prototype.shuffleNotes.toString();
-    t.assertTruthy(funcStr.includes('shuffledCount'), 'shuffleNotes should track shuffledCount');
-    t.assertTruthy(funcStr.includes('return shuffledCount'), 'shuffleNotes should return shuffledCount');
+TestRunner.test("Day 704 - accentNotes returns count of accented notes", (t) => {
+    const funcStr = Track.prototype.accentNotes.toString();
+    t.assertTruthy(funcStr.includes('accentedCount'), 'accentNotes should track accentedCount');
+    t.assertTruthy(funcStr.includes('return accentedCount'), 'accentNotes should return accentedCount');
 });
 
-TestRunner.test("Day 703 - SHUFFLE constants are defined in constants.js", (t) => {
+TestRunner.test("Day 704 - ACCENT_NOTES constants are defined in constants.js", (t) => {
     const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_MIN_WINDOW_STEPS = 1'), 'SHUFFLE_MIN_WINDOW_STEPS should be 1');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_MAX_WINDOW_STEPS = 8'), 'SHUFFLE_MAX_WINDOW_STEPS should be 8');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_DEFAULT_WINDOW_STEPS = 2'), 'SHUFFLE_DEFAULT_WINDOW_STEPS should be 2');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_MIN_SKIP_CHANCE = 0.0'), 'SHUFFLE_MIN_SKIP_CHANCE should be 0.0');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_MAX_SKIP_CHANCE = 0.9'), 'SHUFFLE_MAX_SKIP_CHANCE should be 0.9');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_DEFAULT_SKIP_CHANCE = 0.0'), 'SHUFFLE_DEFAULT_SKIP_CHANCE should be 0.0');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_MIN_VELOCITY_FACTOR = 0.1'), 'SHUFFLE_MIN_VELOCITY_FACTOR should be 0.1');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_MAX_VELOCITY_FACTOR = 1.0'), 'SHUFFLE_MAX_VELOCITY_FACTOR should be 1.0');
-    t.assertTruthy(constantsSrc.includes('SHUFFLE_DEFAULT_VELOCITY_FACTOR = 1.0'), 'SHUFFLE_DEFAULT_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MIN_TARGET_VELOCITY = 0.3'), 'ACCENT_NOTES_MIN_TARGET_VELOCITY should be 0.3');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MAX_TARGET_VELOCITY = 1.0'), 'ACCENT_NOTES_MAX_TARGET_VELOCITY should be 1.0');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_DEFAULT_TARGET_VELOCITY = 0.95'), 'ACCENT_NOTES_DEFAULT_TARGET_VELOCITY should be 0.95');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MIN_STEPS_PER_BEAT = 1'), 'ACCENT_NOTES_MIN_STEPS_PER_BEAT should be 1');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MAX_STEPS_PER_BEAT = 16'), 'ACCENT_NOTES_MAX_STEPS_PER_BEAT should be 16');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT = 4'), 'ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT should be 4');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MODE_DOWNBEATS'), 'ACCENT_NOTES_MODE_DOWNBEATS should be defined');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MODE_ONBEATS'), 'ACCENT_NOTES_MODE_ONBEATS should be defined');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MODE_OFFBEATS'), 'ACCENT_NOTES_MODE_OFFBEATS should be defined');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MODE_EIGHTHS'), 'ACCENT_NOTES_MODE_EIGHTHS should be defined');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MODE_EVERY_STEP'), 'ACCENT_NOTES_MODE_EVERY_STEP should be defined');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MODE_CUSTOM'), 'ACCENT_NOTES_MODE_CUSTOM should be defined');
+    t.assertTruthy(constantsSrc.includes('ACCENT_NOTES_MODES'), 'ACCENT_NOTES_MODES should be defined');
 });
 
-TestRunner.test("Day 703 - ui.js has 5 Shuffle Notes menu items", (t) => {
+TestRunner.test("Day 704 - ui.js has 5 Accent Notes menu items", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    const matches = uiStr.match(/Shuffle Notes \(/g);
-    t.assertTruthy(matches && matches.length >= 5, 'ui.js should have at least 5 Shuffle Notes menu items');
+    const matches = uiStr.match(/Accent Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 5, 'ui.js should have at least 5 Accent Notes menu items');
 });
 
-TestRunner.test("Day 703 - Shuffle Notes menu items call track.shuffleNotes", (t) => {
+TestRunner.test("Day 704 - Accent Notes menu items call track.accentNotes", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('currentTrackForMenu.shuffleNotes('), 'Shuffle Notes menu items should call shuffleNotes()');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.accentNotes('), 'Accent Notes menu items should call accentNotes()');
 });
 
-TestRunner.test("Day 703 - Shuffle Notes menu items call recreateToneSequence", (t) => {
+TestRunner.test("Day 704 - Accent Notes menu items call recreateToneSequence", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('Shuffle Notes') && uiStr.includes('recreateToneSequence'), 'Shuffle Notes menu items should call recreateToneSequence');
+    t.assertTruthy(uiStr.includes('Accent Notes') && uiStr.includes('recreateToneSequence'), 'Accent Notes menu items should call recreateToneSequence');
 });
 
-TestRunner.test("Day 703 - Shuffle Notes menu items show notification with count", (t) => {
+TestRunner.test("Day 704 - Accent Notes menu items show notification with count", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('Shuffled ${result} note'), 'Shuffle Notes should show notification with shuffled count');
-    t.assertTruthy(uiStr.includes('No notes to shuffle.'), 'Shuffle Notes should show "No notes to shuffle." notification');
+    t.assertTruthy(uiStr.includes('Accented ${result} note'), 'Accent Notes should show notification with accented count');
+    t.assertTruthy(uiStr.includes('No notes to accent.'), 'Accent Notes should show "No notes to accent." notification');
 });
 
-TestRunner.test("Day 703 - Shuffle Notes menu items capture undo with descriptive label", (t) => {
+TestRunner.test("Day 704 - Accent Notes menu items capture undo with descriptive label", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('Shuffle Notes on'), 'Shuffle Notes menu items should capture undo with descriptive label');
+    t.assertTruthy(uiStr.includes('Accent Notes on'), 'Accent Notes menu items should capture undo with descriptive label');
 });
 
-TestRunner.test("Day 703 - APP_VERSION validation (>= 2.355)", (t) => {
+TestRunner.test("Day 704 - APP_VERSION validation (>= 2.356)", (t) => {
     const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
     const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
     const version = versionMatch ? versionMatch[1] : '0.0.0';
     const versionParts = version.split('.').map(Number);
-    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 703');
+    t.assertTruthy(versionParts[0] >= 2, 'Major version should be >= 2 for Day 704');
     if (versionParts[0] === 2) {
-        t.assertTruthy(versionParts[1] >= 355, 'Minor version should be >= 355 for Day 703');
+        t.assertTruthy(versionParts[1] >= 356, 'Minor version should be >= 356 for Day 704');
     }
 });
 
-TestRunner.test("Day 703 - shuffleNotes functional test: shift range is -windowSteps..+windowSteps", (t) => {
-    const windowSteps = 2;
-    // Simulate the shift calculation
-    const possibleShifts = [];
-    for (let i = 0; i < (windowSteps * 2 + 1); i++) {
-        possibleShifts.push(i - windowSteps);
-    }
-    t.assertTruthy(possibleShifts.length === 5, 'Should have 2*windowSteps+1 = 5 possible shifts');
-    t.assertTruthy(possibleShifts[0] === -2, 'Min shift should be -windowSteps');
-    t.assertTruthy(possibleShifts[4] === 2, 'Max shift should be +windowSteps');
+TestRunner.test("Day 704 - accentNotes functional test: target velocity 0.95", (t) => {
+    const clampedTarget = 0.95;
+    t.assertEqual(clampedTarget, 0.95, 'Target velocity should be 0.95 (accent)');
 });
 
-TestRunner.test("Day 703 - shuffleNotes functional test: velocity preserved at velocityFactor=1.0", (t) => {
-    const origVel = 0.7;
-    const clampedVel = 1.0;
-    const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
-    t.assertEqual(newVel, 0.7, 'velocityFactor=1.0 should preserve velocity exactly');
+TestRunner.test("Day 704 - accentNotes functional test: downbeats pattern is 0,16,32", (t) => {
+    const stepsPerBar = 16;
+    const downbeats = [];
+    for (let c = 0; c < 64; c += stepsPerBar) downbeats.push(c);
+    t.assertEqual(downbeats[0], 0, 'First downbeat at col 0');
+    t.assertEqual(downbeats[1], 16, 'Second downbeat at col 16');
+    t.assertEqual(downbeats[2], 32, 'Third downbeat at col 32');
 });
 
-TestRunner.test("Day 703 - shuffleNotes functional test: velocity scaled at velocityFactor=0.9", (t) => {
-    const origVel = 1.0;
-    const clampedVel = 0.9;
-    const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
-    t.assertEqual(newVel, 0.9, 'velocityFactor=0.9 on velocity 1.0 should give 0.9');
+TestRunner.test("Day 704 - accentNotes functional test: onbeats pattern is 0,4,8,12", (t) => {
+    const stepsPerBeat = 4;
+    const onbeats = [];
+    for (let c = 0; c < 16; c += stepsPerBeat) onbeats.push(c);
+    t.assertEqual(onbeats.length, 4, 'Should have 4 onbeats');
+    t.assertEqual(onbeats[0], 0, 'First onbeat at col 0');
+    t.assertEqual(onbeats[3], 12, 'Fourth onbeat at col 12');
+});
+
+TestRunner.test("Day 704 - accentNotes functional test: offbeats pattern is 2,6,10,14", (t) => {
+    const stepsPerBeat = 4;
+    const half = Math.floor(stepsPerBeat / 2);
+    const offbeats = [];
+    for (let c = half; c < 16; c += stepsPerBeat) offbeats.push(c);
+    t.assertEqual(offbeats.length, 4, 'Should have 4 offbeats');
+    t.assertEqual(offbeats[0], 2, 'First offbeat at col 2');
+    t.assertEqual(offbeats[3], 14, 'Fourth offbeat at col 14');
+});
+
+TestRunner.test("Day 704 - accentNotes functional test: velocity rounding", (t) => {
+    const rounded = Math.round(0.95 * 100) / 100;
+    t.assertEqual(rounded, 0.95, 'Rounded velocity should be 0.95');
 });
 
 

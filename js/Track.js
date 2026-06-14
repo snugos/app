@@ -2009,6 +2009,78 @@ export class Track {
         return shuffledCount;
     }
 
+    // Accent Notes - boost velocity of notes at specific beat positions
+    // Creates groove and rhythmic feel by accenting downbeats, onbeats, offbeats, or custom positions
+    // targetVelocity: 0.3-1.0 velocity to set on accented notes (clamped to ACCENT_NOTES_MIN/MAX_TARGET_VELOCITY)
+    // stepsPerBeat: 1-16 steps per beat (4 = 16th note grid at 4/4)
+    // mode: 'downbeats' | 'onbeats' | 'offbeats' | 'eighths' | 'every-step' | 'custom'
+    // customOffsets: array of column offsets to accent (only used when mode='custom')
+    accentNotes(targetVelocity = Constants.ACCENT_NOTES_DEFAULT_TARGET_VELOCITY, stepsPerBeat = Constants.ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT, mode = Constants.ACCENT_NOTES_MODE_ONBEATS, customOffsets = null) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} accentNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp target velocity
+        const clampedTarget = Math.max(Constants.ACCENT_NOTES_MIN_TARGET_VELOCITY, Math.min(Constants.ACCENT_NOTES_MAX_TARGET_VELOCITY, targetVelocity));
+        const clampedStepsPerBeat = Math.max(Constants.ACCENT_NOTES_MIN_STEPS_PER_BEAT, Math.min(Constants.ACCENT_NOTES_MAX_STEPS_PER_BEAT, stepsPerBeat));
+
+        // Validate mode (fall back to 'onbeats')
+        const validModes = Constants.ACCENT_NOTES_MODES;
+        const useMode = validModes.includes(mode) ? mode : Constants.ACCENT_NOTES_MODE_ONBEATS;
+
+        // Build the set of column offsets that should be accented based on mode
+        const accentCols = new Set();
+        if (useMode === Constants.ACCENT_NOTES_MODE_DOWNBEATS) {
+            // Accent bar starts (every 16 steps = bar)
+            const stepsPerBar = Constants.STEPS_PER_BAR || 16;
+            for (let c = 0; c < 1024; c += stepsPerBar) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_ONBEATS) {
+            // Accent every beat
+            for (let c = 0; c < 1024; c += clampedStepsPerBeat) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_OFFBEATS) {
+            // Accent between beats (offset by half the beat)
+            const half = Math.floor(clampedStepsPerBeat / 2);
+            for (let c = half; c < 1024; c += clampedStepsPerBeat) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_EIGHTHS) {
+            // Accent every other step (eighth-note feel)
+            for (let c = 0; c < 1024; c += 2) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_EVERY_STEP) {
+            // Accent every step (essentially equalize all notes to accent velocity)
+            for (let c = 0; c < 1024; c++) accentCols.add(c);
+        } else if (useMode === Constants.ACCENT_NOTES_MODE_CUSTOM) {
+            // Accent user-specified column offsets
+            if (Array.isArray(customOffsets)) {
+                for (const off of customOffsets) {
+                    if (Number.isInteger(off) && off >= 0 && off < 1024) accentCols.add(off);
+                }
+            }
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Accent Notes (${useMode}, target ${clampedTarget}) on ${activeSeq.name}`);
+
+        let accentedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+                if (!accentCols.has(col)) continue;
+                stepData.velocity = Math.round(clampedTarget * 100) / 100;
+                accentedCount++;
+            }
+        }
+
+        return accentedCount;
+    }
+
     // Randomize the sequence - fill cells with random notes based on density
     // density: 0.0 to 1.0, where 1.0 = 100% chance of a note in each cell
     randomizeSequence(density = Constants.RANDOMIZE_DENSITY_DEFAULT) {

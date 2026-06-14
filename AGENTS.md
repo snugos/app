@@ -1,3 +1,83 @@
+#### Day 704: Accent Notes Feature (2026-06-13)
+- **Feature**: Added `accentNotes(targetVelocity, stepsPerBeat, mode, customOffsets)` method to Track class and 5 "Accent Notes" menu items to the sequencer context menu. Boosts velocity of notes at specific beat positions to create groove/rhythmic feel — downbeats, onbeats, offbeats, eighths, or all steps.
+- **Files Modified**:
+  - `js/Track.js`: Added `accentNotes` method after `shuffleNotes` (line ~2080)
+  - `js/constants.js`: Added 13 ACCENT_NOTES_* constants + bumped APP_VERSION to 2.356.0
+  - `js/ui.js`: Added 5 Accent Notes menu items in the sequencer context menu after Shuffle Notes (±3, 25% skip), with separator after
+  - `js/tests.js`: Added Day 704 test block with 25 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **accentNotes** (`js/Track.js`): Sets the velocity of notes at specific beat positions to a target velocity, creating rhythmic accent patterns. Useful for adding swing-style pulse, emphasizing downbeats, or creating offbeat groove feels.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `targetVelocity` to ACCENT_NOTES_MIN_TARGET_VELOCITY (0.3) / ACCENT_NOTES_MAX_TARGET_VELOCITY (1.0) range (default ACCENT_NOTES_DEFAULT_TARGET_VELOCITY=0.95)
+    - Clamps `stepsPerBeat` to ACCENT_NOTES_MIN_STEPS_PER_BEAT (1) / ACCENT_NOTES_MAX_STEPS_PER_BEAT (16) range (default ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT=4)
+    - Validates `mode` against ACCENT_NOTES_MODES array, falls back to 'onbeats' if invalid
+    - Builds a `Set` of accent column offsets based on mode:
+      - 'downbeats': every 16 columns (bar starts)
+      - 'onbeats': every `clampedStepsPerBeat` columns starting at 0
+      - 'offbeats': every `clampedStepsPerBeat` columns starting at `floor(stepsPerBeat/2)`
+      - 'eighths': every 2 columns
+      - 'every-step': every column
+      - 'custom': user-provided integer offsets from `customOffsets` array (filtered for valid integers 0-1023)
+    - Captures undo state BEFORE mutation with descriptive "Accent Notes (mode, target V) on <seqname>" label
+    - For each row, for each column in accent set, sets `stepData.velocity = round(clampedTarget * 100) / 100`
+    - Rounds velocity to 2 decimal places
+    - Returns count of accented notes
+  - **Accent Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Shuffle Notes (±3, 25% skip) with separator after
+    - "Accent Notes (Downbeats)" - calls `accentNotes(0.95, 4, 'downbeats', null)` - strong accents on bar starts
+    - "Accent Notes (Onbeats)" - calls `accentNotes(0.95, 4, 'onbeats', null)` - accents on every beat (1/4 note grid)
+    - "Accent Notes (Offbeats)" - calls `accentNotes(0.95, 4, 'offbeats', null)` - accents between beats (1/8 note offbeat feel)
+    - "Accent Notes (Eighths)" - calls `accentNotes(0.95, 4, 'eighths', null)` - accents on every other step (1/8 note feel)
+    - "Accent Notes (All)" - calls `accentNotes(0.95, 4, 'every-step', null)` - equalize all notes to accent velocity
+    - All call `recreateToneSequence(true)` after accenting
+    - All capture undo with descriptive "Accent Notes on <name> (<seqname>)" label
+    - Show notifications: "Accented {count} note(s) (variant)."
+    - Show "No notes to accent." when nothing to accent
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 13 new constants
+  - `ACCENT_NOTES_MIN_TARGET_VELOCITY = 0.3` - Minimum accent target velocity
+  - `ACCENT_NOTES_MAX_TARGET_VELOCITY = 1.0` - Maximum accent target velocity
+  - `ACCENT_NOTES_DEFAULT_TARGET_VELOCITY = 0.95` - Default strong accent (95% velocity)
+  - `ACCENT_NOTES_MIN_STEPS_PER_BEAT = 1` - Minimum steps per beat
+  - `ACCENT_NOTES_MAX_STEPS_PER_BEAT = 16` - Maximum steps per beat
+  - `ACCENT_NOTES_DEFAULT_STEPS_PER_BEAT = 4` - Default 4 steps per beat (16th note grid @ 4/4)
+  - `ACCENT_NOTES_MODE_DOWNBEATS = 'downbeats'` - Accent bar starts (col % 16 === 0)
+  - `ACCENT_NOTES_MODE_ONBEATS = 'onbeats'` - Accent every beat (col % 4 === 0)
+  - `ACCENT_NOTES_MODE_OFFBEATS = 'offbeats'` - Accent between beats (col % 4 === 2)
+  - `ACCENT_NOTES_MODE_EIGHTHS = 'eighths'` - Accent every 8th note (col % 2 === 0)
+  - `ACCENT_NOTES_MODE_EVERY_STEP = 'every-step'` - Accent every step (all notes)
+  - `ACCENT_NOTES_MODE_CUSTOM = 'custom'` - Accent user-specified step positions
+  - `ACCENT_NOTES_MODES = [all 6 modes]` - Valid mode values
+- **Tests** (`js/tests.js`): 25 tests covering:
+  - `accentNotes` is a function on Track.prototype
+  - `accentNotes` accepts 4 parameters with defaults (targetVelocity, stepsPerBeat, mode, customOffsets)
+  - `accentNotes` returns 0 for Audio tracks
+  - `accentNotes` gets active sequence via `getActiveSequence`
+  - `accentNotes` captures undo BEFORE mutation
+  - `accentNotes` has descriptive "Accent Notes" undo label
+  - `accentNotes` clamps targetVelocity to ACCENT_NOTES_MIN/MAX_TARGET_VELOCITY
+  - `accentNotes` clamps stepsPerBeat to ACCENT_NOTES_MIN/MAX_STEPS_PER_BEAT
+  - `accentNotes` validates mode with ACCENT_NOTES_MODES (uses useMode fallback)
+  - `accentNotes` supports downbeats mode
+  - `accentNotes` supports onbeats mode
+  - `accentNotes` supports offbeats mode
+  - `accentNotes` supports custom mode with customOffsets (validates integers)
+  - `accentNotes` rounds velocity to 2 decimal places (Math.round(clampedTarget * 100) / 100)
+  - `accentNotes` returns count of accented notes (accentedCount)
+  - All 13 ACCENT_NOTES constants are defined in constants.js
+  - ui.js has 5 Accent Notes menu items
+  - Accent Notes menu items call track.accentNotes
+  - Accent Notes menu items call recreateToneSequence
+  - Accent Notes menu items show notification with count
+  - Accent Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.356 for Day 704)
+  - Functional test: downbeats pattern is 0, 16, 32 (every STEPS_PER_BAR)
+  - Functional test: onbeats pattern is 0, 4, 8, 12 (every stepsPerBeat)
+  - Functional test: offbeats pattern is 2, 6, 10, 14 (offset by half stepsPerBeat)
+  - Functional test: velocity rounding 0.95 * 100 / 100 = 0.95
+- **Version**: Bumped to 2.356.0
+- **Test Count**: Increased from 2356 to 2356 (25 new Day 704 tests, all pass; 0 regressions in Day 703/702/701/700/698/697 test blocks)
 #### Day 703: Shuffle Notes Feature (2026-06-13)
 - **Feature**: Added `shuffleNotes(windowSteps, skipChance, velocityFactor)` method to Track class and 5 "Shuffle Notes" menu items to the sequencer context menu. Each note randomly shifts its position by -windowSteps..+windowSteps, creating organic, less-repetitive timing while preserving note count, density, and average velocity.
 - **Files Modified**:
