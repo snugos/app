@@ -1,3 +1,79 @@
+#### Day 709: Crescent Notes Feature (2026-06-15)
+- **Feature**: Added `crescentNotes(windowSteps, shift, velocityFactor, shape, skipOccupied)` method to Track class and 5 "Crescent Notes" menu items to the sequencer context menu. Groups consecutive notes within a window, then shifts each group with a velocity ramp, creating a crescent-moon / arc shape across time. Complements `strumNotes` (per-chord strum), `staggerNotes` (per-chord stagger), and the new per-group time-shift + velocity ramp pattern.
+- **Files Modified**:
+  - `js/Track.js`: Added `crescentNotes` method after `staggerNotes` (line ~5373)
+  - `js/constants.js`: Added 14 CRESCENT_NOTES_* constants + bumped APP_VERSION to 2.358.0
+  - `js/ui.js`: Added 5 Crescent Notes menu items in the sequencer context menu after Stagger Notes (Inward), with separator after
+  - `js/tests.js`: Added Day 709 test block with 27 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **crescentNotes** (`js/Track.js`): Groups notes by window (col div windowSteps), then for each group applies a time-shift and velocity ramp based on the chosen shape
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `windowSteps` to CRESCENT_NOTES_MIN_WINDOW_STEPS (1) / CRESCENT_NOTES_MAX_WINDOW_STEPS (8) range with Math.floor (default CRESCENT_NOTES_DEFAULT_WINDOW_STEPS=2)
+    - Clamps `shift` to CRESCENT_NOTES_MIN_SHIFT (1) / CRESCENT_NOTES_MAX_SHIFT (8) range with Math.floor (default CRESCENT_NOTES_DEFAULT_SHIFT=2)
+    - Clamps `velocityFactor` to CRESCENT_NOTES_MIN_VELOCITY_FACTOR (0.3) / CRESCENT_NOTES_MAX_VELOCITY_FACTOR (1.0) range (default CRESCENT_NOTES_DEFAULT_VELOCITY_FACTOR=0.85)
+    - Validates `shape` against CRESCENT_NOTES_SHAPES array, falls back to CRESCENT_NOTES_SHAPE_ARC if invalid
+    - Captures undo state BEFORE mutation with descriptive "Crescent Notes (shape, win X, shift Y) on <seqname>" label
+    - Skips rows with fewer than 2 active notes
+    - Skips rows with fewer than 2 distinct window groups (need at least 2 groups for a crescent)
+    - For each group, computes `positionProgress` based on shape:
+      - 'arc': 0 at start, peak (1.0) at middle, 0 at end via `Math.abs((2*i/(N-1)) - 1)`
+      - 'ascend': 0 at start, 1 at end (linear)
+      - 'descend': 1 at start, 0 at end (linear)
+    - Computes `timeShift = round(positionProgress * clampedShift)` and `posVelFactor = 1.0 - (1.0 - clampedVel) * positionProgress`
+    - For each note in the group, sets `newCol = col + timeShift`, skipping if out of bounds or target slot is occupied
+    - Calculates `newVel = clamp(originalVel * posVelFactor, 0.05, 1.0)`, rounds to 2 decimal places
+    - Returns count of crescent notes added
+  - **Crescent Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Stagger Notes (Inward), with separator after
+    - "Crescent Notes (Arc)" - calls `crescentNotes(2, 2, 0.85, 'arc', true)` - default arc shape, 1/8 note shift
+    - "Crescent Notes (Ascend)" - calls `crescentNotes(2, 2, 0.85, 'ascend', true)` - linear build
+    - "Crescent Notes (Descend)" - calls `crescentNotes(2, 2, 0.85, 'descend', true)` - linear decay
+    - "Crescent Notes (Wide Arc)" - calls `crescentNotes(4, 4, 0.7, 'arc', true)` - 1/4 note shift, more velocity attenuation
+    - "Crescent Notes (Subtle)" - calls `crescentNotes(2, 1, 0.95, 'arc', true)` - 1 step shift, gentle velocity change
+    - All call `recreateToneSequence(true)` after crescenting
+    - All capture undo with descriptive "Crescent Notes on <name> (<seqname>)" label
+    - Show notifications: "Crescented {count} note(s) (variant)."
+    - Show "No notes to crescent." when nothing to crescent
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 14 new constants
+  - `CRESCENT_NOTES_MIN_WINDOW_STEPS = 1` - Minimum 1 step window between grouped notes
+  - `CRESCENT_NOTES_MAX_WINDOW_STEPS = 8` - Maximum 8 steps (1/2 note) window
+  - `CRESCENT_NOTES_DEFAULT_WINDOW_STEPS = 2` - Default 2 steps (1/8 note) window
+  - `CRESCENT_NOTES_MIN_SHIFT = 1` - Minimum 1 step time-shift per crescent position
+  - `CRESCENT_NOTES_MAX_SHIFT = 8` - Maximum 8 steps (1/2 note) time-shift per position
+  - `CRESCENT_NOTES_DEFAULT_SHIFT = 2` - Default 2 steps (1/8 note) shift per position
+  - `CRESCENT_NOTES_MIN_VELOCITY_FACTOR = 0.3` - Minimum velocity factor (30% velocity floor)
+  - `CRESCENT_NOTES_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity factor (1.0 = no scaling)
+  - `CRESCENT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.85` - Default 85% velocity preservation
+  - `CRESCENT_NOTES_SHAPE_ARC = 'arc'` - Notes rise then fall (crescent moon)
+  - `CRESCENT_NOTES_SHAPE_ASCEND = 'ascend'` - Notes only rise (build)
+  - `CRESCENT_NOTES_SHAPE_DESCEND = 'descend'` - Notes only fall (decay)
+  - `CRESCENT_NOTES_SHAPES = [all 3 shapes]` - Valid shape values
+- **Tests** (`js/tests.js`): 27 tests covering:
+  - `crescentNotes` is a function on Track.prototype
+  - `crescentNotes` accepts 5 parameters with defaults
+  - `crescentNotes` returns 0 for Audio tracks
+  - `crescentNotes` gets active sequence via `getActiveSequence`
+  - `crescentNotes` captures undo BEFORE mutation
+  - `crescentNotes` has descriptive "Crescent Notes" undo label
+  - `crescentNotes` clamps windowSteps/shift/velocityFactor to CRESCENT_NOTES_MIN/MAX ranges
+  - `crescentNotes` validates shape with CRESCENT_NOTES_SHAPES
+  - `crescentNotes` supports arc/ascend/descend shapes
+  - All 14 CRESCENT_NOTES constants are defined in constants.js
+  - ui.js has 5 Crescent Notes menu items
+  - Crescent Notes menu items call track.crescentNotes / recreateToneSequence
+  - Crescent Notes menu items show notification with crescented count
+  - Crescent Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.358 for Day 709)
+  - Functional tests: arc/ascend/descend position progress math
+  - Functional tests: group by window (col div windowSteps)
+  - Functional tests: velocity preservation at default (0.85)
+  - Functional tests: clamps for windowSteps/velocityFactor
+- **Version**: Bumped to 2.358.0
+- **Test Count**: Increased from 2389 to 2416 (27 new Day 709 tests, all pass; pre-existing test failures unrelated)
+
+#### Day 708: Syntax Error Fix in Stagger Notes / Strum Notes Menu Items (2026-06-15)
 #### Day 708: Syntax Error Fix in Stagger Notes / Strum Notes Menu Items (2026-06-15)
 - **Bug**: Pre-existing JavaScript syntax error in `js/ui.js` that was blocking the entire `tests.js` file from loading. The error was introduced in the Day 705 commit (78b82ff5) and was missed by the Day 706/707 audits.
 - **Files Modified**:
