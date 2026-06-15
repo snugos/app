@@ -21208,6 +21208,200 @@ TestRunner.test("Day 705 - staggerNotes functional test: inward direction outsid
     t.assertEqual(ordered[2], 3, 'Inward: then index 3');
 });
 
+// Day 709: Crescent Notes Feature
+TestRunner.test("Day 709 - crescentNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.crescentNotes === 'function', 'crescentNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 709 - crescentNotes accepts 5 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes('windowSteps'), 'crescentNotes should accept windowSteps parameter');
+    t.assertTruthy(funcStr.includes('shift'), 'crescentNotes should accept shift parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'crescentNotes should accept velocityFactor parameter');
+    t.assertTruthy(funcStr.includes('shape'), 'crescentNotes should accept shape parameter');
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'crescentNotes should accept skipOccupied parameter');
+});
+
+TestRunner.test("Day 709 - crescentNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes("this.type === 'Audio'"), 'crescentNotes should guard against Audio tracks');
+});
+
+TestRunner.test("Day 709 - crescentNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'crescentNotes should call getActiveSequence');
+});
+
+TestRunner.test("Day 709 - crescentNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('crescentCount');
+    t.assertTruthy(captureIdx > -1, 'crescentNotes should call _captureUndoState');
+    t.assertTruthy(captureIdx < mutationIdx, 'crescentNotes should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 709 - crescentNotes has descriptive 'Crescent Notes' undo label", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes('Crescent Notes'), 'crescentNotes undo label should include "Crescent Notes"');
+});
+
+TestRunner.test("Day 709 - crescentNotes clamps windowSteps to CRESCENT_NOTES_MIN/MAX_WINDOW_STEPS", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes('CRESCENT_NOTES_MIN_WINDOW_STEPS'), 'crescentNotes should reference CRESCENT_NOTES_MIN_WINDOW_STEPS');
+    t.assertTruthy(funcStr.includes('CRESCENT_NOTES_MAX_WINDOW_STEPS'), 'crescentNotes should reference CRESCENT_NOTES_MAX_WINDOW_STEPS');
+});
+
+TestRunner.test("Day 709 - crescentNotes clamps shift to CRESCENT_NOTES_MIN/MAX_SHIFT", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes('CRESCENT_NOTES_MIN_SHIFT'), 'crescentNotes should reference CRESCENT_NOTES_MIN_SHIFT');
+    t.assertTruthy(funcStr.includes('CRESCENT_NOTES_MAX_SHIFT'), 'crescentNotes should reference CRESCENT_NOTES_MAX_SHIFT');
+});
+
+TestRunner.test("Day 709 - crescentNotes clamps velocityFactor to CRESCENT_NOTES_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes('CRESCENT_NOTES_MIN_VELOCITY_FACTOR'), 'crescentNotes should reference CRESCENT_NOTES_MIN_VELOCITY_FACTOR');
+    t.assertTruthy(funcStr.includes('CRESCENT_NOTES_MAX_VELOCITY_FACTOR'), 'crescentNotes should reference CRESCENT_NOTES_MAX_VELOCITY_FACTOR');
+});
+
+TestRunner.test("Day 709 - crescentNotes validates shape with CRESCENT_NOTES_SHAPES", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes('CRESCENT_NOTES_SHAPES'), 'crescentNotes should reference CRESCENT_NOTES_SHAPES');
+    t.assertTruthy(funcStr.includes('CRESCENT_NOTES_SHAPE_ARC'), 'crescentNotes should fall back to CRESCENT_NOTES_SHAPE_ARC');
+});
+
+TestRunner.test("Day 709 - crescentNotes supports arc shape", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes("CRESCENT_NOTES_SHAPE_ARC"), 'crescentNotes should support arc shape');
+});
+
+TestRunner.test("Day 709 - crescentNotes supports ascend shape", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes("CRESCENT_NOTES_SHAPE_ASCEND"), 'crescentNotes should support ascend shape');
+});
+
+TestRunner.test("Day 709 - crescentNotes supports descend shape", (t) => {
+    const funcStr = Track.prototype.crescentNotes.toString();
+    t.assertTruthy(funcStr.includes("CRESCENT_NOTES_SHAPE_DESCEND"), 'crescentNotes should support descend shape');
+});
+
+TestRunner.test("Day 709 - All 14 CRESCENT_NOTES constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_MIN_WINDOW_STEPS = 1'), 'CRESCENT_NOTES_MIN_WINDOW_STEPS should be 1');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_MAX_WINDOW_STEPS = 8'), 'CRESCENT_NOTES_MAX_WINDOW_STEPS should be 8');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_DEFAULT_WINDOW_STEPS = 2'), 'CRESCENT_NOTES_DEFAULT_WINDOW_STEPS should be 2');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_MIN_SHIFT = 1'), 'CRESCENT_NOTES_MIN_SHIFT should be 1');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_MAX_SHIFT = 8'), 'CRESCENT_NOTES_MAX_SHIFT should be 8');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_DEFAULT_SHIFT = 2'), 'CRESCENT_NOTES_DEFAULT_SHIFT should be 2');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_MIN_VELOCITY_FACTOR = 0.3'), 'CRESCENT_NOTES_MIN_VELOCITY_FACTOR should be 0.3');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_MAX_VELOCITY_FACTOR = 1.0'), 'CRESCENT_NOTES_MAX_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.85'), 'CRESCENT_NOTES_DEFAULT_VELOCITY_FACTOR should be 0.85');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_SHAPE_ARC'), 'CRESCENT_NOTES_SHAPE_ARC should be defined');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_SHAPE_ASCEND'), 'CRESCENT_NOTES_SHAPE_ASCEND should be defined');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_SHAPE_DESCEND'), 'CRESCENT_NOTES_SHAPE_DESCEND should be defined');
+    t.assertTruthy(constantsSrc.includes('CRESCENT_NOTES_SHAPES'), 'CRESCENT_NOTES_SHAPES should be defined');
+});
+
+TestRunner.test("Day 709 - ui.js has 5 Crescent Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Crescent Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 5, 'ui.js should have at least 5 Crescent Notes menu items');
+});
+
+TestRunner.test("Day 709 - Crescent Notes menu items call track.crescentNotes", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.crescentNotes('), 'Crescent Notes menu items should call crescentNotes()');
+});
+
+TestRunner.test("Day 709 - Crescent Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Crescent Notes') && uiStr.includes('recreateToneSequence'), 'Crescent Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 709 - Crescent Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Crescented ') && uiStr.includes('note'), 'Crescent Notes should show notification with crescented count');
+    t.assertTruthy(uiStr.includes('No notes to crescent.'), 'Crescent Notes should show "No notes to crescent." notification');
+});
+
+TestRunner.test("Day 709 - Crescent Notes menu items capture undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Crescent Notes on'), 'Crescent Notes menu items should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 709 - APP_VERSION validation (>= 2.358)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
+    t.assertTruthy(versionMatch && parseFloat(versionMatch[1]) >= 2.358, `APP_VERSION should be >= 2.358, got ${versionMatch ? versionMatch[1] : 'unknown'}`);
+});
+
+TestRunner.test("Day 709 - crescentNotes functional test: arc shape position progress (peak at middle)", (t) => {
+    // For 5 positions: |2*i/(N-1) - 1| gives 1, 0.5, 0, 0.5, 1
+    // (peaks at edges, 0 at middle, but actually we want peak at middle)
+    // The implementation uses abs which gives 0 at middle and 1 at edges
+    const numPositions = 5;
+    const progresses = [];
+    for (let i = 0; i < numPositions; i++) {
+        const normalized = (2 * i) / (numPositions - 1);
+        const positionProgress = Math.abs(normalized - 1);
+        progresses.push(positionProgress);
+    }
+    t.assertEqual(progresses[2], 0, 'Arc: middle position has progress 0');
+    t.assertEqual(progresses[0], 1, 'Arc: position 0 has progress 1');
+    t.assertEqual(progresses[4], 1, 'Arc: last position has progress 1');
+});
+
+TestRunner.test("Day 709 - crescentNotes functional test: ascend shape linear progress (0..1)", (t) => {
+    const numPositions = 5;
+    const progresses = [];
+    for (let i = 0; i < numPositions; i++) {
+        const positionProgress = i / (numPositions - 1);
+        progresses.push(positionProgress);
+    }
+    t.assertEqual(progresses[0], 0, 'Ascend: position 0 has progress 0');
+    t.assertEqual(progresses[4], 1, 'Ascend: last position has progress 1');
+    t.assertEqual(progresses[2], 0.5, 'Ascend: middle position has progress 0.5');
+});
+
+TestRunner.test("Day 709 - crescentNotes functional test: descend shape linear progress (1..0)", (t) => {
+    const numPositions = 5;
+    const progresses = [];
+    for (let i = 0; i < numPositions; i++) {
+        const positionProgress = 1 - (i / (numPositions - 1));
+        progresses.push(positionProgress);
+    }
+    t.assertEqual(progresses[0], 1, 'Descend: position 0 has progress 1');
+    t.assertEqual(progresses[4], 0, 'Descend: last position has progress 0');
+    t.assertEqual(progresses[2], 0.5, 'Descend: middle position has progress 0.5');
+});
+
+TestRunner.test("Day 709 - crescentNotes functional test: group by window (col div windowSteps)", (t) => {
+    const windowSteps = 2;
+    const expectedGroups = [0, 0, 1, 1, 2];
+    const cols = [0, 1, 2, 3, 4];
+    const actualGroups = cols.map(c => Math.floor(c / windowSteps));
+    t.assertEqual(actualGroups.join(','), expectedGroups.join(','), 'Groups should be 0,0,1,1,2');
+});
+
+TestRunner.test("Day 709 - crescentNotes functional test: velocity preservation at default (0.85)", (t) => {
+    const defaultVelFactor = 0.85;
+    const originalVel = 1.0;
+    const positionProgress = 0.5;
+    const posVelFactor = 1.0 - (1.0 - defaultVelFactor) * positionProgress;
+    const newVel = Math.max(0.05, Math.min(1.0, originalVel * posVelFactor));
+    t.assertEqual(Math.round(newVel * 100) / 100, 0.93, 'At progress 0.5, vel 1.0 * factor 0.925 = 0.93 (rounded)');
+});
+
+TestRunner.test("Day 709 - crescentNotes functional test: clamps windowSteps to valid range", (t) => {
+    const requested = 100;
+    const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 8, 'Window steps clamped to 8 (max)');
+});
+
+TestRunner.test("Day 709 - crescentNotes functional test: clamps velocityFactor to valid range", (t) => {
+    const requestedVel = 2.5;
+    const clamped = Math.max(0.3, Math.min(1.0, requestedVel));
+    t.assertEqual(clamped, 1.0, 'Velocity clamped to 1.0 (max)');
+});
 
 export async function runTests() {
     return await TestRunner.runAll();

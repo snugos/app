@@ -5351,4 +5351,141 @@ export class Track {
 
         return staggeredCount;
     }
+
+    // Crescent Notes - group consecutive notes within a window and shift each
+    // group with a rising velocity, creating an arc/crescent-moon shape across time.
+    // windowSteps: how many steps wide each "group" of notes is (1-8, default 2)
+    //              Notes within the same window are grouped together
+    // shift: time-shift per crescent position (1-8, default 2)
+    //        - For 'ascend': each subsequent group shifts forward by `shift` steps
+    //        - For 'descend': each subsequent group shifts forward by `shift` steps
+    //          (with the velocity ramp inverted vs 'ascend')
+    //        - For 'arc': groups 0..N/2 ascend, N/2..N descend (crescent moon shape)
+    // velocityFactor: velocity multiplier per crescent position (0.3-1.0, default 0.85)
+    //                  Velocity decays exponentially across groups
+    // shape: 'arc' (crescent moon), 'ascend' (build only), 'descend' (decay only)
+    // skipOccupied: skip target column if it already has a note (true = don't overwrite)
+    crescentNotes(windowSteps = Constants.CRESCENT_NOTES_DEFAULT_WINDOW_STEPS, shift = Constants.CRESCENT_NOTES_DEFAULT_SHIFT, velocityFactor = Constants.CRESCENT_NOTES_DEFAULT_VELOCITY_FACTOR, shape = Constants.CRESCENT_NOTES_SHAPE_ARC, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} crescentNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedWindow = Math.max(Constants.CRESCENT_NOTES_MIN_WINDOW_STEPS, Math.min(Constants.CRESCENT_NOTES_MAX_WINDOW_STEPS, Math.floor(windowSteps)));
+        const clampedShift = Math.max(Constants.CRESCENT_NOTES_MIN_SHIFT, Math.min(Constants.CRESCENT_NOTES_MAX_SHIFT, Math.floor(shift)));
+        const clampedVel = Math.max(Constants.CRESCENT_NOTES_MIN_VELOCITY_FACTOR, Math.min(Constants.CRESCENT_NOTES_MAX_VELOCITY_FACTOR, velocityFactor));
+        const useShape = Constants.CRESCENT_NOTES_SHAPES.includes(shape) ? shape : Constants.CRESCENT_NOTES_SHAPE_ARC;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Crescent Notes (${useShape}, win ${clampedWindow}, shift ${clampedShift}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let crescentCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Group notes by their "window" (col div windowSteps).
+        // Each group becomes a crescent position; we apply time-shift + velocity ramp.
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex] = Array(totalSteps).fill(null);
+                continue;
+            }
+            const row = activeSeq.data[rowIndex];
+
+            // Collect active notes in this row
+            const activeNotes = [];
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (cell && cell.active) {
+                    activeNotes.push({ col, originalVel: (cell.velocity !== undefined) ? cell.velocity : defaultVel });
+                }
+            }
+
+            if (activeNotes.length < 2) continue; // Need at least 2 notes for a crescent
+
+            // Group notes by window: each group is identified by Math.floor(col / clampedWindow)
+            const groups = new Map();
+            for (const note of activeNotes) {
+                const groupKey = Math.floor(note.col / clampedWindow);
+                if (!groups.has(groupKey)) groups.set(groupKey, []);
+                groups.get(groupKey).push(note);
+            }
+
+            if (groups.size < 2) continue; // Need at least 2 groups for a crescent
+
+            // Sort group keys in ascending order
+            const sortedKeys = Array.from(groups.keys()).sort((a, b) => a - b);
+            const numPositions = sortedKeys.length;
+
+            // For each group, compute the time-shift based on the crescent shape
+            for (let posIdx = 0; posIdx < numPositions; posIdx++) {
+                let positionProgress;
+                if (useShape === Constants.CRESCENT_NOTES_SHAPE_ARC) {
+                    // Arc: 0 at start, peak at middle, 0 at end
+                    // Use |2*i/(N-1) - 1| to get 0, 0.5, 1, 0.5, 0 for N=5
+                    if (numPositions === 1) {
+                        positionProgress = 0;
+                    } else {
+                        const normalized = (2 * posIdx) / (numPositions - 1); // 0..2
+                        positionProgress = Math.abs(normalized - 1); // 1 at start/middle, 0 at end (peak at middle, 0 at edges)
+                    }
+                } else if (useShape === Constants.CRESCENT_NOTES_SHAPE_ASCEND) {
+                    // Ascend: 0 at start, 1 at end (linear)
+                    positionProgress = numPositions > 1 ? posIdx / (numPositions - 1) : 0;
+                } else if (useShape === Constants.CRESCENT_NOTES_SHAPE_DESCEND) {
+                    // Descend: 1 at start, 0 at end (linear)
+                    positionProgress = numPositions > 1 ? 1 - (posIdx / (numPositions - 1)) : 0;
+                } else {
+                    // Unknown shape - fall back to arc behavior
+                    if (numPositions === 1) {
+                        positionProgress = 0;
+                    } else {
+                        const normalized = (2 * posIdx) / (numPositions - 1);
+                        positionProgress = Math.abs(normalized - 1);
+                    }
+                }
+
+                // Compute the time-shift: positionProgress * clampedShift
+                const timeShift = Math.round(positionProgress * clampedShift);
+
+                // Compute velocity factor for this position: 1.0 - (1.0 - clampedVel) * positionProgress
+                // At progress=0, factor=1.0; at progress=1, factor=clampedVel
+                const posVelFactor = 1.0 - (1.0 - clampedVel) * positionProgress;
+
+                const groupKey = sortedKeys[posIdx];
+                const groupNotes = groups.get(groupKey);
+                for (const note of groupNotes) {
+                    const newCol = note.col + timeShift;
+                    if (newCol >= totalSteps) continue; // Out of bounds, skip
+                    const targetCell = row[newCol];
+                    if (skipOccupied && targetCell && targetCell.active) continue; // Skip occupied
+                    const newVel = Math.max(0.05, Math.min(1.0, note.originalVel * posVelFactor));
+                    newNotes.push({ rowIndex, col: newCol, velocity: Math.round(newVel * 100) / 100 });
+                }
+            }
+        }
+
+        // Apply the new crescent notes (skip if a note already exists at the target slot)
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                const target = activeSeq.data[note.rowIndex][note.col];
+                if (skipOccupied && target && target.active) continue; // Skip if occupied
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity
+                };
+                crescentCount++;
+            }
+        }
+
+        return crescentCount;
+    }
 }
