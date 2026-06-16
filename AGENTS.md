@@ -1,3 +1,90 @@
+#### Day 711: Drift Notes Feature (2026-06-16)
+- **Feature**: Added `driftNotes(maxShift, skipChance, velocityFactor, driftMode, skipOccupied)` method to Track class and 6 "Drift Notes" menu items to the sequencer context menu. Progressively shifts notes by column position to create evolving, drifting patterns across the bar. Five modes available: linear-up (0→maxShift), linear-down (maxShift→0), linear-center (peak at middle), random-per-note (independent random shift per note), and mirror (maxShift→0). Complements `bounceNotes` (random per-note shift) and `shuffleNotes` (random window shift) with a deterministic, evolving pattern.
+- **Files Modified**:
+  - `js/Track.js`: Added `driftNotes` method after `trillNotes` (line ~5581)
+  - `js/constants.js`: Added 16 DRIFT_NOTES_* constants + bumped APP_VERSION to 2.360.0
+  - `js/ui.js`: Added 6 Drift Notes menu items in the sequencer context menu after Trill Notes (Up, Octave, 4 taps)
+  - `js/tests.js`: Added Day 711 test block with 33 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **driftNotes** (`js/Track.js`): For each active note, computes a column-dependent shift based on the selected drift mode and moves the note to its shifted position. Captures undo state BEFORE mutation with descriptive label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `maxShift` to DRIFT_NOTES_MIN_MAX_SHIFT (1) / DRIFT_NOTES_MAX_MAX_SHIFT (8) range with Math.floor (default DRIFT_NOTES_DEFAULT_MAX_SHIFT=4)
+    - Clamps `skipChance` to DRIFT_NOTES_MIN_SKIP_CHANCE (0.0) / DRIFT_NOTES_MAX_SKIP_CHANCE (0.9) range (default DRIFT_NOTES_DEFAULT_SKIP_CHANCE=0.0)
+    - Clamps `velocityFactor` to DRIFT_NOTES_MIN_VELOCITY_FACTOR (0.1) / DRIFT_NOTES_MAX_VELOCITY_FACTOR (1.0) range (default DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR=0.95)
+    - Validates `driftMode` against DRIFT_NOTES_MODES array, falls back to DRIFT_NOTES_MODE_LINEAR_UP if invalid
+    - Captures undo state BEFORE mutation with descriptive "Drift Notes (mode, max ±X) on <seqname>" label
+    - For each row, for each column, for each active note: rolls skip chance, then computes shift based on mode:
+      - `linear-up`: shift = round(progress * maxShift) where progress = col / (totalSteps - 1)
+      - `linear-down`: shift = round((1.0 - progress) * maxShift)
+      - `linear-center`: shift = round(|2*progress - 1| * maxShift) (peak at middle)
+      - `random-per-note`: shift = floor(random * (2*maxShift+1)) - maxShift (in [-maxShift, +maxShift])
+      - `mirror`: shift = round((1.0 - progress) * maxShift) (linear-down equivalent)
+    - Skips if target is out of bounds (< 0 or >= totalSteps) or already occupied
+    - Moves the note to the target column, scaling velocity by velocityFactor (clamped to 0.05-1.0 range), preserves the original probability
+    - Clears the source cell after a successful move (only if it still holds the original stepData)
+    - Rounds velocity to 2 decimal places
+    - Returns count of drifted notes added
+  - **Drift Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Trill Notes
+    - "Drift Notes (Linear Up ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-up', true)` - default linear ramp
+    - "Drift Notes (Linear Down ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-down', true)` - linear decay
+    - "Drift Notes (Linear Center ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-center', true)` - peak at middle
+    - "Drift Notes (Random Per-Note ±4)" - calls `driftNotes(4, 0.0, 0.95, 'random-per-note', true)` - independent random per note
+    - "Drift Notes (Mirror ±4)" - calls `driftNotes(4, 0.0, 0.95, 'mirror', true)` - mirror of linear-up
+    - "Drift Notes (Linear Up ±8, 30% skip)" - calls `driftNotes(8, 0.3, 0.9, 'linear-up', true)` - larger drift with skip chance
+    - All call `recreateToneSequence(true)` after drifting
+    - All capture undo with descriptive "Drift Notes on <name> (<seqname>)" label
+    - Show notifications: "Drifted {count} note(s) (variant)."
+    - Show "No notes to drift." when nothing to drift
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 16 new constants
+  - `DRIFT_NOTES_MIN_MAX_SHIFT = 1` - Minimum drift distance in steps
+  - `DRIFT_NOTES_MAX_MAX_SHIFT = 8` - Maximum drift distance in steps (1/2 note)
+  - `DRIFT_NOTES_DEFAULT_MAX_SHIFT = 4` - Default 4 steps (1/4 note) max drift
+  - `DRIFT_NOTES_MIN_SKIP_CHANCE = 0.0` - Minimum probability of skipping a note
+  - `DRIFT_NOTES_MAX_SKIP_CHANCE = 0.9` - Maximum probability of skipping a note
+  - `DRIFT_NOTES_DEFAULT_SKIP_CHANCE = 0.0` - Default: all notes drift
+  - `DRIFT_NOTES_MIN_VELOCITY_FACTOR = 0.1` - Minimum velocity factor (preserves 10% velocity at floor)
+  - `DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity factor (1.0 = no change)
+  - `DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95` - Default slight attenuation per drift step
+  - `DRIFT_NOTES_MODE_LINEAR_UP = 'linear-up'` - Shift grows from 0 to maxShift
+  - `DRIFT_NOTES_MODE_LINEAR_DOWN = 'linear-down'` - Shift shrinks from maxShift to 0
+  - `DRIFT_NOTES_MODE_LINEAR_CENTER = 'linear-center'` - Shift peaks at the middle of the bar
+  - `DRIFT_NOTES_MODE_RANDOM_PER_NOTE = 'random-per-note'` - Each note gets a random shift in [-maxShift, +maxShift]
+  - `DRIFT_NOTES_MODE_MIRROR = 'mirror'` - Mirror of linear-up: notes start spread, then collapse back to origin
+  - `DRIFT_NOTES_MODES = [all 5 modes]` - Valid drift mode values
+- **Tests** (`js/tests.js`): 33 tests covering:
+  - `driftNotes` is a function on Track.prototype
+  - `driftNotes` accepts 5 parameters with defaults (maxShift, skipChance, velocityFactor, driftMode, skipOccupied)
+  - `driftNotes` returns 0 for Audio tracks
+  - `driftNotes` gets active sequence via `getActiveSequence`
+  - `driftNotes` captures undo BEFORE mutation
+  - `driftNotes` has descriptive "Drift Notes" undo label
+  - `driftNotes` clamps maxShift/skipChance/velocityFactor to DRIFT_NOTES_MIN/MAX ranges
+  - `driftNotes` validates driftMode with DRIFT_NOTES_MODES (uses useMode fallback)
+  - `driftNotes` uses Math.floor on maxShift
+  - `driftNotes` supports linear-up/linear-down/linear-center/random-per-note/mirror modes
+  - `driftNotes` uses Math.random for random shift generation
+  - `driftNotes` rounds velocity to 2 decimal places
+  - `driftNotes` returns count of drifted notes (driftedCount)
+  - All 16 DRIFT_NOTES constants are defined in constants.js
+  - ui.js has 6 Drift Notes menu items
+  - Drift Notes menu items call track.driftNotes
+  - Drift Notes menu items call recreateToneSequence
+  - Drift Notes menu items show notification with drifted count
+  - Drift Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.360 for Day 711)
+  - Functional test: linear-up mode shift grows 0 to maxShift across the bar
+  - Functional test: linear-down mode shift shrinks maxShift to 0
+  - Functional test: linear-center mode peaks at middle (col 8 = 0, col 0 = maxShift)
+  - Functional test: clamps maxShift to valid range (100 -> 8)
+  - Functional test: clamps velocityFactor to valid range (2.5 -> 1.0)
+  - Functional test: clamps skipChance to valid range (1.5 -> 0.9)
+  - Functional test: random shift range is [-maxShift, +maxShift]
+- **Version**: Bumped to 2.360.0
+- **Test Count**: Increased from 2370 to 2403 (33 new Day 711 tests, all pass; pre-existing test failures unrelated)
+
 #### Day 710: Trill Notes Feature (2026-06-16)
 - **Feature**: Added `trillNotes(taps, interval, velocityFactor, direction, skipOccupied)` method to Track class and 6 "Trill Notes" menu items to the sequencer context menu. Adds a trill ornament to each note by alternating between the source pitch and a neighboring pitch (above, below, or both) for `taps` rapid subdivisions, creating classic trills at the sequencer (note) level. Complements `strumNotes`, `staggerNotes`, `crescentNotes`, etc. with a pitch-based ornament.
 - **Files Modified**:

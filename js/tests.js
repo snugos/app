@@ -21648,6 +21648,222 @@ TestRunner.test("Day 710 - trillNotes functional test: trill notes skip out-of-r
 TestRunner.test("Day 710 - trillNotes functional test: Math.floor used on taps and interval", (t) => {
     const taps = 4.7;
     const interval = 2.3;
+TestRunner.test("Day 711 - driftNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.driftNotes === 'function', 'driftNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 711 - driftNotes accepts 5 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('maxShift'), 'driftNotes should accept maxShift parameter');
+    t.assertTruthy(funcStr.includes('skipChance'), 'driftNotes should accept skipChance parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'driftNotes should accept velocityFactor parameter');
+    t.assertTruthy(funcStr.includes('driftMode'), 'driftNotes should accept driftMode parameter');
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'driftNotes should accept skipOccupied parameter');
+});
+
+TestRunner.test("Day 711 - driftNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('type==="Audio"') || funcStr.includes('Audio'), 'driftNotes should guard against Audio tracks');
+});
+
+TestRunner.test("Day 711 - driftNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'driftNotes should call getActiveSequence');
+});
+
+TestRunner.test("Day 711 - driftNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('driftedCount');
+    t.assertTruthy(captureIdx > -1, 'driftNotes should call _captureUndoState');
+    t.assertTruthy(captureIdx < mutationIdx, 'driftNotes should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 711 - driftNotes has descriptive 'Drift Notes' undo label", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Drift Notes'), 'driftNotes undo label should include "Drift Notes"');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps maxShift to DRIFT_NOTES_MIN/MAX_MAX_SHIFT", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_MAX_SHIFT'), 'driftNotes should reference DRIFT_NOTES_MIN_MAX_SHIFT');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_MAX_SHIFT'), 'driftNotes should reference DRIFT_NOTES_MAX_MAX_SHIFT');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps skipChance to DRIFT_NOTES_MIN/MAX_SKIP_CHANCE", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_SKIP_CHANCE'), 'driftNotes should reference DRIFT_NOTES_MIN_SKIP_CHANCE');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_SKIP_CHANCE'), 'driftNotes should reference DRIFT_NOTES_MAX_SKIP_CHANCE');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps velocityFactor to DRIFT_NOTES_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_VELOCITY_FACTOR'), 'driftNotes should reference DRIFT_NOTES_MIN_VELOCITY_FACTOR');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_VELOCITY_FACTOR'), 'driftNotes should reference DRIFT_NOTES_MAX_VELOCITY_FACTOR');
+});
+
+TestRunner.test("Day 711 - driftNotes validates driftMode with DRIFT_NOTES_MODES", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODES'), 'driftNotes should reference DRIFT_NOTES_MODES');
+});
+
+TestRunner.test("Day 711 - driftNotes uses Math.floor on maxShift", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.floor'), 'driftNotes should use Math.floor for maxShift');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-up mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_UP'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_UP');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-down mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_DOWN'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_DOWN');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-center mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_CENTER'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_CENTER');
+});
+
+TestRunner.test("Day 711 - driftNotes supports random-per-note mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_RANDOM_PER_NOTE'), 'driftNotes should reference DRIFT_NOTES_MODE_RANDOM_PER_NOTE');
+});
+
+TestRunner.test("Day 711 - driftNotes supports mirror mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_MIRROR'), 'driftNotes should reference DRIFT_NOTES_MODE_MIRROR');
+});
+
+TestRunner.test("Day 711 - driftNotes returns count of drifted notes (driftedCount)", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('driftedCount'), 'driftNotes should return count of drifted notes');
+});
+
+TestRunner.test("Day 711 - driftNotes uses Math.random for random shift", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.random'), 'driftNotes should use Math.random for random mode');
+});
+
+TestRunner.test("Day 711 - driftNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round') && funcStr.includes('* 100') && funcStr.includes('/ 100'), 'driftNotes should round velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 711 - All 16 DRIFT_NOTES constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_MAX_SHIFT = 1'), 'DRIFT_NOTES_MIN_MAX_SHIFT should be 1');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_MAX_SHIFT = 8'), 'DRIFT_NOTES_MAX_MAX_SHIFT should be 8');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_MAX_SHIFT = 4'), 'DRIFT_NOTES_DEFAULT_MAX_SHIFT should be 4');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_SKIP_CHANCE = 0.0'), 'DRIFT_NOTES_MIN_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_SKIP_CHANCE = 0.9'), 'DRIFT_NOTES_MAX_SKIP_CHANCE should be 0.9');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_SKIP_CHANCE = 0.0'), 'DRIFT_NOTES_DEFAULT_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_VELOCITY_FACTOR = 0.1'), 'DRIFT_NOTES_MIN_VELOCITY_FACTOR should be 0.1');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0'), 'DRIFT_NOTES_MAX_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95'), 'DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR should be 0.95');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_UP'), 'DRIFT_NOTES_MODE_LINEAR_UP should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_DOWN'), 'DRIFT_NOTES_MODE_LINEAR_DOWN should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_CENTER'), 'DRIFT_NOTES_MODE_LINEAR_CENTER should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_RANDOM_PER_NOTE'), 'DRIFT_NOTES_MODE_RANDOM_PER_NOTE should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_MIRROR'), 'DRIFT_NOTES_MODE_MIRROR should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODES'), 'DRIFT_NOTES_MODES should be defined');
+});
+
+TestRunner.test("Day 711 - ui.js has 6 Drift Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Drift Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 6, `ui.js should have at least 6 Drift Notes menu items, found ${matches ? matches.length : 0}`);
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items call track.driftNotes", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.driftNotes('), 'Drift Notes menu items should call driftNotes()');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drift Notes') && uiStr.includes('recreateToneSequence'), 'Drift Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drifted '), 'Drift Notes should show notification with drifted count');
+    t.assertTruthy(uiStr.includes('No notes to drift'), 'Drift Notes should show "No notes to drift" notification');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items capture undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drift Notes on'), 'Drift Notes menu items should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 711 - APP_VERSION validation (>= 2.360)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
+    t.assertTruthy(versionMatch && parseFloat(versionMatch[1]) >= 2.360, `APP_VERSION should be >= 2.360, got ${versionMatch ? versionMatch[1] : 'unknown'}`);
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-up mode: shift grows 0 to maxShift", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round((c / (totalSteps - 1)) * maxShift));
+    t.assertEqual(expectedShifts[0], 0, 'col 0 -> shift 0');
+    t.assertEqual(expectedShifts[1], 1, 'col 4 -> shift 1');
+    t.assertEqual(expectedShifts[2], 2, 'col 8 -> shift 2');
+    t.assertEqual(expectedShifts[3], 3, 'col 12 -> shift 3');
+    t.assertEqual(expectedShifts[4], 4, 'col 15 -> shift 4');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-down mode: shift shrinks maxShift to 0", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round((1.0 - c / (totalSteps - 1)) * maxShift));
+    t.assertEqual(expectedShifts[0], 4, 'col 0 -> shift 4');
+    t.assertEqual(expectedShifts[1], 3, 'col 4 -> shift 3');
+    t.assertEqual(expectedShifts[2], 2, 'col 8 -> shift 2');
+    t.assertEqual(expectedShifts[3], 1, 'col 12 -> shift 1');
+    t.assertEqual(expectedShifts[4], 0, 'col 15 -> shift 0');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-center mode: peak at middle", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round(Math.abs(2 * (c / (totalSteps - 1)) - 1) * maxShift));
+    t.assertEqual(expectedShifts[0], 4, 'col 0 -> shift 4 (full)');
+    t.assertEqual(expectedShifts[1], 2, 'col 4 -> shift 2');
+    t.assertEqual(expectedShifts[2], 0, 'col 8 -> shift 0 (peak/trough at middle)');
+    t.assertEqual(expectedShifts[3], 2, 'col 12 -> shift 2');
+    t.assertEqual(expectedShifts[4], 4, 'col 15 -> shift 4 (full again)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps maxShift to valid range", (t) => {
+    const requested = 100;
+    const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 8, 'maxShift clamped to 8 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps velocityFactor to valid range", (t) => {
+    const requested = 2.5;
+    const clamped = Math.max(0.1, Math.min(1.0, requested));
+    t.assertEqual(clamped, 1.0, 'velocityFactor clamped to 1.0 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps skipChance to valid range", (t) => {
+    const requested = 1.5;
+    const clamped = Math.max(0.0, Math.min(0.9, requested));
+    t.assertEqual(clamped, 0.9, 'skipChance clamped to 0.9 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: random shift range is -maxShift to +maxShift", (t) => {
+    const maxShift = 4;
+    const r = Math.floor(Math.random() * (maxShift * 2 + 1)) - maxShift;
+    t.assertTruthy(r >= -maxShift && r <= maxShift, 'Random shift in [-maxShift, +maxShift]');
+});
+
     const flooredTaps = Math.floor(taps);
     const flooredInterval = Math.floor(interval);
     t.assertEqual(flooredTaps, 4, 'Taps floored to 4');

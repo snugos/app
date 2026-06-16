@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.359.0';
+export const APP_VERSION = '2.360.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -236,6 +236,43 @@ export const TRILL_NOTES_DIRECTIONS = [
     TRILL_NOTES_DIRECTION_UP,
     TRILL_NOTES_DIRECTION_DOWN,
     TRILL_NOTES_DIRECTION_BOTH
+];
+
+// Day 711: Drift Notes Constants - progressively shift notes over the sequence
+// Creates a "drifting" effect where notes shift by progressively larger or smaller
+// amounts as they move through the bar. Complements bounceNotes (random shift)
+// and shuffleNotes (random window shift) with a deterministic, evolving pattern.
+//
+// driftMode controls how the shift evolves across the bar:
+//   'linear-up': shift grows linearly from 0 to maxShift (notes spread right as bar progresses)
+//   'linear-down': shift starts at maxShift and shrinks to 0 (notes compress right as bar progresses)
+//   'linear-center': shift = 0 at start and end, peak at middle (drift out and back)
+//   'random-per-note': each note gets a per-note random shift within maxShift
+//   'mirror': each note's shift is the mirror of its position's "linear-up" value
+//
+// skipChance: probability of leaving a note in place (0.0 = all notes drift)
+// velocityFactor: scales the velocity of drifted notes (1.0 = no change)
+// Complements strumNotes, staggerNotes, crescentNotes, trillNotes, etc.
+export const DRIFT_NOTES_MIN_MAX_SHIFT = 1; // Minimum drift distance in steps
+export const DRIFT_NOTES_MAX_MAX_SHIFT = 8; // Maximum drift distance in steps (1/2 note)
+export const DRIFT_NOTES_DEFAULT_MAX_SHIFT = 4; // Default 4 steps (1/4 note) max drift
+export const DRIFT_NOTES_MIN_SKIP_CHANCE = 0.0; // Minimum probability of skipping a note
+export const DRIFT_NOTES_MAX_SKIP_CHANCE = 0.9; // Maximum probability of skipping a note
+export const DRIFT_NOTES_DEFAULT_SKIP_CHANCE = 0.0; // Default: all notes drift
+export const DRIFT_NOTES_MIN_VELOCITY_FACTOR = 0.1; // Minimum velocity factor (preserves 10% velocity at floor)
+export const DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no change)
+export const DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95; // Default slight attenuation per drift step
+export const DRIFT_NOTES_MODE_LINEAR_UP = 'linear-up'; // Shift grows from 0 to maxShift
+export const DRIFT_NOTES_MODE_LINEAR_DOWN = 'linear-down'; // Shift shrinks from maxShift to 0
+export const DRIFT_NOTES_MODE_LINEAR_CENTER = 'linear-center'; // Shift peaks at the middle of the bar
+export const DRIFT_NOTES_MODE_RANDOM_PER_NOTE = 'random-per-note'; // Each note gets a random shift in [-maxShift, +maxShift]
+export const DRIFT_NOTES_MODE_MIRROR = 'mirror'; // Mirror of linear-up: notes start spread, then collapse back to origin
+export const DRIFT_NOTES_MODES = [
+    DRIFT_NOTES_MODE_LINEAR_UP,
+    DRIFT_NOTES_MODE_LINEAR_DOWN,
+    DRIFT_NOTES_MODE_LINEAR_CENTER,
+    DRIFT_NOTES_MODE_RANDOM_PER_NOTE,
+    DRIFT_NOTES_MODE_MIRROR
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

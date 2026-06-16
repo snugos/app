@@ -5577,4 +5577,118 @@ export class Track {
 
         return trilledCount;
     }
+
+    // Drift Notes - progressively shift notes over the sequence to create drifting patterns
+    // Complements bounceNotes (random per-note shift) and shuffleNotes (random per-note window)
+    // with a deterministic, evolving shift that grows/shrinks across the bar.
+    // maxShift: maximum drift distance in steps (clamped to DRIFT_NOTES_MIN/MAX_MAX_SHIFT)
+    // skipChance: probability of leaving a note in place (0.0 = all notes drift)
+    // velocityFactor: scales the velocity of drifted notes (1.0 = no change)
+    // driftMode: 'linear-up' | 'linear-down' | 'linear-center' | 'random-per-note' | 'mirror'
+    //   linear-up: shift grows linearly from 0 to maxShift as col progresses through the bar
+    //   linear-down: shift starts at maxShift and shrinks to 0 as col progresses
+    //   linear-center: shift is 0 at start/end and peaks at the middle (drifts out and back)
+    //   random-per-note: each note gets an independent random shift in [-maxShift, +maxShift]
+    //   mirror: shift decreases linearly from maxShift to 0 (opposite direction of linear-up)
+    // skipOccupied: skip target column if already has a note (true = don't overwrite)
+    driftNotes(maxShift = Constants.DRIFT_NOTES_DEFAULT_MAX_SHIFT, skipChance = Constants.DRIFT_NOTES_DEFAULT_SKIP_CHANCE, velocityFactor = Constants.DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR, driftMode = Constants.DRIFT_NOTES_MODE_LINEAR_UP, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} driftNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedMaxShift = Math.max(Constants.DRIFT_NOTES_MIN_MAX_SHIFT, Math.min(Constants.DRIFT_NOTES_MAX_MAX_SHIFT, Math.floor(maxShift)));
+        const clampedSkip = Math.max(Constants.DRIFT_NOTES_MIN_SKIP_CHANCE, Math.min(Constants.DRIFT_NOTES_MAX_SKIP_CHANCE, skipChance));
+        const clampedVel = Math.max(Constants.DRIFT_NOTES_MIN_VELOCITY_FACTOR, Math.min(Constants.DRIFT_NOTES_MAX_VELOCITY_FACTOR, velocityFactor));
+        const useMode = Constants.DRIFT_NOTES_MODES.includes(driftMode) ? driftMode : Constants.DRIFT_NOTES_MODE_LINEAR_UP;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Drift Notes (${useMode}, max ±${clampedMaxShift}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let driftedCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Helper: compute the drift shift for a given column based on the selected mode
+        const computeShift = (col) => {
+            if (totalSteps <= 1) return 0;
+            const progress = col / (totalSteps - 1);
+            switch (useMode) {
+                case Constants.DRIFT_NOTES_MODE_LINEAR_UP:
+                    return Math.round(progress * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_LINEAR_DOWN:
+                    return Math.round((1.0 - progress) * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_LINEAR_CENTER:
+                    // Peak at middle (progress = 0.5)
+                    return Math.round(Math.abs(2 * progress - 1) * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_RANDOM_PER_NOTE: {
+                    // Random shift in [-clampedMaxShift, +clampedMaxShift]
+                    const r = Math.floor(Math.random() * (clampedMaxShift * 2 + 1)) - clampedMaxShift;
+                    return r;
+                }
+                case Constants.DRIFT_NOTES_MODE_MIRROR:
+                    // Shift decreases linearly from maxShift to 0
+                    return Math.round((1.0 - progress) * clampedMaxShift);
+                default:
+                    return Math.round(progress * clampedMaxShift);
+            }
+        };
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                // Roll skip chance
+                if (Math.random() < clampedSkip) continue;
+
+                const shift = computeShift(col);
+                if (shift === 0) continue; // No movement for this note
+                const targetCol = col + shift;
+
+                // Skip if target is out of bounds or already occupied
+                if (targetCol < 0 || targetCol >= totalSteps) continue;
+                if (skipOccupied && row[targetCol] && row[targetCol].active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+                const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
+                newNotes.push({
+                    rowIndex,
+                    col: targetCol,
+                    velocity: Math.round(newVel * 100) / 100,
+                    probability: stepData.probability,
+                    origCol: col
+                });
+            }
+        }
+
+        // Apply the new drifted notes (and clear original positions)
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity,
+                    probability: note.probability
+                };
+                // Clear the source cell (only if it doesn't conflict with another drifted note)
+                if (activeSeq.data[note.rowIndex][note.origCol] === row[note.origCol]) {
+                    activeSeq.data[note.rowIndex][note.origCol] = null;
+                }
+                driftedCount++;
+            }
+        }
+
+        return driftedCount;
+    }
 }
