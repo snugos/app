@@ -5488,4 +5488,93 @@ export class Track {
 
         return crescentCount;
     }
+
+    // Trill Notes - rapidly alternate source note with a neighbor (above or below) for `taps` cycles
+    // Creates a classic trill ornament: each source note gets neighbor notes alternating at +1, +2, +3, ...
+    // taps: number of trill notes to add per source (2-16)
+    // interval: semitone distance from source to the trill neighbor (1-12, default 2 = whole step)
+    // velocityFactor: velocity multiplier applied to trill notes (0.5-1.0, default 0.95)
+    // direction: 'up' (lower row = higher pitch = up in pitch), 'down' (higher row = lower pitch = down in pitch), 'both' (alternates above and below)
+    // skipOccupied: skip target column if already has a note (true = don't overwrite)
+    trillNotes(taps = Constants.TRILL_NOTES_DEFAULT_TAPS, interval = Constants.TRILL_NOTES_DEFAULT_INTERVAL, velocityFactor = Constants.TRILL_NOTES_DEFAULT_VELOCITY_FACTOR, direction = Constants.TRILL_NOTES_DIRECTION_UP, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        if (this.type !== 'Synth' && this.type !== 'InstrumentSampler') {
+            // Trill is a pitch-based ornament; only meaningful for pitched tracks
+            console.warn(`[Track ${this.id} trillNotes] Trill only works on Synth/InstrumentSampler tracks (type=${this.type}).`);
+            return 0;
+        }
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} trillNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedTaps = Math.max(Constants.TRILL_NOTES_MIN_TAPS, Math.min(Constants.TRILL_NOTES_MAX_TAPS, Math.floor(taps)));
+        const clampedInterval = Math.max(Constants.TRILL_NOTES_MIN_INTERVAL, Math.min(Constants.TRILL_NOTES_MAX_INTERVAL, Math.floor(interval)));
+        const clampedVel = Math.max(Constants.TRILL_NOTES_MIN_VELOCITY_FACTOR, Math.min(Constants.TRILL_NOTES_MAX_VELOCITY_FACTOR, velocityFactor));
+        const useDirection = Constants.TRILL_NOTES_DIRECTIONS.includes(direction) ? direction : Constants.TRILL_NOTES_DIRECTION_UP;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Trill Notes (${useDirection}, ${clampedTaps} taps, ±${clampedInterval} semi) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let trilledCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) continue;
+            const row = activeSeq.data[rowIndex];
+
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (!cell || !cell.active) continue;
+                const originalVel = cell.velocity || defaultVel;
+                const trillVel = Math.max(0.05, Math.min(1.0, originalVel * clampedVel));
+
+                for (let t = 1; t <= clampedTaps; t++) {
+                    let targetRowIndex = rowIndex;
+                    if (useDirection === Constants.TRILL_NOTES_DIRECTION_UP) {
+                        // up: source, neighbor-up, source, neighbor-up, ...
+                        targetRowIndex = (t % 2 === 1) ? rowIndex : rowIndex - clampedInterval;
+                    } else if (useDirection === Constants.TRILL_NOTES_DIRECTION_DOWN) {
+                        // down: source, neighbor-down, source, neighbor-down, ...
+                        targetRowIndex = (t % 2 === 1) ? rowIndex : rowIndex + clampedInterval;
+                    } else if (useDirection === Constants.TRILL_NOTES_DIRECTION_BOTH) {
+                        // both: neighbor-up, neighbor-down, neighbor-up, neighbor-down, ...
+                        targetRowIndex = (t % 2 === 1) ? rowIndex - clampedInterval : rowIndex + clampedInterval;
+                    } else {
+                        // Unknown direction - fall back to up behavior
+                        targetRowIndex = (t % 2 === 1) ? rowIndex : rowIndex - clampedInterval;
+                    }
+
+                    const newCol = col + t;
+                    if (newCol >= totalSteps) break;
+                    if (targetRowIndex < 0 || targetRowIndex >= numRows) continue;
+                    if (skipOccupied && activeSeq.data[targetRowIndex]?.[newCol] && activeSeq.data[targetRowIndex][newCol].active) {
+                        continue;
+                    }
+                    newNotes.push({ rowIndex: targetRowIndex, col: newCol, velocity: Math.round(trillVel * 100) / 100 });
+                }
+            }
+        }
+
+        // Apply the new trill notes
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity
+                };
+                trilledCount++;
+            }
+        }
+
+        return trilledCount;
+    }
 }

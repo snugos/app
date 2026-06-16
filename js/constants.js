@@ -216,6 +216,28 @@ export const CRESCENT_NOTES_SHAPES = [
     CRESCENT_NOTES_SHAPE_DESCEND
 ];
 
+// Day 710: Trill Notes Constants - rapidly alternate two notes by re-pitching them up/down
+// for `taps` cycles, each tap one semitone above (ascending) or below (descending) the source,
+// creating a classic trill ornament effect at the sequencer (note) level.
+// Complements strumNotes, staggerNotes, crescentNotes, etc. with a pitch-based ornament.
+export const TRILL_NOTES_MIN_TAPS = 2; // Minimum trill taps (2 = single up+down oscillation)
+export const TRILL_NOTES_MAX_TAPS = 16; // Maximum trill taps (16 = 8 full up-down oscillations)
+export const TRILL_NOTES_DEFAULT_TAPS = 6; // Default 6 taps (~3 cycles of up/down)
+export const TRILL_NOTES_MIN_INTERVAL = 1; // Minimum semitone interval from source (unison = no trill)
+export const TRILL_NOTES_MAX_INTERVAL = 12; // Maximum semitone interval (1 octave)
+export const TRILL_NOTES_DEFAULT_INTERVAL = 2; // Default 2 semitones (whole step) trill
+export const TRILL_NOTES_MIN_VELOCITY_FACTOR = 0.5; // Floor for velocity scaling
+export const TRILL_NOTES_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no scaling)
+export const TRILL_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95; // Default 95% velocity preservation
+export const TRILL_NOTES_DIRECTION_UP = 'up'; // Trill alternates: source, +N, source, +N...
+export const TRILL_NOTES_DIRECTION_DOWN = 'down'; // Trill alternates: source, -N, source, -N...
+export const TRILL_NOTES_DIRECTION_BOTH = 'both'; // Trill alternates: +N, -N, +N, -N (no source repeats)
+export const TRILL_NOTES_DIRECTIONS = [
+    TRILL_NOTES_DIRECTION_UP,
+    TRILL_NOTES_DIRECTION_DOWN,
+    TRILL_NOTES_DIRECTION_BOTH
+];
+
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
 
 // Transport State Constants
