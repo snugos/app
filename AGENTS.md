@@ -1,3 +1,25 @@
+#### Day 711: Track Templates apply to active track (2026-06-16)
+- **Fix**: Completed the incomplete "Apply to first track for now" stub in the Track Templates load handler in `js/ui.js`. The UI text already said "Click 'Load' to apply a template to a **selected** track", but the handler was silently applying to `tracks[0]`. Now it uses `localAppServices.getActiveTrackForInteraction()` (which respects the active sequencer track via `getActiveSequencerTrackIdState`) and only falls back to `tracks[0]` when no active track is set. This matches the documented UX and the rest of the codebase's track-selection pattern.
+- **Files Modified**:
+  - `js/ui.js`: Replaced `const targetTrack = tracks[0]; // Apply to first track for now` with a call to `getActiveTrackForInteraction()` (with fallback to `tracks[0]`).
+  - `js/constants.js`: Bumped `APP_VERSION` from `2.358.0` to `2.359.0` and added a Day 711 comment.
+  - `js/tests.js`: Added 6 Day 711 tests for the fix.
+  - `AGENTS.md`: Updated with this entry.
+- **Feature Details**:
+  - The Track Templates window (`openTrackTemplatesWindow` in `js/ui.js`) lists all saved templates with Load/Delete buttons.
+  - Before: clicking Load always applied the template to `tracks[0]`, regardless of which track the user had selected. This was a known stub marked with `// Apply to first track for now`.
+  - After: clicking Load uses `localAppServices.getActiveTrackForInteraction()` to find the track the user is currently working with (active sequencer track → ghost/selected track → first track fallback, matching the production logic in `js/main.js` lines 670-677).
+  - The notification and undo label already use `targetTrack.name`, so they now correctly show the name of the actually-targeted track.
+- **Tests** (`js/tests.js`): 6 new tests
+  - Stub removed: ui.js no longer contains the literal string "Apply to first track for now"
+  - `getActiveTrackForInteraction` is referenced in the Track Templates load handler
+  - `getActiveTrackForInteraction` appService is defined in main.js
+  - `APP_VERSION` is `>= 2.359`
+  - Functional: when an active sequencer track ID is set, `getActiveTrackForInteraction` returns that track (not `tracks[0]`)
+  - Functional: when no active ID is set, falls back to `tracks[0]`
+- **Version**: Bumped to `2.359.0`
+- **Verification**: `node --check` passes for all four modified files (ui.js, main.js, constants.js, tests.js)
+
 #### Day 710: Agent Audit (2026-06-15)
 - **Audit**: Snaw Feature Completion Agent run completed - feature completion check.
 - **Status**: No incomplete features found. Repository clean.

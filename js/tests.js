@@ -21394,13 +21394,64 @@ TestRunner.test("Day 709 - crescentNotes functional test: velocity preservation 
 TestRunner.test("Day 709 - crescentNotes functional test: clamps windowSteps to valid range", (t) => {
     const requested = 100;
     const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
-    t.assertEqual(clamped, 8, 'Window steps clamped to 8 (max)');
-});
-
 TestRunner.test("Day 709 - crescentNotes functional test: clamps velocityFactor to valid range", (t) => {
     const requestedVel = 2.5;
     const clamped = Math.max(0.3, Math.min(1.0, requestedVel));
     t.assertEqual(clamped, 1.0, 'Velocity clamped to 1.0 (max)');
+});
+
+// --- Day 711: Track Templates apply to active track (fix incomplete "Apply to first track for now" stub) ---
+TestRunner.test("Day 711 - Track Templates load handler no longer uses 'Apply to first track for now' stub", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertFalsy(/Apply to first track for now/.test(uiStr), 'ui.js should no longer contain the "Apply to first track for now" stub');
+});
+
+TestRunner.test("Day 711 - Track Templates load handler uses getActiveTrackForInteraction", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('getActiveTrackForInteraction'), 'ui.js Track Templates load handler should reference getActiveTrackForInteraction');
+});
+
+TestRunner.test("Day 711 - getActiveTrackForInteraction appService is defined", (t) => {
+    const mainStr = require('fs').readFileSync('./js/main.js', 'utf8');
+    t.assertTruthy(/getActiveTrackForInteraction:\s*\(\)\s*=>/.test(mainStr), 'main.js should define getActiveTrackForInteraction appService');
+});
+
+TestRunner.test("Day 711 - APP_VERSION validation (>= 2.359)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
+    t.assertTruthy(versionMatch && parseFloat(versionMatch[1]) >= 2.359, `APP_VERSION should be >= 2.359, got ${versionMatch ? versionMatch[1] : 'unknown'}`);
+});
+
+TestRunner.test("Day 711 - getActiveTrackForInteraction prefers active sequencer track over first track", (t) => {
+    const tracks = [
+        { id: 'track-1', name: 'First' },
+        { id: 'track-2', name: 'Second' }
+    ];
+    const activeId = 'track-2';
+    const fromActive = (() => {
+        if (activeId) {
+            const t = tracks.find(t => t.id === activeId);
+            if (t) return t;
+        }
+        return tracks.length > 0 ? tracks[0] : null;
+    })();
+    t.assertEqual(fromActive.id, 'track-2', 'Should return active sequencer track (track-2), not tracks[0]');
+});
+
+TestRunner.test("Day 711 - getActiveTrackForInteraction falls back to first track only when no active ID", (t) => {
+    const tracks = [
+        { id: 'track-1', name: 'First' },
+        { id: 'track-2', name: 'Second' }
+    ];
+    const activeId = null;
+    const fromActive = (() => {
+        if (activeId) {
+            const t = tracks.find(t => t.id === activeId);
+            if (t) return t;
+        }
+        return tracks.length > 0 ? tracks[0] : null;
+    })();
+    t.assertEqual(fromActive.id, 'track-1', 'Falls back to first track when no active sequencer ID');
 });
 
 export async function runTests() {

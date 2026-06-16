@@ -4212,7 +4212,10 @@ export function openTrackTemplatesWindow(savedState = null) {
                     loadBtn.addEventListener('click', () => {
                         const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
                         if (tracks.length === 0) { showNotification('No tracks available to apply template', 2000); return; }
-                        const targetTrack = tracks[0]; // Apply to first track for now
+                        // Prefer the currently active sequencer track (what the user is interacting with),
+                        // then the ghost/selected track, and only fall back to the first track if neither is set.
+                        const targetTrack = (localAppServices.getActiveTrackForInteraction && localAppServices.getActiveTrackForInteraction())
+                            || tracks[0];
                         const template = localAppServices.getTrackTemplateById ? localAppServices.getTrackTemplateById(templateId) : null;
                         if (!template) { showNotification('Template not found', 2000); return; }
                         if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Apply Template "${template.name}" to ${targetTrack.name}`);
