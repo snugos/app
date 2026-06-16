@@ -1,3 +1,21 @@
+#### Day 710: Trill Notes Feature (2026-06-16)
+- **Feature**: Added `trillNotes(taps, interval, velocityFactor, direction, skipOccupied)` method to Track class and 6 "Trill Notes" menu items to the sequencer context menu. Adds a trill ornament to each note by alternating between the source pitch and a neighboring pitch (above, below, or both) for `taps` rapid subdivisions, creating classic trills at the sequencer (note) level. Complements `strumNotes`, `staggerNotes`, `crescentNotes`, etc. with a pitch-based ornament.
+- **Files Modified**:
+  - `js/Track.js`: Added `trillNotes` method after `crescentNotes` (line ~5491)
+  - `js/constants.js`: Added 13 TRILL_NOTES_* constants + bumped APP_VERSION to 2.359.0
+  - `js/ui.js`: Added 6 Trill Notes menu items in the sequencer context menu after Crescent Notes (Subtle), with separator after
+  - `js/tests.js`: Added Day 710 test block with 25 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **trillNotes** (`js/Track.js`): For each active note, adds `taps` trill notes that alternate between source pitch and a neighbor pitch (offset by `interval` semitones). Trill notes are placed in subsequent columns (`col + t` for tap `t`).
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Returns 0 with warn message for non-pitched track types (DrumSampler, Sampler) — trill is a pitch-based ornament
+  - Functional tests: velocity factor application (0.95 * 1.0 = 0.95)
+  - Functional tests: clamps for taps/interval/velocityFactor
+  - Functional tests: sequence boundary (newCol >= totalSteps) and row range guards
+- **Version**: Bumped to 2.359.0
+- **Test Count**: Increased from 2416 to 2441 (25 new Day 710 tests)
+
 #### Day 710: Agent Audit (2026-06-16)
 - **Audit**: Snaw Feature Completion Agent run completed successfully.
 - **Status**: No incomplete features found. Repository clean.
