@@ -23466,6 +23466,227 @@ TestRunner.test("Day 717 - SPLATTER_NOTES_MODES count matches SHAPES array lengt
     t.assertEqual(items.length, 5, 'SHAPES has 5 entries');
 });
 
+
+// Day 718 - Fan Notes feature tests
+TestRunner.test("Day 718 - fanNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.fanNotes, 'function', 'fanNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 718 - fanNotes accepts 6 parameters with defaults", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.FAN_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/rowSpan\s*=\s*Constants\.FAN_NOTES_DEFAULT_ROW_SPAN/.test(src), 'has rowSpan default');
+    t.assertTruthy(/strumDelay\s*=\s*Constants\.FAN_NOTES_DEFAULT_STAGGER/.test(src), 'has strumDelay default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.FAN_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/direction\s*=\s*Constants\.FAN_NOTES_DIRECTION_DOWN/.test(src), 'has direction default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 718 - fanNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'/.test(src), 'checks for Audio type');
+    t.assertTruthy(/return 0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 718 - fanNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/getActiveSequence/.test(src), 'uses getActiveSequence');
+});
+
+TestRunner.test("Day 718 - fanNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0, 'has undo capture call');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo captured before mutation');
+});
+
+TestRunner.test("Day 718 - fanNotes has descriptive 'Fan Notes' undo label", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/Fan Notes/.test(src), 'has Fan Notes in label');
+    t.assertTruthy(/useDirection/.test(src), 'includes direction in label');
+});
+
+TestRunner.test("Day 718 - fanNotes clamps length to FAN_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/FAN_NOTES_MIN_LENGTH/.test(src), 'uses MIN_LENGTH constant');
+    t.assertTruthy(/FAN_NOTES_MAX_LENGTH/.test(src), 'uses MAX_LENGTH constant');
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor on length');
+});
+
+TestRunner.test("Day 718 - fanNotes clamps rowSpan to FAN_NOTES_MIN/MAX_ROW_SPAN", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/FAN_NOTES_MIN_ROW_SPAN/.test(src), 'uses MIN_ROW_SPAN constant');
+    t.assertTruthy(/FAN_NOTES_MAX_ROW_SPAN/.test(src), 'uses MAX_ROW_SPAN constant');
+    t.assertTruthy(/Math\.floor\(rowSpan\)/.test(src), 'uses Math.floor on rowSpan');
+});
+
+TestRunner.test("Day 718 - fanNotes clamps strumDelay to FAN_NOTES_MIN/MAX_STAGGER", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/FAN_NOTES_MIN_STAGGER/.test(src), 'uses MIN_STAGGER constant');
+    t.assertTruthy(/FAN_NOTES_MAX_STAGGER/.test(src), 'uses MAX_STAGGER constant');
+    t.assertTruthy(/Math\.floor\(strumDelay\)/.test(src), 'uses Math.floor on strumDelay');
+});
+
+TestRunner.test("Day 718 - fanNotes clamps velocityDecay to FAN_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/FAN_NOTES_MIN_VELOCITY_DECAY/.test(src), 'uses MIN_VELOCITY_DECAY constant');
+    t.assertTruthy(/FAN_NOTES_MAX_VELOCITY_DECAY/.test(src), 'uses MAX_VELOCITY_DECAY constant');
+});
+
+TestRunner.test("Day 718 - fanNotes validates direction with FAN_NOTES_DIRECTIONS (uses DOWN fallback)", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/FAN_NOTES_DIRECTIONS\.includes/.test(src), 'validates direction via DIRECTIONS array');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_DOWN/.test(src), 'uses DOWN as fallback');
+});
+
+TestRunner.test("Day 718 - fanNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay/.test(src), 'uses Math.pow for decay');
+});
+
+TestRunner.test("Day 718 - fanNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'uses skipOccupied');
+    t.assertTruthy(/activeSeq\.data\[targetRow\]\[targetCol\]\.active/.test(src), 'checks if target is active');
+});
+
+TestRunner.test("Day 718 - fanNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 718 - fanNotes returns count of fan notes (fanCount)", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/return fanCount/.test(src), 'returns fanCount');
+    t.assertTruthy(/fanCount\s*\+\+/.test(src), 'increments fanCount on each placement');
+});
+
+TestRunner.test("Day 718 - all 18 FAN_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(/FAN_NOTES_MIN_LENGTH\s*=/.test(src), 'has MIN_LENGTH');
+    t.assertTruthy(/FAN_NOTES_MAX_LENGTH\s*=/.test(src), 'has MAX_LENGTH');
+    t.assertTruthy(/FAN_NOTES_DEFAULT_LENGTH\s*=/.test(src), 'has DEFAULT_LENGTH');
+    t.assertTruthy(/FAN_NOTES_MIN_ROW_SPAN\s*=/.test(src), 'has MIN_ROW_SPAN');
+    t.assertTruthy(/FAN_NOTES_MAX_ROW_SPAN\s*=/.test(src), 'has MAX_ROW_SPAN');
+    t.assertTruthy(/FAN_NOTES_DEFAULT_ROW_SPAN\s*=/.test(src), 'has DEFAULT_ROW_SPAN');
+    t.assertTruthy(/FAN_NOTES_MIN_STAGGER\s*=/.test(src), 'has MIN_STAGGER');
+    t.assertTruthy(/FAN_NOTES_MAX_STAGGER\s*=/.test(src), 'has MAX_STAGGER');
+    t.assertTruthy(/FAN_NOTES_DEFAULT_STAGGER\s*=/.test(src), 'has DEFAULT_STAGGER');
+    t.assertTruthy(/FAN_NOTES_MIN_VELOCITY_DECAY\s*=/.test(src), 'has MIN_VELOCITY_DECAY');
+    t.assertTruthy(/FAN_NOTES_MAX_VELOCITY_DECAY\s*=/.test(src), 'has MAX_VELOCITY_DECAY');
+    t.assertTruthy(/FAN_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(src), 'has DEFAULT_VELOCITY_DECAY');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_DOWN\s*=/.test(src), 'has DIRECTION_DOWN');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_UP\s*=/.test(src), 'has DIRECTION_UP');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_INWARD\s*=/.test(src), 'has DIRECTION_INWARD');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_OUTWARD\s*=/.test(src), 'has DIRECTION_OUTWARD');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_RANDOM\s*=/.test(src), 'has DIRECTION_RANDOM');
+    t.assertTruthy(/FAN_NOTES_DIRECTIONS\s*=\s*\[/.test(src), 'has DIRECTIONS array');
+});
+
+TestRunner.test("Day 718 - FAN_NOTES_DIRECTIONS includes all 5 directions", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/FAN_NOTES_DIRECTIONS\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(m, 'has DIRECTIONS array');
+    const items = m[1].split(',').map(s => s.trim()).filter(Boolean);
+    t.assertEqual(items.length, 5, 'DIRECTIONS has 5 entries');
+});
+
+TestRunner.test("Day 718 - ui.js has 5 Fan Notes menu items", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const count = (src.match(/Fan Notes \(/g) || []).length;
+    t.assertTruthy(count >= 5, 'has 5+ Fan Notes menu items (got ' + count + ')');
+});
+
+TestRunner.test("Day 718 - Fan Notes menu items call track.fanNotes", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const calls = (src.match(/currentTrackForMenu\.fanNotes\(/g) || []).length;
+    t.assertTruthy(calls >= 5, 'has 5+ calls to track.fanNotes (got ' + calls + ')');
+});
+
+TestRunner.test("Day 718 - Fan Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/Fanned \$\{result\} note\(s\)/.test(src), 'uses "Fanned N note(s)" notification');
+});
+
+TestRunner.test("Day 718 - Fan Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Fan Notes on/.test(src), 'uses descriptive "Fan Notes" undo label');
+});
+
+TestRunner.test("Day 718 - APP_VERSION validation (>= 2.367 for Day 718)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*['"]([\d.]+)['"]/);
+    t.assertTruthy(m, 'has APP_VERSION');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] > 2 || (v[0] === 2 && v[1] >= 367), 'APP_VERSION >= 2.367 (got ' + m[1] + ')');
+});
+
+TestRunner.test("Day 718 - fanNotes functional test: targetRow = rowIndex + rowOffset", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/targetRow\s*=\s*rowIndex\s*\+\s*rowOffset/.test(src), 'targetRow = rowIndex + rowOffset');
+});
+
+TestRunner.test("Day 718 - fanNotes functional test: colOffset = s * clampedStrumDelay", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/colOffset\s*=\s*s\s*\*\s*clampedStrumDelay/.test(src), 'colOffset = s * clampedStrumDelay');
+    t.assertTruthy(/targetCol\s*=\s*col\s*\+\s*colOffset/.test(src), 'targetCol = col + colOffset');
+});
+
+TestRunner.test("Day 718 - fanNotes functional test: velocity decay (vel * decay^s)", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/origVel\s*\*\s*Math\.pow\(clampedDecay,\s*s\)/.test(src), 'uses vel * pow(decay, s)');
+});
+
+TestRunner.test("Day 718 - fanNotes functional test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
+TestRunner.test("Day 718 - fanNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/newNotes\.push/.test(src), 'uses newNotes.push to collect');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 718 - fanNotes structural test: respects Math.floor for length/rowSpan/strumDelay", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    const floorMatches = (src.match(/Math\.floor\((length|rowSpan|strumDelay)\)/g) || []).length;
+    t.assertTruthy(floorMatches >= 3, 'uses Math.floor on all 3 numeric params (got ' + floorMatches + ')');
+});
+
+TestRunner.test("Day 718 - fanNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source note');
+});
+
+TestRunner.test("Day 718 - fanNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'skips empty rows');
+});
+
+TestRunner.test("Day 718 - fanNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 718 - fanNotes structural test: supports 5 distinct directions", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/FAN_NOTES_DIRECTION_DOWN/.test(src), 'handles DOWN');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_UP/.test(src), 'handles UP');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_INWARD/.test(src), 'handles INWARD');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_OUTWARD/.test(src), 'handles OUTWARD');
+    t.assertTruthy(/FAN_NOTES_DIRECTION_RANDOM/.test(src), 'handles RANDOM');
+});
+
+TestRunner.test("Day 718 - fanNotes functional test: 'random' direction uses Fisher-Yates shuffle", (t) => {
+    const src = Track.prototype.fanNotes.toString();
+    t.assertTruthy(/for\s*\(\s*let\s+i\s*=\s*ordered\.length\s*-\s*1;\s*i\s*>\s*0;\s*i--\)/.test(src), 'uses Fisher-Yates shuffle for random direction');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
+

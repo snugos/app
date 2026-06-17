@@ -6328,4 +6328,128 @@ export class Track {
 
         return splatterCount;
     }
+
+    // Spawns a chord strum pattern from each active note. Each strum places `length` notes
+    // spread across `rowSpan` rows (a chord) with `strumDelay` columns of forward-in-time
+    // stagger between successive strum notes (the strum speed). Direction controls the
+    // strum order: 'down' (top→bottom), 'up' (bottom→top), 'inward' (outside→center),
+    // 'outward' (center→outside), 'random' (shuffled). Velocity decays slightly per strum
+    // step so the last notes sound softer. Complements gliderNotes (directional trail),
+    // rippleNotes (concentric rings), radialNotes (discrete spokes), spiralNotes (angular sweep),
+    // cascadeNotes (linear 2D), driftNotes (column-only), crescentNotes (grouped arc), and
+    // splatterNotes (random scatter) with plucked-string chord strum patterns. Distinct
+    // from the existing simple strumNotes(strumAmount) method which only time-shifts
+    // simultaneous notes — fanNotes *generates* a multi-note chord strum from each
+    // single source note.
+    // length: number of notes in the chord strum (clamped 2..8)
+    // rowSpan: max rows of vertical spread (clamped 1..8) — chord size
+    // strumDelay: columns of stagger between strum notes (clamped 0..4) — 0 = simultaneous chord
+    // velocityDecay: per-step velocity multiplier (0.5..1.0) — 1.0 = no decay
+    // direction: 'down' | 'up' | 'inward' | 'outward' | 'random'
+    // skipOccupied: skip strum note if target slot is already active
+    fanNotes(length = Constants.FAN_NOTES_DEFAULT_LENGTH, rowSpan = Constants.FAN_NOTES_DEFAULT_ROW_SPAN, strumDelay = Constants.FAN_NOTES_DEFAULT_STAGGER, velocityDecay = Constants.FAN_NOTES_DEFAULT_VELOCITY_DECAY, direction = Constants.FAN_NOTES_DIRECTION_DOWN, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} fanNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.FAN_NOTES_MIN_LENGTH, Math.min(Constants.FAN_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedRowSpan = Math.max(Constants.FAN_NOTES_MIN_ROW_SPAN, Math.min(Constants.FAN_NOTES_MAX_ROW_SPAN, Math.floor(rowSpan)));
+        const clampedStrumDelay = Math.max(Constants.FAN_NOTES_MIN_STAGGER, Math.min(Constants.FAN_NOTES_MAX_STAGGER, Math.floor(strumDelay)));
+        const clampedDecay = Math.max(Constants.FAN_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.FAN_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useDirection = Constants.FAN_NOTES_DIRECTIONS.includes(direction) ? direction : Constants.FAN_NOTES_DIRECTION_DOWN;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Fan Notes (${useDirection}, ${clampedLength}-note chord) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let fanCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        // Build the row offset array for the chord based on direction
+        // The chord is `clampedLength` notes spread across `clampedRowSpan` rows centered on the source
+        const buildChordRows = (rowIndex) => {
+            if (clampedLength === 1 || clampedRowSpan === 1) {
+                return [0];
+            }
+            // Generate clampedLength row offsets evenly spread in [-(rowSpan-1)/2, +(rowSpan-1)/2]
+            const half = (clampedRowSpan - 1) / 2;
+            const step = clampedRowSpan <= clampedLength ? 1 : (clampedRowSpan - 1) / (clampedLength - 1);
+            const offsets = [];
+            for (let i = 0; i < clampedLength; i++) {
+                const offset = Math.round(-half + i * step);
+                offsets.push(offset);
+            }
+            // Apply direction order to the offsets
+            let ordered = offsets.slice();
+            if (useDirection === Constants.FAN_NOTES_DIRECTION_UP) {
+                ordered = ordered.slice().reverse();
+            } else if (useDirection === Constants.FAN_NOTES_DIRECTION_INWARD) {
+                ordered = offsets.slice().sort((a, b) => Math.abs(b) - Math.abs(a));
+            } else if (useDirection === Constants.FAN_NOTES_DIRECTION_OUTWARD) {
+                ordered = offsets.slice().sort((a, b) => Math.abs(a) - Math.abs(b));
+            } else if (useDirection === Constants.FAN_NOTES_DIRECTION_RANDOM) {
+                for (let i = ordered.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+                }
+            }
+            return ordered;
+        };
+
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            const chordRows = buildChordRows(rowIndex);
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let s = 0; s < clampedLength; s++) {
+                    const rowOffset = chordRows[s];
+                    const colOffset = s * clampedStrumDelay;
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, s)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            fanCount++;
+        }
+
+        return fanCount;
+    }
 }

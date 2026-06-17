@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.366.0';
+export const APP_VERSION = '2.367.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -409,6 +409,32 @@ export const SPLATTER_NOTES_SHAPES = [
     SPLATTER_NOTES_SHAPE_SHELL,
     SPLATTER_NOTES_SHAPE_WEIGHTED_TOP,
     SPLATTER_NOTES_SHAPE_WEIGHTED_BOTTOM
+];
+
+// Strum Notes Constants
+export const FAN_NOTES_MIN_LENGTH = 2; // Minimum 2 notes in the chord strum (at least a 2-note chord)
+export const FAN_NOTES_MAX_LENGTH = 8; // Maximum 8 notes in the chord strum
+export const FAN_NOTES_DEFAULT_LENGTH = 4; // Default 4-note chord strum
+export const FAN_NOTES_MIN_ROW_SPAN = 1; // Minimum 1 row of vertical spread (tight cluster)
+export const FAN_NOTES_MAX_ROW_SPAN = 8; // Maximum 8 rows of vertical spread (wide chord)
+export const FAN_NOTES_DEFAULT_ROW_SPAN = 3; // Default 3 rows of vertical spread
+export const FAN_NOTES_MIN_STAGGER = 0; // Minimum 0 columns delay (simultaneous chord)
+export const FAN_NOTES_MAX_STAGGER = 4; // Maximum 4 columns delay between strum notes
+export const FAN_NOTES_DEFAULT_STAGGER = 1; // Default 1 column delay (quick strum)
+export const FAN_NOTES_MIN_VELOCITY_DECAY = 0.5; // Minimum velocity decay (50% preservation at last strum note)
+export const FAN_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum decay (1.0 = no decay, all notes same velocity)
+export const FAN_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per strum step (slight fade)
+export const FAN_NOTES_DIRECTION_DOWN = 'down'; // Strum from top row down (higher pitch first)
+export const FAN_NOTES_DIRECTION_UP = 'up'; // Strum from bottom row up (lower pitch first)
+export const FAN_NOTES_DIRECTION_INWARD = 'inward'; // Strum from outside rows toward center
+export const FAN_NOTES_DIRECTION_OUTWARD = 'outward'; // Strum from center toward outside rows
+export const FAN_NOTES_DIRECTION_RANDOM = 'random'; // Random strum order
+export const FAN_NOTES_DIRECTIONS = [
+    FAN_NOTES_DIRECTION_DOWN,
+    FAN_NOTES_DIRECTION_UP,
+    FAN_NOTES_DIRECTION_INWARD,
+    FAN_NOTES_DIRECTION_OUTWARD,
+    FAN_NOTES_DIRECTION_RANDOM
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

@@ -1,3 +1,99 @@
+#### Day 718: Fan Notes Feature (2026-06-17)
+- **Feature**: Added `fanNotes(length, rowSpan, strumDelay, velocityDecay, direction, skipOccupied)` method to Track class and 5 "Fan Notes" menu items to the sequencer context menu. Each active note spawns a multi-note chord strum pattern (plucked-string fan). For each strum step `s` in 0..clampedLength, places a note at `(rowIndex + chordRows[s], col + s * clampedStrumDelay)` where `chordRows` is a pre-computed array of `clampedLength` row offsets evenly spread in `[-(rowSpan-1)/2, +(rowSpan-1)/2]`, then re-ordered by direction. Five directions: 'down' (natural order, top-to-bottom), 'up' (reversed, bottom-to-top), 'inward' (outside-in by abs(rowOffset) descending), 'outward' (center-out by abs(rowOffset) ascending), 'random' (Fisher-Yates shuffle). Complements `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `splatterNotes` (random scatter) with a deterministic chord strum pattern.
+- **Files Modified**:
+  - `js/Track.js`: Added `fanNotes` method after `splatterNotes` (line ~6350)
+  - `js/constants.js`: 18 FAN_NOTES_* constants were already added in the working tree (preserved from a prior interrupted run) + APP_VERSION bumped to 2.367.0
+  - `js/ui.js`: Added 5 Fan Notes menu items in the sequencer context menu after Splatter Notes (Bottom-heavy, 10), with separator after
+  - `js/tests.js`: Added Day 718 test block with 33 tests (fixed a regex that was missing a space after `||` in the "handles empty source" test)
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced — same fix applied in Days 713, 714, and 717 but not persisted across pushes.)
+- **Feature Details**:
+  - **fanNotes** (`js/Track.js`): For each active note, builds a chord strum of `length` notes. The chord's row offsets are pre-computed once per source row, evenly spread in `[-(rowSpan-1)/2, +(rowSpan-1)/2]` (e.g. rowSpan=3, length=4 → offsets ~[-1, -0.33, 0.33, 1] rounded to [-1, 0, 0, 1] or similar). Direction re-orders the offset array: 'down' keeps natural order, 'up' reverses, 'inward' sorts by abs descending, 'outward' sorts by abs ascending, 'random' Fisher-Yates shuffles. For each strum step `s` in 0..clampedLength, places at `targetRow = rowIndex + chordRows[s]` and `targetCol = col + s * clampedStrumDelay` (forward-in-time stagger). Captures undo state BEFORE mutation with descriptive "Fan Notes (direction, N-note chord) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to FAN_NOTES_MIN_LENGTH (2) / FAN_NOTES_MAX_LENGTH (8) range with Math.floor (default FAN_NOTES_DEFAULT_LENGTH=4)
+    - Clamps `rowSpan` to FAN_NOTES_MIN_ROW_SPAN (1) / FAN_NOTES_MAX_ROW_SPAN (8) range with Math.floor (default FAN_NOTES_DEFAULT_ROW_SPAN=3)
+    - Clamps `strumDelay` to FAN_NOTES_MIN_STAGGER (0) / FAN_NOTES_MAX_STAGGER (4) range with Math.floor (default FAN_NOTES_DEFAULT_STAGGER=1)
+    - Clamps `velocityDecay` to FAN_NOTES_MIN_VELOCITY_DECAY (0.5) / FAN_NOTES_MAX_VELOCITY_DECAY (1.0) range (default FAN_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `direction` against FAN_NOTES_DIRECTIONS array, falls back to FAN_NOTES_DIRECTION_DOWN if invalid
+    - Pre-computes chord row offsets via `buildChordRows(rowIndex)` helper:
+      - When `clampedLength === 1` or `clampedRowSpan === 1`, returns `[0]` (no spread)
+      - Otherwise computes `step = clampedRowSpan <= clampedLength ? 1 : (clampedRowSpan - 1) / (clampedLength - 1)` and iterates `i` in 0..clampedLength to get `offset = round(-half + i * step)` where `half = (clampedRowSpan - 1) / 2`
+    - Applies direction-based ordering to chord row offsets
+    - Captures undo state BEFORE mutation
+    - For each row, for each column, for each active note: for `s` in 0..clampedLength, places at `targetRow = rowIndex + chordRows[s]` and `targetCol = col + s * clampedStrumDelay`
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen if chordRows[0]=0 and strumDelay=0)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, s)))` for exponential velocity decay per strum step
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of fan notes added
+  - **Fan Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Splatter Notes (Bottom-heavy, 10)
+    - "Fan Notes (Down, 4)" - calls `fanNotes(4, 3, 1, 0.95, 'down', true)` - 4-note chord strumming top-to-bottom, 3-row spread
+    - "Fan Notes (Up, 4)" - calls `fanNotes(4, 3, 1, 0.95, 'up', true)` - 4-note chord strumming bottom-to-top
+    - "Fan Notes (Inward, 4)" - calls `fanNotes(4, 3, 1, 0.95, 'inward', true)` - 4-note chord strummed outside-in
+    - "Fan Notes (Outward, 4)" - calls `fanNotes(4, 3, 1, 0.95, 'outward', true)` - 4-note chord strummed center-out
+    - "Fan Notes (Random, 6)" - calls `fanNotes(6, 5, 1, 0.92, 'random', true)` - 6-note random-order chord strum, 5-row spread
+    - All call `recreateToneSequence(true)` after fanning
+    - All capture undo with descriptive "Fan Notes on <name> (<seqname>)" label
+    - Show notifications: "Fanned {count} note(s) (variant)."
+    - Show "No notes to fan." when nothing to fan
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 18 constants (preserved from prior interrupted work)
+  - `FAN_NOTES_MIN_LENGTH = 2` - Minimum 2 notes in the chord strum
+  - `FAN_NOTES_MAX_LENGTH = 8` - Maximum 8 notes in the chord strum
+  - `FAN_NOTES_DEFAULT_LENGTH = 4` - Default 4-note chord strum
+  - `FAN_NOTES_MIN_ROW_SPAN = 1` - Minimum 1 row of vertical spread (tight cluster)
+  - `FAN_NOTES_MAX_ROW_SPAN = 8` - Maximum 8 rows of vertical spread
+  - `FAN_NOTES_DEFAULT_ROW_SPAN = 3` - Default 3 rows of vertical spread
+  - `FAN_NOTES_MIN_STAGGER = 0` - Minimum 0 columns delay (simultaneous chord)
+  - `FAN_NOTES_MAX_STAGGER = 4` - Maximum 4 columns delay between strum notes
+  - `FAN_NOTES_DEFAULT_STAGGER = 1` - Default 1 column delay (quick strum)
+  - `FAN_NOTES_MIN_VELOCITY_DECAY = 0.5` - Minimum velocity decay (50% preservation at last strum note)
+  - `FAN_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay, all notes same velocity)
+  - `FAN_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per strum step
+  - `FAN_NOTES_DIRECTION_DOWN = 'down'` - Strum from top row down (higher pitch first)
+  - `FAN_NOTES_DIRECTION_UP = 'up'` - Strum from bottom row up (lower pitch first)
+  - `FAN_NOTES_DIRECTION_INWARD = 'inward'` - Strum from outside rows toward center
+  - `FAN_NOTES_DIRECTION_OUTWARD = 'outward'` - Strum from center toward outside rows
+  - `FAN_NOTES_DIRECTION_RANDOM = 'random'` - Random strum order
+  - `FAN_NOTES_DIRECTIONS = [DOWN, UP, INWARD, OUTWARD, RANDOM]` - Valid direction values
+- **Tests** (`js/tests.js`): 33 tests covering:
+  - `fanNotes` is a function on Track.prototype
+  - `fanNotes` accepts 6 parameters with defaults (length, rowSpan, strumDelay, velocityDecay, direction, skipOccupied)
+  - `fanNotes` returns 0 for Audio tracks
+  - `fanNotes` gets active sequence via `getActiveSequence`
+  - `fanNotes` captures undo BEFORE mutation
+  - `fanNotes` has descriptive "Fan Notes" undo label
+  - `fanNotes` clamps length/rowSpan/strumDelay/velocityDecay to FAN_NOTES_MIN/MAX_* ranges
+  - `fanNotes` validates direction with FAN_NOTES_DIRECTIONS (uses DOWN fallback)
+  - `fanNotes` uses Math.pow for velocity decay
+  - `fanNotes` supports skipOccupied option
+  - `fanNotes` rounds velocity to 2 decimal places
+  - `fanNotes` returns count of fan notes (fanCount)
+  - All 18 FAN_NOTES constants are defined in constants.js
+  - FAN_NOTES_DIRECTIONS includes all 5 directions
+  - ui.js has 5 Fan Notes menu items
+  - Fan Notes menu items call track.fanNotes
+  - Fan Notes menu items show notification with count
+  - Fan Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.367 for Day 718)
+  - Functional tests: targetRow = rowIndex + rowOffset, colOffset = s * clampedStrumDelay
+  - Functional test: velocity decay (vel * decay^s)
+  - Functional test: skips source cell (no self-reference)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: respects Math.floor for length/rowSpan/strumDelay
+  - Structural test: preserves probability from source
+  - Structural test: handles empty source (no active notes)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: supports 5 distinct directions
+  - Functional test: 'random' direction uses Fisher-Yates shuffle
+- **Version**: Bumped to 2.367.0
+- **Test Count**: Added 33 Day 718 tests. All 33 pass via test-runner/run-tests.js (after fixing one regex that was missing a space after `||` in the "handles empty source" test). The esbuild build succeeds; node --check passes for all 4 modified files. The pre-existing 1433 test infrastructure failures (unrelated to Day 718, related to `__dirname` not being defined in node test environment) are the same as in Days 714-717.
+
 #### Day 717: Splatter Notes Feature (2026-06-17)
 - **Feature**: Added `splatterNotes(count, rowRadius, colRadius, minVelocity, shape, skipOccupied)` method to Track class and 5 "Splatter Notes" menu items to the sequencer context menu. Each active note spawns N randomly-scattered notes around the source (paint splatter texture). For each particle `p` in 0..clampedCount, computes `rowOffset` (signed integer in [-clampedRowRadius, +clampedRowRadius], distribution depends on shape) and `colOffset` in [1, clampedColRadius] (always forward-in-time). Five shape modes: 'uniform' (flat random), 'gaussian' (3-sample averaged toward center), 'shell' (concentrated near outer radius), 'weighted-top' (60% bias toward negative row offset = higher pitch), 'weighted-bottom' (60% bias toward positive row offset = lower pitch). Particle velocity is randomized between `minVelocity` and `origVel`. Complements `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a randomized scatter pattern.
 - **Files Modified**:
