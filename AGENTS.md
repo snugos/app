@@ -1,3 +1,13 @@
+#### Day 714: Critical Runtime Bug Fixes (2026-06-17)
+- **Bug**: Two runtime errors that were blocking app initialization on page load.
+  1. `ReferenceError: toggleFullScreen is not defined` in `js/eventHandlers.js:217` - the function was referenced in both the desktop context menu (line 189) and the menu actions map (line 217) but never defined. This caused `initializePrimaryEventListeners` to throw an error during startup, breaking the menu wiring.
+  2. `ReferenceError: getSelectedSoundForPreviewState is not defined` in `js/main.js:833` - the `appServices` object referenced `getSelectedSoundForPreviewState` and `setSelectedSoundForPreviewState` (lines 833-834) but the imports from `state.js` were missing these two functions, so the page-level module evaluation threw and the app never finished loading.
+- **Files Modified**:
+  - `js/eventHandlers.js`: Added `export function toggleFullScreen()` with cross-browser Fullscreen API handling (uses `requestFullscreen` / `webkitRequestFullscreen` / `mozRequestFullScreen` / `msRequestFullscreen` to enter, and `exitFullscreen` / vendor-prefixed equivalents to leave). Has try/catch, fallback notification when API is unsupported, and warnings on failure.
+  - `js/main.js`: Added the two missing state imports (`getSelectedSoundForPreviewState`, `setSelectedSoundForPreviewState`) to the import block from `state.js`.
+- **Verification**: Puppeteer page-load check now reports zero page errors and zero non-MIDI console errors (the only remaining console error is the expected `Failed to get MIDI access` in headless environments without Web MIDI). The app now initializes cleanly.
+- **No version bump**: These are bug fixes, not new features.
+
 #### Day 713: Spiral Notes Feature (2026-06-17)
 - **Feature**: Wired up the partially-scaffolded `spiralNotes(length, radiusStep, columnStep, velocityDecay, direction, skipOccupied)` method in Track.js to the sequencer context menu with 5 "Spiral Notes" menu items. Each active note spawns N notes in a spiral/rotating pattern around the source, computed via angular sweep (Math.sin for row offset, Math.cos for column offset). Complements `cascadeNotes` (linear 2D row+col), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a true 2D spiral effect.
 - **Files Modified**:
