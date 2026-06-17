@@ -138,6 +138,37 @@ let currentOctaveShift = 0;
 const MIN_OCTAVE_SHIFT = -2;
 const MAX_OCTAVE_SHIFT = 2;
 
+export function toggleFullScreen() {
+    try {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+            const docEl = document.documentElement;
+            const requestFn = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            if (requestFn) {
+                requestFn.call(docEl).catch((err) => {
+                    console.warn('[EventHandlers toggleFullScreen] Failed to enter fullscreen:', err);
+                });
+            } else {
+                console.warn('[EventHandlers toggleFullScreen] Fullscreen API not supported in this browser.');
+                if (typeof showNotification === 'function') {
+                    showNotification('Fullscreen mode is not supported in this browser.', 3000);
+                }
+            }
+        } else {
+            const exitFn = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+            if (exitFn) {
+                exitFn.call(document).catch((err) => {
+                    console.warn('[EventHandlers toggleFullScreen] Failed to exit fullscreen:', err);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('[EventHandlers toggleFullScreen] Error during fullscreen toggle:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Fullscreen toggle failed.', 3000);
+        }
+    }
+}
+
 export function initializePrimaryEventListeners(appContext) {
     const services = appContext || localAppServices;
     const uiCache = services.uiElementsCache || {};
