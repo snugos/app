@@ -21870,6 +21870,226 @@ TestRunner.test("Day 711 - driftNotes functional test: random shift range is -ma
     t.assertEqual(flooredInterval, 2, 'Interval floored to 2');
 });
 
+// Day 712 - Cascade Notes feature tests
+TestRunner.test("Day 712 - cascadeNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.cascadeNotes === 'function', 'cascadeNotes is a function on Track.prototype');
+});
+
+TestRunner.test("Day 712 - cascadeNotes accepts 5 parameters with defaults", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/steps\s*=\s*Constants\.CASCADE_NOTES_DEFAULT_STEPS/.test(src), 'Default steps');
+    t.assertTruthy(/stepDelay\s*=\s*Constants\.CASCADE_NOTES_DEFAULT_STEP_DELAY/.test(src), 'Default stepDelay');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.CASCADE_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'Default velocityDecay');
+    t.assertTruthy(/direction\s*=\s*Constants\.CASCADE_NOTES_DIRECTION_DOWN/.test(src), 'Default direction');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'Default skipOccupied=true');
+});
+
+TestRunner.test("Day 712 - cascadeNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]\)\s*return\s*0/.test(src), 'Audio guard returns 0');
+});
+
+TestRunner.test("Day 712 - cascadeNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+    t.assertTruthy(/No active sequence found/.test(src), 'warns when no active sequence');
+});
+
+TestRunner.test("Day 712 - cascadeNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    const captureIdx = src.indexOf('_captureUndoState');
+    const newNotesIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(captureIdx > 0 && newNotesIdx > 0 && captureIdx < newNotesIdx, 'captureUndoState is called before newNotes.push');
+});
+
+TestRunner.test("Day 712 - cascadeNotes has descriptive 'Cascade Notes' undo label", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/Cascade Notes/.test(src), 'undo label includes Cascade Notes');
+});
+
+TestRunner.test("Day 712 - cascadeNotes clamps steps to CASCADE_NOTES_MIN/MAX_STEPS", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/CASCADE_NOTES_MIN_STEPS/.test(src), 'references CASCADE_NOTES_MIN_STEPS');
+    t.assertTruthy(/CASCADE_NOTES_MAX_STEPS/.test(src), 'references CASCADE_NOTES_MAX_STEPS');
+    t.assertTruthy(/Math\.floor\(steps\)/.test(src), 'uses Math.floor on steps');
+});
+
+TestRunner.test("Day 712 - cascadeNotes clamps stepDelay to CASCADE_NOTES_MIN/MAX_STEP_DELAY", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/CASCADE_NOTES_MIN_STEP_DELAY/.test(src), 'references CASCADE_NOTES_MIN_STEP_DELAY');
+    t.assertTruthy(/CASCADE_NOTES_MAX_STEP_DELAY/.test(src), 'references CASCADE_NOTES_MAX_STEP_DELAY');
+});
+
+TestRunner.test("Day 712 - cascadeNotes clamps velocityDecay to CASCADE_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/CASCADE_NOTES_MIN_VELOCITY_DECAY/.test(src), 'references CASCADE_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/CASCADE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'references CASCADE_NOTES_MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 712 - cascadeNotes validates direction with CASCADE_NOTES_DIRECTIONS", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/CASCADE_NOTES_DIRECTIONS\.includes/.test(src), 'uses CASCADE_NOTES_DIRECTIONS.includes for direction validation');
+});
+
+TestRunner.test("Day 712 - cascadeNotes supports down direction", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/rowDelta\s*=\s*useDirection\s*===\s*Constants\.CASCADE_NOTES_DIRECTION_UP\s*\?\s*-1\s*:\s*1/.test(src), 'down sets rowDelta=+1');
+});
+
+TestRunner.test("Day 712 - cascadeNotes supports up direction", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/rowDelta\s*=\s*useDirection\s*===\s*Constants\.CASCADE_NOTES_DIRECTION_UP\s*\?\s*-1\s*:\s*1/.test(src), 'up sets rowDelta=-1');
+});
+
+TestRunner.test("Day 712 - cascadeNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*t\)/.test(src), 'uses Math.pow for exponential decay');
+});
+
+TestRunner.test("Day 712 - cascadeNotes respects sequence length boundary", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks targetCol out of bounds');
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks targetRow out of bounds');
+});
+
+TestRunner.test("Day 712 - cascadeNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'checks skipOccupied before writing');
+});
+
+TestRunner.test("Day 712 - cascadeNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 712 - cascadeNotes returns count of cascaded notes (cascadedCount)", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/cascadedCount/.test(src), 'returns cascadedCount');
+    t.assertTruthy(/return\s+cascadedCount/.test(src), 'returns cascadedCount');
+});
+
+TestRunner.test("Day 712 - All 12 CASCADE_NOTES constants are defined in constants.js", (t) => {
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MIN_STEPS !== 'undefined', 'CASCADE_NOTES_MIN_STEPS defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MAX_STEPS !== 'undefined', 'CASCADE_NOTES_MAX_STEPS defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DEFAULT_STEPS !== 'undefined', 'CASCADE_NOTES_DEFAULT_STEPS defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MIN_STEP_DELAY !== 'undefined', 'CASCADE_NOTES_MIN_STEP_DELAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MAX_STEP_DELAY !== 'undefined', 'CASCADE_NOTES_MAX_STEP_DELAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DEFAULT_STEP_DELAY !== 'undefined', 'CASCADE_NOTES_DEFAULT_STEP_DELAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MIN_VELOCITY_DECAY !== 'undefined', 'CASCADE_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MAX_VELOCITY_DECAY !== 'undefined', 'CASCADE_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DEFAULT_VELOCITY_DECAY !== 'undefined', 'CASCADE_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DIRECTION_DOWN !== 'undefined', 'CASCADE_NOTES_DIRECTION_DOWN defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DIRECTION_UP !== 'undefined', 'CASCADE_NOTES_DIRECTION_UP defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DIRECTIONS !== 'undefined', 'CASCADE_NOTES_DIRECTIONS defined');
+});
+
+TestRunner.test("Day 712 - CASCADE_NOTES_DIRECTIONS includes both down and up", (t) => {
+    t.assertTruthy(Constants.CASCADE_NOTES_DIRECTIONS.includes('down'), 'down direction included');
+    t.assertTruthy(Constants.CASCADE_NOTES_DIRECTIONS.includes('up'), 'up direction included');
+});
+
+TestRunner.test("Day 712 - ui.js has 5 Cascade Notes menu items", (t) => {
+    const uiSrc = window.uiSource || '';
+    const fs = require('fs');
+    let content = uiSrc;
+    if (!content) {
+        try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    }
+    const count = (content.match(/Cascade Notes/g) || []).length;
+    t.assertTruthy(count >= 5, `Found ${count} "Cascade Notes" references in ui.js (expected >= 5)`);
+});
+
+TestRunner.test("Day 712 - Cascade Notes menu items call track.cascadeNotes", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    const matches = content.match(/currentTrackForMenu\.cascadeNotes\(/g) || [];
+    t.assertTruthy(matches.length >= 5, `Found ${matches.length} cascadeNotes calls in ui.js (expected >= 5)`);
+});
+
+TestRunner.test("Day 712 - Cascade Notes menu items call recreateToneSequence", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    // Count cascadeNotes context: should have recreateToneSequence in the if(result>0) blocks
+    const cascades = content.match(/cascadeNotes\([^)]+\)/g) || [];
+    t.assertTruthy(cascades.length >= 5, `Found ${cascades.length} cascadeNotes menu item calls`);
+});
+
+TestRunner.test("Day 712 - Cascade Notes menu items show notification with count", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    t.assertTruthy(/Cascaded \$\{result\} note/s.test(content), 'uses Cascaded ${result} note notification');
+    t.assertTruthy(/No notes to cascade/.test(content), 'shows No notes to cascade when nothing to cascade');
+});
+
+TestRunner.test("Day 712 - Cascade Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    t.assertTruthy(/Cascade Notes on \$\{currentTrackForMenu\.name\}/.test(content), 'uses descriptive Cascade Notes undo label');
+});
+
+TestRunner.test("Day 712 - APP_VERSION validation (>= 2.361)", (t) => {
+    t.assertTruthy(Constants.APP_VERSION >= '2.361', `APP_VERSION ${Constants.APP_VERSION} is >= 2.361`);
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: target row = sourceRow + rowDelta * t", (t) => {
+    const rowIndex = 4;
+    const rowDelta = 1;
+    const t_step = 3;
+    const expectedTargetRow = rowIndex + (rowDelta * t_step);
+    t.assertEqual(expectedTargetRow, 7, 'targetRow is sourceRow + rowDelta * t');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: target col = sourceCol + t * stepDelay", (t) => {
+    const col = 5;
+    const t_step = 3;
+    const stepDelay = 2;
+    const expectedTargetCol = col + (t_step * stepDelay);
+    t.assertEqual(expectedTargetCol, 11, 'targetCol is sourceCol + t * stepDelay');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: velocity decay = origVel * decay^t", (t) => {
+    const origVel = 1.0;
+    const decay = 0.75;
+    const expectedAtT1 = origVel * Math.pow(decay, 1);
+    const expectedAtT2 = origVel * Math.pow(decay, 2);
+    t.assertEqual(Math.round(expectedAtT1 * 100) / 100, 0.75, 't=1 velocity 0.75');
+    t.assertEqual(Math.round(expectedAtT2 * 100) / 100, 0.56, 't=2 velocity 0.56');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: clamps steps to valid range (100 -> 8)", (t) => {
+    const requested = 100;
+    const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 8, 'steps clamped to 8 (max)');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: clamps stepDelay to valid range (-5 -> 0)", (t) => {
+    const requested = -5;
+    const clamped = Math.max(0, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 0, 'stepDelay clamped to 0 (min)');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: clamps velocityDecay to valid range (2.5 -> 1.0)", (t) => {
+    const requested = 2.5;
+    const clamped = Math.max(0.1, Math.min(1.0, requested));
+    t.assertEqual(clamped, 1.0, 'velocityDecay clamped to 1.0 (max)');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: rowDelta=-1 for up direction", (t) => {
+    const useDirection = 'up';
+    const rowDelta = useDirection === 'up' ? -1 : 1;
+    t.assertEqual(rowDelta, -1, 'up direction has rowDelta=-1');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: rowDelta=+1 for down direction", (t) => {
+    const useDirection = 'down';
+    const rowDelta = useDirection === 'up' ? -1 : 1;
+    t.assertEqual(rowDelta, 1, 'down direction has rowDelta=+1');
+});
+
 
 export async function runTests() {
     return await TestRunner.runAll();

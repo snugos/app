@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.360.0';
+export const APP_VERSION = '2.361.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -273,6 +273,25 @@ export const DRIFT_NOTES_MODES = [
     DRIFT_NOTES_MODE_LINEAR_CENTER,
     DRIFT_NOTES_MODE_RANDOM_PER_NOTE,
     DRIFT_NOTES_MODE_MIRROR
+];
+
+// Cascade Notes - cascade each note into a waterfall of notes that follow the source into subsequent rows
+// Creates dense, falling/rising patterns across the grid (column + row movement).
+// Complements staggerNotes (row-only), driftNotes (column-only), and arpeggiateNotes (column-only cycles).
+export const CASCADE_NOTES_MIN_STEPS = 1; // Minimum number of cascade steps per source note
+export const CASCADE_NOTES_MAX_STEPS = 8; // Maximum cascade steps per source note (8 rows of fall)
+export const CASCADE_NOTES_DEFAULT_STEPS = 4; // Default 4 cascade steps (4-row waterfall)
+export const CASCADE_NOTES_MIN_STEP_DELAY = 0; // Minimum columns between cascade notes (0 = same column)
+export const CASCADE_NOTES_MAX_STEP_DELAY = 8; // Maximum 8 columns between cascade notes (1/2 note)
+export const CASCADE_NOTES_DEFAULT_STEP_DELAY = 2; // Default 2 columns (1/8 note) between cascade notes
+export const CASCADE_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum velocity decay per cascade step
+export const CASCADE_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum decay (1.0 = no decay)
+export const CASCADE_NOTES_DEFAULT_VELOCITY_DECAY = 0.75; // Default 75% velocity preservation per cascade step (natural fade)
+export const CASCADE_NOTES_DIRECTION_DOWN = 'down'; // Cascade flows downward (row +N)
+export const CASCADE_NOTES_DIRECTION_UP = 'up'; // Cascade flows upward (row -N)
+export const CASCADE_NOTES_DIRECTIONS = [
+    CASCADE_NOTES_DIRECTION_DOWN,
+    CASCADE_NOTES_DIRECTION_UP
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
