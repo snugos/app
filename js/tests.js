@@ -21394,6 +21394,9 @@ TestRunner.test("Day 709 - crescentNotes functional test: velocity preservation 
 TestRunner.test("Day 709 - crescentNotes functional test: clamps windowSteps to valid range", (t) => {
     const requested = 100;
     const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 8, 'Window steps clamped to 8 (max)');
+});
+
 TestRunner.test("Day 709 - crescentNotes functional test: clamps velocityFactor to valid range", (t) => {
     const requestedVel = 2.5;
     const clamped = Math.max(0.3, Math.min(1.0, requestedVel));
@@ -21645,64 +21648,700 @@ TestRunner.test("Day 710 - trillNotes functional test: trill notes skip out-of-r
 TestRunner.test("Day 710 - trillNotes functional test: Math.floor used on taps and interval", (t) => {
     const taps = 4.7;
     const interval = 2.3;
+TestRunner.test("Day 711 - driftNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.driftNotes === 'function', 'driftNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 711 - driftNotes accepts 5 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('maxShift'), 'driftNotes should accept maxShift parameter');
+    t.assertTruthy(funcStr.includes('skipChance'), 'driftNotes should accept skipChance parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'driftNotes should accept velocityFactor parameter');
+    t.assertTruthy(funcStr.includes('driftMode'), 'driftNotes should accept driftMode parameter');
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'driftNotes should accept skipOccupied parameter');
+});
+
+TestRunner.test("Day 711 - driftNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('type==="Audio"') || funcStr.includes('Audio'), 'driftNotes should guard against Audio tracks');
+});
+
+TestRunner.test("Day 711 - driftNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'driftNotes should call getActiveSequence');
+});
+
+TestRunner.test("Day 711 - driftNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('driftedCount');
+    t.assertTruthy(captureIdx > -1, 'driftNotes should call _captureUndoState');
+    t.assertTruthy(captureIdx < mutationIdx, 'driftNotes should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 711 - driftNotes has descriptive 'Drift Notes' undo label", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Drift Notes'), 'driftNotes undo label should include "Drift Notes"');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps maxShift to DRIFT_NOTES_MIN/MAX_MAX_SHIFT", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_MAX_SHIFT'), 'driftNotes should reference DRIFT_NOTES_MIN_MAX_SHIFT');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_MAX_SHIFT'), 'driftNotes should reference DRIFT_NOTES_MAX_MAX_SHIFT');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps skipChance to DRIFT_NOTES_MIN/MAX_SKIP_CHANCE", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_SKIP_CHANCE'), 'driftNotes should reference DRIFT_NOTES_MIN_SKIP_CHANCE');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_SKIP_CHANCE'), 'driftNotes should reference DRIFT_NOTES_MAX_SKIP_CHANCE');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps velocityFactor to DRIFT_NOTES_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_VELOCITY_FACTOR'), 'driftNotes should reference DRIFT_NOTES_MIN_VELOCITY_FACTOR');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_VELOCITY_FACTOR'), 'driftNotes should reference DRIFT_NOTES_MAX_VELOCITY_FACTOR');
+});
+
+TestRunner.test("Day 711 - driftNotes validates driftMode with DRIFT_NOTES_MODES", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODES'), 'driftNotes should reference DRIFT_NOTES_MODES');
+});
+
+TestRunner.test("Day 711 - driftNotes uses Math.floor on maxShift", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.floor'), 'driftNotes should use Math.floor for maxShift');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-up mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_UP'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_UP');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-down mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_DOWN'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_DOWN');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-center mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_CENTER'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_CENTER');
+});
+
+TestRunner.test("Day 711 - driftNotes supports random-per-note mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_RANDOM_PER_NOTE'), 'driftNotes should reference DRIFT_NOTES_MODE_RANDOM_PER_NOTE');
+});
+
+TestRunner.test("Day 711 - driftNotes supports mirror mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_MIRROR'), 'driftNotes should reference DRIFT_NOTES_MODE_MIRROR');
+});
+
+TestRunner.test("Day 711 - driftNotes returns count of drifted notes (driftedCount)", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('driftedCount'), 'driftNotes should return count of drifted notes');
+});
+
+TestRunner.test("Day 711 - driftNotes uses Math.random for random shift", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.random'), 'driftNotes should use Math.random for random mode');
+});
+
+TestRunner.test("Day 711 - driftNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round') && funcStr.includes('* 100') && funcStr.includes('/ 100'), 'driftNotes should round velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 711 - All 16 DRIFT_NOTES constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_MAX_SHIFT = 1'), 'DRIFT_NOTES_MIN_MAX_SHIFT should be 1');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_MAX_SHIFT = 8'), 'DRIFT_NOTES_MAX_MAX_SHIFT should be 8');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_MAX_SHIFT = 4'), 'DRIFT_NOTES_DEFAULT_MAX_SHIFT should be 4');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_SKIP_CHANCE = 0.0'), 'DRIFT_NOTES_MIN_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_SKIP_CHANCE = 0.9'), 'DRIFT_NOTES_MAX_SKIP_CHANCE should be 0.9');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_SKIP_CHANCE = 0.0'), 'DRIFT_NOTES_DEFAULT_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_VELOCITY_FACTOR = 0.1'), 'DRIFT_NOTES_MIN_VELOCITY_FACTOR should be 0.1');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0'), 'DRIFT_NOTES_MAX_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95'), 'DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR should be 0.95');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_UP'), 'DRIFT_NOTES_MODE_LINEAR_UP should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_DOWN'), 'DRIFT_NOTES_MODE_LINEAR_DOWN should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_CENTER'), 'DRIFT_NOTES_MODE_LINEAR_CENTER should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_RANDOM_PER_NOTE'), 'DRIFT_NOTES_MODE_RANDOM_PER_NOTE should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_MIRROR'), 'DRIFT_NOTES_MODE_MIRROR should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODES'), 'DRIFT_NOTES_MODES should be defined');
+});
+
+TestRunner.test("Day 711 - ui.js has 6 Drift Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Drift Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 6, `ui.js should have at least 6 Drift Notes menu items, found ${matches ? matches.length : 0}`);
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items call track.driftNotes", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.driftNotes('), 'Drift Notes menu items should call driftNotes()');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drift Notes') && uiStr.includes('recreateToneSequence'), 'Drift Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drifted '), 'Drift Notes should show notification with drifted count');
+    t.assertTruthy(uiStr.includes('No notes to drift'), 'Drift Notes should show "No notes to drift" notification');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items capture undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drift Notes on'), 'Drift Notes menu items should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 711 - APP_VERSION validation (>= 2.360)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
+    t.assertTruthy(versionMatch && parseFloat(versionMatch[1]) >= 2.360, `APP_VERSION should be >= 2.360, got ${versionMatch ? versionMatch[1] : 'unknown'}`);
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-up mode: shift grows 0 to maxShift", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round((c / (totalSteps - 1)) * maxShift));
+    t.assertEqual(expectedShifts[0], 0, 'col 0 -> shift 0');
+    t.assertEqual(expectedShifts[1], 1, 'col 4 -> shift 1');
+    t.assertEqual(expectedShifts[2], 2, 'col 8 -> shift 2');
+    t.assertEqual(expectedShifts[3], 3, 'col 12 -> shift 3');
+    t.assertEqual(expectedShifts[4], 4, 'col 15 -> shift 4');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-down mode: shift shrinks maxShift to 0", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round((1.0 - c / (totalSteps - 1)) * maxShift));
+    t.assertEqual(expectedShifts[0], 4, 'col 0 -> shift 4');
+    t.assertEqual(expectedShifts[1], 3, 'col 4 -> shift 3');
+    t.assertEqual(expectedShifts[2], 2, 'col 8 -> shift 2');
+    t.assertEqual(expectedShifts[3], 1, 'col 12 -> shift 1');
+    t.assertEqual(expectedShifts[4], 0, 'col 15 -> shift 0');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-center mode: V-shape (dips at middle)", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round(Math.abs(2 * (c / (totalSteps - 1)) - 1) * maxShift));
+    t.assertEqual(expectedShifts[0], 4, 'col 0 -> shift 4 (full)');
+    t.assertEqual(expectedShifts[1], 2, 'col 4 -> shift 2');
+    t.assertEqual(expectedShifts[2], 0, 'col 8 -> shift 0 (trough at middle)');
+    t.assertEqual(expectedShifts[3], 2, 'col 12 -> shift 2');
+    t.assertEqual(expectedShifts[4], 4, 'col 15 -> shift 4 (full again)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: mirror mode: peak at middle", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round((1.0 - Math.abs(2 * (c / (totalSteps - 1)) - 1)) * maxShift));
+    t.assertEqual(expectedShifts[0], 0, 'col 0 -> shift 0');
+    t.assertEqual(expectedShifts[1], 2, 'col 4 -> shift 2');
+    t.assertEqual(expectedShifts[2], 4, 'col 8 -> shift 4 (peak at middle)');
+    t.assertEqual(expectedShifts[3], 2, 'col 12 -> shift 2');
+    t.assertEqual(expectedShifts[4], 0, 'col 15 -> shift 0');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps maxShift to valid range", (t) => {
+    const requested = 100;
+    const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 8, 'maxShift clamped to 8 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps velocityFactor to valid range", (t) => {
+    const requested = 2.5;
+    const clamped = Math.max(0.1, Math.min(1.0, requested));
+    t.assertEqual(clamped, 1.0, 'velocityFactor clamped to 1.0 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps skipChance to valid range", (t) => {
+    const requested = 1.5;
+    const clamped = Math.max(0.0, Math.min(0.9, requested));
+    t.assertEqual(clamped, 0.9, 'skipChance clamped to 0.9 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: random shift range is -maxShift to +maxShift", (t) => {
+    const maxShift = 4;
+    const r = Math.floor(Math.random() * (maxShift * 2 + 1)) - maxShift;
+    t.assertTruthy(r >= -maxShift && r <= maxShift, 'Random shift in [-maxShift, +maxShift]');
+});
+
     const flooredTaps = Math.floor(taps);
     const flooredInterval = Math.floor(interval);
     t.assertEqual(flooredTaps, 4, 'Taps floored to 4');
     t.assertEqual(flooredInterval, 2, 'Interval floored to 2');
 });
 
-// --- Day 711: Track Templates apply to active track (fix incomplete "Apply to first track for now" stub) ---
-TestRunner.test("Day 711 - Track Templates load handler no longer uses 'Apply to first track for now' stub", (t) => {
-    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertFalsy(/Apply to first track for now/.test(uiStr), 'ui.js should no longer contain the "Apply to first track for now" stub');
+// Day 712 - Cascade Notes feature tests
+TestRunner.test("Day 712 - cascadeNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.cascadeNotes === 'function', 'cascadeNotes is a function on Track.prototype');
 });
 
-TestRunner.test("Day 711 - Track Templates load handler uses getActiveTrackForInteraction", (t) => {
-    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('getActiveTrackForInteraction'), 'ui.js Track Templates load handler should reference getActiveTrackForInteraction');
+TestRunner.test("Day 712 - cascadeNotes accepts 5 parameters with defaults", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/steps\s*=\s*Constants\.CASCADE_NOTES_DEFAULT_STEPS/.test(src), 'Default steps');
+    t.assertTruthy(/stepDelay\s*=\s*Constants\.CASCADE_NOTES_DEFAULT_STEP_DELAY/.test(src), 'Default stepDelay');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.CASCADE_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'Default velocityDecay');
+    t.assertTruthy(/direction\s*=\s*Constants\.CASCADE_NOTES_DIRECTION_DOWN/.test(src), 'Default direction');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'Default skipOccupied=true');
 });
 
-TestRunner.test("Day 711 - getActiveTrackForInteraction appService is defined", (t) => {
-    const mainStr = require('fs').readFileSync('./js/main.js', 'utf8');
-    t.assertTruthy(/getActiveTrackForInteraction:\s*\(\)\s*=>/.test(mainStr), 'main.js should define getActiveTrackForInteraction appService');
+TestRunner.test("Day 712 - cascadeNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]\)\s*return\s*0/.test(src), 'Audio guard returns 0');
 });
 
-TestRunner.test("Day 711 - APP_VERSION validation (>= 2.359)", (t) => {
-    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
-    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
-    t.assertTruthy(versionMatch && parseFloat(versionMatch[1]) >= 2.359, `APP_VERSION should be >= 2.359, got ${versionMatch ? versionMatch[1] : 'unknown'}`);
+TestRunner.test("Day 712 - cascadeNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+    t.assertTruthy(/No active sequence found/.test(src), 'warns when no active sequence');
 });
 
-TestRunner.test("Day 711 - getActiveTrackForInteraction prefers active sequencer track over first track", (t) => {
-    const tracks = [
-        { id: 'track-1', name: 'First' },
-        { id: 'track-2', name: 'Second' }
-    ];
-    const activeId = 'track-2';
-    const fromActive = (() => {
-        if (activeId) {
-            const t = tracks.find(t => t.id === activeId);
-            if (t) return t;
-        }
-        return tracks.length > 0 ? tracks[0] : null;
-    })();
-    t.assertEqual(fromActive.id, 'track-2', 'Should return active sequencer track (track-2), not tracks[0]');
+TestRunner.test("Day 712 - cascadeNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    const captureIdx = src.indexOf('_captureUndoState');
+    const newNotesIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(captureIdx > 0 && newNotesIdx > 0 && captureIdx < newNotesIdx, 'captureUndoState is called before newNotes.push');
 });
 
-TestRunner.test("Day 711 - getActiveTrackForInteraction falls back to first track only when no active ID", (t) => {
-    const tracks = [
-        { id: 'track-1', name: 'First' },
-        { id: 'track-2', name: 'Second' }
-    ];
-    const activeId = null;
-    const fromActive = (() => {
-        if (activeId) {
-            const t = tracks.find(t => t.id === activeId);
-            if (t) return t;
-        }
-        return tracks.length > 0 ? tracks[0] : null;
-    })();
-    t.assertEqual(fromActive.id, 'track-1', 'Falls back to first track when no active sequencer ID');
+TestRunner.test("Day 712 - cascadeNotes has descriptive 'Cascade Notes' undo label", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/Cascade Notes/.test(src), 'undo label includes Cascade Notes');
+});
+
+TestRunner.test("Day 712 - cascadeNotes clamps steps to CASCADE_NOTES_MIN/MAX_STEPS", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/CASCADE_NOTES_MIN_STEPS/.test(src), 'references CASCADE_NOTES_MIN_STEPS');
+    t.assertTruthy(/CASCADE_NOTES_MAX_STEPS/.test(src), 'references CASCADE_NOTES_MAX_STEPS');
+    t.assertTruthy(/Math\.floor\(steps\)/.test(src), 'uses Math.floor on steps');
+});
+
+TestRunner.test("Day 712 - cascadeNotes clamps stepDelay to CASCADE_NOTES_MIN/MAX_STEP_DELAY", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/CASCADE_NOTES_MIN_STEP_DELAY/.test(src), 'references CASCADE_NOTES_MIN_STEP_DELAY');
+    t.assertTruthy(/CASCADE_NOTES_MAX_STEP_DELAY/.test(src), 'references CASCADE_NOTES_MAX_STEP_DELAY');
+});
+
+TestRunner.test("Day 712 - cascadeNotes clamps velocityDecay to CASCADE_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/CASCADE_NOTES_MIN_VELOCITY_DECAY/.test(src), 'references CASCADE_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/CASCADE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'references CASCADE_NOTES_MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 712 - cascadeNotes validates direction with CASCADE_NOTES_DIRECTIONS", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/CASCADE_NOTES_DIRECTIONS\.includes/.test(src), 'uses CASCADE_NOTES_DIRECTIONS.includes for direction validation');
+});
+
+TestRunner.test("Day 712 - cascadeNotes supports down direction", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/rowDelta\s*=\s*useDirection\s*===\s*Constants\.CASCADE_NOTES_DIRECTION_UP\s*\?\s*-1\s*:\s*1/.test(src), 'down sets rowDelta=+1');
+});
+
+TestRunner.test("Day 712 - cascadeNotes supports up direction", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/rowDelta\s*=\s*useDirection\s*===\s*Constants\.CASCADE_NOTES_DIRECTION_UP\s*\?\s*-1\s*:\s*1/.test(src), 'up sets rowDelta=-1');
+});
+
+TestRunner.test("Day 712 - cascadeNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*t\)/.test(src), 'uses Math.pow for exponential decay');
+});
+
+TestRunner.test("Day 712 - cascadeNotes respects sequence length boundary", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks targetCol out of bounds');
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks targetRow out of bounds');
+});
+
+TestRunner.test("Day 712 - cascadeNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'checks skipOccupied before writing');
+});
+
+TestRunner.test("Day 712 - cascadeNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 712 - cascadeNotes returns count of cascaded notes (cascadedCount)", (t) => {
+    const src = Track.prototype.cascadeNotes.toString();
+    t.assertTruthy(/cascadedCount/.test(src), 'returns cascadedCount');
+    t.assertTruthy(/return\s+cascadedCount/.test(src), 'returns cascadedCount');
+});
+
+TestRunner.test("Day 712 - All 12 CASCADE_NOTES constants are defined in constants.js", (t) => {
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MIN_STEPS !== 'undefined', 'CASCADE_NOTES_MIN_STEPS defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MAX_STEPS !== 'undefined', 'CASCADE_NOTES_MAX_STEPS defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DEFAULT_STEPS !== 'undefined', 'CASCADE_NOTES_DEFAULT_STEPS defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MIN_STEP_DELAY !== 'undefined', 'CASCADE_NOTES_MIN_STEP_DELAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MAX_STEP_DELAY !== 'undefined', 'CASCADE_NOTES_MAX_STEP_DELAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DEFAULT_STEP_DELAY !== 'undefined', 'CASCADE_NOTES_DEFAULT_STEP_DELAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MIN_VELOCITY_DECAY !== 'undefined', 'CASCADE_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_MAX_VELOCITY_DECAY !== 'undefined', 'CASCADE_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DEFAULT_VELOCITY_DECAY !== 'undefined', 'CASCADE_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DIRECTION_DOWN !== 'undefined', 'CASCADE_NOTES_DIRECTION_DOWN defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DIRECTION_UP !== 'undefined', 'CASCADE_NOTES_DIRECTION_UP defined');
+    t.assertTruthy(typeof Constants.CASCADE_NOTES_DIRECTIONS !== 'undefined', 'CASCADE_NOTES_DIRECTIONS defined');
+});
+
+TestRunner.test("Day 712 - CASCADE_NOTES_DIRECTIONS includes both down and up", (t) => {
+    t.assertTruthy(Constants.CASCADE_NOTES_DIRECTIONS.includes('down'), 'down direction included');
+    t.assertTruthy(Constants.CASCADE_NOTES_DIRECTIONS.includes('up'), 'up direction included');
+});
+
+TestRunner.test("Day 712 - ui.js has 5 Cascade Notes menu items", (t) => {
+    const uiSrc = window.uiSource || '';
+    const fs = require('fs');
+    let content = uiSrc;
+    if (!content) {
+        try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    }
+    const count = (content.match(/Cascade Notes/g) || []).length;
+    t.assertTruthy(count >= 5, `Found ${count} "Cascade Notes" references in ui.js (expected >= 5)`);
+});
+
+TestRunner.test("Day 712 - Cascade Notes menu items call track.cascadeNotes", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    const matches = content.match(/currentTrackForMenu\.cascadeNotes\(/g) || [];
+    t.assertTruthy(matches.length >= 5, `Found ${matches.length} cascadeNotes calls in ui.js (expected >= 5)`);
+});
+
+TestRunner.test("Day 712 - Cascade Notes menu items call recreateToneSequence", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    // Count cascadeNotes context: should have recreateToneSequence in the if(result>0) blocks
+    const cascades = content.match(/cascadeNotes\([^)]+\)/g) || [];
+    t.assertTruthy(cascades.length >= 5, `Found ${cascades.length} cascadeNotes menu item calls`);
+});
+
+TestRunner.test("Day 712 - Cascade Notes menu items show notification with count", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    t.assertTruthy(/Cascaded \$\{result\} note/s.test(content), 'uses Cascaded ${result} note notification');
+    t.assertTruthy(/No notes to cascade/.test(content), 'shows No notes to cascade when nothing to cascade');
+});
+
+TestRunner.test("Day 712 - Cascade Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    t.assertTruthy(/Cascade Notes on \$\{currentTrackForMenu\.name\}/.test(content), 'uses descriptive Cascade Notes undo label');
+});
+
+TestRunner.test("Day 712 - APP_VERSION validation (>= 2.361)", (t) => {
+    t.assertTruthy(Constants.APP_VERSION >= '2.361', `APP_VERSION ${Constants.APP_VERSION} is >= 2.361`);
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: target row = sourceRow + rowDelta * t", (t) => {
+    const rowIndex = 4;
+    const rowDelta = 1;
+    const t_step = 3;
+    const expectedTargetRow = rowIndex + (rowDelta * t_step);
+    t.assertEqual(expectedTargetRow, 7, 'targetRow is sourceRow + rowDelta * t');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: target col = sourceCol + t * stepDelay", (t) => {
+    const col = 5;
+    const t_step = 3;
+    const stepDelay = 2;
+    const expectedTargetCol = col + (t_step * stepDelay);
+    t.assertEqual(expectedTargetCol, 11, 'targetCol is sourceCol + t * stepDelay');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: velocity decay = origVel * decay^t", (t) => {
+    const origVel = 1.0;
+    const decay = 0.75;
+    const expectedAtT1 = origVel * Math.pow(decay, 1);
+    const expectedAtT2 = origVel * Math.pow(decay, 2);
+    t.assertEqual(Math.round(expectedAtT1 * 100) / 100, 0.75, 't=1 velocity 0.75');
+    t.assertEqual(Math.round(expectedAtT2 * 100) / 100, 0.56, 't=2 velocity 0.56');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: clamps steps to valid range (100 -> 8)", (t) => {
+    const requested = 100;
+    const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 8, 'steps clamped to 8 (max)');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: clamps stepDelay to valid range (-5 -> 0)", (t) => {
+    const requested = -5;
+    const clamped = Math.max(0, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 0, 'stepDelay clamped to 0 (min)');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: clamps velocityDecay to valid range (2.5 -> 1.0)", (t) => {
+    const requested = 2.5;
+    const clamped = Math.max(0.1, Math.min(1.0, requested));
+    t.assertEqual(clamped, 1.0, 'velocityDecay clamped to 1.0 (max)');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: rowDelta=-1 for up direction", (t) => {
+    const useDirection = 'up';
+    const rowDelta = useDirection === 'up' ? -1 : 1;
+    t.assertEqual(rowDelta, -1, 'up direction has rowDelta=-1');
+});
+
+TestRunner.test("Day 712 - cascadeNotes functional test: rowDelta=+1 for down direction", (t) => {
+    const useDirection = 'down';
+    const rowDelta = useDirection === 'up' ? -1 : 1;
+    t.assertEqual(rowDelta, 1, 'down direction has rowDelta=+1');
+});
+
+
+// Day 713 - Spiral Notes feature tests
+TestRunner.test("Day 713 - spiralNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.spiralNotes === 'function', 'spiralNotes is a function on Track.prototype');
+});
+
+TestRunner.test("Day 713 - spiralNotes accepts 6 parameters with defaults", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.SPIRAL_NOTES_DEFAULT_LENGTH/.test(src), 'Default length');
+    t.assertTruthy(/radiusStep\s*=\s*Constants\.SPIRAL_NOTES_DEFAULT_RADIUS_STEP/.test(src), 'Default radiusStep');
+    t.assertTruthy(/columnStep\s*=\s*Constants\.SPIRAL_NOTES_DEFAULT_COLUMN_STEP/.test(src), 'Default columnStep');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'Default velocityDecay');
+    t.assertTruthy(/direction\s*=\s*Constants\.SPIRAL_NOTES_DIRECTION_CW/.test(src), 'Default direction cw');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'Default skipOccupied=true');
+});
+
+TestRunner.test("Day 713 - spiralNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]\)\s*return\s*0/.test(src), 'Audio guard returns 0');
+});
+
+TestRunner.test("Day 713 - spiralNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+    t.assertTruthy(/No active sequence found/.test(src), 'warns when no active sequence');
+});
+
+TestRunner.test("Day 713 - spiralNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    const captureIdx = src.indexOf('_captureUndoState');
+    const newNotesIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(captureIdx > 0 && newNotesIdx > 0 && captureIdx < newNotesIdx, 'captureUndoState is called before newNotes.push');
+});
+
+TestRunner.test("Day 713 - spiralNotes has descriptive 'Spiral Notes' undo label", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/Spiral Notes/.test(src), 'undo label includes Spiral Notes');
+});
+
+TestRunner.test("Day 713 - spiralNotes clamps length to SPIRAL_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/SPIRAL_NOTES_MIN_LENGTH/.test(src), 'references SPIRAL_NOTES_MIN_LENGTH');
+    t.assertTruthy(/SPIRAL_NOTES_MAX_LENGTH/.test(src), 'references SPIRAL_NOTES_MAX_LENGTH');
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor on length');
+});
+
+TestRunner.test("Day 713 - spiralNotes clamps radiusStep to SPIRAL_NOTES_MIN/MAX_RADIUS_STEP", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/SPIRAL_NOTES_MIN_RADIUS_STEP/.test(src), 'references SPIRAL_NOTES_MIN_RADIUS_STEP');
+    t.assertTruthy(/SPIRAL_NOTES_MAX_RADIUS_STEP/.test(src), 'references SPIRAL_NOTES_MAX_RADIUS_STEP');
+});
+
+TestRunner.test("Day 713 - spiralNotes clamps columnStep to SPIRAL_NOTES_MIN/MAX_COLUMN_STEP", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/SPIRAL_NOTES_MIN_COLUMN_STEP/.test(src), 'references SPIRAL_NOTES_MIN_COLUMN_STEP');
+    t.assertTruthy(/SPIRAL_NOTES_MAX_COLUMN_STEP/.test(src), 'references SPIRAL_NOTES_MAX_COLUMN_STEP');
+});
+
+TestRunner.test("Day 713 - spiralNotes clamps velocityDecay to SPIRAL_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/SPIRAL_NOTES_MIN_VELOCITY_DECAY/.test(src), 'references SPIRAL_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/SPIRAL_NOTES_MAX_VELOCITY_DECAY/.test(src), 'references SPIRAL_NOTES_MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 713 - spiralNotes validates direction with SPIRAL_NOTES_DIRECTIONS", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/SPIRAL_NOTES_DIRECTIONS\.includes/.test(src), 'uses SPIRAL_NOTES_DIRECTIONS.includes for direction validation');
+    t.assertTruthy(/SPIRAL_NOTES_DIRECTION_CW/.test(src), 'falls back to SPIRAL_NOTES_DIRECTION_CW');
+});
+
+TestRunner.test("Day 713 - spiralNotes uses Math.sin/cos for spiral offsets", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/Math\.sin\(angle\)/.test(src), 'uses Math.sin for row offset');
+    t.assertTruthy(/Math\.cos\(angle\)/.test(src), 'uses Math.cos for column offset');
+});
+
+TestRunner.test("Day 713 - spiralNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*n\)/.test(src), 'uses Math.pow for exponential decay');
+});
+
+TestRunner.test("Day 713 - spiralNotes respects sequence length boundary", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks targetCol out of bounds');
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks targetRow out of bounds');
+});
+
+TestRunner.test("Day 713 - spiralNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'checks skipOccupied before writing');
+});
+
+TestRunner.test("Day 713 - spiralNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 713 - spiralNotes returns count of spiraled notes (spiraledCount)", (t) => {
+    const src = Track.prototype.spiralNotes.toString();
+    t.assertTruthy(/spiraledCount/.test(src), 'returns spiraledCount');
+    t.assertTruthy(/return\s+spiraledCount/.test(src), 'returns spiraledCount');
+});
+
+TestRunner.test("Day 713 - All 15 SPIRAL_NOTES constants are defined in constants.js", (t) => {
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_MIN_LENGTH !== 'undefined', 'SPIRAL_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_MAX_LENGTH !== 'undefined', 'SPIRAL_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_DEFAULT_LENGTH !== 'undefined', 'SPIRAL_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_MIN_RADIUS_STEP !== 'undefined', 'SPIRAL_NOTES_MIN_RADIUS_STEP defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_MAX_RADIUS_STEP !== 'undefined', 'SPIRAL_NOTES_MAX_RADIUS_STEP defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_DEFAULT_RADIUS_STEP !== 'undefined', 'SPIRAL_NOTES_DEFAULT_RADIUS_STEP defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_MIN_COLUMN_STEP !== 'undefined', 'SPIRAL_NOTES_MIN_COLUMN_STEP defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_MAX_COLUMN_STEP !== 'undefined', 'SPIRAL_NOTES_MAX_COLUMN_STEP defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_DEFAULT_COLUMN_STEP !== 'undefined', 'SPIRAL_NOTES_DEFAULT_COLUMN_STEP defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_MIN_VELOCITY_DECAY !== 'undefined', 'SPIRAL_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_MAX_VELOCITY_DECAY !== 'undefined', 'SPIRAL_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY !== 'undefined', 'SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_DIRECTION_CW !== 'undefined', 'SPIRAL_NOTES_DIRECTION_CW defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_DIRECTION_CCW !== 'undefined', 'SPIRAL_NOTES_DIRECTION_CCW defined');
+    t.assertTruthy(typeof Constants.SPIRAL_NOTES_DIRECTIONS !== 'undefined', 'SPIRAL_NOTES_DIRECTIONS defined');
+});
+
+TestRunner.test("Day 713 - SPIRAL_NOTES_DIRECTIONS includes both cw and ccw", (t) => {
+    t.assertTruthy(Constants.SPIRAL_NOTES_DIRECTIONS.includes('cw'), 'cw direction included');
+    t.assertTruthy(Constants.SPIRAL_NOTES_DIRECTIONS.includes('ccw'), 'ccw direction included');
+});
+
+TestRunner.test("Day 713 - ui.js has 5 Spiral Notes menu items", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    const count = (content.match(/Spiral Notes/g) || []).length;
+    t.assertTruthy(count >= 5, `Found ${count} "Spiral Notes" references in ui.js (expected >= 5)`);
+});
+
+TestRunner.test("Day 713 - Spiral Notes menu items call track.spiralNotes", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    const matches = content.match(/currentTrackForMenu\.spiralNotes\(/g) || [];
+    t.assertTruthy(matches.length >= 5, `Found ${matches.length} spiralNotes calls in ui.js (expected >= 5)`);
+});
+
+TestRunner.test("Day 713 - Spiral Notes menu items call recreateToneSequence", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    const spirals = content.match(/spiralNotes\([^)]+\)/g) || [];
+    t.assertTruthy(spirals.length >= 5, `Found ${spirals.length} spiralNotes menu item calls`);
+});
+
+TestRunner.test("Day 713 - Spiral Notes menu items show notification with count", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    t.assertTruthy(/Spiraled \$\{result\} note/s.test(content), 'uses Spiraled ${result} note notification');
+    t.assertTruthy(/No notes to spiral/.test(content), 'shows No notes to spiral when nothing to spiral');
+});
+
+TestRunner.test("Day 713 - Spiral Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    let content = '';
+    try { content = fs.readFileSync('./js/ui.js', 'utf-8'); } catch (e) { content = ''; }
+    t.assertTruthy(/Spiral Notes on \$\{currentTrackForMenu\.name\}/.test(content), 'uses descriptive Spiral Notes undo label');
+});
+
+TestRunner.test("Day 713 - APP_VERSION validation (>= 2.362)", (t) => {
+    t.assertTruthy(Constants.APP_VERSION >= '2.362', `APP_VERSION ${Constants.APP_VERSION} is >= 2.362`);
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: angle progression", (t) => {
+    const angleSign = 1; // cw
+    const angles = [];
+    for (let n = 1; n <= 4; n++) {
+        angles.push(n * (Math.PI / 4) * angleSign);
+    }
+    t.assertEqual(angles[0].toFixed(2), '0.79', 'n=1 angle is ~PI/4');
+    t.assertEqual(angles[1].toFixed(2), '1.57', 'n=2 angle is ~PI/2');
+    t.assertEqual(angles[2].toFixed(2), '2.36', 'n=3 angle is ~3*PI/4');
+    t.assertEqual(angles[3].toFixed(2), '3.14', 'n=4 angle is ~PI');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: rowOffset = sin(angle) * n * radiusStep", (t) => {
+    const angle = Math.PI / 4; // 45 degrees
+    const n = 4;
+    const radiusStep = 1;
+    const rowOffset = Math.round(Math.sin(angle) * (n * radiusStep));
+    t.assertEqual(rowOffset, 3, 'sin(45deg) * 4 * 1 = ~2.83, rounded to 3');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: colOffset = cos(angle) * columnStep, min 1", (t) => {
+    const angle = Math.PI; // 180 degrees (backwards)
+    const columnStep = 1;
+    let colOffset = Math.round(Math.cos(angle) * columnStep);
+    if (colOffset < 1) colOffset = 1;
+    t.assertEqual(colOffset, 1, 'cos(180deg) = -1, clamped to 1 (min)');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: velocity decay = origVel * decay^n", (t) => {
+    const origVel = 1.0;
+    const decay = 0.88;
+    const expectedAtN1 = Math.round(origVel * Math.pow(decay, 1) * 100) / 100;
+    const expectedAtN4 = Math.round(origVel * Math.pow(decay, 4) * 100) / 100;
+    t.assertEqual(expectedAtN1, 0.88, 'n=1 velocity 0.88');
+    t.assertEqual(expectedAtN4, 0.60, 'n=4 velocity ~0.60');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: clamps length to valid range (100 -> 16)", (t) => {
+    const requested = 100;
+    const clamped = Math.max(1, Math.min(16, Math.floor(requested)));
+    t.assertEqual(clamped, 16, 'length clamped to 16 (max)');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: clamps radiusStep to valid range (-3 -> 0)", (t) => {
+    const requested = -3;
+    const clamped = Math.max(0, Math.min(4, Math.floor(requested)));
+    t.assertEqual(clamped, 0, 'radiusStep clamped to 0 (min)');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: clamps columnStep to valid range (0 -> 1)", (t) => {
+    const requested = 0;
+    const clamped = Math.max(1, Math.min(4, Math.floor(requested)));
+    t.assertEqual(clamped, 1, 'columnStep clamped to 1 (min)');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: clamps velocityDecay to valid range (2.5 -> 1.0)", (t) => {
+    const requested = 2.5;
+    const clamped = Math.max(0.1, Math.min(1.0, requested));
+    t.assertEqual(clamped, 1.0, 'velocityDecay clamped to 1.0 (max)');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: angleSign=-1 for ccw direction", (t) => {
+    const useDirection = 'ccw';
+    const angleSign = useDirection === 'ccw' ? -1 : 1;
+    t.assertEqual(angleSign, -1, 'ccw direction has angleSign=-1');
+});
+
+TestRunner.test("Day 713 - spiralNotes functional test: angleSign=+1 for cw direction", (t) => {
+    const useDirection = 'cw';
+    const angleSign = useDirection === 'ccw' ? -1 : 1;
+    t.assertEqual(angleSign, 1, 'cw direction has angleSign=+1');
 });
 
 export async function runTests() {

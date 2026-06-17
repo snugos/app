@@ -9,8 +9,8 @@
 // Day 521: Track State Management & Render Functions Tests - Added 54 unit tests for track state management functions (addTrackToStateInternal, removeTrackFromStateInternal, renameTrackInState) and UI render functions (renderMixer, renderSoundBrowserFavorites, renderSoundBrowserRecent, renderSoundBrowserDirectoryFiltered, toggleSequencerViewMode, openMixerWindow). Tests cover function exports, parameter counts, async nature, Track instance creation, undo capture, track element creation, and window management patterns. Also added missing imports for these functions in tests.js. Total tests increased from 2029 to 2081. // Day 520: Additional Window Function Tests - Added 53 unit tests for openTrackSequencerWindow, openTimelineWindow, openTrackInspectorWindow, openMasterEffectsRackWindow, openTrackEffectsRackWindow, and openProjectNotesWindow functions. Tests cover function exports, parameter counts, single-instance window management using getOpenWindows/getWindowByIdState, createWindow usage, localAppServices references, savedState handling, and function-specific behavior. Tests increased from 1976 to 2029. // Day 519: Core Window Function Tests - Added 31 unit tests for openMixerWindow, openSoundBrowserWindow, and openGlobalControlsWindow functions. Tests cover function exports, parameter counts, single-instance window management using getOpenWindows, createWindow usage, windowId values, HTML content building, UI element references (play/stop/record buttons, tempo, meter), onReadyCallback handling, localAppServices references, and savedState for window restoration. Version bump to 2.182.0. // Day 518: showKeyboardShortcutsHelpWindow Tests - Added 14 unit tests for the showKeyboardShortcutsHelpWindow function exported from ui.js. Tests cover function export, parameter count, getOpenWindows reference, single-instance window management, HTML content building, all keyboard shortcut sections (Playback Controls, Edit Operations, Track Controls, Piano Keys, Snap & Quantize), createWindow usage, and KEYBOARD_SHORTCUTS_HELP_WIDTH/HEIGHT constant references. Total tests increased from 1931 to 1945. // Day 517: Fix Missing Sequencer Context Menu Tests - Added 2 missing tests from Day 505 block: Scale Velocities (100%) and Quantize to 1/4. The Day 505 tests covered Scale Velocities at 50%, 75%, 125% but missed the 100% option, and covered Quantize to 1/16 and 1/8 but missed 1/4. Both menu items exist in ui.js but tests were never written. Total tests increased from 1929 to 1931. // Day 516: Fix tests.js syntax - duplicate stopMetronome import. // Day 515: Audio Track Inspector Implementation - Added buildAudioTrackInspectorDOM and initializeAudioTrackInspectorControls functions to provide Audio track inspector UI with audio input device selection, input gain knob, monitoring volume slider, and recording status indicator. Both functions are now wired in buildTrackInspectorContentDOM and initializeTypeSpecificInspectorControls. // Day 513: Sidechain Audio Functions Tests - Added 34 unit tests for Sidechain audio functions (handleSidechainParamChangeForEffect, enableSidechainFromTrackForEffect, enableSidechainFromTrackIn, disableSidechainBus) covering function exports, parameter counts, async nature, effectNode validation, sidechainTrackAssignments, localAppServices integration, inputChannel checks, bus connections, and dispose behavior. // Day 512: EffectsRegistry Functions Tests - Added 19 unit tests for EffectsRegistry functions (getEffectBypassState, setEffectBypassState, getEffectParamDefinitions) (getTransportPosition, getTransportSeconds, getTransportBpm, getTransportState) and audio mixdown export (exportMixdownToWav). Tests verify function exports, async nature, parameter counts, Tone.Recorder usage, masterGain connection, transport control, error handling, and recording size validation. Version bump to 2.176.0.
 
 // App Version
-// Day 711: Track Templates apply to active track - uses getActiveTrackForInteraction to apply template to currently active/selected track instead of always tracks[0]
-export const APP_VERSION = '2.359.0';
+
+export const APP_VERSION = '2.362.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -236,6 +236,83 @@ export const TRILL_NOTES_DIRECTIONS = [
     TRILL_NOTES_DIRECTION_UP,
     TRILL_NOTES_DIRECTION_DOWN,
     TRILL_NOTES_DIRECTION_BOTH
+];
+
+// Day 711: Drift Notes Constants - progressively shift notes over the sequence
+// Creates a "drifting" effect where notes shift by progressively larger or smaller
+// amounts as they move through the bar. Complements bounceNotes (random shift)
+// and shuffleNotes (random window shift) with a deterministic, evolving pattern.
+//
+// driftMode controls how the shift evolves across the bar:
+//   'linear-up': shift grows linearly from 0 to maxShift (notes spread right as bar progresses)
+//   'linear-down': shift starts at maxShift and shrinks to 0 (notes compress right as bar progresses)
+//   'linear-center': shift = 0 at start and end, peak at middle (drift out and back)
+//   'random-per-note': each note gets a per-note random shift within maxShift
+//   'mirror': each note's shift is the mirror of its position's "linear-up" value
+//
+// skipChance: probability of leaving a note in place (0.0 = all notes drift)
+// velocityFactor: scales the velocity of drifted notes (1.0 = no change)
+// Complements strumNotes, staggerNotes, crescentNotes, trillNotes, etc.
+export const DRIFT_NOTES_MIN_MAX_SHIFT = 1; // Minimum drift distance in steps
+export const DRIFT_NOTES_MAX_MAX_SHIFT = 8; // Maximum drift distance in steps (1/2 note)
+export const DRIFT_NOTES_DEFAULT_MAX_SHIFT = 4; // Default 4 steps (1/4 note) max drift
+export const DRIFT_NOTES_MIN_SKIP_CHANCE = 0.0; // Minimum probability of skipping a note
+export const DRIFT_NOTES_MAX_SKIP_CHANCE = 0.9; // Maximum probability of skipping a note
+export const DRIFT_NOTES_DEFAULT_SKIP_CHANCE = 0.0; // Default: all notes drift
+export const DRIFT_NOTES_MIN_VELOCITY_FACTOR = 0.1; // Minimum velocity factor (preserves 10% velocity at floor)
+export const DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (1.0 = no change)
+export const DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95; // Default slight attenuation per drift step
+export const DRIFT_NOTES_MODE_LINEAR_UP = 'linear-up'; // Shift grows from 0 to maxShift
+export const DRIFT_NOTES_MODE_LINEAR_DOWN = 'linear-down'; // Shift shrinks from maxShift to 0
+export const DRIFT_NOTES_MODE_LINEAR_CENTER = 'linear-center'; // V-shape: 0 shift at middle, full shift at start and end
+export const DRIFT_NOTES_MODE_RANDOM_PER_NOTE = 'random-per-note'; // Each note gets a random shift in [-maxShift, +maxShift]
+export const DRIFT_NOTES_MODE_MIRROR = 'mirror'; // Inverted V: 0 at start/end, maxShift at middle
+export const DRIFT_NOTES_MODES = [
+    DRIFT_NOTES_MODE_LINEAR_UP,
+    DRIFT_NOTES_MODE_LINEAR_DOWN,
+    DRIFT_NOTES_MODE_LINEAR_CENTER,
+    DRIFT_NOTES_MODE_RANDOM_PER_NOTE,
+    DRIFT_NOTES_MODE_MIRROR
+];
+
+// Cascade Notes - cascade each note into a waterfall of notes that follow the source into subsequent rows
+// Creates dense, falling/rising patterns across the grid (column + row movement).
+// Complements staggerNotes (row-only), driftNotes (column-only), and arpeggiateNotes (column-only cycles).
+export const CASCADE_NOTES_MIN_STEPS = 1; // Minimum number of cascade steps per source note
+export const CASCADE_NOTES_MAX_STEPS = 8; // Maximum cascade steps per source note (8 rows of fall)
+export const CASCADE_NOTES_DEFAULT_STEPS = 4; // Default 4 cascade steps (4-row waterfall)
+export const CASCADE_NOTES_MIN_STEP_DELAY = 0; // Minimum columns between cascade notes (0 = same column)
+export const CASCADE_NOTES_MAX_STEP_DELAY = 8; // Maximum 8 columns between cascade notes (1/2 note)
+export const CASCADE_NOTES_DEFAULT_STEP_DELAY = 2; // Default 2 columns (1/8 note) between cascade notes
+export const CASCADE_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum velocity decay per cascade step
+export const CASCADE_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum decay (1.0 = no decay)
+export const CASCADE_NOTES_DEFAULT_VELOCITY_DECAY = 0.75; // Default 75% velocity preservation per cascade step (natural fade)
+export const CASCADE_NOTES_DIRECTION_DOWN = 'down'; // Cascade flows downward (row +N)
+export const CASCADE_NOTES_DIRECTION_UP = 'up'; // Cascade flows upward (row -N)
+export const CASCADE_NOTES_DIRECTIONS = [
+    CASCADE_NOTES_DIRECTION_DOWN,
+    CASCADE_NOTES_DIRECTION_UP
+];
+
+// Spiral Notes - spawn N notes in a spiral/rotating pattern around each source note
+// Complements cascadeNotes (linear 2D row+col), driftNotes (column-only), and crescentNotes (grouped arc).
+export const SPIRAL_NOTES_MIN_LENGTH = 1;
+export const SPIRAL_NOTES_MAX_LENGTH = 16;
+export const SPIRAL_NOTES_DEFAULT_LENGTH = 8;
+export const SPIRAL_NOTES_MIN_RADIUS_STEP = 0;
+export const SPIRAL_NOTES_MAX_RADIUS_STEP = 4;
+export const SPIRAL_NOTES_DEFAULT_RADIUS_STEP = 1;
+export const SPIRAL_NOTES_MIN_COLUMN_STEP = 1;
+export const SPIRAL_NOTES_MAX_COLUMN_STEP = 4;
+export const SPIRAL_NOTES_DEFAULT_COLUMN_STEP = 1;
+export const SPIRAL_NOTES_MIN_VELOCITY_DECAY = 0.1;
+export const SPIRAL_NOTES_MAX_VELOCITY_DECAY = 1.0;
+export const SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY = 0.88;
+export const SPIRAL_NOTES_DIRECTION_CW = 'cw';
+export const SPIRAL_NOTES_DIRECTION_CCW = 'ccw';
+export const SPIRAL_NOTES_DIRECTIONS = [
+    SPIRAL_NOTES_DIRECTION_CW,
+    SPIRAL_NOTES_DIRECTION_CCW
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

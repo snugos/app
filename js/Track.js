@@ -5577,4 +5577,293 @@ export class Track {
 
         return trilledCount;
     }
+
+    // Drift Notes - progressively shift notes over the sequence to create drifting patterns
+    // Complements bounceNotes (random per-note shift) and shuffleNotes (random per-note window)
+    // with a deterministic, evolving shift that grows/shrinks across the bar.
+    // maxShift: maximum drift distance in steps (clamped to DRIFT_NOTES_MIN/MAX_MAX_SHIFT)
+    // skipChance: probability of leaving a note in place (0.0 = all notes drift)
+    // velocityFactor: scales the velocity of drifted notes (1.0 = no change)
+    // driftMode: 'linear-up' | 'linear-down' | 'linear-center' | 'random-per-note' | 'mirror'
+    //   linear-up: shift grows linearly from 0 to maxShift as col progresses through the bar
+    //   linear-down: shift starts at maxShift and shrinks to 0 as col progresses
+    //   linear-center: V-shape (dips in middle): maxShift at start/end, 0 at middle
+    //   random-per-note: each note gets an independent random shift in [-maxShift, +maxShift]
+    //   mirror: inverted V (peaks in middle): 0 at start/end, maxShift at middle
+    // skipOccupied: skip target column if already has a note (true = don't overwrite)
+    driftNotes(maxShift = Constants.DRIFT_NOTES_DEFAULT_MAX_SHIFT, skipChance = Constants.DRIFT_NOTES_DEFAULT_SKIP_CHANCE, velocityFactor = Constants.DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR, driftMode = Constants.DRIFT_NOTES_MODE_LINEAR_UP, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} driftNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedMaxShift = Math.max(Constants.DRIFT_NOTES_MIN_MAX_SHIFT, Math.min(Constants.DRIFT_NOTES_MAX_MAX_SHIFT, Math.floor(maxShift)));
+        const clampedSkip = Math.max(Constants.DRIFT_NOTES_MIN_SKIP_CHANCE, Math.min(Constants.DRIFT_NOTES_MAX_SKIP_CHANCE, skipChance));
+        const clampedVel = Math.max(Constants.DRIFT_NOTES_MIN_VELOCITY_FACTOR, Math.min(Constants.DRIFT_NOTES_MAX_VELOCITY_FACTOR, velocityFactor));
+        const useMode = Constants.DRIFT_NOTES_MODES.includes(driftMode) ? driftMode : Constants.DRIFT_NOTES_MODE_LINEAR_UP;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Drift Notes (${useMode}, max ±${clampedMaxShift}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let driftedCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Helper: compute the drift shift for a given column based on the selected mode
+        const computeShift = (col) => {
+            if (totalSteps <= 1) return 0;
+            const progress = col / (totalSteps - 1);
+            switch (useMode) {
+                case Constants.DRIFT_NOTES_MODE_LINEAR_UP:
+                    return Math.round(progress * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_LINEAR_DOWN:
+                    return Math.round((1.0 - progress) * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_LINEAR_CENTER:
+                    // V-shape: maxShift at start, 0 at middle, maxShift at end (dips in the middle)
+                    return Math.round(Math.abs(2 * progress - 1) * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_RANDOM_PER_NOTE: {
+                    // Random shift in [-clampedMaxShift, +clampedMaxShift]
+                    const r = Math.floor(Math.random() * (clampedMaxShift * 2 + 1)) - clampedMaxShift;
+                    return r;
+                }
+                case Constants.DRIFT_NOTES_MODE_MIRROR:
+                    // Inverted V (peak): 0 at start/end, maxShift at middle
+                    return Math.round((1.0 - Math.abs(2 * progress - 1)) * clampedMaxShift);
+                default:
+                    return Math.round(progress * clampedMaxShift);
+            }
+        };
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                // Roll skip chance
+                if (Math.random() < clampedSkip) continue;
+
+                const shift = computeShift(col);
+                if (shift === 0) continue; // No movement for this note
+                const targetCol = col + shift;
+
+                // Skip if target is out of bounds or already occupied
+                if (targetCol < 0 || targetCol >= totalSteps) continue;
+                if (skipOccupied && row[targetCol] && row[targetCol].active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+                const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
+                newNotes.push({
+                    rowIndex,
+                    col: targetCol,
+                    velocity: Math.round(newVel * 100) / 100,
+                    probability: stepData.probability,
+                    origCol: col
+                });
+            }
+        }
+
+        // Apply the new drifted notes (and clear original positions)
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity,
+                    probability: note.probability
+                };
+                // Clear the source cell (only if it doesn't conflict with another drifted note)
+                if (activeSeq.data[note.rowIndex][note.origCol] === row[note.origCol]) {
+                    activeSeq.data[note.rowIndex][note.origCol] = null;
+                }
+                driftedCount++;
+            }
+        }
+
+        return driftedCount;
+    }
+
+    // Cascade Notes - cascade each active note into a waterfall of N additional notes that flow
+    // into subsequent rows (and optionally shift in time). Creates dense, falling/rising patterns.
+    // Complements driftNotes (column-only shift), shuffleNotes (random per-note column shift),
+    // staggerNotes (column-only chord cascade), arpeggiateNotes (column arpeggio cycles), and
+    // echoNotes (column-only delay taps) with a 2D row+column cascade.
+    // steps: number of cascade notes to add per source note (clamped to CASCADE_NOTES_MIN/MAX_STEPS)
+    // stepDelay: columns between cascade notes (0 = same column, 2 = 1/8 note spacing)
+    // velocityDecay: multiplicative decay per cascade step (1.0 = no decay, 0.75 = natural fade)
+    // direction: 'down' (cascades into row+1, row+2, ...) or 'up' (cascades into row-1, row-2, ...)
+    // skipOccupied: skip cascade step if target cell already has an active note (true = don't overwrite)
+    cascadeNotes(steps = Constants.CASCADE_NOTES_DEFAULT_STEPS, stepDelay = Constants.CASCADE_NOTES_DEFAULT_STEP_DELAY, velocityDecay = Constants.CASCADE_NOTES_DEFAULT_VELOCITY_DECAY, direction = Constants.CASCADE_NOTES_DIRECTION_DOWN, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} cascadeNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedSteps = Math.max(Constants.CASCADE_NOTES_MIN_STEPS, Math.min(Constants.CASCADE_NOTES_MAX_STEPS, Math.floor(steps)));
+        const clampedDelay = Math.max(Constants.CASCADE_NOTES_MIN_STEP_DELAY, Math.min(Constants.CASCADE_NOTES_MAX_STEP_DELAY, Math.floor(stepDelay)));
+        const clampedDecay = Math.max(Constants.CASCADE_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.CASCADE_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useDirection = Constants.CASCADE_NOTES_DIRECTIONS.includes(direction) ? direction : Constants.CASCADE_NOTES_DIRECTION_DOWN;
+        const rowDelta = useDirection === Constants.CASCADE_NOTES_DIRECTION_UP ? -1 : 1;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Cascade Notes (${useDirection}, ${clampedSteps} steps) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let cascadedCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity, probability} to add
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // For each cascade step, compute target row + target col
+                for (let t = 1; t <= clampedSteps; t++) {
+                    const targetRow = rowIndex + (rowDelta * t);
+                    const targetCol = col + (t * clampedDelay);
+
+                    // Skip if target row is out of bounds
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    // Skip if target col is out of bounds
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    // Skip if skipOccupied and target slot is already active
+                    if (skipOccupied && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+
+                    // Compute decayed velocity: origVel * decay^t (each fade a bit softer)
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, t)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        // Apply the new cascade notes
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            cascadedCount++;
+        }
+
+        return cascadedCount;
+    }
+
+    // Spawns a spiral of new notes around each active source note.
+    // length: number of spiral nodes per source note (clamped 1..16)
+    // radiusStep: rows the spiral expands per node (0 = pure column rotation, 4 = wide spiral)
+    // columnStep: columns advanced per angular node (1 = tight, 4 = loose)
+    // velocityDecay: multiplicative decay per spiral step (1.0 = no decay)
+    // direction: 'cw' (clockwise) or 'ccw' (counter-clockwise)
+    // skipOccupied: skip node if target cell already has an active note
+    spiralNotes(length = Constants.SPIRAL_NOTES_DEFAULT_LENGTH, radiusStep = Constants.SPIRAL_NOTES_DEFAULT_RADIUS_STEP, columnStep = Constants.SPIRAL_NOTES_DEFAULT_COLUMN_STEP, velocityDecay = Constants.SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY, direction = Constants.SPIRAL_NOTES_DIRECTION_CW, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} spiralNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.SPIRAL_NOTES_MIN_LENGTH, Math.min(Constants.SPIRAL_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedRadiusStep = Math.max(Constants.SPIRAL_NOTES_MIN_RADIUS_STEP, Math.min(Constants.SPIRAL_NOTES_MAX_RADIUS_STEP, Math.floor(radiusStep)));
+        const clampedColumnStep = Math.max(Constants.SPIRAL_NOTES_MIN_COLUMN_STEP, Math.min(Constants.SPIRAL_NOTES_MAX_COLUMN_STEP, Math.floor(columnStep)));
+        const clampedDecay = Math.max(Constants.SPIRAL_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.SPIRAL_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useDirection = Constants.SPIRAL_NOTES_DIRECTIONS.includes(direction) ? direction : Constants.SPIRAL_NOTES_DIRECTION_CW;
+        const angleSign = useDirection === Constants.SPIRAL_NOTES_DIRECTION_CCW ? -1 : 1;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Spiral Notes (${useDirection}, ${clampedLength} nodes) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let spiraledCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // For each spiral node, compute (rowOffset, colOffset) using an angular sweep
+                // Node 0: angle=0 -> offsets (0, columnStep)
+                // Node n: angle=(n * PI/4) * angleSign -> offsets depend on cos/sin scaled by radius
+                for (let n = 1; n <= clampedLength; n++) {
+                    const angle = n * (Math.PI / 4) * angleSign;
+                    // Row offset = sin(angle) * (n * radiusStep), rounded
+                    const rowOffset = Math.round(Math.sin(angle) * (n * clampedRadiusStep));
+                    // Column offset = cos(angle) * columnStep, rounded (always at least 1 col forward)
+                    let colOffset = Math.round(Math.cos(angle) * clampedColumnStep);
+                    if (colOffset < 1) colOffset = 1;
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    // Skip if target row is out of bounds
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    // Skip if target col is out of bounds
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    // Skip if skipOccupied and target slot is already active
+                    if (skipOccupied && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+
+                    // Compute decayed velocity: origVel * decay^n
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, n)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        // Apply the new spiral notes
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            spiraledCount++;
+        }
+
+        return spiraledCount;
+    }
 }

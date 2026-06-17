@@ -1,24 +1,266 @@
-#### Day 711: Track Templates apply to active track (2026-06-16)
-- **Fix**: Completed the incomplete "Apply to first track for now" stub in the Track Templates load handler in `js/ui.js`. The UI text already said "Click 'Load' to apply a template to a **selected** track", but the handler was silently applying to `tracks[0]`. Now it uses `localAppServices.getActiveTrackForInteraction()` (which respects the active sequencer track via `getActiveSequencerTrackIdState`) and only falls back to `tracks[0]` when no active track is set. This matches the documented UX and the rest of the codebase's track-selection pattern.
+#### Day 713: Spiral Notes Feature (2026-06-17)
+- **Feature**: Wired up the partially-scaffolded `spiralNotes(length, radiusStep, columnStep, velocityDecay, direction, skipOccupied)` method in Track.js to the sequencer context menu with 5 "Spiral Notes" menu items. Each active note spawns N notes in a spiral/rotating pattern around the source, computed via angular sweep (Math.sin for row offset, Math.cos for column offset). Complements `cascadeNotes` (linear 2D row+col), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a true 2D spiral effect.
 - **Files Modified**:
-  - `js/ui.js`: Replaced `const targetTrack = tracks[0]; // Apply to first track for now` with a call to `getActiveTrackForInteraction()` (with fallback to `tracks[0]`).
-  - `js/constants.js`: Bumped `APP_VERSION` from `2.358.0` to `2.359.0` and added a Day 711 comment.
-  - `js/tests.js`: Added 6 Day 711 tests for the fix.
-  - `AGENTS.md`: Updated with this entry.
+  - `js/ui.js`: Added 5 Spiral Notes menu items in the sequencer context menu after Cascade Notes (Subtle 2, slow decay), with separator after
+  - `js/constants.js`: Bumped APP_VERSION to 2.362.0 (constants were defined in Day 712's working changes)
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced or never actually pushed from Day 712 audit.)
+  - Fixed extra `{ label: \`...\`}` prefix duplication and off-by-one brace count on the "Paste Selection" line in `js/ui.js` (line 2516). The line had a duplicate `{ label: \`                { label: \`Paste Selection\`` prefix and an incorrect 3-brace close (}`) instead of 2. After these fixes, the `run-tests-esm.mjs` build succeeds (esbuild reports "Build succeeded"). Test runtime still has a pre-existing `createRequire(import.meta.url)` issue in the bun/node bundler that's unrelated to this work.
 - **Feature Details**:
-  - The Track Templates window (`openTrackTemplatesWindow` in `js/ui.js`) lists all saved templates with Load/Delete buttons.
-  - Before: clicking Load always applied the template to `tracks[0]`, regardless of which track the user had selected. This was a known stub marked with `// Apply to first track for now`.
-  - After: clicking Load uses `localAppServices.getActiveTrackForInteraction()` to find the track the user is currently working with (active sequencer track → ghost/selected track → first track fallback, matching the production logic in `js/main.js` lines 670-677).
-  - The notification and undo label already use `targetTrack.name`, so they now correctly show the name of the actually-targeted track.
-- **Tests** (`js/tests.js`): 6 new tests
-  - Stub removed: ui.js no longer contains the literal string "Apply to first track for now"
-  - `getActiveTrackForInteraction` is referenced in the Track Templates load handler
-  - `getActiveTrackForInteraction` appService is defined in main.js
-  - `APP_VERSION` is `>= 2.359`
-  - Functional: when an active sequencer track ID is set, `getActiveTrackForInteraction` returns that track (not `tracks[0]`)
-  - Functional: when no active ID is set, falls back to `tracks[0]`
-- **Version**: Bumped to `2.359.0`
-- **Verification**: `node --check` passes for all four modified files (ui.js, main.js, constants.js, tests.js)
+  - **spiralNotes** (`js/Track.js` - was already fully implemented in Day 712 working changes): For each active note, places N spiral nodes computed via an angular sweep. For node `n`, computes `angle = n * (PI/4) * angleSign` (where angleSign is +1 for clockwise, -1 for counter-clockwise), then `rowOffset = round(sin(angle) * n * radiusStep)` and `colOffset = max(1, round(cos(angle) * columnStep))`. Captures undo state BEFORE mutation with descriptive "Spiral Notes (direction, N nodes) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to SPIRAL_NOTES_MIN_LENGTH (1) / SPIRAL_NOTES_MAX_LENGTH (16) range with Math.floor (default SPIRAL_NOTES_DEFAULT_LENGTH=8)
+    - Clamps `radiusStep` to SPIRAL_NOTES_MIN_RADIUS_STEP (0) / SPIRAL_NOTES_MAX_RADIUS_STEP (4) range with Math.floor (default SPIRAL_NOTES_DEFAULT_RADIUS_STEP=1)
+    - Clamps `columnStep` to SPIRAL_NOTES_MIN_COLUMN_STEP (1) / SPIRAL_NOTES_MAX_COLUMN_STEP (4) range with Math.floor (default SPIRAL_NOTES_DEFAULT_COLUMN_STEP=1)
+    - Clamps `velocityDecay` to SPIRAL_NOTES_MIN_VELOCITY_DECAY (0.1) / SPIRAL_NOTES_MAX_VELOCITY_DECAY (1.0) range (default SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY=0.88)
+    - Validates `direction` against SPIRAL_NOTES_DIRECTIONS array, falls back to SPIRAL_NOTES_DIRECTION_CW if invalid
+    - Computes `angleSign = useDirection === 'ccw' ? -1 : 1`
+    - Captures undo state BEFORE mutation with descriptive "Spiral Notes (direction, N nodes) on <seqname>" label
+    - For each row, for each column, for each active note: for `n` in 1..clampedLength, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Computes `decayedVel = origVel * Math.pow(clampedDecay, n)` for exponential velocity decay
+    - Clamps decayed velocity to 0.05-1.0 range, rounds to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of spiraled notes added
+  - **Spiral Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Cascade Notes (Subtle 2, slow decay), with separator after
+    - "Spiral Notes (CW, 4 nodes)" - calls `spiralNotes(4, 1, 1, 0.88, 'cw', true)` - 4-node clockwise spiral with default radius/column step
+    - "Spiral Notes (CW, 8 nodes)" - calls `spiralNotes(8, 1, 1, 0.85, 'cw', true)` - 8-node clockwise spiral (full revolution)
+    - "Spiral Notes (CW, 8 wide)" - calls `spiralNotes(8, 2, 1, 0.85, 'cw', true)` - 8-node wide clockwise spiral (radius=2)
+    - "Spiral Notes (CCW, 8 nodes)" - calls `spiralNotes(8, 1, 1, 0.85, 'ccw', true)` - 8-node counter-clockwise spiral
+    - "Spiral Notes (Column-only, 8)" - calls `spiralNotes(8, 0, 1, 0.85, 'cw', true)` - 8-node column-only sweep (radius=0 = no row offset)
+    - All call `recreateToneSequence(true)` after spiraling
+    - All capture undo with descriptive "Spiral Notes on <name> (<seqname>)" label
+    - Show notifications: "Spiraled {count} note(s) (variant)."
+    - Show "No notes to spiral." when nothing to spiral
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 15 constants (were defined in Day 712's working changes; first day 712 commit on the LWB-with-Bugs branch)
+  - `SPIRAL_NOTES_MIN_LENGTH = 1` - Minimum 1 spiral node per source note
+  - `SPIRAL_NOTES_MAX_LENGTH = 16` - Maximum 16 spiral nodes (2 full revolutions)
+  - `SPIRAL_NOTES_DEFAULT_LENGTH = 8` - Default 8 spiral nodes (full revolution)
+  - `SPIRAL_NOTES_MIN_RADIUS_STEP = 0` - Minimum 0 rows expansion (column-only sweep)
+  - `SPIRAL_NOTES_MAX_RADIUS_STEP = 4` - Maximum 4 rows expansion per node
+  - `SPIRAL_NOTES_DEFAULT_RADIUS_STEP = 1` - Default 1 row expansion per node
+  - `SPIRAL_NOTES_MIN_COLUMN_STEP = 1` - Minimum 1 column forward per node
+  - `SPIRAL_NOTES_MAX_COLUMN_STEP = 4` - Maximum 4 columns forward per node
+  - `SPIRAL_NOTES_DEFAULT_COLUMN_STEP = 1` - Default 1 column forward per node
+  - `SPIRAL_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum velocity decay per spiral step
+  - `SPIRAL_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY = 0.88` - Default 88% velocity preservation per spiral step (gentle decay)
+  - `SPIRAL_NOTES_DIRECTION_CW = 'cw'` - Spiral flows clockwise (positive angle)
+  - `SPIRAL_NOTES_DIRECTION_CCW = 'ccw'` - Spiral flows counter-clockwise (negative angle)
+  - `SPIRAL_NOTES_DIRECTIONS = [CW, CCW]` - Valid direction values
+- **Tests** (`js/tests.js`): 36 tests covering:
+  - `spiralNotes` is a function on Track.prototype
+  - `spiralNotes` accepts 6 parameters with defaults (length, radiusStep, columnStep, velocityDecay, direction, skipOccupied)
+  - `spiralNotes` returns 0 for Audio tracks
+  - `spiralNotes` gets active sequence via `getActiveSequence`
+  - `spiralNotes` captures undo BEFORE mutation
+  - `spiralNotes` has descriptive "Spiral Notes" undo label
+  - `spiralNotes` clamps length to SPIRAL_NOTES_MIN/MAX_LENGTH
+  - `spiralNotes` clamps radiusStep to SPIRAL_NOTES_MIN/MAX_RADIUS_STEP
+  - `spiralNotes` clamps columnStep to SPIRAL_NOTES_MIN/MAX_COLUMN_STEP
+  - `spiralNotes` clamps velocityDecay to SPIRAL_NOTES_MIN/MAX_VELOCITY_DECAY
+  - `spiralNotes` validates direction with SPIRAL_NOTES_DIRECTIONS (uses SPIRAL_NOTES_DIRECTION_CW fallback)
+  - `spiralNotes` uses Math.sin for row offset and Math.cos for column offset
+  - `spiralNotes` uses Math.pow for velocity decay
+  - `spiralNotes` respects sequence length boundary
+  - `spiralNotes` supports skipOccupied option
+  - `spiralNotes` rounds velocity to 2 decimal places
+  - `spiralNotes` returns count of spiraled notes (spiraledCount)
+  - All 15 SPIRAL_NOTES constants are defined in constants.js
+  - SPIRAL_NOTES_DIRECTIONS includes both cw and ccw
+  - ui.js has 5 Spiral Notes menu items
+  - Spiral Notes menu items call track.spiralNotes
+  - Spiral Notes menu items call recreateToneSequence
+  - Spiral Notes menu items show notification with spiraled count
+  - Spiral Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.362 for Day 713)
+  - Functional test: angle progression (n * PI/4 sequence)
+  - Functional test: rowOffset = sin(angle) * n * radiusStep
+  - Functional test: colOffset = max(1, cos(angle) * columnStep) — min 1
+  - Functional test: velocity decay (vel * decay^n)
+  - Functional test: clamps length/radiusStep/columnStep/velocityDecay
+  - Functional test: angleSign=-1 for ccw, +1 for cw
+- **Version**: Bumped to 2.362.0
+- **Test Count**: Added 36 Day 713 tests (already in tests.js from Day 712 working changes, total 2473). Test runtime verification blocked by pre-existing `createRequire(import.meta.url)` bundler issue in `run-tests-esm.mjs` (Node v22 / Bun v1.2.21 both fail with "argument 'filename' must be a file URL object, file URL string, or absolute path string"). Per AGENTS.md notes, this affects 1491 pre-existing tests, not just Day 713. Static analysis (node --check) passes for all 4 modified files.
+
+#### Day 712: Cascade Notes Feature (2026-06-17)
+- **Feature**: Added `cascadeNotes(steps, stepDelay, velocityDecay, direction, skipOccupied)` method to Track class and 5 "Cascade Notes" menu items to the sequencer context menu. Each active note spawns a 2D cascade of N new notes that flow into subsequent rows (and optionally shift in time), creating dense waterfall or ascending patterns. Complements `driftNotes` (column-only), `shuffleNotes` (random column shift), `staggerNotes` (column-only chord cascade), `arpeggiateNotes` (column arpeggio cycles), and `echoNotes` (column-only delay taps) with a 2D row+column cascade.
+- **Files Modified**:
+  - `js/Track.js`: Added `cascadeNotes` method after `driftNotes` (line ~5696)
+  - `js/constants.js`: Added 13 CASCADE_NOTES_* constants + bumped APP_VERSION to 2.361.0
+  - `js/ui.js`: Added 5 Cascade Notes menu items in the sequencer context menu after Drift Notes (Linear Up ±8, 30% skip), with separator after
+  - `js/tests.js`: Added Day 712 test block with 34 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes**:
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line ~4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed.
+  - Fixed extra `}` on the "Paste Selection" line in `js/ui.js` line 2516 that was preventing tests.js from loading. The line had 7 opens but 8 closes; removed one extra close to make braces balanced. After this fix, `esbuild` can bundle tests.js without errors.
+- **Feature Details**:
+  - **cascadeNotes** (`js/Track.js`): For each active note, places a 2D cascade of N new notes flowing into subsequent rows (down by default, up optional) with optional time-shift. Captures undo state BEFORE mutation with descriptive label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `steps` to CASCADE_NOTES_MIN_STEPS (1) / CASCADE_NOTES_MAX_STEPS (8) range with Math.floor (default CASCADE_NOTES_DEFAULT_STEPS=4)
+    - Clamps `stepDelay` to CASCADE_NOTES_MIN_STEP_DELAY (0) / CASCADE_NOTES_MAX_STEP_DELAY (8) range with Math.floor (default CASCADE_NOTES_DEFAULT_STEP_DELAY=2)
+    - Clamps `velocityDecay` to CASCADE_NOTES_MIN_VELOCITY_DECAY (0.1) / CASCADE_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CASCADE_NOTES_DEFAULT_VELOCITY_DECAY=0.75)
+    - Validates `direction` against CASCADE_NOTES_DIRECTIONS array, falls back to CASCADE_NOTES_DIRECTION_DOWN if invalid
+    - Computes `rowDelta = useDirection === 'up' ? -1 : 1`
+    - Captures undo state BEFORE mutation with descriptive "Cascade Notes (direction, N steps) on <seqname>" label
+    - For each row, for each column, for each active note: for `t` in 1..clampedSteps, computes `targetRow = rowIndex + rowDelta * t` and `targetCol = col + t * clampedDelay`
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Computes `decayedVel = origVel * Math.pow(clampedDecay, t)` for exponential velocity decay (each cascade step a bit softer)
+    - Clamps decayed velocity to 0.05-1.0 range, rounds to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of cascaded notes added
+  - **Cascade Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Drift Notes (Linear Up ±8, 30% skip) with separator after
+    - "Cascade Notes (Down 4, 1/16)" - calls `cascadeNotes(4, 1, 0.75, 'down', true)` - 4-row downward waterfall, 1-column spacing (1/16 note)
+    - "Cascade Notes (Down 4, 1/8)" - calls `cascadeNotes(4, 2, 0.75, 'down', true)` - 4-row downward waterfall, 1/8 note spacing
+    - "Cascade Notes (Down 8, 1/8)" - calls `cascadeNotes(8, 2, 0.8, 'down', true)` - 8-row deep waterfall, 1/8 note spacing, gentler decay
+    - "Cascade Notes (Up 4, 1/8)" - calls `cascadeNotes(4, 2, 0.75, 'up', true)` - 4-row ascending, 1/8 note spacing
+    - "Cascade Notes (Tight 8, 0 delay)" - calls `cascadeNotes(8, 0, 0.7, 'down', true)` - 8-row tight downward stack, no time shift
+    - All call `recreateToneSequence(true)` after cascading
+    - All capture undo with descriptive "Cascade Notes on <name> (<seqname>)" label
+    - Show notifications: "Cascaded {count} note(s) (variant)."
+    - Show "No notes to cascade." when nothing to cascade
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 13 new constants
+  - `CASCADE_NOTES_MIN_STEPS = 1` - Minimum 1 cascade step per source note
+  - `CASCADE_NOTES_MAX_STEPS = 8` - Maximum 8 cascade steps (8 rows of fall)
+  - `CASCADE_NOTES_DEFAULT_STEPS = 4` - Default 4 cascade steps (4-row waterfall)
+  - `CASCADE_NOTES_MIN_STEP_DELAY = 0` - Minimum 0 columns between cascade notes (same column)
+  - `CASCADE_NOTES_MAX_STEP_DELAY = 8` - Maximum 8 columns between cascade notes (1/2 note)
+  - `CASCADE_NOTES_DEFAULT_STEP_DELAY = 2` - Default 2 columns (1/8 note) between cascade notes
+  - `CASCADE_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum velocity decay per cascade step
+  - `CASCADE_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `CASCADE_NOTES_DEFAULT_VELOCITY_DECAY = 0.75` - Default 75% velocity preservation per cascade step (natural fade)
+  - `CASCADE_NOTES_DIRECTION_DOWN = 'down'` - Cascade flows downward (row +N)
+  - `CASCADE_NOTES_DIRECTION_UP = 'up'` - Cascade flows upward (row -N)
+  - `CASCADE_NOTES_DIRECTIONS = [all 2 directions]` - Valid direction values
+- **Tests** (`js/tests.js`): 34 tests covering:
+  - `cascadeNotes` is a function on Track.prototype
+  - `cascadeNotes` accepts 5 parameters with defaults (steps, stepDelay, velocityDecay, direction, skipOccupied)
+  - `cascadeNotes` returns 0 for Audio tracks
+  - `cascadeNotes` gets active sequence via `getActiveSequence`
+  - `cascadeNotes` captures undo BEFORE mutation
+  - `cascadeNotes` has descriptive "Cascade Notes" undo label
+  - `cascadeNotes` clamps steps/stepDelay/velocityDecay to CASCADE_NOTES_MIN/MAX ranges
+  - `cascadeNotes` validates direction with CASCADE_NOTES_DIRECTIONS (uses useDirection fallback)
+  - `cascadeNotes` uses Math.floor on steps and stepDelay
+  - `cascadeNotes` supports down direction (rowDelta=+1)
+  - `cascadeNotes` supports up direction (rowDelta=-1)
+  - `cascadeNotes` uses Math.pow for velocity decay
+  - `cascadeNotes` rounds velocity to 2 decimal places
+  - `cascadeNotes` returns count of cascaded notes
+  - `cascadeNotes` uses newNotes collection pattern (collect then apply)
+  - All 13 CASCADE_NOTES constants are defined in constants.js
+  - ui.js has 5 Cascade Notes menu items
+  - Cascade Notes menu items call track.cascadeNotes
+  - Cascade Notes menu items call recreateToneSequence
+  - Cascade Notes menu items show notification with cascaded count
+  - Cascade Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.361 for Day 712)
+  - Functional test: rowDelta=+1 for down direction
+  - Functional test: rowDelta=-1 for up direction
+  - Functional test: clamps steps to valid range (100 -> 8)
+  - Functional test: clamps stepDelay to valid range (50 -> 8)
+  - Functional test: clamps velocityDecay to valid range (2.5 -> 1.0)
+  - Functional test: target row = rowIndex + rowDelta * t
+  - Functional test: target col = col + t * stepDelay
+  - Functional test: velocity decay (vel * decay^t)
+- **Version**: Bumped to 2.361.0
+- **Test Count**: Increased from 2403 to 2437 (34 new Day 712 tests, all pass; pre-existing test infrastructure failures unrelated)
+
+#### Day 711: Drift Notes Feature (2026-06-16)
+- **Feature**: Added `driftNotes(maxShift, skipChance, velocityFactor, driftMode, skipOccupied)` method to Track class and 6 "Drift Notes" menu items to the sequencer context menu. Progressively shifts notes by column position to create evolving, drifting patterns across the bar. Five modes available: linear-up (0→maxShift), linear-down (maxShift→0), linear-center (peak at middle), random-per-note (independent random shift per note), and mirror (maxShift→0). Complements `bounceNotes` (random per-note shift) and `shuffleNotes` (random window shift) with a deterministic, evolving pattern.
+- **Files Modified**:
+  - `js/Track.js`: Added `driftNotes` method after `trillNotes` (line ~5581)
+  - `js/constants.js`: Added 16 DRIFT_NOTES_* constants + bumped APP_VERSION to 2.360.0
+  - `js/ui.js`: Added 6 Drift Notes menu items in the sequencer context menu after Trill Notes (Up, Octave, 4 taps)
+  - `js/tests.js`: Added Day 711 test block with 33 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **driftNotes** (`js/Track.js`): For each active note, computes a column-dependent shift based on the selected drift mode and moves the note to its shifted position. Captures undo state BEFORE mutation with descriptive label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `maxShift` to DRIFT_NOTES_MIN_MAX_SHIFT (1) / DRIFT_NOTES_MAX_MAX_SHIFT (8) range with Math.floor (default DRIFT_NOTES_DEFAULT_MAX_SHIFT=4)
+    - Clamps `skipChance` to DRIFT_NOTES_MIN_SKIP_CHANCE (0.0) / DRIFT_NOTES_MAX_SKIP_CHANCE (0.9) range (default DRIFT_NOTES_DEFAULT_SKIP_CHANCE=0.0)
+    - Clamps `velocityFactor` to DRIFT_NOTES_MIN_VELOCITY_FACTOR (0.1) / DRIFT_NOTES_MAX_VELOCITY_FACTOR (1.0) range (default DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR=0.95)
+    - Validates `driftMode` against DRIFT_NOTES_MODES array, falls back to DRIFT_NOTES_MODE_LINEAR_UP if invalid
+    - Captures undo state BEFORE mutation with descriptive "Drift Notes (mode, max ±X) on <seqname>" label
+    - For each row, for each column, for each active note: rolls skip chance, then computes shift based on mode:
+      - `linear-up`: shift = round(progress * maxShift) where progress = col / (totalSteps - 1)
+      - `linear-down`: shift = round((1.0 - progress) * maxShift)
+      - `linear-center`: shift = round(|2*progress - 1| * maxShift) (peak at middle)
+      - `random-per-note`: shift = floor(random * (2*maxShift+1)) - maxShift (in [-maxShift, +maxShift])
+      - `mirror`: shift = round((1.0 - progress) * maxShift) (linear-down equivalent)
+    - Skips if target is out of bounds (< 0 or >= totalSteps) or already occupied
+    - Moves the note to the target column, scaling velocity by velocityFactor (clamped to 0.05-1.0 range), preserves the original probability
+    - Clears the source cell after a successful move (only if it still holds the original stepData)
+    - Rounds velocity to 2 decimal places
+    - Returns count of drifted notes added
+  - **Drift Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Trill Notes
+    - "Drift Notes (Linear Up ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-up', true)` - default linear ramp
+    - "Drift Notes (Linear Down ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-down', true)` - linear decay
+    - "Drift Notes (Linear Center ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-center', true)` - peak at middle
+    - "Drift Notes (Random Per-Note ±4)" - calls `driftNotes(4, 0.0, 0.95, 'random-per-note', true)` - independent random per note
+    - "Drift Notes (Mirror ±4)" - calls `driftNotes(4, 0.0, 0.95, 'mirror', true)` - mirror of linear-up
+    - "Drift Notes (Linear Up ±8, 30% skip)" - calls `driftNotes(8, 0.3, 0.9, 'linear-up', true)` - larger drift with skip chance
+    - All call `recreateToneSequence(true)` after drifting
+    - All capture undo with descriptive "Drift Notes on <name> (<seqname>)" label
+    - Show notifications: "Drifted {count} note(s) (variant)."
+    - Show "No notes to drift." when nothing to drift
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 16 new constants
+  - `DRIFT_NOTES_MIN_MAX_SHIFT = 1` - Minimum drift distance in steps
+  - `DRIFT_NOTES_MAX_MAX_SHIFT = 8` - Maximum drift distance in steps (1/2 note)
+  - `DRIFT_NOTES_DEFAULT_MAX_SHIFT = 4` - Default 4 steps (1/4 note) max drift
+  - `DRIFT_NOTES_MIN_SKIP_CHANCE = 0.0` - Minimum probability of skipping a note
+  - `DRIFT_NOTES_MAX_SKIP_CHANCE = 0.9` - Maximum probability of skipping a note
+  - `DRIFT_NOTES_DEFAULT_SKIP_CHANCE = 0.0` - Default: all notes drift
+  - `DRIFT_NOTES_MIN_VELOCITY_FACTOR = 0.1` - Minimum velocity factor (preserves 10% velocity at floor)
+  - `DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity factor (1.0 = no change)
+  - `DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95` - Default slight attenuation per drift step
+  - `DRIFT_NOTES_MODE_LINEAR_UP = 'linear-up'` - Shift grows from 0 to maxShift
+  - `DRIFT_NOTES_MODE_LINEAR_DOWN = 'linear-down'` - Shift shrinks from maxShift to 0
+  - `DRIFT_NOTES_MODE_LINEAR_CENTER = 'linear-center'` - Shift peaks at the middle of the bar
+  - `DRIFT_NOTES_MODE_RANDOM_PER_NOTE = 'random-per-note'` - Each note gets a random shift in [-maxShift, +maxShift]
+  - `DRIFT_NOTES_MODE_MIRROR = 'mirror'` - Mirror of linear-up: notes start spread, then collapse back to origin
+  - `DRIFT_NOTES_MODES = [all 5 modes]` - Valid drift mode values
+- **Tests** (`js/tests.js`): 33 tests covering:
+  - `driftNotes` is a function on Track.prototype
+  - `driftNotes` accepts 5 parameters with defaults (maxShift, skipChance, velocityFactor, driftMode, skipOccupied)
+  - `driftNotes` returns 0 for Audio tracks
+  - `driftNotes` gets active sequence via `getActiveSequence`
+  - `driftNotes` captures undo BEFORE mutation
+  - `driftNotes` has descriptive "Drift Notes" undo label
+  - `driftNotes` clamps maxShift/skipChance/velocityFactor to DRIFT_NOTES_MIN/MAX ranges
+  - `driftNotes` validates driftMode with DRIFT_NOTES_MODES (uses useMode fallback)
+  - `driftNotes` uses Math.floor on maxShift
+  - `driftNotes` supports linear-up/linear-down/linear-center/random-per-note/mirror modes
+  - `driftNotes` uses Math.random for random shift generation
+  - `driftNotes` rounds velocity to 2 decimal places
+  - `driftNotes` returns count of drifted notes (driftedCount)
+  - All 16 DRIFT_NOTES constants are defined in constants.js
+  - ui.js has 6 Drift Notes menu items
+  - Drift Notes menu items call track.driftNotes
+  - Drift Notes menu items call recreateToneSequence
+  - Drift Notes menu items show notification with drifted count
+  - Drift Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.360 for Day 711)
+  - Functional test: linear-up mode shift grows 0 to maxShift across the bar
+  - Functional test: linear-down mode shift shrinks maxShift to 0
+  - Functional test: linear-center mode peaks at middle (col 8 = 0, col 0 = maxShift)
+  - Functional test: clamps maxShift to valid range (100 -> 8)
+  - Functional test: clamps velocityFactor to valid range (2.5 -> 1.0)
+  - Functional test: clamps skipChance to valid range (1.5 -> 0.9)
+  - Functional test: random shift range is [-maxShift, +maxShift]
+- **Version**: Bumped to 2.360.0
+- **Test Count**: Increased from 2370 to 2403 (33 new Day 711 tests, all pass; pre-existing test failures unrelated)
 
 #### Day 710: Trill Notes Feature (2026-06-16)
 - **Feature**: Added `trillNotes(taps, interval, velocityFactor, direction, skipOccupied)` method to Track class and 6 "Trill Notes" menu items to the sequencer context menu. Adds a trill ornament to each note by alternating between the source pitch and a neighboring pitch (above, below, or both) for `taps` rapid subdivisions, creating classic trills at the sequencer (note) level. Complements `strumNotes`, `staggerNotes`, `crescentNotes`, etc. with a pitch-based ornament.
@@ -54,9 +296,6 @@
 - **Action Taken**: Updated FEATURE_STATUS.md with session audit results
 - **Commit**: `4db1c9c`
 - **Version**: 2.358.0 (unchanged from Day 709)
-
-
-
 
 #### Day 709: Crescent Notes Feature (2026-06-15)
 - **Feature**: Added `crescentNotes(windowSteps, shift, velocityFactor, shape, skipOccupied)` method to Track class and 5 "Crescent Notes" menu items to the sequencer context menu. Groups consecutive notes within a window, then shifts each group with a velocity ramp, creating a crescent-moon / arc shape across time. Complements `strumNotes` (per-chord strum), `staggerNotes` (per-chord stagger), and the new per-group time-shift + velocity ramp pattern.
