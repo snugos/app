@@ -119,6 +119,7 @@ import {
     setLoadedZipFilesState,
     setSoundLibraryFileTreesState,
     setCurrentLibraryNameState, setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
+    getSelectedSoundForPreviewState, setSelectedSoundForPreviewState,
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
     setPlaybackModeState,
