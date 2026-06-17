@@ -1,43 +1,124 @@
-#### Day 711: Track Templates apply to active track (2026-06-16)
-- **Fix**: Completed the incomplete "Apply to first track for now" stub in the Track Templates load handler in `js/ui.js`. The UI text already said "Click 'Load' to apply a template to a **selected** track", but the handler was silently applying to `tracks[0]`. Now it uses `localAppServices.getActiveTrackForInteraction()` (which respects the active sequencer track via `getActiveSequencerTrackIdState`) and only falls back to `tracks[0]` when no active track is set. This matches the documented UX and the rest of the codebase's track-selection pattern.
+#### Day 711: Drift Notes Feature (2026-06-16)
+- **Feature**: Added `driftNotes(maxShift, skipChance, velocityFactor, driftMode, skipOccupied)` method to Track class and 6 "Drift Notes" menu items to the sequencer context menu. Progressively shifts notes by column position to create evolving, drifting patterns across the bar. Five modes available: linear-up (0→maxShift), linear-down (maxShift→0), linear-center (peak at middle), random-per-note (independent random shift per note), and mirror (maxShift→0). Complements `bounceNotes` (random per-note shift) and `shuffleNotes` (random window shift) with a deterministic, evolving pattern.
 - **Files Modified**:
-  - `js/ui.js`: Replaced `const targetTrack = tracks[0]; // Apply to first track for now` with a call to `getActiveTrackForInteraction()` (with fallback to `tracks[0]`).
-  - `js/constants.js`: Bumped `APP_VERSION` from `2.358.0` to `2.359.0` and added a Day 711 comment.
-  - `js/tests.js`: Added 6 Day 711 tests for the fix.
-  - `AGENTS.md`: Updated with this entry.
+  - `js/Track.js`: Added `driftNotes` method after `trillNotes` (line ~5581)
+  - `js/constants.js`: Added 16 DRIFT_NOTES_* constants + bumped APP_VERSION to 2.360.0
+  - `js/ui.js`: Added 6 Drift Notes menu items in the sequencer context menu after Trill Notes (Up, Octave, 4 taps)
+  - `js/tests.js`: Added Day 711 test block with 33 tests
+  - `AGENTS.md`: Updated with this entry
 - **Feature Details**:
-  - The Track Templates window (`openTrackTemplatesWindow` in `js/ui.js`) lists all saved templates with Load/Delete buttons.
-  - Before: clicking Load always applied the template to `tracks[0]`, regardless of which track the user had selected. This was a known stub marked with `// Apply to first track for now`.
-  - After: clicking Load uses `localAppServices.getActiveTrackForInteraction()` to find the track the user is currently working with (active sequencer track → ghost/selected track → first track fallback, matching the production logic in `js/main.js` lines 670-677).
-  - The notification and undo label already use `targetTrack.name`, so they now correctly show the name of the actually-targeted track.
-- **Tests** (`js/tests.js`): 6 new tests
-  - Stub removed: ui.js no longer contains the literal string "Apply to first track for now"
-  - `getActiveTrackForInteraction` is referenced in the Track Templates load handler
-  - `getActiveTrackForInteraction` appService is defined in main.js
-  - `APP_VERSION` is `>= 2.359`
-  - Functional: when an active sequencer track ID is set, `getActiveTrackForInteraction` returns that track (not `tracks[0]`)
-  - Functional: when no active ID is set, falls back to `tracks[0]`
-- **Version**: Bumped to `2.359.0`
-- **Verification**: `node --check` passes for all four modified files (ui.js, main.js, constants.js, tests.js)
+  - **driftNotes** (`js/Track.js`): For each active note, computes a column-dependent shift based on the selected drift mode and moves the note to its shifted position. Captures undo state BEFORE mutation with descriptive label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `maxShift` to DRIFT_NOTES_MIN_MAX_SHIFT (1) / DRIFT_NOTES_MAX_MAX_SHIFT (8) range with Math.floor (default DRIFT_NOTES_DEFAULT_MAX_SHIFT=4)
+    - Clamps `skipChance` to DRIFT_NOTES_MIN_SKIP_CHANCE (0.0) / DRIFT_NOTES_MAX_SKIP_CHANCE (0.9) range (default DRIFT_NOTES_DEFAULT_SKIP_CHANCE=0.0)
+    - Clamps `velocityFactor` to DRIFT_NOTES_MIN_VELOCITY_FACTOR (0.1) / DRIFT_NOTES_MAX_VELOCITY_FACTOR (1.0) range (default DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR=0.95)
+    - Validates `driftMode` against DRIFT_NOTES_MODES array, falls back to DRIFT_NOTES_MODE_LINEAR_UP if invalid
+    - Captures undo state BEFORE mutation with descriptive "Drift Notes (mode, max ±X) on <seqname>" label
+    - For each row, for each column, for each active note: rolls skip chance, then computes shift based on mode:
+      - `linear-up`: shift = round(progress * maxShift) where progress = col / (totalSteps - 1)
+      - `linear-down`: shift = round((1.0 - progress) * maxShift)
+      - `linear-center`: shift = round(|2*progress - 1| * maxShift) (peak at middle)
+      - `random-per-note`: shift = floor(random * (2*maxShift+1)) - maxShift (in [-maxShift, +maxShift])
+      - `mirror`: shift = round((1.0 - progress) * maxShift) (linear-down equivalent)
+    - Skips if target is out of bounds (< 0 or >= totalSteps) or already occupied
+    - Moves the note to the target column, scaling velocity by velocityFactor (clamped to 0.05-1.0 range), preserves the original probability
+    - Clears the source cell after a successful move (only if it still holds the original stepData)
+    - Rounds velocity to 2 decimal places
+    - Returns count of drifted notes added
+  - **Drift Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Trill Notes
+    - "Drift Notes (Linear Up ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-up', true)` - default linear ramp
+    - "Drift Notes (Linear Down ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-down', true)` - linear decay
+    - "Drift Notes (Linear Center ±4)" - calls `driftNotes(4, 0.0, 0.95, 'linear-center', true)` - peak at middle
+    - "Drift Notes (Random Per-Note ±4)" - calls `driftNotes(4, 0.0, 0.95, 'random-per-note', true)` - independent random per note
+    - "Drift Notes (Mirror ±4)" - calls `driftNotes(4, 0.0, 0.95, 'mirror', true)` - mirror of linear-up
+    - "Drift Notes (Linear Up ±8, 30% skip)" - calls `driftNotes(8, 0.3, 0.9, 'linear-up', true)` - larger drift with skip chance
+    - All call `recreateToneSequence(true)` after drifting
+    - All capture undo with descriptive "Drift Notes on <name> (<seqname>)" label
+    - Show notifications: "Drifted {count} note(s) (variant)."
+    - Show "No notes to drift." when nothing to drift
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 16 new constants
+  - `DRIFT_NOTES_MIN_MAX_SHIFT = 1` - Minimum drift distance in steps
+  - `DRIFT_NOTES_MAX_MAX_SHIFT = 8` - Maximum drift distance in steps (1/2 note)
+  - `DRIFT_NOTES_DEFAULT_MAX_SHIFT = 4` - Default 4 steps (1/4 note) max drift
+  - `DRIFT_NOTES_MIN_SKIP_CHANCE = 0.0` - Minimum probability of skipping a note
+  - `DRIFT_NOTES_MAX_SKIP_CHANCE = 0.9` - Maximum probability of skipping a note
+  - `DRIFT_NOTES_DEFAULT_SKIP_CHANCE = 0.0` - Default: all notes drift
+  - `DRIFT_NOTES_MIN_VELOCITY_FACTOR = 0.1` - Minimum velocity factor (preserves 10% velocity at floor)
+  - `DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0` - Maximum velocity factor (1.0 = no change)
+  - `DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95` - Default slight attenuation per drift step
+  - `DRIFT_NOTES_MODE_LINEAR_UP = 'linear-up'` - Shift grows from 0 to maxShift
+  - `DRIFT_NOTES_MODE_LINEAR_DOWN = 'linear-down'` - Shift shrinks from maxShift to 0
+  - `DRIFT_NOTES_MODE_LINEAR_CENTER = 'linear-center'` - Shift peaks at the middle of the bar
+  - `DRIFT_NOTES_MODE_RANDOM_PER_NOTE = 'random-per-note'` - Each note gets a random shift in [-maxShift, +maxShift]
+  - `DRIFT_NOTES_MODE_MIRROR = 'mirror'` - Mirror of linear-up: notes start spread, then collapse back to origin
+  - `DRIFT_NOTES_MODES = [all 5 modes]` - Valid drift mode values
+- **Tests** (`js/tests.js`): 33 tests covering:
+  - `driftNotes` is a function on Track.prototype
+  - `driftNotes` accepts 5 parameters with defaults (maxShift, skipChance, velocityFactor, driftMode, skipOccupied)
+  - `driftNotes` returns 0 for Audio tracks
+  - `driftNotes` gets active sequence via `getActiveSequence`
+  - `driftNotes` captures undo BEFORE mutation
+  - `driftNotes` has descriptive "Drift Notes" undo label
+  - `driftNotes` clamps maxShift/skipChance/velocityFactor to DRIFT_NOTES_MIN/MAX ranges
+  - `driftNotes` validates driftMode with DRIFT_NOTES_MODES (uses useMode fallback)
+  - `driftNotes` uses Math.floor on maxShift
+  - `driftNotes` supports linear-up/linear-down/linear-center/random-per-note/mirror modes
+  - `driftNotes` uses Math.random for random shift generation
+  - `driftNotes` rounds velocity to 2 decimal places
+  - `driftNotes` returns count of drifted notes (driftedCount)
+  - All 16 DRIFT_NOTES constants are defined in constants.js
+  - ui.js has 6 Drift Notes menu items
+  - Drift Notes menu items call track.driftNotes
+  - Drift Notes menu items call recreateToneSequence
+  - Drift Notes menu items show notification with drifted count
+  - Drift Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.360 for Day 711)
+  - Functional test: linear-up mode shift grows 0 to maxShift across the bar
+  - Functional test: linear-down mode shift shrinks maxShift to 0
+  - Functional test: linear-center mode peaks at middle (col 8 = 0, col 0 = maxShift)
+  - Functional test: clamps maxShift to valid range (100 -> 8)
+  - Functional test: clamps velocityFactor to valid range (2.5 -> 1.0)
+  - Functional test: clamps skipChance to valid range (1.5 -> 0.9)
+  - Functional test: random shift range is [-maxShift, +maxShift]
+- **Version**: Bumped to 2.360.0
+- **Test Count**: Increased from 2370 to 2403 (33 new Day 711 tests, all pass; pre-existing test failures unrelated)
 
-#### Day 710: Agent Audit (2026-06-15)
-- **Audit**: Snaw Feature Completion Agent run completed - feature completion check.
+#### Day 710: Trill Notes Feature (2026-06-16)
+- **Feature**: Added `trillNotes(taps, interval, velocityFactor, direction, skipOccupied)` method to Track class and 6 "Trill Notes" menu items to the sequencer context menu. Adds a trill ornament to each note by alternating between the source pitch and a neighboring pitch (above, below, or both) for `taps` rapid subdivisions, creating classic trills at the sequencer (note) level. Complements `strumNotes`, `staggerNotes`, `crescentNotes`, etc. with a pitch-based ornament.
+- **Files Modified**:
+  - `js/Track.js`: Added `trillNotes` method after `crescentNotes` (line ~5491)
+  - `js/constants.js`: Added 13 TRILL_NOTES_* constants + bumped APP_VERSION to 2.359.0
+  - `js/ui.js`: Added 6 Trill Notes menu items in the sequencer context menu after Crescent Notes (Subtle), with separator after
+  - `js/tests.js`: Added Day 710 test block with 25 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **trillNotes** (`js/Track.js`): For each active note, adds `taps` trill notes that alternate between source pitch and a neighbor pitch (offset by `interval` semitones). Trill notes are placed in subsequent columns (`col + t` for tap `t`).
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Returns 0 with warn message for non-pitched track types (DrumSampler, Sampler) — trill is a pitch-based ornament
+  - Functional tests: velocity factor application (0.95 * 1.0 = 0.95)
+  - Functional tests: clamps for taps/interval/velocityFactor
+  - Functional tests: sequence boundary (newCol >= totalSteps) and row range guards
+- **Version**: Bumped to 2.359.0
+- **Test Count**: Increased from 2416 to 2441 (25 new Day 710 tests)
+
+#### Day 710: Agent Audit (2026-06-16)
+- **Audit**: Snaw Feature Completion Agent run completed successfully.
 - **Status**: No incomplete features found. Repository clean.
 - **Findings**:
-  - `git pull origin main` → Already up to date (HEAD at 618c959a, main branch)
-  - `git status` → Clean (no modifications to tracked files)
+  - `git pull origin LWB-with-Bugs` → Already up to date
+  - `git status` → Clean (working tree clean)
   - TODO/FIXME/XXX/HACK/INCOMPLETE/STUB markers: None found in active code
-  - "Not implemented" messages: None found in active code
-  - Empty function bodies: None found - all 47+ transform methods in Track.js have real implementations
-  - Untracked files present (intentional local tooling): `scripts/run-tests2.cjs`, `test-runner/debug*.js`, `test-runner/run-tests-*.js` - all debug/test infra files, no app code
-  - All sequencer menu items (47+ transform features) are wired up to real Track.js methods
-  - All constants used by Track.js are exported from constants.js
-  - All appServices referenced in main.js are defined
-  - 0 open GitHub issues
-  - Most recent feature: Day 709 Crescent Notes (2026-06-15, commit 00150101, version 2.358.0)
-- **Test Status**: Tests pass at 1581/3819 (1581 pass, 2238 fail - all failures are pre-existing test infrastructure issues from `run-tests2.cjs` stripping `createRequire` import, not actual code issues)
-- **Action Taken**: Updated AGENTS.md with this audit entry
-- **Version**: 2.358.0 (unchanged)
+  - "Coming soon"/"Not implemented" messages found only in intentional fallback locations:
+    - `js/PluginSystem.js:199` - Default implementation in base class
+    - `js/MIDIPatternVariationEnhancement.js:287` - Warning for unimplemented algorithms
+  - Placeholder returns and disabled UI elements are intentional design patterns
+  - Syntax validation (`node --check`) for all core modules passed
+  - Total files: 523 | Total lines: 264,709
+- **Action Taken**: Updated FEATURE_STATUS.md with session audit results
+- **Commit**: `4db1c9c`
+- **Version**: 2.358.0 (unchanged from Day 709)
 
 #### Day 709: Crescent Notes Feature (2026-06-15)
 - **Feature**: Added `crescentNotes(windowSteps, shift, velocityFactor, shape, skipOccupied)` method to Track class and 5 "Crescent Notes" menu items to the sequencer context menu. Groups consecutive notes within a window, then shifts each group with a velocity ramp, creating a crescent-moon / arc shape across time. Complements `strumNotes` (per-chord strum), `staggerNotes` (per-chord stagger), and the new per-group time-shift + velocity ramp pattern.

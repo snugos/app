@@ -5488,4 +5488,207 @@ export class Track {
 
         return crescentCount;
     }
+
+    // Trill Notes - rapidly alternate source note with a neighbor (above or below) for `taps` cycles
+    // Creates a classic trill ornament: each source note gets neighbor notes alternating at +1, +2, +3, ...
+    // taps: number of trill notes to add per source (2-16)
+    // interval: semitone distance from source to the trill neighbor (1-12, default 2 = whole step)
+    // velocityFactor: velocity multiplier applied to trill notes (0.5-1.0, default 0.95)
+    // direction: 'up' (lower row = higher pitch = up in pitch), 'down' (higher row = lower pitch = down in pitch), 'both' (alternates above and below)
+    // skipOccupied: skip target column if already has a note (true = don't overwrite)
+    trillNotes(taps = Constants.TRILL_NOTES_DEFAULT_TAPS, interval = Constants.TRILL_NOTES_DEFAULT_INTERVAL, velocityFactor = Constants.TRILL_NOTES_DEFAULT_VELOCITY_FACTOR, direction = Constants.TRILL_NOTES_DIRECTION_UP, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        if (this.type !== 'Synth' && this.type !== 'InstrumentSampler') {
+            // Trill is a pitch-based ornament; only meaningful for pitched tracks
+            console.warn(`[Track ${this.id} trillNotes] Trill only works on Synth/InstrumentSampler tracks (type=${this.type}).`);
+            return 0;
+        }
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} trillNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedTaps = Math.max(Constants.TRILL_NOTES_MIN_TAPS, Math.min(Constants.TRILL_NOTES_MAX_TAPS, Math.floor(taps)));
+        const clampedInterval = Math.max(Constants.TRILL_NOTES_MIN_INTERVAL, Math.min(Constants.TRILL_NOTES_MAX_INTERVAL, Math.floor(interval)));
+        const clampedVel = Math.max(Constants.TRILL_NOTES_MIN_VELOCITY_FACTOR, Math.min(Constants.TRILL_NOTES_MAX_VELOCITY_FACTOR, velocityFactor));
+        const useDirection = Constants.TRILL_NOTES_DIRECTIONS.includes(direction) ? direction : Constants.TRILL_NOTES_DIRECTION_UP;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Trill Notes (${useDirection}, ${clampedTaps} taps, ±${clampedInterval} semi) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let trilledCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (!activeSeq.data[rowIndex]) continue;
+            const row = activeSeq.data[rowIndex];
+
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (!cell || !cell.active) continue;
+                const originalVel = cell.velocity || defaultVel;
+                const trillVel = Math.max(0.05, Math.min(1.0, originalVel * clampedVel));
+
+                for (let t = 1; t <= clampedTaps; t++) {
+                    let targetRowIndex = rowIndex;
+                    if (useDirection === Constants.TRILL_NOTES_DIRECTION_UP) {
+                        // up: source, neighbor-up, source, neighbor-up, ...
+                        targetRowIndex = (t % 2 === 1) ? rowIndex : rowIndex - clampedInterval;
+                    } else if (useDirection === Constants.TRILL_NOTES_DIRECTION_DOWN) {
+                        // down: source, neighbor-down, source, neighbor-down, ...
+                        targetRowIndex = (t % 2 === 1) ? rowIndex : rowIndex + clampedInterval;
+                    } else if (useDirection === Constants.TRILL_NOTES_DIRECTION_BOTH) {
+                        // both: neighbor-up, neighbor-down, neighbor-up, neighbor-down, ...
+                        targetRowIndex = (t % 2 === 1) ? rowIndex - clampedInterval : rowIndex + clampedInterval;
+                    } else {
+                        // Unknown direction - fall back to up behavior
+                        targetRowIndex = (t % 2 === 1) ? rowIndex : rowIndex - clampedInterval;
+                    }
+
+                    const newCol = col + t;
+                    if (newCol >= totalSteps) break;
+                    if (targetRowIndex < 0 || targetRowIndex >= numRows) continue;
+                    if (skipOccupied && activeSeq.data[targetRowIndex]?.[newCol] && activeSeq.data[targetRowIndex][newCol].active) {
+                        continue;
+                    }
+                    newNotes.push({ rowIndex: targetRowIndex, col: newCol, velocity: Math.round(trillVel * 100) / 100 });
+                }
+            }
+        }
+
+        // Apply the new trill notes
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity
+                };
+                trilledCount++;
+            }
+        }
+
+        return trilledCount;
+    }
+
+    // Drift Notes - progressively shift notes over the sequence to create drifting patterns
+    // Complements bounceNotes (random per-note shift) and shuffleNotes (random per-note window)
+    // with a deterministic, evolving shift that grows/shrinks across the bar.
+    // maxShift: maximum drift distance in steps (clamped to DRIFT_NOTES_MIN/MAX_MAX_SHIFT)
+    // skipChance: probability of leaving a note in place (0.0 = all notes drift)
+    // velocityFactor: scales the velocity of drifted notes (1.0 = no change)
+    // driftMode: 'linear-up' | 'linear-down' | 'linear-center' | 'random-per-note' | 'mirror'
+    //   linear-up: shift grows linearly from 0 to maxShift as col progresses through the bar
+    //   linear-down: shift starts at maxShift and shrinks to 0 as col progresses
+    //   linear-center: shift is 0 at start/end and peaks at the middle (drifts out and back)
+    //   random-per-note: each note gets an independent random shift in [-maxShift, +maxShift]
+    //   mirror: shift decreases linearly from maxShift to 0 (opposite direction of linear-up)
+    // skipOccupied: skip target column if already has a note (true = don't overwrite)
+    driftNotes(maxShift = Constants.DRIFT_NOTES_DEFAULT_MAX_SHIFT, skipChance = Constants.DRIFT_NOTES_DEFAULT_SKIP_CHANCE, velocityFactor = Constants.DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR, driftMode = Constants.DRIFT_NOTES_MODE_LINEAR_UP, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} driftNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedMaxShift = Math.max(Constants.DRIFT_NOTES_MIN_MAX_SHIFT, Math.min(Constants.DRIFT_NOTES_MAX_MAX_SHIFT, Math.floor(maxShift)));
+        const clampedSkip = Math.max(Constants.DRIFT_NOTES_MIN_SKIP_CHANCE, Math.min(Constants.DRIFT_NOTES_MAX_SKIP_CHANCE, skipChance));
+        const clampedVel = Math.max(Constants.DRIFT_NOTES_MIN_VELOCITY_FACTOR, Math.min(Constants.DRIFT_NOTES_MAX_VELOCITY_FACTOR, velocityFactor));
+        const useMode = Constants.DRIFT_NOTES_MODES.includes(driftMode) ? driftMode : Constants.DRIFT_NOTES_MODE_LINEAR_UP;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Drift Notes (${useMode}, max ±${clampedMaxShift}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let driftedCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Helper: compute the drift shift for a given column based on the selected mode
+        const computeShift = (col) => {
+            if (totalSteps <= 1) return 0;
+            const progress = col / (totalSteps - 1);
+            switch (useMode) {
+                case Constants.DRIFT_NOTES_MODE_LINEAR_UP:
+                    return Math.round(progress * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_LINEAR_DOWN:
+                    return Math.round((1.0 - progress) * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_LINEAR_CENTER:
+                    // Peak at middle (progress = 0.5)
+                    return Math.round(Math.abs(2 * progress - 1) * clampedMaxShift);
+                case Constants.DRIFT_NOTES_MODE_RANDOM_PER_NOTE: {
+                    // Random shift in [-clampedMaxShift, +clampedMaxShift]
+                    const r = Math.floor(Math.random() * (clampedMaxShift * 2 + 1)) - clampedMaxShift;
+                    return r;
+                }
+                case Constants.DRIFT_NOTES_MODE_MIRROR:
+                    // Shift decreases linearly from maxShift to 0
+                    return Math.round((1.0 - progress) * clampedMaxShift);
+                default:
+                    return Math.round(progress * clampedMaxShift);
+            }
+        };
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                // Roll skip chance
+                if (Math.random() < clampedSkip) continue;
+
+                const shift = computeShift(col);
+                if (shift === 0) continue; // No movement for this note
+                const targetCol = col + shift;
+
+                // Skip if target is out of bounds or already occupied
+                if (targetCol < 0 || targetCol >= totalSteps) continue;
+                if (skipOccupied && row[targetCol] && row[targetCol].active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+                const newVel = Math.max(0.05, Math.min(1.0, origVel * clampedVel));
+                newNotes.push({
+                    rowIndex,
+                    col: targetCol,
+                    velocity: Math.round(newVel * 100) / 100,
+                    probability: stepData.probability,
+                    origCol: col
+                });
+            }
+        }
+
+        // Apply the new drifted notes (and clear original positions)
+        for (const note of newNotes) {
+            if (note.rowIndex < numRows) {
+                if (!activeSeq.data[note.rowIndex]) {
+                    activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+                }
+                activeSeq.data[note.rowIndex][note.col] = {
+                    active: true,
+                    velocity: note.velocity,
+                    probability: note.probability
+                };
+                // Clear the source cell (only if it doesn't conflict with another drifted note)
+                if (activeSeq.data[note.rowIndex][note.origCol] === row[note.origCol]) {
+                    activeSeq.data[note.rowIndex][note.origCol] = null;
+                }
+                driftedCount++;
+            }
+        }
+
+        return driftedCount;
+    }
 }

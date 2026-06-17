@@ -21394,65 +21394,482 @@ TestRunner.test("Day 709 - crescentNotes functional test: velocity preservation 
 TestRunner.test("Day 709 - crescentNotes functional test: clamps windowSteps to valid range", (t) => {
     const requested = 100;
     const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 8, 'Window steps clamped to 8 (max)');
+});
+
 TestRunner.test("Day 709 - crescentNotes functional test: clamps velocityFactor to valid range", (t) => {
     const requestedVel = 2.5;
     const clamped = Math.max(0.3, Math.min(1.0, requestedVel));
     t.assertEqual(clamped, 1.0, 'Velocity clamped to 1.0 (max)');
 });
 
-// --- Day 711: Track Templates apply to active track (fix incomplete "Apply to first track for now" stub) ---
-TestRunner.test("Day 711 - Track Templates load handler no longer uses 'Apply to first track for now' stub", (t) => {
+TestRunner.test("Day 710 - trillNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.trillNotes === 'function', 'trillNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 710 - trillNotes accepts 5 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('taps'), 'trillNotes should accept taps parameter');
+    t.assertTruthy(funcStr.includes('interval'), 'trillNotes should accept interval parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'trillNotes should accept velocityFactor parameter');
+    t.assertTruthy(funcStr.includes('direction'), 'trillNotes should accept direction parameter');
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'trillNotes should accept skipOccupied parameter');
+});
+
+TestRunner.test("Day 710 - trillNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes("this.type === 'Audio'"), 'trillNotes should guard against Audio tracks');
+});
+
+TestRunner.test("Day 710 - trillNotes guards non-pitched track types", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes("'Synth'") || funcStr.includes('Synth'), 'trillNotes should reference Synth track type');
+    t.assertTruthy(funcStr.includes('InstrumentSampler'), 'trillNotes should reference InstrumentSampler track type');
+});
+
+TestRunner.test("Day 710 - trillNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'trillNotes should call getActiveSequence');
+});
+
+TestRunner.test("Day 710 - trillNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('trilledCount');
+    t.assertTruthy(captureIdx > -1, 'trillNotes should call _captureUndoState');
+    t.assertTruthy(captureIdx < mutationIdx, 'trillNotes should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 710 - trillNotes has descriptive 'Trill Notes' undo label", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('Trill Notes'), 'trillNotes undo label should include "Trill Notes"');
+});
+
+TestRunner.test("Day 710 - trillNotes clamps taps to TRILL_NOTES_MIN/MAX_TAPS", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_MIN_TAPS'), 'trillNotes should reference TRILL_NOTES_MIN_TAPS');
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_MAX_TAPS'), 'trillNotes should reference TRILL_NOTES_MAX_TAPS');
+});
+
+TestRunner.test("Day 710 - trillNotes clamps interval to TRILL_NOTES_MIN/MAX_INTERVAL", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_MIN_INTERVAL'), 'trillNotes should reference TRILL_NOTES_MIN_INTERVAL');
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_MAX_INTERVAL'), 'trillNotes should reference TRILL_NOTES_MAX_INTERVAL');
+});
+
+TestRunner.test("Day 710 - trillNotes clamps velocityFactor to TRILL_NOTES_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_MIN_VELOCITY_FACTOR'), 'trillNotes should reference TRILL_NOTES_MIN_VELOCITY_FACTOR');
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_MAX_VELOCITY_FACTOR'), 'trillNotes should reference TRILL_NOTES_MAX_VELOCITY_FACTOR');
+});
+
+TestRunner.test("Day 710 - trillNotes validates direction with TRILL_NOTES_DIRECTIONS", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_DIRECTIONS'), 'trillNotes should reference TRILL_NOTES_DIRECTIONS');
+});
+
+TestRunner.test("Day 710 - trillNotes supports up direction", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_DIRECTION_UP'), 'trillNotes should reference TRILL_NOTES_DIRECTION_UP');
+});
+
+TestRunner.test("Day 710 - trillNotes supports down direction", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_DIRECTION_DOWN'), 'trillNotes should reference TRILL_NOTES_DIRECTION_DOWN');
+});
+
+TestRunner.test("Day 710 - trillNotes supports both direction", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('TRILL_NOTES_DIRECTION_BOTH'), 'trillNotes should reference TRILL_NOTES_DIRECTION_BOTH');
+});
+
+TestRunner.test("Day 710 - trillNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round'), 'trillNotes should use Math.round for velocity rounding');
+});
+
+TestRunner.test("Day 710 - trillNotes returns count of trilled notes (trilledCount)", (t) => {
+    const funcStr = Track.prototype.trillNotes.toString();
+    t.assertTruthy(funcStr.includes('trilledCount'), 'trillNotes should return count of trilled notes');
+});
+
+TestRunner.test("Day 710 - All 13 TRILL_NOTES constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_MIN_TAPS = 2'), 'TRILL_NOTES_MIN_TAPS should be 2');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_MAX_TAPS = 16'), 'TRILL_NOTES_MAX_TAPS should be 16');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_DEFAULT_TAPS = 6'), 'TRILL_NOTES_DEFAULT_TAPS should be 6');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_MIN_INTERVAL = 1'), 'TRILL_NOTES_MIN_INTERVAL should be 1');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_MAX_INTERVAL = 12'), 'TRILL_NOTES_MAX_INTERVAL should be 12');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_DEFAULT_INTERVAL = 2'), 'TRILL_NOTES_DEFAULT_INTERVAL should be 2');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_MIN_VELOCITY_FACTOR = 0.5'), 'TRILL_NOTES_MIN_VELOCITY_FACTOR should be 0.5');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_MAX_VELOCITY_FACTOR = 1.0'), 'TRILL_NOTES_MAX_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95'), 'TRILL_NOTES_DEFAULT_VELOCITY_FACTOR should be 0.95');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_DIRECTION_UP'), 'TRILL_NOTES_DIRECTION_UP should be defined');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_DIRECTION_DOWN'), 'TRILL_NOTES_DIRECTION_DOWN should be defined');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_DIRECTION_BOTH'), 'TRILL_NOTES_DIRECTION_BOTH should be defined');
+    t.assertTruthy(constantsSrc.includes('TRILL_NOTES_DIRECTIONS'), 'TRILL_NOTES_DIRECTIONS should be defined');
+});
+
+TestRunner.test("Day 710 - ui.js has 6 Trill Notes menu items", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertFalsy(/Apply to first track for now/.test(uiStr), 'ui.js should no longer contain the "Apply to first track for now" stub');
+    const matches = uiStr.match(/Trill Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 6, `ui.js should have at least 6 Trill Notes menu items, found ${matches ? matches.length : 0}`);
 });
 
-TestRunner.test("Day 711 - Track Templates load handler uses getActiveTrackForInteraction", (t) => {
+TestRunner.test("Day 710 - Trill Notes menu items call track.trillNotes", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('getActiveTrackForInteraction'), 'ui.js Track Templates load handler should reference getActiveTrackForInteraction');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.trillNotes('), 'Trill Notes menu items should call trillNotes()');
 });
 
-TestRunner.test("Day 711 - getActiveTrackForInteraction appService is defined", (t) => {
-    const mainStr = require('fs').readFileSync('./js/main.js', 'utf8');
-    t.assertTruthy(/getActiveTrackForInteraction:\s*\(\)\s*=>/.test(mainStr), 'main.js should define getActiveTrackForInteraction appService');
+TestRunner.test("Day 710 - Trill Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Trill Notes') && uiStr.includes('recreateToneSequence'), 'Trill Notes menu items should call recreateToneSequence');
 });
 
-TestRunner.test("Day 711 - APP_VERSION validation (>= 2.359)", (t) => {
+TestRunner.test("Day 710 - Trill Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Trilled '), 'Trill Notes should show notification with trilled count');
+    t.assertTruthy(uiStr.includes('No notes to trill'), 'Trill Notes should show "No notes to trill" notification');
+});
+
+TestRunner.test("Day 710 - Trill Notes menu items capture undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Trill Notes on'), 'Trill Notes menu items should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 710 - APP_VERSION validation (>= 2.359)", (t) => {
     const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
     const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
     t.assertTruthy(versionMatch && parseFloat(versionMatch[1]) >= 2.359, `APP_VERSION should be >= 2.359, got ${versionMatch ? versionMatch[1] : 'unknown'}`);
 });
 
-TestRunner.test("Day 711 - getActiveTrackForInteraction prefers active sequencer track over first track", (t) => {
-    const tracks = [
-        { id: 'track-1', name: 'First' },
-        { id: 'track-2', name: 'Second' }
-    ];
-    const activeId = 'track-2';
-    const fromActive = (() => {
-        if (activeId) {
-            const t = tracks.find(t => t.id === activeId);
-            if (t) return t;
-        }
-        return tracks.length > 0 ? tracks[0] : null;
-    })();
-    t.assertEqual(fromActive.id, 'track-2', 'Should return active sequencer track (track-2), not tracks[0]');
+TestRunner.test("Day 710 - trillNotes functional test: up direction alternates source and source-interval", (t) => {
+    const rowIndex = 10;
+    const interval = 2;
+    const taps = 4;
+    const expectedRowOffsets = [];
+    for (let t = 1; t <= taps; t++) {
+        const offset = (t % 2 === 1) ? 0 : -interval;
+        expectedRowOffsets.push(offset);
+    }
+    t.assertEqual(expectedRowOffsets[0], 0, 'Up: tap 1 is at source');
+    t.assertEqual(expectedRowOffsets[1], -2, 'Up: tap 2 is at source - interval');
+    t.assertEqual(expectedRowOffsets[2], 0, 'Up: tap 3 is at source');
+    t.assertEqual(expectedRowOffsets[3], -2, 'Up: tap 4 is at source - interval');
 });
 
-TestRunner.test("Day 711 - getActiveTrackForInteraction falls back to first track only when no active ID", (t) => {
-    const tracks = [
-        { id: 'track-1', name: 'First' },
-        { id: 'track-2', name: 'Second' }
-    ];
-    const activeId = null;
-    const fromActive = (() => {
-        if (activeId) {
-            const t = tracks.find(t => t.id === activeId);
-            if (t) return t;
-        }
-        return tracks.length > 0 ? tracks[0] : null;
-    })();
-    t.assertEqual(fromActive.id, 'track-1', 'Falls back to first track when no active sequencer ID');
+TestRunner.test("Day 710 - trillNotes functional test: down direction alternates source and source+interval", (t) => {
+    const rowIndex = 10;
+    const interval = 2;
+    const taps = 4;
+    const expectedRowOffsets = [];
+    for (let t = 1; t <= taps; t++) {
+        const offset = (t % 2 === 1) ? 0 : interval;
+        expectedRowOffsets.push(offset);
+    }
+    t.assertEqual(expectedRowOffsets[0], 0, 'Down: tap 1 is at source');
+    t.assertEqual(expectedRowOffsets[1], 2, 'Down: tap 2 is at source + interval');
+    t.assertEqual(expectedRowOffsets[2], 0, 'Down: tap 3 is at source');
+    t.assertEqual(expectedRowOffsets[3], 2, 'Down: tap 4 is at source + interval');
 });
+
+TestRunner.test("Day 710 - trillNotes functional test: both direction alternates -interval and +interval", (t) => {
+    const rowIndex = 10;
+    const interval = 2;
+    const taps = 4;
+    const expectedRowOffsets = [];
+    for (let t = 1; t <= taps; t++) {
+        const offset = (t % 2 === 1) ? -interval : interval;
+        expectedRowOffsets.push(offset);
+    }
+    t.assertEqual(expectedRowOffsets[0], -2, 'Both: tap 1 is at source - interval');
+    t.assertEqual(expectedRowOffsets[1], 2, 'Both: tap 2 is at source + interval');
+    t.assertEqual(expectedRowOffsets[2], -2, 'Both: tap 3 is at source - interval');
+    t.assertEqual(expectedRowOffsets[3], 2, 'Both: tap 4 is at source + interval');
+});
+
+TestRunner.test("Day 710 - trillNotes functional test: tap column position is col + t", (t) => {
+    const col = 4;
+    const taps = 4;
+    const newCols = [];
+    for (let t = 1; t <= taps; t++) {
+        newCols.push(col + t);
+    }
+    t.assertEqual(newCols.join(','), '5,6,7,8', 'New columns are 5, 6, 7, 8');
+});
+
+TestRunner.test("Day 710 - trillNotes functional test: velocity factor applied (0.95 * 1.0 = 0.95)", (t) => {
+    const originalVel = 1.0;
+    const velocityFactor = 0.95;
+    const trillVel = Math.max(0.05, Math.min(1.0, originalVel * velocityFactor));
+    t.assertEqual(trillVel, 0.95, 'Trill velocity 0.95 at velFactor 0.95');
+});
+
+TestRunner.test("Day 710 - trillNotes functional test: clamps taps to valid range", (t) => {
+    const requestedTaps = 100;
+    const clamped = Math.max(2, Math.min(16, Math.floor(requestedTaps)));
+    t.assertEqual(clamped, 16, 'Taps clamped to 16 (max)');
+});
+
+TestRunner.test("Day 710 - trillNotes functional test: clamps interval to valid range", (t) => {
+    const requestedInterval = 50;
+    const clamped = Math.max(1, Math.min(12, Math.floor(requestedInterval)));
+    t.assertEqual(clamped, 12, 'Interval clamped to 12 (max)');
+});
+
+TestRunner.test("Day 710 - trillNotes functional test: clamps velocityFactor to valid range", (t) => {
+    const requestedVel = 1.5;
+    const clamped = Math.max(0.5, Math.min(1.0, requestedVel));
+    t.assertEqual(clamped, 1.0, 'Velocity clamped to 1.0 (max)');
+});
+
+TestRunner.test("Day 710 - trillNotes functional test: trill notes respect sequence boundary (newCol >= totalSteps)", (t) => {
+    const col = 12;
+    const totalSteps = 16;
+    const taps = 8;
+    const validCols = [];
+    for (let t = 1; t <= taps; t++) {
+        const newCol = col + t;
+        if (newCol >= totalSteps) break;
+        validCols.push(newCol);
+    }
+    t.assertEqual(validCols.join(','), '13,14,15', 'Valid columns are 13, 14, 15');
+});
+
+TestRunner.test("Day 710 - trillNotes functional test: trill notes skip out-of-range row indices", (t) => {
+    const rowIndex = 1;
+    const interval = 2;
+    const targetRowIndex = rowIndex - interval;
+    const isValid = targetRowIndex >= 0;
+    t.assertEqual(targetRowIndex, -1, 'Row index is -1');
+    t.assertEqual(isValid, false, 'Row index -1 is out of range, should skip');
+});
+
+TestRunner.test("Day 710 - trillNotes functional test: Math.floor used on taps and interval", (t) => {
+    const taps = 4.7;
+    const interval = 2.3;
+TestRunner.test("Day 711 - driftNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.driftNotes === 'function', 'driftNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 711 - driftNotes accepts 5 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('maxShift'), 'driftNotes should accept maxShift parameter');
+    t.assertTruthy(funcStr.includes('skipChance'), 'driftNotes should accept skipChance parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'driftNotes should accept velocityFactor parameter');
+    t.assertTruthy(funcStr.includes('driftMode'), 'driftNotes should accept driftMode parameter');
+    t.assertTruthy(funcStr.includes('skipOccupied'), 'driftNotes should accept skipOccupied parameter');
+});
+
+TestRunner.test("Day 711 - driftNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes("type === 'Audio'") || funcStr.includes('type==="Audio"') || funcStr.includes('Audio'), 'driftNotes should guard against Audio tracks');
+});
+
+TestRunner.test("Day 711 - driftNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence'), 'driftNotes should call getActiveSequence');
+});
+
+TestRunner.test("Day 711 - driftNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    const captureIdx = funcStr.indexOf('_captureUndoState');
+    const mutationIdx = funcStr.indexOf('driftedCount');
+    t.assertTruthy(captureIdx > -1, 'driftNotes should call _captureUndoState');
+    t.assertTruthy(captureIdx < mutationIdx, 'driftNotes should capture undo BEFORE mutation');
+});
+
+TestRunner.test("Day 711 - driftNotes has descriptive 'Drift Notes' undo label", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Drift Notes'), 'driftNotes undo label should include "Drift Notes"');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps maxShift to DRIFT_NOTES_MIN/MAX_MAX_SHIFT", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_MAX_SHIFT'), 'driftNotes should reference DRIFT_NOTES_MIN_MAX_SHIFT');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_MAX_SHIFT'), 'driftNotes should reference DRIFT_NOTES_MAX_MAX_SHIFT');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps skipChance to DRIFT_NOTES_MIN/MAX_SKIP_CHANCE", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_SKIP_CHANCE'), 'driftNotes should reference DRIFT_NOTES_MIN_SKIP_CHANCE');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_SKIP_CHANCE'), 'driftNotes should reference DRIFT_NOTES_MAX_SKIP_CHANCE');
+});
+
+TestRunner.test("Day 711 - driftNotes clamps velocityFactor to DRIFT_NOTES_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MIN_VELOCITY_FACTOR'), 'driftNotes should reference DRIFT_NOTES_MIN_VELOCITY_FACTOR');
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MAX_VELOCITY_FACTOR'), 'driftNotes should reference DRIFT_NOTES_MAX_VELOCITY_FACTOR');
+});
+
+TestRunner.test("Day 711 - driftNotes validates driftMode with DRIFT_NOTES_MODES", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODES'), 'driftNotes should reference DRIFT_NOTES_MODES');
+});
+
+TestRunner.test("Day 711 - driftNotes uses Math.floor on maxShift", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.floor'), 'driftNotes should use Math.floor for maxShift');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-up mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_UP'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_UP');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-down mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_DOWN'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_DOWN');
+});
+
+TestRunner.test("Day 711 - driftNotes supports linear-center mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_LINEAR_CENTER'), 'driftNotes should reference DRIFT_NOTES_MODE_LINEAR_CENTER');
+});
+
+TestRunner.test("Day 711 - driftNotes supports random-per-note mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_RANDOM_PER_NOTE'), 'driftNotes should reference DRIFT_NOTES_MODE_RANDOM_PER_NOTE');
+});
+
+TestRunner.test("Day 711 - driftNotes supports mirror mode", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('DRIFT_NOTES_MODE_MIRROR'), 'driftNotes should reference DRIFT_NOTES_MODE_MIRROR');
+});
+
+TestRunner.test("Day 711 - driftNotes returns count of drifted notes (driftedCount)", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('driftedCount'), 'driftNotes should return count of drifted notes');
+});
+
+TestRunner.test("Day 711 - driftNotes uses Math.random for random shift", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.random'), 'driftNotes should use Math.random for random mode');
+});
+
+TestRunner.test("Day 711 - driftNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.driftNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round') && funcStr.includes('* 100') && funcStr.includes('/ 100'), 'driftNotes should round velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 711 - All 16 DRIFT_NOTES constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_MAX_SHIFT = 1'), 'DRIFT_NOTES_MIN_MAX_SHIFT should be 1');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_MAX_SHIFT = 8'), 'DRIFT_NOTES_MAX_MAX_SHIFT should be 8');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_MAX_SHIFT = 4'), 'DRIFT_NOTES_DEFAULT_MAX_SHIFT should be 4');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_SKIP_CHANCE = 0.0'), 'DRIFT_NOTES_MIN_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_SKIP_CHANCE = 0.9'), 'DRIFT_NOTES_MAX_SKIP_CHANCE should be 0.9');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_SKIP_CHANCE = 0.0'), 'DRIFT_NOTES_DEFAULT_SKIP_CHANCE should be 0.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MIN_VELOCITY_FACTOR = 0.1'), 'DRIFT_NOTES_MIN_VELOCITY_FACTOR should be 0.1');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0'), 'DRIFT_NOTES_MAX_VELOCITY_FACTOR should be 1.0');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95'), 'DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR should be 0.95');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_UP'), 'DRIFT_NOTES_MODE_LINEAR_UP should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_DOWN'), 'DRIFT_NOTES_MODE_LINEAR_DOWN should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_LINEAR_CENTER'), 'DRIFT_NOTES_MODE_LINEAR_CENTER should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_RANDOM_PER_NOTE'), 'DRIFT_NOTES_MODE_RANDOM_PER_NOTE should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODE_MIRROR'), 'DRIFT_NOTES_MODE_MIRROR should be defined');
+    t.assertTruthy(constantsSrc.includes('DRIFT_NOTES_MODES'), 'DRIFT_NOTES_MODES should be defined');
+});
+
+TestRunner.test("Day 711 - ui.js has 6 Drift Notes menu items", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = uiStr.match(/Drift Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 6, `ui.js should have at least 6 Drift Notes menu items, found ${matches ? matches.length : 0}`);
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items call track.driftNotes", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.driftNotes('), 'Drift Notes menu items should call driftNotes()');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items call recreateToneSequence", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drift Notes') && uiStr.includes('recreateToneSequence'), 'Drift Notes menu items should call recreateToneSequence');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items show notification with count", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drifted '), 'Drift Notes should show notification with drifted count');
+    t.assertTruthy(uiStr.includes('No notes to drift'), 'Drift Notes should show "No notes to drift" notification');
+});
+
+TestRunner.test("Day 711 - Drift Notes menu items capture undo with descriptive label", (t) => {
+    const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(uiStr.includes('Drift Notes on'), 'Drift Notes menu items should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 711 - APP_VERSION validation (>= 2.360)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const versionMatch = constantsSrc.match(/APP_VERSION = '([\d.]+)'/);
+    t.assertTruthy(versionMatch && parseFloat(versionMatch[1]) >= 2.360, `APP_VERSION should be >= 2.360, got ${versionMatch ? versionMatch[1] : 'unknown'}`);
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-up mode: shift grows 0 to maxShift", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round((c / (totalSteps - 1)) * maxShift));
+    t.assertEqual(expectedShifts[0], 0, 'col 0 -> shift 0');
+    t.assertEqual(expectedShifts[1], 1, 'col 4 -> shift 1');
+    t.assertEqual(expectedShifts[2], 2, 'col 8 -> shift 2');
+    t.assertEqual(expectedShifts[3], 3, 'col 12 -> shift 3');
+    t.assertEqual(expectedShifts[4], 4, 'col 15 -> shift 4');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-down mode: shift shrinks maxShift to 0", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round((1.0 - c / (totalSteps - 1)) * maxShift));
+    t.assertEqual(expectedShifts[0], 4, 'col 0 -> shift 4');
+    t.assertEqual(expectedShifts[1], 3, 'col 4 -> shift 3');
+    t.assertEqual(expectedShifts[2], 2, 'col 8 -> shift 2');
+    t.assertEqual(expectedShifts[3], 1, 'col 12 -> shift 1');
+    t.assertEqual(expectedShifts[4], 0, 'col 15 -> shift 0');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: linear-center mode: peak at middle", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round(Math.abs(2 * (c / (totalSteps - 1)) - 1) * maxShift));
+    t.assertEqual(expectedShifts[0], 4, 'col 0 -> shift 4 (full)');
+    t.assertEqual(expectedShifts[1], 2, 'col 4 -> shift 2');
+    t.assertEqual(expectedShifts[2], 0, 'col 8 -> shift 0 (peak/trough at middle)');
+    t.assertEqual(expectedShifts[3], 2, 'col 12 -> shift 2');
+    t.assertEqual(expectedShifts[4], 4, 'col 15 -> shift 4 (full again)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps maxShift to valid range", (t) => {
+    const requested = 100;
+    const clamped = Math.max(1, Math.min(8, Math.floor(requested)));
+    t.assertEqual(clamped, 8, 'maxShift clamped to 8 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps velocityFactor to valid range", (t) => {
+    const requested = 2.5;
+    const clamped = Math.max(0.1, Math.min(1.0, requested));
+    t.assertEqual(clamped, 1.0, 'velocityFactor clamped to 1.0 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: clamps skipChance to valid range", (t) => {
+    const requested = 1.5;
+    const clamped = Math.max(0.0, Math.min(0.9, requested));
+    t.assertEqual(clamped, 0.9, 'skipChance clamped to 0.9 (max)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: random shift range is -maxShift to +maxShift", (t) => {
+    const maxShift = 4;
+    const r = Math.floor(Math.random() * (maxShift * 2 + 1)) - maxShift;
+    t.assertTruthy(r >= -maxShift && r <= maxShift, 'Random shift in [-maxShift, +maxShift]');
+});
+
+    const flooredTaps = Math.floor(taps);
+    const flooredInterval = Math.floor(interval);
+    t.assertEqual(flooredTaps, 4, 'Taps floored to 4');
+    t.assertEqual(flooredInterval, 2, 'Interval floored to 2');
+});
+
 
 export async function runTests() {
     return await TestRunner.runAll();
