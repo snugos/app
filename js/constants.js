@@ -264,9 +264,9 @@ export const DRIFT_NOTES_MAX_VELOCITY_FACTOR = 1.0; // Maximum velocity factor (
 export const DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR = 0.95; // Default slight attenuation per drift step
 export const DRIFT_NOTES_MODE_LINEAR_UP = 'linear-up'; // Shift grows from 0 to maxShift
 export const DRIFT_NOTES_MODE_LINEAR_DOWN = 'linear-down'; // Shift shrinks from maxShift to 0
-export const DRIFT_NOTES_MODE_LINEAR_CENTER = 'linear-center'; // Shift peaks at the middle of the bar
+export const DRIFT_NOTES_MODE_LINEAR_CENTER = 'linear-center'; // V-shape: 0 shift at middle, full shift at start and end
 export const DRIFT_NOTES_MODE_RANDOM_PER_NOTE = 'random-per-note'; // Each note gets a random shift in [-maxShift, +maxShift]
-export const DRIFT_NOTES_MODE_MIRROR = 'mirror'; // Mirror of linear-up: notes start spread, then collapse back to origin
+export const DRIFT_NOTES_MODE_MIRROR = 'mirror'; // Inverted V: 0 at start/end, maxShift at middle
 export const DRIFT_NOTES_MODES = [
     DRIFT_NOTES_MODE_LINEAR_UP,
     DRIFT_NOTES_MODE_LINEAR_DOWN,
