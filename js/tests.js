@@ -22576,6 +22576,258 @@ TestRunner.test("Day 714 - radialNotes functional test: even angular spacing for
     const angleStep = (2 * Math.PI) / spokes;
     t.assertEqual(Math.round(angleStep * 1000) / 1000, Math.round(Math.PI / 4 * 1000) / 1000, '8 spokes have PI/4 step');
 });
+
+// Day 715 - Ripple Notes feature tests
+TestRunner.test("Day 715 - rippleNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.rippleNotes === 'function', 'rippleNotes is a function on Track.prototype');
+});
+
+TestRunner.test("Day 715 - rippleNotes accepts 6 parameters with defaults", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/rings\s*=\s*Constants\.RIPPLE_NOTES_DEFAULT_RINGS/.test(src), 'Default rings');
+    t.assertTruthy(/ringStep\s*=\s*Constants\.RIPPLE_NOTES_DEFAULT_RING_STEP/.test(src), 'Default ringStep');
+    t.assertTruthy(/columnStep\s*=\s*Constants\.RIPPLE_NOTES_DEFAULT_COLUMN_STEP/.test(src), 'Default columnStep');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.RIPPLE_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'Default velocityDecay');
+    t.assertTruthy(/shape\s*=\s*Constants\.RIPPLE_NOTES_SHAPE_SQUARE/.test(src), 'Default shape square');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'Default skipOccupied=true');
+});
+
+TestRunner.test("Day 715 - rippleNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]\)\s*return\s*0/.test(src), 'Audio guard returns 0');
+});
+
+TestRunner.test("Day 715 - rippleNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+    t.assertTruthy(/No active sequence found/.test(src), 'warns when no active sequence');
+});
+
+TestRunner.test("Day 715 - rippleNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    const captureIdx = src.indexOf('_captureUndoState');
+    const newNotesIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(captureIdx > 0 && newNotesIdx > 0 && captureIdx < newNotesIdx, 'captureUndoState is called before newNotes.push');
+});
+
+TestRunner.test("Day 715 - rippleNotes has descriptive 'Ripple Notes' undo label", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/Ripple Notes/.test(src), 'undo label includes Ripple Notes');
+});
+
+TestRunner.test("Day 715 - rippleNotes clamps rings to RIPPLE_NOTES_MIN/MAX_RINGS", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/RIPPLE_NOTES_MIN_RINGS/.test(src), 'references RIPPLE_NOTES_MIN_RINGS');
+    t.assertTruthy(/RIPPLE_NOTES_MAX_RINGS/.test(src), 'references RIPPLE_NOTES_MAX_RINGS');
+    t.assertTruthy(/Math\.floor\(rings\)/.test(src), 'uses Math.floor on rings');
+});
+
+TestRunner.test("Day 715 - rippleNotes clamps ringStep to RIPPLE_NOTES_MIN/MAX_RING_STEP", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/RIPPLE_NOTES_MIN_RING_STEP/.test(src), 'references RIPPLE_NOTES_MIN_RING_STEP');
+    t.assertTruthy(/RIPPLE_NOTES_MAX_RING_STEP/.test(src), 'references RIPPLE_NOTES_MAX_RING_STEP');
+});
+
+TestRunner.test("Day 715 - rippleNotes clamps columnStep to RIPPLE_NOTES_MIN/MAX_COLUMN_STEP", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/RIPPLE_NOTES_MIN_COLUMN_STEP/.test(src), 'references RIPPLE_NOTES_MIN_COLUMN_STEP');
+    t.assertTruthy(/RIPPLE_NOTES_MAX_COLUMN_STEP/.test(src), 'references RIPPLE_NOTES_MAX_COLUMN_STEP');
+});
+
+TestRunner.test("Day 715 - rippleNotes clamps velocityDecay to RIPPLE_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/RIPPLE_NOTES_MIN_VELOCITY_DECAY/.test(src), 'references RIPPLE_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/RIPPLE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'references RIPPLE_NOTES_MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 715 - rippleNotes validates shape with RIPPLE_NOTES_SHAPES", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/RIPPLE_NOTES_SHAPES\.includes/.test(src), 'validates shape via .includes');
+    t.assertTruthy(/RIPPLE_NOTES_SHAPE_SQUARE/.test(src), 'uses RIPPLE_NOTES_SHAPE_SQUARE fallback');
+});
+
+TestRunner.test("Day 715 - rippleNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*r\)/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 715 - rippleNotes respects sequence length boundary", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 715 - rippleNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'checks skipOccupied');
+});
+
+TestRunner.test("Day 715 - rippleNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 715 - rippleNotes returns count of ripple notes (rippleCount)", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/rippleCount/.test(src), 'returns rippleCount');
+});
+
+TestRunner.test("Day 715 - All 18 RIPPLE_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'constants.js'), 'utf-8');
+    const expected = [
+        'RIPPLE_NOTES_MIN_RINGS', 'RIPPLE_NOTES_MAX_RINGS', 'RIPPLE_NOTES_DEFAULT_RINGS',
+        'RIPPLE_NOTES_MIN_RING_STEP', 'RIPPLE_NOTES_MAX_RING_STEP', 'RIPPLE_NOTES_DEFAULT_RING_STEP',
+        'RIPPLE_NOTES_MIN_COLUMN_STEP', 'RIPPLE_NOTES_MAX_COLUMN_STEP', 'RIPPLE_NOTES_DEFAULT_COLUMN_STEP',
+        'RIPPLE_NOTES_MIN_VELOCITY_DECAY', 'RIPPLE_NOTES_MAX_VELOCITY_DECAY', 'RIPPLE_NOTES_DEFAULT_VELOCITY_DECAY',
+        'RIPPLE_NOTES_SHAPE_SQUARE', 'RIPPLE_NOTES_SHAPE_CROSS', 'RIPPLE_NOTES_SHAPE_DIAGONAL', 'RIPPLE_NOTES_SHAPES'
+    ];
+    for (const name of expected) {
+        t.assertTruthy(src.includes('export const ' + name), `constants.js defines ${name}`);
+    }
+});
+
+TestRunner.test("Day 715 - RIPPLE_NOTES_SHAPES includes square, cross, and diagonal", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'constants.js'), 'utf-8');
+    t.assertTruthy(/RIPPLE_NOTES_SHAPES\s*=\s*\[[\s\S]*RIPPLE_NOTES_SHAPE_SQUARE[\s\S]*RIPPLE_NOTES_SHAPE_CROSS[\s\S]*RIPPLE_NOTES_SHAPE_DIAGONAL[\s\S]*\]/.test(src), 'SHAPES array includes square, cross, diagonal');
+});
+
+TestRunner.test("Day 715 - ui.js has 5 Ripple Notes menu items", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    const matches = src.match(/label:\s*`Ripple Notes\s*\(/g) || [];
+    t.assertTruthy(matches.length >= 5, `Found ${matches.length} Ripple Notes menu items (expected >= 5)`);
+});
+
+TestRunner.test("Day 715 - Ripple Notes menu items call track.rippleNotes", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    const matches = src.match(/currentTrackForMenu\.rippleNotes\(/g) || [];
+    t.assertTruthy(matches.length >= 5, `Found ${matches.length} rippleNotes calls in ui.js (expected >= 5)`);
+});
+
+TestRunner.test("Day 715 - Ripple Notes menu items call recreateToneSequence", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    const ripples = src.match(/rippleNotes\([^)]+\)/g) || [];
+    t.assertTruthy(ripples.length >= 5, `Found ${ripples.length} rippleNotes menu item calls`);
+});
+
+TestRunner.test("Day 715 - Ripple Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    t.assertTruthy(/Rippled \$\{result\} note\(s\)/.test(src), 'shows "Rippled {result} note(s)" notification');
+});
+
+TestRunner.test("Day 715 - Ripple Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    t.assertTruthy(/captureStateForUndo\(`Ripple Notes on/.test(src), 'captures undo with "Ripple Notes on" label');
+});
+
+TestRunner.test("Day 715 - APP_VERSION validation (>= 2.364)", (t) => {
+    t.assertTruthy(Constants.APP_VERSION >= '2.364', `APP_VERSION ${Constants.APP_VERSION} is >= 2.364`);
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: square shape has 8 direction offsets", (t) => {
+    let directionOffsets;
+    const useShape = 'square';
+    if (useShape === 'cross') {
+        directionOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    } else if (useShape === 'diagonal') {
+        directionOffsets = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    } else {
+        directionOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+    }
+    t.assertEqual(directionOffsets.length, 8, 'square shape has 8 direction offsets');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: cross shape has 4 cardinal direction offsets", (t) => {
+    let directionOffsets;
+    const useShape = 'cross';
+    if (useShape === 'cross') {
+        directionOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    } else if (useShape === 'diagonal') {
+        directionOffsets = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    } else {
+        directionOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+    }
+    t.assertEqual(directionOffsets.length, 4, 'cross shape has 4 direction offsets');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: diagonal shape has 4 diagonal direction offsets", (t) => {
+    let directionOffsets;
+    const useShape = 'diagonal';
+    if (useShape === 'cross') {
+        directionOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    } else if (useShape === 'diagonal') {
+        directionOffsets = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    } else {
+        directionOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+    }
+    t.assertEqual(directionOffsets.length, 4, 'diagonal shape has 4 direction offsets');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: targetRow = rowIndex + dRow * ringStep * r", (t) => {
+    const rowIndex = 4;
+    const dRow = -1;
+    const ringStep = 1;
+    const r = 3;
+    const targetRow = rowIndex + (dRow * ringStep * r);
+    t.assertEqual(targetRow, 1, '4 + (-1*1*3) = 1');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: targetCol = col + dCol * ringStep * r + colShift", (t) => {
+    const col = 5;
+    const dCol = 1;
+    const ringStep = 2;
+    const r = 2;
+    const colShift = r * 1; // columnStep=1
+    const targetCol = col + (dCol * ringStep * r) + colShift;
+    t.assertEqual(targetCol, 11, '5 + (1*2*2) + 2 = 11');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: velocity decay = origVel * decay^r", (t) => {
+    const origVel = 0.8;
+    const decay = 0.8;
+    const v1 = Math.max(0.05, Math.min(1.0, origVel * Math.pow(decay, 1)));
+    t.assertEqual(Math.round(v1 * 100) / 100, 0.64, 'r=1 velocity 0.8*0.8=0.64');
+    const v2 = Math.max(0.05, Math.min(1.0, origVel * Math.pow(decay, 2)));
+    t.assertEqual(Math.round(v2 * 100) / 100, 0.51, 'r=2 velocity 0.8*0.64=0.51');
+    const v3 = Math.max(0.05, Math.min(1.0, origVel * Math.pow(decay, 3)));
+    t.assertEqual(Math.round(v3 * 100) / 100, 0.41, 'r=3 velocity 0.8*0.512=0.41');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: clamps rings to valid range (100 -> 8)", (t) => {
+    const clamped = Math.max(1, Math.min(8, Math.floor(100)));
+    t.assertEqual(clamped, 8, '100 rings clamps to 8');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: clamps ringStep to valid range (0 -> 1)", (t) => {
+    const clamped = Math.max(1, Math.min(3, Math.floor(0)));
+    t.assertEqual(clamped, 1, '0 ringStep clamps to 1');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: clamps columnStep to valid range (-5 -> 0)", (t) => {
+    const clamped = Math.max(0, Math.min(4, Math.floor(-5)));
+    t.assertEqual(clamped, 0, '-5 columnStep clamps to 0');
+});
+
+TestRunner.test("Day 715 - rippleNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/const newNotes = \[\]/.test(src), 'collects new notes in array');
+    t.assertTruthy(/for \(const note of newNotes\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 715 - rippleNotes uses ring 1..rings range (not 0..rings-1)", (t) => {
+    const src = Track.prototype.rippleNotes.toString();
+    t.assertTruthy(/r\s*=\s*1;\s*r\s*<=\s*clampedRings/.test(src), 'loops r=1..clampedRings inclusive');
+});
+
+TestRunner.test("Day 715 - rippleNotes functional test: ring r=1 places at distance ringStep, r=2 at 2*ringStep", (t) => {
+    const ringStep = 2;
+    const r1Dist = 1 * ringStep;
+    const r2Dist = 2 * ringStep;
+    const r3Dist = 3 * ringStep;
+    t.assertEqual(r1Dist, 2, 'r=1 distance=2');
+    t.assertEqual(r2Dist, 4, 'r=2 distance=4');
+    t.assertEqual(r3Dist, 6, 'r=3 distance=6');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

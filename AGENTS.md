@@ -1,3 +1,91 @@
+#### Day 715: Ripple Notes Feature (2026-06-17)
+- **Feature**: Added `rippleNotes(rings, ringStep, columnStep, velocityDecay, shape, skipOccupied)` method to Track class and 5 "Ripple Notes" menu items to the sequencer context menu. Each active note spawns N concentric expanding rings (the "stone-in-pond" effect) around the source. For ring `r` in 1..clampedRings, places notes at every surrounding direction offset scaled by `ringStep * r`, with a per-ring column shift of `r * columnStep` so the ripple drifts forward in time. Three shape modes: 'square' (8-direction Chebyshev), 'cross' (4 cardinal), 'diagonal' (4 diagonal). Complements `radialNotes` (discrete spokes), `spiralNotes` (continuous angular sweep), `cascadeNotes` (linear 2D row+col), `driftNotes` (column-only), and `crescentNotes` (grouped arc).
+- **Files Modified**:
+  - `js/Track.js`: Added `rippleNotes` method after `radialNotes` (line ~5965); added trailing newline
+  - `js/constants.js`: Added 18 RIPPLE_NOTES_* constants + bumped APP_VERSION to 2.364.0
+  - `js/ui.js`: Added 5 Ripple Notes menu items in the sequencer context menu after Radial Notes (Column-only, 8), with separator after
+  - `js/tests.js`: Added Day 715 test block with 37 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **rippleNotes** (`js/Track.js`): For each active note, places N rings of N_dir surrounding notes. For ring `r` in 1..clampedRings, computes `colShift = r * clampedColumnStep` and iterates each direction offset `[dRow, dCol]`, placing at `targetRow = rowIndex + dRow * clampedRingStep * r` and `targetCol = col + dCol * clampedRingStep * r + colShift`. Captures undo state BEFORE mutation with descriptive "Ripple Notes (shape, N rings) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `rings` to RIPPLE_NOTES_MIN_RINGS (1) / RIPPLE_NOTES_MAX_RINGS (8) range with Math.floor (default RIPPLE_NOTES_DEFAULT_RINGS=4)
+    - Clamps `ringStep` to RIPPLE_NOTES_MIN_RING_STEP (1) / RIPPLE_NOTES_MAX_RING_STEP (3) range with Math.floor (default RIPPLE_NOTES_DEFAULT_RING_STEP=1)
+    - Clamps `columnStep` to RIPPLE_NOTES_MIN_COLUMN_STEP (0) / RIPPLE_NOTES_MAX_COLUMN_STEP (4) range with Math.floor (default RIPPLE_NOTES_DEFAULT_COLUMN_STEP=1)
+    - Clamps `velocityDecay` to RIPPLE_NOTES_MIN_VELOCITY_DECAY (0.1) / RIPPLE_NOTES_MAX_VELOCITY_DECAY (1.0) range (default RIPPLE_NOTES_DEFAULT_VELOCITY_DECAY=0.8)
+    - Validates `shape` against RIPPLE_NOTES_SHAPES array, falls back to RIPPLE_NOTES_SHAPE_SQUARE if invalid
+    - Selects direction offsets based on shape: square=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]] (8 dirs), cross=4 cardinal, diagonal=4 diagonal
+    - Captures undo state BEFORE mutation with descriptive "Ripple Notes (shape, N rings) on <seqname>" label
+    - For each row, for each column, for each active note: for `r` in 1..clampedRings, iterates direction offsets to compute target row and col
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, r)))` for exponential velocity decay per ring
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of ripple notes added
+  - **Ripple Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Radial Notes (Column-only, 8)
+    - "Ripple Notes (Square, 4 rings)" - calls `rippleNotes(4, 1, 1, 0.8, 'square', true)` - classic 8-direction stone-in-pond pattern
+    - "Ripple Notes (Square, 6 rings, spaced)" - calls `rippleNotes(6, 2, 1, 0.85, 'square', true)` - wider, slower decay stone-in-pond
+    - "Ripple Notes (Cross, 4 rings)" - calls `rippleNotes(4, 1, 1, 0.8, 'cross', true)` - cardinal-only ripple (4 directions)
+    - "Ripple Notes (Diagonal, 4 rings)" - calls `rippleNotes(4, 1, 1, 0.8, 'diagonal', true)` - diagonal-only ripple (4 corners)
+    - "Ripple Notes (Column-only, 4)" - calls `rippleNotes(4, 1, 0, 0.8, 'cross', true)` - vertical-only cross sweep (columnStep=0)
+    - All call `recreateToneSequence(true)` after rippling
+    - All capture undo with descriptive "Ripple Notes on <name> (<seqname>)" label
+    - Show notifications: "Rippled {count} note(s) (variant)."
+    - Show "No notes to ripple." when nothing to ripple
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 18 new constants
+  - `RIPPLE_NOTES_MIN_RINGS = 1` - Minimum 1 ring
+  - `RIPPLE_NOTES_MAX_RINGS = 8` - Maximum 8 rings outward
+  - `RIPPLE_NOTES_DEFAULT_RINGS = 4` - Default 4 rings of expansion
+  - `RIPPLE_NOTES_MIN_RING_STEP = 1` - Minimum 1 row/col per ring
+  - `RIPPLE_NOTES_MAX_RING_STEP = 3` - Maximum 3 rows/cols per ring
+  - `RIPPLE_NOTES_DEFAULT_RING_STEP = 1` - Default 1 row/col per ring
+  - `RIPPLE_NOTES_MIN_COLUMN_STEP = 0` - Minimum 0 columns forward per ring
+  - `RIPPLE_NOTES_MAX_COLUMN_STEP = 4` - Maximum 4 columns forward per ring
+  - `RIPPLE_NOTES_DEFAULT_COLUMN_STEP = 1` - Default 1 column forward per ring
+  - `RIPPLE_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum velocity decay per ring
+  - `RIPPLE_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `RIPPLE_NOTES_DEFAULT_VELOCITY_DECAY = 0.8` - Default 80% velocity preservation per ring
+  - `RIPPLE_NOTES_SHAPE_SQUARE = 'square'` - Full 8-direction Chebyshev ring
+  - `RIPPLE_NOTES_SHAPE_CROSS = 'cross'` - 4 cardinal-only ring (N/S/E/W)
+  - `RIPPLE_NOTES_SHAPE_DIAGONAL = 'diagonal'` - 4 diagonal-only ring (NE/NW/SE/SW)
+  - `RIPPLE_NOTES_SHAPES = [SQUARE, CROSS, DIAGONAL]` - Valid shape values
+- **Tests** (`js/tests.js`): 37 tests covering:
+  - `rippleNotes` is a function on Track.prototype
+  - `rippleNotes` accepts 6 parameters with defaults
+  - `rippleNotes` returns 0 for Audio tracks
+  - `rippleNotes` gets active sequence via `getActiveSequence`
+  - `rippleNotes` captures undo BEFORE mutation
+  - `rippleNotes` has descriptive "Ripple Notes" undo label
+  - `rippleNotes` clamps rings/ringStep/columnStep/velocityDecay to RIPPLE_NOTES_MIN/MAX_* ranges
+  - `rippleNotes` validates shape with RIPPLE_NOTES_SHAPES (uses SQUARE fallback)
+  - `rippleNotes` uses Math.pow for velocity decay
+  - `rippleNotes` respects sequence length and row boundaries
+  - `rippleNotes` supports skipOccupied option
+  - `rippleNotes` rounds velocity to 2 decimal places
+  - `rippleNotes` returns count of ripple notes (rippleCount)
+  - All 16 RIPPLE_NOTES constants are defined in constants.js
+  - RIPPLE_NOTES_SHAPES includes square, cross, and diagonal
+  - ui.js has 5 Ripple Notes menu items
+  - Ripple Notes menu items call track.rippleNotes
+  - Ripple Notes menu items show notification with count
+  - Ripple Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.364 for Day 715)
+  - Functional tests: square (8 offsets), cross (4 cardinal), diagonal (4 diagonal) shapes
+  - Functional test: targetRow = rowIndex + dRow * ringStep * r
+  - Functional test: targetCol = col + dCol * ringStep * r + r * columnStep
+  - Functional test: velocity decay (vel * decay^r)
+  - Functional tests: clamps to valid ranges (rings 100->8, ringStep 0->1, columnStep -5->0)
+  - Functional test: ring r=1..rings inclusive (not 0..rings-1)
+  - Functional test: distance scales linearly (r=1 -> 1*ringStep, r=2 -> 2*ringStep)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+- **Version**: Bumped to 2.364.0
+- **Test Count**: Added 37 Day 715 tests. esbuild build succeeds. Test runtime verification blocked by pre-existing `createRequire(import.meta.url)` bundler issue in `run-tests-esm.mjs` (Node v22 / Bun v1.2.21 both fail with "argument 'filename' must be a file URL object, file URL string, or absolute path string"). Per AGENTS.md notes, this affects pre-existing tests too, not just Day 715. Static analysis (node --check) passes for all 4 modified files.
+
 #### Day 714: Radial Notes Feature (2026-06-17)
 - **Feature**: Added `radialNotes(spokes, radius, columnStep, velocityDecay, direction, skipOccupied)` method to Track class and 5 "Radial Notes" menu items to the sequencer context menu. Each active note spawns N evenly-spaced angular "spokes" (sunburst/starburst pattern) around the source, computed via `angle = 2*PI*s/spokes * directionSign`, with `rowOffset = round(cos(angle) * radius)` and `colOffset = round(sin(angle) * columnStep)`. Complements `spiralNotes` (continuous angular sweep) and `cascadeNotes` (linear 2D row+col) with a discrete radial spoke pattern — the signature starburst look.
 - **Files Modified**:

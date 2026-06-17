@@ -5961,4 +5961,106 @@ export class Track {
 
         return radialCount;
     }
+
+    // Ripple Notes - generate concentric expanding rings (stone-in-pond) around each source note.
+    // For each source note, place notes at the 8 (square) / 4 (cross) / 4 (diagonal) surrounding
+    // positions for each ring r in 1..rings, with offsets scaled by ringStep.
+    // Rings: number of expanding rings per source note (clamped 1..8)
+    // ringStep: how many rows/cols each ring extends (1 = tight ripple, 3 = wide gap)
+    // columnStep: how many columns each ring advances (0 = pure vertical ripple, 4 = wide sweep)
+    // velocityDecay: multiplicative decay per ring (1.0 = no decay)
+    // shape: 'square' (full 8-dir Chebyshev ring), 'cross' (4 cardinal), 'diagonal' (4 diagonal)
+    // skipOccupied: skip ring cell if target is already active
+    rippleNotes(rings = Constants.RIPPLE_NOTES_DEFAULT_RINGS, ringStep = Constants.RIPPLE_NOTES_DEFAULT_RING_STEP, columnStep = Constants.RIPPLE_NOTES_DEFAULT_COLUMN_STEP, velocityDecay = Constants.RIPPLE_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.RIPPLE_NOTES_SHAPE_SQUARE, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} rippleNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedRings = Math.max(Constants.RIPPLE_NOTES_MIN_RINGS, Math.min(Constants.RIPPLE_NOTES_MAX_RINGS, Math.floor(rings)));
+        const clampedRingStep = Math.max(Constants.RIPPLE_NOTES_MIN_RING_STEP, Math.min(Constants.RIPPLE_NOTES_MAX_RING_STEP, Math.floor(ringStep)));
+        const clampedColumnStep = Math.max(Constants.RIPPLE_NOTES_MIN_COLUMN_STEP, Math.min(Constants.RIPPLE_NOTES_MAX_COLUMN_STEP, Math.floor(columnStep)));
+        const clampedDecay = Math.max(Constants.RIPPLE_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.RIPPLE_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.RIPPLE_NOTES_SHAPES.includes(shape) ? shape : Constants.RIPPLE_NOTES_SHAPE_SQUARE;
+
+        // Direction offsets based on shape
+        let directionOffsets;
+        if (useShape === Constants.RIPPLE_NOTES_SHAPE_CROSS) {
+            // 4 cardinal directions
+            directionOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+        } else if (useShape === Constants.RIPPLE_NOTES_SHAPE_DIAGONAL) {
+            // 4 diagonal directions
+            directionOffsets = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+        } else {
+            // square - 8 directions (4 cardinal + 4 diagonal)
+            directionOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+        }
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Ripple Notes (${useShape}, ${clampedRings} rings) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let rippleCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // For each ring r, place a note at every direction offset scaled by ringStep
+                for (let r = 1; r <= clampedRings; r++) {
+                    // Column shift per ring: r * clampedColumnStep (so the ripple drifts forward in time)
+                    const colShift = r * clampedColumnStep;
+                    for (const [dRow, dCol] of directionOffsets) {
+                        const targetRow = rowIndex + (dRow * clampedRingStep * r);
+                        const targetCol = col + (dCol * clampedRingStep * r) + colShift;
+
+                        // Skip if target row is out of bounds
+                        if (targetRow < 0 || targetRow >= numRows) continue;
+                        // Skip if target col is out of bounds
+                        if (targetCol < 0 || targetCol >= totalSteps) continue;
+                        // Skip if skipOccupied and target slot is already active
+                        if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                        // Skip if target is the source cell (no-op)
+                        if (targetRow === rowIndex && targetCol === col) continue;
+
+                        // Compute decayed velocity: origVel * decay^r
+                        const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, r)));
+                        newNotes.push({
+                            rowIndex: targetRow,
+                            col: targetCol,
+                            velocity: Math.round(decayedVel * 100) / 100,
+                            probability: stepData.probability
+                        });
+                    }
+                }
+            }
+        }
+
+        // Apply the new ripple notes
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            rippleCount++;
+        }
+
+        return rippleCount;
+    }
 }
