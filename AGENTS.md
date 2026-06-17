@@ -89,7 +89,6 @@
 - **Test Count**: Added 36 Day 713 tests (already in tests.js from Day 712 working changes, total 2473). Test runtime verification blocked by pre-existing `createRequire(import.meta.url)` bundler issue in `run-tests-esm.mjs` (Node v22 / Bun v1.2.21 both fail with "argument 'filename' must be a file URL object, file URL string, or absolute path string"). Per AGENTS.md notes, this affects 1491 pre-existing tests, not just Day 713. Static analysis (node --check) passes for all 4 modified files.
 
 #### Day 712: Cascade Notes Feature (2026-06-17)
-#### Day 712: Cascade Notes Feature (2026-06-17)
 - **Feature**: Added `cascadeNotes(steps, stepDelay, velocityDecay, direction, skipOccupied)` method to Track class and 5 "Cascade Notes" menu items to the sequencer context menu. Each active note spawns a 2D cascade of N new notes that flow into subsequent rows (and optionally shift in time), creating dense waterfall or ascending patterns. Complements `driftNotes` (column-only), `shuffleNotes` (random column shift), `staggerNotes` (column-only chord cascade), `arpeggiateNotes` (column arpeggio cycles), and `echoNotes` (column-only delay taps) with a 2D row+column cascade.
 - **Files Modified**:
   - `js/Track.js`: Added `cascadeNotes` method after `driftNotes` (line ~5696)
