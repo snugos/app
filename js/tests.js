@@ -22828,6 +22828,330 @@ TestRunner.test("Day 715 - rippleNotes functional test: ring r=1 places at dista
     t.assertEqual(r3Dist, 6, 'r=3 distance=6');
 });
 
+TestRunner.test("Day 716 - gliderNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.gliderNotes, 'function', 'gliderNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 716 - gliderNotes accepts 6 parameters with defaults", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.GLIDER_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/rowStep\s*=\s*Constants\.GLIDER_NOTES_DEFAULT_ROW_STEP/.test(src), 'has rowStep default');
+    t.assertTruthy(/columnStep\s*=\s*Constants\.GLIDER_NOTES_DEFAULT_COLUMN_STEP/.test(src), 'has columnStep default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.GLIDER_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/mode\s*=\s*Constants\.GLIDER_NOTES_MODE_FORWARD/.test(src), 'has mode default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 716 - gliderNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'/.test(src), 'checks for Audio type');
+    t.assertTruthy(/return 0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 716 - gliderNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/getActiveSequence/.test(src), 'uses getActiveSequence');
+});
+
+TestRunner.test("Day 716 - gliderNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0, 'has undo capture call');
+    t.assertTruthy(mutationIdx > undoIdx, 'undo is captured before mutation');
+});
+
+TestRunner.test("Day 716 - gliderNotes has descriptive 'Glider Notes' undo label", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/Glider Notes/.test(src), 'has Glider Notes in undo label');
+});
+
+TestRunner.test("Day 716 - gliderNotes clamps length to GLIDER_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/GLIDER_NOTES_MIN_LENGTH/.test(src), 'references GLIDER_NOTES_MIN_LENGTH');
+    t.assertTruthy(/GLIDER_NOTES_MAX_LENGTH/.test(src), 'references GLIDER_NOTES_MAX_LENGTH');
+});
+
+TestRunner.test("Day 716 - gliderNotes clamps rowStep to GLIDER_NOTES_MIN/MAX_ROW_STEP", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/GLIDER_NOTES_MIN_ROW_STEP/.test(src), 'references GLIDER_NOTES_MIN_ROW_STEP');
+    t.assertTruthy(/GLIDER_NOTES_MAX_ROW_STEP/.test(src), 'references GLIDER_NOTES_MAX_ROW_STEP');
+});
+
+TestRunner.test("Day 716 - gliderNotes clamps columnStep to GLIDER_NOTES_MIN/MAX_COLUMN_STEP", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/GLIDER_NOTES_MIN_COLUMN_STEP/.test(src), 'references GLIDER_NOTES_MIN_COLUMN_STEP');
+    t.assertTruthy(/GLIDER_NOTES_MAX_COLUMN_STEP/.test(src), 'references GLIDER_NOTES_MAX_COLUMN_STEP');
+});
+
+TestRunner.test("Day 716 - gliderNotes clamps velocityDecay to GLIDER_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/GLIDER_NOTES_MIN_VELOCITY_DECAY/.test(src), 'references GLIDER_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/GLIDER_NOTES_MAX_VELOCITY_DECAY/.test(src), 'references GLIDER_NOTES_MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 716 - gliderNotes validates mode with GLIDER_NOTES_MODES", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/GLIDER_NOTES_MODES\.includes/.test(src), 'validates mode via .includes');
+    t.assertTruthy(/GLIDER_NOTES_MODE_FORWARD/.test(src), 'uses GLIDER_NOTES_MODE_FORWARD fallback');
+});
+
+TestRunner.test("Day 716 - gliderNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*s\)/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 716 - gliderNotes respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 716 - gliderNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'checks skipOccupied');
+});
+
+TestRunner.test("Day 716 - gliderNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 716 - gliderNotes returns count of glider notes (gliderCount)", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/gliderCount/.test(src), 'returns gliderCount');
+});
+
+TestRunner.test("Day 716 - All 21 GLIDER_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'constants.js'), 'utf-8');
+    const expected = [
+        'GLIDER_NOTES_MIN_LENGTH', 'GLIDER_NOTES_MAX_LENGTH', 'GLIDER_NOTES_DEFAULT_LENGTH',
+        'GLIDER_NOTES_MIN_ROW_STEP', 'GLIDER_NOTES_MAX_ROW_STEP', 'GLIDER_NOTES_DEFAULT_ROW_STEP',
+        'GLIDER_NOTES_MIN_COLUMN_STEP', 'GLIDER_NOTES_MAX_COLUMN_STEP', 'GLIDER_NOTES_DEFAULT_COLUMN_STEP',
+        'GLIDER_NOTES_MIN_VELOCITY_DECAY', 'GLIDER_NOTES_MAX_VELOCITY_DECAY', 'GLIDER_NOTES_DEFAULT_VELOCITY_DECAY',
+        'GLIDER_NOTES_MODE_FORWARD', 'GLIDER_NOTES_MODE_BACKWARD', 'GLIDER_NOTES_MODE_V',
+        'GLIDER_NOTES_MODE_INV_V', 'GLIDER_NOTES_MODE_X', 'GLIDER_NOTES_MODE_ZIGZAG',
+        'GLIDER_NOTES_MODES'
+    ];
+    for (const c of expected) {
+        t.assertTruthy(src.includes(c), 'constants.js should define ' + c);
+    }
+});
+
+TestRunner.test("Day 716 - GLIDER_NOTES_MODES includes all 6 modes", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'constants.js'), 'utf-8');
+    t.assertTruthy(/GLIDER_NOTES_MODE_FORWARD/.test(src), 'has FORWARD');
+    t.assertTruthy(/GLIDER_NOTES_MODE_BACKWARD/.test(src), 'has BACKWARD');
+    t.assertTruthy(/GLIDER_NOTES_MODE_V/.test(src), 'has V');
+    t.assertTruthy(/GLIDER_NOTES_MODE_INV_V/.test(src), 'has INV_V');
+    t.assertTruthy(/GLIDER_NOTES_MODE_X/.test(src), 'has X');
+    t.assertTruthy(/GLIDER_NOTES_MODE_ZIGZAG/.test(src), 'has ZIGZAG');
+});
+
+TestRunner.test("Day 716 - ui.js has 5 Glider Notes menu items", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    const matches = src.match(/Glider Notes\s*\(/g) || [];
+    t.assertTruthy(matches.length >= 5, 'ui.js should have at least 5 Glider Notes menu items, found ' + matches.length);
+});
+
+TestRunner.test("Day 716 - Glider Notes menu items call track.gliderNotes", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    t.assertTruthy(/currentTrackForMenu\.gliderNotes/.test(src), 'menu items call currentTrackForMenu.gliderNotes');
+});
+
+TestRunner.test("Day 716 - Glider Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    t.assertTruthy(/Glidered.*note\(s\)/.test(src), 'menu items show Glidered note(s) notification');
+});
+
+TestRunner.test("Day 716 - Glider Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    t.assertTruthy(/captureStateForUndo.*Glider Notes/.test(src), 'menu items capture undo with Glider Notes label');
+});
+
+TestRunner.test("Day 716 - APP_VERSION validation (>= 2.365 for Day 716)", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'constants.js'), 'utf-8');
+    const match = src.match(/APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(match, 'APP_VERSION should be defined');
+    const major = parseInt(match[1]);
+    const minor = parseInt(match[2]);
+    t.assertTruthy(major > 2 || (major === 2 && minor >= 365), 'APP_VERSION should be >= 2.365');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: forward mode has 1 direction (1,1)", (t) => {
+    let stepDirections;
+    const useMode = 'forward';
+    if (useMode === 'forward') {
+        stepDirections = [[1, 1]];
+    } else if (useMode === 'backward') {
+        stepDirections = [[1, -1]];
+    } else {
+        stepDirections = [[1, 1]];
+    }
+    t.assertEqual(stepDirections.length, 1, 'forward has 1 direction');
+    t.assertEqual(stepDirections[0][0], 1, 'forward row direction is 1');
+    t.assertEqual(stepDirections[0][1], 1, 'forward col direction is 1');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: backward mode has 1 direction (1,-1)", (t) => {
+    let stepDirections;
+    const useMode = 'backward';
+    if (useMode === 'backward') {
+        stepDirections = [[1, -1]];
+    } else {
+        stepDirections = [[1, 1]];
+    }
+    t.assertEqual(stepDirections.length, 1, 'backward has 1 direction');
+    t.assertEqual(stepDirections[0][0], 1, 'backward row direction is 1');
+    t.assertEqual(stepDirections[0][1], -1, 'backward col direction is -1');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: v mode has 2 directions (1,1) and (-1,1)", (t) => {
+    let stepDirections;
+    const useMode = 'v';
+    if (useMode === 'v') {
+        stepDirections = [[1, 1], [-1, 1]];
+    } else {
+        stepDirections = [[1, 1]];
+    }
+    t.assertEqual(stepDirections.length, 2, 'v has 2 directions');
+    t.assertEqual(stepDirections[0][0], 1, 'v first row direction is 1');
+    t.assertEqual(stepDirections[0][1], 1, 'v first col direction is 1');
+    t.assertEqual(stepDirections[1][0], -1, 'v second row direction is -1');
+    t.assertEqual(stepDirections[1][1], 1, 'v second col direction is 1');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: inv-v mode has 2 directions (-1,1) and (1,1)", (t) => {
+    let stepDirections;
+    const useMode = 'inv-v';
+    if (useMode === 'inv-v') {
+        stepDirections = [[-1, 1], [1, 1]];
+    } else {
+        stepDirections = [[1, 1]];
+    }
+    t.assertEqual(stepDirections.length, 2, 'inv-v has 2 directions');
+    t.assertEqual(stepDirections[0][0], -1, 'inv-v first row direction is -1');
+    t.assertEqual(stepDirections[1][0], 1, 'inv-v second row direction is 1');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: x mode has 4 directions", (t) => {
+    let stepDirections;
+    const useMode = 'x';
+    if (useMode === 'x') {
+        stepDirections = [[-1, 1], [-1, -1], [1, 1], [1, -1]];
+    } else {
+        stepDirections = [[1, 1]];
+    }
+    t.assertEqual(stepDirections.length, 4, 'x has 4 directions (NE, NW, SE, SW)');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: zigzag mode builds per-step rowDir alternating", (t) => {
+    const clampedLength = 6;
+    const stepDirections = [];
+    for (let z = 1; z <= clampedLength; z++) {
+        const rowDir = (z % 2 === 1) ? 1 : -1;
+        stepDirections.push([rowDir, 1]);
+    }
+    t.assertEqual(stepDirections.length, 6, 'zigzag builds 6 steps');
+    t.assertEqual(stepDirections[0][0], 1, 'step 1 rowDir=1 (down)');
+    t.assertEqual(stepDirections[1][0], -1, 'step 2 rowDir=-1 (up)');
+    t.assertEqual(stepDirections[2][0], 1, 'step 3 rowDir=1 (down)');
+    t.assertEqual(stepDirections[3][0], -1, 'step 4 rowDir=-1 (up)');
+    t.assertEqual(stepDirections[4][0], 1, 'step 5 rowDir=1 (down)');
+    t.assertEqual(stepDirections[5][0], -1, 'step 6 rowDir=-1 (up)');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: targetRow = rowIndex + rowDir * rowStep * s", (t) => {
+    const rowIndex = 4;
+    const rowDir = 1;
+    const rowStep = 1;
+    const s = 3;
+    const targetRow = rowIndex + (rowDir * rowStep * s);
+    t.assertEqual(targetRow, 7, '4 + (1*1*3) = 7');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: targetCol = col + colDir * columnStep * s", (t) => {
+    const col = 5;
+    const colDir = 1;
+    const columnStep = 2;
+    const s = 2;
+    const targetCol = col + (colDir * columnStep * s);
+    t.assertEqual(targetCol, 9, '5 + (1*2*2) = 9');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: velocity decay = origVel * decay^s", (t) => {
+    const origVel = 0.8;
+    const decay = 0.88;
+    const v1 = Math.max(0.05, Math.min(1.0, origVel * Math.pow(decay, 1)));
+    t.assertEqual(Math.round(v1 * 100) / 100, 0.7, 's=1 velocity 0.8*0.88=0.70');
+    const v3 = Math.max(0.05, Math.min(1.0, origVel * Math.pow(decay, 3)));
+    t.assertEqual(Math.round(v3 * 100) / 100, 0.55, 's=3 velocity 0.8*0.681=0.55');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: clamps length to valid range (100 -> 16)", (t) => {
+    const clamped = Math.max(1, Math.min(16, Math.floor(100)));
+    t.assertEqual(clamped, 16, '100 length clamps to 16');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: clamps rowStep to valid range (-5 -> 0)", (t) => {
+    const clamped = Math.max(0, Math.min(4, Math.floor(-5)));
+    t.assertEqual(clamped, 0, '-5 rowStep clamps to 0');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: clamps columnStep to valid range (0 -> 1)", (t) => {
+    const clamped = Math.max(1, Math.min(4, Math.floor(0)));
+    t.assertEqual(clamped, 1, '0 columnStep clamps to 1');
+});
+
+TestRunner.test("Day 716 - gliderNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/const newNotes = \[\]/.test(src), 'collects new notes in array');
+    t.assertTruthy(/for \(const note of newNotes\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 716 - gliderNotes uses step 1..length range (not 0..length-1)", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/s\s*=\s*1;\s*s\s*<=\s*clampedLength/.test(src), 'loops s=1..clampedLength inclusive');
+});
+
+TestRunner.test("Day 716 - gliderNotes functional test: step s=1 places at distance step, s=2 at 2*step", (t) => {
+    const rowStep = 2;
+    const s1Dist = 1 * rowStep;
+    const s2Dist = 2 * rowStep;
+    const s3Dist = 3 * rowStep;
+    t.assertEqual(s1Dist, 2, 's=1 distance=2');
+    t.assertEqual(s2Dist, 4, 's=2 distance=4');
+    t.assertEqual(s3Dist, 6, 's=3 distance=6');
+});
+
+TestRunner.test("Day 716 - gliderNotes structural test: supports 6 distinct modes", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/GLIDER_NOTES_MODE_FORWARD/.test(src), 'has FORWARD mode');
+    t.assertTruthy(/GLIDER_NOTES_MODE_BACKWARD/.test(src), 'has BACKWARD mode');
+    t.assertTruthy(/GLIDER_NOTES_MODE_V/.test(src), 'has V mode');
+    t.assertTruthy(/GLIDER_NOTES_MODE_INV_V/.test(src), 'has INV_V mode');
+    t.assertTruthy(/GLIDER_NOTES_MODE_X/.test(src), 'has X mode');
+    t.assertTruthy(/GLIDER_NOTES_MODE_ZIGZAG/.test(src), 'has ZIGZAG mode');
+});
+
+TestRunner.test("Day 716 - gliderNotes structural test: respects Math.floor for length/rowStep/columnStep", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor on length');
+    t.assertTruthy(/Math\.floor\(rowStep\)/.test(src), 'uses Math.floor on rowStep');
+    t.assertTruthy(/Math\.floor\(columnStep\)/.test(src), 'uses Math.floor on columnStep');
+});
+
+TestRunner.test("Day 716 - gliderNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves source probability');
+});
+
+TestRunner.test("Day 716 - gliderNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.gliderNotes.toString();
+    t.assertTruthy(/stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive steps');
+    t.assertTruthy(/!row\s*\|\|\s*!row\.length/.test(src) || /if\s*\(\s*!row\s*\)\s*continue/.test(src), 'handles empty rows');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

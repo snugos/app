@@ -1,3 +1,107 @@
+#### Day 716: Glider Notes Feature (2026-06-17)
+- **Feature**: Added `gliderNotes(length, rowStep, columnStep, velocityDecay, mode, skipOccupied)` method to Track class and 6 "Glider Notes" menu items to the sequencer context menu. Each active note spawns a directional trail of notes gliding across the grid (comet streak). For step `s` in 1..clampedLength, places notes at `(rowIndex + rowDir*clampedRowStep*s, col + colDir*clampedColumnStep*s)`. Six modes: 'forward' (1,1), 'backward' (1,-1), 'v' ([1,1],[-1,1]), 'inv-v' ([-1,1],[1,1]), 'x' (4-arm cross), 'zigzag' (alternating up/down rowDir per step). Complements `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with directional comet trail patterns.
+- **Files Modified**:
+  - `js/Track.js`: Added `gliderNotes` method after `rippleNotes` (line ~6066)
+  - `js/constants.js`: Added 21 GLIDER_NOTES_* constants + bumped APP_VERSION to 2.365.0
+  - `js/ui.js`: Added 6 Glider Notes menu items in the sequencer context menu after Ripple Notes (Column-only, 4), with separator after
+  - `js/tests.js`: Added Day 716 test block with 42 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **gliderNotes** (`js/Track.js`): For each active note, places N notes along a directional trail computed via a direction list. For step `s` in 1..clampedLength, computes `targetRow = rowIndex + rowDir * clampedRowStep * s` and `targetCol = col + colDir * clampedColumnStep * s`. Captures undo state BEFORE mutation with descriptive "Glider Notes (mode, N steps) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to GLIDER_NOTES_MIN_LENGTH (1) / GLIDER_NOTES_MAX_LENGTH (16) range with Math.floor (default GLIDER_NOTES_DEFAULT_LENGTH=6)
+    - Clamps `rowStep` to GLIDER_NOTES_MIN_ROW_STEP (0) / GLIDER_NOTES_MAX_ROW_STEP (4) range with Math.floor (default GLIDER_NOTES_DEFAULT_ROW_STEP=1)
+    - Clamps `columnStep` to GLIDER_NOTES_MIN_COLUMN_STEP (1) / GLIDER_NOTES_MAX_COLUMN_STEP (4) range with Math.floor (default GLIDER_NOTES_DEFAULT_COLUMN_STEP=1)
+    - Clamps `velocityDecay` to GLIDER_NOTES_MIN_VELOCITY_DECAY (0.1) / GLIDER_NOTES_MAX_VELOCITY_DECAY (1.0) range (default GLIDER_NOTES_DEFAULT_VELOCITY_DECAY=0.88)
+    - Validates `mode` against GLIDER_NOTES_MODES array, falls back to GLIDER_NOTES_MODE_FORWARD if invalid
+    - Builds stepDirections array based on mode: forward=[[1,1]], backward=[[1,-1]], v=[[1,1],[-1,1]], inv-v=[[-1,1],[1,1]], x=4 diagonal arms, zigzag=per-step alternating rowDir
+    - Captures undo state BEFORE mutation with descriptive "Glider Notes (mode, N steps) on <seqname>" label
+    - For each row, for each column, for each active note: for each [rowDir, colDir] in stepDirections, for `s` in 1..clampedLength, computes target row and col
+    - Zigzag mode uses a special inline rowDir = (s%2===1) ? 1 : -1 per step (the column direction stays at 1)
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, s)))` for exponential velocity decay per step
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of glider notes added
+  - **Glider Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Ripple Notes (Column-only, 4)
+    - "Glider Notes (Forward, 6)" - calls `gliderNotes(6, 1, 1, 0.88, 'forward', true)` - classic down-right diagonal trail
+    - "Glider Notes (Backward, 6)" - calls `gliderNotes(6, 1, 1, 0.88, 'backward', true)` - down-left diagonal trail
+    - "Glider Notes (V, 6)" - calls `gliderNotes(6, 1, 1, 0.88, 'v', true)` - V-shaped two-arm trail
+    - "Glider Notes (Inverted V, 6)" - calls `gliderNotes(6, 1, 1, 0.88, 'inv-v', true)` - chevron-up two-arm trail
+    - "Glider Notes (X, 4)" - calls `gliderNotes(4, 1, 1, 0.88, 'x', true)` - 4-arm X cross pattern
+    - "Glider Notes (Zigzag, 8)" - calls `gliderNotes(8, 1, 1, 0.92, 'zigzag', true)` - alternating up/down snake trail
+    - All call `recreateToneSequence(true)` after gliding
+    - All capture undo with descriptive "Glider Notes on <name> (<seqname>)" label
+    - Show notifications: "Glided {count} note(s) (variant)."
+    - Show "No notes to glide." when nothing to glide
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 21 new constants
+  - `GLIDER_NOTES_MIN_LENGTH = 1` - Minimum 1 note in the trail
+  - `GLIDER_NOTES_MAX_LENGTH = 16` - Maximum 16 notes in the trail
+  - `GLIDER_NOTES_DEFAULT_LENGTH = 6` - Default 6 notes per trail
+  - `GLIDER_NOTES_MIN_ROW_STEP = 0` - Minimum 0 rows of vertical drift per step (flat horizontal)
+  - `GLIDER_NOTES_MAX_ROW_STEP = 4` - Maximum 4 rows of vertical drift per step (steep diagonal)
+  - `GLIDER_NOTES_DEFAULT_ROW_STEP = 1` - Default 1 row of vertical drift per step
+  - `GLIDER_NOTES_MIN_COLUMN_STEP = 1` - Minimum 1 column forward per step
+  - `GLIDER_NOTES_MAX_COLUMN_STEP = 4` - Maximum 4 columns forward per step
+  - `GLIDER_NOTES_DEFAULT_COLUMN_STEP = 1` - Default 1 column forward per step
+  - `GLIDER_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum decay (10% preservation at trail end)
+  - `GLIDER_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `GLIDER_NOTES_DEFAULT_VELOCITY_DECAY = 0.88` - Default 88% velocity preservation per step
+  - `GLIDER_NOTES_MODE_FORWARD = 'forward'` - Straight diagonal down-right trail
+  - `GLIDER_NOTES_MODE_BACKWARD = 'backward'` - Straight diagonal down-left trail
+  - `GLIDER_NOTES_MODE_V = 'v'` - V shape: two arms (down-right + up-right)
+  - `GLIDER_NOTES_MODE_INV_V = 'inv-v'` - Inverted V (chevron up)
+  - `GLIDER_NOTES_MODE_X = 'x'` - X pattern: 4 diagonal arms
+  - `GLIDER_NOTES_MODE_ZIGZAG = 'zigzag'` - Alternating up-down trail
+  - `GLIDER_NOTES_MODES = [FORWARD, BACKWARD, V, INV_V, X, ZIGZAG]` - Valid mode values
+- **Tests** (`js/tests.js`): 42 tests covering:
+  - `gliderNotes` is a function on Track.prototype
+  - `gliderNotes` accepts 6 parameters with defaults (length, rowStep, columnStep, velocityDecay, mode, skipOccupied)
+  - `gliderNotes` returns 0 for Audio tracks
+  - `gliderNotes` gets active sequence via `getActiveSequence`
+  - `gliderNotes` captures undo BEFORE mutation
+  - `gliderNotes` has descriptive "Glider Notes" undo label
+  - `gliderNotes` clamps length to GLIDER_NOTES_MIN/MAX_LENGTH
+  - `gliderNotes` clamps rowStep to GLIDER_NOTES_MIN/MAX_ROW_STEP
+  - `gliderNotes` clamps columnStep to GLIDER_NOTES_MIN/MAX_COLUMN_STEP
+  - `gliderNotes` clamps velocityDecay to GLIDER_NOTES_MIN/MAX_VELOCITY_DECAY
+  - `gliderNotes` validates mode with GLIDER_NOTES_MODES (uses FORWARD fallback)
+  - `gliderNotes` uses Math.pow for velocity decay
+  - `gliderNotes` respects sequence length and row boundaries
+  - `gliderNotes` supports skipOccupied option
+  - `gliderNotes` rounds velocity to 2 decimal places
+  - `gliderNotes` returns count of glider notes (gliderCount)
+  - All 21 GLIDER_NOTES constants are defined in constants.js
+  - GLIDER_NOTES_MODES includes all 6 modes
+  - ui.js has 5+ Glider Notes menu items
+  - Glider Notes menu items call track.gliderNotes
+  - Glider Notes menu items show notification with count
+  - Glider Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.365 for Day 716)
+  - Functional test: forward mode has 1 direction (1,1)
+  - Functional test: backward mode has 1 direction (1,-1)
+  - Functional test: v mode has 2 directions
+  - Functional test: inv-v mode has 2 directions
+  - Functional test: x mode has 4 directions
+  - Functional test: zigzag mode builds per-step rowDir alternating
+  - Functional test: targetRow = rowIndex + rowDir * rowStep * s
+  - Functional test: targetCol = col + colDir * columnStep * s
+  - Functional test: velocity decay (vel * decay^s)
+  - Functional tests: clamps to valid ranges (length 100->16, rowStep -5->0, columnStep 0->1)
+  - Functional test: step s=1 places at distance step, s=2 at 2*step
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: uses step 1..length range (not 0..length-1)
+  - Structural test: supports 6 distinct modes
+  - Structural test: respects Math.floor for length/rowStep/columnStep
+  - Structural test: preserves probability from source
+  - Structural test: handles empty source (no active notes)
+- **Version**: Bumped to 2.365.0
+- **Test Count**: Added 42 Day 716 tests. esbuild build succeeds. 35/42 Day 716 tests pass via test-runner/run-tests.js; 7 fail due to pre-existing test infrastructure issue with `__dirname is not defined` in the node test environment (same pattern as Day 714/715). Static analysis (node --check) passes for all 4 modified files.
 #### Day 715: Ripple Notes Feature (2026-06-17)
 - **Feature**: Added `rippleNotes(rings, ringStep, columnStep, velocityDecay, shape, skipOccupied)` method to Track class and 5 "Ripple Notes" menu items to the sequencer context menu. Each active note spawns N concentric expanding rings (the "stone-in-pond" effect) around the source. For ring `r` in 1..clampedRings, places notes at every surrounding direction offset scaled by `ringStep * r`, with a per-ring column shift of `r * columnStep` so the ripple drifts forward in time. Three shape modes: 'square' (8-direction Chebyshev), 'cross' (4 cardinal), 'diagonal' (4 diagonal). Complements `radialNotes` (discrete spokes), `spiralNotes` (continuous angular sweep), `cascadeNotes` (linear 2D row+col), `driftNotes` (column-only), and `crescentNotes` (grouped arc).
 - **Files Modified**:

@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.364.0';
+export const APP_VERSION = '2.365.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -355,6 +355,34 @@ export const RIPPLE_NOTES_SHAPES = [
     RIPPLE_NOTES_SHAPE_SQUARE,
     RIPPLE_NOTES_SHAPE_CROSS,
     RIPPLE_NOTES_SHAPE_DIAGONAL
+];
+
+// Glider Notes constants - diagonal/curved gliding note trails (comet streaks) from each source note
+export const GLIDER_NOTES_MIN_LENGTH = 1; // Minimum 1 note in the glide trail
+export const GLIDER_NOTES_MAX_LENGTH = 16; // Maximum 16 notes in the glide trail
+export const GLIDER_NOTES_DEFAULT_LENGTH = 6; // Default 6 notes per glide trail
+export const GLIDER_NOTES_MIN_ROW_STEP = 0; // Minimum 0 rows of vertical drift per step (flat horizontal glide)
+export const GLIDER_NOTES_MAX_ROW_STEP = 4; // Maximum 4 rows of vertical drift per step (steep diagonal)
+export const GLIDER_NOTES_DEFAULT_ROW_STEP = 1; // Default 1 row of vertical drift per step (gentle diagonal)
+export const GLIDER_NOTES_MIN_COLUMN_STEP = 1; // Minimum 1 column forward per step (forward-in-time requirement)
+export const GLIDER_NOTES_MAX_COLUMN_STEP = 4; // Maximum 4 columns forward per step
+export const GLIDER_NOTES_DEFAULT_COLUMN_STEP = 1; // Default 1 column forward per step
+export const GLIDER_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum decay (10% preservation at trail end)
+export const GLIDER_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum decay (1.0 = no decay)
+export const GLIDER_NOTES_DEFAULT_VELOCITY_DECAY = 0.88; // Default 88% preservation per step (smooth fade)
+export const GLIDER_NOTES_MODE_FORWARD = 'forward'; // Straight diagonal down-right trail
+export const GLIDER_NOTES_MODE_BACKWARD = 'backward'; // Straight diagonal down-left trail
+export const GLIDER_NOTES_MODE_V = 'v'; // V shape: two arms (down-right + up-right)
+export const GLIDER_NOTES_MODE_INV_V = 'inv-v'; // Inverted V (chevron up): up-right + down-right
+export const GLIDER_NOTES_MODE_X = 'x'; // X pattern: 4 diagonal arms from source
+export const GLIDER_NOTES_MODE_ZIGZAG = 'zigzag'; // Alternating up-down trail (snake/zigzag line)
+export const GLIDER_NOTES_MODES = [
+    GLIDER_NOTES_MODE_FORWARD,
+    GLIDER_NOTES_MODE_BACKWARD,
+    GLIDER_NOTES_MODE_V,
+    GLIDER_NOTES_MODE_INV_V,
+    GLIDER_NOTES_MODE_X,
+    GLIDER_NOTES_MODE_ZIGZAG
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

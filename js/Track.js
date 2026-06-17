@@ -6063,4 +6063,134 @@ export class Track {
 
         return rippleCount;
     }
+
+    // Glider Notes - generate diagonal/curved gliding note trails (comet streaks) from each source note.
+    // For each source note, place `length` notes along a directional trail. Each step advances
+    // columnStep columns forward and ±rowStep rows, with optional mirrored arms for V/X patterns
+    // and a zigzag mode that alternates direction per step. Complements rippleNotes (concentric
+    // rings), radialNotes (discrete spokes), spiralNotes (angular sweep), cascadeNotes (linear 2D),
+    // driftNotes (column-only), and crescentNotes (grouped arc) with directional comet trails.
+    // length: number of notes in the glide trail (clamped 1..16)
+    // rowStep: how many rows of vertical drift per step (0 = flat, 4 = steep diagonal)
+    // columnStep: how many columns forward per step (1..4)
+    // velocityDecay: multiplicative decay per step (1.0 = no decay)
+    // mode: 'forward' (down-right diagonal), 'backward' (down-left), 'v' (down+up chevron),
+    //       'inv-v' (up+down chevron), 'x' (4-arm cross), 'zigzag' (alternating up/down)
+    // skipOccupied: skip trail cell if target is already active
+    gliderNotes(length = Constants.GLIDER_NOTES_DEFAULT_LENGTH, rowStep = Constants.GLIDER_NOTES_DEFAULT_ROW_STEP, columnStep = Constants.GLIDER_NOTES_DEFAULT_COLUMN_STEP, velocityDecay = Constants.GLIDER_NOTES_DEFAULT_VELOCITY_DECAY, mode = Constants.GLIDER_NOTES_MODE_FORWARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} gliderNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.GLIDER_NOTES_MIN_LENGTH, Math.min(Constants.GLIDER_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedRowStep = Math.max(Constants.GLIDER_NOTES_MIN_ROW_STEP, Math.min(Constants.GLIDER_NOTES_MAX_ROW_STEP, Math.floor(rowStep)));
+        const clampedColumnStep = Math.max(Constants.GLIDER_NOTES_MIN_COLUMN_STEP, Math.min(Constants.GLIDER_NOTES_MAX_COLUMN_STEP, Math.floor(columnStep)));
+        const clampedDecay = Math.max(Constants.GLIDER_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.GLIDER_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useMode = Constants.GLIDER_NOTES_MODES.includes(mode) ? mode : Constants.GLIDER_NOTES_MODE_FORWARD;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Glider Notes (${useMode}, ${clampedLength} steps) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let gliderCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // Build the list of (rowDir, colDir) step directions for this mode.
+                // Each step i in 1..clampedLength computes (i*rowStep*rowDir, i*columnStep*colDir).
+                let stepDirections;
+                if (useMode === Constants.GLIDER_NOTES_MODE_FORWARD) {
+                    // Straight diagonal down-right (comet trail going down and forward in time)
+                    stepDirections = [[1, 1]];
+                } else if (useMode === Constants.GLIDER_NOTES_MODE_BACKWARD) {
+                    // Straight diagonal down-left (comet trail going down and backward in time)
+                    stepDirections = [[1, -1]];
+                } else if (useMode === Constants.GLIDER_NOTES_MODE_V) {
+                    // V shape: two arms (down-right + up-right)
+                    stepDirections = [[1, 1], [-1, 1]];
+                } else if (useMode === Constants.GLIDER_NOTES_MODE_INV_V) {
+                    // Inverted V (chevron up): up-right + down-right
+                    stepDirections = [[-1, 1], [1, 1]];
+                } else if (useMode === Constants.GLIDER_NOTES_MODE_X) {
+                    // X pattern: 4 diagonal arms (NE, NW, SE, SW)
+                    stepDirections = [[-1, 1], [-1, -1], [1, 1], [1, -1]];
+                } else if (useMode === Constants.GLIDER_NOTES_MODE_ZIGZAG) {
+                    // Zigzag: alternating up/down row direction (the column direction stays forward)
+                    // rowDir alternates between +1 (down) and -1 (up) per step
+                    stepDirections = [];
+                    for (let z = 1; z <= clampedLength; z++) {
+                        const rowDir = (z % 2 === 1) ? 1 : -1;
+                        stepDirections.push([rowDir, 1]);
+                    }
+                } else {
+                    stepDirections = [[1, 1]];
+                }
+
+                // For each step direction, place notes along the trail
+                for (const [rowDir, colDir] of stepDirections) {
+                    for (let s = 1; s <= clampedLength; s++) {
+                        let targetRow, targetCol;
+                        if (useMode === Constants.GLIDER_NOTES_MODE_ZIGZAG) {
+                            // Zigzag: each step s has its own rowDir (alternating)
+                            const zigRowDir = (s % 2 === 1) ? 1 : -1;
+                            targetRow = rowIndex + (zigRowDir * clampedRowStep * s);
+                            targetCol = col + (clampedColumnStep * s);
+                        } else {
+                            // Other modes: use the static rowDir/colDir from stepDirections
+                            targetRow = rowIndex + (rowDir * clampedRowStep * s);
+                            targetCol = col + (colDir * clampedColumnStep * s);
+                        }
+
+                        // Skip if target row is out of bounds
+                        if (targetRow < 0 || targetRow >= numRows) continue;
+                        // Skip if target col is out of bounds
+                        if (targetCol < 0 || targetCol >= totalSteps) continue;
+                        // Skip if skipOccupied and target slot is already active
+                        if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                        // Skip if target is the source cell (no-op)
+                        if (targetRow === rowIndex && targetCol === col) continue;
+
+                        // Compute decayed velocity: origVel * decay^s
+                        const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, s)));
+                        newNotes.push({
+                            rowIndex: targetRow,
+                            col: targetCol,
+                            velocity: Math.round(decayedVel * 100) / 100,
+                            probability: stepData.probability
+                        });
+                    }
+                }
+            }
+        }
+
+        // Apply the new glider notes
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            gliderCount++;
+        }
+
+        return gliderCount;
+    }
 }
