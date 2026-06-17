@@ -5866,4 +5866,99 @@ export class Track {
 
         return spiraledCount;
     }
+
+    // Radial Notes - place N evenly-spaced angular spokes (sunburst) around each source note.
+    // For spoke s in 0..spokes, angle = 2*PI*s/spokes * directionSign.
+    // rowOffset = round(cos(angle) * radius), colOffset = round(sin(angle) * columnStep)
+    // direction 'out' pushes spokes away from source; 'in' pulls them back toward source.
+    // spokes: number of radial spokes per source note (clamped 3..16)
+    // radius: how many rows each spoke extends (1 = small starburst, 8 = big)
+    // columnStep: how many columns each spoke advances per angular step (0 = pure row sweep, 4 = wide)
+    // velocityDecay: multiplicative decay per spoke (1.0 = no decay)
+    // direction: 'out' (spokes fan outward) or 'in' (spokes fan inward)
+    // skipOccupied: skip spoke if target cell already has an active note
+    radialNotes(spokes = Constants.RADIAL_NOTES_DEFAULT_SPOKES, radius = Constants.RADIAL_NOTES_DEFAULT_RADIUS, columnStep = Constants.RADIAL_NOTES_DEFAULT_COLUMN_STEP, velocityDecay = Constants.RADIAL_NOTES_DEFAULT_VELOCITY_DECAY, direction = Constants.RADIAL_NOTES_DIRECTION_OUT, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} radialNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedSpokes = Math.max(Constants.RADIAL_NOTES_MIN_SPOKES, Math.min(Constants.RADIAL_NOTES_MAX_SPOKES, Math.floor(spokes)));
+        const clampedRadius = Math.max(Constants.RADIAL_NOTES_MIN_RADIUS, Math.min(Constants.RADIAL_NOTES_MAX_RADIUS, Math.floor(radius)));
+        const clampedColumnStep = Math.max(Constants.RADIAL_NOTES_MIN_COLUMN_STEP, Math.min(Constants.RADIAL_NOTES_MAX_COLUMN_STEP, Math.floor(columnStep)));
+        const clampedDecay = Math.max(Constants.RADIAL_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.RADIAL_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useDirection = Constants.RADIAL_NOTES_DIRECTIONS.includes(direction) ? direction : Constants.RADIAL_NOTES_DIRECTION_OUT;
+        const directionSign = useDirection === Constants.RADIAL_NOTES_DIRECTION_IN ? -1 : 1;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Radial Notes (${useDirection}, ${clampedSpokes} spokes) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let radialCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // For each spoke s, compute (rowOffset, colOffset) using evenly-spaced angles
+                for (let s = 0; s < clampedSpokes; s++) {
+                    const angle = (2 * Math.PI * s / clampedSpokes) * directionSign;
+                    // Row offset = cos(angle) * radius, rounded
+                    const rowOffset = Math.round(Math.cos(angle) * clampedRadius);
+                    // Column offset = sin(angle) * columnStep, rounded (at least 1 col forward if user requested columnStep > 0)
+                    let colOffset = Math.round(Math.sin(angle) * clampedColumnStep);
+                    if (clampedColumnStep > 0 && colOffset < 1) colOffset = 1;
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    // Skip if target row is out of bounds
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    // Skip if target col is out of bounds
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    // Skip if skipOccupied and target slot is already active
+                    if (skipOccupied && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    // Skip if target is the source cell (no-op)
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Compute decayed velocity: origVel * decay^(s+1) (s=0 is the first spoke, full velocity)
+                    const decayPower = s + 1;
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, decayPower)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        // Apply the new radial notes
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            radialCount++;
+        }
+
+        return radialCount;
+    }
 }

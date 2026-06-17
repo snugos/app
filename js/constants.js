@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.362.0';
+export const APP_VERSION = '2.363.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -313,6 +313,26 @@ export const SPIRAL_NOTES_DIRECTION_CCW = 'ccw';
 export const SPIRAL_NOTES_DIRECTIONS = [
     SPIRAL_NOTES_DIRECTION_CW,
     SPIRAL_NOTES_DIRECTION_CCW
+];
+
+// Radial Notes constants - 2D radial spoke pattern (sunburst) per source note
+export const RADIAL_NOTES_MIN_SPOKES = 3; // Minimum 3 spokes (triangle)
+export const RADIAL_NOTES_MAX_SPOKES = 16; // Maximum 16 spokes (full 16th circle)
+export const RADIAL_NOTES_DEFAULT_SPOKES = 8; // Default 8 spokes (octagonal starburst)
+export const RADIAL_NOTES_MIN_RADIUS = 1; // Minimum 1 row out per spoke
+export const RADIAL_NOTES_MAX_RADIUS = 8; // Maximum 8 rows out per spoke
+export const RADIAL_NOTES_DEFAULT_RADIUS = 3; // Default 3 rows out per spoke
+export const RADIAL_NOTES_MIN_COLUMN_STEP = 0; // Minimum 0 columns forward per spoke
+export const RADIAL_NOTES_MAX_COLUMN_STEP = 4; // Maximum 4 columns forward per spoke
+export const RADIAL_NOTES_DEFAULT_COLUMN_STEP = 1; // Default 1 column forward per spoke
+export const RADIAL_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum velocity decay per spoke
+export const RADIAL_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum decay (1.0 = no decay)
+export const RADIAL_NOTES_DEFAULT_VELOCITY_DECAY = 0.85; // Default 85% velocity preservation per spoke
+export const RADIAL_NOTES_DIRECTION_OUT = 'out'; // Spokes fan out from source
+export const RADIAL_NOTES_DIRECTION_IN = 'in'; // Spokes fan in toward source
+export const RADIAL_NOTES_DIRECTIONS = [
+    RADIAL_NOTES_DIRECTION_OUT,
+    RADIAL_NOTES_DIRECTION_IN
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

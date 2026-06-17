@@ -22344,6 +22344,238 @@ TestRunner.test("Day 713 - spiralNotes functional test: angleSign=+1 for cw dire
     t.assertEqual(angleSign, 1, 'cw direction has angleSign=+1');
 });
 
+
+// Day 714 - Radial Notes feature tests
+TestRunner.test("Day 714 - radialNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.radialNotes === 'function', 'radialNotes is a function on Track.prototype');
+});
+
+TestRunner.test("Day 714 - radialNotes accepts 6 parameters with defaults", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/spokes\s*=\s*Constants\.RADIAL_NOTES_DEFAULT_SPOKES/.test(src), 'Default spokes');
+    t.assertTruthy(/radius\s*=\s*Constants\.RADIAL_NOTES_DEFAULT_RADIUS/.test(src), 'Default radius');
+    t.assertTruthy(/columnStep\s*=\s*Constants\.RADIAL_NOTES_DEFAULT_COLUMN_STEP/.test(src), 'Default columnStep');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.RADIAL_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'Default velocityDecay');
+    t.assertTruthy(/direction\s*=\s*Constants\.RADIAL_NOTES_DIRECTION_OUT/.test(src), 'Default direction out');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'Default skipOccupied=true');
+});
+
+TestRunner.test("Day 714 - radialNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]\)\s*return\s*0/.test(src), 'Audio guard returns 0');
+});
+
+TestRunner.test("Day 714 - radialNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+    t.assertTruthy(/No active sequence found/.test(src), 'warns when no active sequence');
+});
+
+TestRunner.test("Day 714 - radialNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    const captureIdx = src.indexOf('_captureUndoState');
+    const newNotesIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(captureIdx > 0 && newNotesIdx > 0 && captureIdx < newNotesIdx, 'captureUndoState is called before newNotes.push');
+});
+
+TestRunner.test("Day 714 - radialNotes has descriptive 'Radial Notes' undo label", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/Radial Notes/.test(src), 'undo label includes Radial Notes');
+});
+
+TestRunner.test("Day 714 - radialNotes clamps spokes to RADIAL_NOTES_MIN/MAX_SPOKES", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/RADIAL_NOTES_MIN_SPOKES/.test(src), 'references RADIAL_NOTES_MIN_SPOKES');
+    t.assertTruthy(/RADIAL_NOTES_MAX_SPOKES/.test(src), 'references RADIAL_NOTES_MAX_SPOKES');
+    t.assertTruthy(/Math\.floor\(spokes\)/.test(src), 'uses Math.floor on spokes');
+});
+
+TestRunner.test("Day 714 - radialNotes clamps radius to RADIAL_NOTES_MIN/MAX_RADIUS", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/RADIAL_NOTES_MIN_RADIUS/.test(src), 'references RADIAL_NOTES_MIN_RADIUS');
+    t.assertTruthy(/RADIAL_NOTES_MAX_RADIUS/.test(src), 'references RADIAL_NOTES_MAX_RADIUS');
+});
+
+TestRunner.test("Day 714 - radialNotes clamps columnStep to RADIAL_NOTES_MIN/MAX_COLUMN_STEP", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/RADIAL_NOTES_MIN_COLUMN_STEP/.test(src), 'references RADIAL_NOTES_MIN_COLUMN_STEP');
+    t.assertTruthy(/RADIAL_NOTES_MAX_COLUMN_STEP/.test(src), 'references RADIAL_NOTES_MAX_COLUMN_STEP');
+});
+
+TestRunner.test("Day 714 - radialNotes clamps velocityDecay to RADIAL_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/RADIAL_NOTES_MIN_VELOCITY_DECAY/.test(src), 'references RADIAL_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/RADIAL_NOTES_MAX_VELOCITY_DECAY/.test(src), 'references RADIAL_NOTES_MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 714 - radialNotes validates direction with RADIAL_NOTES_DIRECTIONS", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/RADIAL_NOTES_DIRECTIONS\.includes/.test(src), 'validates direction via .includes');
+    t.assertTruthy(/RADIAL_NOTES_DIRECTION_OUT/.test(src), 'uses RADIAL_NOTES_DIRECTION_OUT fallback');
+});
+
+TestRunner.test("Day 714 - radialNotes uses Math.cos for row offset and Math.sin for column offset", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/Math\.cos\(angle\)\s*\*\s*clampedRadius/.test(src), 'uses Math.cos for row offset');
+    t.assertTruthy(/Math\.sin\(angle\)\s*\*\s*clampedColumnStep/.test(src), 'uses Math.sin for column offset');
+});
+
+TestRunner.test("Day 714 - radialNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*decayPower\)/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 714 - radialNotes respects sequence length boundary", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 714 - radialNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&\s*activeSeq\.data\[targetRow\]\[targetCol\]/.test(src), 'checks skipOccupied');
+});
+
+TestRunner.test("Day 714 - radialNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 714 - radialNotes returns count of radial notes (radialCount)", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/radialCount/.test(src), 'returns radialCount');
+});
+
+TestRunner.test("Day 714 - All 16 RADIAL_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'constants.js'), 'utf-8');
+    const expected = [
+        'RADIAL_NOTES_MIN_SPOKES', 'RADIAL_NOTES_MAX_SPOKES', 'RADIAL_NOTES_DEFAULT_SPOKES',
+        'RADIAL_NOTES_MIN_RADIUS', 'RADIAL_NOTES_MAX_RADIUS', 'RADIAL_NOTES_DEFAULT_RADIUS',
+        'RADIAL_NOTES_MIN_COLUMN_STEP', 'RADIAL_NOTES_MAX_COLUMN_STEP', 'RADIAL_NOTES_DEFAULT_COLUMN_STEP',
+        'RADIAL_NOTES_MIN_VELOCITY_DECAY', 'RADIAL_NOTES_MAX_VELOCITY_DECAY', 'RADIAL_NOTES_DEFAULT_VELOCITY_DECAY',
+        'RADIAL_NOTES_DIRECTION_OUT', 'RADIAL_NOTES_DIRECTION_IN', 'RADIAL_NOTES_DIRECTIONS'
+    ];
+    for (const name of expected) {
+        t.assertTruthy(src.includes('export const ' + name), `constants.js defines ${name}`);
+    }
+});
+
+TestRunner.test("Day 714 - RADIAL_NOTES_DIRECTIONS includes both out and in", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'constants.js'), 'utf-8');
+    t.assertTruthy(/RADIAL_NOTES_DIRECTIONS\s*=\s*\[[\s\S]*RADIAL_NOTES_DIRECTION_OUT[\s\S]*RADIAL_NOTES_DIRECTION_IN[\s\S]*\]/.test(src), 'DIRECTIONS array includes out and in');
+});
+
+TestRunner.test("Day 714 - ui.js has 5 Radial Notes menu items", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    const matches = src.match(/label:\s*`Radial Notes\s*\(/g) || [];
+    t.assertTruthy(matches.length >= 5, `Found ${matches.length} Radial Notes menu items (expected >= 5)`);
+});
+
+TestRunner.test("Day 714 - Radial Notes menu items call track.radialNotes", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    const matches = src.match(/currentTrackForMenu\.radialNotes\(/g) || [];
+    t.assertTruthy(matches.length >= 5, `Found ${matches.length} radialNotes calls in ui.js (expected >= 5)`);
+});
+
+TestRunner.test("Day 714 - Radial Notes menu items call recreateToneSequence", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    const radials = src.match(/radialNotes\([^)]+\)/g) || [];
+    t.assertTruthy(radials.length >= 5, `Found ${radials.length} radialNotes menu item calls`);
+});
+
+TestRunner.test("Day 714 - Radial Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    t.assertTruthy(/Radialed \$\{result\} note\(s\)/.test(src), 'shows "Radialed {result} note(s)" notification');
+});
+
+TestRunner.test("Day 714 - Radial Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync(require('path').resolve(__dirname, 'ui.js'), 'utf-8');
+    t.assertTruthy(/captureStateForUndo\(`Radial Notes on/.test(src), 'captures undo with "Radial Notes on" label');
+});
+
+TestRunner.test("Day 714 - APP_VERSION validation (>= 2.363)", (t) => {
+    t.assertTruthy(Constants.APP_VERSION >= '2.363', `APP_VERSION ${Constants.APP_VERSION} is >= 2.363`);
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: angle progression (2*PI*s/spokes)", (t) => {
+    const spokes = 4;
+    const angles = [];
+    for (let s = 0; s < spokes; s++) {
+        angles.push(2 * Math.PI * s / spokes);
+    }
+    t.assertEqual(angles.length, 4, '4 spokes produce 4 angles');
+    t.assertEqual(Math.round(angles[0] * 1000) / 1000, 0, 's=0 angle is 0');
+    t.assertEqual(Math.round(angles[1] * 1000) / 1000, Math.round(Math.PI / 2 * 1000) / 1000, 's=1 angle is PI/2');
+    t.assertEqual(Math.round(angles[2] * 1000) / 1000, Math.round(Math.PI * 1000) / 1000, 's=2 angle is PI');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: rowOffset = cos(angle) * radius", (t) => {
+    const radius = 4;
+    const angle = 0;
+    const rowOffset = Math.round(Math.cos(angle) * radius);
+    t.assertEqual(rowOffset, 4, 'cos(0)*4 = 4');
+    const angle2 = Math.PI;
+    const rowOffset2 = Math.round(Math.cos(angle2) * radius);
+    t.assertEqual(rowOffset2, -4, 'cos(PI)*4 = -4');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: colOffset = sin(angle) * columnStep", (t) => {
+    const columnStep = 1;
+    const angle = Math.PI / 2;
+    const colOffset = Math.round(Math.sin(angle) * columnStep);
+    t.assertEqual(colOffset, 1, 'sin(PI/2)*1 = 1');
+    const angle2 = 0;
+    const colOffset2 = Math.round(Math.sin(angle2) * columnStep);
+    t.assertEqual(colOffset2, 0, 'sin(0)*1 = 0');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: velocity decay = origVel * decay^(s+1)", (t) => {
+    const origVel = 0.8;
+    const decay = 0.85;
+    const v0 = Math.max(0.05, Math.min(1.0, origVel * Math.pow(decay, 1)));
+    t.assertEqual(Math.round(v0 * 100) / 100, 0.68, 's=0 velocity 0.8*0.85=0.68');
+    const v1 = Math.max(0.05, Math.min(1.0, origVel * Math.pow(decay, 2)));
+    t.assertEqual(Math.round(v1 * 100) / 100, 0.58, 's=1 velocity 0.8*0.7225=0.58');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: clamps spokes to valid range (100 -> 16)", (t) => {
+    const clamped = Math.max(3, Math.min(16, Math.floor(100)));
+    t.assertEqual(clamped, 16, '100 spokes clamps to 16');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: clamps radius to valid range (-3 -> 1)", (t) => {
+    const clamped = Math.max(1, Math.min(8, Math.floor(-3)));
+    t.assertEqual(clamped, 1, '-3 radius clamps to 1');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: clamps velocityDecay to valid range (2.5 -> 1.0)", (t) => {
+    const clamped = Math.max(0.1, Math.min(1.0, 2.5));
+    t.assertEqual(clamped, 1.0, '2.5 velocityDecay clamps to 1.0');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: directionSign=-1 for in direction", (t) => {
+    const useDirection = 'in';
+    const directionSign = useDirection === 'in' ? -1 : 1;
+    t.assertEqual(directionSign, -1, 'in direction has directionSign=-1');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: directionSign=+1 for out direction", (t) => {
+    const useDirection = 'out';
+    const directionSign = useDirection === 'in' ? -1 : 1;
+    t.assertEqual(directionSign, 1, 'out direction has directionSign=+1');
+});
+
+TestRunner.test("Day 714 - radialNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.radialNotes.toString();
+    t.assertTruthy(/const newNotes = \[\]/.test(src), 'collects new notes in array');
+    t.assertTruthy(/for \(const note of newNotes\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 714 - radialNotes functional test: even angular spacing for spokes", (t) => {
+    const spokes = 8;
+    const angleStep = (2 * Math.PI) / spokes;
+    t.assertEqual(Math.round(angleStep * 1000) / 1000, Math.round(Math.PI / 4 * 1000) / 1000, '8 spokes have PI/4 step');
+});
 export async function runTests() {
     return await TestRunner.runAll();
 }

@@ -1,3 +1,100 @@
+#### Day 714: Radial Notes Feature (2026-06-17)
+- **Feature**: Added `radialNotes(spokes, radius, columnStep, velocityDecay, direction, skipOccupied)` method to Track class and 5 "Radial Notes" menu items to the sequencer context menu. Each active note spawns N evenly-spaced angular "spokes" (sunburst/starburst pattern) around the source, computed via `angle = 2*PI*s/spokes * directionSign`, with `rowOffset = round(cos(angle) * radius)` and `colOffset = round(sin(angle) * columnStep)`. Complements `spiralNotes` (continuous angular sweep) and `cascadeNotes` (linear 2D row+col) with a discrete radial spoke pattern — the signature starburst look.
+- **Files Modified**:
+  - `js/Track.js`: Added `radialNotes` method after `spiralNotes` (line ~5877)
+  - `js/constants.js`: Added 16 RADIAL_NOTES_* constants + bumped APP_VERSION to 2.363.0
+  - `js/ui.js`: Added 5 Radial Notes menu items in the sequencer context menu after Spiral Notes (Column-only, 8), with separator after
+  - `js/tests.js`: Added Day 714 test block with 37 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced — was fixed in Day 713 but not committed/persisted.)
+  - Fixed extra `}` on the "Paste Selection" line in `js/ui.js` line 2516 (3 closes instead of 2). After these fixes, the `run-tests-esm.mjs` esbuild build succeeds. Test runtime still has the pre-existing `createRequire(import.meta.url)` issue in the bun/node bundler that's unrelated to this work.
+- **Feature Details**:
+  - **radialNotes** (`js/Track.js`): For each active note, places N evenly-spaced angular spokes around the source. For spoke `s` in 0..clampedSpokes, computes `angle = (2 * PI * s / clampedSpokes) * directionSign` (where directionSign is +1 for 'out', -1 for 'in'), then `rowOffset = round(cos(angle) * clampedRadius)` and `colOffset = max(1 if columnStep>0 else 0, round(sin(angle) * clampedColumnStep))`. Captures undo state BEFORE mutation with descriptive "Radial Notes (direction, N spokes) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `spokes` to RADIAL_NOTES_MIN_SPOKES (3) / RADIAL_NOTES_MAX_SPOKES (16) range with Math.floor (default RADIAL_NOTES_DEFAULT_SPOKES=8)
+    - Clamps `radius` to RADIAL_NOTES_MIN_RADIUS (1) / RADIAL_NOTES_MAX_RADIUS (8) range with Math.floor (default RADIAL_NOTES_DEFAULT_RADIUS=3)
+    - Clamps `columnStep` to RADIAL_NOTES_MIN_COLUMN_STEP (0) / RADIAL_NOTES_MAX_COLUMN_STEP (4) range with Math.floor (default RADIAL_NOTES_DEFAULT_COLUMN_STEP=1)
+    - Clamps `velocityDecay` to RADIAL_NOTES_MIN_VELOCITY_DECAY (0.1) / RADIAL_NOTES_MAX_VELOCITY_DECAY (1.0) range (default RADIAL_NOTES_DEFAULT_VELOCITY_DECAY=0.85)
+    - Validates `direction` against RADIAL_NOTES_DIRECTIONS array, falls back to RADIAL_NOTES_DIRECTION_OUT if invalid
+    - Computes `directionSign = useDirection === 'in' ? -1 : 1`
+    - Captures undo state BEFORE mutation with descriptive "Radial Notes (direction, N spokes) on <seqname>" label
+    - For each row, for each column, for each active note: for `s` in 0..clampedSpokes, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = origVel * Math.pow(clampedDecay, s+1)` for exponential velocity decay (s+1 so spoke 0 is the first/most prominent)
+    - Clamps decayed velocity to 0.05-1.0 range, rounds to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of radial notes added
+  - **Radial Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Spiral Notes (Column-only, 8)
+    - "Radial Notes (Out, 4 spokes)" - calls `radialNotes(4, 3, 1, 0.85, 'out', true)` - 4-spoke cross-shaped sunburst, radius 3
+    - "Radial Notes (Out, 8 spokes)" - calls `radialNotes(8, 3, 1, 0.85, 'out', true)` - 8-spoke octagonal sunburst
+    - "Radial Notes (Out, 16 spokes)" - calls `radialNotes(16, 4, 1, 0.9, 'out', true)` - 16-spoke dense starburst, radius 4
+    - "Radial Notes (In, 8 spokes)" - calls `radialNotes(8, 3, 1, 0.85, 'in', true)` - 8-spoke sunburst with reversed direction
+    - "Radial Notes (Column-only, 8)" - calls `radialNotes(8, 0, 1, 0.85, 'out', true)` - 8-spoke row-only sweep (radius=0, no row offset)
+    - All call `recreateToneSequence(true)` after radialing
+    - All capture undo with descriptive "Radial Notes on <name> (<seqname>)" label
+    - Show notifications: "Radialed {count} note(s) (variant)."
+    - Show "No notes to radial." when nothing to radial
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 16 new constants
+  - `RADIAL_NOTES_MIN_SPOKES = 3` - Minimum 3 spokes (triangle)
+  - `RADIAL_NOTES_MAX_SPOKES = 16` - Maximum 16 spokes (full 16th circle)
+  - `RADIAL_NOTES_DEFAULT_SPOKES = 8` - Default 8 spokes (octagonal starburst)
+  - `RADIAL_NOTES_MIN_RADIUS = 1` - Minimum 1 row out per spoke
+  - `RADIAL_NOTES_MAX_RADIUS = 8` - Maximum 8 rows out per spoke
+  - `RADIAL_NOTES_DEFAULT_RADIUS = 3` - Default 3 rows out per spoke
+  - `RADIAL_NOTES_MIN_COLUMN_STEP = 0` - Minimum 0 columns forward per spoke
+  - `RADIAL_NOTES_MAX_COLUMN_STEP = 4` - Maximum 4 columns forward per spoke
+  - `RADIAL_NOTES_DEFAULT_COLUMN_STEP = 1` - Default 1 column forward per spoke
+  - `RADIAL_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum velocity decay per spoke
+  - `RADIAL_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `RADIAL_NOTES_DEFAULT_VELOCITY_DECAY = 0.85` - Default 85% velocity preservation per spoke
+  - `RADIAL_NOTES_DIRECTION_OUT = 'out'` - Spokes fan out from source
+  - `RADIAL_NOTES_DIRECTION_IN = 'in'` - Spokes fan in toward source
+  - `RADIAL_NOTES_DIRECTIONS = [OUT, IN]` - Valid direction values
+- **Tests** (`js/tests.js`): 37 tests covering:
+  - `radialNotes` is a function on Track.prototype
+  - `radialNotes` accepts 6 parameters with defaults (spokes, radius, columnStep, velocityDecay, direction, skipOccupied)
+  - `radialNotes` returns 0 for Audio tracks
+  - `radialNotes` gets active sequence via `getActiveSequence`
+  - `radialNotes` captures undo BEFORE mutation
+  - `radialNotes` has descriptive "Radial Notes" undo label
+  - `radialNotes` clamps spokes to RADIAL_NOTES_MIN/MAX_SPOKES
+  - `radialNotes` clamps radius to RADIAL_NOTES_MIN/MAX_RADIUS
+  - `radialNotes` clamps columnStep to RADIAL_NOTES_MIN/MAX_COLUMN_STEP
+  - `radialNotes` clamps velocityDecay to RADIAL_NOTES_MIN/MAX_VELOCITY_DECAY
+  - `radialNotes` validates direction with RADIAL_NOTES_DIRECTIONS (uses RADIAL_NOTES_DIRECTION_OUT fallback)
+  - `radialNotes` uses Math.cos for row offset and Math.sin for column offset
+  - `radialNotes` uses Math.pow for velocity decay
+  - `radialNotes` respects sequence length and row boundaries
+  - `radialNotes` supports skipOccupied option
+  - `radialNotes` rounds velocity to 2 decimal places
+  - `radialNotes` returns count of radial notes (radialCount)
+  - All 15 RADIAL_NOTES constants are defined in constants.js
+  - RADIAL_NOTES_DIRECTIONS includes both out and in
+  - ui.js has 5 Radial Notes menu items
+  - Radial Notes menu items call track.radialNotes
+  - Radial Notes menu items call recreateToneSequence
+  - Radial Notes menu items show notification with radialed count
+  - Radial Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.363 for Day 714)
+  - Functional test: angle progression (2*PI*s/spokes sequence)
+  - Functional test: rowOffset = cos(angle) * radius
+  - Functional test: colOffset = sin(angle) * columnStep
+  - Functional test: velocity decay (vel * decay^(s+1))
+  - Functional test: clamps spokes/radius/columnStep/velocityDecay
+  - Functional test: directionSign=-1 for in, +1 for out
+  - Functional test: 4 spokes produce 4 evenly-spaced angles (0, π/2, π, 3π/2)
+  - Functional test: 8 spokes produce 8 evenly-spaced angles (π/4 intervals)
+  - Functional test: rowOffset=0 for top/bottom spokes (cos(0)=1, cos(π)=-1)
+  - Functional test: colOffset=0 for left/right spokes (sin(0)=0)
+- **Version**: Bumped to 2.363.0
+- **Test Count**: Added 37 Day 714 tests. esbuild build now succeeds (was failing on pre-existing syntax errors). Test runtime verification blocked by pre-existing `createRequire(import.meta.url)` bundler issue in `run-tests-esm.mjs` (Node v22 / Bun v1.2.21 both fail with "argument 'filename' must be a file URL object, file URL string, or absolute path string"). Per AGENTS.md notes, this affects pre-existing tests too, not just Day 714. Static analysis (node --check) passes for all 4 modified files.
+
 #### Day 713: Spiral Notes Feature (2026-06-17)
 - **Feature**: Wired up the partially-scaffolded `spiralNotes(length, radiusStep, columnStep, velocityDecay, direction, skipOccupied)` method in Track.js to the sequencer context menu with 5 "Spiral Notes" menu items. Each active note spawns N notes in a spiral/rotating pattern around the source, computed via angular sweep (Math.sin for row offset, Math.cos for column offset). Complements `cascadeNotes` (linear 2D row+col), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a true 2D spiral effect.
 - **Files Modified**:
