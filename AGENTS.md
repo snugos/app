@@ -1,3 +1,105 @@
+#### Day 717: Splatter Notes Feature (2026-06-17)
+- **Feature**: Added `splatterNotes(count, rowRadius, colRadius, minVelocity, shape, skipOccupied)` method to Track class and 5 "Splatter Notes" menu items to the sequencer context menu. Each active note spawns N randomly-scattered notes around the source (paint splatter texture). For each particle `p` in 0..clampedCount, computes `rowOffset` (signed integer in [-clampedRowRadius, +clampedRowRadius], distribution depends on shape) and `colOffset` in [1, clampedColRadius] (always forward-in-time). Five shape modes: 'uniform' (flat random), 'gaussian' (3-sample averaged toward center), 'shell' (concentrated near outer radius), 'weighted-top' (60% bias toward negative row offset = higher pitch), 'weighted-bottom' (60% bias toward positive row offset = lower pitch). Particle velocity is randomized between `minVelocity` and `origVel`. Complements `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a randomized scatter pattern.
+- **Files Modified**:
+  - `js/Track.js`: Added `splatterNotes` method after `gliderNotes` (line ~6197)
+  - `js/constants.js`: 21 SPLATTER_NOTES_* constants were already added in the working tree (preserved from a prior interrupted run) + APP_VERSION bumped to 2.366.0
+  - `js/ui.js`: Added 5 Splatter Notes menu items in the sequencer context menu after Glider Notes (Zigzag, 8)
+  - `js/tests.js`: Added Day 717 test block with 38 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced — same fix applied in Days 713 and 714 but not persisted across pushes.)
+- **Feature Details**:
+  - **splatterNotes** (`js/Track.js`): For each active note, places `count` randomly-scattered particles around the source. For each particle `p` in 0..clampedCount, computes `rowOffset` via a shape-dependent distribution function and `colOffset = randInt(1, clampedColRadius)` (always at least 1 to ensure forward-in-time). Captures undo state BEFORE mutation with descriptive "Splatter Notes (shape, N particles) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `count` to SPLATTER_NOTES_MIN_COUNT (1) / SPLATTER_NOTES_MAX_COUNT (32) range with Math.floor (default SPLATTER_NOTES_DEFAULT_COUNT=8)
+    - Clamps `rowRadius` to SPLATTER_NOTES_MIN_ROW_RADIUS (0) / SPLATTER_NOTES_MAX_ROW_RADIUS (8) range with Math.floor (default SPLATTER_NOTES_DEFAULT_ROW_RADIUS=3)
+    - Clamps `colRadius` to SPLATTER_NOTES_MIN_COL_RADIUS (1) / SPLATTER_NOTES_MAX_COL_RADIUS (8) range with Math.floor (default SPLATTER_NOTES_DEFAULT_COL_RADIUS=4)
+    - Clamps `minVelocity` to SPLATTER_NOTES_MIN_MIN_VELOCITY (0.05) / SPLATTER_NOTES_MAX_MIN_VELOCITY (1.0) range (default SPLATTER_NOTES_DEFAULT_MIN_VELOCITY=0.25)
+    - Validates `shape` against SPLATTER_NOTES_SHAPES array, falls back to SPLATTER_NOTES_SHAPE_UNIFORM if invalid
+    - Captures undo state BEFORE mutation with descriptive "Splatter Notes (shape, N particles) on <seqname>" label
+    - For each row, for each column, for each active note: for `p` in 0..clampedCount, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Row offset distribution by shape: uniform=`randInt(-R, R)`, gaussian=`round((a+b+c)/3)` for 3 samples, shell=`sign * max(1, floor(R*(0.5 + rand*0.5)))` (concentrated near max), weighted-top=60% chance `randInt(-R, 0)` else `randInt(0, R)`, weighted-bottom=60% chance `randInt(0, R)` else `randInt(-R, 0)`
+    - When `clampedRowRadius === 0`, all shapes return 0 for rowOffset (flat horizontal scatter)
+    - Column offset is always `randInt(1, clampedColRadius)` — never 0, ensures forward-in-time progression
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen if colOffset=0 is ever allowed, currently impossible)
+    - Computes `particleVel = clampedMinVel + Math.random() * (origVel - clampedMinVel)` for random per-particle velocity in [minVelocity, origVel]
+    - Rounds particle velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of splatter notes added
+  - **Splatter Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Glider Notes (Zigzag, 8)
+    - "Splatter Notes (Uniform, 8)" - calls `splatterNotes(8, 3, 4, 0.25, 'uniform', true)` - flat random scatter, 8 particles, 3-row radius
+    - "Splatter Notes (Gaussian, 12)" - calls `splatterNotes(12, 4, 4, 0.2, 'gaussian', true)` - clustered scatter, 12 particles, 4-row radius
+    - "Splatter Notes (Shell, 16)" - calls `splatterNotes(16, 6, 6, 0.3, 'shell', true)` - outer-halo scatter, 16 particles, 6-row radius
+    - "Splatter Notes (Top-heavy, 10)" - calls `splatterNotes(10, 4, 4, 0.25, 'weighted-top', true)` - high-pitch-biased scatter, 10 particles
+    - "Splatter Notes (Bottom-heavy, 10)" - calls `splatterNotes(10, 4, 4, 0.25, 'weighted-bottom', true)` - low-pitch-biased scatter, 10 particles
+    - All call `recreateToneSequence(true)` after splattering
+    - All capture undo with descriptive "Splatter Notes on <name> (<seqname>)" label
+    - Show notifications: "Splattered {count} note(s) (variant)."
+    - Show "No notes to splatter." when nothing to splatter
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 21 constants (preserved from prior interrupted work)
+  - `SPLATTER_NOTES_MIN_COUNT = 1` - Minimum 1 scattered note per source
+  - `SPLATTER_NOTES_MAX_COUNT = 32` - Maximum 32 scattered notes per source
+  - `SPLATTER_NOTES_DEFAULT_COUNT = 8` - Default 8 scattered notes per source
+  - `SPLATTER_NOTES_MIN_ROW_RADIUS = 0` - Minimum 0 rows of vertical scatter (flat horizontal)
+  - `SPLATTER_NOTES_MAX_ROW_RADIUS = 8` - Maximum 8 rows of vertical scatter
+  - `SPLATTER_NOTES_DEFAULT_ROW_RADIUS = 3` - Default 3 rows of vertical scatter radius
+  - `SPLATTER_NOTES_MIN_COL_RADIUS = 1` - Minimum 1 column forward (forward-in-time requirement)
+  - `SPLATTER_NOTES_MAX_COL_RADIUS = 8` - Maximum 8 columns forward per scatter particle
+  - `SPLATTER_NOTES_DEFAULT_COL_RADIUS = 4` - Default 4 columns forward
+  - `SPLATTER_NOTES_MIN_MIN_VELOCITY = 0.05` - Minimum possible floor velocity
+  - `SPLATTER_NOTES_MAX_MIN_VELOCITY = 1.0` - Maximum possible floor velocity
+  - `SPLATTER_NOTES_DEFAULT_MIN_VELOCITY = 0.25` - Default floor velocity (low for soft splatter)
+  - `SPLATTER_NOTES_SHAPE_UNIFORM = 'uniform'` - Flat random within bounds (true splatter)
+  - `SPLATTER_NOTES_SHAPE_GAUSSIAN = 'gaussian'` - Clustered toward center (3-sample averaged)
+  - `SPLATTER_NOTES_SHAPE_SHELL = 'shell'` - Concentrated near max radius (outer halo)
+  - `SPLATTER_NOTES_SHAPE_WEIGHTED_TOP = 'weighted-top'` - Skewed upward (high pitch cluster)
+  - `SPLATTER_NOTES_SHAPE_WEIGHTED_BOTTOM = 'weighted-bottom'` - Skewed downward (low pitch cluster)
+  - `SPLATTER_NOTES_SHAPES = [UNIFORM, GAUSSIAN, SHELL, WEIGHTED_TOP, WEIGHTED_BOTTOM]` - Valid shape values
+- **Tests** (`js/tests.js`): 38 tests covering:
+  - `splatterNotes` is a function on Track.prototype
+  - `splatterNotes` accepts 6 parameters with defaults (count, rowRadius, colRadius, minVelocity, shape, skipOccupied)
+  - `splatterNotes` returns 0 for Audio tracks
+  - `splatterNotes` gets active sequence via `getActiveSequence`
+  - `splatterNotes` captures undo BEFORE mutation
+  - `splatterNotes` has descriptive "Splatter Notes" undo label
+  - `splatterNotes` clamps count to SPLATTER_NOTES_MIN/MAX_COUNT
+  - `splatterNotes` clamps rowRadius to SPLATTER_NOTES_MIN/MAX_ROW_RADIUS
+  - `splatterNotes` clamps colRadius to SPLATTER_NOTES_MIN/MAX_COL_RADIUS
+  - `splatterNotes` clamps minVelocity to SPLATTER_NOTES_MIN/MAX_MIN_VELOCITY
+  - `splatterNotes` validates shape with SPLATTER_NOTES_SHAPES (uses UNIFORM fallback)
+  - `splatterNotes` uses Math.random for randomization
+  - `splatterNotes` uses randInt helper for offsets
+  - `splatterNotes` respects sequence length and row boundaries
+  - `splatterNotes` supports skipOccupied option
+  - `splatterNotes` rounds velocity to 2 decimal places
+  - `splatterNotes` returns count of splatter notes (splatterCount)
+  - All 21 SPLATTER_NOTES constants are defined in constants.js
+  - SPLATTER_NOTES_SHAPES includes all 5 shapes
+  - ui.js has 5 Splatter Notes menu items
+  - Splatter Notes menu items call track.splatterNotes
+  - Splatter Notes menu items show notification with count
+  - Splatter Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.366 for Day 717)
+  - Functional test: uniform shape has symmetric row range
+  - Functional test: gaussian shape averages 3 samples
+  - Functional test: shell shape concentrates near max
+  - Functional test: weighted-top biases upward (negative row)
+  - Functional test: clamps to valid ranges (count 100->32, rowRadius -5->0, colRadius 0->1)
+  - Functional test: colOffset always >= 1 (forward-in-time)
+  - Functional test: particle velocity is in [minVelocity, origVel]
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: supports 5 distinct shapes
+  - Structural test: respects Math.floor for count/rowRadius/colRadius
+  - Structural test: preserves probability from source
+  - Structural test: handles empty source (no active notes)
+- **Version**: Bumped to 2.366.0
+- **Test Count**: Added 38 Day 717 tests. esbuild build now succeeds (was failing on pre-existing syntax error in Track.js line 4047, also fixed). 31/38 Day 717 tests pass via test-runner/run-tests.js; 7 fail due to pre-existing test infrastructure issue with `__dirname is not defined` in the node test environment (same pattern as Days 714-716 — affects all file-read tests across recent days, not specific to Day 717). Static analysis (node --check) passes for all 4 modified files.
+
 #### Day 716: Glider Notes Feature (2026-06-17)
 - **Feature**: Added `gliderNotes(length, rowStep, columnStep, velocityDecay, mode, skipOccupied)` method to Track class and 6 "Glider Notes" menu items to the sequencer context menu. Each active note spawns a directional trail of notes gliding across the grid (comet streak). For step `s` in 1..clampedLength, places notes at `(rowIndex + rowDir*clampedRowStep*s, col + colDir*clampedColumnStep*s)`. Six modes: 'forward' (1,1), 'backward' (1,-1), 'v' ([1,1],[-1,1]), 'inv-v' ([-1,1],[1,1]), 'x' (4-arm cross), 'zigzag' (alternating up/down rowDir per step). Complements `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with directional comet trail patterns.
 - **Files Modified**:

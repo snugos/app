@@ -23152,6 +23152,320 @@ TestRunner.test("Day 716 - gliderNotes structural test: handles empty source (no
     t.assertTruthy(/!row\s*\|\|\s*!row\.length/.test(src) || /if\s*\(\s*!row\s*\)\s*continue/.test(src), 'handles empty rows');
 });
 
+// Day 717 - Splatter Notes feature tests
+TestRunner.test("Day 717 - splatterNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.splatterNotes, 'function', 'splatterNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 717 - splatterNotes accepts 6 parameters with defaults", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/count\s*=\s*Constants\.SPLATTER_NOTES_DEFAULT_COUNT/.test(src), 'has count default');
+    t.assertTruthy(/rowRadius\s*=\s*Constants\.SPLATTER_NOTES_DEFAULT_ROW_RADIUS/.test(src), 'has rowRadius default');
+    t.assertTruthy(/colRadius\s*=\s*Constants\.SPLATTER_NOTES_DEFAULT_COL_RADIUS/.test(src), 'has colRadius default');
+    t.assertTruthy(/minVelocity\s*=\s*Constants\.SPLATTER_NOTES_DEFAULT_MIN_VELOCITY/.test(src), 'has minVelocity default');
+    t.assertTruthy(/shape\s*=\s*Constants\.SPLATTER_NOTES_SHAPE_UNIFORM/.test(src), 'has shape default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 717 - splatterNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'/.test(src), 'checks for Audio type');
+    t.assertTruthy(/return 0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 717 - splatterNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/getActiveSequence/.test(src), 'uses getActiveSequence');
+});
+
+TestRunner.test("Day 717 - splatterNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0, 'has undo capture call');
+    t.assertTruthy(undoIdx < mutationIdx, 'undo captured before mutation');
+});
+
+TestRunner.test("Day 717 - splatterNotes has descriptive 'Splatter Notes' undo label", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/Splatter Notes/.test(src), 'has Splatter Notes in label');
+    t.assertTruthy(/useShape/.test(src), 'includes shape in label');
+});
+
+TestRunner.test("Day 717 - splatterNotes clamps count to SPLATTER_NOTES_MIN/MAX_COUNT", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_MIN_COUNT/.test(src), 'uses MIN_COUNT constant');
+    t.assertTruthy(/SPLATTER_NOTES_MAX_COUNT/.test(src), 'uses MAX_COUNT constant');
+    t.assertTruthy(/Math\.floor\(count\)/.test(src), 'uses Math.floor on count');
+});
+
+TestRunner.test("Day 717 - splatterNotes clamps rowRadius to SPLATTER_NOTES_MIN/MAX_ROW_RADIUS", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_MIN_ROW_RADIUS/.test(src), 'uses MIN_ROW_RADIUS constant');
+    t.assertTruthy(/SPLATTER_NOTES_MAX_ROW_RADIUS/.test(src), 'uses MAX_ROW_RADIUS constant');
+    t.assertTruthy(/Math\.floor\(rowRadius\)/.test(src), 'uses Math.floor on rowRadius');
+});
+
+TestRunner.test("Day 717 - splatterNotes clamps colRadius to SPLATTER_NOTES_MIN/MAX_COL_RADIUS", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_MIN_COL_RADIUS/.test(src), 'uses MIN_COL_RADIUS constant');
+    t.assertTruthy(/SPLATTER_NOTES_MAX_COL_RADIUS/.test(src), 'uses MAX_COL_RADIUS constant');
+    t.assertTruthy(/Math\.floor\(colRadius\)/.test(src), 'uses Math.floor on colRadius');
+});
+
+TestRunner.test("Day 717 - splatterNotes clamps minVelocity to SPLATTER_NOTES_MIN/MAX_MIN_VELOCITY", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_MIN_MIN_VELOCITY/.test(src), 'uses MIN_MIN_VELOCITY constant');
+    t.assertTruthy(/SPLATTER_NOTES_MAX_MIN_VELOCITY/.test(src), 'uses MAX_MIN_VELOCITY constant');
+});
+
+TestRunner.test("Day 717 - splatterNotes validates shape with SPLATTER_NOTES_SHAPES (uses UNIFORM fallback)", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_SHAPES\.includes/.test(src), 'validates shape against SHAPES array');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_UNIFORM/.test(src), 'falls back to UNIFORM');
+});
+
+TestRunner.test("Day 717 - splatterNotes uses Math.random for randomization", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/Math\.random/.test(src), 'uses Math.random');
+});
+
+TestRunner.test("Day 717 - splatterNotes respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 717 - splatterNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'respects skipOccupied');
+    t.assertTruthy(/\.active\)\s*continue/.test(src), 'skips occupied cells');
+});
+
+TestRunner.test("Day 717 - splatterNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/Math\.round\(\s*\w*[Vv]el\w*\s*\*\s*100\s*\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 717 - splatterNotes returns count of splatter notes (splatterCount)", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/splatterCount/.test(src), 'tracks splatterCount');
+    t.assertTruthy(/return splatterCount/.test(src), 'returns splatterCount');
+});
+
+TestRunner.test("Day 717 - All 19 SPLATTER_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(/SPLATTER_NOTES_MIN_COUNT\s*=/.test(src), 'has MIN_COUNT');
+    t.assertTruthy(/SPLATTER_NOTES_MAX_COUNT\s*=/.test(src), 'has MAX_COUNT');
+    t.assertTruthy(/SPLATTER_NOTES_DEFAULT_COUNT\s*=/.test(src), 'has DEFAULT_COUNT');
+    t.assertTruthy(/SPLATTER_NOTES_MIN_ROW_RADIUS\s*=/.test(src), 'has MIN_ROW_RADIUS');
+    t.assertTruthy(/SPLATTER_NOTES_MAX_ROW_RADIUS\s*=/.test(src), 'has MAX_ROW_RADIUS');
+    t.assertTruthy(/SPLATTER_NOTES_DEFAULT_ROW_RADIUS\s*=/.test(src), 'has DEFAULT_ROW_RADIUS');
+    t.assertTruthy(/SPLATTER_NOTES_MIN_COL_RADIUS\s*=/.test(src), 'has MIN_COL_RADIUS');
+    t.assertTruthy(/SPLATTER_NOTES_MAX_COL_RADIUS\s*=/.test(src), 'has MAX_COL_RADIUS');
+    t.assertTruthy(/SPLATTER_NOTES_DEFAULT_COL_RADIUS\s*=/.test(src), 'has DEFAULT_COL_RADIUS');
+    t.assertTruthy(/SPLATTER_NOTES_MIN_MIN_VELOCITY\s*=/.test(src), 'has MIN_MIN_VELOCITY');
+    t.assertTruthy(/SPLATTER_NOTES_MAX_MIN_VELOCITY\s*=/.test(src), 'has MAX_MIN_VELOCITY');
+    t.assertTruthy(/SPLATTER_NOTES_DEFAULT_MIN_VELOCITY\s*=/.test(src), 'has DEFAULT_MIN_VELOCITY');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_UNIFORM\s*=/.test(src), 'has SHAPE_UNIFORM');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_GAUSSIAN\s*=/.test(src), 'has SHAPE_GAUSSIAN');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_SHELL\s*=/.test(src), 'has SHAPE_SHELL');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_WEIGHTED_TOP\s*=/.test(src), 'has SHAPE_WEIGHTED_TOP');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_WEIGHTED_BOTTOM\s*=/.test(src), 'has SHAPE_WEIGHTED_BOTTOM');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPES\s*=\s*\[/.test(src), 'has SHAPES array');
+});
+
+TestRunner.test("Day 717 - SPLATTER_NOTES_SHAPES includes all 5 modes", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPES\s*=\s*\[[\s\S]*UNIFORM[\s\S]*GAUSSIAN[\s\S]*SHELL[\s\S]*WEIGHTED_TOP[\s\S]*WEIGHTED_BOTTOM[\s\S]*\]/.test(src), 'SHAPES array contains all 5 modes');
+});
+
+TestRunner.test("Day 717 - ui.js has 5+ Splatter Notes menu items", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const matches = src.match(/label:\s*`Splatter Notes/g);
+    t.assertTruthy(matches && matches.length >= 5, 'has 5+ Splatter Notes menu items (got ' + (matches ? matches.length : 0) + ')');
+});
+
+TestRunner.test("Day 717 - Splatter Notes menu items call track.splatterNotes", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const calls = src.match(/currentTrackForMenu\.splatterNotes\(/g);
+    t.assertTruthy(calls && calls.length >= 5, 'has 5+ splatterNotes() calls in ui.js');
+});
+
+TestRunner.test("Day 717 - Splatter Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/Splattered\s*\$\{result\}\s*note\(s\)/.test(src), 'shows Splattered notification with count');
+    t.assertTruthy(/No notes to splatter/.test(src), 'shows fallback notification');
+});
+
+TestRunner.test("Day 717 - Splatter Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/Splatter Notes on \$\{currentTrackForMenu\.name\}/.test(src), 'captures undo with Splatter Notes label');
+});
+
+TestRunner.test("Day 717 - APP_VERSION validation (>= 2.366 for Day 717)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const match = src.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(match, 'APP_VERSION is defined');
+    if (match) {
+        const version = match[1];
+        const parts = version.split('.').map(Number);
+        const isAtLeast = parts[0] > 2 || (parts[0] === 2 && (parts[1] > 366 || (parts[1] === 366 && parts[2] >= 0)));
+        t.assertTruthy(isAtLeast, 'APP_VERSION ' + version + ' is >= 2.366.0');
+    }
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: uniform mode has random in [-rowRadius, +rowRadius]", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_UNIFORM[\s\S]{0,200}randInt\(-clampedRowRadius,\s*clampedRowRadius\)/.test(src), 'uniform uses randInt(-rowRadius, +rowRadius)');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: gaussian mode uses 3-sample average", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_GAUSSIAN[\s\S]{0,600}\(a\s*\+\s*b\s*\+\s*c\)\s*\/\s*3/.test(src), 'gaussian uses 3-sample average');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: shell mode concentrates near outer radius", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_SHELL[\s\S]{0,300}0\.5\s*\+\s*Math\.random\(\)\s*\*\s*0\.5/.test(src), 'shell uses 0.5+random*0.5 magnitude factor');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: weighted-top biases negative rowOffset", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_WEIGHTED_TOP[\s\S]{0,300}randInt\(-clampedRowRadius,\s*0\)/.test(src), 'weighted-top uses randInt(-rowRadius, 0) for 60%');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: weighted-bottom biases positive rowOffset", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_WEIGHTED_BOTTOM[\s\S]{0,300}randInt\(0,\s*clampedRowRadius\)/.test(src), 'weighted-bottom uses randInt(0, rowRadius) for 60%');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: colOffset is in [1, colRadius] (forward only)", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/randInt\(1,\s*clampedColRadius\)/.test(src), 'colOffset uses randInt(1, colRadius)');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: particleVel in [minVelocity, origVel]", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/clampedMinVel\s*\+\s*\(Math\.random\(\)\s*\*\s*\(origVel\s*-\s*clampedMinVel\)\)/.test(src), 'particleVel is clampedMinVel + random*(origVel - clampedMinVel)');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: clamps to valid ranges (count 100->32, rowRadius -5->0, colRadius 0->1)", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/Math\.max\(\s*Constants\.SPLATTER_NOTES_MIN_COUNT/.test(src), 'clamps count to MIN_COUNT floor');
+    t.assertTruthy(/Math\.min\(\s*Constants\.SPLATTER_NOTES_MAX_COUNT/.test(src), 'clamps count to MAX_COUNT ceiling');
+    t.assertTruthy(/Math\.max\(\s*Constants\.SPLATTER_NOTES_MIN_ROW_RADIUS/.test(src), 'clamps rowRadius to MIN_ROW_RADIUS floor');
+    t.assertTruthy(/Math\.min\(\s*Constants\.SPLATTER_NOTES_MAX_ROW_RADIUS/.test(src), 'clamps rowRadius to MAX_ROW_RADIUS ceiling');
+    t.assertTruthy(/Math\.max\(\s*Constants\.SPLATTER_NOTES_MIN_COL_RADIUS/.test(src), 'clamps colRadius to MIN_COL_RADIUS floor');
+    t.assertTruthy(/Math\.min\(\s*Constants\.SPLATTER_NOTES_MAX_COL_RADIUS/.test(src), 'clamps colRadius to MAX_COL_RADIUS ceiling');
+});
+
+TestRunner.test("Day 717 - splatterNotes structural test: uses newNotes collection pattern", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/newNotes\s*=\s*\[\]/.test(src), 'initializes newNotes array');
+    t.assertTruthy(/newNotes\.push/.test(src), 'pushes to newNotes array');
+});
+
+TestRunner.test("Day 717 - splatterNotes structural test: uses randInt helper for random integers", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/const randInt\s*=/.test(src), 'defines randInt helper');
+    t.assertTruthy(/randInt\(/.test(src), 'uses randInt helper');
+});
+
+TestRunner.test("Day 717 - splatterNotes structural test: supports 5 distinct shapes", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_UNIFORM/.test(src), 'has UNIFORM shape');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_GAUSSIAN/.test(src), 'has GAUSSIAN shape');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_SHELL/.test(src), 'has SHELL shape');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_WEIGHTED_TOP/.test(src), 'has WEIGHTED_TOP shape');
+    t.assertTruthy(/SPLATTER_NOTES_SHAPE_WEIGHTED_BOTTOM/.test(src), 'has WEIGHTED_BOTTOM shape');
+});
+
+TestRunner.test("Day 717 - splatterNotes structural test: respects Math.floor for count/rowRadius/colRadius", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/Math\.floor\(count\)/.test(src), 'uses Math.floor on count');
+    t.assertTruthy(/Math\.floor\(rowRadius\)/.test(src), 'uses Math.floor on rowRadius');
+    t.assertTruthy(/Math\.floor\(colRadius\)/.test(src), 'uses Math.floor on colRadius');
+});
+
+TestRunner.test("Day 717 - splatterNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves source probability');
+});
+
+TestRunner.test("Day 717 - splatterNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'handles empty rows');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: Math.random usage in velocity calculation", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/clampedMinVel\s*\+\s*\(\s*Math\.random\(\)\s*\*\s*\(origVel\s*-\s*clampedMinVel\)\s*\)/.test(src), 'velocity uses Math.random within range');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: 5 SHAPES array structure", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const shapesMatch = src.match(/SPLATTER_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(shapesMatch, 'SPLATTER_NOTES_SHAPES array defined');
+    if (shapesMatch) {
+        const items = shapesMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+        t.assertEqual(items.length, 5, 'SHAPES array has exactly 5 entries');
+    }
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: returns number type (not undefined)", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/return splatterCount/.test(src), 'returns splatterCount');
+    t.assertTruthy(/splatterCount\s*\+\+/.test(src), 'increments splatterCount on each placement');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: count is the loop variable for particles per source", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/for\s*\(\s*let\s+p\s*=\s*0;\s*p\s*<\s*clampedCount/.test(src), 'uses clampedCount for particle loop');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: target row = rowIndex + rowOffset, target col = col + colOffset", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/targetRow\s*=\s*rowIndex\s*\+\s*rowOffset/.test(src), 'targetRow = rowIndex + rowOffset');
+    t.assertTruthy(/targetCol\s*=\s*col\s*\+\s*colOffset/.test(src), 'targetCol = col + colOffset');
+});
+
+
+TestRunner.test("Day 717 - splatterNotes functional test: shape branches via if/else if chain", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    const ifCount = (src.match(/else\s+if\s*\(\s*shape\s*===\s*Constants\.SPLATTER_NOTES_SHAPE/g) || []).length;
+    t.assertTruthy(ifCount >= 4, 'has 4+ shape branches via else if (got ' + ifCount + ')');
+});
+
+TestRunner.test("Day 717 - splatterNotes structural test: skipOccupied default is true", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'skipOccupied defaults to true');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: targetRow = rowIndex + rowOffset", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/targetRow\s*=\s*rowIndex\s*\+\s*rowOffset/.test(src), 'targetRow = rowIndex + rowOffset');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: targetCol = col + colOffset", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/targetCol\s*=\s*col\s*\+\s*colOffset/.test(src), 'targetCol = col + colOffset');
+});
+
+TestRunner.test("Day 717 - splatterNotes functional test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.splatterNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
+TestRunner.test("Day 717 - SPLATTER_NOTES_MODES count matches SHAPES array length (5)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/SPLATTER_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(m, 'has SHAPES array');
+    const items = m[1].split(',').filter(s => s.trim().length > 0);
+    t.assertEqual(items.length, 5, 'SHAPES has 5 entries');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

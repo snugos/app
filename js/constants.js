@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.365.0';
+export const APP_VERSION = '2.366.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -383,6 +383,32 @@ export const GLIDER_NOTES_MODES = [
     GLIDER_NOTES_MODE_INV_V,
     GLIDER_NOTES_MODE_X,
     GLIDER_NOTES_MODE_ZIGZAG
+];
+
+// Splatter Notes constants - randomized scatter of notes around each source (paint splatter texture)
+export const SPLATTER_NOTES_MIN_COUNT = 1; // Minimum 1 scattered note per source
+export const SPLATTER_NOTES_MAX_COUNT = 32; // Maximum 32 scattered notes per source
+export const SPLATTER_NOTES_DEFAULT_COUNT = 8; // Default 8 scattered notes per source
+export const SPLATTER_NOTES_MIN_ROW_RADIUS = 0; // Minimum 0 rows of vertical scatter (flat horizontal)
+export const SPLATTER_NOTES_MAX_ROW_RADIUS = 8; // Maximum 8 rows of vertical scatter
+export const SPLATTER_NOTES_DEFAULT_ROW_RADIUS = 3; // Default 3 rows of vertical scatter radius
+export const SPLATTER_NOTES_MIN_COL_RADIUS = 1; // Minimum 1 column forward (forward-in-time requirement)
+export const SPLATTER_NOTES_MAX_COL_RADIUS = 8; // Maximum 8 columns forward per scatter particle
+export const SPLATTER_NOTES_DEFAULT_COL_RADIUS = 4; // Default 4 columns forward
+export const SPLATTER_NOTES_MIN_MIN_VELOCITY = 0.05; // Minimum possible floor velocity
+export const SPLATTER_NOTES_MAX_MIN_VELOCITY = 1.0; // Maximum possible floor velocity
+export const SPLATTER_NOTES_DEFAULT_MIN_VELOCITY = 0.25; // Default floor velocity (low for soft splatter)
+export const SPLATTER_NOTES_SHAPE_UNIFORM = 'uniform'; // Flat random within bounds (true splatter)
+export const SPLATTER_NOTES_SHAPE_GAUSSIAN = 'gaussian'; // Clustered toward center (3-sample averaged)
+export const SPLATTER_NOTES_SHAPE_SHELL = 'shell'; // Concentrated near max radius (outer halo)
+export const SPLATTER_NOTES_SHAPE_WEIGHTED_TOP = 'weighted-top'; // Skewed upward (high pitch cluster)
+export const SPLATTER_NOTES_SHAPE_WEIGHTED_BOTTOM = 'weighted-bottom'; // Skewed downward (low pitch cluster)
+export const SPLATTER_NOTES_SHAPES = [
+    SPLATTER_NOTES_SHAPE_UNIFORM,
+    SPLATTER_NOTES_SHAPE_GAUSSIAN,
+    SPLATTER_NOTES_SHAPE_SHELL,
+    SPLATTER_NOTES_SHAPE_WEIGHTED_TOP,
+    SPLATTER_NOTES_SHAPE_WEIGHTED_BOTTOM
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

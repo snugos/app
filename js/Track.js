@@ -6193,4 +6193,139 @@ export class Track {
 
         return gliderCount;
     }
+
+    // Splatter Notes - generate random scattered notes around each source (paint splatter texture).
+    // For each source note, place `count` notes with random row/col offsets within a radius around
+    // the source. The 'shape' parameter controls the random distribution: 'uniform' (flat random),
+    // 'gaussian' (3-sample averaged cluster toward center), 'shell' (concentrated near outer radius),
+    // 'weighted-top' (skewed upward / high pitch), 'weighted-bottom' (skewed downward / low pitch).
+    // Velocity is randomized between `minVelocity` and `origVel` so each splatter particle has a
+    // distinct accent. Complements gliderNotes (directional trail), rippleNotes (concentric rings),
+    // radialNotes (discrete spokes), spiralNotes (angular sweep), cascadeNotes (linear 2D),
+    // driftNotes (column-only), and crescentNotes (grouped arc) with a random scatter pattern.
+    // count: number of scattered notes per source (clamped 1..32)
+    // rowRadius: max rows of vertical scatter (0 = flat horizontal, 8 = wide vertical)
+    // colRadius: max columns forward per particle (clamped 1..8, ensures forward-in-time)
+    // minVelocity: floor velocity for splatter particles (0.05..1.0)
+    // shape: 'uniform' (flat random), 'gaussian' (clustered), 'shell' (outer ring),
+    //        'weighted-top' (high pitch skew), 'weighted-bottom' (low pitch skew)
+    // skipOccupied: skip particle if target slot is already active
+    splatterNotes(count = Constants.SPLATTER_NOTES_DEFAULT_COUNT, rowRadius = Constants.SPLATTER_NOTES_DEFAULT_ROW_RADIUS, colRadius = Constants.SPLATTER_NOTES_DEFAULT_COL_RADIUS, minVelocity = Constants.SPLATTER_NOTES_DEFAULT_MIN_VELOCITY, shape = Constants.SPLATTER_NOTES_SHAPE_UNIFORM, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} splatterNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedCount = Math.max(Constants.SPLATTER_NOTES_MIN_COUNT, Math.min(Constants.SPLATTER_NOTES_MAX_COUNT, Math.floor(count)));
+        const clampedRowRadius = Math.max(Constants.SPLATTER_NOTES_MIN_ROW_RADIUS, Math.min(Constants.SPLATTER_NOTES_MAX_ROW_RADIUS, Math.floor(rowRadius)));
+        const clampedColRadius = Math.max(Constants.SPLATTER_NOTES_MIN_COL_RADIUS, Math.min(Constants.SPLATTER_NOTES_MAX_COL_RADIUS, Math.floor(colRadius)));
+        const clampedMinVel = Math.max(Constants.SPLATTER_NOTES_MIN_MIN_VELOCITY, Math.min(Constants.SPLATTER_NOTES_MAX_MIN_VELOCITY, minVelocity));
+        const useShape = Constants.SPLATTER_NOTES_SHAPES.includes(shape) ? shape : Constants.SPLATTER_NOTES_SHAPE_UNIFORM;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Splatter Notes (${useShape}, ${clampedCount} particles) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let splatterCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        // Helper: get a uniform random integer in [min, max] (inclusive)
+        const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // Helper: generate a row offset based on shape (returns signed integer)
+        const getRowOffset = (shape) => {
+            if (clampedRowRadius === 0) return 0;
+            if (shape === Constants.SPLATTER_NOTES_SHAPE_UNIFORM) {
+                // Flat random within [-rowRadius, +rowRadius]
+                return randInt(-clampedRowRadius, clampedRowRadius);
+            } else if (shape === Constants.SPLATTER_NOTES_SHAPE_GAUSSIAN) {
+                // 3-sample averaged (tends toward center but can spread)
+                const a = randInt(-clampedRowRadius, clampedRowRadius);
+                const b = randInt(-clampedRowRadius, clampedRowRadius);
+                const c = randInt(-clampedRowRadius, clampedRowRadius);
+                return Math.round((a + b + c) / 3);
+            } else if (shape === Constants.SPLATTER_NOTES_SHAPE_SHELL) {
+                // Concentrate near max radius (pick a distance in upper half of range)
+                const sign = Math.random() < 0.5 ? -1 : 1;
+                const magnitude = Math.floor(clampedRowRadius * (0.5 + Math.random() * 0.5));
+                return sign * Math.max(1, magnitude);
+            } else if (shape === Constants.SPLATTER_NOTES_SHAPE_WEIGHTED_TOP) {
+                // Skewed upward: bias row offset to be negative (up = smaller row index)
+                // 60% chance to be in upper half, 40% chance to be elsewhere
+                if (Math.random() < 0.6) {
+                    return randInt(-clampedRowRadius, 0);
+                } else {
+                    return randInt(0, clampedRowRadius);
+                }
+            } else if (shape === Constants.SPLATTER_NOTES_SHAPE_WEIGHTED_BOTTOM) {
+                // Skewed downward: bias row offset to be positive (down = larger row index)
+                if (Math.random() < 0.6) {
+                    return randInt(0, clampedRowRadius);
+                } else {
+                    return randInt(-clampedRowRadius, 0);
+                }
+            }
+            return randInt(-clampedRowRadius, clampedRowRadius);
+        };
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // Place `clampedCount` scattered notes with random offsets
+                for (let p = 0; p < clampedCount; p++) {
+                    const rowOffset = getRowOffset(useShape);
+                    // Column offset is always forward (col + colOffset where colOffset >= 1)
+                    const colOffset = randInt(1, clampedColRadius);
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    // Skip if target row is out of bounds
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    // Skip if target col is out of bounds
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    // Skip if skipOccupied and target slot is already active
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    // Skip if target is the source cell (no-op)
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Random velocity between clampedMinVel and origVel
+                    const particleVel = clampedMinVel + (Math.random() * (origVel - clampedMinVel));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(particleVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        // Apply the new splatter notes
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            splatterCount++;
+        }
+
+        return splatterCount;
+    }
 }
