@@ -1,3 +1,94 @@
+#### Day 713: Spiral Notes Feature (2026-06-17)
+- **Feature**: Wired up the partially-scaffolded `spiralNotes(length, radiusStep, columnStep, velocityDecay, direction, skipOccupied)` method in Track.js to the sequencer context menu with 5 "Spiral Notes" menu items. Each active note spawns N notes in a spiral/rotating pattern around the source, computed via angular sweep (Math.sin for row offset, Math.cos for column offset). Complements `cascadeNotes` (linear 2D row+col), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a true 2D spiral effect.
+- **Files Modified**:
+  - `js/ui.js`: Added 5 Spiral Notes menu items in the sequencer context menu after Cascade Notes (Subtle 2, slow decay), with separator after
+  - `js/constants.js`: Bumped APP_VERSION to 2.362.0 (constants were defined in Day 712's working changes)
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced or never actually pushed from Day 712 audit.)
+  - Fixed extra `{ label: \`...\`}` prefix duplication and off-by-one brace count on the "Paste Selection" line in `js/ui.js` (line 2516). The line had a duplicate `{ label: \`                { label: \`Paste Selection\`` prefix and an incorrect 3-brace close (}`) instead of 2. After these fixes, the `run-tests-esm.mjs` build succeeds (esbuild reports "Build succeeded"). Test runtime still has a pre-existing `createRequire(import.meta.url)` issue in the bun/node bundler that's unrelated to this work.
+- **Feature Details**:
+  - **spiralNotes** (`js/Track.js` - was already fully implemented in Day 712 working changes): For each active note, places N spiral nodes computed via an angular sweep. For node `n`, computes `angle = n * (PI/4) * angleSign` (where angleSign is +1 for clockwise, -1 for counter-clockwise), then `rowOffset = round(sin(angle) * n * radiusStep)` and `colOffset = max(1, round(cos(angle) * columnStep))`. Captures undo state BEFORE mutation with descriptive "Spiral Notes (direction, N nodes) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to SPIRAL_NOTES_MIN_LENGTH (1) / SPIRAL_NOTES_MAX_LENGTH (16) range with Math.floor (default SPIRAL_NOTES_DEFAULT_LENGTH=8)
+    - Clamps `radiusStep` to SPIRAL_NOTES_MIN_RADIUS_STEP (0) / SPIRAL_NOTES_MAX_RADIUS_STEP (4) range with Math.floor (default SPIRAL_NOTES_DEFAULT_RADIUS_STEP=1)
+    - Clamps `columnStep` to SPIRAL_NOTES_MIN_COLUMN_STEP (1) / SPIRAL_NOTES_MAX_COLUMN_STEP (4) range with Math.floor (default SPIRAL_NOTES_DEFAULT_COLUMN_STEP=1)
+    - Clamps `velocityDecay` to SPIRAL_NOTES_MIN_VELOCITY_DECAY (0.1) / SPIRAL_NOTES_MAX_VELOCITY_DECAY (1.0) range (default SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY=0.88)
+    - Validates `direction` against SPIRAL_NOTES_DIRECTIONS array, falls back to SPIRAL_NOTES_DIRECTION_CW if invalid
+    - Computes `angleSign = useDirection === 'ccw' ? -1 : 1`
+    - Captures undo state BEFORE mutation with descriptive "Spiral Notes (direction, N nodes) on <seqname>" label
+    - For each row, for each column, for each active note: for `n` in 1..clampedLength, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Computes `decayedVel = origVel * Math.pow(clampedDecay, n)` for exponential velocity decay
+    - Clamps decayed velocity to 0.05-1.0 range, rounds to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of spiraled notes added
+  - **Spiral Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Cascade Notes (Subtle 2, slow decay), with separator after
+    - "Spiral Notes (CW, 4 nodes)" - calls `spiralNotes(4, 1, 1, 0.88, 'cw', true)` - 4-node clockwise spiral with default radius/column step
+    - "Spiral Notes (CW, 8 nodes)" - calls `spiralNotes(8, 1, 1, 0.85, 'cw', true)` - 8-node clockwise spiral (full revolution)
+    - "Spiral Notes (CW, 8 wide)" - calls `spiralNotes(8, 2, 1, 0.85, 'cw', true)` - 8-node wide clockwise spiral (radius=2)
+    - "Spiral Notes (CCW, 8 nodes)" - calls `spiralNotes(8, 1, 1, 0.85, 'ccw', true)` - 8-node counter-clockwise spiral
+    - "Spiral Notes (Column-only, 8)" - calls `spiralNotes(8, 0, 1, 0.85, 'cw', true)` - 8-node column-only sweep (radius=0 = no row offset)
+    - All call `recreateToneSequence(true)` after spiraling
+    - All capture undo with descriptive "Spiral Notes on <name> (<seqname>)" label
+    - Show notifications: "Spiraled {count} note(s) (variant)."
+    - Show "No notes to spiral." when nothing to spiral
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 15 constants (were defined in Day 712's working changes; first day 712 commit on the LWB-with-Bugs branch)
+  - `SPIRAL_NOTES_MIN_LENGTH = 1` - Minimum 1 spiral node per source note
+  - `SPIRAL_NOTES_MAX_LENGTH = 16` - Maximum 16 spiral nodes (2 full revolutions)
+  - `SPIRAL_NOTES_DEFAULT_LENGTH = 8` - Default 8 spiral nodes (full revolution)
+  - `SPIRAL_NOTES_MIN_RADIUS_STEP = 0` - Minimum 0 rows expansion (column-only sweep)
+  - `SPIRAL_NOTES_MAX_RADIUS_STEP = 4` - Maximum 4 rows expansion per node
+  - `SPIRAL_NOTES_DEFAULT_RADIUS_STEP = 1` - Default 1 row expansion per node
+  - `SPIRAL_NOTES_MIN_COLUMN_STEP = 1` - Minimum 1 column forward per node
+  - `SPIRAL_NOTES_MAX_COLUMN_STEP = 4` - Maximum 4 columns forward per node
+  - `SPIRAL_NOTES_DEFAULT_COLUMN_STEP = 1` - Default 1 column forward per node
+  - `SPIRAL_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum velocity decay per spiral step
+  - `SPIRAL_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `SPIRAL_NOTES_DEFAULT_VELOCITY_DECAY = 0.88` - Default 88% velocity preservation per spiral step (gentle decay)
+  - `SPIRAL_NOTES_DIRECTION_CW = 'cw'` - Spiral flows clockwise (positive angle)
+  - `SPIRAL_NOTES_DIRECTION_CCW = 'ccw'` - Spiral flows counter-clockwise (negative angle)
+  - `SPIRAL_NOTES_DIRECTIONS = [CW, CCW]` - Valid direction values
+- **Tests** (`js/tests.js`): 36 tests covering:
+  - `spiralNotes` is a function on Track.prototype
+  - `spiralNotes` accepts 6 parameters with defaults (length, radiusStep, columnStep, velocityDecay, direction, skipOccupied)
+  - `spiralNotes` returns 0 for Audio tracks
+  - `spiralNotes` gets active sequence via `getActiveSequence`
+  - `spiralNotes` captures undo BEFORE mutation
+  - `spiralNotes` has descriptive "Spiral Notes" undo label
+  - `spiralNotes` clamps length to SPIRAL_NOTES_MIN/MAX_LENGTH
+  - `spiralNotes` clamps radiusStep to SPIRAL_NOTES_MIN/MAX_RADIUS_STEP
+  - `spiralNotes` clamps columnStep to SPIRAL_NOTES_MIN/MAX_COLUMN_STEP
+  - `spiralNotes` clamps velocityDecay to SPIRAL_NOTES_MIN/MAX_VELOCITY_DECAY
+  - `spiralNotes` validates direction with SPIRAL_NOTES_DIRECTIONS (uses SPIRAL_NOTES_DIRECTION_CW fallback)
+  - `spiralNotes` uses Math.sin for row offset and Math.cos for column offset
+  - `spiralNotes` uses Math.pow for velocity decay
+  - `spiralNotes` respects sequence length boundary
+  - `spiralNotes` supports skipOccupied option
+  - `spiralNotes` rounds velocity to 2 decimal places
+  - `spiralNotes` returns count of spiraled notes (spiraledCount)
+  - All 15 SPIRAL_NOTES constants are defined in constants.js
+  - SPIRAL_NOTES_DIRECTIONS includes both cw and ccw
+  - ui.js has 5 Spiral Notes menu items
+  - Spiral Notes menu items call track.spiralNotes
+  - Spiral Notes menu items call recreateToneSequence
+  - Spiral Notes menu items show notification with spiraled count
+  - Spiral Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.362 for Day 713)
+  - Functional test: angle progression (n * PI/4 sequence)
+  - Functional test: rowOffset = sin(angle) * n * radiusStep
+  - Functional test: colOffset = max(1, cos(angle) * columnStep) — min 1
+  - Functional test: velocity decay (vel * decay^n)
+  - Functional test: clamps length/radiusStep/columnStep/velocityDecay
+  - Functional test: angleSign=-1 for ccw, +1 for cw
+- **Version**: Bumped to 2.362.0
+- **Test Count**: Added 36 Day 713 tests (already in tests.js from Day 712 working changes, total 2473). Test runtime verification blocked by pre-existing `createRequire(import.meta.url)` bundler issue in `run-tests-esm.mjs` (Node v22 / Bun v1.2.21 both fail with "argument 'filename' must be a file URL object, file URL string, or absolute path string"). Per AGENTS.md notes, this affects 1491 pre-existing tests, not just Day 713. Static analysis (node --check) passes for all 4 modified files.
+
+#### Day 712: Cascade Notes Feature (2026-06-17)
 #### Day 712: Cascade Notes Feature (2026-06-17)
 - **Feature**: Added `cascadeNotes(steps, stepDelay, velocityDecay, direction, skipOccupied)` method to Track class and 5 "Cascade Notes" menu items to the sequencer context menu. Each active note spawns a 2D cascade of N new notes that flow into subsequent rows (and optionally shift in time), creating dense waterfall or ascending patterns. Complements `driftNotes` (column-only), `shuffleNotes` (random column shift), `staggerNotes` (column-only chord cascade), `arpeggiateNotes` (column arpeggio cycles), and `echoNotes` (column-only delay taps) with a 2D row+column cascade.
 - **Files Modified**:
