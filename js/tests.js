@@ -21828,16 +21828,28 @@ TestRunner.test("Day 711 - driftNotes functional test: linear-down mode: shift s
     t.assertEqual(expectedShifts[4], 0, 'col 15 -> shift 0');
 });
 
-TestRunner.test("Day 711 - driftNotes functional test: linear-center mode: peak at middle", (t) => {
+TestRunner.test("Day 711 - driftNotes functional test: linear-center mode: V-shape (dips at middle)", (t) => {
     const totalSteps = 16;
     const maxShift = 4;
     const cases = [0, 4, 8, 12, 15];
     const expectedShifts = cases.map(c => Math.round(Math.abs(2 * (c / (totalSteps - 1)) - 1) * maxShift));
     t.assertEqual(expectedShifts[0], 4, 'col 0 -> shift 4 (full)');
     t.assertEqual(expectedShifts[1], 2, 'col 4 -> shift 2');
-    t.assertEqual(expectedShifts[2], 0, 'col 8 -> shift 0 (peak/trough at middle)');
+    t.assertEqual(expectedShifts[2], 0, 'col 8 -> shift 0 (trough at middle)');
     t.assertEqual(expectedShifts[3], 2, 'col 12 -> shift 2');
     t.assertEqual(expectedShifts[4], 4, 'col 15 -> shift 4 (full again)');
+});
+
+TestRunner.test("Day 711 - driftNotes functional test: mirror mode: peak at middle", (t) => {
+    const totalSteps = 16;
+    const maxShift = 4;
+    const cases = [0, 4, 8, 12, 15];
+    const expectedShifts = cases.map(c => Math.round((1.0 - Math.abs(2 * (c / (totalSteps - 1)) - 1)) * maxShift));
+    t.assertEqual(expectedShifts[0], 0, 'col 0 -> shift 0');
+    t.assertEqual(expectedShifts[1], 2, 'col 4 -> shift 2');
+    t.assertEqual(expectedShifts[2], 4, 'col 8 -> shift 4 (peak at middle)');
+    t.assertEqual(expectedShifts[3], 2, 'col 12 -> shift 2');
+    t.assertEqual(expectedShifts[4], 0, 'col 15 -> shift 0');
 });
 
 TestRunner.test("Day 711 - driftNotes functional test: clamps maxShift to valid range", (t) => {

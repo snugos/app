@@ -5587,9 +5587,9 @@ export class Track {
     // driftMode: 'linear-up' | 'linear-down' | 'linear-center' | 'random-per-note' | 'mirror'
     //   linear-up: shift grows linearly from 0 to maxShift as col progresses through the bar
     //   linear-down: shift starts at maxShift and shrinks to 0 as col progresses
-    //   linear-center: shift is 0 at start/end and peaks at the middle (drifts out and back)
+    //   linear-center: V-shape (dips in middle): maxShift at start/end, 0 at middle
     //   random-per-note: each note gets an independent random shift in [-maxShift, +maxShift]
-    //   mirror: shift decreases linearly from maxShift to 0 (opposite direction of linear-up)
+    //   mirror: inverted V (peaks in middle): 0 at start/end, maxShift at middle
     // skipOccupied: skip target column if already has a note (true = don't overwrite)
     driftNotes(maxShift = Constants.DRIFT_NOTES_DEFAULT_MAX_SHIFT, skipChance = Constants.DRIFT_NOTES_DEFAULT_SKIP_CHANCE, velocityFactor = Constants.DRIFT_NOTES_DEFAULT_VELOCITY_FACTOR, driftMode = Constants.DRIFT_NOTES_MODE_LINEAR_UP, skipOccupied = true) {
         if (this.type === 'Audio') return 0;
@@ -5624,7 +5624,7 @@ export class Track {
                 case Constants.DRIFT_NOTES_MODE_LINEAR_DOWN:
                     return Math.round((1.0 - progress) * clampedMaxShift);
                 case Constants.DRIFT_NOTES_MODE_LINEAR_CENTER:
-                    // Peak at middle (progress = 0.5)
+                    // V-shape: maxShift at start, 0 at middle, maxShift at end (dips in the middle)
                     return Math.round(Math.abs(2 * progress - 1) * clampedMaxShift);
                 case Constants.DRIFT_NOTES_MODE_RANDOM_PER_NOTE: {
                     // Random shift in [-clampedMaxShift, +clampedMaxShift]
@@ -5632,8 +5632,8 @@ export class Track {
                     return r;
                 }
                 case Constants.DRIFT_NOTES_MODE_MIRROR:
-                    // Shift decreases linearly from maxShift to 0
-                    return Math.round((1.0 - progress) * clampedMaxShift);
+                    // Inverted V (peak): 0 at start/end, maxShift at middle
+                    return Math.round((1.0 - Math.abs(2 * progress - 1)) * clampedMaxShift);
                 default:
                     return Math.round(progress * clampedMaxShift);
             }
