@@ -6821,6 +6821,7 @@ export class Track {
         return ricochetCount;
     }
 
+
     phyllotaxisNotes(count = Constants.PHYLLOTAXIS_NOTES_DEFAULT_COUNT, scale = Constants.PHYLLOTAXIS_NOTES_DEFAULT_SCALE, angleDegrees = Constants.PHYLLOTAXIS_NOTES_DEFAULT_ANGLE, columnStep = Constants.PHYLLOTAXIS_NOTES_DEFAULT_COLUMN_STEP, velocityDecay = Constants.PHYLLOTAXIS_NOTES_DEFAULT_VELOCITY_DECAY, orientation = Constants.PHYLLOTAXIS_NOTES_ORIENTATION_CW, skipOccupied = true) {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();
@@ -6899,6 +6900,7 @@ export class Track {
 
         return phyllotaxisCount;
     }
+
 
     stairNotes(length = Constants.STAIR_NOTES_DEFAULT_LENGTH, stepSize = Constants.STAIR_NOTES_DEFAULT_STEP_SIZE, columnStep = Constants.STAIR_NOTES_DEFAULT_COLUMN_STEP, velocityDecay = Constants.STAIR_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.STAIR_NOTES_SHAPE_UP, skipOccupied = true) {
         if (this.type === 'Audio') return 0;

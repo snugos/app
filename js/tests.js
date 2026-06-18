@@ -24863,9 +24863,11 @@ TestRunner.test("Day 722 - Stair Notes menu items capture undo with descriptive 
 });
 
 TestRunner.test("Day 722 - APP_VERSION validation (>= 2.371 for Day 722)", (t) => {
-    const version = Constants.APP_VERSION;
-    const parts = version.split('.').map(Number);
-    t.assertTruthy(parts[0] > 2 || (parts[0] === 2 && parts[1] >= 371), 'APP_VERSION should be >= 2.371 (got ' + version + ')');
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*['"]([\d.]+)['"]/);
+    t.assertTruthy(m, 'has APP_VERSION');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] > 2 || (v[0] === 2 && v[1] >= 371), 'APP_VERSION >= 2.371 (got ' + m[1] + ')');
 });
 
 TestRunner.test("Day 722 - stairNotes structural test: uses stairOffset helper for shape computation", (t) => {
@@ -24944,6 +24946,7 @@ TestRunner.test("Day 722 - stairNotes functional test: velocity decay uses Math.
     const src = Track.prototype.stairNotes.toString();
     t.assertTruthy(/Math\.pow\(clampedDecay,\s*s\)/.test(src), 'velocity decay uses Math.pow(clampedDecay, s)');
 });
+
 
 export async function runTests() {
     return await TestRunner.runAll();
