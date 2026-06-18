@@ -6820,4 +6820,83 @@ export class Track {
 
         return ricochetCount;
     }
+
+    phyllotaxisNotes(count = Constants.PHYLLOTAXIS_NOTES_DEFAULT_COUNT, scale = Constants.PHYLLOTAXIS_NOTES_DEFAULT_SCALE, angleDegrees = Constants.PHYLLOTAXIS_NOTES_DEFAULT_ANGLE, columnStep = Constants.PHYLLOTAXIS_NOTES_DEFAULT_COLUMN_STEP, velocityDecay = Constants.PHYLLOTAXIS_NOTES_DEFAULT_VELOCITY_DECAY, orientation = Constants.PHYLLOTAXIS_NOTES_ORIENTATION_CW, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} phyllotaxisNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedCount = Math.max(Constants.PHYLLOTAXIS_NOTES_MIN_COUNT, Math.min(Constants.PHYLLOTAXIS_NOTES_MAX_COUNT, Math.floor(count)));
+        const clampedScale = Math.max(Constants.PHYLLOTAXIS_NOTES_MIN_SCALE, Math.min(Constants.PHYLLOTAXIS_NOTES_MAX_SCALE, Math.floor(scale)));
+        const clampedAngle = Math.max(Constants.PHYLLOTAXIS_NOTES_MIN_ANGLE, Math.min(Constants.PHYLLOTAXIS_NOTES_MAX_ANGLE, Math.floor(angleDegrees)));
+        const clampedColStep = Math.max(Constants.PHYLLOTAXIS_NOTES_MIN_COLUMN_STEP, Math.min(Constants.PHYLLOTAXIS_NOTES_MAX_COLUMN_STEP, Math.floor(columnStep)));
+        const clampedDecay = Math.max(Constants.PHYLLOTAXIS_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.PHYLLOTAXIS_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useOrientation = Constants.PHYLLOTAXIS_NOTES_ORIENTATIONS.includes(orientation) ? orientation : Constants.PHYLLOTAXIS_NOTES_ORIENTATION_CW;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Phyllotaxis Notes (${useOrientation}, ${clampedCount} leaves, angle ${clampedAngle} deg) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let phyllotaxisCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const angleSign = useOrientation === Constants.PHYLLOTAXIS_NOTES_ORIENTATION_CCW ? -1 : 1;
+        const angleRadBase = (clampedAngle * Math.PI) / 180;
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 1; i <= clampedCount; i++) {
+                    const angleRad = angleSign * i * angleRadBase;
+                    const radius = clampedScale * Math.sqrt(i);
+                    const rowOffset = Math.round(Math.cos(angleRad) * radius);
+                    // Use |sin| so colOffset is always non-negative, then ensure >=1 to guarantee forward-in-time
+                    const colOffset = Math.max(1, Math.round(Math.abs(Math.sin(angleRad)) * clampedColStep * Math.sqrt(i)));
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Velocity decays with leaf index (i-1 so first leaf is at full velocity)
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i - 1)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            phyllotaxisCount++;
+        }
+
+        return phyllotaxisCount;
+    }
 }

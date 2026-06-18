@@ -1,3 +1,107 @@
+#### Day 722: Phyllotaxis Notes Feature (2026-06-18)
+- **Feature**: Added `phyllotaxisNotes(count, scale, angleDegrees, columnStep, velocityDecay, orientation, skipOccupied)` method to Track class and 5 "Phyllotaxis Notes" menu items to the sequencer context menu. Each active note spawns N notes arranged in a phyllotaxis spiral (the Fermat spiral found in sunflowers, pinecones, and daisies), computed via `angleRad = angleSign * i * (angleDegrees * π/180)` and `radius = scale * sqrt(i)`. Then `rowOffset = round(cos(angleRad) * radius)` and `colOffset = max(1, round(|sin(angleRad)| * columnStep * sqrt(i)))` — `|sin|` ensures colOffset is always non-negative, and `Math.max(1, ...)` floors it to at least 1 to guarantee forward-in-time progression. The default 137° is the golden angle (137.508°), which produces the densest possible spiral packing with no leaves overlapping. Complements `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with the iconic botanical spiral pattern.
+- **Files Modified**:
+  - `js/Track.js`: Added `phyllotaxisNotes` method after `ricochetNotes` (line ~6833, the new last method on the class)
+  - `js/constants.js`: Added 19 PHYLLOTAXIS_NOTES_* constants + bumped APP_VERSION to 2.371.0
+  - `js/ui.js`: Added 5 Phyllotaxis Notes menu items in the sequencer context menu after Ricochet Notes (High-bounce, 12)
+  - `js/tests.js`: Added Day 722 test block with 39 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 (re-introduced since the Day 713 fix; the same fix has been needed on Days 714, 717, 718, 719, 720, and 721 too).
+  - Fixed extra `}` closer on 4 menu items in `js/ui.js` (Paste Selection, Paste Full Sequence, Clear Selection, Invert Selection — lines 2516, 2519, 2522, 2523). Previous run had added `} }` (3 closes) where only `} }` (2 closes) was correct. After these fixes, the esbuild build succeeds.
+- **Feature Details**:
+  - **phyllotaxisNotes** (`js/Track.js`): For each active note, places N notes arranged in a phyllotaxis (Fermat) spiral. For leaf index `i` in 1..clampedCount, computes `angleRad = angleSign * i * angleRadBase` (where `angleRadBase = (clampedAngle * π)/180` and `angleSign = -1` for ccw, `+1` for cw), then `radius = clampedScale * sqrt(i)`. `rowOffset = round(cos(angleRad) * radius)` and `colOffset = max(1, round(|sin(angleRad)| * clampedColStep * sqrt(i)))`. Captures undo state BEFORE mutation with descriptive `Phyllotaxis Notes (orientation, N leaves, angle X deg) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `count` to PHYLLOTAXIS_NOTES_MIN_COUNT (1) / PHYLLOTAXIS_NOTES_MAX_COUNT (64) range with Math.floor (default PHYLLOTAXIS_NOTES_DEFAULT_COUNT=16)
+    - Clamps `scale` to PHYLLOTAXIS_NOTES_MIN_SCALE (0) / PHYLLOTAXIS_NOTES_MAX_SCALE (8) range with Math.floor (default PHYLLOTAXIS_NOTES_DEFAULT_SCALE=2)
+    - Clamps `angleDegrees` to PHYLLOTAXIS_NOTES_MIN_ANGLE (30) / PHYLLOTAXIS_NOTES_MAX_ANGLE (180) range with Math.floor (default PHYLLOTAXIS_NOTES_DEFAULT_ANGLE=137 — the golden angle)
+    - Clamps `columnStep` to PHYLLOTAXIS_NOTES_MIN_COLUMN_STEP (1) / PHYLLOTAXIS_NOTES_MAX_COLUMN_STEP (4) range with Math.floor (default PHYLLOTAXIS_NOTES_DEFAULT_COLUMN_STEP=1)
+    - Clamps `velocityDecay` to PHYLLOTAXIS_NOTES_MIN_VELOCITY_DECAY (0.1) / PHYLLOTAXIS_NOTES_MAX_VELOCITY_DECAY (1.0) range (default PHYLLOTAXIS_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `orientation` against PHYLLOTAXIS_NOTES_ORIENTATIONS array, falls back to PHYLLOTAXIS_NOTES_ORIENTATION_CW if invalid
+    - Computes `angleSign = useOrientation === 'ccw' ? -1 : 1`
+    - Captures undo state BEFORE mutation with descriptive `Phyllotaxis Notes (orientation, N leaves, angle X deg) on <seqname>` label
+    - For each row, for each column, for each active note: for `i` in 1..clampedCount, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Uses `Math.abs(Math.sin(angleRad))` so colOffset is always non-negative
+    - Uses `Math.max(1, ...)` to floor colOffset to at least 1 to guarantee forward-in-time progression
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen if i=1 produces rowOffset=0, colOffset=1 which then misses because col!=col+1 always)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i-1)))` for exponential velocity decay by leaf index (i-1 so leaf 1 is at full velocity)
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of phyllotaxis notes added (phyllotaxisCount)
+  - **Phyllotaxis Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Ricochet Notes (High-bounce, 12)
+    - "Phyllotaxis Notes (Sunflower, 16)" - calls `phyllotaxisNotes(16, 2, 137, 1, 0.95, 'cw', true)` - classic sunflower: 16 leaves, golden angle, scale 2
+    - "Phyllotaxis Notes (Pinecone, 24)" - calls `phyllotaxisNotes(24, 3, 137, 1, 0.92, 'cw', true)` - 24-leaf pinecone spiral, larger scale
+    - "Phyllotaxis Notes (Tight Spiral, 12)" - calls `phyllotaxisNotes(12, 1, 90, 1, 0.94, 'cw', true)` - tight 12-leaf spiral with 90° quadrant angle
+    - "Phyllotaxis Notes (Wide Spiral, 32)" - calls `phyllotaxisNotes(32, 4, 137, 1, 0.96, 'cw', true)` - 32-leaf wide sunflower spiral, scale 4
+    - "Phyllotaxis Notes (CCW Sunflower, 16)" - calls `phyllotaxisNotes(16, 2, 137, 1, 0.95, 'ccw', true)` - 16-leaf sunflower mirrored (counter-clockwise)
+    - All call `recreateToneSequence(true)` after phyllotaxising
+    - All capture undo with descriptive `Phyllotaxis Notes on <name> (<seqname>)` label
+    - Show notifications: `Phyllotaxised {count} note(s) (variant).`
+    - Show `No notes to phyllotaxis.` when nothing to phyllotaxis
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 19 new constants
+  - `PHYLLOTAXIS_NOTES_MIN_COUNT = 1` - Minimum 1 leaf in the spiral
+  - `PHYLLOTAXIS_NOTES_MAX_COUNT = 64` - Maximum 64 leaves (full half-turn of a sunflower)
+  - `PHYLLOTAXIS_NOTES_DEFAULT_COUNT = 16` - Default 16 leaves (1 full golden-angle turn)
+  - `PHYLLOTAXIS_NOTES_MIN_SCALE = 0` - Minimum 0 spiral radius (all leaves at source row)
+  - `PHYLLOTAXIS_NOTES_MAX_SCALE = 8` - Maximum 8 rows of spiral radius
+  - `PHYLLOTAXIS_NOTES_DEFAULT_SCALE = 2` - Default 2 rows of spiral radius
+  - `PHYLLOTAXIS_NOTES_MIN_ANGLE = 30` - Minimum 30 degrees between leaves (tight cluster)
+  - `PHYLLOTAXIS_NOTES_MAX_ANGLE = 180` - Maximum 180 degrees between leaves (half-turn)
+  - `PHYLLOTAXIS_NOTES_DEFAULT_ANGLE = 137` - Default 137 degrees — golden angle (sunflower optimal packing)
+  - `PHYLLOTAXIS_NOTES_MIN_COLUMN_STEP = 1` - Minimum 1 column forward per spiral unit (forward-in-time requirement)
+  - `PHYLLOTAXIS_NOTES_MAX_COLUMN_STEP = 4` - Maximum 4 columns forward per spiral unit
+  - `PHYLLOTAXIS_NOTES_DEFAULT_COLUMN_STEP = 1` - Default 1 column forward per unit
+  - `PHYLLOTAXIS_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% preservation at leaf N
+  - `PHYLLOTAXIS_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `PHYLLOTAXIS_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per leaf
+  - `PHYLLOTAXIS_NOTES_ORIENTATION_CW = 'cw'` - Clockwise spiral (positive angle)
+  - `PHYLLOTAXIS_NOTES_ORIENTATION_CCW = 'ccw'` - Counter-clockwise spiral (negative angle)
+  - `PHYLLOTAXIS_NOTES_ORIENTATIONS = [CW, CCW]` - Valid orientation values
+- **Tests** (`js/tests.js`): 39 tests covering:
+  - `phyllotaxisNotes` is a function on Track.prototype
+  - `phyllotaxisNotes` accepts 7 parameters with defaults (count, scale, angleDegrees, columnStep, velocityDecay, orientation, skipOccupied)
+  - `phyllotaxisNotes` returns 0 for Audio tracks
+  - `phyllotaxisNotes` gets active sequence via `getActiveSequence`
+  - `phyllotaxisNotes` captures undo BEFORE mutation
+  - `phyllotaxisNotes` has descriptive `Phyllotaxis Notes` undo label
+  - `phyllotaxisNotes` clamps count/scale/angle/columnStep/velocityDecay to PHYLLOTAXIS_NOTES_MIN/MAX_* ranges
+  - `phyllotaxisNotes` validates orientation with PHYLLOTAXIS_NOTES_ORIENTATIONS (uses CW fallback)
+  - `phyllotaxisNotes` uses Math.pow for velocity decay
+  - `phyllotaxisNotes` uses Math.floor for count/scale/angle/columnStep
+  - `phyllotaxisNotes` uses Math.sqrt for radius (Fermat spiral characteristic)
+  - `phyllotaxisNotes` uses Math.cos for row offset and Math.sin for column offset
+  - `phyllotaxisNotes` uses Math.abs(Math.sin(angleRad)) so colOffset is always non-negative
+  - `phyllotaxisNotes` uses Math.max(1, ...) to floor colOffset to at least 1 (forward-in-time)
+  - `phyllotaxisNotes` respects sequence length and row boundaries
+  - `phyllotaxisNotes` supports skipOccupied option
+  - `phyllotaxisNotes` rounds velocity to 2 decimal places
+  - `phyllotaxisNotes` returns count of phyllotaxis notes (phyllotaxisCount)
+  - All 19 PHYLLOTAXIS_NOTES constants are defined in constants.js
+  - PHYLLOTAXIS_NOTES_ORIENTATIONS includes cw and ccw
+  - ui.js has 5 Phyllotaxis Notes menu items
+  - Phyllotaxis Notes menu items call track.phyllotaxisNotes
+  - Phyllotaxis Notes menu items show notification with phyllotaxised count
+  - Phyllotaxis Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.371 for Day 722)
+  - Functional test: angleRad = angleSign * i * (angle * π/180)
+  - Functional test: radius = scale * sqrt(i)
+  - Functional test: rowOffset = round(cos(angleRad) * radius)
+  - Functional test: colOffset = max(1, round(|sin(angleRad)| * columnStep * sqrt(i)))
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: respects Math.floor for count/scale/angleDegrees/columnStep
+  - Structural test: preserves probability from source
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (count 100->64, scale -5->0, angle 500->180)
+  - Functional test: angleSign=-1 for ccw, +1 for cw
+  - Functional test: leaf index i=1..count inclusive (not 0..count-1)
+- **Version**: Bumped to 2.371.0
+- **Test Count**: Added 39 Day 722 tests. All 39 pass via test-runner/run-tests.js. esbuild build succeeds (after fixing pre-existing missing-close-paren syntax error on Track.js line 4047 and 4 extra `}` closers on ui.js menu items lines 2516, 2519, 2522, 2523). node --check passes for all 4 modified files.
+
 #### Day 721: Ricochet Notes Feature (2026-06-18)
 - **Feature**: Added `ricochetNotes(length, rowVelocityStart, colVelocityStart, wallElasticity, rowGravity, velocityDecay, axis, skipOccupied)` method to Track class and 5 "Ricochet Notes" menu items to the sequencer context menu. Each active note spawns a chain of N notes that bounce off the grid edges like a billiard/pool ball (ping-pong). For step `s` in 0..clampedLength, computes `nextRow = currRow + rowVel` and `nextCol = currCol + colVel`, then reflects off walls if the position falls outside `[0, numRows-1]` / `[0, totalSteps-1]` by negating the velocity and scaling by `wallElasticity`. `rowGravity` is added to `rowVel` each step, and a global `velocityDecay` (per-step multiplier) is applied to both velocities to fade the chain over time. Three axis modes: 'both' (bounce off row + col walls, classic billiard), 'row-only' (column passes through edges, only row walls bounce — produces a horizontal ribbon pattern), 'col-only' (row passes through, only col walls bounce — produces a vertical stripe pattern). Velocity decays per step, preserves the original probability.
 - **Naming note**: Originally planned as "Bounce Notes" but renamed to "Ricochet Notes" because Track.js already had a `bounceNotes(maxOffsetSteps, skipChance, velocityFactor)` method (random ±N column shift) — having two `bounceNotes` methods would have caused a class-member duplicate-definition error at module load. All `BOUNCE_NOTES_*` constants were renamed to `RICOCHET_NOTES_*` and the menu items to "Ricochet Notes" to disambiguate.

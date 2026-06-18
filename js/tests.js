@@ -24461,8 +24461,244 @@ TestRunner.test("Day 721 - ricochetNotes functional test: clamps to valid ranges
     t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_WALL_ELASTICITY,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_WALL_ELASTICITY/.test(src), 'clamps wallElasticity');
 });
 
+// Day 722 - Phyllotaxis Notes Feature Tests
+TestRunner.test("Day 722 - phyllotaxisNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.phyllotaxisNotes === 'function', 'phyllotaxisNotes is a function');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes accepts 7 parameters with defaults (count, scale, angleDegrees, columnStep, velocityDecay, orientation, skipOccupied)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/count\s*=\s*Constants\.PHYLLOTAXIS_NOTES_DEFAULT_COUNT/.test(src), 'has count default');
+    t.assertTruthy(/scale\s*=\s*Constants\.PHYLLOTAXIS_NOTES_DEFAULT_SCALE/.test(src), 'has scale default');
+    t.assertTruthy(/angleDegrees\s*=\s*Constants\.PHYLLOTAXIS_NOTES_DEFAULT_ANGLE/.test(src), 'has angleDegrees default');
+    t.assertTruthy(/columnStep\s*=\s*Constants\.PHYLLOTAXIS_NOTES_DEFAULT_COLUMN_STEP/.test(src), 'has columnStep default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.PHYLLOTAXIS_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/orientation\s*=\s*Constants\.PHYLLOTAXIS_NOTES_ORIENTATION_CW/.test(src), 'has orientation default');
+    t.assertTruthy(/skipOccupied/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['\"]Audio['\"]/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0 && mutationIdx > undoIdx, 'undo capture is before mutation (undoIdx=' + undoIdx + ', mutationIdx=' + mutationIdx + ')');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes has descriptive 'Phyllotaxis Notes' undo label", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Phyllotaxis Notes/.test(src), 'has "Phyllotaxis Notes" in undo label');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes clamps count to PHYLLOTAXIS_NOTES_MIN/MAX_COUNT", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.PHYLLOTAXIS_NOTES_MIN_COUNT,\s*Math\.min\(Constants\.PHYLLOTAXIS_NOTES_MAX_COUNT/.test(src), 'clamps count');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes clamps scale to PHYLLOTAXIS_NOTES_MIN/MAX_SCALE", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.PHYLLOTAXIS_NOTES_MIN_SCALE,\s*Math\.min\(Constants\.PHYLLOTAXIS_NOTES_MAX_SCALE/.test(src), 'clamps scale');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes clamps angle to PHYLLOTAXIS_NOTES_MIN/MAX_ANGLE", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.PHYLLOTAXIS_NOTES_MIN_ANGLE,\s*Math\.min\(Constants\.PHYLLOTAXIS_NOTES_MAX_ANGLE/.test(src), 'clamps angle');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes clamps columnStep to PHYLLOTAXIS_NOTES_MIN/MAX_COLUMN_STEP", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.PHYLLOTAXIS_NOTES_MIN_COLUMN_STEP,\s*Math\.min\(Constants\.PHYLLOTAXIS_NOTES_MAX_COLUMN_STEP/.test(src), 'clamps columnStep');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes clamps velocityDecay to PHYLLOTAXIS_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.PHYLLOTAXIS_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.PHYLLOTAXIS_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes validates orientation with PHYLLOTAXIS_NOTES_ORIENTATIONS (uses CW fallback)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/PHYLLOTAXIS_NOTES_ORIENTATIONS\.includes\(orientation\)/.test(src), 'validates orientation with PHYLLOTAXIS_NOTES_ORIENTATIONS');
+    t.assertTruthy(/:.*PHYLLOTAXIS_NOTES_ORIENTATION_CW/.test(src), 'falls back to PHYLLOTAXIS_NOTES_ORIENTATION_CW');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*i\s*-\s*1\)/.test(src), 'uses Math.pow(clampedDecay, i-1)');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes uses Math.floor for count/scale/angle/columnStep", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    const floorMatches = (src.match(/Math\.floor\((count|scale|angleDegrees|columnStep)\)/g) || []).length;
+    t.assertTruthy(floorMatches >= 4, 'uses Math.floor on count/scale/angle/columnStep (got ' + floorMatches + ')');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'uses skipOccupied');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds decayedVel to 2 decimal places');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes returns count of phyllotaxis notes (phyllotaxisCount)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/return\s+phyllotaxisCount/.test(src), 'returns phyllotaxisCount');
+    t.assertTruthy(/phyllotaxisCount\s*\+\+/.test(src), 'increments phyllotaxisCount on each placement');
+});
+
+TestRunner.test("Day 722 - all 18 PHYLLOTAXIS_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const expectedConstants = [
+        'PHYLLOTAXIS_NOTES_MIN_COUNT',
+        'PHYLLOTAXIS_NOTES_MAX_COUNT',
+        'PHYLLOTAXIS_NOTES_DEFAULT_COUNT',
+        'PHYLLOTAXIS_NOTES_MIN_SCALE',
+        'PHYLLOTAXIS_NOTES_MAX_SCALE',
+        'PHYLLOTAXIS_NOTES_DEFAULT_SCALE',
+        'PHYLLOTAXIS_NOTES_MIN_ANGLE',
+        'PHYLLOTAXIS_NOTES_MAX_ANGLE',
+        'PHYLLOTAXIS_NOTES_DEFAULT_ANGLE',
+        'PHYLLOTAXIS_NOTES_MIN_COLUMN_STEP',
+        'PHYLLOTAXIS_NOTES_MAX_COLUMN_STEP',
+        'PHYLLOTAXIS_NOTES_DEFAULT_COLUMN_STEP',
+        'PHYLLOTAXIS_NOTES_MIN_VELOCITY_DECAY',
+        'PHYLLOTAXIS_NOTES_MAX_VELOCITY_DECAY',
+        'PHYLLOTAXIS_NOTES_DEFAULT_VELOCITY_DECAY',
+        'PHYLLOTAXIS_NOTES_ORIENTATION_CW',
+        'PHYLLOTAXIS_NOTES_ORIENTATION_CCW',
+        'PHYLLOTAXIS_NOTES_ORIENTATIONS'
+    ];
+    for (const c of expectedConstants) {
+        t.assertTruthy(src.indexOf('export const ' + c) >= 0, 'has ' + c);
+    }
+});
+
+TestRunner.test("Day 722 - PHYLLOTAXIS_NOTES_ORIENTATIONS includes cw and ccw", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(/PHYLLOTAXIS_NOTES_ORIENTATIONS\s*=\s*\[/.test(src) && /PHYLLOTAXIS_NOTES_ORIENTATION_CW/.test(src) && /PHYLLOTAXIS_NOTES_ORIENTATION_CCW/.test(src), 'PHYLLOTAXIS_NOTES_ORIENTATIONS includes cw/ccw');
+});
+
+TestRunner.test("Day 722 - ui.js has 5 Phyllotaxis Notes menu items", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const matches = src.match(/Phyllotaxis Notes \(/g) || [];
+    t.assertTruthy(matches.length >= 5, 'has 5+ Phyllotaxis Notes menu items (got ' + matches.length + ')');
+});
+
+TestRunner.test("Day 722 - Phyllotaxis Notes menu items call track.phyllotaxisNotes", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const matches = src.match(/currentTrackForMenu\.phyllotaxisNotes\(/g) || [];
+    t.assertTruthy(matches.length >= 5, 'has 5+ phyllotaxisNotes menu item calls (got ' + matches.length + ')');
+});
+
+TestRunner.test("Day 722 - Phyllotaxis Notes menu items show notification with phyllotaxised count", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/Phyllotaxised \$\{result\} note\(s\)/.test(src), 'shows "Phyllotaxised {result} note(s)" notification');
+    t.assertTruthy(/No notes to phyllotaxis/.test(src), 'shows "No notes to phyllotaxis." fallback');
+});
+
+TestRunner.test("Day 722 - Phyllotaxis Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Phyllotaxis Notes on/.test(src), 'captures undo with "Phyllotaxis Notes on ..." label');
+});
+
+TestRunner.test("Day 722 - APP_VERSION validation (>= 2.371 for Day 722)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*['"]([\d.]+)['"]/);
+    t.assertTruthy(m, 'has APP_VERSION');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] > 2 || (v[0] === 2 && v[1] >= 371), 'APP_VERSION >= 2.371 (got ' + m[1] + ')');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: uses polar coordinates (cos for row, sin for col)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.cos\(angleRad\)/.test(src), 'uses Math.cos for row offset');
+    t.assertTruthy(/Math\.sin\(angleRad\)/.test(src), 'uses Math.sin for col offset');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: uses sqrt(i) for radius scaling", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.sqrt\(i\)/.test(src), 'uses Math.sqrt(i) for radius');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: angle is converted from degrees to radians", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.PI\s*\/\s*180/.test(src), 'converts degrees to radians');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: uses angleSign=-1 for ccw, +1 for cw", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/angleSign\s*=\s*useOrientation\s*===\s*Constants\.PHYLLOTAXIS_NOTES_ORIENTATION_CCW\s*\?\s*-1\s*:\s*1/.test(src), 'angleSign is -1 for ccw, +1 for cw');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: starts loop at i=1 (leaf 0 is the source)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/for\s*\(\s*let\s+i\s*=\s*1;\s*i\s*<=\s*clampedCount;\s*i\s*\+\+\s*\)/.test(src), 'loops i from 1 to clampedCount inclusive');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/newNotes\.push/.test(src), 'uses newNotes.push to collect');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source note');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'skips empty rows');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: supports 2 distinct orientations (cw/ccw)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/PHYLLOTAXIS_NOTES_ORIENTATION_CW/.test(src), 'handles CW orientation');
+    t.assertTruthy(/PHYLLOTAXIS_NOTES_ORIENTATION_CCW/.test(src), 'handles CCW orientation');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: clamps to valid ranges (count 100->64, scale -5->0, angle 1000->180)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.PHYLLOTAXIS_NOTES_MIN_COUNT,\s*Math\.min\(Constants\.PHYLLOTAXIS_NOTES_MAX_COUNT/.test(src), 'clamps count');
+    t.assertTruthy(/Math\.max\(Constants\.PHYLLOTAXIS_NOTES_MIN_SCALE,\s*Math\.min\(Constants\.PHYLLOTAXIS_NOTES_MAX_SCALE/.test(src), 'clamps scale');
+    t.assertTruthy(/Math\.max\(Constants\.PHYLLOTAXIS_NOTES_MIN_ANGLE,\s*Math\.min\(Constants\.PHYLLOTAXIS_NOTES_MAX_ANGLE/.test(src), 'clamps angle');
+});
+
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: colOffset is always forward-in-time (uses Math.abs and Math.max with 1)", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.abs\(Math\.sin\(angleRad\)\)/.test(src), 'uses Math.abs(Math.sin(angleRad)) so colOffset is always non-negative');
+    t.assertTruthy(/Math\.max\(1/.test(src), 'floors colOffset to at least 1 to guarantee forward-in-time');
+});
+
+TestRunner.test("Day 722 - phyllotaxisNotes functional test: rowOffset uses cos*radius (no abs), can swing negative", (t) => {
+    const src = Track.prototype.phyllotaxisNotes.toString();
+    t.assertTruthy(/Math\.round\(Math\.cos\(angleRad\)\s\*\s*radius\)/.test(src), 'rowOffset is Math.round(Math.cos(angleRad) * radius) (signed)');
+});
 
 export async function runTests() {
     return await TestRunner.runAll();
 }
-

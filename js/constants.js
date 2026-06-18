@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.370.0';
+export const APP_VERSION = '2.371.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -520,6 +520,34 @@ export const RICOCHET_NOTES_AXES = [
     RICOCHET_NOTES_AXIS_BOTH,
     RICOCHET_NOTES_AXIS_ROW_ONLY,
     RICOCHET_NOTES_AXIS_COL_ONLY
+];
+
+// Day 722: Phyllotaxis Notes Constants
+// Phyllotaxis is the botanical arrangement of leaves (Fermat's golden-angle spiral used by sunflowers).
+// Each source note spawns N notes at polar angles `i * angle` and radii `scale * sqrt(i)`,
+// giving the classic sunflower / pinecone spiral pattern.
+// rowOffset = round(cos(angleRad + angleOffset) * scale * sqrt(i))
+// colOffset = round(sin(angleRad + angleOffset) * columnStep * sqrt(i))
+export const PHYLLOTAXIS_NOTES_MIN_COUNT = 1; // Minimum 1 leaf in the spiral
+export const PHYLLOTAXIS_NOTES_MAX_COUNT = 64; // Maximum 64 leaves (full 1/2-turn of a sunflower)
+export const PHYLLOTAXIS_NOTES_DEFAULT_COUNT = 16; // Default 16 leaves (1 full turn)
+export const PHYLLOTAXIS_NOTES_MIN_SCALE = 0; // Minimum 0 spiral radius (all leaves at source row)
+export const PHYLLOTAXIS_NOTES_MAX_SCALE = 8; // Maximum 8 rows of spiral radius
+export const PHYLLOTAXIS_NOTES_DEFAULT_SCALE = 2; // Default 2 rows of spiral radius
+export const PHYLLOTAXIS_NOTES_MIN_ANGLE = 30; // Minimum 30 degrees between leaves (tight cluster)
+export const PHYLLOTAXIS_NOTES_MAX_ANGLE = 180; // Maximum 180 degrees between leaves (half-turn)
+export const PHYLLOTAXIS_NOTES_DEFAULT_ANGLE = 137; // Default 137.508 degrees — golden angle (sunflower optimal packing)
+export const PHYLLOTAXIS_NOTES_MIN_COLUMN_STEP = 1; // Minimum 1 column forward per spiral unit (forward-in-time requirement)
+export const PHYLLOTAXIS_NOTES_MAX_COLUMN_STEP = 4; // Maximum 4 columns forward per spiral unit
+export const PHYLLOTAXIS_NOTES_DEFAULT_COLUMN_STEP = 1; // Default 1 column forward per unit
+export const PHYLLOTAXIS_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% preservation at leaf N
+export const PHYLLOTAXIS_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const PHYLLOTAXIS_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per leaf
+export const PHYLLOTAXIS_NOTES_ORIENTATION_CW = 'cw'; // Clockwise spiral (positive angle)
+export const PHYLLOTAXIS_NOTES_ORIENTATION_CCW = 'ccw'; // Counter-clockwise spiral (negative angle)
+export const PHYLLOTAXIS_NOTES_ORIENTATIONS = [
+    PHYLLOTAXIS_NOTES_ORIENTATION_CW,
+    PHYLLOTAXIS_NOTES_ORIENTATION_CCW
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
