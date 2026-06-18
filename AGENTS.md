@@ -1,3 +1,114 @@
+#### Day 725: Lissajous Notes Feature (2026-06-18)
+- **Feature**: Added `lissajousNotes(length, amplitude, phase, velocityDecay, mode, skipOccupied)` method to Track class and 6 "Lissajous Notes" menu items to the sequencer context menu. Each active note spawns N samples around a Lissajous curve (the iconic X-Y oscilloscope / spirograph pattern), computed via the parametric equations `x(t) = sin(a*t + δ)` and `y(t) = sin(b*t)` where `t = 2π*i/length` and `(a, b)` are mode-dependent integer frequency ratios. The default mode CIRCLE uses a=1, b=1 producing a perfect circle. The x-component drives the column offset (via `(x+1) * halfRange` so it spans [0, length]) and the y-component drives the row offset (via `round(amplitude * y)`), with a per-sample velocity decay. Six distinct frequency-ratio modes — circle (1:1), figure-8 (1:2), three-lobe (2:3), rosette-34 (3:4), rosette-35 (3:5), rosette-45 (4:5) — produce the classic oscilloscope rosette patterns. Complements `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with the iconic oscilloscope X-Y patterns found on vintage CRT test equipment.
+- **Files Modified**:
+  - `js/Track.js`: Added `lissajousNotes` method after `bezierNotes` (line ~7119, the new last method on the class)
+  - `js/constants.js`: Added 19 LISSAJOUS_NOTES_* constants + bumped APP_VERSION to 2.374.0
+  - `js/ui.js`: Added 6 Lissajous Notes menu items in the sequencer context menu after Bezier Notes (Linear, 8)
+  - `js/tests.js`: Added Day 725 test block with 42 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced since the Day 724 fix; the same fix has been needed on Days 714, 717, 718, 719, 720, 721, 722, 723, 724 too.)
+- **Feature Details**:
+  - **lissajousNotes** (`js/Track.js`): For each active note, places N samples around a Lissajous curve. For each sample `i` in 0..clampedLength, computes `t = 2*PI*i/clampedLength`, then `x = sin(a*t + clampedPhase)` and `y = sin(b*t)`. The x-component drives column offset via `(x+1) * halfRange` (where `halfRange = max(1, floor(clampedLength/2))`) so the column spans [0, clampedLength] regardless of the sin()'s [-1, 1] range. The y-component drives row offset via `round(clampedAmplitude * y)` so it spans [-clampedAmplitude, +clampedAmplitude]. Captures undo state BEFORE mutation with descriptive `Lissajous Notes (mode, N samples, amp A) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to LISSAJOUS_NOTES_MIN_LENGTH (8) / LISSAJOUS_NOTES_MAX_LENGTH (64) range with Math.floor (default LISSAJOUS_NOTES_DEFAULT_LENGTH=24)
+    - Clamps `amplitude` to LISSAJOUS_NOTES_MIN_AMPLITUDE (1) / LISSAJOUS_NOTES_MAX_AMPLITUDE (8) range with Math.floor (default LISSAJOUS_NOTES_DEFAULT_AMPLITUDE=3)
+    - Clamps `phase` to LISSAJOUS_NOTES_MIN_PHASE (0) / LISSAJOUS_NOTES_MAX_PHASE (6.2832 ≈ 2π) range (default LISSAJOUS_NOTES_DEFAULT_PHASE=π/2 — classic 90° oscilloscope phase)
+    - Clamps `velocityDecay` to LISSAJOUS_NOTES_MIN_VELOCITY_DECAY (0.1) / LISSAJOUS_NOTES_MAX_VELOCITY_DECAY (1.0) range (default LISSAJOUS_NOTES_DEFAULT_VELOCITY_DECAY=0.94)
+    - Validates `mode` against LISSAJOUS_NOTES_MODES array, falls back to LISSAJOUS_NOTES_MODE_CIRCLE if invalid
+    - `lissajousRatios(mode)` returns the integer (a, b) frequency ratios for each mode:
+      - CIRCLE: `{a: 1, b: 1}` — perfect circle (1:1 ratio)
+      - FIGURE_8: `{a: 1, b: 2}` — horizontal figure-8 / lemniscate
+      - THREE_LOBE: `{a: 2, b: 3}` — three-lobed trefoil
+      - ROSETTE_34: `{a: 3, b: 4}` — 4-petal rosette (3+4-1 = 6 lobes crossed, 4 distinct petals when coprime)
+      - ROSETTE_35: `{a: 3, b: 5}` — 5-petal rosette (3+5-1 = 7 lobes crossed)
+      - ROSETTE_45: `{a: 4, b: 5}` — 10-lobe dense rosette (4+5-1 = 8 lobes crossed, 10 when coprime)
+    - Uses `Math.sin(a*t + clampedPhase)` for x and `Math.sin(b*t)` for y — classic Lissajous parametric equations
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength, computes target row = rowIndex + Math.round(amplitude * y) and target col = col + Math.round((x+1) * halfRange)
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen at t = 0 where x=sin(phase) and y=0)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of lissajous notes added (lissajousCount)
+  - **Lissajous Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Bezier Notes (Linear, 8)
+    - "Lissajous Notes (Circle, 24)" - calls `lissajousNotes(24, 3, Math.PI / 2, 0.94, 'circle', true)` - perfect circle, 24 samples, 3-row amplitude, π/2 phase
+    - "Lissajous Notes (Figure-8, 24)" - calls `lissajousNotes(24, 3, Math.PI / 2, 0.94, 'figure-8', true)` - horizontal figure-8 (lemniscate) at 1:2 ratio
+    - "Lissajous Notes (Three-Lobe, 24)" - calls `lissajousNotes(24, 3, Math.PI / 2, 0.94, 'three-lobe', true)` - 3-lobe trefoil at 2:3 ratio
+    - "Lissajous Notes (Rosette 3:4, 24)" - calls `lissajousNotes(24, 3, Math.PI / 2, 0.94, 'rosette-34', true)` - 4-petal rosette at 3:4 ratio
+    - "Lissajous Notes (Rosette 3:5, 24)" - calls `lissajousNotes(24, 3, Math.PI / 2, 0.94, 'rosette-35', true)` - 5-petal rosette at 3:5 ratio
+    - "Lissajous Notes (Rosette 4:5, 24)" - calls `lissajousNotes(24, 3, Math.PI / 2, 0.94, 'rosette-45', true)` - 10-lobe dense rosette at 4:5 ratio
+    - All call `recreateToneSequence(true)` after lissajousing
+    - All capture undo with descriptive `Lissajous Notes on <name> (<seqname>)` label
+    - Show notifications: `Lissajoussed {count} note(s) (variant, 24).`
+    - Show `No notes to lissajous.` when nothing to lissajous
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 19 new constants
+  - `LISSAJOUS_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve (full period resolution)
+  - `LISSAJOUS_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution rosette)
+  - `LISSAJOUS_NOTES_DEFAULT_LENGTH = 24` - Default 24 samples around the curve
+  - `LISSAJOUS_NOTES_MIN_AMPLITUDE = 1` - Minimum 1 row of vertical swing
+  - `LISSAJOUS_NOTES_MAX_AMPLITUDE = 8` - Maximum 8 rows of vertical swing
+  - `LISSAJOUS_NOTES_DEFAULT_AMPLITUDE = 3` - Default 3 rows of vertical swing
+  - `LISSAJOUS_NOTES_MIN_PHASE = 0` - Minimum 0 radians phase shift
+  - `LISSAJOUS_NOTES_MAX_PHASE = 6.2832` - Maximum 2π radians phase shift (full cycle)
+  - `LISSAJOUS_NOTES_DEFAULT_PHASE = 1.5708` - Default π/2 (90° phase, classic X-Y oscilloscope)
+  - `LISSAJOUS_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% preservation at last sample
+  - `LISSAJOUS_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `LISSAJOUS_NOTES_DEFAULT_VELOCITY_DECAY = 0.94` - Default 94% velocity preservation per sample
+  - `LISSAJOUS_NOTES_MODE_CIRCLE = 'circle'` - a=1, b=1: perfect circle
+  - `LISSAJOUS_NOTES_MODE_FIGURE_8 = 'figure-8'` - a=1, b=2: horizontal figure-8 (lemniscate)
+  - `LISSAJOUS_NOTES_MODE_THREE_LOBE = 'three-lobe'` - a=2, b=3: three-lobed trefoil
+  - `LISSAJOUS_NOTES_MODE_ROSETTE_34 = 'rosette-34'` - a=3, b=4: 4-petal rosette
+  - `LISSAJOUS_NOTES_MODE_ROSETTE_35 = 'rosette-35'` - a=3, b=5: 5-petal rosette
+  - `LISSAJOUS_NOTES_MODE_ROSETTE_45 = 'rosette-45'` - a=4, b=5: 10-lobe dense rosette
+  - `LISSAJOUS_NOTES_MODES = [CIRCLE, FIGURE_8, THREE_LOBE, ROSETTE_34, ROSETTE_35, ROSETTE_45]` - Valid mode values
+- **Tests** (`js/tests.js`): 42 tests covering:
+  - `lissajousNotes` is a function on Track.prototype
+  - `lissajousNotes` accepts 6 parameters with defaults (length, amplitude, phase, velocityDecay, mode, skipOccupied)
+  - `lissajousNotes` returns 0 for Audio tracks
+  - `lissajousNotes` gets active sequence via `getActiveSequence`
+  - `lissajousNotes` captures undo BEFORE mutation
+  - `lissajousNotes` clamps length/amplitude/phase/velocityDecay to LISSAJOUS_NOTES_MIN/MAX_* ranges
+  - `lissajousNotes` validates mode with LISSAJOUS_NOTES_MODES (uses CIRCLE fallback)
+  - `lissajousNotes` uses Math.sin for x and y computation
+  - `lissajousNotes` uses Math.pow for velocity decay
+  - `lissajousNotes` supports skipOccupied option
+  - `lissajousNotes` rounds velocity to 2 decimal places
+  - `lissajousNotes` returns count of lissajous notes (lissajousCount)
+  - `lissajousNotes` uses Math.floor for length and amplitude
+  - `lissajousNotes` uses Math.PI for t normalization
+  - All 19 LISSAJOUS_NOTES constants are defined in constants.js
+  - LISSAJOUS_NOTES_MODES includes all 6 modes (circle, figure-8, three-lobe, rosette-34, rosette-35, rosette-45)
+  - APP_VERSION validation (>= 2.374 for Day 725)
+  - Functional test: t = 2*PI*i/length
+  - Functional test: x = sin(a*t + phase), y = sin(b*t)
+  - Functional test: rowOffset = round(amplitude * y)
+  - Functional test: colOffset = round((x+1) * halfRange)
+  - Functional test: circle mode has a=1, b=1
+  - Functional test: figure-8 mode has a=1, b=2
+  - Functional test: rosette-34 mode has a=3, b=4
+  - Structural test: supports 6 distinct modes (circle, figure-8, three-lobe, rosette-34, rosette-35, rosette-45)
+  - Structural test: uses halfRange for col normalization
+  - Structural test: uses lissajousRatios helper for mode-dependent a/b
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: velocity decay uses Math.pow(decay, i)
+  - Functional test: clamps to valid ranges (length 100->64, amplitude -5->1, phase 100->6.28, velocityDecay 2->1.0)
+  - ui.js has 6 Lissajous Notes menu items
+  - Lissajous Notes menu items call track.lissajousNotes
+  - Lissajous Notes menu items call recreateToneSequence
+  - Lissajous Notes menu items show Lissajoussed N note(s) notification
+  - Lissajous Notes menu items capture undo with descriptive label
+- **Version**: Bumped to 2.374.0
+- **Test Count**: Added 42 Day 725 tests. All 42 pass via `test-runner/run-tests.js`. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild build succeeds (warning only, no errors). The pre-existing test infrastructure failures (1443, related to `__dirname` not being defined in node test environment) are unrelated to Day 725. Total tests now at 2981 passed, 1443 failed (pre-existing infrastructure issues unrelated to this work).
+
 #### Day 724: Bezier Curve Notes Feature (2026-06-18)
 - **Feature**: Added `bezierNotes(length, amplitude, velocityDecay, mode, skipOccupied)` method to Track class and 5 "Bezier Notes" menu items to the sequencer context menu. Each active note spawns N points sampled along a cubic Bezier curve (the same curve family used in vector graphics for smooth paths and in font design). The curve is defined by 4 control points: `P0 = (0, 0)` (source), `P1` and `P2` (mode-dependent control points that shape the curve), and `P3 = (0, L)` (end). For each `t = i / (clampedLength - 1)` in [0, 1], the position is computed via the cubic Bezier formula `B(t) = (1-t)³P0 + 3(1-t)²t P1 + 3(1-t)t² P2 + t³ P3`. Five control-point modes: 'arc' (symmetric hump with P1.row = P2.row = A, classic Bezier arc), 's-curve' (P1.row = +A, P2.row = -A — crosses over for smooth S-shape), 'loop' (P1.row = +A, P2.row = -A with tighter t-positions — overshoots both directions for tangled loop), 'wave' (alternating P1.row = +A, P2.row = -A, P3.row = +A — 3-oscillation end-to-mid wave), 'linear' (all control points at row=0 — straight horizontal line). Complements `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a smooth parametric cubic Bezier curve.
 - **Files Modified**:

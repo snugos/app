@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.373.0';
+export const APP_VERSION = '2.374.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -595,6 +595,34 @@ export const BEZIER_NOTES_MODES = [
     BEZIER_NOTES_MODE_LOOP,
     BEZIER_NOTES_MODE_WAVE,
     BEZIER_NOTES_MODE_LINEAR
+];
+
+// Lissajous Notes constants - classic oscilloscope/X-Y curves defined by x = sin(a*t + δ), y = sin(b*t)
+export const LISSAJOUS_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve (full period resolution)
+export const LISSAJOUS_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution rosette)
+export const LISSAJOUS_NOTES_DEFAULT_LENGTH = 24; // Default 24 samples around the curve
+export const LISSAJOUS_NOTES_MIN_AMPLITUDE = 1; // Minimum 1 row of vertical swing
+export const LISSAJOUS_NOTES_MAX_AMPLITUDE = 8; // Maximum 8 rows of vertical swing
+export const LISSAJOUS_NOTES_DEFAULT_AMPLITUDE = 3; // Default 3 rows of vertical swing
+export const LISSAJOUS_NOTES_MIN_PHASE = 0; // Minimum 0 radians phase shift
+export const LISSAJOUS_NOTES_MAX_PHASE = 6.2832; // Maximum 2*PI radians phase shift (full cycle)
+export const LISSAJOUS_NOTES_DEFAULT_PHASE = 1.5708; // Default π/2 (90° phase, classic X-Y oscilloscope)
+export const LISSAJOUS_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% preservation at last sample
+export const LISSAJOUS_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const LISSAJOUS_NOTES_DEFAULT_VELOCITY_DECAY = 0.94; // Default 94% velocity preservation per sample
+export const LISSAJOUS_NOTES_MODE_CIRCLE = 'circle'; // a=1, b=1 — perfect circle
+export const LISSAJOUS_NOTES_MODE_FIGURE_8 = 'figure-8'; // a=1, b=2 — horizontal figure-8 (lemniscate)
+export const LISSAJOUS_NOTES_MODE_THREE_LOBE = 'three-lobe'; // a=2, b=3 — three-lobed trefoil
+export const LISSAJOUS_NOTES_MODE_ROSETTE_34 = 'rosette-34'; // a=3, b=4 — 4-petal rosette
+export const LISSAJOUS_NOTES_MODE_ROSETTE_35 = 'rosette-35'; // a=3, b=5 — 5-petal rosette
+export const LISSAJOUS_NOTES_MODE_ROSETTE_45 = 'rosette-45'; // a=4, b=5 — 10-lobe dense rosette
+export const LISSAJOUS_NOTES_MODES = [
+    LISSAJOUS_NOTES_MODE_CIRCLE,
+    LISSAJOUS_NOTES_MODE_FIGURE_8,
+    LISSAJOUS_NOTES_MODE_THREE_LOBE,
+    LISSAJOUS_NOTES_MODE_ROSETTE_34,
+    LISSAJOUS_NOTES_MODE_ROSETTE_35,
+    LISSAJOUS_NOTES_MODE_ROSETTE_45
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

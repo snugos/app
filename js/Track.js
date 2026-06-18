@@ -7118,4 +7118,98 @@ export class Track {
 
         return bezierCount;
     }
+
+    lissajousNotes(length = Constants.LISSAJOUS_NOTES_DEFAULT_LENGTH, amplitude = Constants.LISSAJOUS_NOTES_DEFAULT_AMPLITUDE, phase = Constants.LISSAJOUS_NOTES_DEFAULT_PHASE, velocityDecay = Constants.LISSAJOUS_NOTES_DEFAULT_VELOCITY_DECAY, mode = Constants.LISSAJOUS_NOTES_MODE_CIRCLE, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} lissajousNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.LISSAJOUS_NOTES_MIN_LENGTH, Math.min(Constants.LISSAJOUS_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedAmplitude = Math.max(Constants.LISSAJOUS_NOTES_MIN_AMPLITUDE, Math.min(Constants.LISSAJOUS_NOTES_MAX_AMPLITUDE, Math.floor(amplitude)));
+        const clampedPhase = Math.max(Constants.LISSAJOUS_NOTES_MIN_PHASE, Math.min(Constants.LISSAJOUS_NOTES_MAX_PHASE, phase));
+        const clampedDecay = Math.max(Constants.LISSAJOUS_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.LISSAJOUS_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useMode = Constants.LISSAJOUS_NOTES_MODES.includes(mode) ? mode : Constants.LISSAJOUS_NOTES_MODE_CIRCLE;
+
+        this._captureUndoState(`Lissajous Notes (${useMode}, ${clampedLength} samples, amp ${clampedAmplitude}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let lissajousCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        const lissajousRatios = (m) => {
+            switch (m) {
+                case Constants.LISSAJOUS_NOTES_MODE_FIGURE_8:
+                    return { a: 1, b: 2 };
+                case Constants.LISSAJOUS_NOTES_MODE_THREE_LOBE:
+                    return { a: 2, b: 3 };
+                case Constants.LISSAJOUS_NOTES_MODE_ROSETTE_34:
+                    return { a: 3, b: 4 };
+                case Constants.LISSAJOUS_NOTES_MODE_ROSETTE_35:
+                    return { a: 3, b: 5 };
+                case Constants.LISSAJOUS_NOTES_MODE_ROSETTE_45:
+                    return { a: 4, b: 5 };
+                case Constants.LISSAJOUS_NOTES_MODE_CIRCLE:
+                default:
+                    return { a: 1, b: 1 };
+            }
+        };
+
+        const ratios = lissajousRatios(useMode);
+        const halfRange = Math.max(1, Math.floor(clampedLength / 2));
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < clampedLength; i++) {
+                    const t = (2 * Math.PI * i) / clampedLength;
+                    const x = Math.sin(ratios.a * t + clampedPhase);
+                    const y = Math.sin(ratios.b * t);
+                    const rowOffset = Math.round(clampedAmplitude * y);
+                    const colOffsetRaw = Math.round((x + 1) * halfRange);
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffsetRaw;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            lissajousCount++;
+        }
+
+        return lissajousCount;
+    }
 }

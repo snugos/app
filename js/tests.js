@@ -25198,6 +25198,270 @@ TestRunner.test("Day 724 - bezierNotes functional test: velocity decay uses Math
 });
 
 
+TestRunner.test("Day 725 - lissajousNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.lissajousNotes === 'function', 'lissajousNotes is a function');
+});
+
+TestRunner.test("Day 725 - lissajousNotes accepts 6 parameters with defaults (length, amplitude, phase, velocityDecay, mode, skipOccupied)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.LISSAJOUS_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/amplitude\s*=\s*Constants\.LISSAJOUS_NOTES_DEFAULT_AMPLITUDE/.test(src), 'has amplitude default');
+    t.assertTruthy(/phase\s*=\s*Constants\.LISSAJOUS_NOTES_DEFAULT_PHASE/.test(src), 'has phase default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.LISSAJOUS_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/mode\s*=\s*Constants\.LISSAJOUS_NOTES_MODE_CIRCLE/.test(src), 'has mode default CIRCLE');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied default true');
+});
+
+TestRunner.test("Day 725 - lissajousNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 725 - lissajousNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/this\.getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+});
+
+TestRunner.test("Day 725 - lissajousNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/_captureUndoState\(`Lissajous Notes/.test(src), 'captures undo with Lissajous Notes label');
+});
+
+TestRunner.test("Day 725 - lissajousNotes clamps length to LISSAJOUS_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+});
+
+TestRunner.test("Day 725 - lissajousNotes clamps amplitude to LISSAJOUS_NOTES_MIN/MAX_AMPLITUDE", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_AMPLITUDE,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_AMPLITUDE/.test(src), 'clamps amplitude');
+});
+
+TestRunner.test("Day 725 - lissajousNotes clamps phase to LISSAJOUS_NOTES_MIN/MAX_PHASE", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_PHASE,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_PHASE/.test(src), 'clamps phase');
+});
+
+TestRunner.test("Day 725 - lissajousNotes clamps velocityDecay to LISSAJOUS_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 725 - lissajousNotes validates mode with LISSAJOUS_NOTES_MODES (uses CIRCLE fallback)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/LISSAJOUS_NOTES_MODES\.includes/.test(src), 'validates mode');
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_CIRCLE/.test(src), 'has CIRCLE fallback');
+});
+
+TestRunner.test("Day 725 - lissajousNotes uses Math.sin for x and y computation", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    const sinCount = (src.match(/Math\.sin\(/g) || []).length;
+    t.assertTruthy(sinCount >= 2, 'uses Math.sin at least twice (for x and y)');
+});
+
+TestRunner.test("Day 725 - lissajousNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 725 - lissajousNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'honors skipOccupied flag');
+});
+
+TestRunner.test("Day 725 - lissajousNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(src.includes('Math.round(') && src.includes('* 100) / 100'), 'rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 725 - lissajousNotes returns count of lissajous notes (lissajousCount)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/lissajousCount/.test(src), 'tracks lissajousCount');
+    t.assertTruthy(/return\s+lissajousCount/.test(src), 'returns lissajousCount');
+});
+
+TestRunner.test("Day 725 - lissajousNotes uses Math.floor for length and amplitude", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor on length');
+    t.assertTruthy(/Math\.floor\(amplitude\)/.test(src), 'uses Math.floor on amplitude');
+});
+
+TestRunner.test("Day 725 - lissajousNotes uses Math.PI for t normalization", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/2\s*\*\s*Math\.PI/.test(src), 'uses 2*PI for t normalization');
+});
+
+TestRunner.test("Day 725 - all 19 LISSAJOUS_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const expectedConstants = [
+        'LISSAJOUS_NOTES_MIN_LENGTH',
+        'LISSAJOUS_NOTES_MAX_LENGTH',
+        'LISSAJOUS_NOTES_DEFAULT_LENGTH',
+        'LISSAJOUS_NOTES_MIN_AMPLITUDE',
+        'LISSAJOUS_NOTES_MAX_AMPLITUDE',
+        'LISSAJOUS_NOTES_DEFAULT_AMPLITUDE',
+        'LISSAJOUS_NOTES_MIN_PHASE',
+        'LISSAJOUS_NOTES_MAX_PHASE',
+        'LISSAJOUS_NOTES_DEFAULT_PHASE',
+        'LISSAJOUS_NOTES_MIN_VELOCITY_DECAY',
+        'LISSAJOUS_NOTES_MAX_VELOCITY_DECAY',
+        'LISSAJOUS_NOTES_DEFAULT_VELOCITY_DECAY',
+        'LISSAJOUS_NOTES_MODE_CIRCLE',
+        'LISSAJOUS_NOTES_MODE_FIGURE_8',
+        'LISSAJOUS_NOTES_MODE_THREE_LOBE',
+        'LISSAJOUS_NOTES_MODE_ROSETTE_34',
+        'LISSAJOUS_NOTES_MODE_ROSETTE_35',
+        'LISSAJOUS_NOTES_MODE_ROSETTE_45',
+        'LISSAJOUS_NOTES_MODES'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(src.includes('export const ' + name), name + ' defined');
+    }
+});
+
+TestRunner.test("Day 725 - LISSAJOUS_NOTES_MODES includes all 6 modes (circle, figure-8, three-lobe, rosette-34, rosette-35, rosette-45)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(src.includes("'circle'"), 'includes circle');
+    t.assertTruthy(src.includes("'figure-8'"), 'includes figure-8');
+    t.assertTruthy(src.includes("'three-lobe'"), 'includes three-lobe');
+    t.assertTruthy(src.includes("'rosette-34'"), 'includes rosette-34');
+    t.assertTruthy(src.includes("'rosette-35'"), 'includes rosette-35');
+    t.assertTruthy(src.includes("'rosette-45'"), 'includes rosette-45');
+});
+
+TestRunner.test("Day 725 - APP_VERSION validation (>= 2.374 for Day 725)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*['"]([\d.]+)['"]/);
+    t.assertTruthy(m, 'has APP_VERSION');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] > 2 || (v[0] === 2 && v[1] >= 374), 'APP_VERSION >= 2.374 (got ' + m[1] + ')');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: t = 2*PI*i/length", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/\(2\s*\*\s*Math\.PI\s*\*\s*i\)\s*\/\s*clampedLength/.test(src), 't = 2*PI*i/clampedLength');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: x = sin(a*t + phase), y = sin(b*t)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.sin\(ratios\.a\s*\*\s*t\s*\+\s*clampedPhase\)/.test(src), 'x = sin(a*t + phase)');
+    t.assertTruthy(/Math\.sin\(ratios\.b\s*\*\s*t\)/.test(src), 'y = sin(b*t)');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: rowOffset = round(amplitude * y)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/rowOffset\s*=\s*Math\.round\(clampedAmplitude\s*\*\s*y\)/.test(src), 'rowOffset = round(amplitude * y)');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: colOffset = round((x+1) * halfRange)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/colOffsetRaw\s*=\s*Math\.round\(\(x\s*\+\s*1\)\s*\*\s*halfRange\)/.test(src), 'colOffset = round((x+1) * halfRange)');
+});
+
+TestRunner.test("Day 725 - lissajousNotes structural test: uses lissajousRatios helper for mode-dependent a/b", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/lissajousRatios\s*=\s*\(/.test(src), 'defines lissajousRatios helper');
+    t.assertTruthy(/lissajousRatios\(useMode\)/.test(src), 'calls lissajousRatios(useMode)');
+});
+
+TestRunner.test("Day 725 - lissajousNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/newNotes\.push/.test(src), 'uses newNotes.push to collect');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 725 - lissajousNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source note');
+});
+
+TestRunner.test("Day 725 - lissajousNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
+TestRunner.test("Day 725 - lissajousNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 725 - lissajousNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'skips empty rows');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: circle mode has a=1, b=1", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_CIRCLE[\s\S]{0,200}a:\s*1,\s*b:\s*1/.test(src), 'circle mode has a=1, b=1');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: figure-8 mode has a=1, b=2", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_FIGURE_8[\s\S]{0,200}a:\s*1,\s*b:\s*2/.test(src), 'figure-8 mode has a=1, b=2');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: rosette-34 mode has a=3, b=4", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_ROSETTE_34[\s\S]{0,200}a:\s*3,\s*b:\s*4/.test(src), 'rosette-34 mode has a=3, b=4');
+});
+
+TestRunner.test("Day 725 - lissajousNotes structural test: supports 6 distinct modes (circle, figure-8, three-lobe, rosette-34, rosette-35, rosette-45)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_CIRCLE/.test(src), 'handles CIRCLE mode');
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_FIGURE_8/.test(src), 'handles FIGURE_8 mode');
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_THREE_LOBE/.test(src), 'handles THREE_LOBE mode');
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_ROSETTE_34/.test(src), 'handles ROSETTE_34 mode');
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_ROSETTE_35/.test(src), 'handles ROSETTE_35 mode');
+    t.assertTruthy(/LISSAJOUS_NOTES_MODE_ROSETTE_45/.test(src), 'handles ROSETTE_45 mode');
+});
+
+TestRunner.test("Day 725 - lissajousNotes structural test: uses halfRange for col normalization", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/halfRange\s*=\s*Math\.max\(\s*1,\s*Math\.floor\(\s*clampedLength\s*\/\s*2\s*\)\s*\)/.test(src), 'computes halfRange = max(1, floor(length/2))');
+});
+
+TestRunner.test("Day 725 - ui.js has 6 Lissajous Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Lissajous Notes\s*\(/g) || [];
+    t.assertTruthy(matches.length >= 6, 'has at least 6 Lissajous Notes menu items (got ' + matches.length + ')');
+});
+
+TestRunner.test("Day 725 - Lissajous Notes menu items call track.lissajousNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/currentTrackForMenu\.lissajousNotes\(/.test(src), 'menu items call track.lissajousNotes');
+});
+
+TestRunner.test("Day 725 - Lissajous Notes menu items call recreateToneSequence", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/lissajousNotes\([^)]*\)[\s\S]{0,300}recreateToneSequence/.test(src), 'menu items call recreateToneSequence after lissajousNotes');
+});
+
+TestRunner.test("Day 725 - Lissajous Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Lissajoussed\s+\$\{result\}\s+note\(s\)/.test(src), 'shows Lissajoussed N note(s) notification');
+});
+
+TestRunner.test("Day 725 - Lissajous Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Lissajous Notes on/.test(src), 'has Lissajous Notes on undo label');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: velocity decay uses Math.pow(decay, i)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*i\)/.test(src), 'velocity decay uses Math.pow(clampedDecay, i)');
+});
+
+TestRunner.test("Day 725 - lissajousNotes functional test: clamps to valid ranges (length 100->64, amplitude -5->1, phase 100->6.28, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.lissajousNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+    t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_AMPLITUDE,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_AMPLITUDE/.test(src), 'clamps amplitude');
+    t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_PHASE,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_PHASE/.test(src), 'clamps phase');
+    t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
