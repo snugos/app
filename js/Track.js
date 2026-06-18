@@ -6585,4 +6585,116 @@ export class Track {
 
         return mosaicCount;
     }
+
+    waveNotes(length = Constants.WAVE_NOTES_DEFAULT_LENGTH, amplitude = Constants.WAVE_NOTES_DEFAULT_AMPLITUDE, frequency = Constants.WAVE_NOTES_DEFAULT_FREQUENCY, phase = Constants.WAVE_NOTES_DEFAULT_PHASE, velocityDecay = Constants.WAVE_NOTES_DEFAULT_VELOCITY_DECAY, wave = Constants.WAVE_NOTES_WAVE_SINE, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} waveNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.WAVE_NOTES_MIN_LENGTH, Math.min(Constants.WAVE_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedAmplitude = Math.max(Constants.WAVE_NOTES_MIN_AMPLITUDE, Math.min(Constants.WAVE_NOTES_MAX_AMPLITUDE, Math.floor(amplitude)));
+        const clampedFrequency = Math.max(Constants.WAVE_NOTES_MIN_FREQUENCY, Math.min(Constants.WAVE_NOTES_MAX_FREQUENCY, Math.floor(frequency)));
+        const clampedPhase = Math.max(Constants.WAVE_NOTES_MIN_PHASE, Math.min(Constants.WAVE_NOTES_MAX_PHASE, phase));
+        const clampedDecay = Math.max(Constants.WAVE_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.WAVE_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useWave = Constants.WAVE_NOTES_WAVES.includes(wave) ? wave : Constants.WAVE_NOTES_WAVE_SINE;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Wave Notes (${useWave}, ${clampedLength} steps, amp ${clampedAmplitude}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let waveCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        // Helper: compute the wave value for a given step s in [0, length-1]
+        // Returns a value in [-1, 1] which is then multiplied by amplitude
+        const waveSample = (s) => {
+            if (clampedLength <= 1) return 0;
+            // t is the normalized position along the wave, in [0, 1)
+            const t = s / clampedLength;
+            // Angular position in radians
+            const angle = 2 * Math.PI * clampedFrequency * t + clampedPhase;
+            switch (useWave) {
+                case Constants.WAVE_NOTES_WAVE_COSINE:
+                    return Math.cos(angle);
+                case Constants.WAVE_NOTES_WAVE_TRIANGLE: {
+                    // Triangle wave: linear ramp up then down. Use fract(angle / 2PI) to get position in cycle.
+                    const fract = (angle / (2 * Math.PI)) - Math.floor(angle / (2 * Math.PI));
+                    // Map fract [0, 1) to triangle [-1, 1]: starts at -1, peaks at 1 at half, back to -1
+                    return fract < 0.5
+                        ? (-1 + 4 * fract)         // rising from -1 to 1
+                        : (3 - 4 * fract);         // falling from 1 to -1
+                }
+                case Constants.WAVE_NOTES_WAVE_SAWTOOTH: {
+                    // Sawtooth: linear ramp from 1 down to -1, then jump back
+                    const fract = (angle / (2 * Math.PI)) - Math.floor(angle / (2 * Math.PI));
+                    return 1 - 2 * fract;
+                }
+                case Constants.WAVE_NOTES_WAVE_SQUARE: {
+                    // Square wave: +1 in first half of cycle, -1 in second half
+                    const fract = (angle / (2 * Math.PI)) - Math.floor(angle / (2 * Math.PI));
+                    return fract < 0.5 ? 1 : -1;
+                }
+                case Constants.WAVE_NOTES_WAVE_SINE:
+                default:
+                    return Math.sin(angle);
+            }
+        };
+
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let s = 0; s < clampedLength; s++) {
+                    // Compute wave-shaped row offset (s in 0..clampedLength-1)
+                    const sample = waveSample(s);
+                    const rowOffset = Math.round(clampedAmplitude * sample);
+                    const colOffset = s; // Forward in time by s steps
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Velocity decays by step number (each subsequent wave note is softer)
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, s)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            waveCount++;
+        }
+
+        return waveCount;
+    }
 }

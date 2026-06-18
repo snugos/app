@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.368.0';
+export const APP_VERSION = '2.369.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -465,6 +465,34 @@ export const MOSAIC_NOTES_SHAPES = [
     MOSAIC_NOTES_SHAPE_DIAMOND,
     MOSAIC_NOTES_SHAPE_CROSS,
     MOSAIC_NOTES_SHAPE_RING
+];
+
+export const WAVE_NOTES_MIN_LENGTH = 1; // Minimum 1 note in the wave sweep
+export const WAVE_NOTES_MAX_LENGTH = 16; // Maximum 16 notes in the wave sweep
+export const WAVE_NOTES_DEFAULT_LENGTH = 8; // Default 8 notes per wave sweep
+export const WAVE_NOTES_MIN_AMPLITUDE = 0; // Minimum 0 rows of vertical swing (flat horizontal)
+export const WAVE_NOTES_MAX_AMPLITUDE = 8; // Maximum 8 rows of vertical swing
+export const WAVE_NOTES_DEFAULT_AMPLITUDE = 3; // Default 3 rows of vertical swing
+export const WAVE_NOTES_MIN_FREQUENCY = 0; // Minimum 0 cycles per length (flat line)
+export const WAVE_NOTES_MAX_FREQUENCY = 4; // Maximum 4 cycles per length (rapid oscillation)
+export const WAVE_NOTES_DEFAULT_FREQUENCY = 1; // Default 1 cycle per length (single swoop)
+export const WAVE_NOTES_MIN_PHASE = 0; // Minimum 0 radians phase shift
+export const WAVE_NOTES_MAX_PHASE = 6.2832; // Maximum 2*PI radians phase shift (full cycle)
+export const WAVE_NOTES_DEFAULT_PHASE = 0; // Default 0 radians phase shift
+export const WAVE_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum decay (10% preservation at last step)
+export const WAVE_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum decay (1.0 = no decay)
+export const WAVE_NOTES_DEFAULT_VELOCITY_DECAY = 0.9; // Default 90% velocity preservation per step
+export const WAVE_NOTES_WAVE_SINE = 'sine'; // Smooth sine wave (Math.sin)
+export const WAVE_NOTES_WAVE_COSINE = 'cosine'; // Cosine wave (Math.cos)
+export const WAVE_NOTES_WAVE_TRIANGLE = 'triangle'; // Triangle wave (linear up/down)
+export const WAVE_NOTES_WAVE_SAWTOOTH = 'sawtooth'; // Sawtooth wave (linear ramp reset)
+export const WAVE_NOTES_WAVE_SQUARE = 'square'; // Square wave (sign of sine)
+export const WAVE_NOTES_WAVES = [
+    WAVE_NOTES_WAVE_SINE,
+    WAVE_NOTES_WAVE_COSINE,
+    WAVE_NOTES_WAVE_TRIANGLE,
+    WAVE_NOTES_WAVE_SAWTOOTH,
+    WAVE_NOTES_WAVE_SQUARE
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

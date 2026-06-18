@@ -23952,6 +23952,263 @@ TestRunner.test("Day 719 - mosaicNotes functional test: clamps to valid ranges (
 });
 
 
+// Day 720 - Wave Notes Feature Tests
+// Tests for the new waveNotes(length, amplitude, frequency, phase, velocityDecay, wave, skipOccupied) method on Track class
+// and 6 Wave Notes menu items in the sequencer context menu (sine, cosine, triangle, sawtooth, square shapes)
+
+TestRunner.test("Day 720 - waveNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.waveNotes === 'function', 'waveNotes is a function');
+});
+
+TestRunner.test("Day 720 - waveNotes accepts 7 parameters with defaults", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/waveNotes\s*\(\s*length\s*=/.test(src), 'has length default');
+    t.assertTruthy(/amplitude\s*=/.test(src), 'has amplitude default');
+    t.assertTruthy(/frequency\s*=/.test(src), 'has frequency default');
+    t.assertTruthy(/phase\s*=/.test(src), 'has phase default');
+    t.assertTruthy(/velocityDecay\s*=/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/wave\s*=/.test(src), 'has wave default');
+    t.assertTruthy(/skipOccupied\s*=/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 720 - waveNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'checks track type Audio');
+    t.assertTruthy(/if\s*\(\s*this\.type\s*===\s*['"]Audio['"]\s*\)\s*return\s+0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 720 - waveNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/this\.getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+    t.assertTruthy(/activeSeq\.data/.test(src), 'references activeSeq.data');
+});
+
+TestRunner.test("Day 720 - waveNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0, 'calls _captureUndoState');
+    t.assertTruthy(mutationIdx > 0, 'calls newNotes.push');
+    t.assertTruthy(undoIdx < mutationIdx, 'captureUndoState called BEFORE newNotes.push');
+});
+
+TestRunner.test("Day 720 - waveNotes has descriptive 'Wave Notes' undo label", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/Wave Notes \(/.test(src), 'uses descriptive "Wave Notes" undo label');
+});
+
+TestRunner.test("Day 720 - waveNotes clamps length to WAVE_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/WAVE_NOTES_MIN_LENGTH/.test(src), 'references WAVE_NOTES_MIN_LENGTH');
+    t.assertTruthy(/WAVE_NOTES_MAX_LENGTH/.test(src), 'references WAVE_NOTES_MAX_LENGTH');
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor on length');
+});
+
+TestRunner.test("Day 720 - waveNotes clamps amplitude to WAVE_NOTES_MIN/MAX_AMPLITUDE", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/WAVE_NOTES_MIN_AMPLITUDE/.test(src), 'references WAVE_NOTES_MIN_AMPLITUDE');
+    t.assertTruthy(/WAVE_NOTES_MAX_AMPLITUDE/.test(src), 'references WAVE_NOTES_MAX_AMPLITUDE');
+    t.assertTruthy(/Math\.floor\(amplitude\)/.test(src), 'uses Math.floor on amplitude');
+});
+
+TestRunner.test("Day 720 - waveNotes clamps frequency to WAVE_NOTES_MIN/MAX_FREQUENCY", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/WAVE_NOTES_MIN_FREQUENCY/.test(src), 'references WAVE_NOTES_MIN_FREQUENCY');
+    t.assertTruthy(/WAVE_NOTES_MAX_FREQUENCY/.test(src), 'references WAVE_NOTES_MAX_FREQUENCY');
+});
+
+TestRunner.test("Day 720 - waveNotes clamps phase to WAVE_NOTES_MIN/MAX_PHASE", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/WAVE_NOTES_MIN_PHASE/.test(src), 'references WAVE_NOTES_MIN_PHASE');
+    t.assertTruthy(/WAVE_NOTES_MAX_PHASE/.test(src), 'references WAVE_NOTES_MAX_PHASE');
+});
+
+TestRunner.test("Day 720 - waveNotes clamps velocityDecay to WAVE_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/WAVE_NOTES_MIN_VELOCITY_DECAY/.test(src), 'references WAVE_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/WAVE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'references WAVE_NOTES_MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 720 - waveNotes validates wave with WAVE_NOTES_WAVES (uses SINE fallback)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/WAVE_NOTES_WAVES\.includes/.test(src), 'validates wave with WAVE_NOTES_WAVES');
+    t.assertTruthy(/WAVE_NOTES_WAVE_SINE/.test(src), 'uses SINE as fallback');
+});
+
+TestRunner.test("Day 720 - waveNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay/.test(src), 'uses Math.pow for decay');
+});
+
+TestRunner.test("Day 720 - waveNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'uses skipOccupied');
+    t.assertTruthy(/activeSeq\.data\[targetRow\]\[targetCol\]\.active/.test(src), 'checks if target is active');
+});
+
+TestRunner.test("Day 720 - waveNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 720 - waveNotes returns count of wave notes (waveCount)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/return waveCount/.test(src), 'returns waveCount');
+    t.assertTruthy(/waveCount\s*\+\+/.test(src), 'increments waveCount on each placement');
+});
+
+TestRunner.test("Day 720 - all 21 WAVE_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(/WAVE_NOTES_MIN_LENGTH\s*=/.test(src), 'has MIN_LENGTH');
+    t.assertTruthy(/WAVE_NOTES_MAX_LENGTH\s*=/.test(src), 'has MAX_LENGTH');
+    t.assertTruthy(/WAVE_NOTES_DEFAULT_LENGTH\s*=/.test(src), 'has DEFAULT_LENGTH');
+    t.assertTruthy(/WAVE_NOTES_MIN_AMPLITUDE\s*=/.test(src), 'has MIN_AMPLITUDE');
+    t.assertTruthy(/WAVE_NOTES_MAX_AMPLITUDE\s*=/.test(src), 'has MAX_AMPLITUDE');
+    t.assertTruthy(/WAVE_NOTES_DEFAULT_AMPLITUDE\s*=/.test(src), 'has DEFAULT_AMPLITUDE');
+    t.assertTruthy(/WAVE_NOTES_MIN_FREQUENCY\s*=/.test(src), 'has MIN_FREQUENCY');
+    t.assertTruthy(/WAVE_NOTES_MAX_FREQUENCY\s*=/.test(src), 'has MAX_FREQUENCY');
+    t.assertTruthy(/WAVE_NOTES_DEFAULT_FREQUENCY\s*=/.test(src), 'has DEFAULT_FREQUENCY');
+    t.assertTruthy(/WAVE_NOTES_MIN_PHASE\s*=/.test(src), 'has MIN_PHASE');
+    t.assertTruthy(/WAVE_NOTES_MAX_PHASE\s*=/.test(src), 'has MAX_PHASE');
+    t.assertTruthy(/WAVE_NOTES_DEFAULT_PHASE\s*=/.test(src), 'has DEFAULT_PHASE');
+    t.assertTruthy(/WAVE_NOTES_MIN_VELOCITY_DECAY\s*=/.test(src), 'has MIN_VELOCITY_DECAY');
+    t.assertTruthy(/WAVE_NOTES_MAX_VELOCITY_DECAY\s*=/.test(src), 'has MAX_VELOCITY_DECAY');
+    t.assertTruthy(/WAVE_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(src), 'has DEFAULT_VELOCITY_DECAY');
+    t.assertTruthy(/WAVE_NOTES_WAVE_SINE\s*=/.test(src), 'has WAVE_SINE');
+    t.assertTruthy(/WAVE_NOTES_WAVE_COSINE\s*=/.test(src), 'has WAVE_COSINE');
+    t.assertTruthy(/WAVE_NOTES_WAVE_TRIANGLE\s*=/.test(src), 'has WAVE_TRIANGLE');
+    t.assertTruthy(/WAVE_NOTES_WAVE_SAWTOOTH\s*=/.test(src), 'has WAVE_SAWTOOTH');
+    t.assertTruthy(/WAVE_NOTES_WAVE_SQUARE\s*=/.test(src), 'has WAVE_SQUARE');
+    t.assertTruthy(/WAVE_NOTES_WAVES\s*=\s*\[/.test(src), 'has WAVES array');
+});
+
+TestRunner.test("Day 720 - WAVE_NOTES_WAVES includes all 5 wave types", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/WAVE_NOTES_WAVES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(m, 'has WAVES array');
+    const items = m[1].split(',').map(s => s.trim()).filter(Boolean);
+    t.assertEqual(items.length, 5, 'WAVES has 5 entries (got ' + items.length + ')');
+});
+
+TestRunner.test("Day 720 - ui.js has 6 Wave Notes menu items", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const count = (src.match(/Wave Notes \(/g) || []).length;
+    t.assertTruthy(count >= 6, 'has 6+ Wave Notes menu items (got ' + count + ')');
+});
+
+TestRunner.test("Day 720 - Wave Notes menu items call track.waveNotes", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const calls = (src.match(/currentTrackForMenu\.waveNotes\(/g) || []).length;
+    t.assertTruthy(calls >= 6, 'has 6+ calls to track.waveNotes (got ' + calls + ')');
+});
+
+TestRunner.test("Day 720 - Wave Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/Waved \$\{result\} note\(s\)/.test(src), 'uses "Waved N note(s)" notification');
+});
+
+TestRunner.test("Day 720 - Wave Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Wave Notes on/.test(src), 'uses descriptive "Wave Notes" undo label');
+});
+
+TestRunner.test("Day 720 - APP_VERSION validation (>= 2.369 for Day 720)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*['"]([\d.]+)['"]/);
+    t.assertTruthy(m, 'has APP_VERSION');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] > 2 || (v[0] === 2 && v[1] >= 369), 'APP_VERSION >= 2.369 (got ' + m[1] + ')');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: rowOffset = round(amplitude * waveSample)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/rowOffset\s*=\s*Math\.round\(clampedAmplitude\s*\*\s*sample\)/.test(src), 'rowOffset = Math.round(amplitude * sample)');
+    t.assertTruthy(/targetRow\s*=\s*rowIndex\s*\+\s*rowOffset/.test(src), 'targetRow = rowIndex + rowOffset');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: colOffset = s (forward in time)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/colOffset\s*=\s*s/.test(src), 'colOffset = s (forward in time)');
+    t.assertTruthy(/targetCol\s*=\s*col\s*\+\s*colOffset/.test(src), 'targetCol = col + colOffset');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: uses angle = 2*PI*frequency*t + phase", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/2\s*\*\s*Math\.PI\s*\*\s*clampedFrequency\s*\*\s*t\s*\+\s*clampedPhase/.test(src), 'angle = 2*PI*freq*t + phase');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: sine uses Math.sin, cosine uses Math.cos", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/Math\.sin\(angle\)/.test(src), 'sine uses Math.sin');
+    t.assertTruthy(/Math\.cos\(angle\)/.test(src), 'cosine uses Math.cos');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: triangle wave uses fract/4 pattern", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/fract\s*=\s*\(angle/.test(src), 'triangle computes fract');
+    t.assertTruthy(/4\s*\*\s*fract/.test(src), 'triangle uses 4 * fract for slope');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: sawtooth uses 1 - 2*fract", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/1\s*-\s*2\s*\*\s*fract/.test(src), 'sawtooth = 1 - 2*fract');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: square wave sign(fract < 0.5)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/fract\s*<\s*0\.5\s*\?\s*1\s*:\s*-1/.test(src), 'square uses fract < 0.5 ? 1 : -1');
+});
+
+TestRunner.test("Day 720 - waveNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/newNotes\.push/.test(src), 'uses newNotes.push to collect');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 720 - waveNotes structural test: supports 5 distinct wave types", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/WAVE_NOTES_WAVE_SINE/.test(src), 'handles SINE');
+    t.assertTruthy(/WAVE_NOTES_WAVE_COSINE/.test(src), 'handles COSINE');
+    t.assertTruthy(/WAVE_NOTES_WAVE_TRIANGLE/.test(src), 'handles TRIANGLE');
+    t.assertTruthy(/WAVE_NOTES_WAVE_SAWTOOTH/.test(src), 'handles SAWTOOTH');
+    t.assertTruthy(/WAVE_NOTES_WAVE_SQUARE/.test(src), 'handles SQUARE');
+});
+
+TestRunner.test("Day 720 - waveNotes structural test: respects Math.floor for length/amplitude/frequency", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    const floorMatches = (src.match(/Math\.floor\((length|amplitude|frequency)\)/g) || []).length;
+    t.assertTruthy(floorMatches >= 3, 'uses Math.floor on length/amplitude/frequency (got ' + floorMatches + ')');
+});
+
+TestRunner.test("Day 720 - waveNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source note');
+});
+
+TestRunner.test("Day 720 - waveNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'skips empty rows');
+});
+
+TestRunner.test("Day 720 - waveNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: clamps to valid ranges (length 100->16, amplitude -5->0, frequency 10->4)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.WAVE_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.WAVE_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+    t.assertTruthy(/Math\.max\(Constants\.WAVE_NOTES_MIN_AMPLITUDE,\s*Math\.min\(Constants\.WAVE_NOTES_MAX_AMPLITUDE/.test(src), 'clamps amplitude');
+    t.assertTruthy(/Math\.max\(Constants\.WAVE_NOTES_MIN_FREQUENCY,\s*Math\.min\(Constants\.WAVE_NOTES_MAX_FREQUENCY/.test(src), 'clamps frequency');
+});
+
+TestRunner.test("Day 720 - waveNotes functional test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.waveNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

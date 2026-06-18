@@ -1,3 +1,111 @@
+#### Day 720: Wave Notes Feature (2026-06-17)
+- **Feature**: Added `waveNotes(length, amplitude, frequency, phase, velocityDecay, wave, skipOccupied)` method to Track class and 6 "Wave Notes" menu items to the sequencer context menu. Each active note spawns N notes along a mathematical waveform curve in the row dimension (oscilloscope / LFO sweep). For step `s` in 0..clampedLength, computes `angle = 2*PI*clampedFrequency*(s/clampedLength) + clampedPhase` and `rowOffset = round(clampedAmplitude * waveSample)` where `colOffset = s` (forward in time). Five wave shapes: 'sine' (smooth `Math.sin`), 'cosine' (`Math.cos`, 90° phase shift), 'triangle' (linear ramp up then down, `fract < 0.5 ? -1+4*fract : 3-4*fract`), 'sawtooth' (linear ramp down with hard reset, `1 - 2*fract`), 'square' (sign wave, `fract < 0.5 ? 1 : -1`). Velocity decays by step number. Complements `mosaicNotes` (2D tile grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a smooth oscillating curve pattern.
+- **Files Modified**:
+  - `js/Track.js`: Added `waveNotes` method after `mosaicNotes` (line ~6700)
+  - `js/constants.js`: Added 22 WAVE_NOTES_* constants + bumped APP_VERSION to 2.369.0
+  - `js/ui.js`: Added 6 Wave Notes menu items in the sequencer context menu after Mosaic Notes (Ring 5x5), with separator after; restored trailing newline
+  - `js/tests.js`: Added Day 720 test block with 38 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **waveNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a wave curve. For step `s` in 0..clampedLength-1, computes `angle = 2*PI*clampedFrequency*(s/clampedLength) + clampedPhase` and feeds it into a wave-shape sampler returning a value in [-1, 1]. Multiplied by `clampedAmplitude` and rounded gives `rowOffset`; `colOffset = s` ensures forward-in-time progression. Captures undo state BEFORE mutation with descriptive "Wave Notes (wave, N steps, amp A) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to WAVE_NOTES_MIN_LENGTH (1) / WAVE_NOTES_MAX_LENGTH (16) range with Math.floor (default WAVE_NOTES_DEFAULT_LENGTH=8)
+    - Clamps `amplitude` to WAVE_NOTES_MIN_AMPLITUDE (0) / WAVE_NOTES_MAX_AMPLITUDE (8) range with Math.floor (default WAVE_NOTES_DEFAULT_AMPLITUDE=3)
+    - Clamps `frequency` to WAVE_NOTES_MIN_FREQUENCY (0) / WAVE_NOTES_MAX_FREQUENCY (4) range with Math.floor (default WAVE_NOTES_DEFAULT_FREQUENCY=1)
+    - Clamps `phase` to WAVE_NOTES_MIN_PHASE (0) / WAVE_NOTES_MAX_PHASE (6.2832 ≈ 2π) range (default WAVE_NOTES_DEFAULT_PHASE=0)
+    - Clamps `velocityDecay` to WAVE_NOTES_MIN_VELOCITY_DECAY (0.1) / WAVE_NOTES_MAX_VELOCITY_DECAY (1.0) range (default WAVE_NOTES_DEFAULT_VELOCITY_DECAY=0.9)
+    - Validates `wave` against WAVE_NOTES_WAVES array, falls back to WAVE_NOTES_WAVE_SINE if invalid
+    - Captures undo state BEFORE mutation
+    - Computes `t = s / clampedLength` (normalized position in [0, 1)) and `angle = 2*PI*clampedFrequency*t + clampedPhase`
+    - Wave sampler returns [-1, 1]:
+      - SINE: `Math.sin(angle)`
+      - COSINE: `Math.cos(angle)`
+      - TRIANGLE: `fract = angle/(2π) - floor(angle/(2π))`; `fract < 0.5 ? -1+4*fract : 3-4*fract` (rises -1→1 in first half, falls 1→-1 in second half)
+      - SAWTOOTH: `fract = angle/(2π) - floor(angle/(2π))`; `1 - 2*fract` (linear ramp 1→-1 with hard reset)
+      - SQUARE: `fract = angle/(2π) - floor(angle/(2π))`; `fract < 0.5 ? 1 : -1`
+    - `rowOffset = round(clampedAmplitude * sample)`; `colOffset = s` (always forward in time, no colRadius parameter)
+    - For each row, for each column, for each active note: for `s` in 0..clampedLength, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen if s=0 and amplitude=0)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, s)))` for exponential velocity decay per step
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of wave notes added
+  - **Wave Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Mosaic Notes (Ring 5x5)
+    - "Wave Notes (Sine, 8)" - calls `waveNotes(8, 3, 1, 0, 0.9, 'sine', true)` - classic single-swoop sine curve, 3-row amplitude
+    - "Wave Notes (Cosine, 8)" - calls `waveNotes(8, 3, 1, 0, 0.9, 'cosine', true)` - 90°-shifted sine, starts at peak
+    - "Wave Notes (Triangle, 8)" - calls `waveNotes(8, 3, 1, 0, 0.9, 'triangle', true)` - sharp linear up/down
+    - "Wave Notes (Sawtooth, 8)" - calls `waveNotes(8, 3, 1, 0, 0.9, 'sawtooth', true)` - linear ramp with hard reset
+    - "Wave Notes (Square, 8)" - calls `waveNotes(8, 3, 1, 0, 0.9, 'square', true)` - sign-wave bounce between top and bottom
+    - "Wave Notes (Sine 2-cycle, 8)" - calls `waveNotes(8, 3, 2, 0, 0.9, 'sine', true)` - 2 full sine cycles in 8 steps (faster oscillation)
+    - All call `recreateToneSequence(true)` after waving
+    - All capture undo with descriptive "Wave Notes on <name> (<seqname>)" label
+    - Show notifications: "Waved {count} note(s) (variant)."
+    - Show "No notes to wave." when nothing to wave
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 22 new constants
+  - `WAVE_NOTES_MIN_LENGTH = 1` - Minimum 1 note in the wave sweep
+  - `WAVE_NOTES_MAX_LENGTH = 16` - Maximum 16 notes per wave sweep
+  - `WAVE_NOTES_DEFAULT_LENGTH = 8` - Default 8 notes per wave sweep
+  - `WAVE_NOTES_MIN_AMPLITUDE = 0` - Minimum 0 rows of vertical swing (flat horizontal line)
+  - `WAVE_NOTES_MAX_AMPLITUDE = 8` - Maximum 8 rows of vertical swing
+  - `WAVE_NOTES_DEFAULT_AMPLITUDE = 3` - Default 3 rows of vertical swing
+  - `WAVE_NOTES_MIN_FREQUENCY = 0` - Minimum 0 cycles per length (constant value at 0)
+  - `WAVE_NOTES_MAX_FREQUENCY = 4` - Maximum 4 cycles per length (rapid oscillation)
+  - `WAVE_NOTES_DEFAULT_FREQUENCY = 1` - Default 1 cycle per length (single swoop)
+  - `WAVE_NOTES_MIN_PHASE = 0` - Minimum 0 radians phase shift
+  - `WAVE_NOTES_MAX_PHASE = 6.2832` - Maximum 2*PI radians phase shift (full cycle)
+  - `WAVE_NOTES_DEFAULT_PHASE = 0` - Default 0 radians phase shift
+  - `WAVE_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum decay (10% preservation at last step)
+  - `WAVE_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `WAVE_NOTES_DEFAULT_VELOCITY_DECAY = 0.9` - Default 90% velocity preservation per step
+  - `WAVE_NOTES_WAVE_SINE = 'sine'` - Smooth sine wave (Math.sin)
+  - `WAVE_NOTES_WAVE_COSINE = 'cosine'` - Cosine wave (Math.cos)
+  - `WAVE_NOTES_WAVE_TRIANGLE = 'triangle'` - Triangle wave (linear up/down)
+  - `WAVE_NOTES_WAVE_SAWTOOTH = 'sawtooth'` - Sawtooth wave (linear ramp reset)
+  - `WAVE_NOTES_WAVE_SQUARE = 'square'` - Square wave (sign of sine)
+  - `WAVE_NOTES_WAVES = [SINE, COSINE, TRIANGLE, SAWTOOTH, SQUARE]` - Valid wave values
+- **Tests** (`js/tests.js`): 38 tests covering:
+  - `waveNotes` is a function on Track.prototype
+  - `waveNotes` accepts 7 parameters with defaults (length, amplitude, frequency, phase, velocityDecay, wave, skipOccupied)
+  - `waveNotes` returns 0 for Audio tracks
+  - `waveNotes` gets active sequence via `getActiveSequence`
+  - `waveNotes` captures undo BEFORE mutation
+  - `waveNotes` has descriptive "Wave Notes" undo label
+  - `waveNotes` clamps length/amplitude/frequency/phase/velocityDecay to WAVE_NOTES_MIN/MAX_* ranges
+  - `waveNotes` validates wave with WAVE_NOTES_WAVES (uses SINE fallback)
+  - `waveNotes` uses Math.pow for velocity decay
+  - `waveNotes` supports skipOccupied option
+  - `waveNotes` rounds velocity to 2 decimal places
+  - `waveNotes` returns count of wave notes (waveCount)
+  - All 22 WAVE_NOTES constants are defined in constants.js
+  - WAVE_NOTES_WAVES includes all 5 wave types
+  - ui.js has 6 Wave Notes menu items
+  - Wave Notes menu items call track.waveNotes
+  - Wave Notes menu items show notification with count
+  - Wave Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.369 for Day 720)
+  - Functional test: rowOffset = round(amplitude * sample)
+  - Functional test: colOffset = s (forward in time)
+  - Functional test: uses angle = 2*PI*frequency*t + phase
+  - Functional test: sine uses Math.sin, cosine uses Math.cos
+  - Functional test: triangle wave uses fract/4 pattern
+  - Functional test: sawtooth uses 1 - 2*fract
+  - Functional test: square wave sign(fract < 0.5 ? 1 : -1)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: supports 5 distinct wave types
+  - Structural test: respects Math.floor for length/amplitude/frequency
+  - Structural test: preserves probability from source
+  - Structural test: handles empty source (no active notes)
+  - Structural test: respects sequence length and row boundaries
+  - Functional test: clamps to valid ranges (length 100->16, amplitude -5->0, frequency 10->4)
+  - Functional test: skips source cell (no self-reference)
+- **Version**: Bumped to 2.369.0
+- **Test Count**: Added 38 Day 720 tests. All 38 pass via test-runner/run-tests.js. esbuild build succeeds. node --check passes for all 4 modified files. Total tests now at 4228 across the test suite (2794 pass, 1434 fail due to pre-existing test infrastructure issues from earlier days, unrelated to Day 720).
+
 #### Day 719: Mosaic Notes Feature (2026-06-17)
 - **Feature**: Added `mosaicNotes(rows, cols, rowSpacing, colSpacing, velocityDecay, shape, skipOccupied)` method to Track class and 6 "Mosaic Notes" menu items to the sequencer context menu. Each active note spawns a 2D tiled mosaic of new notes around the source (centered on the source cell), with shape-based cell filtering. For each cell `(r, c)` in the rows × cols grid, computes `rowOffset = (r - centerR) * rowSpacing` and `colOffset = (c - centerC) * colSpacing` where the center is at `(floor((rows-1)/2), floor((cols-1)/2))`. Six shape modes: 'solid' (all cells), 'checker' (only `(r+c)` even, like a chessboard), 'brick' (only even `c`, offset alternating rows), 'diamond' (only `|dr|+|dc| <= radius`, filled diamond), 'cross' (only `dr === 0 || dc === 0`, plus sign), 'ring' (only `|dr|+|dc| === radius`, single diamond outline). Velocity decays by manhattan distance from the source cell: `decayedVel = max(0.05, min(1.0, origVel * Math.pow(decay, |dr|+|dc|)))`. Complements `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with deterministic 2D tile mosaic patterns.
 - **Files Modified**:
