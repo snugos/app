@@ -24948,6 +24948,256 @@ TestRunner.test("Day 722 - stairNotes functional test: velocity decay uses Math.
 });
 
 
+// Day 724: Bezier Curve Notes Feature
+// ============================================
+
+TestRunner.test("Day 724 - bezierNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.bezierNotes === 'function', 'bezierNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 724 - bezierNotes accepts 5 parameters with defaults (length, amplitude, velocityDecay, mode, skipOccupied)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(src.includes('length = Constants.BEZIER_NOTES_DEFAULT_LENGTH'), 'has length default');
+    t.assertTruthy(src.includes('amplitude = Constants.BEZIER_NOTES_DEFAULT_AMPLITUDE'), 'has amplitude default');
+    t.assertTruthy(src.includes('velocityDecay = Constants.BEZIER_NOTES_DEFAULT_VELOCITY_DECAY'), 'has velocityDecay default');
+    t.assertTruthy(src.includes('mode = Constants.BEZIER_NOTES_MODE_ARC'), 'has mode default');
+    t.assertTruthy(src.includes('skipOccupied'), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 724 - bezierNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(src.includes('this.type === ' + String.fromCharCode(39) + 'Audio' + String.fromCharCode(39)), 'guards against Audio tracks');
+});
+
+TestRunner.test("Day 724 - bezierNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 724 - bezierNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0 && mutationIdx > undoIdx, 'undo capture is before mutation');
+});
+
+TestRunner.test("Day 724 - bezierNotes has descriptive 'Bezier Notes' undo label", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/Bezier Notes/.test(src), 'has Bezier Notes in undo label');
+});
+
+TestRunner.test("Day 724 - bezierNotes clamps length to BEZIER_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.BEZIER_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.BEZIER_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+});
+
+TestRunner.test("Day 724 - bezierNotes clamps amplitude to BEZIER_NOTES_MIN/MAX_AMPLITUDE", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.BEZIER_NOTES_MIN_AMPLITUDE,\s*Math\.min\(Constants\.BEZIER_NOTES_MAX_AMPLITUDE/.test(src), 'clamps amplitude');
+});
+
+TestRunner.test("Day 724 - bezierNotes clamps velocityDecay to BEZIER_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.BEZIER_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.BEZIER_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 724 - bezierNotes validates mode with BEZIER_NOTES_MODES (uses ARC fallback)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/BEZIER_NOTES_MODES\.includes/.test(src), 'validates mode against BEZIER_NOTES_MODES');
+    t.assertTruthy(/BEZIER_NOTES_MODE_ARC/.test(src), 'has BEZIER_NOTES_MODE_ARC fallback');
+});
+
+TestRunner.test("Day 724 - bezierNotes supports 5 distinct modes (arc, s-curve, loop, wave, linear)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/BEZIER_NOTES_MODE_ARC\b/.test(src), 'handles ARC mode');
+    t.assertTruthy(/BEZIER_NOTES_MODE_S_CURVE/.test(src), 'handles S_CURVE mode');
+    t.assertTruthy(/BEZIER_NOTES_MODE_LOOP/.test(src), 'handles LOOP mode');
+    t.assertTruthy(/BEZIER_NOTES_MODE_WAVE/.test(src), 'handles WAVE mode');
+    t.assertTruthy(/BEZIER_NOTES_MODE_LINEAR/.test(src), 'handles LINEAR mode');
+});
+
+TestRunner.test("Day 724 - bezierNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 724 - bezierNotes uses Math.floor for length and amplitude", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor on length');
+    t.assertTruthy(/Math\.floor\(amplitude\)/.test(src), 'uses Math.floor on amplitude');
+});
+
+TestRunner.test("Day 724 - bezierNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'honors skipOccupied flag');
+});
+
+TestRunner.test("Day 724 - bezierNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(src.includes('Math.round(') && src.includes('* 100) / 100'), 'rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 724 - bezierNotes returns count of bezier notes (bezierCount)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/bezierCount/.test(src), 'tracks bezierCount');
+    t.assertTruthy(/return\s+bezierCount/.test(src), 'returns bezierCount');
+});
+
+TestRunner.test("Day 724 - all 15 BEZIER_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const expectedConstants = [
+        'BEZIER_NOTES_MIN_LENGTH',
+        'BEZIER_NOTES_MAX_LENGTH',
+        'BEZIER_NOTES_DEFAULT_LENGTH',
+        'BEZIER_NOTES_MIN_AMPLITUDE',
+        'BEZIER_NOTES_MAX_AMPLITUDE',
+        'BEZIER_NOTES_DEFAULT_AMPLITUDE',
+        'BEZIER_NOTES_MIN_VELOCITY_DECAY',
+        'BEZIER_NOTES_MAX_VELOCITY_DECAY',
+        'BEZIER_NOTES_DEFAULT_VELOCITY_DECAY',
+        'BEZIER_NOTES_MODE_ARC',
+        'BEZIER_NOTES_MODE_S_CURVE',
+        'BEZIER_NOTES_MODE_LOOP',
+        'BEZIER_NOTES_MODE_WAVE',
+        'BEZIER_NOTES_MODE_LINEAR',
+        'BEZIER_NOTES_MODES'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(src.includes('export const ' + name), name + ' defined');
+    }
+});
+
+TestRunner.test("Day 724 - BEZIER_NOTES_MODES includes arc, s-curve, loop, wave, and linear", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(src.includes("'arc'"), 'includes arc');
+    t.assertTruthy(src.includes("'s-curve'"), 'includes s-curve');
+    t.assertTruthy(src.includes("'loop'"), 'includes loop');
+    t.assertTruthy(src.includes("'wave'"), 'includes wave');
+    t.assertTruthy(src.includes("'linear'"), 'includes linear');
+});
+
+TestRunner.test("Day 724 - ui.js has 5 Bezier Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Bezier Notes\s*\(/g) || [];
+    t.assertTruthy(matches.length >= 5, 'has at least 5 Bezier Notes menu items (got ' + matches.length + ')');
+});
+
+TestRunner.test("Day 724 - Bezier Notes menu items call track.bezierNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/currentTrackForMenu\.bezierNotes\(/.test(src), 'menu items call track.bezierNotes');
+});
+
+TestRunner.test("Day 724 - Bezier Notes menu items call recreateToneSequence", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/bezierNotes\([^)]*\)[\s\S]{0,300}recreateToneSequence/.test(src), 'menu items call recreateToneSequence after bezierNotes');
+});
+
+TestRunner.test("Day 724 - Bezier Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Beziered\s+\$\{result\}\s+note\(s\)/.test(src), 'shows Beziered N note(s) notification');
+});
+
+TestRunner.test("Day 724 - Bezier Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Bezier Notes on/.test(src), 'has Bezier Notes on undo label');
+});
+
+TestRunner.test("Day 724 - APP_VERSION validation (>= 2.373 for Day 724)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*['"]([\d.]+)['"]/);
+    t.assertTruthy(m, 'has APP_VERSION');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] > 2 || (v[0] === 2 && v[1] >= 373), 'APP_VERSION >= 2.373 (got ' + m[1] + ')');
+});
+
+TestRunner.test("Day 724 - bezierNotes structural test: uses bezierControlPoints helper for mode-dependent P1/P2", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/bezierControlPoints\s*=\s*\(/.test(src), 'defines bezierControlPoints helper');
+    t.assertTruthy(/bezierControlPoints\(useMode\)/.test(src), 'calls bezierControlPoints(useMode)');
+});
+
+TestRunner.test("Day 724 - bezierNotes structural test: uses bezierPoint helper for cubic interpolation", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/bezierPoint\s*=\s*\(/.test(src), 'defines bezierPoint helper');
+    t.assertTruthy(/bezierPoint\(t,\s*controlPoints\)/.test(src), 'calls bezierPoint(t, controlPoints)');
+});
+
+TestRunner.test("Day 724 - bezierNotes structural test: cubic formula uses (1-t)^3 P0 + 3(1-t)^2 t P1 + 3(1-t) t^2 P2 + t^3 P3", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/omt3\s*\*\s*pts\[0\]\.row/.test(src), 'cubic has omt3 * P0.row term');
+    t.assertTruthy(/3\s*\*\s*omt2\s*\*\s*t\s*\*\s*pts\[1\]\.row/.test(src), 'cubic has 3*omt2*t*P1.row term');
+    t.assertTruthy(/3\s*\*\s*omt\s*\*\s*t2\s*\*\s*pts\[2\]\.row/.test(src), 'cubic has 3*omt*t2*P2.row term');
+    t.assertTruthy(/t3\s*\*\s*pts\[3\]\.row/.test(src), 'cubic has t3*P3.row term');
+});
+
+TestRunner.test("Day 724 - bezierNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/newNotes\.push/.test(src), 'uses newNotes.push to collect');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 724 - bezierNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source note');
+});
+
+TestRunner.test("Day 724 - bezierNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
+TestRunner.test("Day 724 - bezierNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 724 - bezierNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'skips empty rows');
+});
+
+TestRunner.test("Day 724 - bezierNotes functional test: t parameter spans 0..1 via i/(length-1)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/i\s*\/\s*\(clampedLength\s*-\s*1\)/.test(src), 'computes t = i / (clampedLength - 1)');
+});
+
+TestRunner.test("Day 724 - bezierNotes functional test: clamps to valid ranges (length 100->16, amplitude -5->0, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.BEZIER_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.BEZIER_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+    t.assertTruthy(/Math\.max\(Constants\.BEZIER_NOTES_MIN_AMPLITUDE,\s*Math\.min\(Constants\.BEZIER_NOTES_MAX_AMPLITUDE/.test(src), 'clamps amplitude');
+    t.assertTruthy(/Math\.max\(Constants\.BEZIER_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.BEZIER_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 724 - bezierNotes functional test: targetRow = rowIndex + Math.round(pt.row)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/rowOffset\s*=\s*Math\.round\(pt\.row\)/.test(src), 'rowOffset is Math.round(pt.row)');
+    t.assertTruthy(/targetRow\s*=\s*rowIndex\s*\+\s*rowOffset/.test(src), 'targetRow is rowIndex + rowOffset');
+});
+
+TestRunner.test("Day 724 - bezierNotes functional test: targetCol = col + Math.round(pt.col)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/colOffset\s*=\s*Math\.round\(pt\.col\)/.test(src), 'colOffset is Math.round(pt.col)');
+    t.assertTruthy(/targetCol\s*=\s*col\s*\+\s*colOffset/.test(src), 'targetCol is col + colOffset');
+});
+
+TestRunner.test("Day 724 - bezierNotes functional test: arc mode has symmetric hump with P1.row = P2.row = A", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/BEZIER_NOTES_MODE_ARC[\s\S]{0,300}row:\s*A,\s*col:\s*L\s*\/\s*3[\s\S]{0,200}row:\s*A,\s*col:\s*\(2\s*\*\s*L\)\s*\/\s*3/.test(src), 'arc mode has symmetric P1 and P2 with row=A');
+});
+
+TestRunner.test("Day 724 - bezierNotes functional test: linear mode collapses control points to endpoints (flat line)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/BEZIER_NOTES_MODE_LINEAR[\s\S]{0,400}row:\s*0,\s*col:\s*L[\s\S]{0,200}row:\s*0,\s*col:\s*L/.test(src), 'linear mode has flat P2 and P3 at col=L with row=0');
+});
+
+TestRunner.test("Day 724 - bezierNotes functional test: velocity decay uses Math.pow(decay, i)", (t) => {
+    const src = Track.prototype.bezierNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*i\)/.test(src), 'velocity decay uses Math.pow(clampedDecay, i)');
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

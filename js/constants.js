@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.372.0';
+export const APP_VERSION = '2.373.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -573,6 +573,28 @@ export const STAIR_NOTES_SHAPES = [
     STAIR_NOTES_SHAPE_UP_DOWN,
     STAIR_NOTES_SHAPE_DOWN_UP,
     STAIR_NOTES_SHAPE_RANDOM
+];
+
+export const BEZIER_NOTES_MIN_LENGTH = 2; // Minimum 2 points on the curve (start and end)
+export const BEZIER_NOTES_MAX_LENGTH = 16; // Maximum 16 points sampled along the curve
+export const BEZIER_NOTES_DEFAULT_LENGTH = 8; // Default 8 points sampled along the curve
+export const BEZIER_NOTES_MIN_AMPLITUDE = 0; // Minimum 0 rows of vertical bulge (flat horizontal line)
+export const BEZIER_NOTES_MAX_AMPLITUDE = 8; // Maximum 8 rows of vertical bulge
+export const BEZIER_NOTES_DEFAULT_AMPLITUDE = 3; // Default 3 rows of vertical bulge
+export const BEZIER_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% preservation at last point
+export const BEZIER_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const BEZIER_NOTES_DEFAULT_VELOCITY_DECAY = 0.9; // Default 90% velocity preservation per point
+export const BEZIER_NOTES_MODE_ARC = 'arc'; // Symmetric hump: rises to peak at midpoint then returns to source row
+export const BEZIER_NOTES_MODE_S_CURVE = 's-curve'; // S-shape: rises then falls (or vice versa) for smooth crossover
+export const BEZIER_NOTES_MODE_LOOP = 'loop'; // Loop-the-loop: overshoots both directions for tangled knot
+export const BEZIER_NOTES_MODE_WAVE = 'wave'; // End-to-mid wave: oscillates 3 times across the span
+export const BEZIER_NOTES_MODE_LINEAR = 'linear'; // Straight horizontal line (control points coincide with endpoints)
+export const BEZIER_NOTES_MODES = [
+    BEZIER_NOTES_MODE_ARC,
+    BEZIER_NOTES_MODE_S_CURVE,
+    BEZIER_NOTES_MODE_LOOP,
+    BEZIER_NOTES_MODE_WAVE,
+    BEZIER_NOTES_MODE_LINEAR
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

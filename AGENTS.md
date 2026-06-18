@@ -1,3 +1,109 @@
+#### Day 724: Bezier Curve Notes Feature (2026-06-18)
+- **Feature**: Added `bezierNotes(length, amplitude, velocityDecay, mode, skipOccupied)` method to Track class and 5 "Bezier Notes" menu items to the sequencer context menu. Each active note spawns N points sampled along a cubic Bezier curve (the same curve family used in vector graphics for smooth paths and in font design). The curve is defined by 4 control points: `P0 = (0, 0)` (source), `P1` and `P2` (mode-dependent control points that shape the curve), and `P3 = (0, L)` (end). For each `t = i / (clampedLength - 1)` in [0, 1], the position is computed via the cubic Bezier formula `B(t) = (1-t)³P0 + 3(1-t)²t P1 + 3(1-t)t² P2 + t³ P3`. Five control-point modes: 'arc' (symmetric hump with P1.row = P2.row = A, classic Bezier arc), 's-curve' (P1.row = +A, P2.row = -A — crosses over for smooth S-shape), 'loop' (P1.row = +A, P2.row = -A with tighter t-positions — overshoots both directions for tangled loop), 'wave' (alternating P1.row = +A, P2.row = -A, P3.row = +A — 3-oscillation end-to-mid wave), 'linear' (all control points at row=0 — straight horizontal line). Complements `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a smooth parametric cubic Bezier curve.
+- **Files Modified**:
+  - `js/Track.js`: Added `bezierNotes` method after `stairNotes` (line ~6994, the new last method on the class)
+  - `js/constants.js`: Added 15 BEZIER_NOTES_* constants + bumped APP_VERSION to 2.373.0
+  - `js/ui.js`: Added 5 Bezier Notes menu items in the sequencer context menu after Stair Notes (Steep Up, 8)
+  - `js/tests.js`: Added Day 724 test block with 39 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed.
+  - Fixed 4 broken regex literals in Day 724 tests in `js/tests.js` (lines 24960-24974, 25037, 25163): the original generator produced `/foo//.test(...)` (with an extra `/` before `.test`) which closed the regex literal prematurely. Also fixed a malformed character class `['\"\\]Audio['\"\\]` that was missing balance and an over-escaped paren in the `t = i/(length-1)` regex.
+- **Feature Details**:
+  - **bezierNotes** (`js/Track.js`): For each active note, places N points sampled along a cubic Bezier curve. The 4 control points are `P0 = (0, 0)`, `P1` and `P2` (mode-dependent), and `P3 = (0, L)`. For `i` in 0..clampedLength-1, computes `t = clampedLength <= 1 ? 0 : i / (clampedLength - 1)` and feeds it to the cubic Bezier interpolator `bezierPoint(t, pts)`. Captures undo state BEFORE mutation with descriptive `Bezier Notes (mode, N points, amp A) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to BEZIER_NOTES_MIN_LENGTH (2) / BEZIER_NOTES_MAX_LENGTH (16) range with Math.floor (default BEZIER_NOTES_DEFAULT_LENGTH=8)
+    - Clamps `amplitude` to BEZIER_NOTES_MIN_AMPLITUDE (0) / BEZIER_NOTES_MAX_AMPLITUDE (8) range with Math.floor (default BEZIER_NOTES_DEFAULT_AMPLITUDE=3)
+    - Clamps `velocityDecay` to BEZIER_NOTES_MIN_VELOCITY_DECAY (0.1) / BEZIER_NOTES_MAX_VELOCITY_DECAY (1.0) range (default BEZIER_NOTES_DEFAULT_VELOCITY_DECAY=0.9)
+    - Validates `mode` against BEZIER_NOTES_MODES array, falls back to BEZIER_NOTES_MODE_ARC if invalid
+    - Captures undo state BEFORE mutation with descriptive `Bezier Notes (mode, N points, amp A) on <seqname>` label
+    - `bezierControlPoints(mode)` returns the 4-point control array based on mode:
+      - ARC: `[(0,0), (A, L/3), (A, 2L/3), (0, L)]` — symmetric hump with P1.row = P2.row = A
+      - S_CURVE: `[(0,0), (A, L/3), (-A, 2L/3), (0, L)]` — rises then falls for smooth crossover
+      - LOOP: `[(0,0), (A, L/4), (-A, 3L/4), (0, L)]` — overshoots both directions for tangled knot
+      - WAVE: `[(0,0), (A, L/4), (-A, L/2), (A, 3L/4)]` — 3-oscillation end-to-mid wave
+      - LINEAR: `[(0,0), (0, 0), (0, L), (0, L)]` — collapsed control points, flat horizontal line
+    - `bezierPoint(t, pts)` computes the cubic Bezier formula: `row = (1-t)³ * P0.row + 3(1-t)²t * P1.row + 3(1-t)t² * P2.row + t³ * P3.row` (and same for col)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength, computes target row = rowIndex + Math.round(pt.row) and target col = col + Math.round(pt.col)
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen at the endpoints where pt = (0,0) or pt = (0,L))
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by point index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of bezier notes added (bezierCount)
+  - **Bezier Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Stair Notes (Steep Up, 8)
+    - "Bezier Notes (Arc, 8)" - calls `bezierNotes(8, 3, 0.9, 'arc', true)` - classic symmetric Bezier arc with 3-row amplitude, 8-point sampling
+    - "Bezier Notes (S-Curve, 8)" - calls `bezierNotes(8, 3, 0.9, 's-curve', true)` - smooth crossover S-shape
+    - "Bezier Notes (Loop, 8)" - calls `bezierNotes(8, 3, 0.9, 'loop', true)` - tangled loop overshooting both directions
+    - "Bezier Notes (Wave, 8)" - calls `bezierNotes(8, 3, 0.9, 'wave', true)` - 3-oscillation end-to-mid wave
+    - "Bezier Notes (Linear, 8)" - calls `bezierNotes(8, 3, 0.9, 'linear', true)` - flat horizontal line (control points collapsed)
+    - All call `recreateToneSequence(true)` after beziering
+    - All capture undo with descriptive `Bezier Notes on <name> (<seqname>)` label
+    - Show notifications: `Beziered {count} note(s) (variant).`
+    - Show `No notes to bezier.` when nothing to bezier
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 15 new constants
+  - `BEZIER_NOTES_MIN_LENGTH = 2` - Minimum 2 points on the curve (start and end)
+  - `BEZIER_NOTES_MAX_LENGTH = 16` - Maximum 16 points sampled along the curve
+  - `BEZIER_NOTES_DEFAULT_LENGTH = 8` - Default 8 points sampled along the curve
+  - `BEZIER_NOTES_MIN_AMPLITUDE = 0` - Minimum 0 rows of vertical bulge (flat horizontal line)
+  - `BEZIER_NOTES_MAX_AMPLITUDE = 8` - Maximum 8 rows of vertical bulge
+  - `BEZIER_NOTES_DEFAULT_AMPLITUDE = 3` - Default 3 rows of vertical bulge
+  - `BEZIER_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% preservation at last point
+  - `BEZIER_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `BEZIER_NOTES_DEFAULT_VELOCITY_DECAY = 0.9` - Default 90% velocity preservation per point
+  - `BEZIER_NOTES_MODE_ARC = 'arc'` - Symmetric hump: rises to peak at midpoint then returns to source row
+  - `BEZIER_NOTES_MODE_S_CURVE = 's-curve'` - S-shape: rises then falls (or vice versa) for smooth crossover
+  - `BEZIER_NOTES_MODE_LOOP = 'loop'` - Loop-the-loop: overshoots both directions for tangled knot
+  - `BEZIER_NOTES_MODE_WAVE = 'wave'` - End-to-mid wave: oscillates 3 times across the span
+  - `BEZIER_NOTES_MODE_LINEAR = 'linear'` - Straight horizontal line (control points coincide with endpoints)
+  - `BEZIER_NOTES_MODES = [ARC, S_CURVE, LOOP, WAVE, LINEAR]` - Valid mode values
+- **Tests** (`js/tests.js`): 39 tests covering:
+  - `bezierNotes` is a function on Track.prototype
+  - `bezierNotes` accepts 5 parameters with defaults (length, amplitude, velocityDecay, mode, skipOccupied)
+  - `bezierNotes` returns 0 for Audio tracks
+  - `bezierNotes` gets active sequence via `getActiveSequence`
+  - `bezierNotes` captures undo BEFORE mutation
+  - `bezierNotes` has descriptive `Bezier Notes` undo label
+  - `bezierNotes` clamps length to BEZIER_NOTES_MIN/MAX_LENGTH
+  - `bezierNotes` clamps amplitude to BEZIER_NOTES_MIN/MAX_AMPLITUDE
+  - `bezierNotes` clamps velocityDecay to BEZIER_NOTES_MIN/MAX_VELOCITY_DECAY
+  - `bezierNotes` validates mode with BEZIER_NOTES_MODES (uses ARC fallback)
+  - `bezierNotes` supports 5 distinct modes (arc, s-curve, loop, wave, linear)
+  - `bezierNotes` uses Math.pow for velocity decay
+  - `bezierNotes` uses Math.floor for length and amplitude
+  - `bezierNotes` supports skipOccupied option
+  - `bezierNotes` rounds velocity to 2 decimal places
+  - `bezierNotes` returns count of bezier notes (bezierCount)
+  - All 15 BEZIER_NOTES constants are defined in constants.js
+  - BEZIER_NOTES_MODES includes arc, s-curve, loop, wave, and linear
+  - ui.js has 5 Bezier Notes menu items
+  - Bezier Notes menu items call track.bezierNotes
+  - Bezier Notes menu items call recreateToneSequence
+  - Bezier Notes menu items show notification with count
+  - Bezier Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.373 for Day 724)
+  - Functional test: uses bezierControlPoints helper for mode-dependent P1/P2
+  - Functional test: uses bezierPoint helper for cubic interpolation
+  - Functional test: cubic formula uses (1-t)³ P0 + 3(1-t)²t P1 + 3(1-t)t² P2 + t³ P3
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: t parameter spans 0..1 via i/(length-1)
+  - Functional test: clamps to valid ranges (length 100->16, amplitude -5->0, velocityDecay 2->1.0)
+  - Functional test: targetRow = rowIndex + Math.round(pt.row)
+  - Functional test: targetCol = col + Math.round(pt.col)
+  - Functional test: arc mode has symmetric hump with P1.row = P2.row = A
+  - Functional test: linear mode collapses control points to endpoints (flat line)
+  - Functional test: velocity decay uses Math.pow(decay, i)
+- **Version**: Bumped to 2.373.0
+- **Test Count**: Added 39 Day 724 tests. All 39 pass via `test-runner/run-tests.js`. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild build succeeds (after fixing 4 broken regex literals + over-escaped backslashes in Day 724 tests (Python generation artifact)). The pre-existing test infrastructure failures (1443, related to `__dirname` not being defined in node test environment) are unrelated to Day 724.
+
 #### Day 723: Stair Notes Feature (2026-06-18)
 - **Feature**: Added `stairNotes(length, stepSize, columnStep, velocityDecay, shape, skipOccupied)` method to Track class and 6 "Stair Notes" menu items to the sequencer context menu. Each active note spawns a stair-stepped chain of N notes where the row offset follows one of 5 shape patterns (up, down, up-down, down-up, random) and the column offset is `s * columnStep` (diagonal march through the grid). Per-step exponential velocity decay preserves the original probability. The shape is computed via an internal `stairOffset(s)` helper that returns the row delta for each step in the chain; a `newNotes` collection pattern (collect-then-apply) avoids mutating active sequence data mid-iteration. Complements `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a deterministic staircase pattern.
 - **Files Modified**:

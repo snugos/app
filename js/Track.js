@@ -6990,4 +6990,132 @@ export class Track {
 
         return stairCount;
     }
+
+    bezierNotes(length = Constants.BEZIER_NOTES_DEFAULT_LENGTH, amplitude = Constants.BEZIER_NOTES_DEFAULT_AMPLITUDE, velocityDecay = Constants.BEZIER_NOTES_DEFAULT_VELOCITY_DECAY, mode = Constants.BEZIER_NOTES_MODE_ARC, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} bezierNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.BEZIER_NOTES_MIN_LENGTH, Math.min(Constants.BEZIER_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedAmplitude = Math.max(Constants.BEZIER_NOTES_MIN_AMPLITUDE, Math.min(Constants.BEZIER_NOTES_MAX_AMPLITUDE, Math.floor(amplitude)));
+        const clampedDecay = Math.max(Constants.BEZIER_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.BEZIER_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useMode = Constants.BEZIER_NOTES_MODES.includes(mode) ? mode : Constants.BEZIER_NOTES_MODE_ARC;
+
+        this._captureUndoState(`Bezier Notes (${useMode}, ${clampedLength} points, amp ${clampedAmplitude}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let bezierCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        const bezierControlPoints = (m) => {
+            const L = clampedLength;
+            const A = clampedAmplitude;
+            switch (m) {
+                case Constants.BEZIER_NOTES_MODE_S_CURVE:
+                    return [
+                        { row: 0, col: 0 },
+                        { row: A, col: L / 3 },
+                        { row: -A, col: (2 * L) / 3 },
+                        { row: 0, col: L }
+                    ];
+                case Constants.BEZIER_NOTES_MODE_LOOP:
+                    return [
+                        { row: 0, col: 0 },
+                        { row: A, col: L / 4 },
+                        { row: -A, col: (3 * L) / 4 },
+                        { row: 0, col: L }
+                    ];
+                case Constants.BEZIER_NOTES_MODE_WAVE:
+                    return [
+                        { row: 0, col: 0 },
+                        { row: A, col: L / 4 },
+                        { row: -A, col: L / 2 },
+                        { row: A, col: (3 * L) / 4 }
+                    ];
+                case Constants.BEZIER_NOTES_MODE_LINEAR:
+                    return [
+                        { row: 0, col: 0 },
+                        { row: 0, col: 0 },
+                        { row: 0, col: L },
+                        { row: 0, col: L }
+                    ];
+                case Constants.BEZIER_NOTES_MODE_ARC:
+                default:
+                    return [
+                        { row: 0, col: 0 },
+                        { row: A, col: L / 3 },
+                        { row: A, col: (2 * L) / 3 },
+                        { row: 0, col: L }
+                    ];
+            }
+        };
+
+        const controlPoints = bezierControlPoints(useMode);
+
+        const bezierPoint = (t, pts) => {
+            const omt = 1 - t;
+            const omt2 = omt * omt;
+            const t2 = t * t;
+            const omt3 = omt2 * omt;
+            const t3 = t2 * t;
+            const row = omt3 * pts[0].row + 3 * omt2 * t * pts[1].row + 3 * omt * t2 * pts[2].row + t3 * pts[3].row;
+            const col = omt3 * pts[0].col + 3 * omt2 * t * pts[1].col + 3 * omt * t2 * pts[2].col + t3 * pts[3].col;
+            return { row, col };
+        };
+
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < clampedLength; i++) {
+                    const t = clampedLength <= 1 ? 0 : i / (clampedLength - 1);
+                    const pt = bezierPoint(t, controlPoints);
+                    const rowOffset = Math.round(pt.row);
+                    const colOffset = Math.round(pt.col);
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            bezierCount++;
+        }
+
+        return bezierCount;
+    }
 }
