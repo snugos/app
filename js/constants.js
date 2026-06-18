@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.367.0';
+export const APP_VERSION = '2.368.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -435,6 +435,36 @@ export const FAN_NOTES_DIRECTIONS = [
     FAN_NOTES_DIRECTION_INWARD,
     FAN_NOTES_DIRECTION_OUTWARD,
     FAN_NOTES_DIRECTION_RANDOM
+];
+
+export const MOSAIC_NOTES_MIN_ROWS = 1; // Minimum 1 row of tile vertically
+export const MOSAIC_NOTES_MAX_ROWS = 8; // Maximum 8 rows of tile vertically
+export const MOSAIC_NOTES_DEFAULT_ROWS = 3; // Default 3 rows of tile vertically
+export const MOSAIC_NOTES_MIN_COLS = 1; // Minimum 1 column of tile horizontally
+export const MOSAIC_NOTES_MAX_COLS = 8; // Maximum 8 columns of tile horizontally
+export const MOSAIC_NOTES_DEFAULT_COLS = 3; // Default 3 columns of tile horizontally
+export const MOSAIC_NOTES_MIN_ROW_SPACING = 1; // Minimum 1 row between tiles (adjacent)
+export const MOSAIC_NOTES_MAX_ROW_SPACING = 4; // Maximum 4 rows between tiles (spread)
+export const MOSAIC_NOTES_DEFAULT_ROW_SPACING = 1; // Default 1 row between tiles
+export const MOSAIC_NOTES_MIN_COL_SPACING = 1; // Minimum 1 column between tiles (adjacent)
+export const MOSAIC_NOTES_MAX_COL_SPACING = 4; // Maximum 4 columns between tiles (spread)
+export const MOSAIC_NOTES_DEFAULT_COL_SPACING = 1; // Default 1 column between tiles
+export const MOSAIC_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum decay (10% per manhattan step)
+export const MOSAIC_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum decay (1.0 = no decay)
+export const MOSAIC_NOTES_DEFAULT_VELOCITY_DECAY = 0.85; // Default 85% velocity preservation per manhattan step
+export const MOSAIC_NOTES_SHAPE_SOLID = 'solid'; // All cells in the rows x cols grid are filled
+export const MOSAIC_NOTES_SHAPE_CHECKER = 'checker'; // Alternating like a chessboard (only (r+c) even)
+export const MOSAIC_NOTES_SHAPE_BRICK = 'brick'; // Offset alternating rows (only even c)
+export const MOSAIC_NOTES_SHAPE_DIAMOND = 'diamond'; // Filled diamond where |dr|+|dc| <= radius
+export const MOSAIC_NOTES_SHAPE_CROSS = 'cross'; // Plus sign — same row or same column as source
+export const MOSAIC_NOTES_SHAPE_RING = 'ring'; // Single diamond outline where |dr|+|dc| === radius
+export const MOSAIC_NOTES_SHAPES = [
+    MOSAIC_NOTES_SHAPE_SOLID,
+    MOSAIC_NOTES_SHAPE_CHECKER,
+    MOSAIC_NOTES_SHAPE_BRICK,
+    MOSAIC_NOTES_SHAPE_DIAMOND,
+    MOSAIC_NOTES_SHAPE_CROSS,
+    MOSAIC_NOTES_SHAPE_RING
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

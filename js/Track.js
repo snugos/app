@@ -6452,4 +6452,137 @@ export class Track {
 
         return fanCount;
     }
+
+    // Spawns a 2D tiled mosaic of new notes around each active source note.
+    // rows: number of tile rows vertically (clamped 1..8)
+    // cols: number of tile columns horizontally (clamped 1..8)
+    // rowSpacing: rows between tiles (clamped 1..4) — 1 = adjacent, 4 = spread
+    // colSpacing: columns between tiles (clamped 1..4) — 1 = adjacent, 4 = spread
+    // velocityDecay: per-step velocity multiplier by manhattan distance (0.1..1.0) — 1.0 = no decay
+    // shape: 'solid' | 'checker' | 'brick' | 'diamond' | 'cross' | 'ring'
+    //   - 'solid':   all cells in the rows x cols grid are filled
+    //   - 'checker': only cells where (r + c) is even are filled (alternating like a chessboard)
+    //   - 'brick':   only cells where c is even are filled (offset alternating rows)
+    //   - 'diamond': only cells where |dr| + |dc| <= radius (filled diamond shape)
+    //   - 'cross':   only cells on same row or same column as source (plus sign)
+    //   - 'ring':    only cells where |dr| + |dc| === radius (single diamond outline)
+    // skipOccupied: skip tile cell if target slot is already active
+    mosaicNotes(rows = Constants.MOSAIC_NOTES_DEFAULT_ROWS, cols = Constants.MOSAIC_NOTES_DEFAULT_COLS, rowSpacing = Constants.MOSAIC_NOTES_DEFAULT_ROW_SPACING, colSpacing = Constants.MOSAIC_NOTES_DEFAULT_COL_SPACING, velocityDecay = Constants.MOSAIC_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.MOSAIC_NOTES_SHAPE_SOLID, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} mosaicNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedRows = Math.max(Constants.MOSAIC_NOTES_MIN_ROWS, Math.min(Constants.MOSAIC_NOTES_MAX_ROWS, Math.floor(rows)));
+        const clampedCols = Math.max(Constants.MOSAIC_NOTES_MIN_COLS, Math.min(Constants.MOSAIC_NOTES_MAX_COLS, Math.floor(cols)));
+        const clampedRowSpacing = Math.max(Constants.MOSAIC_NOTES_MIN_ROW_SPACING, Math.min(Constants.MOSAIC_NOTES_MAX_ROW_SPACING, Math.floor(rowSpacing)));
+        const clampedColSpacing = Math.max(Constants.MOSAIC_NOTES_MIN_COL_SPACING, Math.min(Constants.MOSAIC_NOTES_MAX_COL_SPACING, Math.floor(colSpacing)));
+        const clampedDecay = Math.max(Constants.MOSAIC_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.MOSAIC_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.MOSAIC_NOTES_SHAPES.includes(shape) ? shape : Constants.MOSAIC_NOTES_SHAPE_SOLID;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Mosaic Notes (${useShape}, ${clampedRows}x${clampedCols} grid) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let mosaicCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        // For diamond/cross/ring shapes we need a "radius" — the max manhattan distance.
+        // We use the larger of (clampedRows-1) * rowSpacing and (clampedCols-1) * colSpacing,
+        // divided by 2 (so the diamond fits inside the grid).
+        const radius = Math.max(
+            Math.floor(((clampedRows - 1) * clampedRowSpacing) / 2),
+            Math.floor(((clampedCols - 1) * clampedColSpacing) / 2)
+        );
+
+        // Helper: does the (r, c) tile pass the shape filter?
+        const cellPasses = (r, c) => {
+            // r is in 0..clampedRows-1, c in 0..clampedCols-1 — half-grid indices centered on source
+            // Convert to (dr, dc) offsets in steps. The source sits at the "center" of the grid.
+            // For odd row/col counts, the source is at (clampedRows / 2, clampedCols / 2).
+            // For even counts, the source sits between the two middle tiles.
+            const centerR = Math.floor((clampedRows - 1) / 2);
+            const centerC = Math.floor((clampedCols - 1) / 2);
+            const dr = (r - centerR) * clampedRowSpacing;
+            const dc = (c - centerC) * clampedColSpacing;
+            const manhattan = Math.abs(dr) + Math.abs(dc);
+            switch (useShape) {
+                case Constants.MOSAIC_NOTES_SHAPE_CHECKER:
+                    return ((r + c) % 2) === 0;
+                case Constants.MOSAIC_NOTES_SHAPE_BRICK:
+                    return (c % 2) === 0;
+                case Constants.MOSAIC_NOTES_SHAPE_DIAMOND:
+                    return manhattan <= radius;
+                case Constants.MOSAIC_NOTES_SHAPE_CROSS:
+                    return dr === 0 || dc === 0;
+                case Constants.MOSAIC_NOTES_SHAPE_RING:
+                    return manhattan === radius;
+                case Constants.MOSAIC_NOTES_SHAPE_SOLID:
+                default:
+                    return true;
+            }
+        };
+
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let r = 0; r < clampedRows; r++) {
+                    for (let c = 0; c < clampedCols; c++) {
+                        if (!cellPasses(r, c)) continue;
+
+                        // Compute target offsets from source
+                        const centerR = Math.floor((clampedRows - 1) / 2);
+                        const centerC = Math.floor((clampedCols - 1) / 2);
+                        const rowOffset = (r - centerR) * clampedRowSpacing;
+                        const colOffset = (c - centerC) * clampedColSpacing;
+
+                        const targetRow = rowIndex + rowOffset;
+                        const targetCol = col + colOffset;
+
+                        if (targetRow < 0 || targetRow >= numRows) continue;
+                        if (targetCol < 0 || targetCol >= totalSteps) continue;
+                        if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                        if (targetRow === rowIndex && targetCol === col) continue;
+
+                        // Velocity decays by manhattan distance from source cell
+                        const manhattanDist = Math.abs(rowOffset) + Math.abs(colOffset);
+                        const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, manhattanDist)));
+                        newNotes.push({
+                            rowIndex: targetRow,
+                            col: targetCol,
+                            velocity: Math.round(decayedVel * 100) / 100,
+                            probability: stepData.probability
+                        });
+                    }
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            mosaicCount++;
+        }
+
+        return mosaicCount;
+    }
 }

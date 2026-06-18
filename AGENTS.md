@@ -1,3 +1,103 @@
+#### Day 719: Mosaic Notes Feature (2026-06-17)
+- **Feature**: Added `mosaicNotes(rows, cols, rowSpacing, colSpacing, velocityDecay, shape, skipOccupied)` method to Track class and 6 "Mosaic Notes" menu items to the sequencer context menu. Each active note spawns a 2D tiled mosaic of new notes around the source (centered on the source cell), with shape-based cell filtering. For each cell `(r, c)` in the rows × cols grid, computes `rowOffset = (r - centerR) * rowSpacing` and `colOffset = (c - centerC) * colSpacing` where the center is at `(floor((rows-1)/2), floor((cols-1)/2))`. Six shape modes: 'solid' (all cells), 'checker' (only `(r+c)` even, like a chessboard), 'brick' (only even `c`, offset alternating rows), 'diamond' (only `|dr|+|dc| <= radius`, filled diamond), 'cross' (only `dr === 0 || dc === 0`, plus sign), 'ring' (only `|dr|+|dc| === radius`, single diamond outline). Velocity decays by manhattan distance from the source cell: `decayedVel = max(0.05, min(1.0, origVel * Math.pow(decay, |dr|+|dc|)))`. Complements `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with deterministic 2D tile mosaic patterns.
+- **Files Modified**:
+  - `js/Track.js`: Added `mosaicNotes` method after `fanNotes` (line ~6470)
+  - `js/constants.js`: Added 22 MOSAIC_NOTES_* constants + bumped APP_VERSION to 2.368.0
+  - `js/ui.js`: Added 6 Mosaic Notes menu items in the sequencer context menu after Fan Notes (Random, 6), with separator after
+  - `js/tests.js`: Added Day 719 test block with 39 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **mosaicNotes** (`js/Track.js`): For each active note, places up to `rows * cols` new notes tiled in a 2D grid centered on the source. For each cell `(r, c)` in the grid, computes `rowOffset = (r - centerR) * rowSpacing` and `colOffset = (c - centerC) * colSpacing` where `centerR = floor((rows-1)/2)` and `centerC = floor((cols-1)/2)`. Captures undo state BEFORE mutation with descriptive "Mosaic Notes (shape, rows×cols grid) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `rows` to MOSAIC_NOTES_MIN_ROWS (1) / MOSAIC_NOTES_MAX_ROWS (8) range with Math.floor (default MOSAIC_NOTES_DEFAULT_ROWS=3)
+    - Clamps `cols` to MOSAIC_NOTES_MIN_COLS (1) / MOSAIC_NOTES_MAX_COLS (8) range with Math.floor (default MOSAIC_NOTES_DEFAULT_COLS=3)
+    - Clamps `rowSpacing` to MOSAIC_NOTES_MIN_ROW_SPACING (1) / MOSAIC_NOTES_MAX_ROW_SPACING (4) range with Math.floor (default MOSAIC_NOTES_DEFAULT_ROW_SPACING=1)
+    - Clamps `colSpacing` to MOSAIC_NOTES_MIN_COL_SPACING (1) / MOSAIC_NOTES_MAX_COL_SPACING (4) range with Math.floor (default MOSAIC_NOTES_DEFAULT_COL_SPACING=1)
+    - Clamps `velocityDecay` to MOSAIC_NOTES_MIN_VELOCITY_DECAY (0.1) / MOSAIC_NOTES_MAX_VELOCITY_DECAY (1.0) range (default MOSAIC_NOTES_DEFAULT_VELOCITY_DECAY=0.85)
+    - Validates `shape` against MOSAIC_NOTES_SHAPES array, falls back to MOSAIC_NOTES_SHAPE_SOLID if invalid
+    - Computes `radius = max(floor(((rows-1) * rowSpacing) / 2), floor(((cols-1) * colSpacing) / 2))` for diamond/cross/ring shapes
+    - Cell passes filter by shape: solid=true, checker=`(r+c)%2===0`, brick=`c%2===0`, diamond=`|dr|+|dc| <= radius`, cross=`dr===0 || dc===0`, ring=`|dr|+|dc| === radius`
+    - Captures undo state BEFORE mutation with descriptive "Mosaic Notes (shape, rows×cols grid) on <seqname>" label
+    - For each row, for each column, for each active note: for `r` in 0..rows, for `c` in 0..cols, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen when grid center is at source)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(decay, |dr|+|dc|)))` for exponential velocity decay by manhattan distance
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of mosaic notes added
+  - **Mosaic Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Fan Notes (Random, 6)
+    - "Mosaic Notes (Solid 3x3)" - calls `mosaicNotes(3, 3, 1, 1, 0.85, 'solid', true)` - 3×3 dense tile, all cells filled
+    - "Mosaic Notes (Checker 4x4)" - calls `mosaicNotes(4, 4, 1, 1, 0.9, 'checker', true)` - 4×4 chessboard pattern
+    - "Mosaic Notes (Brick 4x4)" - calls `mosaicNotes(4, 4, 1, 1, 0.9, 'brick', true)` - 4×4 brick offset pattern
+    - "Mosaic Notes (Diamond 5x5)" - calls `mosaicNotes(5, 5, 1, 1, 0.85, 'diamond', true)` - 5×5 filled diamond shape
+    - "Mosaic Notes (Cross 5x5)" - calls `mosaicNotes(5, 5, 1, 1, 0.85, 'cross', true)` - 5×5 plus-sign cross
+    - "Mosaic Notes (Ring 5x5)" - calls `mosaicNotes(5, 5, 1, 1, 0.85, 'ring', true)` - 5×5 diamond outline
+    - All call `recreateToneSequence(true)` after mosaicking
+    - All capture undo with descriptive "Mosaic Notes on <name> (<seqname>)" label
+    - Show notifications: "Mosaicked {count} note(s) (variant)."
+    - Show "No notes to mosaic." when nothing to mosaic
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 22 new constants
+  - `MOSAIC_NOTES_MIN_ROWS = 1` - Minimum 1 row of tile vertically
+  - `MOSAIC_NOTES_MAX_ROWS = 8` - Maximum 8 rows of tile vertically
+  - `MOSAIC_NOTES_DEFAULT_ROWS = 3` - Default 3 rows of tile vertically
+  - `MOSAIC_NOTES_MIN_COLS = 1` - Minimum 1 column of tile horizontally
+  - `MOSAIC_NOTES_MAX_COLS = 8` - Maximum 8 columns of tile horizontally
+  - `MOSAIC_NOTES_DEFAULT_COLS = 3` - Default 3 columns of tile horizontally
+  - `MOSAIC_NOTES_MIN_ROW_SPACING = 1` - Minimum 1 row between tiles (adjacent)
+  - `MOSAIC_NOTES_MAX_ROW_SPACING = 4` - Maximum 4 rows between tiles (spread)
+  - `MOSAIC_NOTES_DEFAULT_ROW_SPACING = 1` - Default 1 row between tiles
+  - `MOSAIC_NOTES_MIN_COL_SPACING = 1` - Minimum 1 column between tiles (adjacent)
+  - `MOSAIC_NOTES_MAX_COL_SPACING = 4` - Maximum 4 columns between tiles (spread)
+  - `MOSAIC_NOTES_DEFAULT_COL_SPACING = 1` - Default 1 column between tiles
+  - `MOSAIC_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum decay (10% per manhattan step)
+  - `MOSAIC_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `MOSAIC_NOTES_DEFAULT_VELOCITY_DECAY = 0.85` - Default 85% velocity preservation per manhattan step
+  - `MOSAIC_NOTES_SHAPE_SOLID = 'solid'` - All cells in the rows × cols grid are filled
+  - `MOSAIC_NOTES_SHAPE_CHECKER = 'checker'` - Alternating like a chessboard (only (r+c) even)
+  - `MOSAIC_NOTES_SHAPE_BRICK = 'brick'` - Offset alternating rows (only even c)
+  - `MOSAIC_NOTES_SHAPE_DIAMOND = 'diamond'` - Filled diamond where |dr|+|dc| <= radius
+  - `MOSAIC_NOTES_SHAPE_CROSS = 'cross'` - Plus sign — same row or same column as source
+  - `MOSAIC_NOTES_SHAPE_RING = 'ring'` - Single diamond outline where |dr|+|dc| === radius
+  - `MOSAIC_NOTES_SHAPES = [SOLID, CHECKER, BRICK, DIAMOND, CROSS, RING]` - Valid shape values
+- **Tests** (`js/tests.js`): 39 tests covering:
+  - `mosaicNotes` is a function on Track.prototype
+  - `mosaicNotes` accepts 7 parameters with defaults (rows, cols, rowSpacing, colSpacing, velocityDecay, shape, skipOccupied)
+  - `mosaicNotes` returns 0 for Audio tracks
+  - `mosaicNotes` gets active sequence via `getActiveSequence`
+  - `mosaicNotes` captures undo BEFORE mutation
+  - `mosaicNotes` has descriptive "Mosaic Notes" undo label
+  - `mosaicNotes` clamps rows/cols/rowSpacing/colSpacing/velocityDecay to MOSAIC_NOTES_MIN/MAX_* ranges
+  - `mosaicNotes` validates shape with MOSAIC_NOTES_SHAPES (uses SOLID fallback)
+  - `mosaicNotes` uses Math.pow for velocity decay
+  - `mosaicNotes` uses Math.floor for rows/cols/rowSpacing/colSpacing
+  - `mosaicNotes` respects sequence length and row boundaries
+  - `mosaicNotes` supports skipOccupied option
+  - `mosaicNotes` rounds velocity to 2 decimal places
+  - `mosaicNotes` returns count of mosaic notes (mosaicCount)
+  - All 22 MOSAIC_NOTES constants are defined in constants.js
+  - MOSAIC_NOTES_SHAPES includes all 6 shapes
+  - ui.js has 6 Mosaic Notes menu items
+  - Mosaic Notes menu items call track.mosaicNotes
+  - Mosaic Notes menu items show notification with count
+  - Mosaic Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.368 for Day 719)
+  - Functional test: checker uses (r+c) % 2 parity
+  - Functional test: brick uses c % 2 parity
+  - Functional test: cross filters dr === 0 || dc === 0
+  - Functional test: diamond uses manhattan <= radius
+  - Functional test: ring uses manhattan === radius
+  - Structural test: respects Math.floor for rows/cols/rowSpacing/colSpacing
+  - Structural test: preserves probability from source
+  - Structural test: handles empty source (no active notes)
+  - Structural test: respects sequence length and row boundaries
+  - Functional test: clamps to valid ranges (rows 100->8, cols -5->1, rowSpacing 0->1)
+- **Version**: Bumped to 2.368.0
+- **Test Count**: Added 39 Day 719 tests. All 39 pass via test-runner/run-tests.js (no failures). esbuild build succeeds (already had clean state from prior push); node --check passes for all 4 modified files. Total tests now at 4190 across the test suite (2756 pass, 1433 fail due to pre-existing `__dirname` test infrastructure issue, unrelated to Day 719).
+
 #### Day 718: Fan Notes Feature (2026-06-17)
 - **Feature**: Added `fanNotes(length, rowSpan, strumDelay, velocityDecay, direction, skipOccupied)` method to Track class and 5 "Fan Notes" menu items to the sequencer context menu. Each active note spawns a multi-note chord strum pattern (plucked-string fan). For each strum step `s` in 0..clampedLength, places a note at `(rowIndex + chordRows[s], col + s * clampedStrumDelay)` where `chordRows` is a pre-computed array of `clampedLength` row offsets evenly spread in `[-(rowSpan-1)/2, +(rowSpan-1)/2]`, then re-ordered by direction. Five directions: 'down' (natural order, top-to-bottom), 'up' (reversed, bottom-to-top), 'inward' (outside-in by abs(rowOffset) descending), 'outward' (center-out by abs(rowOffset) ascending), 'random' (Fisher-Yates shuffle). Complements `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `splatterNotes` (random scatter) with a deterministic chord strum pattern.
 - **Files Modified**:

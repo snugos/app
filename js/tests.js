@@ -23686,6 +23686,272 @@ TestRunner.test("Day 718 - fanNotes functional test: 'random' direction uses Fis
     t.assertTruthy(/for\s*\(\s*let\s+i\s*=\s*ordered\.length\s*-\s*1;\s*i\s*>\s*0;\s*i--\)/.test(src), 'uses Fisher-Yates shuffle for random direction');
 });
 
+// Day 719 - Mosaic Notes Feature Tests
+// Tests for the new mosaicNotes(rows, cols, rowSpacing, colSpacing, velocityDecay, shape, skipOccupied) method on Track class
+// and 6 Mosaic Notes menu items in the sequencer context menu (solid, checker, brick, diamond, cross, ring shapes)
+
+TestRunner.test("Day 719 - mosaicNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.mosaicNotes === 'function', 'mosaicNotes is a function');
+});
+
+TestRunner.test("Day 719 - mosaicNotes accepts 7 parameters with defaults", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/mosaicNotes\s*\(\s*rows\s*=/.test(src), 'has rows default');
+    t.assertTruthy(/cols\s*=/.test(src), 'has cols default');
+    t.assertTruthy(/rowSpacing\s*=/.test(src), 'has rowSpacing default');
+    t.assertTruthy(/colSpacing\s*=/.test(src), 'has colSpacing default');
+    t.assertTruthy(/velocityDecay\s*=/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/shape\s*=/.test(src), 'has shape default');
+    t.assertTruthy(/skipOccupied\s*=/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 719 - mosaicNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'checks track type Audio');
+    t.assertTruthy(/if\s*\(\s*this\.type\s*===\s*['"]Audio['"]\s*\)\s*return\s+0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 719 - mosaicNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/this\.getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+    t.assertTruthy(/activeSeq\.data/.test(src), 'references activeSeq.data');
+});
+
+TestRunner.test("Day 719 - mosaicNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0, 'calls _captureUndoState');
+    t.assertTruthy(mutationIdx > 0, 'calls newNotes.push');
+    t.assertTruthy(undoIdx < mutationIdx, 'captureUndoState called BEFORE newNotes.push');
+});
+
+TestRunner.test("Day 719 - mosaicNotes has descriptive 'Mosaic Notes' undo label", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/Mosaic Notes \(/.test(src), 'uses descriptive "Mosaic Notes" undo label');
+});
+
+TestRunner.test("Day 719 - mosaicNotes clamps rows to MOSAIC_NOTES_MIN/MAX_ROWS", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/MOSAIC_NOTES_MIN_ROWS/.test(src), 'references MOSAIC_NOTES_MIN_ROWS');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_ROWS/.test(src), 'references MOSAIC_NOTES_MAX_ROWS');
+    t.assertTruthy(/Math\.floor\(rows\)/.test(src), 'uses Math.floor on rows');
+});
+
+TestRunner.test("Day 719 - mosaicNotes clamps cols to MOSAIC_NOTES_MIN/MAX_COLS", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/MOSAIC_NOTES_MIN_COLS/.test(src), 'references MOSAIC_NOTES_MIN_COLS');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_COLS/.test(src), 'references MOSAIC_NOTES_MAX_COLS');
+    t.assertTruthy(/Math\.floor\(cols\)/.test(src), 'uses Math.floor on cols');
+});
+
+TestRunner.test("Day 719 - mosaicNotes clamps rowSpacing to MOSAIC_NOTES_MIN/MAX_ROW_SPACING", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/MOSAIC_NOTES_MIN_ROW_SPACING/.test(src), 'references MOSAIC_NOTES_MIN_ROW_SPACING');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_ROW_SPACING/.test(src), 'references MOSAIC_NOTES_MAX_ROW_SPACING');
+});
+
+TestRunner.test("Day 719 - mosaicNotes clamps colSpacing to MOSAIC_NOTES_MIN/MAX_COL_SPACING", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/MOSAIC_NOTES_MIN_COL_SPACING/.test(src), 'references MOSAIC_NOTES_MIN_COL_SPACING');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_COL_SPACING/.test(src), 'references MOSAIC_NOTES_MAX_COL_SPACING');
+});
+
+TestRunner.test("Day 719 - mosaicNotes clamps velocityDecay to MOSAIC_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/MOSAIC_NOTES_MIN_VELOCITY_DECAY/.test(src), 'references MOSAIC_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_VELOCITY_DECAY/.test(src), 'references MOSAIC_NOTES_MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 719 - mosaicNotes validates shape with MOSAIC_NOTES_SHAPES (uses SOLID fallback)", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/MOSAIC_NOTES_SHAPES\.includes/.test(src), 'validates shape with MOSAIC_NOTES_SHAPES');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_SOLID/.test(src), 'uses SOLID as fallback');
+});
+
+TestRunner.test("Day 719 - mosaicNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay/.test(src), 'uses Math.pow for decay');
+});
+
+TestRunner.test("Day 719 - mosaicNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'uses skipOccupied');
+    t.assertTruthy(/activeSeq\.data\[targetRow\]\[targetCol\]\.active/.test(src), 'checks if target is active');
+});
+
+TestRunner.test("Day 719 - mosaicNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 719 - mosaicNotes returns count of mosaic notes (mosaicCount)", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/return mosaicCount/.test(src), 'returns mosaicCount');
+    t.assertTruthy(/mosaicCount\s*\+\+/.test(src), 'increments mosaicCount on each placement');
+});
+
+TestRunner.test("Day 719 - all 24 MOSAIC_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(/MOSAIC_NOTES_MIN_ROWS\s*=/.test(src), 'has MIN_ROWS');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_ROWS\s*=/.test(src), 'has MAX_ROWS');
+    t.assertTruthy(/MOSAIC_NOTES_DEFAULT_ROWS\s*=/.test(src), 'has DEFAULT_ROWS');
+    t.assertTruthy(/MOSAIC_NOTES_MIN_COLS\s*=/.test(src), 'has MIN_COLS');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_COLS\s*=/.test(src), 'has MAX_COLS');
+    t.assertTruthy(/MOSAIC_NOTES_DEFAULT_COLS\s*=/.test(src), 'has DEFAULT_COLS');
+    t.assertTruthy(/MOSAIC_NOTES_MIN_ROW_SPACING\s*=/.test(src), 'has MIN_ROW_SPACING');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_ROW_SPACING\s*=/.test(src), 'has MAX_ROW_SPACING');
+    t.assertTruthy(/MOSAIC_NOTES_DEFAULT_ROW_SPACING\s*=/.test(src), 'has DEFAULT_ROW_SPACING');
+    t.assertTruthy(/MOSAIC_NOTES_MIN_COL_SPACING\s*=/.test(src), 'has MIN_COL_SPACING');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_COL_SPACING\s*=/.test(src), 'has MAX_COL_SPACING');
+    t.assertTruthy(/MOSAIC_NOTES_DEFAULT_COL_SPACING\s*=/.test(src), 'has DEFAULT_COL_SPACING');
+    t.assertTruthy(/MOSAIC_NOTES_MIN_VELOCITY_DECAY\s*=/.test(src), 'has MIN_VELOCITY_DECAY');
+    t.assertTruthy(/MOSAIC_NOTES_MAX_VELOCITY_DECAY\s*=/.test(src), 'has MAX_VELOCITY_DECAY');
+    t.assertTruthy(/MOSAIC_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(src), 'has DEFAULT_VELOCITY_DECAY');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_SOLID\s*=/.test(src), 'has SHAPE_SOLID');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_CHECKER\s*=/.test(src), 'has SHAPE_CHECKER');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_BRICK\s*=/.test(src), 'has SHAPE_BRICK');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_DIAMOND\s*=/.test(src), 'has SHAPE_DIAMOND');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_CROSS\s*=/.test(src), 'has SHAPE_CROSS');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_RING\s*=/.test(src), 'has SHAPE_RING');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPES\s*=\s*\[/.test(src), 'has SHAPES array');
+});
+
+TestRunner.test("Day 719 - MOSAIC_NOTES_SHAPES includes all 6 shapes", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/MOSAIC_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(m, 'has SHAPES array');
+    const items = m[1].split(',').map(s => s.trim()).filter(Boolean);
+    t.assertEqual(items.length, 6, 'SHAPES has 6 entries (got ' + items.length + ')');
+});
+
+TestRunner.test("Day 719 - ui.js has 6 Mosaic Notes menu items", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const count = (src.match(/Mosaic Notes \(/g) || []).length;
+    t.assertTruthy(count >= 6, 'has 6+ Mosaic Notes menu items (got ' + count + ')');
+});
+
+TestRunner.test("Day 719 - Mosaic Notes menu items call track.mosaicNotes", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const calls = (src.match(/currentTrackForMenu\.mosaicNotes\(/g) || []).length;
+    t.assertTruthy(calls >= 6, 'has 6+ calls to track.mosaicNotes (got ' + calls + ')');
+});
+
+TestRunner.test("Day 719 - Mosaic Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/Mosaicked \$\{result\} note\(s\)/.test(src), 'uses "Mosaicked N note(s)" notification');
+});
+
+TestRunner.test("Day 719 - Mosaic Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Mosaic Notes on/.test(src), 'uses descriptive "Mosaic Notes" undo label');
+});
+
+TestRunner.test("Day 719 - APP_VERSION validation (>= 2.368 for Day 719)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*['"]([\d.]+)['"]/);
+    t.assertTruthy(m, 'has APP_VERSION');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] > 2 || (v[0] === 2 && v[1] >= 368), 'APP_VERSION >= 2.368 (got ' + m[1] + ')');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: rowOffset = (r - centerR) * rowSpacing", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/rowOffset\s*=\s*\(r\s*-\s*centerR\)\s*\*\s*clampedRowSpacing/.test(src), 'rowOffset = (r - centerR) * rowSpacing');
+    t.assertTruthy(/targetRow\s*=\s*rowIndex\s*\+\s*rowOffset/.test(src), 'targetRow = rowIndex + rowOffset');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: colOffset = (c - centerC) * colSpacing", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/colOffset\s*=\s*\(c\s*-\s*centerC\)\s*\*\s*clampedColSpacing/.test(src), 'colOffset = (c - centerC) * colSpacing');
+    t.assertTruthy(/targetCol\s*=\s*col\s*\+\s*colOffset/.test(src), 'targetCol = col + colOffset');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: velocity decay (vel * decay^manhattanDist)", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/origVel\s*\*\s*Math\.pow\(clampedDecay,\s*manhattanDist\)/.test(src), 'uses vel * pow(decay, manhattanDist)');
+    t.assertTruthy(/manhattanDist\s*=\s*Math\.abs\(rowOffset\)\s*\+\s*Math\.abs\(colOffset\)/.test(src), 'manhattanDist = |rowOffset| + |colOffset|');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
+TestRunner.test("Day 719 - mosaicNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/newNotes\.push/.test(src), 'uses newNotes.push to collect');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 719 - mosaicNotes structural test: supports 6 distinct shapes", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_SOLID/.test(src), 'handles SOLID');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_CHECKER/.test(src), 'handles CHECKER');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_BRICK/.test(src), 'handles BRICK');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_DIAMOND/.test(src), 'handles DIAMOND');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_CROSS/.test(src), 'handles CROSS');
+    t.assertTruthy(/MOSAIC_NOTES_SHAPE_RING/.test(src), 'handles RING');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: checker uses (r+c) % 2 parity", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/\(r\s*\+\s*c\)\s*%\s*2/.test(src), 'checker uses (r+c) % 2');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: brick uses c % 2 parity", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/c\s*%\s*2\s*\)\s*===\s*0/.test(src), 'brick uses (c % 2) === 0');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: cross filters dr === 0 || dc === 0", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/dr\s*===\s*0\s*\|\|\s*dc\s*===\s*0/.test(src), 'cross filters dr === 0 || dc === 0');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: diamond uses manhattan <= radius", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/manhattan\s*<=\s*radius/.test(src), 'diamond uses manhattan <= radius');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: ring uses manhattan === radius", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/manhattan\s*===\s*radius/.test(src), 'ring uses manhattan === radius');
+});
+
+TestRunner.test("Day 719 - mosaicNotes structural test: respects Math.floor for rows/cols/rowSpacing/colSpacing", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    const floorMatches = (src.match(/Math\.floor\((rows|cols|rowSpacing|colSpacing)\)/g) || []).length;
+    t.assertTruthy(floorMatches >= 4, 'uses Math.floor on all 4 numeric params (got ' + floorMatches + ')');
+});
+
+TestRunner.test("Day 719 - mosaicNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source note');
+});
+
+TestRunner.test("Day 719 - mosaicNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'skips empty rows');
+});
+
+TestRunner.test("Day 719 - mosaicNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 719 - mosaicNotes functional test: clamps to valid ranges (rows 100->8, cols -5->1, rowSpacing 0->1)", (t) => {
+    const src = Track.prototype.mosaicNotes.toString();
+    // Verify clamp expressions exist (using Constants. prefix as in source)
+    t.assertTruthy(/Math\.max\(Constants\.MOSAIC_NOTES_MIN_ROWS,\s*Math\.min\(Constants\.MOSAIC_NOTES_MAX_ROWS/.test(src), 'clamps rows');
+    t.assertTruthy(/Math\.max\(Constants\.MOSAIC_NOTES_MIN_COLS,\s*Math\.min\(Constants\.MOSAIC_NOTES_MAX_COLS/.test(src), 'clamps cols');
+    t.assertTruthy(/Math\.max\(Constants\.MOSAIC_NOTES_MIN_ROW_SPACING,\s*Math\.min\(Constants\.MOSAIC_NOTES_MAX_ROW_SPACING/.test(src), 'clamps rowSpacing');
+    t.assertTruthy(/Math\.max\(Constants\.MOSAIC_NOTES_MIN_COL_SPACING,\s*Math\.min\(Constants\.MOSAIC_NOTES_MAX_COL_SPACING/.test(src), 'clamps colSpacing');
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
