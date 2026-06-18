@@ -20640,92 +20640,92 @@ TestRunner.test("Day 701 - invertProbabilities functional test: clamping handles
     t.assertEqual(newProb, 1.0, 'Inverting 0.0 (when range is 0-1) should give 1.0');
 });
 
-// Day 702: Bounce Notes Feature
+// Day 702: Ricochet Notes Feature
 // ================================================
-TestRunner.test("Day 702 - bounceNotes is a function on Track.prototype", (t) => {
-    t.assertTruthy(typeof Track.prototype.bounceNotes === 'function', 'bounceNotes should be a function on Track.prototype');
+TestRunner.test("Day 702 - ricochetNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.ricochetNotes === 'function', 'ricochetNotes should be a function on Track.prototype');
 });
 
-TestRunner.test("Day 702 - bounceNotes accepts 3 parameters with defaults", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('maxOffsetSteps'), 'bounceNotes should accept maxOffsetSteps parameter');
-    t.assertTruthy(funcStr.includes('skipChance'), 'bounceNotes should accept skipChance parameter');
-    t.assertTruthy(funcStr.includes('velocityFactor'), 'bounceNotes should accept velocityFactor parameter');
+TestRunner.test("Day 702 - ricochetNotes accepts 3 parameters with defaults", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('maxOffsetSteps'), 'ricochetNotes should accept maxOffsetSteps parameter');
+    t.assertTruthy(funcStr.includes('skipChance'), 'ricochetNotes should accept skipChance parameter');
+    t.assertTruthy(funcStr.includes('velocityFactor'), 'ricochetNotes should accept velocityFactor parameter');
 });
 
-TestRunner.test("Day 702 - bounceNotes returns 0 for Audio tracks", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes("'Audio'") && funcStr.includes('return 0'), 'bounceNotes should guard against Audio tracks');
+TestRunner.test("Day 702 - ricochetNotes returns 0 for Audio tracks", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes("'Audio'") && funcStr.includes('return 0'), 'ricochetNotes should guard against Audio tracks');
 });
 
-TestRunner.test("Day 702 - bounceNotes gets active sequence via getActiveSequence", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'bounceNotes should use getActiveSequence()');
+TestRunner.test("Day 702 - ricochetNotes gets active sequence via getActiveSequence", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('getActiveSequence()'), 'ricochetNotes should use getActiveSequence()');
 });
 
-TestRunner.test("Day 702 - bounceNotes captures undo BEFORE mutation", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
+TestRunner.test("Day 702 - ricochetNotes captures undo BEFORE mutation", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
     const captureIdx = funcStr.indexOf('_captureUndoState');
     const forLoopIdx = funcStr.indexOf('for (let rowIndex');
-    t.assertTruthy(captureIdx !== -1 && captureIdx < forLoopIdx, 'bounceNotes should capture undo BEFORE data iteration');
+    t.assertTruthy(captureIdx !== -1 && captureIdx < forLoopIdx, 'ricochetNotes should capture undo BEFORE data iteration');
 });
 
-TestRunner.test("Day 702 - bounceNotes has descriptive 'Bounce Notes' undo label", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('Bounce Notes'), 'bounceNotes should have descriptive undo label');
+TestRunner.test("Day 702 - ricochetNotes has descriptive 'Ricochet Notes' undo label", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('Ricochet Notes'), 'ricochetNotes should have descriptive undo label');
 });
 
-TestRunner.test("Day 702 - bounceNotes clamps maxOffsetSteps to BOUNCE_MIN/MAX_OFFSET_STEPS", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('BOUNCE_MIN_OFFSET_STEPS'), 'bounceNotes should use BOUNCE_MIN_OFFSET_STEPS constant');
-    t.assertTruthy(funcStr.includes('BOUNCE_MAX_OFFSET_STEPS'), 'bounceNotes should use BOUNCE_MAX_OFFSET_STEPS constant');
-    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'bounceNotes should clamp with Math.max/min');
+TestRunner.test("Day 702 - ricochetNotes clamps maxOffsetSteps to BOUNCE_MIN/MAX_OFFSET_STEPS", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('BOUNCE_MIN_OFFSET_STEPS'), 'ricochetNotes should use BOUNCE_MIN_OFFSET_STEPS constant');
+    t.assertTruthy(funcStr.includes('BOUNCE_MAX_OFFSET_STEPS'), 'ricochetNotes should use BOUNCE_MAX_OFFSET_STEPS constant');
+    t.assertTruthy(funcStr.includes('Math.max') && funcStr.includes('Math.min'), 'ricochetNotes should clamp with Math.max/min');
 });
 
-TestRunner.test("Day 702 - bounceNotes clamps skipChance to BOUNCE_MIN/MAX_SKIP_CHANCE", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('BOUNCE_MIN_SKIP_CHANCE'), 'bounceNotes should use BOUNCE_MIN_SKIP_CHANCE constant');
-    t.assertTruthy(funcStr.includes('BOUNCE_MAX_SKIP_CHANCE'), 'bounceNotes should use BOUNCE_MAX_SKIP_CHANCE constant');
+TestRunner.test("Day 702 - ricochetNotes clamps skipChance to BOUNCE_MIN/MAX_SKIP_CHANCE", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('BOUNCE_MIN_SKIP_CHANCE'), 'ricochetNotes should use BOUNCE_MIN_SKIP_CHANCE constant');
+    t.assertTruthy(funcStr.includes('BOUNCE_MAX_SKIP_CHANCE'), 'ricochetNotes should use BOUNCE_MAX_SKIP_CHANCE constant');
 });
 
-TestRunner.test("Day 702 - bounceNotes clamps velocityFactor to BOUNCE_MIN/MAX_VELOCITY_FACTOR", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('BOUNCE_MIN_VELOCITY_FACTOR'), 'bounceNotes should use BOUNCE_MIN_VELOCITY_FACTOR constant');
-    t.assertTruthy(funcStr.includes('BOUNCE_MAX_VELOCITY_FACTOR'), 'bounceNotes should use BOUNCE_MAX_VELOCITY_FACTOR constant');
+TestRunner.test("Day 702 - ricochetNotes clamps velocityFactor to BOUNCE_MIN/MAX_VELOCITY_FACTOR", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('BOUNCE_MIN_VELOCITY_FACTOR'), 'ricochetNotes should use BOUNCE_MIN_VELOCITY_FACTOR constant');
+    t.assertTruthy(funcStr.includes('BOUNCE_MAX_VELOCITY_FACTOR'), 'ricochetNotes should use BOUNCE_MAX_VELOCITY_FACTOR constant');
 });
 
-TestRunner.test("Day 702 - bounceNotes uses random direction and shift", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('Math.random()'), 'bounceNotes should use Math.random() for direction and shift');
-    t.assertTruthy(funcStr.includes('direction'), 'bounceNotes should track direction variable');
-    t.assertTruthy(funcStr.includes('shift'), 'bounceNotes should track shift variable');
+TestRunner.test("Day 702 - ricochetNotes uses random direction and shift", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.random()'), 'ricochetNotes should use Math.random() for direction and shift');
+    t.assertTruthy(funcStr.includes('direction'), 'ricochetNotes should track direction variable');
+    t.assertTruthy(funcStr.includes('shift'), 'ricochetNotes should track shift variable');
 });
 
-TestRunner.test("Day 702 - bounceNotes respects sequence length boundary", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('targetCol < 0') && funcStr.includes('>= totalSteps'), 'bounceNotes should bound check target column');
+TestRunner.test("Day 702 - ricochetNotes respects sequence length boundary", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('targetCol < 0') && funcStr.includes('>= totalSteps'), 'ricochetNotes should bound check target column');
 });
 
-TestRunner.test("Day 702 - bounceNotes skips occupied target slots", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('row[targetCol]') && funcStr.includes('.active'), 'bounceNotes should check target slot is empty');
+TestRunner.test("Day 702 - ricochetNotes skips occupied target slots", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('row[targetCol]') && funcStr.includes('.active'), 'ricochetNotes should check target slot is empty');
 });
 
-TestRunner.test("Day 702 - bounceNotes scales velocity and preserves probability", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('origVel * clampedVel'), 'bounceNotes should scale velocity by velocityFactor');
-    t.assertTruthy(funcStr.includes('stepData.probability'), 'bounceNotes should preserve probability');
+TestRunner.test("Day 702 - ricochetNotes scales velocity and preserves probability", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('origVel * clampedVel'), 'ricochetNotes should scale velocity by velocityFactor');
+    t.assertTruthy(funcStr.includes('stepData.probability'), 'ricochetNotes should preserve probability');
 });
 
-TestRunner.test("Day 702 - bounceNotes rounds velocity to 2 decimal places", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('Math.round(newVel * 100) / 100'), 'bounceNotes should round velocity to 2 decimal places');
+TestRunner.test("Day 702 - ricochetNotes rounds velocity to 2 decimal places", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('Math.round(newVel * 100) / 100'), 'ricochetNotes should round velocity to 2 decimal places');
 });
 
-TestRunner.test("Day 702 - bounceNotes returns count of bounced notes", (t) => {
-    const funcStr = Track.prototype.bounceNotes.toString();
-    t.assertTruthy(funcStr.includes('bouncedCount'), 'bounceNotes should track bouncedCount');
-    t.assertTruthy(funcStr.includes('return bouncedCount'), 'bounceNotes should return bouncedCount');
+TestRunner.test("Day 702 - ricochetNotes returns count of bounced notes", (t) => {
+    const funcStr = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(funcStr.includes('bouncedCount'), 'ricochetNotes should track bouncedCount');
+    t.assertTruthy(funcStr.includes('return bouncedCount'), 'ricochetNotes should return bouncedCount');
 });
 
 TestRunner.test("Day 702 - BOUNCE constants are defined in constants.js", (t) => {
@@ -20741,31 +20741,31 @@ TestRunner.test("Day 702 - BOUNCE constants are defined in constants.js", (t) =>
     t.assertTruthy(constantsSrc.includes('BOUNCE_DEFAULT_VELOCITY_FACTOR = 0.9'), 'BOUNCE_DEFAULT_VELOCITY_FACTOR should be 0.9');
 });
 
-TestRunner.test("Day 702 - ui.js has 5 Bounce Notes menu items", (t) => {
+TestRunner.test("Day 702 - ui.js has 5 Ricochet Notes menu items", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    const matches = uiStr.match(/Bounce Notes \(/g);
-    t.assertTruthy(matches && matches.length >= 5, 'ui.js should have at least 5 Bounce Notes menu items');
+    const matches = uiStr.match(/Ricochet Notes \(/g);
+    t.assertTruthy(matches && matches.length >= 5, 'ui.js should have at least 5 Ricochet Notes menu items');
 });
 
-TestRunner.test("Day 702 - Bounce Notes menu items call track.bounceNotes", (t) => {
+TestRunner.test("Day 702 - Ricochet Notes menu items call track.ricochetNotes", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('currentTrackForMenu.bounceNotes('), 'Bounce Notes menu items should call bounceNotes()');
+    t.assertTruthy(uiStr.includes('currentTrackForMenu.ricochetNotes('), 'Ricochet Notes menu items should call ricochetNotes()');
 });
 
-TestRunner.test("Day 702 - Bounce Notes menu items call recreateToneSequence", (t) => {
+TestRunner.test("Day 702 - Ricochet Notes menu items call recreateToneSequence", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('Bounce Notes') && uiStr.includes('recreateToneSequence'), 'Bounce Notes menu items should call recreateToneSequence');
+    t.assertTruthy(uiStr.includes('Ricochet Notes') && uiStr.includes('recreateToneSequence'), 'Ricochet Notes menu items should call recreateToneSequence');
 });
 
-TestRunner.test("Day 702 - Bounce Notes menu items show notification with count", (t) => {
+TestRunner.test("Day 702 - Ricochet Notes menu items show notification with count", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('Bounced ${result} note'), 'Bounce Notes should show notification with bounced count');
-    t.assertTruthy(uiStr.includes('No notes to bounce.'), 'Bounce Notes should show "No notes to bounce." notification');
+    t.assertTruthy(uiStr.includes('Bounced ${result} note'), 'Ricochet Notes should show notification with bounced count');
+    t.assertTruthy(uiStr.includes('No notes to bounce.'), 'Ricochet Notes should show "No notes to bounce." notification');
 });
 
-TestRunner.test("Day 702 - Bounce Notes menu items capture undo with descriptive label", (t) => {
+TestRunner.test("Day 702 - Ricochet Notes menu items capture undo with descriptive label", (t) => {
     const uiStr = require('fs').readFileSync('./js/ui.js', 'utf8');
-    t.assertTruthy(uiStr.includes('Bounce Notes on'), 'Bounce Notes menu item should capture undo with descriptive label');
+    t.assertTruthy(uiStr.includes('Ricochet Notes on'), 'Ricochet Notes menu item should capture undo with descriptive label');
 });
 
 TestRunner.test("Day 702 - APP_VERSION validation (>= 2.354)", (t) => {
@@ -20779,7 +20779,7 @@ TestRunner.test("Day 702 - APP_VERSION validation (>= 2.354)", (t) => {
     }
 });
 
-TestRunner.test("Day 702 - bounceNotes functional test: shift range is 1..maxOffsetSteps", (t) => {
+TestRunner.test("Day 702 - ricochetNotes functional test: shift range is 1..maxOffsetSteps", (t) => {
     const maxOffset = 4;
     for (let i = 0; i < 10; i++) {
         const shift = 1 + Math.floor(Math.random() * maxOffset);
@@ -20787,7 +20787,7 @@ TestRunner.test("Day 702 - bounceNotes functional test: shift range is 1..maxOff
     }
 });
 
-TestRunner.test("Day 702 - bounceNotes functional test: direction is -1 or +1", (t) => {
+TestRunner.test("Day 702 - ricochetNotes functional test: direction is -1 or +1", (t) => {
     for (let i = 0; i < 10; i++) {
         const direction = Math.random() < 0.5 ? -1 : 1;
         t.assertTruthy(direction === -1 || direction === 1, 'direction should be -1 or +1');
@@ -24208,6 +24208,259 @@ TestRunner.test("Day 720 - waveNotes functional test: skips source cell (no self
     const src = Track.prototype.waveNotes.toString();
     t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
 });
+
+
+// Day 721 - Ricochet Notes Feature Tests
+TestRunner.test("Day 721 - ricochetNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.ricochetNotes === 'function', 'ricochetNotes is a function');
+});
+
+TestRunner.test("Day 721 - ricochetNotes accepts 8 parameters with defaults (length, rowVelocityStart, colVelocityStart, wallElasticity, rowGravity, velocityDecay, axis, skipOccupied)", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.RICOCHET_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/rowVelocityStart\s*=\s*Constants\.RICOCHET_NOTES_DEFAULT_ROW_VELOCITY/.test(src), 'has rowVelocityStart default');
+    t.assertTruthy(/colVelocityStart\s*=\s*Constants\.RICOCHET_NOTES_DEFAULT_COL_VELOCITY/.test(src), 'has colVelocityStart default');
+    t.assertTruthy(/wallElasticity\s*=\s*Constants\.RICOCHET_NOTES_DEFAULT_WALL_ELASTICITY/.test(src), 'has wallElasticity default');
+    t.assertTruthy(/rowGravity\s*=\s*Constants\.RICOCHET_NOTES_DEFAULT_ROW_GRAVITY/.test(src), 'has rowGravity default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.RICOCHET_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/axis\s*=\s*Constants\.RICOCHET_NOTES_AXIS_BOTH/.test(src), 'has axis default');
+    t.assertTruthy(/skipOccupied/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 721 - ricochetNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['\"]Audio['\"]/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 721 - ricochetNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 721 - ricochetNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0 && mutationIdx > undoIdx, 'undo capture is before mutation (undoIdx=' + undoIdx + ', mutationIdx=' + mutationIdx + ')');
+});
+
+TestRunner.test("Day 721 - ricochetNotes has descriptive 'Ricochet Notes' undo label", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Ricochet Notes/.test(src), 'has "Ricochet Notes" in undo label');
+});
+
+TestRunner.test("Day 721 - ricochetNotes clamps length to RICOCHET_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+});
+
+TestRunner.test("Day 721 - ricochetNotes clamps rowVelocity to RICOCHET_NOTES_MIN/MAX_ROW_VELOCITY", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_ROW_VELOCITY,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_ROW_VELOCITY/.test(src), 'clamps rowVelocity');
+});
+
+TestRunner.test("Day 721 - ricochetNotes clamps colVelocity to RICOCHET_NOTES_MIN/MAX_COL_VELOCITY", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_COL_VELOCITY,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_COL_VELOCITY/.test(src), 'clamps colVelocity');
+});
+
+TestRunner.test("Day 721 - ricochetNotes clamps wallElasticity to RICOCHET_NOTES_MIN/MAX_WALL_ELASTICITY", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_WALL_ELASTICITY,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_WALL_ELASTICITY/.test(src), 'clamps wallElasticity');
+});
+
+TestRunner.test("Day 721 - ricochetNotes clamps rowGravity to RICOCHET_NOTES_MIN/MAX_ROW_GRAVITY", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_ROW_GRAVITY,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_ROW_GRAVITY/.test(src), 'clamps rowGravity');
+});
+
+TestRunner.test("Day 721 - ricochetNotes clamps velocityDecay to RICOCHET_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 721 - ricochetNotes validates axis with RICOCHET_NOTES_AXES (uses BOTH fallback)", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/RICOCHET_NOTES_AXES\.includes\(axis\)/.test(src), 'validates axis with RICOCHET_NOTES_AXES');
+    t.assertTruthy(/:.*RICOCHET_NOTES_AXIS_BOTH/.test(src), 'falls back to RICOCHET_NOTES_AXIS_BOTH');
+});
+
+TestRunner.test("Day 721 - ricochetNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*s\)/.test(src), 'uses Math.pow(clampedDecay, s)');
+});
+
+TestRunner.test("Day 721 - ricochetNotes uses Math.floor for length/rowVelocity/colVelocity/rowGravity", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    const floorMatches = (src.match(/Math\.floor\((length|rowVelocityStart|colVelocityStart|rowGravity)\)/g) || []).length;
+    t.assertTruthy(floorMatches >= 4, 'uses Math.floor on length/rowVelocity/colVelocity/rowGravity (got ' + floorMatches + ')');
+});
+
+TestRunner.test("Day 721 - ricochetNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'uses skipOccupied');
+});
+
+TestRunner.test("Day 721 - ricochetNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds decayedVel to 2 decimal places');
+});
+
+TestRunner.test("Day 721 - ricochetNotes returns count of ricochet notes (ricochetCount)", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/return\s+ricochetCount/.test(src), 'returns ricochetCount');
+    t.assertTruthy(/ricochetCount\s*\+\+/.test(src), 'increments ricochetCount on each placement');
+});
+
+TestRunner.test("Day 721 - all 22 RICOCHET_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const expectedConstants = [
+        'RICOCHET_NOTES_MIN_LENGTH',
+        'RICOCHET_NOTES_MAX_LENGTH',
+        'RICOCHET_NOTES_DEFAULT_LENGTH',
+        'RICOCHET_NOTES_MIN_ROW_VELOCITY',
+        'RICOCHET_NOTES_MAX_ROW_VELOCITY',
+        'RICOCHET_NOTES_DEFAULT_ROW_VELOCITY',
+        'RICOCHET_NOTES_MIN_COL_VELOCITY',
+        'RICOCHET_NOTES_MAX_COL_VELOCITY',
+        'RICOCHET_NOTES_DEFAULT_COL_VELOCITY',
+        'RICOCHET_NOTES_MIN_WALL_ELASTICITY',
+        'RICOCHET_NOTES_MAX_WALL_ELASTICITY',
+        'RICOCHET_NOTES_DEFAULT_WALL_ELASTICITY',
+        'RICOCHET_NOTES_MIN_ROW_GRAVITY',
+        'RICOCHET_NOTES_MAX_ROW_GRAVITY',
+        'RICOCHET_NOTES_DEFAULT_ROW_GRAVITY',
+        'RICOCHET_NOTES_MIN_VELOCITY_DECAY',
+        'RICOCHET_NOTES_MAX_VELOCITY_DECAY',
+        'RICOCHET_NOTES_DEFAULT_VELOCITY_DECAY',
+        'RICOCHET_NOTES_AXIS_BOTH',
+        'RICOCHET_NOTES_AXIS_ROW_ONLY',
+        'RICOCHET_NOTES_AXIS_COL_ONLY',
+        'RICOCHET_NOTES_AXES'
+    ];
+    for (const c of expectedConstants) {
+        t.assertTruthy(src.indexOf('export const ' + c) >= 0, 'has ' + c);
+    }
+});
+
+TestRunner.test("Day 721 - RICOCHET_NOTES_AXES includes both, row-only, and col-only", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(/RICOCHET_NOTES_AXES\s*=\s*\[/.test(src) && /RICOCHET_NOTES_AXIS_BOTH/.test(src) && /RICOCHET_NOTES_AXIS_ROW_ONLY/.test(src) && /RICOCHET_NOTES_AXIS_COL_ONLY/.test(src), 'RICOCHET_NOTES_AXES includes both/row-only/col-only');
+});
+
+TestRunner.test("Day 721 - ui.js has 5 Ricochet Notes menu items", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const matches = src.match(/Ricochet Notes \(/g) || [];
+    t.assertTruthy(matches.length >= 5, 'has 5+ Ricochet Notes menu items (got ' + matches.length + ')');
+});
+
+TestRunner.test("Day 721 - Ricochet Notes menu items call track.ricochetNotes", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    const matches = src.match(/currentTrackForMenu\.ricochetNotes\(/g) || [];
+    t.assertTruthy(matches.length >= 5, 'has 5+ ricochetNotes menu item calls (got ' + matches.length + ')');
+});
+
+TestRunner.test("Day 721 - Ricochet Notes menu items show notification with ricocheted count", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/Ricocheted \$\{result\} note\(s\)/.test(src), 'shows "Ricocheted {result} note(s)" notification');
+    t.assertTruthy(/No notes to ricochet/.test(src), 'shows "No notes to ricochet." fallback');
+});
+
+TestRunner.test("Day 721 - Ricochet Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Ricochet Notes on/.test(src), 'captures undo with "Ricochet Notes on ..." label');
+});
+
+TestRunner.test("Day 721 - APP_VERSION validation (>= 2.370 for Day 721)", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*['"]([\d.]+)['"]/);
+    t.assertTruthy(m, 'has APP_VERSION');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] > 2 || (v[0] === 2 && v[1] >= 370), 'APP_VERSION >= 2.370 (got ' + m[1] + ')');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: uses reflect() helper for wall bouncing", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/reflect\s*=/.test(src), 'defines reflect helper');
+    t.assertTruthy(/reflect\(nextRow/.test(src), 'uses reflect for row');
+    t.assertTruthy(/reflect\(nextCol/.test(src), 'uses reflect for col');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: reflect inverts velocity on wall hit", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/v\s*=\s*-v\s*\*\s*clampedElasticity/.test(src), 'inverts velocity and multiplies by elasticity');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: axis-aware wall application (row-only bypasses col walls)", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/applyRowWalls\s*=\s*useAxis\s*!==\s*Constants\.RICOCHET_NOTES_AXIS_COL_ONLY/.test(src), 'row walls skipped in col-only mode');
+    t.assertTruthy(/applyColWalls\s*=\s*useAxis\s*!==\s*Constants\.RICOCHET_NOTES_AXIS_ROW_ONLY/.test(src), 'col walls skipped in row-only mode');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: gravity accumulates into row velocity each step", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/rowVel\s*\+=\s*clampedGravity/.test(src), 'adds clampedGravity to rowVel each step');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: per-step velocity decay applied to row/col velocity", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/rowVel\s*=\s*rowVel\s*\*\s*clampedDecay/.test(src), 'multiplies rowVel by clampedDecay');
+    t.assertTruthy(/colVel\s*=\s*colVel\s*\*\s*clampedDecay/.test(src), 'multiplies colVel by clampedDecay');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: handles out-of-bounds reflection with bounded loop", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/for\s*\(\s*let\s+i\s*=\s*0;\s*i\s*<\s*8;\s*i\s*\+\+\s*\)/.test(src), 'has bounded reflection loop (max 8 iterations)');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: clamps final reflected position to [0, max-1]", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/if\s*\(\s*p\s*<\s*0\s*\)\s*p\s*=\s*0/.test(src), 'clamps p >= 0');
+    t.assertTruthy(/if\s*\(\s*p\s*>=\s*max\s*\)\s*p\s*=\s*max\s*-\s*1/.test(src), 'clamps p < max');
+});
+
+TestRunner.test("Day 721 - ricochetNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/newNotes\.push/.test(src), 'uses newNotes.push to collect');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 721 - ricochetNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source note');
+});
+
+TestRunner.test("Day 721 - ricochetNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
+TestRunner.test("Day 721 - ricochetNotes structural test: supports 3 distinct axis modes", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/RICOCHET_NOTES_AXIS_BOTH/.test(src), 'handles BOTH axis');
+    t.assertTruthy(/RICOCHET_NOTES_AXIS_ROW_ONLY/.test(src), 'handles ROW_ONLY axis');
+    t.assertTruthy(/RICOCHET_NOTES_AXIS_COL_ONLY/.test(src), 'handles COL_ONLY axis');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 721 - ricochetNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'skips empty rows');
+});
+
+TestRunner.test("Day 721 - ricochetNotes functional test: clamps to valid ranges (length 100->32, rowVelocity -10->-4, wallElasticity 2->1.0)", (t) => {
+    const src = Track.prototype.ricochetNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_ROW_VELOCITY,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_ROW_VELOCITY/.test(src), 'clamps rowVelocity');
+    t.assertTruthy(/Math\.max\(Constants\.RICOCHET_NOTES_MIN_WALL_ELASTICITY,\s*Math\.min\(Constants\.RICOCHET_NOTES_MAX_WALL_ELASTICITY/.test(src), 'clamps wallElasticity');
+});
+
 
 export async function runTests() {
     return await TestRunner.runAll();

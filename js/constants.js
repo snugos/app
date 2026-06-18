@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.369.0';
+export const APP_VERSION = '2.370.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -493,6 +493,33 @@ export const WAVE_NOTES_WAVES = [
     WAVE_NOTES_WAVE_TRIANGLE,
     WAVE_NOTES_WAVE_SAWTOOTH,
     WAVE_NOTES_WAVE_SQUARE
+];
+
+export const RICOCHET_NOTES_MIN_LENGTH = 1; // Minimum 1 bounce step (just the source row stamp)
+export const RICOCHET_NOTES_MAX_LENGTH = 32; // Maximum 32 bounce steps (long ping-pong trail)
+export const RICOCHET_NOTES_DEFAULT_LENGTH = 12; // Default 12 bounce steps (3-wall ping-pong)
+export const RICOCHET_NOTES_MIN_ROW_VELOCITY = -4; // Minimum -4 row velocity (strong upward)
+export const RICOCHET_NOTES_MAX_ROW_VELOCITY = 4; // Maximum +4 row velocity (strong downward)
+export const RICOCHET_NOTES_DEFAULT_ROW_VELOCITY = 2; // Default +2 row velocity (gentle downward)
+export const RICOCHET_NOTES_MIN_COL_VELOCITY = -4; // Minimum -4 col velocity (backward in time)
+export const RICOCHET_NOTES_MAX_COL_VELOCITY = 4; // Maximum +4 col velocity (forward in time)
+export const RICOCHET_NOTES_DEFAULT_COL_VELOCITY = 1; // Default +1 col velocity (steady forward)
+export const RICOCHET_NOTES_MIN_WALL_ELASTICITY = 0.1; // Minimum wall elasticity (very lossy wall)
+export const RICOCHET_NOTES_MAX_WALL_ELASTICITY = 1.0; // Maximum wall elasticity (perfectly elastic)
+export const RICOCHET_NOTES_DEFAULT_WALL_ELASTICITY = 0.85; // Default 85% velocity preserved on bounce
+export const RICOCHET_NOTES_MIN_ROW_GRAVITY = 0; // Minimum 0 row gravity (no gravity)
+export const RICOCHET_NOTES_MAX_ROW_GRAVITY = 4; // Maximum +4 row gravity (strong downward pull)
+export const RICOCHET_NOTES_DEFAULT_ROW_GRAVITY = 0; // Default 0 row gravity (clean bounce)
+export const RICOCHET_NOTES_MIN_VELOCITY_DECAY = 0.5; // Minimum per-step velocity decay floor (50% per step)
+export const RICOCHET_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no per-step velocity decay)
+export const RICOCHET_NOTES_DEFAULT_VELOCITY_DECAY = 0.97; // Default 97% velocity preservation per step (slow fade)
+export const RICOCHET_NOTES_AXIS_BOTH = 'both'; // Bounce off both top/bottom and left/right walls
+export const RICOCHET_NOTES_AXIS_ROW_ONLY = 'row-only'; // Bounce off only top/bottom walls (col passes through)
+export const RICOCHET_NOTES_AXIS_COL_ONLY = 'col-only'; // Bounce off only left/right walls (row passes through)
+export const RICOCHET_NOTES_AXES = [
+    RICOCHET_NOTES_AXIS_BOTH,
+    RICOCHET_NOTES_AXIS_ROW_ONLY,
+    RICOCHET_NOTES_AXIS_COL_ONLY
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

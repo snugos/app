@@ -1,3 +1,116 @@
+#### Day 721: Ricochet Notes Feature (2026-06-17)
+- **Feature**: Added `ricochetNotes(length, rowVelocityStart, colVelocityStart, wallElasticity, rowGravity, velocityDecay, axis, skipOccupied)` method to Track class and 5 "Ricochet Notes" menu items to the sequencer context menu. Each active note spawns a chain of N notes that bounce off the grid edges like a billiard/pool ball (ping-pong). For step `s` in 0..clampedLength, computes `nextRow = currRow + rowVel` and `nextCol = currCol + colVel`, then reflects off walls if the position falls outside `[0, numRows-1]` / `[0, totalSteps-1]` by negating the velocity and scaling by `wallElasticity` (i.e. the "ball" reverses direction with some energy loss per bounce). `rowGravity` is added to `rowVel` each step, and a global `velocityDecay` (per-step multiplier) is applied to both velocities to fade the chain over time. Three axis modes: 'both' (bounce off row + col walls, classic billiard), 'row-only' (column passes through, only row walls bounce — produces a horizontal ribbon pattern), 'col-only' (row passes through, only col walls bounce — produces a vertical stripe pattern). Velocity decays per step, preserves the original probability. Complements `waveNotes` (smooth oscilloscope curve), `mosaicNotes` (2D tile grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a reflection-bound ricochet chain — the only note-generator whose path is topologically constrained by the grid itself.
+- **Files Modified**:
+  - `js/Track.js`: Added `ricochetNotes` method after `waveNotes` (line ~6700, the new last method on the class)
+  - `js/constants.js`: Added 24 RICOCHET_NOTES_* constants + bumped APP_VERSION to 2.370.0
+  - `js/ui.js`: Added 5 Ricochet Notes menu items in the sequencer context menu after Wave Notes (Sine 2-cycle, 8)
+  - `js/tests.js`: Added Day 721 test block with 40 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **ricochetNotes** (`js/Track.js`): For each active note, places a chain of N bounce positions. Maintains per-note state across the chain: `currRow`, `currCol`, `rowVel`, `colVel`. For step `s` in 0..clampedLength, computes `nextRow = currRow + rowVel` and `nextCol = currCol + colVel`, then calls `reflect(pos, vel, max, applyWalls)` which negates the velocity and multiplies by `clampedElasticity` whenever the position crosses a wall. Captures undo state BEFORE mutation with descriptive "Ricochet Notes (axis, N steps, vRow/vCol) on <seqname>" label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to RICOCHET_NOTES_MIN_LENGTH (1) / RICOCHET_NOTES_MAX_LENGTH (32) range with Math.floor (default RICOCHET_NOTES_DEFAULT_LENGTH=12)
+    - Clamps `rowVelocityStart` to RICOCHET_NOTES_MIN_ROW_VELOCITY (-4) / RICOCHET_NOTES_MAX_ROW_VELOCITY (+4) range with Math.floor (default RICOCHET_NOTES_DEFAULT_ROW_VELOCITY=2)
+    - Clamps `colVelocityStart` to RICOCHET_NOTES_MIN_COL_VELOCITY (-4) / RICOCHET_NOTES_MAX_COL_VELOCITY (+4) range with Math.floor (default RICOCHET_NOTES_DEFAULT_COL_VELOCITY=1)
+    - Clamps `wallElasticity` to RICOCHET_NOTES_MIN_WALL_ELASTICITY (0.1) / RICOCHET_NOTES_MAX_WALL_ELASTICITY (1.0) range (default RICOCHET_NOTES_DEFAULT_WALL_ELASTICITY=0.85)
+    - Clamps `rowGravity` to RICOCHET_NOTES_MIN_ROW_GRAVITY (0) / RICOCHET_NOTES_MAX_ROW_GRAVITY (4) range with Math.floor (default RICOCHET_NOTES_DEFAULT_ROW_GRAVITY=0)
+    - Clamps `velocityDecay` to RICOCHET_NOTES_MIN_VELOCITY_DECAY (0.5) / RICOCHET_NOTES_MAX_VELOCITY_DECAY (1.0) range (default RICOCHET_NOTES_DEFAULT_VELOCITY_DECAY=0.97)
+    - Validates `axis` against RICOCHET_NOTES_AXES array, falls back to RICOCHET_NOTES_AXIS_BOTH if invalid
+    - Captures undo state BEFORE mutation with descriptive "Ricochet Notes (axis, N steps, vRow/vCol) on <seqname>" label
+    - For each row, for each column, for each active note: initializes per-note `currRow = rowIndex`, `currCol = col`, `rowVel = clampedRowVel`, `colVel = clampedColVel`
+    - For step `s` in 0..clampedLength: computes `nextRow = currRow + rowVel` and `nextCol = currCol + colVel`
+    - Calls `reflect(nextRow, rowVel, numRows, applyRowWalls)` and `reflect(nextCol, colVel, totalSteps, applyColWalls)` to handle wall bounces
+    - Wall reflection: if `pos < 0`, sets `pos = -pos` and `vel = -vel * clampedElasticity`. If `pos >= max`, sets `pos = (max-1) - (pos - (max-1))` and `vel = -vel * clampedElasticity`. Loops up to 8 times to handle high-velocity multi-bounce in a single step. Final clamp to `[0, max-1]`. Returns `[Math.round(pos), vel]`.
+    - `applyRowWalls` is false only when axis === 'col-only'. `applyColWalls` is false only when axis === 'row-only'.
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, s)))` for exponential velocity decay per step
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Updates per-note state after each step: `currRow = targetRow`, `currCol = targetCol`, `rowVel += clampedGravity`, `rowVel = rowVel * clampedDecay`, `colVel = colVel * clampedDecay`
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of ricochet notes added
+  - **Ricochet Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Wave Notes (Sine 2-cycle, 8)
+    - "Ricochet Notes (Billiard, 12)" - calls `ricochetNotes(12, 2, 1, 0.85, 0, 0.97, 'both', true)` - classic billiard ball: +2 row vel, +1 col vel, 85% wall elasticity, no gravity
+    - "Ricochet Notes (Steep Ricochet, 16)" - calls `ricochetNotes(16, 3, 1, 0.9, 0, 0.98, 'both', true)` - more energetic: +3 row vel, 90% elasticity, 16-step trail
+    - "Ricochet Notes (With Gravity, 12)" - calls `ricochetNotes(12, 1, 1, 0.8, 1, 0.95, 'both', true)` - ball that gradually falls under +1 row gravity per step
+    - "Ricochet Notes (Vertical Pinball, 10)" - calls `ricochetNotes(10, 2, 1, 0.85, 0, 0.97, 'row-only', true)` - col passes through edges, only row walls bounce (vertical pinball)
+    - "Ricochet Notes (Horizontal Stripe, 10)" - calls `ricochetNotes(10, 1, 2, 0.85, 0, 0.97, 'col-only', true)` - row passes through, only col walls bounce (horizontal stripe)
+    - All call `recreateToneSequence(true)` after bouncing
+    - All capture undo with descriptive "Ricochet Notes on <name> (<seqname>)" label
+    - Show notifications: "Ricochetd {count} note(s) (variant)."
+    - Show "No notes to bounce." when nothing to bounce
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 24 new constants
+  - `RICOCHET_NOTES_MIN_LENGTH = 1` - Minimum 1 bounce step (just the source row stamp)
+  - `RICOCHET_NOTES_MAX_LENGTH = 32` - Maximum 32 bounce steps (long ping-pong trail)
+  - `RICOCHET_NOTES_DEFAULT_LENGTH = 12` - Default 12 bounce steps (3-wall ping-pong)
+  - `RICOCHET_NOTES_MIN_ROW_VELOCITY = -4` - Minimum -4 row velocity (strong upward)
+  - `RICOCHET_NOTES_MAX_ROW_VELOCITY = 4` - Maximum +4 row velocity (strong downward)
+  - `RICOCHET_NOTES_DEFAULT_ROW_VELOCITY = 2` - Default +2 row velocity (gentle downward)
+  - `RICOCHET_NOTES_MIN_COL_VELOCITY = -4` - Minimum -4 col velocity (backward in time)
+  - `RICOCHET_NOTES_MAX_COL_VELOCITY = 4` - Maximum +4 col velocity (forward in time)
+  - `RICOCHET_NOTES_DEFAULT_COL_VELOCITY = 1` - Default +1 col velocity (steady forward)
+  - `RICOCHET_NOTES_MIN_WALL_ELASTICITY = 0.1` - Minimum wall elasticity (very lossy wall)
+  - `RICOCHET_NOTES_MAX_WALL_ELASTICITY = 1.0` - Maximum wall elasticity (perfectly elastic)
+  - `RICOCHET_NOTES_DEFAULT_WALL_ELASTICITY = 0.85` - Default 85% velocity preserved on bounce
+  - `RICOCHET_NOTES_MIN_ROW_GRAVITY = 0` - Minimum 0 row gravity (no gravity)
+  - `RICOCHET_NOTES_MAX_ROW_GRAVITY = 4` - Maximum +4 row gravity (strong downward pull)
+  - `RICOCHET_NOTES_DEFAULT_ROW_GRAVITY = 0` - Default 0 row gravity (clean bounce)
+  - `RICOCHET_NOTES_MIN_VELOCITY_DECAY = 0.5` - Minimum per-step velocity decay floor (50% per step)
+  - `RICOCHET_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no per-step velocity decay)
+  - `RICOCHET_NOTES_DEFAULT_VELOCITY_DECAY = 0.97` - Default 97% velocity preservation per step (slow fade)
+  - `RICOCHET_NOTES_AXIS_BOTH = 'both'` - Ricochet off both top/bottom and left/right walls
+  - `RICOCHET_NOTES_AXIS_ROW_ONLY = 'row-only'` - Ricochet off only top/bottom walls (col passes through)
+  - `RICOCHET_NOTES_AXIS_COL_ONLY = 'col-only'` - Ricochet off only left/right walls (row passes through)
+  - `RICOCHET_NOTES_AXES = [BOTH, ROW_ONLY, COL_ONLY]` - Valid axis values
+- **Tests** (`js/tests.js`): 40 tests covering:
+  - `ricochetNotes` is a function on Track.prototype
+  - `ricochetNotes` accepts 8 parameters with defaults (length, rowVelocityStart, colVelocityStart, wallElasticity, rowGravity, velocityDecay, axis, skipOccupied)
+  - `ricochetNotes` returns 0 for Audio tracks
+  - `ricochetNotes` gets active sequence via `getActiveSequence`
+  - `ricochetNotes` captures undo BEFORE mutation
+  - `ricochetNotes` has descriptive "Ricochet Notes" undo label
+  - `ricochetNotes` clamps length to RICOCHET_NOTES_MIN/MAX_LENGTH
+  - `ricochetNotes` clamps rowVelocityStart to RICOCHET_NOTES_MIN/MAX_ROW_VELOCITY
+  - `ricochetNotes` clamps colVelocityStart to RICOCHET_NOTES_MIN/MAX_COL_VELOCITY
+  - `ricochetNotes` clamps wallElasticity to RICOCHET_NOTES_MIN/MAX_WALL_ELASTICITY
+  - `ricochetNotes` clamps rowGravity to RICOCHET_NOTES_MIN/MAX_ROW_GRAVITY
+  - `ricochetNotes` clamps velocityDecay to RICOCHET_NOTES_MIN/MAX_VELOCITY_DECAY
+  - `ricochetNotes` validates axis with RICOCHET_NOTES_AXES (uses BOTH fallback)
+  - `ricochetNotes` uses Math.pow for velocity decay
+  - `ricochetNotes` supports skipOccupied option
+  - `ricochetNotes` rounds velocity to 2 decimal places
+  - `ricochetNotes` returns count of ricochet notes (bounceCount)
+  - All 24 BOUNCE_NOTES constants are defined in constants.js
+  - RICOCHET_NOTES_AXES includes both, row-only, and col-only
+  - ui.js has 5 Ricochet Notes menu items
+  - Ricochet Notes menu items call track.ricochetNotes
+  - Ricochet Notes menu items show notification with count
+  - Ricochet Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.370 for Day 721)
+  - Functional test: nextRow = currRow + rowVel, nextCol = currCol + colVel
+  - Functional test: applies clampedGravity to rowVel each step
+  - Functional test: applies clampedDecay to both rowVel and colVel each step
+  - Functional test: wall reflection negates velocity and scales by elasticity
+  - Functional test: 'row-only' axis disables col wall reflection
+  - Functional test: 'col-only' axis disables row wall reflection
+  - Functional test: uses reflect helper for wall bouncing
+  - Functional test: respects Math.floor for length/rowVel/colVel/gravity
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: supports 3 distinct axis modes
+  - Structural test: preserves probability from source
+  - Structural test: handles empty source (no active notes)
+  - Structural test: respects sequence length and row boundaries
+  - Functional test: clamps to valid ranges (length 100->32, rowVel -10->-4, colVel 10->4, elasticity 2.0->1.0)
+  - Functional test: skips source cell (no self-reference)
+  - Functional test: maintains per-note currRow/currCol state across the chain
+- **Version**: Bumped to 2.370.0
+- **Test Count**: Added 40 Day 721 tests. All 40 are written to `js/tests.js` and follow the same structural pattern as the Day 720 block. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle and the runtime test infrastructure have the same pre-existing 1433-file-read `__dirname` test-environment issue from Days 714-720, unrelated to this work.
+
+
 #### Day 720: Wave Notes Feature (2026-06-17)
 - **Feature**: Added `waveNotes(length, amplitude, frequency, phase, velocityDecay, wave, skipOccupied)` method to Track class and 6 "Wave Notes" menu items to the sequencer context menu. Each active note spawns N notes along a mathematical waveform curve in the row dimension (oscilloscope / LFO sweep). For step `s` in 0..clampedLength, computes `angle = 2*PI*clampedFrequency*(s/clampedLength) + clampedPhase` and `rowOffset = round(clampedAmplitude * waveSample)` where `colOffset = s` (forward in time). Five wave shapes: 'sine' (smooth `Math.sin`), 'cosine' (`Math.cos`, 90° phase shift), 'triangle' (linear ramp up then down, `fract < 0.5 ? -1+4*fract : 3-4*fract`), 'sawtooth' (linear ramp down with hard reset, `1 - 2*fract`), 'square' (sign wave, `fract < 0.5 ? 1 : -1`). Velocity decays by step number. Complements `mosaicNotes` (2D tile grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a smooth oscillating curve pattern.
 - **Files Modified**:

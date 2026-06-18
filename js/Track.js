@@ -6697,4 +6697,127 @@ export class Track {
 
         return waveCount;
     }
+
+    ricochetNotes(length = Constants.RICOCHET_NOTES_DEFAULT_LENGTH, rowVelocityStart = Constants.RICOCHET_NOTES_DEFAULT_ROW_VELOCITY, colVelocityStart = Constants.RICOCHET_NOTES_DEFAULT_COL_VELOCITY, wallElasticity = Constants.RICOCHET_NOTES_DEFAULT_WALL_ELASTICITY, rowGravity = Constants.RICOCHET_NOTES_DEFAULT_ROW_GRAVITY, velocityDecay = Constants.RICOCHET_NOTES_DEFAULT_VELOCITY_DECAY, axis = Constants.RICOCHET_NOTES_AXIS_BOTH, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} ricochetNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.RICOCHET_NOTES_MIN_LENGTH, Math.min(Constants.RICOCHET_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedRowVel = Math.max(Constants.RICOCHET_NOTES_MIN_ROW_VELOCITY, Math.min(Constants.RICOCHET_NOTES_MAX_ROW_VELOCITY, Math.floor(rowVelocityStart)));
+        const clampedColVel = Math.max(Constants.RICOCHET_NOTES_MIN_COL_VELOCITY, Math.min(Constants.RICOCHET_NOTES_MAX_COL_VELOCITY, Math.floor(colVelocityStart)));
+        const clampedElasticity = Math.max(Constants.RICOCHET_NOTES_MIN_WALL_ELASTICITY, Math.min(Constants.RICOCHET_NOTES_MAX_WALL_ELASTICITY, wallElasticity));
+        const clampedGravity = Math.max(Constants.RICOCHET_NOTES_MIN_ROW_GRAVITY, Math.min(Constants.RICOCHET_NOTES_MAX_ROW_GRAVITY, Math.floor(rowGravity)));
+        const clampedDecay = Math.max(Constants.RICOCHET_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.RICOCHET_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useAxis = Constants.RICOCHET_NOTES_AXES.includes(axis) ? axis : Constants.RICOCHET_NOTES_AXIS_BOTH;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Ricochet Notes (${useAxis}, ${clampedLength} steps, v${clampedRowVel}/${clampedColVel}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let ricochetCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        // Helper: reflect an integer position+velocity pair off the [0, max-1] wall with elasticity.
+        // Returns [newPos, newVel] where newVel has been negated and scaled by elasticity.
+        // When axis is 'col-only', row walls are not applied (returns pos unchanged, vel unchanged).
+        // When axis is 'row-only', col walls are not applied (returns pos unchanged, vel unchanged).
+        const reflect = (pos, vel, max, applyWalls) => {
+            if (!applyWalls) return [pos, vel];
+            let p = pos;
+            let v = vel;
+            // Allow multiple reflections in case velocity is large enough to skip past the wall
+            // (cap the loop so we don't loop forever if velocity is degenerate).
+            for (let i = 0; i < 8; i++) {
+                if (p < 0) {
+                    p = -p;
+                    v = -v * clampedElasticity;
+                } else if (p >= max) {
+                    p = (max - 1) - (p - (max - 1));
+                    v = -v * clampedElasticity;
+                } else {
+                    break;
+                }
+            }
+            // Final clamp in case of small floating-point edge case
+            if (p < 0) p = 0;
+            if (p >= max) p = max - 1;
+            return [Math.round(p), v];
+        };
+
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // Track per-note state across the bounce chain
+                let currRow = rowIndex;
+                let currCol = col;
+                let rowVel = clampedRowVel;
+                let colVel = clampedColVel;
+
+                for (let s = 0; s < clampedLength; s++) {
+                    // Step forward by current velocity (row gravity accumulates each step)
+                    let nextRow = currRow + rowVel;
+                    let nextCol = currCol + colVel;
+
+                    // Reflect off walls (per axis mode)
+                    const applyRowWalls = useAxis !== Constants.RICOCHET_NOTES_AXIS_COL_ONLY;
+                    const applyColWalls = useAxis !== Constants.RICOCHET_NOTES_AXIS_ROW_ONLY;
+                    [nextRow, rowVel] = reflect(nextRow, rowVel, numRows, applyRowWalls);
+                    [nextCol, colVel] = reflect(nextCol, colVel, totalSteps, applyColWalls);
+
+                    const targetRow = nextRow;
+                    const targetCol = nextCol;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Apply per-step velocity decay to the source note's velocity
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, s)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+
+                    // Advance current position, apply gravity to row velocity, and per-step decay to both
+                    currRow = targetRow;
+                    currCol = targetCol;
+                    rowVel += clampedGravity;
+                    rowVel = rowVel * clampedDecay;
+                    colVel = colVel * clampedDecay;
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            ricochetCount++;
+        }
+
+        return ricochetCount;
+    }
 }
