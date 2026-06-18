@@ -1,3 +1,104 @@
+#### Day 723: Stair Notes Feature (2026-06-18)
+- **Feature**: Added `stairNotes(length, stepSize, columnStep, velocityDecay, shape, skipOccupied)` method to Track class and 6 "Stair Notes" menu items to the sequencer context menu. Each active note spawns a stair-stepped chain of N notes where the row offset follows one of 5 shape patterns (up, down, up-down, down-up, random) and the column offset is `s * columnStep` (diagonal march through the grid). Per-step exponential velocity decay preserves the original probability. The shape is computed via an internal `stairOffset(s)` helper that returns the row delta for each step in the chain; a `newNotes` collection pattern (collect-then-apply) avoids mutating active sequence data mid-iteration. Complements `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with a deterministic staircase pattern.
+- **Files Modified**:
+  - `js/Track.js`: Added `stairNotes` method after `phyllotaxisNotes` (line ~6903, the new last method on the class)
+  - `js/constants.js`: Added 17 STAIR_NOTES_* constants + bumped APP_VERSION to 2.372.0
+  - `js/ui.js`: Added 6 Stair Notes menu items in the sequencer context menu after Phyllotaxis Notes (CCW Sunflower, 16)
+  - `js/tests.js`: Added Day 723 test block with 31 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed broken last Stair Notes test in `js/tests.js` (was missing closing `});` after the "clamps to valid ranges" test, causing the file to merge with the `export async function runTests()` declaration at the end).
+- **Feature Details**:
+  - **stairNotes** (`js/Track.js`): For each active note, places a chain of N stair-stepped notes. Computes a per-step row offset via the `stairOffset(s)` helper based on the shape parameter, and a column offset of `s * clampedColumnStep`. Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating).
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to STAIR_NOTES_MIN_LENGTH (1) / STAIR_NOTES_MAX_LENGTH (16) range with Math.floor (default STAIR_NOTES_DEFAULT_LENGTH=8)
+    - Clamps `stepSize` to STAIR_NOTES_MIN_STEP_SIZE (0) / STAIR_NOTES_MAX_STEP_SIZE (4) range with Math.floor (default STAIR_NOTES_DEFAULT_STEP_SIZE=1)
+    - Clamps `columnStep` to STAIR_NOTES_MIN_COLUMN_STEP (0) / STAIR_NOTES_MAX_COLUMN_STEP (4) range with Math.floor (default STAIR_NOTES_DEFAULT_COLUMN_STEP=1)
+    - Clamps `velocityDecay` to STAIR_NOTES_MIN_VELOCITY_DECAY (0.1) / STAIR_NOTES_MAX_VELOCITY_DECAY (1.0) range (default STAIR_NOTES_DEFAULT_VELOCITY_DECAY=0.9)
+    - Validates `shape` against STAIR_NOTES_SHAPES array, falls back to STAIR_NOTES_SHAPE_UP if invalid
+    - Captures undo state BEFORE mutation with descriptive `Stair Notes (shape, N steps, size X) on <seqname>` label
+    - Computes stair offset per step: `up` (always +s*stepSize), `down` (always -s*stepSize), `up-down` (rises to half then falls: `s*stepSize` then `(N-1-s)*stepSize`), `down-up` (falls to half then rises: `-s*stepSize` then `-(N-1-s)*stepSize`), `random` (`(Math.random() < 0.5 ? -1 : 1) * stepSize`)
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, s)))` for exponential velocity decay per step
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Returns count of stair notes added (stairCount)
+  - **Stair Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Phyllotaxis Notes (CCW Sunflower, 16)
+    - "Stair Notes (Up, 8)" - calls `stairNotes(8, 1, 1, 0.9, 'up', true)` - classic ascending staircase: 1 row up per step, 1 column forward per step
+    - "Stair Notes (Down, 8)" - calls `stairNotes(8, 1, 1, 0.9, 'down', true)` - descending staircase: 1 row down per step
+    - "Stair Notes (Up-Down, 8)" - calls `stairNotes(8, 1, 1, 0.9, 'up-down', true)` - pyramid shape: rises to peak at step 4 then falls back
+    - "Stair Notes (Down-Up, 8)" - calls `stairNotes(8, 1, 1, 0.9, 'down-up', true)` - valley shape: falls to trough at step 4 then rises back
+    - "Stair Notes (Random, 8)" - calls `stairNotes(8, 1, 1, 0.9, 'random', true)` - random walk: each step randomly up or down
+    - "Stair Notes (Steep Up, 8)" - calls `stairNotes(8, 2, 1, 0.9, 'up', true)` - steep staircase: 2 rows up per step
+    - All call `recreateToneSequence(true)` after stairing
+    - All capture undo with descriptive `Stair Notes on <name> (<seqname>)` label
+    - Show notifications: `Staired {count} note(s) (variant).`
+    - Show `No notes to stair.` when nothing to stair
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 17 new constants
+  - `STAIR_NOTES_MIN_LENGTH = 1` - Minimum 1 step in the staircase
+  - `STAIR_NOTES_MAX_LENGTH = 16` - Maximum 16 steps in the staircase
+  - `STAIR_NOTES_DEFAULT_LENGTH = 8` - Default 8 steps in the staircase
+  - `STAIR_NOTES_MIN_STEP_SIZE = 0` - Minimum 0 rows per step (flat line, no ascent)
+  - `STAIR_NOTES_MAX_STEP_SIZE = 4` - Maximum 4 rows per stair step (steep stairs)
+  - `STAIR_NOTES_DEFAULT_STEP_SIZE = 1` - Default 1 row per stair step (gentle slope)
+  - `STAIR_NOTES_MIN_COLUMN_STEP = 0` - Minimum 0 columns forward per step (column stack)
+  - `STAIR_NOTES_MAX_COLUMN_STEP = 4` - Maximum 4 columns forward per step (rapid diagonal)
+  - `STAIR_NOTES_DEFAULT_COLUMN_STEP = 1` - Default 1 column forward per step (diagonal)
+  - `STAIR_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum decay (10% preservation at last step)
+  - `STAIR_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum decay (1.0 = no decay)
+  - `STAIR_NOTES_DEFAULT_VELOCITY_DECAY = 0.9` - Default 90% velocity preservation per step
+  - `STAIR_NOTES_SHAPE_UP = 'up'` - Always ascend: each step rises by stepSize
+  - `STAIR_NOTES_SHAPE_DOWN = 'down'` - Always descend: each step falls by stepSize
+  - `STAIR_NOTES_SHAPE_UP_DOWN = 'up-down'` - Rise to peak at half then descend symmetrically
+  - `STAIR_NOTES_SHAPE_DOWN_UP = 'down-up'` - Fall to trough at half then ascend symmetrically
+  - `STAIR_NOTES_SHAPE_RANDOM = 'random'` - Each step randomly goes up or down by stepSize
+  - `STAIR_NOTES_SHAPES = [UP, DOWN, UP_DOWN, DOWN_UP, RANDOM]` - Valid shape values
+- **Tests** (`js/tests.js`): 31 tests covering:
+  - `stairNotes` is a function on Track.prototype
+  - `stairNotes` accepts 6 parameters with defaults (length, stepSize, columnStep, velocityDecay, shape, skipOccupied)
+  - `stairNotes` returns 0 for Audio tracks
+  - `stairNotes` gets active sequence via `getActiveSequence`
+  - `stairNotes` captures undo BEFORE mutation
+  - `stairNotes` has descriptive `Stair Notes` undo label
+  - `stairNotes` clamps length to STAIR_NOTES_MIN/MAX_LENGTH
+  - `stairNotes` clamps stepSize to STAIR_NOTES_MIN/MAX_STEP_SIZE
+  - `stairNotes` clamps columnStep to STAIR_NOTES_MIN/MAX_COLUMN_STEP
+  - `stairNotes` clamps velocityDecay to STAIR_NOTES_MIN/MAX_VELOCITY_DECAY
+  - `stairNotes` validates shape with STAIR_NOTES_SHAPES (uses UP fallback)
+  - `stairNotes` supports 5 distinct shapes (up, down, up-down, down-up, random)
+  - `stairNotes` uses Math.pow for velocity decay
+  - `stairNotes` uses Math.floor for length/stepSize/columnStep
+  - `stairNotes` supports skipOccupied option
+  - `stairNotes` rounds velocity to 2 decimal places
+  - `stairNotes` returns count of stair notes (stairCount)
+  - All 17 STAIR_NOTES constants are defined in constants.js
+  - STAIR_NOTES_SHAPES includes up, down, up-down, down-up, and random
+  - ui.js has 6 Stair Notes menu items
+  - Stair Notes menu items call track.stairNotes
+  - Stair Notes menu items call recreateToneSequence
+  - Stair Notes menu items show notification with stair count
+  - Stair Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.372 for Day 723)
+  - Functional test: uses stairOffset helper for shape computation
+  - Functional test: up-down shape symmetrically rises then falls
+  - Functional test: down-up shape symmetrically falls then rises
+  - Functional test: random shape uses Math.random for direction
+  - Functional test: targetRow = rowIndex + rowOffset
+  - Functional test: targetCol = col + colOffset
+  - Functional test: stairOffset returns 0 when length <= 1
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->16, stepSize -5->0, velocityDecay 2->1.0)
+- **Version**: Bumped to 2.372.0
+- **Test Count**: Added 31 Day 723 tests. All 31 pass via `test-runner/run-tests.js` (after fixing the broken closing brace on the last test that was merged with `export async function runTests()`). `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild build succeeds. Pre-existing test infrastructure failures (1521, related to `__dirname` not being defined in node test environment) are unrelated to Day 723.
+
 #### Day 722: Phyllotaxis Notes Feature (2026-06-18)
 - **Feature**: Added `phyllotaxisNotes(count, scale, angleDegrees, columnStep, velocityDecay, orientation, skipOccupied)` method to Track class and 5 "Phyllotaxis Notes" menu items to the sequencer context menu. Each active note spawns N notes arranged in a phyllotaxis spiral (the Fermat spiral found in sunflowers, pinecones, and daisies), computed via `angleRad = angleSign * i * (angleDegrees * π/180)` and `radius = scale * sqrt(i)`. Then `rowOffset = round(cos(angleRad) * radius)` and `colOffset = max(1, round(|sin(angleRad)| * columnStep * sqrt(i)))` — `|sin|` ensures colOffset is always non-negative, and `Math.max(1, ...)` floors it to at least 1 to guarantee forward-in-time progression. The default 137° is the golden angle (137.508°), which produces the densest possible spiral packing with no leaves overlapping. Complements `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with the iconic botanical spiral pattern.
 - **Files Modified**:

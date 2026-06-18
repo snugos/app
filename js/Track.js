@@ -6899,4 +6899,93 @@ export class Track {
 
         return phyllotaxisCount;
     }
+
+    stairNotes(length = Constants.STAIR_NOTES_DEFAULT_LENGTH, stepSize = Constants.STAIR_NOTES_DEFAULT_STEP_SIZE, columnStep = Constants.STAIR_NOTES_DEFAULT_COLUMN_STEP, velocityDecay = Constants.STAIR_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.STAIR_NOTES_SHAPE_UP, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} stairNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.STAIR_NOTES_MIN_LENGTH, Math.min(Constants.STAIR_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedStepSize = Math.max(Constants.STAIR_NOTES_MIN_STEP_SIZE, Math.min(Constants.STAIR_NOTES_MAX_STEP_SIZE, Math.floor(stepSize)));
+        const clampedColumnStep = Math.max(Constants.STAIR_NOTES_MIN_COLUMN_STEP, Math.min(Constants.STAIR_NOTES_MAX_COLUMN_STEP, Math.floor(columnStep)));
+        const clampedDecay = Math.max(Constants.STAIR_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.STAIR_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.STAIR_NOTES_SHAPES.includes(shape) ? shape : Constants.STAIR_NOTES_SHAPE_UP;
+
+        this._captureUndoState(`Stair Notes (${useShape}, ${clampedLength} steps, size ${clampedStepSize}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let stairCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+
+        const stairOffset = (s) => {
+            if (clampedLength <= 1) return 0;
+            const half = Math.floor(clampedLength / 2);
+            switch (useShape) {
+                case Constants.STAIR_NOTES_SHAPE_DOWN:
+                    return -s * clampedStepSize;
+                case Constants.STAIR_NOTES_SHAPE_UP_DOWN:
+                    return s <= half ? s * clampedStepSize : (clampedLength - 1 - s) * clampedStepSize;
+                case Constants.STAIR_NOTES_SHAPE_DOWN_UP:
+                    return s <= half ? -s * clampedStepSize : -(clampedLength - 1 - s) * clampedStepSize;
+                case Constants.STAIR_NOTES_SHAPE_RANDOM:
+                    return (Math.random() < 0.5 ? -1 : 1) * clampedStepSize;
+                case Constants.STAIR_NOTES_SHAPE_UP:
+                default:
+                    return s * clampedStepSize;
+            }
+        };
+
+        const newNotes = [];
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let s = 0; s < clampedLength; s++) {
+                    const rowOffset = stairOffset(s);
+                    const colOffset = s * clampedColumnStep;
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, s)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            stairCount++;
+        }
+
+        return stairCount;
+    }
 }

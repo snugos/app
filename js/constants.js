@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.371.0';
+export const APP_VERSION = '2.372.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -548,6 +548,31 @@ export const PHYLLOTAXIS_NOTES_ORIENTATION_CCW = 'ccw'; // Counter-clockwise spi
 export const PHYLLOTAXIS_NOTES_ORIENTATIONS = [
     PHYLLOTAXIS_NOTES_ORIENTATION_CW,
     PHYLLOTAXIS_NOTES_ORIENTATION_CCW
+];
+
+export const STAIR_NOTES_MIN_LENGTH = 1; // Minimum 1 step in the staircase
+export const STAIR_NOTES_MAX_LENGTH = 16; // Maximum 16 steps in the staircase
+export const STAIR_NOTES_DEFAULT_LENGTH = 8; // Default 8 steps in the staircase
+export const STAIR_NOTES_MIN_STEP_SIZE = 0; // Minimum 0 rows per step (flat line, no ascent)
+export const STAIR_NOTES_MAX_STEP_SIZE = 4; // Maximum 4 rows per stair step (steep stairs)
+export const STAIR_NOTES_DEFAULT_STEP_SIZE = 1; // Default 1 row per stair step (gentle slope)
+export const STAIR_NOTES_MIN_COLUMN_STEP = 0; // Minimum 0 columns forward per step (column stack)
+export const STAIR_NOTES_MAX_COLUMN_STEP = 4; // Maximum 4 columns forward per step (rapid diagonal)
+export const STAIR_NOTES_DEFAULT_COLUMN_STEP = 1; // Default 1 column forward per step (diagonal)
+export const STAIR_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum decay (10% preservation at last step)
+export const STAIR_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum decay (1.0 = no decay)
+export const STAIR_NOTES_DEFAULT_VELOCITY_DECAY = 0.9; // Default 90% velocity preservation per step
+export const STAIR_NOTES_SHAPE_UP = 'up'; // Always ascend: each step rises by stepSize
+export const STAIR_NOTES_SHAPE_DOWN = 'down'; // Always descend: each step falls by stepSize
+export const STAIR_NOTES_SHAPE_UP_DOWN = 'up-down'; // Rise to peak at half then descend symmetrically
+export const STAIR_NOTES_SHAPE_DOWN_UP = 'down-up'; // Fall to trough at half then ascend symmetrically
+export const STAIR_NOTES_SHAPE_RANDOM = 'random'; // Each step randomly goes up or down by stepSize
+export const STAIR_NOTES_SHAPES = [
+    STAIR_NOTES_SHAPE_UP,
+    STAIR_NOTES_SHAPE_DOWN,
+    STAIR_NOTES_SHAPE_UP_DOWN,
+    STAIR_NOTES_SHAPE_DOWN_UP,
+    STAIR_NOTES_SHAPE_RANDOM
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

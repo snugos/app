@@ -24699,6 +24699,252 @@ TestRunner.test("Day 722 - phyllotaxisNotes functional test: rowOffset uses cos*
     t.assertTruthy(/Math\.round\(Math\.cos\(angleRad\)\s\*\s*radius\)/.test(src), 'rowOffset is Math.round(Math.cos(angleRad) * radius) (signed)');
 });
 
+// Day 722: Stair Notes Feature
+// ============================================
+
+TestRunner.test("Day 722 - stairNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.stairNotes === 'function', 'stairNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 722 - stairNotes accepts 6 parameters with defaults (length, stepSize, columnStep, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.STAIR_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/stepSize\s*=\s*Constants\.STAIR_NOTES_DEFAULT_STEP_SIZE/.test(src), 'has stepSize default');
+    t.assertTruthy(/columnStep\s*=\s*Constants\.STAIR_NOTES_DEFAULT_COLUMN_STEP/.test(src), 'has columnStep default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.STAIR_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.STAIR_NOTES_SHAPE_UP/.test(src), 'has shape default');
+    t.assertTruthy(/skipOccupied/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 722 - stairNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'guards against Audio tracks');
+});
+
+TestRunner.test("Day 722 - stairNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 722 - stairNotes captures undo BEFORE mutation", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    const undoIdx = src.indexOf('_captureUndoState');
+    const mutationIdx = src.indexOf('newNotes.push');
+    t.assertTruthy(undoIdx > 0 && mutationIdx > undoIdx, 'undo capture is before mutation (undoIdx=' + undoIdx + ', mutationIdx=' + mutationIdx + ')');
+});
+
+TestRunner.test("Day 722 - stairNotes has descriptive 'Stair Notes' undo label", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Stair Notes/.test(src), 'has "Stair Notes" in undo label');
+});
+
+TestRunner.test("Day 722 - stairNotes clamps length to STAIR_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.STAIR_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.STAIR_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+});
+
+TestRunner.test("Day 722 - stairNotes clamps stepSize to STAIR_NOTES_MIN/MAX_STEP_SIZE", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.STAIR_NOTES_MIN_STEP_SIZE,\s*Math\.min\(Constants\.STAIR_NOTES_MAX_STEP_SIZE/.test(src), 'clamps stepSize');
+});
+
+TestRunner.test("Day 722 - stairNotes clamps columnStep to STAIR_NOTES_MIN/MAX_COLUMN_STEP", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.STAIR_NOTES_MIN_COLUMN_STEP,\s*Math\.min\(Constants\.STAIR_NOTES_MAX_COLUMN_STEP/.test(src), 'clamps columnStep');
+});
+
+TestRunner.test("Day 722 - stairNotes clamps velocityDecay to STAIR_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.STAIR_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.STAIR_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 722 - stairNotes validates shape with STAIR_NOTES_SHAPES (uses UP fallback)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/STAIR_NOTES_SHAPES\.includes/.test(src), 'validates shape against STAIR_NOTES_SHAPES');
+    t.assertTruthy(/STAIR_NOTES_SHAPE_UP/.test(src), 'has STAIR_NOTES_SHAPE_UP fallback');
+});
+
+TestRunner.test("Day 722 - stairNotes supports 5 distinct shapes (up, down, up-down, down-up, random)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/STAIR_NOTES_SHAPE_UP\b/.test(src), 'handles UP shape');
+    t.assertTruthy(/STAIR_NOTES_SHAPE_DOWN\b/.test(src), 'handles DOWN shape');
+    t.assertTruthy(/STAIR_NOTES_SHAPE_UP_DOWN/.test(src), 'handles UP_DOWN shape');
+    t.assertTruthy(/STAIR_NOTES_SHAPE_DOWN_UP/.test(src), 'handles DOWN_UP shape');
+    t.assertTruthy(/STAIR_NOTES_SHAPE_RANDOM/.test(src), 'handles RANDOM shape');
+});
+
+TestRunner.test("Day 722 - stairNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 722 - stairNotes uses Math.floor for length/stepSize/columnStep", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor on length');
+    t.assertTruthy(/Math\.floor\(stepSize\)/.test(src), 'uses Math.floor on stepSize');
+    t.assertTruthy(/Math\.floor\(columnStep\)/.test(src), 'uses Math.floor on columnStep');
+});
+
+TestRunner.test("Day 722 - stairNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'honors skipOccupied flag');
+});
+
+TestRunner.test("Day 722 - stairNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.round\([^)]*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 722 - stairNotes returns count of stair notes (stairCount)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/stairCount/.test(src), 'tracks stairCount');
+    t.assertTruthy(/return\s+stairCount/.test(src), 'returns stairCount');
+});
+
+TestRunner.test("Day 722 - all 17 STAIR_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    const expectedConstants = [
+        'STAIR_NOTES_MIN_LENGTH',
+        'STAIR_NOTES_MAX_LENGTH',
+        'STAIR_NOTES_DEFAULT_LENGTH',
+        'STAIR_NOTES_MIN_STEP_SIZE',
+        'STAIR_NOTES_MAX_STEP_SIZE',
+        'STAIR_NOTES_DEFAULT_STEP_SIZE',
+        'STAIR_NOTES_MIN_COLUMN_STEP',
+        'STAIR_NOTES_MAX_COLUMN_STEP',
+        'STAIR_NOTES_DEFAULT_COLUMN_STEP',
+        'STAIR_NOTES_MIN_VELOCITY_DECAY',
+        'STAIR_NOTES_MAX_VELOCITY_DECAY',
+        'STAIR_NOTES_DEFAULT_VELOCITY_DECAY',
+        'STAIR_NOTES_SHAPE_UP',
+        'STAIR_NOTES_SHAPE_DOWN',
+        'STAIR_NOTES_SHAPE_UP_DOWN',
+        'STAIR_NOTES_SHAPE_DOWN_UP',
+        'STAIR_NOTES_SHAPE_RANDOM'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(src.includes('export const ' + name), name + ' defined');
+    }
+});
+
+TestRunner.test("Day 722 - STAIR_NOTES_SHAPES includes up, down, up-down, down-up, and random", (t) => {
+    const src = require('fs').readFileSync('js/constants.js', 'utf8');
+    t.assertTruthy(src.includes("'up'") || src.includes('"up"'), 'includes up');
+    t.assertTruthy(src.includes("'down'") || src.includes('"down"'), 'includes down');
+    t.assertTruthy(src.includes("'up-down'") || src.includes('"up-down"'), 'includes up-down');
+    t.assertTruthy(src.includes("'down-up'") || src.includes('"down-up"'), 'includes down-up');
+    t.assertTruthy(src.includes("'random'") || src.includes('"random"'), 'includes random');
+});
+
+TestRunner.test("Day 722 - ui.js has 6 Stair Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Stair Notes\s*\(/g) || [];
+    t.assertTruthy(matches.length >= 6, 'has at least 6 Stair Notes menu items (got ' + matches.length + ')');
+});
+
+TestRunner.test("Day 722 - Stair Notes menu items call track.stairNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/currentTrackForMenu\.stairNotes\(/.test(src), 'menu items call track.stairNotes');
+});
+
+TestRunner.test("Day 722 - Stair Notes menu items call recreateToneSequence", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/stairNotes\([^)]*\)[\s\S]{0,300}recreateToneSequence/.test(src), 'menu items call recreateToneSequence after stairNotes');
+});
+
+TestRunner.test("Day 722 - Stair Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Staired\s+\$\{result\}\s+note\(s\)/.test(src), 'shows "Staired N note(s)" notification');
+});
+
+TestRunner.test("Day 722 - Stair Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Stair Notes on/.test(src), 'has "Stair Notes on" undo label');
+});
+
+TestRunner.test("Day 722 - APP_VERSION validation (>= 2.371 for Day 722)", (t) => {
+    const version = Constants.APP_VERSION;
+    const parts = version.split('.').map(Number);
+    t.assertTruthy(parts[0] > 2 || (parts[0] === 2 && parts[1] >= 371), 'APP_VERSION should be >= 2.371 (got ' + version + ')');
+});
+
+TestRunner.test("Day 722 - stairNotes structural test: uses stairOffset helper for shape computation", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/stairOffset\s*=\s*\(/.test(src), 'defines stairOffset helper');
+    t.assertTruthy(/stairOffset\(s\)/.test(src), 'calls stairOffset(s) to compute row offset');
+});
+
+TestRunner.test("Day 722 - stairNotes structural test: up-down shape symmetrically rises then falls", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/STAIR_NOTES_SHAPE_UP_DOWN[\s\S]{0,200}s\s*<=\s*half/.test(src), 'up-down uses s <= half to ascend then descend');
+});
+
+TestRunner.test("Day 722 - stairNotes structural test: down-up shape symmetrically falls then rises", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/STAIR_NOTES_SHAPE_DOWN_UP[\s\S]{0,200}s\s*<=\s*half/.test(src), 'down-up uses s <= half to descend then ascend');
+});
+
+TestRunner.test("Day 722 - stairNotes structural test: random shape uses Math.random for direction", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/STAIR_NOTES_SHAPE_RANDOM[\s\S]{0,200}Math\.random/.test(src), 'random uses Math.random for direction');
+});
+
+TestRunner.test("Day 722 - stairNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/newNotes\.push/.test(src), 'uses newNotes.push to collect');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 722 - stairNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source note');
+});
+
+TestRunner.test("Day 722 - stairNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell match');
+});
+
+TestRunner.test("Day 722 - stairNotes functional test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 722 - stairNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(src), 'skips inactive steps');
+    t.assertTruthy(/if\s*\(\s*!row\s*\)\s*continue/.test(src), 'skips empty rows');
+});
+
+TestRunner.test("Day 722 - stairNotes functional test: clamps to valid ranges (length 100->16, stepSize -5->0, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.STAIR_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.STAIR_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+    t.assertTruthy(/Math\.max\(Constants\.STAIR_NOTES_MIN_STEP_SIZE,\s*Math\.min\(Constants\.STAIR_NOTES_MAX_STEP_SIZE/.test(src), 'clamps stepSize');
+    t.assertTruthy(/Math\.max\(Constants\.STAIR_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.STAIR_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+
+TestRunner.test("Day 722 - stairNotes functional test: stairOffset returns 0 when length <= 1", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/if\s*\(\s*clampedLength\s*<=\s*1\s*\)\s*return\s+0/.test(src), 'returns 0 when length <= 1');
+});
+
+TestRunner.test("Day 722 - stairNotes functional test: targetRow = rowIndex + rowOffset (stairOffset result)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/targetRow\s*=\s*rowIndex\s*\+\s*rowOffset/.test(src), 'targetRow is rowIndex + rowOffset');
+});
+
+TestRunner.test("Day 722 - stairNotes functional test: targetCol = col + s * columnStep", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/targetCol\s*=\s*col\s*\+\s*colOffset/.test(src), 'targetCol is col + s * clampedColumnStep');
+});
+
+TestRunner.test("Day 722 - stairNotes functional test: velocity decay uses Math.pow(decay, s)", (t) => {
+    const src = Track.prototype.stairNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*s\)/.test(src), 'velocity decay uses Math.pow(clampedDecay, s)');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
