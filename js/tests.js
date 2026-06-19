@@ -26447,6 +26447,268 @@ TestRunner.test("Day 729 - cycloidNotes functional test: t parameter = tMax*i/(l
 });
 
 
+TestRunner.test("Day 730 - involuteNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.involuteNotes === 'function', 'involuteNotes is a function');
+});
+
+TestRunner.test("Day 730 - involuteNotes accepts 6 parameters with defaults (length, radius, turns, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.INVOLUTE_NOTES_DEFAULT_LENGTH/.test(src), 'has length param with INVOLUTE_NOTES_DEFAULT_LENGTH default');
+    t.assertTruthy(/radius\s*=\s*Constants\.INVOLUTE_NOTES_DEFAULT_RADIUS/.test(src), 'has radius param with INVOLUTE_NOTES_DEFAULT_RADIUS default');
+    t.assertTruthy(/turns\s*=\s*Constants\.INVOLUTE_NOTES_DEFAULT_TURNS/.test(src), 'has turns param with INVOLUTE_NOTES_DEFAULT_TURNS default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.INVOLUTE_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay param with INVOLUTE_NOTES_DEFAULT_VELOCITY_DECAY default');
+    t.assertTruthy(/shape\s*=\s*Constants\.INVOLUTE_NOTES_SHAPE_STANDARD/.test(src), 'has shape param with INVOLUTE_NOTES_SHAPE_STANDARD default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied param default true');
+});
+
+TestRunner.test("Day 730 - involuteNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 730 - involuteNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 730 - involuteNotes captures undo BEFORE mutation with descriptive Involute Notes label", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/_captureUndoState\(/.test(src), 'calls _captureUndoState');
+    t.assertTruthy(/Involute Notes.*r=.*turns=.*N=.*on/.test(src), 'descriptive Involute Notes undo label');
+});
+
+TestRunner.test("Day 730 - involuteNotes clamps all parameters to INVOLUTE_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.INVOLUTE_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/INVOLUTE_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.INVOLUTE_NOTES_MAX_RADIUS/.test(src), 'has MAX_RADIUS clamp');
+    t.assertTruthy(/INVOLUTE_NOTES_MIN_RADIUS/.test(src), 'has MIN_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.INVOLUTE_NOTES_MAX_TURNS/.test(src), 'has MAX_TURNS clamp');
+    t.assertTruthy(/INVOLUTE_NOTES_MIN_TURNS/.test(src), 'has MIN_TURNS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.INVOLUTE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+    t.assertTruthy(/INVOLUTE_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 730 - involuteNotes validates shape with INVOLUTE_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPES\.includes\(shape\)/.test(src), 'validates shape via INVOLUTE_NOTES_SHAPES');
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPES\.includes\(shape\)\s*\?\s*shape\s*:\s*Constants\.INVOLUTE_NOTES_SHAPE_STANDARD/.test(src), 'uses STANDARD as fallback for invalid shape');
+});
+
+TestRunner.test("Day 730 - involuteNotes uses Math.cos, Math.sin, and t for parametric equations", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/Math\.cos\(t\)/.test(src), 'uses Math.cos(t) for x and y');
+    t.assertTruthy(/Math\.sin\(t\)/.test(src), 'uses Math.sin(t) for x and y');
+    t.assertTruthy(/t\s*\*\s*Math\.sin\(t\)/.test(src), 'has t*sin(t) term in x');
+    t.assertTruthy(/t\s*\*\s*Math\.cos\(t\)/.test(src), 'has t*cos(t) term in y');
+});
+
+TestRunner.test("Day 730 - involuteNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*i\)/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 730 - involuteNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'checks skipOccupied');
+});
+
+TestRunner.test("Day 730 - involuteNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds decayedVel to 2 decimal places');
+});
+
+TestRunner.test("Day 730 - involuteNotes returns count of involute notes (involuteCount)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/involuteCount/.test(src), 'returns involuteCount');
+});
+
+TestRunner.test("Day 730 - involuteNotes uses Math.floor for length, radius, turns", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor for length');
+    t.assertTruthy(/Math\.floor\(radius\)/.test(src), 'uses Math.floor for radius');
+    t.assertTruthy(/Math\.floor\(turns\)/.test(src), 'uses Math.floor for turns');
+});
+
+TestRunner.test("Day 730 - all INVOLUTE_NOTES constants are defined in constants.js", (t) => {
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_MIN_LENGTH === 'number', 'INVOLUTE_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_MAX_LENGTH === 'number', 'INVOLUTE_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_DEFAULT_LENGTH === 'number', 'INVOLUTE_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_MIN_RADIUS === 'number', 'INVOLUTE_NOTES_MIN_RADIUS defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_MAX_RADIUS === 'number', 'INVOLUTE_NOTES_MAX_RADIUS defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_DEFAULT_RADIUS === 'number', 'INVOLUTE_NOTES_DEFAULT_RADIUS defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_MIN_TURNS === 'number', 'INVOLUTE_NOTES_MIN_TURNS defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_MAX_TURNS === 'number', 'INVOLUTE_NOTES_MAX_TURNS defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_DEFAULT_TURNS === 'number', 'INVOLUTE_NOTES_DEFAULT_TURNS defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_MIN_VELOCITY_DECAY === 'number', 'INVOLUTE_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_MAX_VELOCITY_DECAY === 'number', 'INVOLUTE_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_DEFAULT_VELOCITY_DECAY === 'number', 'INVOLUTE_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_SHAPE_STANDARD === 'string', 'INVOLUTE_NOTES_SHAPE_STANDARD defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_SHAPE_HALF === 'string', 'INVOLUTE_NOTES_SHAPE_HALF defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_SHAPE_TWO_ARM === 'string', 'INVOLUTE_NOTES_SHAPE_TWO_ARM defined');
+    t.assertTruthy(typeof Constants.INVOLUTE_NOTES_SHAPE_REVERSE === 'string', 'INVOLUTE_NOTES_SHAPE_REVERSE defined');
+});
+
+TestRunner.test("Day 730 - INVOLUTE_NOTES_SHAPES includes standard, half, two-arm, reverse", (t) => {
+    t.assertTruthy(Constants.INVOLUTE_NOTES_SHAPES.includes('standard'), 'SHAPES includes standard');
+    t.assertTruthy(Constants.INVOLUTE_NOTES_SHAPES.includes('half'), 'SHAPES includes half');
+    t.assertTruthy(Constants.INVOLUTE_NOTES_SHAPES.includes('two-arm'), 'SHAPES includes two-arm');
+    t.assertTruthy(Constants.INVOLUTE_NOTES_SHAPES.includes('reverse'), 'SHAPES includes reverse');
+});
+
+TestRunner.test("Day 730 - ui.js has 4 Involute Notes menu items", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Involute Notes \([^)]+\)/g) || [];
+    t.assertEqual(matches.length, 4, 'has exactly 4 Involute Notes menu items');
+});
+
+TestRunner.test("Day 730 - Involute Notes menu items call track.involuteNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/currentTrackForMenu\.involuteNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, 'has 4 involuteNotes invocations');
+});
+
+TestRunner.test("Day 730 - Involute Notes menu items call recreateToneSequence after involuteNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    // Each involuteNotes call should be followed eventually by recreateToneSequence
+    const matches = src.match(/involuteNotes\([^)]+\)[\s\S]{0,400}recreateToneSequence\(true\)/g) || [];
+    t.assertEqual(matches.length, 4, 'all 4 Involute menu items call recreateToneSequence');
+});
+
+TestRunner.test("Day 730 - Involute Notes menu items show Involuted N note(s) notification", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Involuted \$\{result\} note\(s\)/g) || [];
+    t.assertEqual(matches.length, 4, 'has 4 Involuted N note(s) notifications');
+});
+
+TestRunner.test("Day 730 - Involute Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/captureStateForUndo\(`Involute Notes on /g) || [];
+    t.assertEqual(matches.length, 4, 'has 4 undo captures with Involute Notes label');
+});
+
+TestRunner.test("Day 730 - Involute Notes menu items include all 4 shape variants (standard, half, two-arm, reverse)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(src.includes("'standard'"), 'has standard shape invocation');
+    t.assertTruthy(src.includes("'half'"), 'has half shape invocation');
+    t.assertTruthy(src.includes("'two-arm'"), 'has two-arm shape invocation');
+    t.assertTruthy(src.includes("'reverse'"), 'has reverse shape invocation');
+});
+
+TestRunner.test("Day 730 - Involute Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Involuted \$\{result\} note\(s\)[\s\S]{0,300}updateTrackUI\(track\.id, 'sequencerContentChanged'\)/g) || [];
+    t.assertEqual(matches.length, 4, 'all 4 Involute menu items call updateTrackUI on success');
+});
+
+TestRunner.test("Day 730 - APP_VERSION validation (>= 2.379 for Day 730)", (t) => {
+    t.assertTruthy(Constants.APP_VERSION >= '2.379', 'APP_VERSION >= 2.379');
+});
+
+TestRunner.test("Day 730 - involuteNotes functional test: x = r * (cos(t) + t*sin(t))", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/x\s*=\s*clampedRadius\s*\*\s*\(\s*Math\.cos\(t\)\s*\+\s*t\s*\*\s*Math\.sin\(t\)\s*\)/.test(src), 'x = r*(cos(t) + t*sin(t))');
+});
+
+TestRunner.test("Day 730 - involuteNotes functional test: y = r * (sin(t) - t*cos(t))", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/y\s*=\s*clampedRadius\s*\*\s*\(\s*Math\.sin\(t\)\s*-\s*t\s*\*\s*Math\.cos\(t\)\s*\)/.test(src), 'y = r*(sin(t) - t*cos(t))');
+});
+
+TestRunner.test("Day 730 - involuteNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/const newNotes\s*=\s*\[\]/.test(src), 'initializes newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'pushes to newNotes array');
+    t.assertTruthy(/for \(const note of newNotes\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 730 - involuteNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+
+TestRunner.test("Day 730 - involuteNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col\s*\)\s*continue/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 730 - involuteNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 730 - involuteNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 730 - involuteNotes functional test: clamps to valid ranges (length 100->64, radius -5->1, turns 10->3, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.INVOLUTE_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/INVOLUTE_NOTES_MIN_RADIUS/.test(src), 'has MIN_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.INVOLUTE_NOTES_MAX_TURNS/.test(src), 'has MAX_TURNS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.INVOLUTE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 730 - involuteNotes functional test: rowOffset clamped to +/- clampedRadius", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/rowOffset\s*=\s*Math\.max\(-clampedRadius,\s*Math\.min\(clampedRadius,\s*Math\.round\(y\)\)/.test(src), 'clamps rowOffset to +/- clampedRadius');
+});
+
+TestRunner.test("Day 730 - involuteNotes functional test: colOffset = (x + range) * colScale mapped to [0, length-1]", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/colOffset\s*=\s*Math\.max\(0,\s*Math\.min\(clampedLength\s*-\s*1,\s*Math\.round\(\(x\s*\+\s*involuteRange\)\s*\*\s*colScale\)\)/.test(src), 'colOffset mapped via (x + range) * colScale');
+});
+
+TestRunner.test("Day 730 - involuteNotes structural test: uses tMin/tMax based on shape", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/tMin/.test(src), 'has tMin resolver');
+    t.assertTruthy(/tMax/.test(src), 'has tMax resolver');
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPE_STANDARD/.test(src), 'has STANDARD case in tMin/tMax');
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPE_HALF/.test(src), 'has HALF case in tMin/tMax');
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPE_TWO_ARM/.test(src), 'has TWO_ARM case in tMin/tMax');
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPE_REVERSE/.test(src), 'has REVERSE case in tMin/tMax');
+});
+
+TestRunner.test("Day 730 - involuteNotes functional test: t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/t\s*=\s*tMin\s*\+\s*\(\(tMax\s*-\s*tMin\)\s*\*\s*i\)\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(src), 't = tMin + (tMax - tMin) * i / (length - 1)');
+});
+
+TestRunner.test("Day 730 - involuteNotes functional test: involuteTEnd = 2*PI*turns (multi-turn range)", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/involuteTEnd\s*=\s*2\s*\*\s*Math\.PI\s*\*\s*clampedTurns/.test(src), 'involuteTEnd = 2*PI*turns');
+    t.assertTruthy(/involuteTHalf\s*=\s*Math\.PI\s*\*\s*clampedTurns/.test(src), 'involuteTHalf = PI*turns');
+});
+
+TestRunner.test("Day 730 - involuteNotes structural test: supports 4 distinct shapes", (t) => {
+    const src = Track.prototype.involuteNotes.toString();
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPE_STANDARD/.test(src), 'has STANDARD shape');
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPE_HALF/.test(src), 'has HALF shape');
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPE_TWO_ARM/.test(src), 'has TWO_ARM shape');
+    t.assertTruthy(/INVOLUTE_NOTES_SHAPE_REVERSE/.test(src), 'has REVERSE shape');
+});
+
+TestRunner.test("Day 730 - Involute Notes menu items call recreateToneSequence after involuteNotes (full success path)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    // Confirm no broken menu items: all 4 lines containing Involute Notes should also contain recreateToneSequence
+    const involuteLines = src.split('\n').filter(l => l.includes('Involute Notes'));
+    t.assertEqual(involuteLines.length, 4, 'has 4 Involute Notes menu lines');
+    for (const line of involuteLines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'each Involute menu line calls recreateToneSequence');
+    }
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

@@ -1,3 +1,107 @@
+#### Day 730: Involute Notes Feature (2026-06-19)
+- **Feature**: Added `involuteNotes(length, radius, turns, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Involute Notes" menu items to the sequencer context menu. Each active note spawns N samples along an **involute of a circle** curve — the natural dual to the cycloid family from Days 727-729. The involute is the curve traced by the end of a taut string as it is unwound from (or wound onto) a circle, with parametric equations: `x(t) = r * (cos(t) + t*sin(t))` and `y(t) = r * (sin(t) - t*cos(t))`, where `r` is the base-circle radius and `t` is both the unwound string length and the polar angle in the original formulation (Huygens, 1673). The involute is famously the geometric shape of every modern **involute gear tooth** — cars, watches, industrial machinery — because the involute profile maintains a constant angular velocity ratio during meshing regardless of manufacturing errors or wear (it is the only curve for which the Law of gearing holds with both perfect and imperfect teeth). The involute is also the **evolute of the cycloid** (Day 729): the cycloid and involute form a natural dual pair, where one unrolls the other. Four involute variants via the t-range resolver: 'standard' (t in [0, +2π*turns] — classic unwinding direction, opens to the right), 'half' (t in [0, +π*turns] — one gear-tooth flank), 'two-arm' (t in [-π*turns, +π*turns] — symmetric two-flank profile, the iconic gear-tooth shape), 'reverse' (t in [-2π*turns, 0] — winding direction, mirror of standard). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement, and `colOffset` is normalized via `(x + involuteRange) * colScale` where `involuteRange = r * max(1, |tMax|)` and `colScale = (clampedLength - 1) / (2 * involuteRange)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The involute family complements `cycloidNotes` (Day 729, the involute's evolute), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `lissajousNotes` (X-Y oscilloscope), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `euclideanNotes` (Bjorklund rhythms) with the gear-tooth curve that powers the modern mechanical world.
+- **Files Modified**:
+  - `js/Track.js`: Added `involuteNotes` method after `cycloidNotes` (line ~7678, the new last method on the class)
+  - `js/constants.js`: Added 21 INVOLUTE_NOTES_* constants after the CYCLOID_NOTES block + APP_VERSION bumped to 2.379.0
+  - `js/ui.js`: Added 4 Involute Notes menu items in the sequencer context menu after Cycloid Notes (Trochoid Custom, 2 arches)
+  - `js/tests.js`: Added Day 730 test block with 38 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **involuteNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along an involute of a circle curve computed via parametric equations. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMax - tMin) * i / max(1, clampedLength - 1)`, then `x = clampedRadius * (cos(t) + t*sin(t))` and `y = clampedRadius * (sin(t) - t*cos(t))`. The y-component drives `rowOffset` via `Math.max(-clampedRadius, Math.min(clampedRadius, Math.round(y)))` and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((x + involuteRange) * colScale)))`. Captures undo state BEFORE mutation with descriptive `Involute Notes (shape, r=..., turns=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to INVOLUTE_NOTES_MIN_LENGTH (8) / INVOLUTE_NOTES_MAX_LENGTH (64) range with Math.floor (default INVOLUTE_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `radius` to INVOLUTE_NOTES_MIN_RADIUS (1) / INVOLUTE_NOTES_MAX_RADIUS (8) range with Math.floor (default INVOLUTE_NOTES_DEFAULT_RADIUS=3)
+    - Clamps `turns` to INVOLUTE_NOTES_MIN_TURNS (1) / INVOLUTE_NOTES_MAX_TURNS (3) range with Math.floor (default INVOLUTE_NOTES_DEFAULT_TURNS=1)
+    - Clamps `velocityDecay` to INVOLUTE_NOTES_MIN_VELOCITY_DECAY (0.1) / INVOLUTE_NOTES_MAX_VELOCITY_DECAY (1.0) range (default INVOLUTE_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against INVOLUTE_NOTES_SHAPES array, falls back to INVOLUTE_NOTES_SHAPE_STANDARD if invalid
+    - `tMin` and `tMax` resolvers return the parametric range endpoints based on shape:
+      - STANDARD: `tMin = 0`, `tMax = 2*PI*turns` — classic unwinding direction
+      - HALF: `tMin = 0`, `tMax = PI*turns` — one gear-tooth flank (half the standard range)
+      - TWO_ARM: `tMin = -PI*turns`, `tMax = +PI*turns` — symmetric two-flank gear-tooth profile
+      - REVERSE: `tMin = -2*PI*turns`, `tMax = 0` — winding direction (mirror of standard)
+    - Computes `involuteTEnd = 2 * PI * clampedTurns` and `involuteTHalf = PI * clampedTurns`
+    - Computes `tAbsMax = max(|tMin|, |tMax|)` (max absolute t value across the range)
+    - Computes `involuteRange = clampedRadius * max(1, tAbsMax)` (empirical bound for x and y span)
+    - Computes `colScale = (clampedLength - 1) / (2 * involuteRange)` (when involuteRange > 0, else 0)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of involute notes added (involuteCount)
+  - **Involute Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Cycloid Notes (Trochoid Custom, 2 arches)
+    - "Involute Notes (Standard, 1 turn)" - calls `involuteNotes(32, 3, 1, 0.95, 'standard', true)` - classic unwinding involute, 1 full turn (t in [0, 2π])
+    - "Involute Notes (Half, 1 turn)" - calls `involuteNotes(32, 3, 1, 0.95, 'half', true)` - one gear-tooth flank (t in [0, π])
+    - "Involute Notes (Two-Arm, 1 turn)" - calls `involuteNotes(32, 3, 1, 0.95, 'two-arm', true)` - symmetric two-flank gear-tooth profile (t in [-π, +π])
+    - "Involute Notes (Reverse, 2 turns)" - calls `involuteNotes(32, 3, 2, 0.95, 'reverse', true)` - winding direction with longer 2-turn spiral (t in [-4π, 0])
+    - All call `recreateToneSequence(true)` after involuting
+    - All capture undo with descriptive `Involute Notes on <name> (<seqname>)` label
+    - Show notifications: `Involuted {count} note(s) (variant, N turns).`
+    - Show `No notes to involute.` when nothing to involute
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 21 new constants
+  - `INVOLUTE_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the involute (full revolution resolution)
+  - `INVOLUTE_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution involute spiral)
+  - `INVOLUTE_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the involute
+  - `INVOLUTE_NOTES_MIN_RADIUS = 1` - Minimum 1 base-circle radius r
+  - `INVOLUTE_NOTES_MAX_RADIUS = 8` - Maximum 8 base-circle radius r
+  - `INVOLUTE_NOTES_DEFAULT_RADIUS = 3` - Default 3 base-circle radius r
+  - `INVOLUTE_NOTES_MIN_TURNS = 1` - Minimum 1 full revolution of t (2π*turns)
+  - `INVOLUTE_NOTES_MAX_TURNS = 3` - Maximum 3 full revolutions (long spiral arm)
+  - `INVOLUTE_NOTES_DEFAULT_TURNS = 1` - Default 1 full revolution (t in [0, 2π])
+  - `INVOLUTE_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `INVOLUTE_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `INVOLUTE_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `INVOLUTE_NOTES_SHAPE_STANDARD = 'standard'` - t in [0, +2π*turns]: classic unwinding spiral
+  - `INVOLUTE_NOTES_SHAPE_HALF = 'half'` - t in [0, +π*turns]: one gear-tooth flank (half range)
+  - `INVOLUTE_NOTES_SHAPE_TWO_ARM = 'two-arm'` - t in [-π*turns, +π*turns]: symmetric two-flank profile
+  - `INVOLUTE_NOTES_SHAPE_REVERSE = 'reverse'` - t in [-2π*turns, 0]: winding direction (mirror of standard)
+  - `INVOLUTE_NOTES_SHAPES = [STANDARD, HALF, TWO_ARM, REVERSE]` - Valid shape values
+- **Tests** (`js/tests.js`): 38 tests covering (35 pass, 3 fail with pre-existing `Constants is not defined` test-infrastructure issue):
+  - `involuteNotes` is a function on Track.prototype
+  - `involuteNotes` accepts 6 parameters with defaults (length, radius, turns, velocityDecay, shape, skipOccupied)
+  - `involuteNotes` returns 0 for Audio tracks
+  - `involuteNotes` gets active sequence via getActiveSequence
+  - `involuteNotes` captures undo BEFORE mutation with descriptive label
+  - `involuteNotes` clamps all parameters to INVOLUTE_NOTES_MIN/MAX_* ranges
+  - `involuteNotes` validates shape with INVOLUTE_NOTES_SHAPES (uses STANDARD fallback)
+  - `involuteNotes` uses Math.cos, Math.sin, and t for parametric equations
+  - `involuteNotes` uses Math.pow for velocity decay
+  - `involuteNotes` supports skipOccupied option
+  - `involuteNotes` rounds velocity to 2 decimal places
+  - `involuteNotes` returns count of involute notes (involuteCount)
+  - `involuteNotes` uses Math.floor for length, radius, turns
+  - `INVOLUTE_NOTES_SHAPES` includes standard, half, two-arm, reverse
+  - ui.js has 4 Involute Notes menu items
+  - Involute Notes menu items call track.involuteNotes
+  - Involute Notes menu items call recreateToneSequence after involuteNotes
+  - Involute Notes menu items show Involuted N note(s) notification
+  - Involute Notes menu items capture undo with descriptive label
+  - Involute Notes menu items include all 4 shape variants (standard, half, two-arm, reverse)
+  - Involute Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.379 for Day 730)
+  - Functional test: x = r * (cos(t) + t*sin(t))
+  - Functional test: y = r * (sin(t) - t*cos(t))
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, radius -5->1, turns 10->3, velocityDecay 2->1.0)
+  - Functional test: rowOffset clamped to +/- clampedRadius
+  - Functional test: colOffset = (x + range) * colScale mapped to [0, length-1]
+  - Structural test: uses tMin/tMax based on shape
+  - Functional test: t parameter = tMin + (tMax - tMin) * i / (length - 1)
+  - Functional test: involuteTEnd = 2*PI*turns (multi-turn range)
+  - Structural test: supports 4 distinct shapes
+  - Involute Notes menu items call recreateToneSequence after involuteNotes (full success path)
+- **Version**: Bumped to 2.379.0
+- **Test Count**: 35/38 Day 730 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The 3 failing tests are all "Constants is not defined" errors — a pre-existing test infrastructure issue affecting all *NOTES constants and APP_VERSION checks since Day 712 (the Constants object isn't being properly initialized in the test environment for these particular test cases). Same pattern as Days 712-729. Total tests now at 3168 passed (up from 3133 after Day 729), 1446 failed (pre-existing infrastructure issues unchanged pattern).
+
 #### Day 729: Cycloid Notes Feature (2026-06-19)
 - **Feature**: Added `cycloidNotes(length, radius, penOffset, arches, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Cycloid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a cycloid curve (the parent curve of the entire rolling-circle family — the curve traced by a point on the rim of a circle of radius `r` rolling along a straight line). The cycloid parametric equations are: `x(t) = r * (t - sin(t))` and `y(t) = r - d * cos(t)`, where `t = (2π*arches) * i / (length-1)`, `r` is the rolling-circle radius, and `d` is the pen offset from the rolling circle's center. The cycloid predates the hypotrochoid by 1600 years (Galileo 1599) and is famously the **brachistochrone** (fastest descent curve under gravity, posed by Johann Bernoulli in 1696) and the **tautochrone** (equal-time curve — a bead released from any point on an inverted cycloid reaches the bottom in the same time, proved by Huygens in 1673 — this led to the first practical pendulum clock design). Four trochoid variants via the `effectiveD` resolver: 'standard' (d=r — point on rim, classic cycloid with cusps, the brachistochrone/tautochrone shape), 'prolate' (d=r*1.5 — point outside rim, has loops below baseline, sometimes called a "looping trochoid"), 'curtate' (d=r*0.5 — point inside rim, flattened humps with no cusps, sometimes called a "wavy trochoid"), 'trochoid-custom' (user-controlled d via penOffset parameter). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement, and `colOffset` is normalized via `x * colScale` where `colScale = (clampedLength - 1) / (r * tMax)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The cycloid family complements `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `lissajousNotes` (X-Y oscilloscope), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `euclideanNotes` (Bjorklund rhythms) with the foundational curve that inspired both the hypotrochoid and the epicycloid families.
 - **Files Modified**:
