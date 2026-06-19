@@ -1,3 +1,105 @@
+#### Day 732: Rose Curve Notes Feature (2026-06-19)
+- **Feature**: Added `roseNotes(length, radius, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Rose Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **rhodonea curve** (also called the rose curve), the iconic flower-petal polar curve discovered by Guido Grandi in 1723 in his "Flores geometrici" and studied further by Lucia Perazza and Colin Maclaurin. The rose is defined by the polar equation `r = a · sin(k·θ)` with parametric form `x(θ) = a · sin(k·θ) · cos(θ)` and `y(θ) = a · sin(k·θ) · sin(θ)`, where `a` is the petal radius and `k` is the rose constant (an integer). For `k` odd, a single 2π sweep produces exactly `k` petals (k=3→3 petals, k=5→5 petals); for `k` even, a single 2π sweep produces `2k` petals because each petal is traced twice (k=6→12 petals, k=8→16 petals). Both `x` and `y` lie in `[-a, +a]`. Four shape variants via the `k`-resolver: 'standard' (k=5 — the classic 5-petal rose, the most common rhodonea shape), 'double' (k=6 — 12-petal rose, even-k case where each petal is traced twice during one revolution), 'half' (k=3 — 3-petal rose, the smallest odd-k rose with nontrivial shape), 'quarter' (k=8 — 16-petal dense rose, the highest petal count of the four presets). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement, and `colOffset` is normalized via `(x + roseRange) * colScale` where `roseRange = clampedRadius` and `colScale = (clampedLength - 1) / (2 * roseRange)`. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The rose family complements `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic flower-petal polar curve studied by Grandi, Perazza, and Maclaurin.
+- **Files Modified**:
+  - `js/Track.js`: Added `roseNotes` method after `lemniscateNotes` (line ~7923, the new last method on the class)
+  - `js/constants.js`: Added 15 ROSE_NOTES_* constants + APP_VERSION bumped to 2.381.0
+  - `js/ui.js`: Added 4 Rose Notes menu items in the sequencer context menu after Lemniscate Notes (Left Lobe, 32)
+  - `js/tests.js`: Added Day 732 test block with 37 tests (all 37 pass)
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced — same fix applied on Days 713, 714, 717, 718, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731 too.)
+  - Fixed `Constants.ROSE_NOTES_SHAPES.includes(petals)` bug in the new `roseNotes` method: the parameter is named `shape`, not `petals` — the typo would have caused a `ReferenceError: petals is not defined` on the very first call. Renamed the reference to `shape`.
+- **Feature Details**:
+  - **roseNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a rhodonea (rose) curve computed via parametric equations. For sample `i` in 0..clampedLength-1, computes `t = (2*PI) * i / max(1, clampedLength-1)`, then `r = clampedRadius * sin(k*t)`, `x = r * cos(t)`, `y = r * sin(t)`. The y-component drives `rowOffset` via `Math.max(-clampedRadius, Math.min(clampedRadius, Math.round(y)))` and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((x + roseRange) * colScale)))`. Captures undo state BEFORE mutation with descriptive `Rose Notes (shape, k=..., a=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to ROSE_NOTES_MIN_LENGTH (8) / ROSE_NOTES_MAX_LENGTH (64) range with Math.floor (default ROSE_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `radius` to ROSE_NOTES_MIN_RADIUS (1) / ROSE_NOTES_MAX_RADIUS (8) range with Math.floor (default ROSE_NOTES_DEFAULT_RADIUS=4)
+    - Clamps `velocityDecay` to ROSE_NOTES_MIN_VELOCITY_DECAY (0.1) / ROSE_NOTES_MAX_VELOCITY_DECAY (1.0) range (default ROSE_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against ROSE_NOTES_SHAPES array, falls back to ROSE_NOTES_SHAPE_STANDARD if invalid
+    - `petalMap` resolver returns the rose constant `k` based on shape:
+      - STANDARD: `k = 5` — classic 5-petal rose (Grandi 1723 default; odd k, 1 petal per 2π/k)
+      - DOUBLE: `k = 6` — 12-petal rose (even k, each petal traced twice during one 2π revolution)
+      - HALF: `k = 3` — 3-petal rose (odd k, the smallest nontrivial odd-rose)
+      - QUARTER: `k = 8` — 16-petal dense rose (even k, 8-traced-twice petals)
+    - Computes `tMin = 0`, `tMax = 2*PI` (one full revolution — the rose is always traced in [0, 2π])
+    - Computes `roseRange = clampedRadius` (empirical bound: x and y both reach ±a at the petal tips)
+    - Computes `colScale = (roseRange > 0) ? (clampedLength - 1) / (2 * roseRange) : 0` (when roseRange > 0, else 0)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — happens at t=0,π where x=y=0)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of rose notes added (roseCount)
+  - **Rose Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Lemniscate Notes (Left Lobe, 32)
+    - "Rose Notes (Standard, 32)" - calls `roseNotes(32, 4, 0.95, 'standard', true)` - classic 5-petal rose (Grandi 1723 default, k=5)
+    - "Rose Notes (Double, 32)" - calls `roseNotes(32, 4, 0.95, 'double', true)` - 12-petal rose (k=6, even-k case where each petal is traced twice)
+    - "Rose Notes (Half, 32)" - calls `roseNotes(32, 4, 0.95, 'half', true)` - 3-petal rose (k=3, the smallest odd-k nontrivial rose)
+    - "Rose Notes (Quarter, 32)" - calls `roseNotes(32, 4, 0.95, 'quarter', true)` - 16-petal dense rose (k=8, even-k with 8 traced-twice petals)
+    - All call `recreateToneSequence(true)` after rosing
+    - All capture undo with descriptive `Rose Notes on <name> (<seqname>)` label
+    - Show notifications: `Rosed {count} note(s) (variant, 32).`
+    - Show `No notes to rose.` when nothing to rose
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 15 new constants
+  - `ROSE_NOTES_MIN_LENGTH = 8` - Minimum 8 samples (enough to resolve a single petal of the rose)
+  - `ROSE_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution rose)
+  - `ROSE_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the rose
+  - `ROSE_NOTES_MIN_RADIUS = 1` - Minimum 1 petal radius a (small tight rose)
+  - `ROSE_NOTES_MAX_RADIUS = 8` - Maximum 8 petal radius a (wide rose)
+  - `ROSE_NOTES_DEFAULT_RADIUS = 4` - Default 4 petal radius a
+  - `ROSE_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `ROSE_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `ROSE_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `ROSE_NOTES_DEFAULT_PETALS = 'standard'` - Default 5-petal rose
+  - `ROSE_NOTES_SHAPE_STANDARD = 'standard'` - k=5: classic 5-petal rose (Grandi 1723 default; odd k, 1 petal per 2π/k)
+  - `ROSE_NOTES_SHAPE_DOUBLE = 'double'` - k=6: 12-petal rose (even k, each petal traced twice during one 2π revolution)
+  - `ROSE_NOTES_SHAPE_HALF = 'half'` - k=3: 3-petal rose (odd k, the smallest nontrivial odd-rose)
+  - `ROSE_NOTES_SHAPE_QUARTER = 'quarter'` - k=8: 16-petal dense rose (even k, 8 traced-twice petals)
+  - `ROSE_NOTES_SHAPES = [STANDARD, DOUBLE, HALF, QUARTER]` - Valid shape values
+- **Tests** (`js/tests.js`): 37 tests covering (all 37 pass):
+  - `roseNotes` is a function on Track.prototype
+  - `roseNotes` accepts 5 parameters with defaults (length, radius, velocityDecay, shape, skipOccupied)
+  - `roseNotes` returns 0 for Audio tracks
+  - `roseNotes` gets active sequence via getActiveSequence
+  - `roseNotes` captures undo BEFORE mutation with descriptive `Rose Notes (k=..., a=..., N=...)` label
+  - `roseNotes` clamps all parameters to ROSE_NOTES_MIN/MAX_* ranges
+  - `roseNotes` validates shape with ROSE_NOTES_SHAPES (uses STANDARD fallback)
+  - `roseNotes` uses Math.sin and Math.cos for parametric equations
+  - `roseNotes` uses Math.sin(k*t) for the radial component (rhodonea curve characteristic)
+  - `roseNotes` uses Math.pow for velocity decay
+  - `roseNotes` supports skipOccupied option
+  - `roseNotes` rounds velocity to 2 decimal places
+  - `roseNotes` returns count of rose notes (roseCount)
+  - `roseNotes` uses Math.floor for length and radius
+  - All 15 ROSE_NOTES constants are defined in constants.js
+  - ROSE_NOTES_SHAPES includes standard, double, half, quarter
+  - ui.js has 4 Rose Notes menu items
+  - Rose Notes menu items call track.roseNotes
+  - Rose Notes menu items call recreateToneSequence after roseNotes
+  - Rose Notes menu items show `Rosed N note(s)` notification
+  - Rose Notes menu items capture undo with descriptive label
+  - Rose Notes menu items include all 4 shape variants (standard, double, half, quarter)
+  - Rose Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.381 for Day 732)
+  - Functional test: x = a*sin(k*t)*cos(t)
+  - Functional test: y = a*sin(k*t)*sin(t)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, radius -5->1, velocityDecay 2->1.0)
+  - Functional test: rowOffset clamped to +/- clampedRadius
+  - Functional test: colOffset = (x + range) * colScale mapped to [0, length-1]
+  - Structural test: supports 4 distinct shapes
+  - Rose Notes menu items call recreateToneSequence after roseNotes (full success path)
+- **Version**: Bumped to 2.381.0
+- **Test Count**: All 37 Day 732 tests pass via `test-runner/run-tests.js`. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild build succeeds (after fixing pre-existing missing-close-paren syntax error on Track.js line 4047). The 1449 test infrastructure failures are the same pre-existing `__dirname` / `createRequire(import.meta.url)` issue from Days 714-731, unrelated to Day 732. Total tests now at 3238 passed (up from 3202 after Day 731), 1449 failed (pre-existing infrastructure issues unchanged).
+
 #### Day 731: Lemniscate Notes Feature (2026-06-19)
 - **Feature**: Added `lemniscateNotes(length, radius, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Lemniscate Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **lemniscate of Bernoulli** curve — the iconic sideways infinity ∞ shape discovered by Jacob Bernoulli in 1694 while studying elastic curves, with polar equation `r² = a² · cos(2θ)` and parametric form `x(t) = a · cos(t) / (1 + sin²(t))` and `y(t) = a · sin(t) · cos(t) / (1 + sin²(t))`, where `a` is the lobe half-width and `t` is the polar angle. The lemniscate has the self-intersection at the origin (when `t = ±π/2`, both x and y equal 0 simultaneously, the center of the figure-8), with the two lobe tips at `(±a, 0)` and the curve fitting inside the box `[-a, +a] × [-a/2, +a/2]`. The lemniscate is famously the curve traced by a Lissajous figure at the 1:1 frequency ratio with a 90° phase shift (Day 725's CIRCLE mode becomes the LEMNISCATE at phase π/2), and is the shape of the **lemniscate constant** `Ω = 2 · ∫₀¹ dt / √(1 − t⁴) ≈ 2.622` — a transcendental constant related to the gamma function by `Ω = Γ(1/4)² / (2√(2π))`, discovered by Euler and Gauss, and used to calculate the arc length of the lemniscate. Four shape variants via the t-range resolver: 'horizontal' (t in [0, 2π] — classic sideways infinity, lobes extend left-right along x-axis, Bernoulli 1694 default), 'vertical' (t in [-π/2, 3π/2] — upright figure-8, lobes extend up-down along y-axis, rotated +π/2), 'right-lobe' (t in [-π/4, +π/4] — single lobe on the right side only, half the horizontal curve), 'left-lobe' (t in [3π/4, 5π/4] — single lobe on the left side only, the mirror of right-lobe). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement, and `colOffset` is normalized via `(x + lemniscateRange) * colScale` where `lemniscateRange = clampedRadius` and `colScale = (clampedLength - 1) / (2 * lemniscateRange)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The lemniscate family complements `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `lissajousNotes` (Day 725, X-Y oscilloscope curves), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), `crescentNotes` (Day 710, grouped arc), and `euclideanNotes` (Day 726, Bjorklund rhythms) with the iconic sideways-infinity curve discovered by Bernoulli while studying elastic bands and rubber.
 - **Files Modified**:
