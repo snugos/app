@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.380.0';
+export const APP_VERSION = '2.381.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1423,3 +1423,31 @@ export const DEFAULT_EFFECT_PRESET = {
     effectType: null,  // The effect type (e.g., 'Reverb', 'Chorus')
     params: {}         // The effect parameters
 };
+
+// Rose Curve Notes (Day 732) — the rhodonea curve r = a * sin(k*θ),
+// discovered by Guido Grandi in 1723 ("Flores geometrici") and studied
+// later by Lucia Perazza and Colin Maclaurin. For k odd, one 2π sweep
+// produces k petals (k=3→3 petals, k=5→5 petals). For k even, one 2π
+// sweep produces 2k petals because each petal is traced twice (k=6→12
+// petals, k=8→16 petals). Parametric: x = a*sin(k*θ)*cos(θ),
+// y = a*sin(k*θ)*sin(θ), so x and y both lie in [-a, +a].
+export const ROSE_NOTES_MIN_LENGTH = 8; // Minimum 8 samples (enough to resolve a single petal)
+export const ROSE_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution rose)
+export const ROSE_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the rose
+export const ROSE_NOTES_MIN_RADIUS = 1; // Minimum 1 petal radius a (small tight rose)
+export const ROSE_NOTES_MAX_RADIUS = 8; // Maximum 8 petal radius a (wide rose)
+export const ROSE_NOTES_DEFAULT_RADIUS = 4; // Default 4 petal radius a
+export const ROSE_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const ROSE_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const ROSE_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const ROSE_NOTES_DEFAULT_PETALS = 'standard'; // Default 5-petal rose
+export const ROSE_NOTES_SHAPE_STANDARD = 'standard'; // k=5: classic 5-petal rose (odd, t in [0, 2π] → 5 petals)
+export const ROSE_NOTES_SHAPE_DOUBLE = 'double'; // k=6: 12-petal rose (even, t in [0, 2π] → 12 petals, each traced twice)
+export const ROSE_NOTES_SHAPE_HALF = 'half'; // k=3: 3-petal rose (odd, t in [0, 2π] → 3 petals)
+export const ROSE_NOTES_SHAPE_QUARTER = 'quarter'; // k=8: 16-petal rose (even, t in [0, 2π] → 16 petals, each traced twice)
+export const ROSE_NOTES_SHAPES = [
+    ROSE_NOTES_SHAPE_STANDARD,
+    ROSE_NOTES_SHAPE_DOUBLE,
+    ROSE_NOTES_SHAPE_HALF,
+    ROSE_NOTES_SHAPE_QUARTER
+];

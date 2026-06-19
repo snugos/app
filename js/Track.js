@@ -7857,12 +7857,7 @@ export class Track {
         // Lemniscate parametric equations (Bernoulli, 1694):
         //   x(t) = a * cos(t) / (1 + sin^2(t))
         //   y(t) = a * sin(t) * cos(t) / (1 + sin^2(t))
-        // The curve fits inside [-a, +a] in both x and y. x reaches ±a at t=0,π (the lobe tips),
-        // and y reaches ±a/2 at t=±π/4 (the self-intersection point at origin).
         const lemniscateRange = clampedRadius;
-        // rowOffset clamps y to +/- clampedRadius for sane grid placement
-        // colOffset normalization: x and y both span [-lemniscateRange, +lemniscateRange],
-        // so we map to [0, clampedLength] to spread the curve across the sample count.
         const colScale = (lemniscateRange > 0) ? (clampedLength - 1) / (2 * lemniscateRange) : 0;
 
         for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
@@ -7923,5 +7918,89 @@ export class Track {
         }
 
         return lemniscateCount;
+    }
+
+    roseNotes(length = Constants.ROSE_NOTES_DEFAULT_LENGTH, radius = Constants.ROSE_NOTES_DEFAULT_RADIUS, velocityDecay = Constants.ROSE_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.ROSE_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} roseNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.ROSE_NOTES_MIN_LENGTH, Math.min(Constants.ROSE_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedRadius = Math.max(Constants.ROSE_NOTES_MIN_RADIUS, Math.min(Constants.ROSE_NOTES_MAX_RADIUS, Math.floor(radius)));
+        const clampedDecay = Math.max(Constants.ROSE_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.ROSE_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.ROSE_NOTES_SHAPES.includes(shape) ? shape : Constants.ROSE_NOTES_SHAPE_STANDARD;
+        const petalMap = {
+            [Constants.ROSE_NOTES_SHAPE_STANDARD]: 5,
+            [Constants.ROSE_NOTES_SHAPE_DOUBLE]: 6,
+            [Constants.ROSE_NOTES_SHAPE_HALF]: 3,
+            [Constants.ROSE_NOTES_SHAPE_QUARTER]: 8
+        };
+        const useK = petalMap[useShape] || 5;
+
+        this._captureUndoState(`Rose Notes (${useShape}, k=${useK}, a=${clampedRadius}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let roseCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+        const tMin = 0;
+        const tMax = 2 * Math.PI;
+        const roseRange = clampedRadius;
+        const colScale = (roseRange > 0) ? (clampedLength - 1) / (2 * roseRange) : 0;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < clampedLength; i++) {
+                    const t = tMin + ((tMax - tMin) * i) / Math.max(1, clampedLength - 1);
+                    const r = clampedRadius * Math.sin(useK * t);
+                    const x = r * Math.cos(t);
+                    const y = r * Math.sin(t);
+
+                    const rowOffset = Math.max(-clampedRadius, Math.min(clampedRadius, Math.round(y)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((x + roseRange) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            roseCount++;
+        }
+
+        return roseCount;
     }
 }

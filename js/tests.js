@@ -26955,6 +26955,265 @@ TestRunner.test("Day 731 - Lemniscate Notes menu items call recreateToneSequence
     }
 });
 
+// Day 732: Rose Notes Feature - roseNotes method, constants, UI menu items
+TestRunner.test("Day 732 - roseNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.roseNotes === 'function', 'roseNotes is a function');
+});
+
+TestRunner.test("Day 732 - roseNotes accepts 5 parameters with defaults (length, radius, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.ROSE_NOTES_DEFAULT_LENGTH/.test(src), 'has length param with ROSE_NOTES_DEFAULT_LENGTH default');
+    t.assertTruthy(/radius\s*=\s*Constants\.ROSE_NOTES_DEFAULT_RADIUS/.test(src), 'has radius param with ROSE_NOTES_DEFAULT_RADIUS default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.ROSE_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay param with ROSE_NOTES_DEFAULT_VELOCITY_DECAY default');
+    t.assertTruthy(/shape\s*=\s*Constants\.ROSE_NOTES_SHAPE_STANDARD/.test(src), 'has shape param with ROSE_NOTES_SHAPE_STANDARD default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied param default true');
+});
+
+TestRunner.test("Day 732 - roseNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 732 - roseNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 732 - roseNotes captures undo BEFORE mutation with descriptive Rose Notes label", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/_captureUndoState\(/.test(src), 'calls _captureUndoState');
+    t.assertTruthy(/Rose Notes.*k=.*a=.*N=.*on/.test(src), 'descriptive Rose Notes undo label');
+});
+
+TestRunner.test("Day 732 - roseNotes clamps length/radius/velocityDecay to ROSE_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.ROSE_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/ROSE_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.ROSE_NOTES_MAX_RADIUS/.test(src), 'has MAX_RADIUS clamp');
+    t.assertTruthy(/ROSE_NOTES_MIN_RADIUS/.test(src), 'has MIN_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.ROSE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+    t.assertTruthy(/ROSE_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 732 - roseNotes validates shape with ROSE_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/ROSE_NOTES_SHAPES\.includes\(shape\)/.test(src), 'validates shape via ROSE_NOTES_SHAPES');
+    t.assertTruthy(/ROSE_NOTES_SHAPES\.includes\(shape\)\s*\?\s*shape\s*:\s*Constants\.ROSE_NOTES_SHAPE_STANDARD/.test(src), 'uses STANDARD as fallback for invalid shape');
+});
+
+TestRunner.test("Day 732 - roseNotes uses Math.sin and Math.cos for parametric equations", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.sin\(/.test(src), 'uses Math.sin');
+    t.assertTruthy(/Math\.cos\(/.test(src), 'uses Math.cos');
+});
+
+TestRunner.test("Day 732 - roseNotes uses Math.sin(k*t) for radial component (rose curve characteristic)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.sin\(useK\s*\*\s*t\)/.test(src), 'uses Math.sin(k*t) for radial component');
+});
+
+TestRunner.test("Day 732 - roseNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay\s*,\s*i\)/.test(src), 'uses Math.pow(clampedDecay, i) for velocity decay');
+});
+
+TestRunner.test("Day 732 - roseNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'checks skipOccupied before placing notes');
+});
+
+TestRunner.test("Day 732 - roseNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds decayedVel to 2 decimal places');
+});
+
+TestRunner.test("Day 732 - roseNotes returns count of rose notes (roseCount)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/return\s+roseCount/.test(src), 'returns roseCount');
+});
+
+TestRunner.test("Day 732 - roseNotes uses Math.floor for length and radius", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor on length');
+    t.assertTruthy(/Math\.floor\(radius\)/.test(src), 'uses Math.floor on radius');
+});
+
+TestRunner.test("Day 732 - All ROSE_NOTES constants are defined in constants.js", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/export const ROSE_NOTES_MIN_LENGTH\s*=/.test(src), 'has ROSE_NOTES_MIN_LENGTH');
+    t.assertTruthy(/export const ROSE_NOTES_MAX_LENGTH\s*=/.test(src), 'has ROSE_NOTES_MAX_LENGTH');
+    t.assertTruthy(/export const ROSE_NOTES_DEFAULT_LENGTH\s*=/.test(src), 'has ROSE_NOTES_DEFAULT_LENGTH');
+    t.assertTruthy(/export const ROSE_NOTES_MIN_RADIUS\s*=/.test(src), 'has ROSE_NOTES_MIN_RADIUS');
+    t.assertTruthy(/export const ROSE_NOTES_MAX_RADIUS\s*=/.test(src), 'has ROSE_NOTES_MAX_RADIUS');
+    t.assertTruthy(/export const ROSE_NOTES_DEFAULT_RADIUS\s*=/.test(src), 'has ROSE_NOTES_DEFAULT_RADIUS');
+    t.assertTruthy(/export const ROSE_NOTES_MIN_VELOCITY_DECAY\s*=/.test(src), 'has ROSE_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/export const ROSE_NOTES_MAX_VELOCITY_DECAY\s*=/.test(src), 'has ROSE_NOTES_MAX_VELOCITY_DECAY');
+    t.assertTruthy(/export const ROSE_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(src), 'has ROSE_NOTES_DEFAULT_VELOCITY_DECAY');
+    t.assertTruthy(/export const ROSE_NOTES_SHAPE_STANDARD\s*=/.test(src), 'has ROSE_NOTES_SHAPE_STANDARD');
+    t.assertTruthy(/export const ROSE_NOTES_SHAPE_DOUBLE\s*=/.test(src), 'has ROSE_NOTES_SHAPE_DOUBLE');
+    t.assertTruthy(/export const ROSE_NOTES_SHAPE_HALF\s*=/.test(src), 'has ROSE_NOTES_SHAPE_HALF');
+    t.assertTruthy(/export const ROSE_NOTES_SHAPE_QUARTER\s*=/.test(src), 'has ROSE_NOTES_SHAPE_QUARTER');
+    t.assertTruthy(/export const ROSE_NOTES_SHAPES\s*=\s*\[/.test(src), 'has ROSE_NOTES_SHAPES array');
+});
+
+TestRunner.test("Day 732 - ROSE_NOTES_SHAPES includes standard, double, half, quarter", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    const arrayMatch = src.match(/export const ROSE_NOTES_SHAPES\s*=\s*\[([^\]]+)\]/);
+    t.assertTruthy(arrayMatch, 'ROSE_NOTES_SHAPES array exists');
+    const arrayText = arrayMatch[1];
+    t.assertTruthy(arrayText.includes('ROSE_NOTES_SHAPE_STANDARD'), 'includes STANDARD');
+    t.assertTruthy(arrayText.includes('ROSE_NOTES_SHAPE_DOUBLE'), 'includes DOUBLE');
+    t.assertTruthy(arrayText.includes('ROSE_NOTES_SHAPE_HALF'), 'includes HALF');
+    t.assertTruthy(arrayText.includes('ROSE_NOTES_SHAPE_QUARTER'), 'includes QUARTER');
+});
+
+TestRunner.test("Day 732 - ui.js has 4 Rose Notes menu items", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const roseLines = src.split('\n').filter(l => l.includes('Rose Notes') && l.includes('action:'));
+    t.assertEqual(roseLines.length, 4, 'has 4 Rose Notes menu lines');
+});
+
+TestRunner.test("Day 732 - Rose Notes menu items call track.roseNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const roseLines = src.split('\n').filter(l => l.includes('Rose Notes') && l.includes('action:'));
+    for (const line of roseLines) {
+        t.assertTruthy(line.includes('.roseNotes('), 'each Rose Notes menu line calls track.roseNotes');
+    }
+});
+
+TestRunner.test("Day 732 - Rose Notes menu items call recreateToneSequence after roseNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const roseLines = src.split('\n').filter(l => l.includes('Rose Notes') && l.includes('action:'));
+    for (const line of roseLines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'each Rose Notes menu line calls recreateToneSequence');
+    }
+});
+
+TestRunner.test("Day 732 - Rose Notes menu items show Rosed N note(s) notification", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const roseLines = src.split('\n').filter(l => l.includes('Rose Notes') && l.includes('action:'));
+    t.assertEqual(roseLines.length, 4, 'has 4 Rose Notes menu lines');
+    for (const line of roseLines) {
+        t.assertTruthy(/Rosed \$\{result\} note/.test(line), 'each Rose Notes menu line shows Rosed N note(s) notification');
+    }
+});
+
+TestRunner.test("Day 732 - Rose Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const roseLines = src.split('\n').filter(l => l.includes('Rose Notes') && l.includes('action:'));
+    for (const line of roseLines) {
+        t.assertTruthy(line.includes('captureStateForUndo') && line.includes('Rose Notes'), 'each Rose Notes menu line captures undo with descriptive label');
+    }
+});
+
+TestRunner.test("Day 732 - Rose Notes menu items include all 4 shape variants (standard, double, half, quarter)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const roseLines = src.split('\n').filter(l => l.includes('Rose Notes') && l.includes('action:'));
+    const allRose = roseLines.join('\n');
+    t.assertTruthy(allRose.includes("'standard'"), 'includes standard shape');
+    t.assertTruthy(allRose.includes("'double'"), 'includes double shape');
+    t.assertTruthy(allRose.includes("'half'"), 'includes half shape');
+    t.assertTruthy(allRose.includes("'quarter'"), 'includes quarter shape');
+});
+
+TestRunner.test("Day 732 - Rose Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const roseLines = src.split('\n').filter(l => l.includes('Rose Notes') && l.includes('action:'));
+    for (const line of roseLines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each Rose Notes menu line calls updateTrackUI');
+    }
+});
+
+TestRunner.test("Day 732 - APP_VERSION validation (>= 2.381 for Day 732)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    const match = src.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    t.assertTruthy(match, 'APP_VERSION is defined');
+    const [major, minor, patch] = match[1].split('.').map(Number);
+    t.assertTruthy(major > 2 || (major === 2 && minor > 381) || (major === 2 && minor === 381), 'APP_VERSION >= 2.381');
+});
+
+TestRunner.test("Day 732 - roseNotes functional test: x = a*sin(k*t)*cos(t)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.cos\(t\)/.test(src), 'uses Math.cos(t) for x computation');
+});
+
+TestRunner.test("Day 732 - roseNotes functional test: y = a*sin(k*t)*sin(t)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.sin\(t\)/.test(src), 'uses Math.sin(t) for y computation');
+});
+
+TestRunner.test("Day 732 - roseNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[\]/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'pushes to newNotes');
+});
+
+TestRunner.test("Day 732 - roseNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+
+TestRunner.test("Day 732 - roseNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 732 - roseNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row boundaries');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks column boundaries');
+});
+
+TestRunner.test("Day 732 - roseNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'checks for active stepData');
+});
+
+TestRunner.test("Day 732 - roseNotes functional test: clamps to valid ranges (length 100->64, radius -5->1, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.ROSE_NOTES_MIN_LENGTH/.test(src), 'clamps to MIN_LENGTH');
+    t.assertTruthy(/Math\.min\(Constants\.ROSE_NOTES_MAX_LENGTH/.test(src), 'clamps to MAX_LENGTH');
+    t.assertTruthy(/Math\.min\(Constants\.ROSE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps to MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 732 - roseNotes functional test: rowOffset clamped to +/- clampedRadius", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.max\(-clampedRadius/.test(src) && /Math\.min\(clampedRadius/.test(src), 'clamps rowOffset to +/- clampedRadius');
+});
+
+TestRunner.test("Day 732 - roseNotes functional test: colOffset = (x + range) * colScale mapped to [0, length-1]", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/Math\.max\(0/.test(src) && /Math\.min\(clampedLength\s*-\s*1/.test(src), 'maps colOffset to [0, length-1]');
+});
+
+TestRunner.test("Day 732 - roseNotes structural test: supports 4 distinct shapes", (t) => {
+    const src = Track.prototype.roseNotes.toString();
+    t.assertTruthy(/ROSE_NOTES_SHAPE_STANDARD/.test(src), 'has STANDARD shape');
+    t.assertTruthy(/ROSE_NOTES_SHAPE_DOUBLE/.test(src), 'has DOUBLE shape');
+    t.assertTruthy(/ROSE_NOTES_SHAPE_HALF/.test(src), 'has HALF shape');
+    t.assertTruthy(/ROSE_NOTES_SHAPE_QUARTER/.test(src), 'has QUARTER shape');
+});
+
+TestRunner.test("Day 732 - Rose Notes menu items call recreateToneSequence after roseNotes (full success path)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const roseLines = src.split('\n').filter(l => l.includes('Rose Notes') && l.includes('action:'));
+    t.assertEqual(roseLines.length, 4, 'has 4 Rose Notes menu lines');
+    for (const line of roseLines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'each Rose menu line calls recreateToneSequence');
+    }
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
