@@ -25612,7 +25612,7 @@ TestRunner.test("Day 726 - APP_VERSION validation (>= 2.375 for Day 726)", (t) =
 TestRunner.test("Day 726 - euclideanNotes uses bjorklund helper for distribution", (t) => {
     const src = Track.prototype.euclideanNotes.toString();
     t.assertTruthy(/groups\s*=\s*\[\]/.test(src) && /groups\.shift\(\)/.test(src), 'defines an interleaving helper (bjorklund inlined as arrow)');
-    t.assertTruthy(/(clampedPulses,\s*clampedSteps\)|pulses,\s*steps\)/.test(src), 'calls helper with clampedPulses, clampedSteps');
+    t.assertTruthy(/bjorklund\(clampedPulses,\s*clampedSteps\)/.test(src), 'calls bjorklund(clampedPulses, clampedSteps)');
 });
 
 TestRunner.test("Day 726 - euclideanNotes bjorklund uses recursive group interleaving", (t) => {
