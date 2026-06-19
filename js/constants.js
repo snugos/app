@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.374.0';
+export const APP_VERSION = '2.375.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -623,6 +623,33 @@ export const LISSAJOUS_NOTES_MODES = [
     LISSAJOUS_NOTES_MODE_ROSETTE_34,
     LISSAJOUS_NOTES_MODE_ROSETTE_35,
     LISSAJOUS_NOTES_MODE_ROSETTE_45
+];
+
+// Euclidean Notes Constants (Day 726)
+// Euclidean rhythm generator (Bjorklund algorithm) — distributes K pulses across N steps
+// as evenly as possible. Famous examples: E(3,8) = tresillo, E(5,8) = cinquillo, E(5,16) = Cuban
+export const EUCLIDEAN_NOTES_MIN_PULSES = 1; // Minimum 1 pulse (single hit)
+export const EUCLIDEAN_NOTES_MAX_PULSES = 16; // Maximum 16 pulses (dense pattern)
+export const EUCLIDEAN_NOTES_MIN_STEPS = 1; // Minimum 1 step (all hits on one column)
+export const EUCLIDEAN_NOTES_MAX_STEPS = 32; // Maximum 32 steps (long pattern)
+export const EUCLIDEAN_NOTES_MIN_ROW_OFFSET = -8; // Minimum -8 rows of pitch shift
+export const EUCLIDEAN_NOTES_MAX_ROW_OFFSET = 8; // Maximum +8 rows of pitch shift
+export const EUCLIDEAN_NOTES_MIN_ROTATION = 0; // Minimum 0 steps rotation
+export const EUCLIDEAN_NOTES_MAX_ROTATION = 15; // Maximum 15 steps rotation
+export const EUCLIDEAN_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation
+export const EUCLIDEAN_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const EUCLIDEAN_NOTES_DEFAULT_PULSES = 5; // Default 5 pulses (cinquillo-style)
+export const EUCLIDEAN_NOTES_DEFAULT_STEPS = 8; // Default 8 steps (one measure of 8ths)
+export const EUCLIDEAN_NOTES_DEFAULT_ROW_OFFSET = 0; // Default 0 rows (same pitch)
+export const EUCLIDEAN_NOTES_DEFAULT_ROTATION = 0; // Default 0 rotation
+export const EUCLIDEAN_NOTES_DEFAULT_VELOCITY_DECAY = 1.0; // Default 1.0 (no velocity decay — pattern is rhythmic not pitched)
+export const EUCLIDEAN_NOTES_MODE_FORWARD = 'forward'; // Natural Bjorklund ordering
+export const EUCLIDEAN_NOTES_MODE_REVERSE = 'reverse'; // Mirror the pattern (reverse temporal order)
+export const EUCLIDEAN_NOTES_MODE_PENDULUM = 'pendulum'; // Bounce: forward then reverse (sounds palindromic)
+export const EUCLIDEAN_NOTES_MODES = [
+    EUCLIDEAN_NOTES_MODE_FORWARD,
+    EUCLIDEAN_NOTES_MODE_REVERSE,
+    EUCLIDEAN_NOTES_MODE_PENDULUM
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

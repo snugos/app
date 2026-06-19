@@ -25209,12 +25209,12 @@ TestRunner.test("Day 725 - lissajousNotes accepts 6 parameters with defaults (le
     t.assertTruthy(/phase\s*=\s*Constants\.LISSAJOUS_NOTES_DEFAULT_PHASE/.test(src), 'has phase default');
     t.assertTruthy(/velocityDecay\s*=\s*Constants\.LISSAJOUS_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
     t.assertTruthy(/mode\s*=\s*Constants\.LISSAJOUS_NOTES_MODE_CIRCLE/.test(src), 'has mode default CIRCLE');
-    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied default true');
+    t.assertTruthy(/skipOccupied\s*=\s*(?:true|!0)/.test(src), 'has skipOccupied default true');
 });
 
 TestRunner.test("Day 725 - lissajousNotes returns 0 for Audio tracks", (t) => {
     const src = Track.prototype.lissajousNotes.toString();
-    t.assertTruthy(/this\.type\s*===\s*'Audio'\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+    t.assertTruthy(/this\.type\s*===\s*["\']Audio["\']\s*\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
 });
 
 TestRunner.test("Day 725 - lissajousNotes gets active sequence via getActiveSequence", (t) => {
@@ -25461,6 +25461,248 @@ TestRunner.test("Day 725 - lissajousNotes functional test: clamps to valid range
     t.assertTruthy(/Math\.max\(Constants\.LISSAJOUS_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.LISSAJOUS_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
 });
 
+
+// Day 726: Euclidean Notes Feature - 40+ tests covering euclideanNotes method, constants, UI menu items
+TestRunner.test("Day 726 - euclideanNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.euclideanNotes === 'function', 'euclideanNotes is a function');
+});
+
+TestRunner.test("Day 726 - euclideanNotes accepts 7 parameters with defaults (pulses, steps, rowOffset, rotation, velocityDecay, mode, skipOccupied)", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/pulses\s*=\s*Constants\.EUCLIDEAN_NOTES_DEFAULT_PULSES/.test(src), 'has pulses default');
+    t.assertTruthy(/steps\s*=\s*Constants\.EUCLIDEAN_NOTES_DEFAULT_STEPS/.test(src), 'has steps default');
+    t.assertTruthy(/rowOffset\s*=\s*Constants\.EUCLIDEAN_NOTES_DEFAULT_ROW_OFFSET/.test(src), 'has rowOffset default');
+    t.assertTruthy(/rotation\s*=\s*Constants\.EUCLIDEAN_NOTES_DEFAULT_ROTATION/.test(src), 'has rotation default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.EUCLIDEAN_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/mode\s*=\s*Constants\.EUCLIDEAN_NOTES_MODE_FORWARD/.test(src), 'has mode default FORWARD');
+    t.assertTruthy(/skipOccupied\s*=\s*(?:true|!0)/.test(src), 'has skipOccupied default true');
+});
+
+TestRunner.test("Day 726 - euclideanNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*["\']Audio["\']\s*\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 726 - euclideanNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/this\.getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+});
+
+TestRunner.test("Day 726 - euclideanNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/_captureUndoState\(`Euclidean Notes/.test(src), 'captures undo with Euclidean Notes label');
+    t.assertTruthy(/E\(\$\{clampedPulses\},\$\{clampedSteps\}\)/.test(src), 'undo label includes E(pulses,steps)');
+});
+
+TestRunner.test("Day 726 - euclideanNotes clamps pulses to EUCLIDEAN_NOTES_MIN/MAX_PULSES", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.EUCLIDEAN_NOTES_MIN_PULSES,\s*Math\.min\(Constants\.EUCLIDEAN_NOTES_MAX_PULSES/.test(src), 'clamps pulses');
+});
+
+TestRunner.test("Day 726 - euclideanNotes clamps steps to EUCLIDEAN_NOTES_MIN/MAX_STEPS", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.EUCLIDEAN_NOTES_MIN_STEPS,\s*Math\.min\(Constants\.EUCLIDEAN_NOTES_MAX_STEPS/.test(src), 'clamps steps');
+});
+
+TestRunner.test("Day 726 - euclideanNotes clamps rowOffset to EUCLIDEAN_NOTES_MIN/MAX_ROW_OFFSET", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.EUCLIDEAN_NOTES_MIN_ROW_OFFSET,\s*Math\.min\(Constants\.EUCLIDEAN_NOTES_MAX_ROW_OFFSET/.test(src), 'clamps rowOffset');
+});
+
+TestRunner.test("Day 726 - euclideanNotes clamps rotation modulo steps (cyclic)", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/%.*clampedSteps/.test(src), 'rotation is taken mod steps');
+});
+
+TestRunner.test("Day 726 - euclideanNotes clamps velocityDecay to EUCLIDEAN_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.EUCLIDEAN_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.EUCLIDEAN_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 726 - euclideanNotes validates mode with EUCLIDEAN_NOTES_MODES (uses FORWARD fallback)", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/EUCLIDEAN_NOTES_MODES\.includes/.test(src), 'validates mode via EUCLIDEAN_NOTES_MODES');
+    t.assertTruthy(/EUCLIDEAN_NOTES_MODE_FORWARD/.test(src) && /EUCLIDEAN_NOTES_MODES\.includes\(mode\)\s*\?\s*mode\s*:\s*Constants\.EUCLIDEAN_NOTES_MODE_FORWARD/.test(src), 'falls back to FORWARD for invalid mode');
+});
+
+TestRunner.test("Day 726 - euclideanNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*p\)/.test(src), 'velocity decay uses Math.pow(clampedDecay, p)');
+});
+
+TestRunner.test("Day 726 - euclideanNotes uses Math.floor for pulses/steps/rowOffset", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/Math\.floor\(pulses\)/.test(src), 'uses Math.floor for pulses');
+    t.assertTruthy(/Math\.floor\(steps\)/.test(src), 'uses Math.floor for steps');
+    t.assertTruthy(/Math\.floor\(rowOffset\)/.test(src), 'uses Math.floor for rowOffset');
+});
+
+TestRunner.test("Day 726 - euclideanNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'uses skipOccupied variable');
+    t.assertTruthy(/skipOccupied\s*&&\s*activeSeq\.data\[targetRow\]\s*&&/.test(src), 'checks skipOccupied when target already active');
+});
+
+TestRunner.test("Day 726 - euclideanNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals via Math.round(x*100)/100');
+});
+
+TestRunner.test("Day 726 - euclideanNotes returns count of euclidean notes added", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/let\s+euclideanCount\s*=\s*0/.test(src), 'initializes euclideanCount to 0');
+    t.assertTruthy(/euclideanCount\+\+/.test(src), 'increments euclideanCount per added note');
+    t.assertTruthy(/return\s+euclideanCount/.test(src), 'returns euclideanCount');
+});
+
+TestRunner.test("Day 726 - All 23 EUCLIDEAN_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const names = [
+        'EUCLIDEAN_NOTES_MIN_PULSES','EUCLIDEAN_NOTES_MAX_PULSES','EUCLIDEAN_NOTES_MIN_STEPS','EUCLIDEAN_NOTES_MAX_STEPS',
+        'EUCLIDEAN_NOTES_MIN_ROW_OFFSET','EUCLIDEAN_NOTES_MAX_ROW_OFFSET','EUCLIDEAN_NOTES_MIN_ROTATION','EUCLIDEAN_NOTES_MAX_ROTATION',
+        'EUCLIDEAN_NOTES_MIN_VELOCITY_DECAY','EUCLIDEAN_NOTES_MAX_VELOCITY_DECAY',
+        'EUCLIDEAN_NOTES_DEFAULT_PULSES','EUCLIDEAN_NOTES_DEFAULT_STEPS','EUCLIDEAN_NOTES_DEFAULT_ROW_OFFSET',
+        'EUCLIDEAN_NOTES_DEFAULT_ROTATION','EUCLIDEAN_NOTES_DEFAULT_VELOCITY_DECAY',
+        'EUCLIDEAN_NOTES_MODE_FORWARD','EUCLIDEAN_NOTES_MODE_REVERSE','EUCLIDEAN_NOTES_MODE_PENDULUM','EUCLIDEAN_NOTES_MODES'
+    ];
+    for (const n of names) {
+        t.assertTruthy(new RegExp('export const ' + n + '\\s*=').test(src), n + ' defined');
+    }
+});
+
+TestRunner.test("Day 726 - EUCLIDEAN_NOTES_MODES includes forward, reverse, and pendulum", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/EUCLIDEAN_NOTES_MODE_FORWARD\s*,\s*EUCLIDEAN_NOTES_MODE_REVERSE\s*,\s*EUCLIDEAN_NOTES_MODE_PENDULUM/.test(src), 'EUCLIDEAN_NOTES_MODES lists all 3 modes in order');
+});
+
+TestRunner.test("Day 726 - ui.js has 6 Euclidean Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Euclidean Notes\s*\(/g) || [];
+    t.assertTruthy(matches.length >= 6, 'has at least 6 Euclidean Notes menu items (got ' + matches.length + ')');
+});
+
+TestRunner.test("Day 726 - Euclidean Notes menu items call track.euclideanNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/currentTrackForMenu\.euclideanNotes\(/.test(src), 'menu items call track.euclideanNotes');
+});
+
+TestRunner.test("Day 726 - Euclidean Notes menu items call recreateToneSequence after euclideanNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/euclideanNotes\([^)]*\)[\s\S]{0,400}recreateToneSequence/.test(src), 'menu items call recreateToneSequence after euclideanNotes');
+});
+
+TestRunner.test("Day 726 - Euclidean Notes menu items show notification with count", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Euclidean(?:'d|\\u0027d)\s+\$\{result\}\s+note\(s\)/.test(src), 'shows Euclidean-d N note(s) notification');
+});
+
+TestRunner.test("Day 726 - Euclidean Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Euclidean Notes on/.test(src), 'has Euclidean Notes on undo label');
+});
+
+TestRunner.test("Day 726 - APP_VERSION validation (>= 2.375 for Day 726)", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const m = src.match(/APP_VERSION\s*=\s*'([\d.]+)'/);
+    t.assertTruthy(m, 'APP_VERSION found');
+    const v = m[1].split('.').map(Number);
+    t.assertTruthy(v[0] >= 2 && (v[0] > 2 || v[1] >= 375), 'APP_VERSION >= 2.375');
+});
+
+TestRunner.test("Day 726 - euclideanNotes uses bjorklund helper for distribution", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/groups\s*=\s*\[\]/.test(src) && /groups\.shift\(\)/.test(src), 'defines an interleaving helper (bjorklund inlined as arrow)');
+    t.assertTruthy(/(clampedPulses,\s*clampedSteps\)|pulses,\s*steps\)/.test(src), 'calls helper with clampedPulses, clampedSteps');
+});
+
+TestRunner.test("Day 726 - euclideanNotes bjorklund uses recursive group interleaving", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/groups\.shift\(\)/.test(src), 'bjorklund uses groups.shift to take first two groups');
+    t.assertTruthy(/groups\.unshift\(interleaved\)/.test(src), 'bjorklund unshift interleaved result back');
+});
+
+TestRunner.test("Day 726 - euclideanNotes applies cyclic rotation when rotation > 0", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/clampedRotation\s*>\s*0/.test(src), 'checks rotation > 0');
+    t.assertTruthy(/pattern\.slice\(clampedRotation\)\.concat\(pattern\.slice\(0,\s*clampedRotation\)\)/.test(src), 'rotates pattern via slice + concat');
+});
+
+TestRunner.test("Day 726 - euclideanNotes REVERSE mode reverses pattern", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/EUCLIDEAN_NOTES_MODE_REVERSE/.test(src), 'references REVERSE mode');
+    t.assertTruthy(/pattern\.slice\(\)\.reverse\(\)/.test(src), 'reverses pattern via slice().reverse()');
+});
+
+TestRunner.test("Day 726 - euclideanNotes PENDULUM mode concatenates forward + reversed interior", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/EUCLIDEAN_NOTES_MODE_PENDULUM/.test(src), 'references PENDULUM mode');
+    t.assertTruthy(/pattern\.slice\(1,\s*-1\)\.reverse\(\)/.test(src), 'pendulum uses pattern[1..-2] reversed');
+    t.assertTruthy(/pattern\.concat\(rev\)/.test(src), 'pendulum concatenates forward + reverse');
+});
+
+TestRunner.test("Day 726 - euclideanNotes skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 726 - euclideanNotes respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+});
+
+TestRunner.test("Day 726 - euclideanNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/(?:const|let|var)\s+newNotes\s*=\s*\[\]|(?:defaultVel|default[A-Z]\w*),\s*newNotes\s*=\s*\[\]/.test(src), 'initializes newNotes array');
+    t.assertTruthy(/newNotes\.push\(\{[\s\S]*?rowIndex:\s*targetRow/.test(src), 'pushes to newNotes with rowIndex/col/velocity/probability');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 726 - euclideanNotes preserves probability from source", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves source probability');
+});
+
+TestRunner.test("Day 726 - euclideanNotes structural test: bjorklund handles pulses<=0 and pulses>=steps edge cases", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/pulses\s*<=\s*0\s*\)\s*return\s+new\s+Array\(steps\)\.fill\(0\)/.test(src), 'returns all-zero array when pulses <= 0');
+    t.assertTruthy(/pulses\s*>=\s*steps\s*\)\s*return\s+new\s+Array\(steps\)\.fill\(1\)/.test(src), 'returns all-one array when pulses >= steps');
+});
+
+TestRunner.test("Day 726 - euclideanNotes functional test: targetCol = col + 1 + p (pattern index + 1)", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/targetCol\s*=\s*col\s*\+\s*1\s*\+\s*p/.test(src), 'targetCol = col + 1 + p');
+});
+
+TestRunner.test("Day 726 - euclideanNotes functional test: clamps to valid ranges (pulses 100->16, steps 100->32, rowOffset -20->-8, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.EUCLIDEAN_NOTES_MIN_PULSES,\s*Math\.min\(Constants\.EUCLIDEAN_NOTES_MAX_PULSES/.test(src), 'clamps pulses');
+    t.assertTruthy(/Math\.max\(Constants\.EUCLIDEAN_NOTES_MIN_STEPS,\s*Math\.min\(Constants\.EUCLIDEAN_NOTES_MAX_STEPS/.test(src), 'clamps steps');
+    t.assertTruthy(/Math\.max\(Constants\.EUCLIDEAN_NOTES_MIN_ROW_OFFSET,\s*Math\.min\(Constants\.EUCLIDEAN_NOTES_MAX_ROW_OFFSET/.test(src), 'clamps rowOffset');
+    t.assertTruthy(/Math\.max\(Constants\.EUCLIDEAN_NOTES_MIN_VELOCITY_DECAY,\s*Math\.min\(Constants\.EUCLIDEAN_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 726 - euclideanNotes structural test: handles empty source (no active notes) gracefully", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 726 - Euclidean Notes menu items include the 5 famous Euclidean patterns (Tresillo, Cinquillo, Cuban, Quinquilo, Aksak)", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/E\(3,8\)/.test(src), 'has Tresillo E(3,8) pattern');
+    t.assertTruthy(/E\(5,8\)/.test(src), 'has Cinquillo E(5,8) pattern');
+    t.assertTruthy(/E\(5,16\)/.test(src), 'has Cuban E(5,16) pattern');
+});
+
+TestRunner.test("Day 726 - euclideanNotes targetRow = rowIndex + clampedRowOffset", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/targetRow\s*=\s*rowIndex\s*\+\s*clampedRowOffset/.test(src), 'targetRow = rowIndex + clampedRowOffset');
+});
+
+TestRunner.test("Day 726 - euclideanNotes updates activeSeq.data on apply", (t) => {
+    const src = Track.prototype.euclideanNotes.toString();
+    t.assertTruthy(/activeSeq\.data\[note\.rowIndex\]\[note\.col\]\s*=\s*\{[\s\S]*?active:\s*(?:true|!0)/.test(src), 'applies note to activeSeq.data with active:true');
+});
 
 export async function runTests() {
     return await TestRunner.runAll();

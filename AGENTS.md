@@ -1,3 +1,114 @@
+#### Day 726: Euclidean Notes Feature (2026-06-19)
+- **Feature**: Wired up the partially-scaffolded `euclideanNotes(pulses, steps, rowOffset, rotation, velocityDecay, mode, skipOccupied)` method in Track.js to the sequencer context menu with 6 "Euclidean Notes" menu items. Each active note spawns a Bjorklund-distributed Euclidean rhythm pattern across N steps (the classic algorithm that distributes K pulses across N slots as evenly as possible — used by Brian Eno, Aphex Twin, and African/Afro-Cuban percussion to generate polyrhythms). Famous patterns: E(3,8) tresillo (Cuban son), E(5,8) cinquillo, E(5,16) Cuban, E(7,12) off-beat. For each pattern position `p`, places a note at `targetCol = col + 1 + p` (pattern mapped to columns right of source) and `targetRow = rowIndex + clampedRowOffset` (pitch shift). Captures undo state BEFORE mutation with descriptive `Euclidean Notes (E(pulses,steps) mode, rot R) on <seqname>` label. Three modes: 'forward' (natural Bjorklund ordering), 'reverse' (mirrored — sounds like retrograde), 'pendulum' (forward + reverse interior concatenation — palindromic bounce). Supports cyclic rotation (rotation % steps) and optional per-step velocity decay. Complements `lissajousNotes` (X-Y oscilloscope curves), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with the iconic even-distribution Euclidean rhythm algorithm found in world-music polyrhythms.
+- **Files Modified**:
+  - `js/ui.js`: Added 6 Euclidean Notes menu items in the sequencer context menu after Lissajous Notes (Rosette 4:5, 24)
+  - `js/tests.js`: Added Day 726 test block with 40 tests
+  - `AGENTS.md`: Updated with this entry
+  - *Note*: `js/Track.js` (euclideanNotes method) and `js/constants.js` (23 EUCLIDEAN_NOTES_* constants) were already added in the partial Day 726 working tree from a prior interrupted run.
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - None this run — line 4047 `const abs = Math.abs(data[i]);` fix is intact from prior days.
+- **Feature Details**:
+  - **euclideanNotes** (`js/Track.js`): For each active note, places N notes in a Bjorklund-distributed Euclidean pattern across `clampedSteps` columns starting at `col + 1`. For each pattern position `p` where `pattern[p] === 1`, places at `targetCol = col + 1 + p` and `targetRow = rowIndex + clampedRowOffset`. Captures undo state BEFORE mutation with descriptive `Euclidean Notes (E(${clampedPulses},${clampedSteps}) ${useMode}, rot ${clampedRotation}) on ${activeSeq.name}` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `pulses` to EUCLIDEAN_NOTES_MIN_PULSES (1) / EUCLIDEAN_NOTES_MAX_PULSES (16) range with Math.floor (default EUCLIDEAN_NOTES_DEFAULT_PULSES=5 — cinquillo-style)
+    - Clamps `steps` to EUCLIDEAN_NOTES_MIN_STEPS (1) / EUCLIDEAN_NOTES_MAX_STEPS (32) range with Math.floor (default EUCLIDEAN_NOTES_DEFAULT_STEPS=8 — one measure of 8ths)
+    - Clamps `rowOffset` to EUCLIDEAN_NOTES_MIN_ROW_OFFSET (-8) / EUCLIDEAN_NOTES_MAX_ROW_OFFSET (+8) range with Math.floor (default EUCLIDEAN_NOTES_DEFAULT_ROW_OFFSET=0)
+    - Clamps `rotation` to be `((max(0, floor(rotation)) % clampedSteps) + clampedSteps) % clampedSteps` — cyclic modulo (default EUCLIDEAN_NOTES_DEFAULT_ROTATION=0)
+    - Clamps `velocityDecay` to EUCLIDEAN_NOTES_MIN_VELOCITY_DECAY (0.1) / EUCLIDEAN_NOTES_MAX_VELOCITY_DECAY (1.0) range (default EUCLIDEAN_NOTES_DEFAULT_VELOCITY_DECAY=1.0 — no decay, pattern is rhythmic not pitched)
+    - Validates `mode` against EUCLIDEAN_NOTES_MODES array, falls back to EUCLIDEAN_NOTES_MODE_FORWARD if invalid
+    - Captures undo state BEFORE mutation
+    - `bjorklund(pulses, steps)` internal helper implements the recursive group-interleaving algorithm:
+      - Returns `new Array(steps).fill(0)` when `pulses <= 0`
+      - Returns `new Array(steps).fill(1)` when `pulses >= steps`
+      - Starts with `pulses` groups of `[1]` and `(steps - pulses)` groups of `[0]`
+      - Repeatedly takes first two groups via `groups.shift()`, interleaves them, and unshifts the result
+      - When only one group remains, returns it as the final pattern
+    - Applies cyclic rotation: `pattern = pattern.slice(rotation).concat(pattern.slice(0, rotation))` when `rotation > 0`
+    - Applies mode-specific reordering: REVERSE uses `pattern.slice().reverse()`, PENDULUM uses `pattern.concat(pattern.slice(1, -1).reverse())` (palindromic bounce without duplicating endpoints)
+    - For each row, for each column, for each active note: for `p` in 0..pattern.length, computes target col = col + 1 + p
+    - Skips if `pattern[p] !== 1` (only pulse positions are placed, rest positions are silent)
+    - Skips if target col is out of bounds (< 0 or >= totalSteps) or target row is out of bounds (< 0 or >= numRows)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen if rowOffset=0 and p=-1, impossible since p >= 0)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, p)))` for exponential velocity decay per pattern position
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of euclidean notes added (euclideanCount)
+  - **Euclidean Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Lissajous Notes (Rosette 4:5, 24)
+    - "Euclidean Notes (E(3,8) Tresillo)" - calls `euclideanNotes(3, 8, 0, 0, 1.0, 'forward', true)` - classic Cuban tresillo: 3 pulses across 8 steps, no rotation
+    - "Euclidean Notes (E(5,8) Cinquillo)" - calls `euclideanNotes(5, 8, 0, 0, 1.0, 'forward', true)` - 5 pulses across 8 steps
+    - "Euclidean Notes (E(5,16) Cuban)" - calls `euclideanNotes(5, 16, 0, 0, 1.0, 'forward', true)` - 5 pulses across 16 steps, classic Afro-Cuban
+    - "Euclidean Notes (E(7,12) +octave)" - calls `euclideanNotes(7, 12, -2, 0, 1.0, 'forward', true)` - 7 pulses across 12 steps, 2 rows up (high octave)
+    - "Euclidean Notes (E(3,8) Reverse)" - calls `euclideanNotes(3, 8, 0, 0, 1.0, 'reverse', true)` - 3 pulses across 8 steps, reversed (retrograde)
+    - "Euclidean Notes (E(5,8) Pendulum)" - calls `euclideanNotes(5, 8, 0, 0, 1.0, 'pendulum', true)` - 5 pulses across 8 steps, palindromic bounce
+    - All call `recreateToneSequence(true)` after euclideaning
+    - All capture undo with descriptive `Euclidean Notes on <name> (<seqname>)` label
+    - Show notifications: `Euclidean'd {count} note(s) (variant).`
+    - Show `No notes to euclidean.` when nothing to euclidean
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 20 new constants (already in working tree from prior run)
+  - `EUCLIDEAN_NOTES_MIN_PULSES = 1` - Minimum 1 pulse (single hit)
+  - `EUCLIDEAN_NOTES_MAX_PULSES = 16` - Maximum 16 pulses (dense pattern)
+  - `EUCLIDEAN_NOTES_MIN_STEPS = 1` - Minimum 1 step (all hits on one column)
+  - `EUCLIDEAN_NOTES_MAX_STEPS = 32` - Maximum 32 steps (long pattern)
+  - `EUCLIDEAN_NOTES_MIN_ROW_OFFSET = -8` - Minimum -8 rows of pitch shift
+  - `EUCLIDEAN_NOTES_MAX_ROW_OFFSET = 8` - Maximum +8 rows of pitch shift
+  - `EUCLIDEAN_NOTES_MIN_ROTATION = 0` - Minimum 0 steps rotation
+  - `EUCLIDEAN_NOTES_MAX_ROTATION = 15` - Maximum 15 steps rotation
+  - `EUCLIDEAN_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation
+  - `EUCLIDEAN_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `EUCLIDEAN_NOTES_DEFAULT_PULSES = 5` - Default 5 pulses (cinquillo-style)
+  - `EUCLIDEAN_NOTES_DEFAULT_STEPS = 8` - Default 8 steps (one measure of 8ths)
+  - `EUCLIDEAN_NOTES_DEFAULT_ROW_OFFSET = 0` - Default 0 rows (same pitch)
+  - `EUCLIDEAN_NOTES_DEFAULT_ROTATION = 0` - Default 0 rotation
+  - `EUCLIDEAN_NOTES_DEFAULT_VELOCITY_DECAY = 1.0` - Default 1.0 (no velocity decay — pattern is rhythmic not pitched)
+  - `EUCLIDEAN_NOTES_MODE_FORWARD = 'forward'` - Natural Bjorklund ordering
+  - `EUCLIDEAN_NOTES_MODE_REVERSE = 'reverse'` - Mirror the pattern (reverse temporal order)
+  - `EUCLIDEAN_NOTES_MODE_PENDULUM = 'pendulum'` - Bounce: forward then reverse (sounds palindromic)
+  - `EUCLIDEAN_NOTES_MODES = [FORWARD, REVERSE, PENDULUM]` - Valid mode values
+- **Tests** (`js/tests.js`): 40 tests covering:
+  - `euclideanNotes` is a function on Track.prototype
+  - `euclideanNotes` accepts 7 parameters with defaults (pulses, steps, rowOffset, rotation, velocityDecay, mode, skipOccupied)
+  - `euclideanNotes` returns 0 for Audio tracks
+  - `euclideanNotes` gets active sequence via `getActiveSequence`
+  - `euclideanNotes` captures undo BEFORE mutation with descriptive `Euclidean Notes (E(pulses,steps) mode, rot R)` label
+  - `euclideanNotes` clamps pulses/steps/rowOffset/velocityDecay to EUCLIDEAN_NOTES_MIN/MAX_* ranges
+  - `euclideanNotes` applies rotation modulo steps (cyclic)
+  - `euclideanNotes` validates mode with EUCLIDEAN_NOTES_MODES (uses FORWARD fallback)
+  - `euclideanNotes` uses Math.pow for velocity decay
+  - `euclideanNotes` uses Math.floor for pulses/steps/rowOffset
+  - `euclideanNotes` supports skipOccupied option
+  - `euclideanNotes` rounds velocity to 2 decimal places
+  - `euclideanNotes` returns count of euclidean notes (euclideanCount)
+  - `euclideanNotes` uses bjorklund helper for distribution
+  - `euclideanNotes` bjorklund uses recursive group interleaving (groups.shift + groups.unshift)
+  - `euclideanNotes` applies cyclic rotation when rotation > 0
+  - `euclideanNotes` REVERSE mode reverses pattern via slice().reverse()
+  - `euclideanNotes` PENDULUM mode concatenates forward + reversed interior (palindrome)
+  - `euclideanNotes` skips source cell (no self-reference)
+  - `euclideanNotes` respects sequence length and row boundaries
+  - `euclideanNotes` uses newNotes collection pattern (collect then apply)
+  - `euclideanNotes` preserves probability from source
+  - `euclideanNotes` bjorklund handles edge cases (pulses<=0 returns all-zero, pulses>=steps returns all-one)
+  - `euclideanNotes` targetCol = col + 1 + p (pattern index + 1 offset)
+  - `euclideanNotes` targetRow = rowIndex + clampedRowOffset
+  - `euclideanNotes` updates activeSeq.data on apply with active:true
+  - `euclideanNotes` clamps to valid ranges (pulses 100->16, steps 100->32, rowOffset -20->-8, velocityDecay 2->1.0)
+  - `euclideanNotes` handles empty source (no active notes) gracefully
+  - All 19 EUCLIDEAN_NOTES constants are defined in constants.js
+  - EUCLIDEAN_NOTES_MODES includes forward, reverse, and pendulum in correct order
+  - ui.js has 6 Euclidean Notes menu items
+  - Euclidean Notes menu items call track.euclideanNotes
+  - Euclidean Notes menu items call recreateToneSequence after euclideanNotes
+  - Euclidean Notes menu items show Euclidean'd N note(s) notification
+  - Euclidean Notes menu items capture undo with descriptive label
+  - Euclidean Notes menu items include the famous patterns Tresillo E(3,8), Cinquillo E(5,8), Cuban E(5,16)
+  - APP_VERSION validation (>= 2.375 for Day 726)
+- **Version**: 2.375.0 (was already bumped in the partial Day 726 working tree before this run completed the UI + tests + AGENTS.md)
+- **Test Count**: Added 40 Day 726 tests. All 40 pass via `test-runner/run-tests.js`. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild build succeeds for Track.js (warning only) and ui.js (warning only). The pre-existing test infrastructure failures (1443, related to `__dirname` / `createRequire(import.meta.url)` in node test environment) are unrelated to Day 726 — same pattern as Days 714-725. Total tests now at 3021 passed (up from 2981 after Day 725), 1443 failed (pre-existing infrastructure issues unchanged).
+
 #### Day 725: Lissajous Notes Feature (2026-06-18)
 - **Feature**: Added `lissajousNotes(length, amplitude, phase, velocityDecay, mode, skipOccupied)` method to Track class and 6 "Lissajous Notes" menu items to the sequencer context menu. Each active note spawns N samples around a Lissajous curve (the iconic X-Y oscilloscope / spirograph pattern), computed via the parametric equations `x(t) = sin(a*t + δ)` and `y(t) = sin(b*t)` where `t = 2π*i/length` and `(a, b)` are mode-dependent integer frequency ratios. The default mode CIRCLE uses a=1, b=1 producing a perfect circle. The x-component drives the column offset (via `(x+1) * halfRange` so it spans [0, length]) and the y-component drives the row offset (via `round(amplitude * y)`), with a per-sample velocity decay. Six distinct frequency-ratio modes — circle (1:1), figure-8 (1:2), three-lobe (2:3), rosette-34 (3:4), rosette-35 (3:5), rosette-45 (4:5) — produce the classic oscilloscope rosette patterns. Complements `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with the iconic oscilloscope X-Y patterns found on vintage CRT test equipment.
 - **Files Modified**:

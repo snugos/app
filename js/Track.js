@@ -7212,4 +7212,123 @@ export class Track {
 
         return lissajousCount;
     }
+
+    euclideanNotes(pulses = Constants.EUCLIDEAN_NOTES_DEFAULT_PULSES, steps = Constants.EUCLIDEAN_NOTES_DEFAULT_STEPS, rowOffset = Constants.EUCLIDEAN_NOTES_DEFAULT_ROW_OFFSET, rotation = Constants.EUCLIDEAN_NOTES_DEFAULT_ROTATION, velocityDecay = Constants.EUCLIDEAN_NOTES_DEFAULT_VELOCITY_DECAY, mode = Constants.EUCLIDEAN_NOTES_MODE_FORWARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} euclideanNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedPulses = Math.max(Constants.EUCLIDEAN_NOTES_MIN_PULSES, Math.min(Constants.EUCLIDEAN_NOTES_MAX_PULSES, Math.floor(pulses)));
+        const clampedSteps = Math.max(Constants.EUCLIDEAN_NOTES_MIN_STEPS, Math.min(Constants.EUCLIDEAN_NOTES_MAX_STEPS, Math.floor(steps)));
+        const clampedRowOffset = Math.max(Constants.EUCLIDEAN_NOTES_MIN_ROW_OFFSET, Math.min(Constants.EUCLIDEAN_NOTES_MAX_ROW_OFFSET, Math.floor(rowOffset)));
+        const clampedRotation = ((Math.max(0, Math.floor(rotation)) % clampedSteps) + clampedSteps) % clampedSteps;
+        const clampedDecay = Math.max(Constants.EUCLIDEAN_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.EUCLIDEAN_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useMode = Constants.EUCLIDEAN_NOTES_MODES.includes(mode) ? mode : Constants.EUCLIDEAN_NOTES_MODE_FORWARD;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Euclidean Notes (E(${clampedPulses},${clampedSteps}) ${useMode}, rot ${clampedRotation}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let euclideanCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Bjorklund algorithm: distribute `clampedPulses` hits across `clampedSteps` columns as evenly as possible.
+        // Recursive: start with `clampedPulses` groups of [1] and (clampedSteps - clampedPulses) groups of [0].
+        // Repeatedly take the first two groups and redistribute them by interleaving.
+        const bjorklund = (pulses, steps) => {
+            if (pulses <= 0) return new Array(steps).fill(0);
+            if (pulses >= steps) return new Array(steps).fill(1);
+            let groups = [];
+            for (let i = 0; i < pulses; i++) groups.push([1]);
+            for (let i = 0; i < steps - pulses; i++) groups.push([0]);
+            while (groups.length > 1) {
+                const a = groups.shift();
+                const b = groups.shift();
+                const interleaved = [];
+                const maxLen = Math.max(a.length, b.length);
+                for (let i = 0; i < maxLen; i++) {
+                    if (i < a.length) interleaved.push(a[i]);
+                    if (i < b.length) interleaved.push(b[i]);
+                }
+                groups.unshift(interleaved);
+            }
+            return groups[0];
+        };
+
+        let pattern = bjorklund(clampedPulses, clampedSteps);
+
+        // Apply cyclic rotation
+        if (clampedRotation > 0 && clampedRotation < pattern.length) {
+            pattern = pattern.slice(clampedRotation).concat(pattern.slice(0, clampedRotation));
+        }
+
+        // Apply mode-specific reordering
+        if (useMode === Constants.EUCLIDEAN_NOTES_MODE_REVERSE) {
+            pattern = pattern.slice().reverse();
+        } else if (useMode === Constants.EUCLIDEAN_NOTES_MODE_PENDULUM) {
+            // Pendulum: forward then reverse (without duplicating endpoints)
+            // For length L: pendulum sequence = pattern + reverse(pattern[1..L-2])
+            // Examples: [1,0,0,1,0,1] → [1,0,0,1,0,1,0,1,0,0,1]
+            let rev;
+            if (pattern.length <= 2) {
+                rev = pattern.slice().reverse();
+            } else {
+                rev = pattern.slice(1, -1).reverse();
+            }
+            pattern = pattern.concat(rev);
+        }
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // For each hit position in the pattern, place a note at the corresponding column.
+                // The pattern is mapped to the columns [col+1, col+1+pattern.length) so the source col is treated as the "starting point".
+                for (let p = 0; p < pattern.length; p++) {
+                    if (pattern[p] !== 1) continue;
+                    const targetCol = col + 1 + p;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    const targetRow = rowIndex + clampedRowOffset;
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Apply velocity decay by step index
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, p)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            euclideanCount++;
+        }
+
+        return euclideanCount;
+    }
 }
