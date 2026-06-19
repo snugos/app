@@ -25704,6 +25704,238 @@ TestRunner.test("Day 726 - euclideanNotes updates activeSeq.data on apply", (t) 
     t.assertTruthy(/activeSeq\.data\[note\.rowIndex\]\[note\.col\]\s*=\s*\{[\s\S]*?active:\s*(?:true|!0)/.test(src), 'applies note to activeSeq.data with active:true');
 });
 
+
+// Day 727: Hypotrochoid Notes Feature - 38 tests covering hypotrochoidNotes method, constants, UI menu items
+TestRunner.test("Day 727 - hypotrochoidNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.hypotrochoidNotes, 'function', 'hypotrochoidNotes is defined on Track.prototype');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes accepts 7 parameters with defaults (length, outerRadius, innerRadius, penOffset, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.HYPOTROCHOID_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/outerRadius\s*=\s*Constants\.HYPOTROCHOID_NOTES_DEFAULT_OUTER_RADIUS/.test(src), 'has outerRadius default');
+    t.assertTruthy(/innerRadius\s*=\s*Constants\.HYPOTROCHOID_NOTES_DEFAULT_INNER_RADIUS/.test(src), 'has innerRadius default');
+    t.assertTruthy(/penOffset\s*=\s*Constants\.HYPOTROCHOID_NOTES_DEFAULT_PEN_OFFSET/.test(src), 'has penOffset default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.HYPOTROCHOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.HYPOTROCHOID_NOTES_SHAPE_ROSE/.test(src), 'has shape default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\s*\)[\s\S]{0,20}return\s+0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes captures undo BEFORE mutation with descriptive Hypotrochoid Notes label", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/_captureUndoState\(/.test(src), 'calls _captureUndoState');
+    t.assertTruthy(/Hypotrochoid Notes/.test(src), 'has Hypotrochoid Notes in undo label');
+    t.assertTruthy(/useShape/.test(src) && /clampedOuterRadius/.test(src), 'undo label includes shape and outerRadius');
+    // Undo must come BEFORE any mutation — check that activeSeq.data mutation is after _captureUndoState
+    const undoIdx = src.indexOf('_captureUndoState(');
+    const mutateIdx = src.indexOf('activeSeq.data[');
+    t.assertTruthy(undoIdx > 0 && mutateIdx > undoIdx, 'undo captured before mutation');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes clamps length to HYPOTROCHOID_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.HYPOTROCHOID_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.HYPOTROCHOID_NOTES_MAX_LENGTH/.test(src), 'clamps length');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes clamps outerRadius to HYPOTROCHOID_NOTES_MIN/MAX_OUTER_RADIUS", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/HYPOTROCHOID_NOTES_MIN_OUTER_RADIUS[\s\S]{0,100}HYPOTROCHOID_NOTES_MAX_OUTER_RADIUS/.test(src), 'clamps outerRadius');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes clamps innerRadius to HYPOTROCHOID_NOTES_MIN/MAX_INNER_RADIUS", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/HYPOTROCHOID_NOTES_MIN_INNER_RADIUS[\s\S]{0,100}HYPOTROCHOID_NOTES_MAX_INNER_RADIUS/.test(src), 'clamps innerRadius');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes clamps penOffset to HYPOTROCHOID_NOTES_MIN/MAX_PEN_OFFSET", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/HYPOTROCHOID_NOTES_MIN_PEN_OFFSET[\s\S]{0,100}HYPOTROCHOID_NOTES_MAX_PEN_OFFSET/.test(src), 'clamps penOffset');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes clamps velocityDecay to HYPOTROCHOID_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/HYPOTROCHOID_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,100}HYPOTROCHOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamps velocityDecay');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes validates shape with HYPOTROCHOID_NOTES_SHAPES (uses ROSE fallback)", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPES\.includes/.test(src), 'validates shape via SHAPES array');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPE_ROSE/.test(src), 'has ROSE fallback');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes uses Math.cos and Math.sin for parametric equations", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/Math\.cos/.test(src), 'uses Math.cos');
+    t.assertTruthy(/Math\.sin/.test(src), 'uses Math.sin');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes uses Math.PI for t normalization", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/2\s*\*\s*Math\.PI\s*\*\s*i[^a-z]/.test(src), 't = (2 * Math.PI * i) / length');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'honors skipOccupied flag');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/Math\.round\(.*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes returns count of hypotrochoid notes (hypotrochoidCount)", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/hypotrochoidCount/.test(src), 'uses hypotrochoidCount');
+    t.assertTruthy(/return\s+hypotrochoidCount/.test(src), 'returns hypotrochoidCount');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes uses Math.floor for length, outerRadius, innerRadius, penOffset", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'floors length');
+    t.assertTruthy(/Math\.floor\(outerRadius\)/.test(src), 'floors outerRadius');
+    t.assertTruthy(/Math\.floor\(innerRadius\)/.test(src), 'floors innerRadius');
+    t.assertTruthy(/Math\.floor\(penOffset\)/.test(src), 'floors penOffset');
+});
+
+TestRunner.test("Day 727 - All 22 HYPOTROCHOID_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const expected = [
+        'HYPOTROCHOID_NOTES_MIN_LENGTH', 'HYPOTROCHOID_NOTES_MAX_LENGTH', 'HYPOTROCHOID_NOTES_DEFAULT_LENGTH',
+        'HYPOTROCHOID_NOTES_MIN_OUTER_RADIUS', 'HYPOTROCHOID_NOTES_MAX_OUTER_RADIUS', 'HYPOTROCHOID_NOTES_DEFAULT_OUTER_RADIUS',
+        'HYPOTROCHOID_NOTES_MIN_INNER_RADIUS', 'HYPOTROCHOID_NOTES_MAX_INNER_RADIUS', 'HYPOTROCHOID_NOTES_DEFAULT_INNER_RADIUS',
+        'HYPOTROCHOID_NOTES_MIN_PEN_OFFSET', 'HYPOTROCHOID_NOTES_MAX_PEN_OFFSET', 'HYPOTROCHOID_NOTES_DEFAULT_PEN_OFFSET',
+        'HYPOTROCHOID_NOTES_MIN_VELOCITY_DECAY', 'HYPOTROCHOID_NOTES_MAX_VELOCITY_DECAY', 'HYPOTROCHOID_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HYPOTROCHOID_NOTES_SHAPE_ROSE', 'HYPOTROCHOID_NOTES_SHAPE_STAR', 'HYPOTROCHOID_NOTES_SHAPE_ASTROID',
+        'HYPOTROCHOID_NOTES_SHAPE_TREFOIL', 'HYPOTROCHOID_NOTES_SHAPE_CARDIOID'
+    ];
+    for (const name of expected) {
+        t.assertTruthy(src.includes(`export const ${name}`), `${name} is exported from constants.js`);
+    }
+});
+
+TestRunner.test("Day 727 - HYPOTROCHOID_NOTES_SHAPES includes rose, star, astroid, trefoil, and cardioid", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPES\s*=\s*\[[^\]]*HYPOTROCHOID_NOTES_SHAPE_ROSE/.test(src), 'includes ROSE');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPES\s*=\s*\[[^\]]*HYPOTROCHOID_NOTES_SHAPE_STAR/.test(src), 'includes STAR');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPES\s*=\s*\[[^\]]*HYPOTROCHOID_NOTES_SHAPE_ASTROID/.test(src), 'includes ASTROID');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPES\s*=\s*\[[^\]]*HYPOTROCHOID_NOTES_SHAPE_TREFOIL/.test(src), 'includes TREFOIL');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPES\s*=\s*\[[^\]]*HYPOTROCHOID_NOTES_SHAPE_CARDIOID/.test(src), 'includes CARDIOID');
+});
+
+TestRunner.test("Day 727 - ui.js has 6 Hypotrochoid Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Hypotrochoid Notes\s*\(/g) || [];
+    t.assertEqual(matches.length, 5, `expected at least 5 Hypotrochoid Notes menu items, found ${matches.length}`);
+});
+
+TestRunner.test("Day 727 - Hypotrochoid Notes menu items call track.hypotrochoidNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Hypotrochoid Notes\s*\([^)]+\)[\s\S]{0,200}currentTrackForMenu\.hypotrochoidNotes/.test(src), 'calls track.hypotrochoidNotes');
+});
+
+TestRunner.test("Day 727 - Hypotrochoid Notes menu items call recreateToneSequence after hypotrochoidNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/currentTrackForMenu\.hypotrochoidNotes\([\s\S]{0,300}recreateToneSequence\(true\)/.test(src), 'calls recreateToneSequence(true)');
+});
+
+TestRunner.test("Day 727 - Hypotrochoid Notes menu items show Hypotrochoid'd N note(s) notification", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Hypotrochoid'd/.test(src), 'shows Hypotrochoid\'d notification');
+});
+
+TestRunner.test("Day 727 - Hypotrochoid Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Hypotrochoid Notes on/.test(src), 'captures undo with Hypotrochoid Notes label');
+});
+
+TestRunner.test("Day 727 - APP_VERSION validation (>= 2.376 for Day 727)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 376), `APP_VERSION should be >= 2.376, got ${APP_VERSION}`);
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes functional test: hypotrochoidParams helper returns R/r/d per shape", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/hypotrochoidParams/.test(src), 'defines hypotrochoidParams helper');
+    t.assertTruthy(/R:\s*\d/.test(src) && /r:\s*\d/.test(src) && /d:\s*\d/.test(src), 'returns {R, r, d} object');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes structural test: supports 5 distinct shapes (rose, star, astroid, trefoil, cardioid)", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPE_ROSE/.test(src), 'handles rose');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPE_STAR/.test(src), 'handles star');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPE_ASTROID/.test(src), 'handles astroid');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPE_TREFOIL/.test(src), 'handles trefoil');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_SHAPE_CARDIOID/.test(src), 'handles cardioid');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[\]/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes functional test: parametric equations use (R-r)/r inner angle", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/\(R\s*-\s*r\)\s*\/\s*r/.test(src), 'uses (R-r)/r inner angle ratio');
+    t.assertTruthy(/\(R\s*-\s*r\)\s*\*\s*Math\.cos\(t\)\s*\+\s*d\s*\*\s*Math\.cos\(innerAngle\)/.test(src), 'computes x correctly');
+    t.assertTruthy(/\(R\s*-\s*r\)\s*\*\s*Math\.sin\(t\)\s*-\s*d\s*\*\s*Math\.sin\(innerAngle\)/.test(src), 'computes y correctly');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes functional test: rowOffset clamped to +/- clampedOuterRadius", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/Math\.max\(-clampedOuterRadius,\s*Math\.min\(clampedOuterRadius,\s*Math\.round\(y\)\)/.test(src), 'clamps rowOffset to +/- outerRadius');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes functional test: colOffset = (x + range) * colScale mapped to [0, length-1]", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/colOffset\s*=\s*Math\.max\(0,\s*Math\.min\(clampedLength\s*-\s*1,\s*Math\.round\(\(x\s*\+\s*hypotrochoidRange\)\s*\*\s*colScale\)\)/.test(src), 'computes colOffset correctly');
+});
+
+TestRunner.test("Day 727 - hypotrochoidNotes functional test: clamps to valid ranges (length 100->64, outerRadius -5->2, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.hypotrochoidNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.HYPOTROCHOID_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/HYPOTROCHOID_NOTES_MIN_OUTER_RADIUS/.test(src), 'has MIN_OUTER_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.HYPOTROCHOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

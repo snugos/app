@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.375.0';
+export const APP_VERSION = '2.376.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -650,6 +650,43 @@ export const EUCLIDEAN_NOTES_MODES = [
     EUCLIDEAN_NOTES_MODE_FORWARD,
     EUCLIDEAN_NOTES_MODE_REVERSE,
     EUCLIDEAN_NOTES_MODE_PENDULUM
+];
+
+// Hypotrochoid Notes (Day 727) — spirograph curves traced by the Spirograph toy.
+// Hypotrochoid parametric equations:
+//   x(t) = (R - r) * cos(t) + d * cos((R - r) / r * t)
+//   y(t) = (R - r) * sin(t) - d * sin((R - r) / r * t)
+// Where R = outer ring radius, r = inner gear radius, d = pen offset from gear center.
+// Famous shapes: rose (R=5, r=3), star (R=7, r=3), astroid (R=4, r=1),
+// trefoil (R=3, r=1), cardioid (R=2, r=1).
+export const HYPOTROCHOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve (full period resolution)
+export const HYPOTROCHOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution spirograph)
+export const HYPOTROCHOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the curve
+export const HYPOTROCHOID_NOTES_MIN_OUTER_RADIUS = 2; // Minimum outer ring radius R
+export const HYPOTROCHOID_NOTES_MAX_OUTER_RADIUS = 12; // Maximum outer ring radius R
+export const HYPOTROCHOID_NOTES_DEFAULT_OUTER_RADIUS = 5; // Default outer ring radius R
+export const HYPOTROCHOID_NOTES_MIN_INNER_RADIUS = 1; // Minimum inner gear radius r (must be >= 1 for division)
+export const HYPOTROCHOID_NOTES_MAX_INNER_RADIUS = 8; // Maximum inner gear radius r
+export const HYPOTROCHOID_NOTES_DEFAULT_INNER_RADIUS = 3; // Default inner gear radius r
+export const HYPOTROCHOID_NOTES_MIN_PEN_OFFSET = 1; // Minimum pen offset d from gear center
+export const HYPOTROCHOID_NOTES_MAX_PEN_OFFSET = 12; // Maximum pen offset d
+export const HYPOTROCHOID_NOTES_DEFAULT_PEN_OFFSET = 5; // Default pen offset d (matches R for full coverage)
+export const HYPOTROCHOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const HYPOTROCHOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const HYPOTROCHOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const HYPOTROCHOID_NOTES_SHAPE_ROSE = 'rose'; // R=5, r=3: 5-petal rose
+export const HYPOTROCHOID_NOTES_SHAPE_STAR = 'star'; // R=7, r=3: 7-point star
+export const HYPOTROCHOID_NOTES_SHAPE_ASTROID = 'astroid'; // R=4, r=1: 4-cusp astroid (hypocycloid)
+export const HYPOTROCHOID_NOTES_SHAPE_TREFOIL = 'trefoil'; // R=3, r=1: 3-lobed trefoil knot
+export const HYPOTROCHOID_NOTES_SHAPE_CARDIOID = 'cardioid'; // R=2, r=1: heart-shape cardioid
+export const HYPOTROCHOID_NOTES_SHAPE_CUSTOM = 'custom'; // Use user-supplied R/r/d (outerRadius/innerRadius/penOffset)
+export const HYPOTROCHOID_NOTES_SHAPES = [
+    HYPOTROCHOID_NOTES_SHAPE_ROSE,
+    HYPOTROCHOID_NOTES_SHAPE_STAR,
+    HYPOTROCHOID_NOTES_SHAPE_ASTROID,
+    HYPOTROCHOID_NOTES_SHAPE_TREFOIL,
+    HYPOTROCHOID_NOTES_SHAPE_CARDIOID,
+    HYPOTROCHOID_NOTES_SHAPE_CUSTOM
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

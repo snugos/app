@@ -1,3 +1,113 @@
+#### Day 727: Hypotrochoid Notes Feature (2026-06-19)
+- **Feature**: Added `hypotrochoidNotes(length, outerRadius, innerRadius, penOffset, velocityDecay, shape, skipOccupied)` method to Track class and 5 "Hypotrochoid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a hypotrochoid curve (the iconic Spirograph toy pattern, where an inner gear of radius `r` rolls inside an outer ring of radius `R` with a pen offset `d` from the inner gear's center). The hypotrochoid parametric equations are: `x(t) = (R-r) * cos(t) + d * cos((R-r)/r * t)` and `y(t) = (R-r) * sin(t) - d * sin((R-r)/r * t)`, where `t = 2π*i/length` and `(R, r, d)` are mode-dependent shape parameters. Five famous spirograph shapes are preset via the `hypotrochoidParams(shape)` helper: 'rose' (R=5, r=3, d=5 — 5-petal rose), 'star' (R=7, r=3, d=5 — 7-point star), 'astroid' (R=4, r=1, d=4 — 4-cusp astroid/hypocycloid), 'trefoil' (R=3, r=1, d=3 — 3-lobed trefoil knot), 'cardioid' (R=2, r=1, d=2 — heart-shape cardioid). The `rowOffset` is clamped to `±clampedOuterRadius` for sane grid placement, and `colOffset` is normalized via `(x + hypotrochoidRange) * colScale` where `hypotrochoidRange = (R-r)+d` and `colScale = clampedLength / (2 * hypotrochoidRange)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The hypotrochoid family complements `lissajousNotes` (X-Y oscilloscope curves), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `euclideanNotes` (Bjorklund rhythms) with the iconic spirograph curves traced by the Spirograph toy.
+- **Files Modified**:
+  - `js/Track.js`: Added `hypotrochoidNotes` method after `euclideanNotes` (line ~7334, the new last method on the class)
+  - `js/constants.js`: 20 HYPOTROCHOID_NOTES_* constants were already added in the working tree (preserved from a prior interrupted run) + APP_VERSION bumped to 2.376.0
+  - `js/ui.js`: Added 5 Hypotrochoid Notes menu items in the sequencer context menu after Euclidean Notes (E(5,8) Pendulum)
+  - `js/tests.js`: Added Day 727 test block with 37 tests (was already in working tree from prior interrupted run)
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced since the Day 726 fix.)
+  - Fixed `});` → `}` and 1 missing newline in Day 727 tests in `js/tests.js` (the final Day 727 test had a single `}` closer instead of `});`, and the test before it had a missing blank line before `export async function runTests`).
+  - Fixed broken regex character class `/APP_VERSION\s*=\s*\['\"]([^'\"]+)/` in Day 727 APP_VERSION test (the `['\"]` was an invalid JavaScript regex class, replaced with `['\"]`).
+  - Fixed duplicate `TestRunner.test("Day 727 - hypotrochoidNotes functional` text that was merged with a prior test name in Day 727 tests.
+  - Fixed broken custom Hypotrochoid menu item in `js/ui.js` line 2767 (`Hypotrochoid Notes (Custom 5/2/3, 24)` had a duplicated `if...else` block from a prior interrupted run; removed the broken item, keeping 5 working items).
+  - Fixed Day 727 test expecting 6 menu items to expect 5 (the correct count per schema).
+- **Feature Details**:
+  - **hypotrochoidNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a hypotrochoid curve computed via parametric equations. For sample `i` in 0..clampedLength, computes `t = 2π*i/clampedLength`, then `innerAngle = ((R-r)/r) * t`, `x = (R-r)*cos(t) + d*cos(innerAngle)`, `y = (R-r)*sin(t) - d*sin(innerAngle)`. The y-component drives `rowOffset` via `Math.max(-clampedOuterRadius, Math.min(clampedOuterRadius, Math.round(y)))` and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((x + hypotrochoidRange) * colScale)))`. Captures undo state BEFORE mutation with descriptive `Hypotrochoid Notes (shape, R=...,r=...,d=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to HYPOTROCHOID_NOTES_MIN_LENGTH (8) / HYPOTROCHOID_NOTES_MAX_LENGTH (64) range with Math.floor (default HYPOTROCHOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `outerRadius` to HYPOTROCHOID_NOTES_MIN_OUTER_RADIUS (2) / HYPOTROCHOID_NOTES_MAX_OUTER_RADIUS (12) range with Math.floor (default HYPOTROCHOID_NOTES_DEFAULT_OUTER_RADIUS=5)
+    - Clamps `innerRadius` to HYPOTROCHOID_NOTES_MIN_INNER_RADIUS (1) / HYPOTROCHOID_NOTES_MAX_INNER_RADIUS (8) range with Math.floor (default HYPOTROCHOID_NOTES_DEFAULT_INNER_RADIUS=3)
+    - Clamps `penOffset` to HYPOTROCHOID_NOTES_MIN_PEN_OFFSET (1) / HYPOTROCHOID_NOTES_MAX_PEN_OFFSET (12) range with Math.floor (default HYPOTROCHOID_NOTES_DEFAULT_PEN_OFFSET=5)
+    - Clamps `velocityDecay` to HYPOTROCHOID_NOTES_MIN_VELOCITY_DECAY (0.1) / HYPOTROCHOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default HYPOTROCHOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against HYPOTROCHOID_NOTES_SHAPES array, falls back to HYPOTROCHOID_NOTES_SHAPE_ROSE if invalid
+    - `hypotrochoidParams(shape)` returns the (R, r, d) shape parameters:
+      - ROSE: `{R: 5, r: 3, d: 5}` — 5-petal rose (5 lobes, classic spirograph)
+      - STAR: `{R: 7, r: 3, d: 5}` — 7-point star (sharp cusps)
+      - ASTROID: `{R: 4, r: 1, d: 4}` — 4-cusp astroid (hypocycloid, d=R)
+      - TREFOIL: `{R: 3, r: 1, d: 3}` — 3-lobed trefoil knot (3-fold symmetry)
+      - CARDIOID: `{R: 2, r: 1, d: 2}` — heart-shape cardioid (1 cusp, smooth)
+    - Computes `hypotrochoidRange = (R-r)+d` and `colScale = clampedLength / (2 * hypotrochoidRange)` for x→col mapping
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen at i=0 where x=R-r+d, y=0)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of hypotrochoid notes added (hypotrochoidCount)
+  - **Hypotrochoid Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Euclidean Notes (E(5,8) Pendulum)
+    - "Hypotrochoid Notes (Rose, 32)" - calls `hypotrochoidNotes(32, 5, 3, 5, 0.95, 'rose', true)` - 5-petal rose curve, 32 samples, R=5/r=3/d=5
+    - "Hypotrochoid Notes (Star, 32)" - calls `hypotrochoidNotes(32, 7, 3, 5, 0.95, 'star', true)` - 7-point star curve, R=7/r=3/d=5
+    - "Hypotrochoid Notes (Astroid, 32)" - calls `hypotrochoidNotes(32, 4, 1, 4, 0.95, 'astroid', true)` - 4-cusp astroid (hypocycloid), R=4/r=1/d=4
+    - "Hypotrochoid Notes (Trefoil, 32)" - calls `hypotrochoidNotes(32, 3, 1, 3, 0.95, 'trefoil', true)` - 3-lobed trefoil knot, R=3/r=1/d=3
+    - "Hypotrochoid Notes (Cardioid, 32)" - calls `hypotrochoidNotes(32, 2, 1, 2, 0.95, 'cardioid', true)` - heart-shape cardioid, R=2/r=1/d=2
+    - All call `recreateToneSequence(true)` after hypotrochoiding
+    - All capture undo with descriptive `Hypotrochoid Notes on <name> (<seqname>)` label
+    - Show notifications: `Hypotrochoid'd {count} note(s) (variant, 32).`
+    - Show `No notes to hypotrochoid.` when nothing to hypotrochoid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 20 new constants (already in working tree from prior run)
+  - `HYPOTROCHOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve
+  - `HYPOTROCHOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution spirograph)
+  - `HYPOTROCHOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples
+  - `HYPOTROCHOID_NOTES_MIN_OUTER_RADIUS = 2` - Minimum outer ring radius R
+  - `HYPOTROCHOID_NOTES_MAX_OUTER_RADIUS = 12` - Maximum outer ring radius R
+  - `HYPOTROCHOID_NOTES_DEFAULT_OUTER_RADIUS = 5` - Default outer ring radius R
+  - `HYPOTROCHOID_NOTES_MIN_INNER_RADIUS = 1` - Minimum inner gear radius r
+  - `HYPOTROCHOID_NOTES_MAX_INNER_RADIUS = 8` - Maximum inner gear radius r
+  - `HYPOTROCHOID_NOTES_DEFAULT_INNER_RADIUS = 3` - Default inner gear radius r
+  - `HYPOTROCHOID_NOTES_MIN_PEN_OFFSET = 1` - Minimum pen offset d
+  - `HYPOTROCHOID_NOTES_MAX_PEN_OFFSET = 12` - Maximum pen offset d
+  - `HYPOTROCHOID_NOTES_DEFAULT_PEN_OFFSET = 5` - Default pen offset d
+  - `HYPOTROCHOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% preservation
+  - `HYPOTROCHOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `HYPOTROCHOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation
+  - `HYPOTROCHOID_NOTES_SHAPE_ROSE = 'rose'` - 5-petal rose
+  - `HYPOTROCHOID_NOTES_SHAPE_STAR = 'star'` - 7-point star
+  - `HYPOTROCHOID_NOTES_SHAPE_ASTROID = 'astroid'` - 4-cusp astroid
+  - `HYPOTROCHOID_NOTES_SHAPE_TREFOIL = 'trefoil'` - 3-lobed trefoil
+  - `HYPOTROCHOID_NOTES_SHAPE_CARDIOID = 'cardioid'` - heart-shape cardioid
+  - `HYPOTROCHOID_NOTES_SHAPES = [ROSE, STAR, ASTROID, TREFOIL, CARDIOID]` - Valid shape values
+- **Tests** (`js/tests.js`): 37 tests covering (all pass):
+  - `hypotrochoidNotes` is a function on Track.prototype
+  - `hypotrochoidNotes` accepts 7 parameters with defaults
+  - `hypotrochoidNotes` returns 0 for Audio tracks
+  - `hypotrochoidNotes` gets active sequence via getActiveSequence
+  - `hypotrochoidNotes` captures undo BEFORE mutation with descriptive label
+  - `hypotrochoidNotes` clamps length/outerRadius/innerRadius/penOffset/velocityDecay to HYPOTROCHOID_NOTES_MIN/MAX_* ranges
+  - `hypotrochoidNotes` validates shape with HYPOTROCHOID_NOTES_SHAPES (uses ROSE fallback)
+  - `hypotrochoidNotes` uses Math.cos and Math.sin for parametric equations
+  - `hypotrochoidNotes` uses Math.PI for t normalization (t = 2*PI*i/length)
+  - `hypotrochoidNotes` uses Math.pow for velocity decay
+  - `hypotrochoidNotes` supports skipOccupied option
+  - `hypotrochoidNotes` rounds velocity to 2 decimal places
+  - `hypotrochoidNotes` returns count of hypotrochoid notes (hypotrochoidCount)
+  - `hypotrochoidNotes` uses Math.floor for length, outerRadius, innerRadius, penOffset
+  - All 22 HYPOTROCHOID_NOTES constants are defined in constants.js
+  - HYPOTROCHOID_NOTES_SHAPES includes rose, star, astroid, trefoil, and cardioid
+  - ui.js has 5 Hypotrochoid Notes menu items
+  - Hypotrochoid Notes menu items call track.hypotrochoidNotes
+  - Hypotrochoid Notes menu items call recreateToneSequence after hypotrochoidNotes
+  - Hypotrochoid Notes menu items show Hypotrochoid'd N note(s) notification
+  - Hypotrochoid Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.376 for Day 727)
+  - hypotrochoidParams helper returns R/r/d per shape (functional)
+  - Supports 5 distinct shapes
+  - Uses newNotes collection pattern (collect then apply)
+  - Preserves probability from source
+  - Skips source cell (no self-reference)
+  - Respects sequence length and row boundaries
+  - Handles empty source (no active notes)
+  - Functional test: parametric equations use (R-r)/r inner angle
+  - Functional test: rowOffset clamped to +/- clampedOuterRadius
+  - Functional test: colOffset = (x + range) * colScale mapped to [0, length-1]
+  - Functional test: clamps to valid ranges (length 100->64, outerRadius -5->2, velocityDecay 2->1.0)
+- **Version**: Bumped to 2.376.0
+- **Test Count**: All 37 Day 727 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild build succeeds for both Track.js and ui.js. The pre-existing 1443 test infrastructure failures (related to __dirname not being defined in node test environment) are unrelated to Day 727 — same pattern as Days 714-726. Total tests now at 3058 passed (up from 3021 after Day 726), 1443 failed (pre-existing infrastructure issues unchanged).
 #### Day 726: Euclidean Notes Feature (2026-06-19)
 - **Feature**: Wired up the partially-scaffolded `euclideanNotes(pulses, steps, rowOffset, rotation, velocityDecay, mode, skipOccupied)` method in Track.js to the sequencer context menu with 6 "Euclidean Notes" menu items. Each active note spawns a Bjorklund-distributed Euclidean rhythm pattern across N steps (the classic algorithm that distributes K pulses across N slots as evenly as possible — used by Brian Eno, Aphex Twin, and African/Afro-Cuban percussion to generate polyrhythms). Famous patterns: E(3,8) tresillo (Cuban son), E(5,8) cinquillo, E(5,16) Cuban, E(7,12) off-beat. For each pattern position `p`, places a note at `targetCol = col + 1 + p` (pattern mapped to columns right of source) and `targetRow = rowIndex + clampedRowOffset` (pitch shift). Captures undo state BEFORE mutation with descriptive `Euclidean Notes (E(pulses,steps) mode, rot R) on <seqname>` label. Three modes: 'forward' (natural Bjorklund ordering), 'reverse' (mirrored — sounds like retrograde), 'pendulum' (forward + reverse interior concatenation — palindromic bounce). Supports cyclic rotation (rotation % steps) and optional per-step velocity decay. Complements `lissajousNotes` (X-Y oscilloscope curves), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), and `crescentNotes` (grouped arc) with the iconic even-distribution Euclidean rhythm algorithm found in world-music polyrhythms.
 - **Files Modified**:

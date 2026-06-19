@@ -7331,4 +7331,115 @@ export class Track {
 
         return euclideanCount;
     }
+    hypotrochoidNotes(length = Constants.HYPOTROCHOID_NOTES_DEFAULT_LENGTH, outerRadius = Constants.HYPOTROCHOID_NOTES_DEFAULT_OUTER_RADIUS, innerRadius = Constants.HYPOTROCHOID_NOTES_DEFAULT_INNER_RADIUS, penOffset = Constants.HYPOTROCHOID_NOTES_DEFAULT_PEN_OFFSET, velocityDecay = Constants.HYPOTROCHOID_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.HYPOTROCHOID_NOTES_SHAPE_ROSE, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} hypotrochoidNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.HYPOTROCHOID_NOTES_MIN_LENGTH, Math.min(Constants.HYPOTROCHOID_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedOuterRadius = Math.max(Constants.HYPOTROCHOID_NOTES_MIN_OUTER_RADIUS, Math.min(Constants.HYPOTROCHOID_NOTES_MAX_OUTER_RADIUS, Math.floor(outerRadius)));
+        const clampedInnerRadius = Math.max(Constants.HYPOTROCHOID_NOTES_MIN_INNER_RADIUS, Math.min(Constants.HYPOTROCHOID_NOTES_MAX_INNER_RADIUS, Math.floor(innerRadius)));
+        const clampedPenOffset = Math.max(Constants.HYPOTROCHOID_NOTES_MIN_PEN_OFFSET, Math.min(Constants.HYPOTROCHOID_NOTES_MAX_PEN_OFFSET, Math.floor(penOffset)));
+        const clampedDecay = Math.max(Constants.HYPOTROCHOID_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.HYPOTROCHOID_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.HYPOTROCHOID_NOTES_SHAPES.includes(shape) ? shape : Constants.HYPOTROCHOID_NOTES_SHAPE_ROSE;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Hypotrochoid Notes (${useShape}, R=${clampedOuterRadius},r=${clampedInnerRadius},d=${clampedPenOffset}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let hypotrochoidCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Hypotrochoid parameter sets (R = outer ring, r = inner gear, d = pen offset)
+        const hypotrochoidParams = (s) => {
+            switch (s) {
+                case Constants.HYPOTROCHOID_NOTES_SHAPE_STAR:
+                    return { R: 7, r: 3, d: 5 };
+                case Constants.HYPOTROCHOID_NOTES_SHAPE_ASTROID:
+                    return { R: 4, r: 1, d: 4 };
+                case Constants.HYPOTROCHOID_NOTES_SHAPE_TREFOIL:
+                    return { R: 3, r: 1, d: 3 };
+                case Constants.HYPOTROCHOID_NOTES_SHAPE_CARDIOID:
+                    return { R: 2, r: 1, d: 2 };
+                case Constants.HYPOTROCHOID_NOTES_SHAPE_CUSTOM:
+                    return { R: clampedOuterRadius, r: clampedInnerRadius, d: clampedPenOffset };
+                case Constants.HYPOTROCHOID_NOTES_SHAPE_ROSE:
+                default:
+                    return { R: 5, r: 3, d: 5 };
+            }
+        };
+
+        const params = hypotrochoidParams(useShape);
+        const R = params.R;
+        const r = Math.max(1, params.r);
+        const d = params.d;
+        // hypotrochoid range: x,y both span [-(R-r+d), +(R-r+d)]
+        const hypotrochoidRange = (R - r) + d;
+        // rowOffset will be clamped to +/- clampedOuterRadius
+        // colOffset normalization: x is in [-hypotrochoidRange, +hypotrochoidRange], map to [0, length]
+        const colScale = clampedLength / (2 * hypotrochoidRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // Sample the hypotrochoid curve at N points
+                for (let i = 0; i < clampedLength; i++) {
+                    const t = (2 * Math.PI * i) / clampedLength;
+                    // Hypotrochoid parametric equations
+                    const innerAngle = ((R - r) / r) * t;
+                    const x = (R - r) * Math.cos(t) + d * Math.cos(innerAngle);
+                    const y = (R - r) * Math.sin(t) - d * Math.sin(innerAngle);
+
+                    // rowOffset: clamp y to +/- clampedOuterRadius for sane grid placement
+                    const rowOffset = Math.max(-clampedOuterRadius, Math.min(clampedOuterRadius, Math.round(y)));
+                    // colOffset: map x to [0, length] so the curve spans the sample count
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((x + hypotrochoidRange) * colScale)));
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Apply velocity decay by sample index
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            hypotrochoidCount++;
+        }
+
+        return hypotrochoidCount;
+    }
 }
