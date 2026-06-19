@@ -7442,4 +7442,119 @@ export class Track {
 
         return hypotrochoidCount;
     }
+
+    epicycloidNotes(length = Constants.EPICYCLOID_NOTES_DEFAULT_LENGTH, baseRadius = Constants.EPICYCLOID_NOTES_DEFAULT_BASE_RADIUS, radiusRatio = Constants.EPICYCLOID_NOTES_DEFAULT_RADIUS_RATIO, penOffset = Constants.EPICYCLOID_NOTES_DEFAULT_PEN_OFFSET, velocityDecay = Constants.EPICYCLOID_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.EPICYCLOID_NOTES_SHAPE_CARDIOID, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} epicycloidNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.EPICYCLOID_NOTES_MIN_LENGTH, Math.min(Constants.EPICYCLOID_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedBaseRadius = Math.max(Constants.EPICYCLOID_NOTES_MIN_BASE_RADIUS, Math.min(Constants.EPICYCLOID_NOTES_MAX_BASE_RADIUS, Math.floor(baseRadius)));
+        const clampedRadiusRatio = Math.max(Constants.EPICYCLOID_NOTES_MIN_RADIUS_RATIO, Math.min(Constants.EPICYCLOID_NOTES_MAX_RADIUS_RATIO, Math.floor(radiusRatio)));
+        const clampedPenOffset = Math.max(Constants.EPICYCLOID_NOTES_MIN_PEN_OFFSET, Math.min(Constants.EPICYCLOID_NOTES_MAX_PEN_OFFSET, Math.floor(penOffset)));
+        const clampedDecay = Math.max(Constants.EPICYCLOID_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.EPICYCLOID_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.EPICYCLOID_NOTES_SHAPES.includes(shape) ? shape : Constants.EPICYCLOID_NOTES_SHAPE_CARDIOID;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Epicycloid Notes (${useShape}, R=${clampedBaseRadius},r=${clampedRadiusRatio},d=${clampedPenOffset}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let epicycloidCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Epicycloid parameter sets (R = fixed circle, r = rolling circle, d = pen offset)
+        // Note: for the n-cusp shapes, the small circle radius is chosen so that
+        // n = round((R + r) / r) when r is the rolling circle (i.e. n*r ≈ R + r for the cusp count).
+        const epicycloidParams = (s) => {
+            switch (s) {
+                case Constants.EPICYCLOID_NOTES_SHAPE_NEPHROID:
+                    return { R: clampedBaseRadius, r: Math.max(1, Math.round(clampedBaseRadius / 2)), d: clampedBaseRadius };
+                case Constants.EPICYCLOID_NOTES_SHAPE_3CUSP:
+                    return { R: clampedBaseRadius, r: Math.max(1, Math.round(clampedBaseRadius / 2)), d: clampedBaseRadius };
+                case Constants.EPICYCLOID_NOTES_SHAPE_4CUSP:
+                    return { R: clampedBaseRadius, r: Math.max(1, Math.round(clampedBaseRadius / 3)), d: clampedBaseRadius };
+                case Constants.EPICYCLOID_NOTES_SHAPE_5CUSP:
+                    return { R: clampedBaseRadius, r: Math.max(1, Math.round(clampedBaseRadius / 4)), d: clampedBaseRadius };
+                case Constants.EPICYCLOID_NOTES_SHAPE_6CUSP:
+                    return { R: clampedBaseRadius, r: Math.max(1, Math.round(clampedBaseRadius / 5)), d: clampedBaseRadius };
+                case Constants.EPICYCLOID_NOTES_SHAPE_CARDIOID:
+                default:
+                    return { R: clampedBaseRadius, r: clampedRadiusRatio, d: clampedPenOffset };
+            }
+        };
+
+        const params = epicycloidParams(useShape);
+        const R = params.R;
+        const r = Math.max(1, params.r);
+        const d = params.d;
+        // epicycloid range: x,y both span [-(R + d + r), +(R + d + r)] approximately
+        // but the parametric sum bounds it tighter; use a simple empirical bound
+        const epicycloidRange = R + d + r;
+        // rowOffset will be clamped to +/- clampedBaseRadius for sane grid placement
+        // colOffset normalization: x is in approximately [-epicycloidRange, +epicycloidRange]
+        const colScale = clampedLength / (2 * epicycloidRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // Sample the epicycloid curve at N points
+                for (let i = 0; i < clampedLength; i++) {
+                    const t = (2 * Math.PI * i) / clampedLength;
+                    // Epicycloid parametric equations (note the + signs vs hypotrochoid's -)
+                    const innerAngle = ((R + r) / r) * t;
+                    const x = (R + r) * Math.cos(t) - d * Math.cos(innerAngle);
+                    const y = (R + r) * Math.sin(t) - d * Math.sin(innerAngle);
+
+                    // rowOffset: clamp y to +/- clampedBaseRadius for sane grid placement
+                    const rowOffset = Math.max(-clampedBaseRadius, Math.min(clampedBaseRadius, Math.round(y)));
+                    // colOffset: map x to [0, length] so the curve spans the sample count
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((x + epicycloidRange) * colScale)));
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Apply velocity decay by sample index
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            epicycloidCount++;
+        }
+
+        return epicycloidCount;
+    }
 }

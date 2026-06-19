@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.376.0';
+export const APP_VERSION = '2.377.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -687,6 +687,45 @@ export const HYPOTROCHOID_NOTES_SHAPES = [
     HYPOTROCHOID_NOTES_SHAPE_TREFOIL,
     HYPOTROCHOID_NOTES_SHAPE_CARDIOID,
     HYPOTROCHOID_NOTES_SHAPE_CUSTOM
+];
+
+// Epicycloid Notes (Day 728) — companion curves to the hypotrochoid (Day 727).
+// An epicycloid is the curve traced by a point on a small circle of radius r rolling
+// OUTSIDE a larger fixed circle of radius R, with pen offset d from the small circle's center.
+// Epicycloid parametric equations:
+//   x(t) = (R + r) * cos(t) - d * cos((R + r) / r * t)
+//   y(t) = (R + r) * sin(t) - d * sin((R + r) / r * t)
+// Where R = fixed circle radius, r = rolling circle radius, d = pen offset from rolling circle center.
+// Famous shapes: cardioid (R=r, d=r), nephroid (R=2r, d=2r), 3-cusp (n=3), 4-cusp (n=4),
+// 5-cusp (n=5), 6-cusp (n=6). Note the + signs contrast with the hypotrochoid's - signs.
+export const EPICYCLOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve (full period resolution)
+export const EPICYCLOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution epicycloid)
+export const EPICYCLOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the curve
+export const EPICYCLOID_NOTES_MIN_RADIUS_RATIO = 1; // Minimum 1 rolling circle radius r (must be >= 1 for division)
+export const EPICYCLOID_NOTES_MAX_RADIUS_RATIO = 8; // Maximum 8 rolling circle radius r
+export const EPICYCLOID_NOTES_DEFAULT_RADIUS_RATIO = 3; // Default 3 rolling circle radius r
+export const EPICYCLOID_NOTES_MIN_BASE_RADIUS = 2; // Minimum 2 fixed circle radius R
+export const EPICYCLOID_NOTES_MAX_BASE_RADIUS = 12; // Maximum 12 fixed circle radius R
+export const EPICYCLOID_NOTES_DEFAULT_BASE_RADIUS = 3; // Default 3 fixed circle radius R
+export const EPICYCLOID_NOTES_MIN_PEN_OFFSET = 1; // Minimum 1 pen offset d from rolling circle center
+export const EPICYCLOID_NOTES_MAX_PEN_OFFSET = 12; // Maximum 12 pen offset d
+export const EPICYCLOID_NOTES_DEFAULT_PEN_OFFSET = 3; // Default 3 pen offset d (matches default r for full coverage)
+export const EPICYCLOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const EPICYCLOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const EPICYCLOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const EPICYCLOID_NOTES_SHAPE_CARDIOID = 'cardioid'; // R=1, r=1, d=1: 1-cusped heart curve
+export const EPICYCLOID_NOTES_SHAPE_NEPHROID = 'nephroid'; // R=2, r=1, d=2: 2-cusped kidney shape
+export const EPICYCLOID_NOTES_SHAPE_3CUSP = '3-cusp'; // n=3: 3-cusped trefoil
+export const EPICYCLOID_NOTES_SHAPE_4CUSP = '4-cusp'; // n=4: 4-cusped quatrefoil
+export const EPICYCLOID_NOTES_SHAPE_5CUSP = '5-cusp'; // n=5: 5-cusped cinquefoil
+export const EPICYCLOID_NOTES_SHAPE_6CUSP = '6-cusp'; // n=6: 6-cusped hexafoil
+export const EPICYCLOID_NOTES_SHAPES = [
+    EPICYCLOID_NOTES_SHAPE_CARDIOID,
+    EPICYCLOID_NOTES_SHAPE_NEPHROID,
+    EPICYCLOID_NOTES_SHAPE_3CUSP,
+    EPICYCLOID_NOTES_SHAPE_4CUSP,
+    EPICYCLOID_NOTES_SHAPE_5CUSP,
+    EPICYCLOID_NOTES_SHAPE_6CUSP
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

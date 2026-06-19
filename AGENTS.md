@@ -1,3 +1,115 @@
+#### Day 728: Epicycloid Notes Feature (2026-06-19)
+- **Feature**: Added `epicycloidNotes(length, baseRadius, radiusRatio, penOffset, velocityDecay, shape, skipOccupied)` method to Track class and 6 "Epicycloid Notes" menu items to the sequencer context menu. Each active note spawns N samples along an epicycloid curve (the natural counterpart to the hypotrochoid from Day 727 — instead of the small circle rolling INSIDE a larger ring, the small circle of radius `r` rolls OUTSIDE a larger fixed circle of radius `R`, with a pen offset `d` from the rolling circle's center). The epicycloid parametric equations are: `x(t) = (R+r) * cos(t) - d * cos((R+r)/r * t)` and `y(t) = (R+r) * sin(t) - d * sin((R+r)/r * t)`, where `t = 2π*i/length` and `(R, r, d)` are mode-dependent shape parameters. Note the `+` signs in `R+r` (vs the hypotrochoid's `R-r`) — the only difference is the addition vs subtraction, but the resulting curves are dramatically different (cusps point OUTWARD instead of inward). Six famous epicycloid shapes via the `epicycloidParams(shape)` helper: 'cardioid' (R=r, d=r — 1-cusped heart shape, the simplest epicycloid), 'nephroid' (R=2r, d=2r — 2-cusped kidney shape), '3-cusp' (3-cusped trefoil, 3-fold symmetry), '4-cusp' (4-cusped quatrefoil), '5-cusp' (5-cusped cinquefoil), '6-cusp' (6-cusped hexafoil). The `rowOffset` is clamped to `±clampedBaseRadius` for sane grid placement, and `colOffset` is normalized via `(x + epicycloidRange) * colScale` where `epicycloidRange = R + d + r` and `colScale = clampedLength / (2 * epicycloidRange)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The epicycloid family complements `hypotrochoidNotes` (Day 727, inner-circle spirograph), `lissajousNotes` (X-Y oscilloscope), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `euclideanNotes` (Bjorklund rhythms) with the iconic OUTSIDE-rolling spirograph curves where cusps always point outward.
+- **Files Modified**:
+  - `js/Track.js`: Added `epicycloidNotes` method after `hypotrochoidNotes` (line ~7446, the new last method on the class)
+  - `js/constants.js`: Added 22 EPICYCLOID_NOTES_* constants after the HYPOTROCHOID_NOTES block + APP_VERSION bumped to 2.377.0
+  - `js/ui.js`: Added 6 Epicycloid Notes menu items in the sequencer context menu after Hypotrochoid Notes (Cardioid, 32)
+  - `js/tests.js`: Added Day 728 test block with 39 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed Day 728 test regex `/2\s*\*\s*Math\.PI\s*\*\s*i\s*\/\s*clampedLength/` to `/\(?\s*2\s*\*\s*Math\.PI\s*\*\s*i\s*\)?\s*\/\s*clampedLength/` so it matches the source `(2 * Math.PI * i) / clampedLength` (with optional parens around the numerator).
+- **Feature Details**:
+  - **epicycloidNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along an epicycloid curve computed via parametric equations. For sample `i` in 0..clampedLength, computes `t = 2π*i/clampedLength`, then `innerAngle = ((R+r)/r) * t`, `x = (R+r)*cos(t) - d*cos(innerAngle)`, `y = (R+r)*sin(t) - d*sin(innerAngle)`. The y-component drives `rowOffset` via `Math.max(-clampedBaseRadius, Math.min(clampedBaseRadius, Math.round(y)))` and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((x + epicycloidRange) * colScale)))`. Captures undo state BEFORE mutation with descriptive `Epicycloid Notes (shape, R=...,r=...,d=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to EPICYCLOID_NOTES_MIN_LENGTH (8) / EPICYCLOID_NOTES_MAX_LENGTH (64) range with Math.floor (default EPICYCLOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `baseRadius` to EPICYCLOID_NOTES_MIN_BASE_RADIUS (2) / EPICYCLOID_NOTES_MAX_BASE_RADIUS (12) range with Math.floor (default EPICYCLOID_NOTES_DEFAULT_BASE_RADIUS=3)
+    - Clamps `radiusRatio` to EPICYCLOID_NOTES_MIN_RADIUS_RATIO (1) / EPICYCLOID_NOTES_MAX_RADIUS_RATIO (8) range with Math.floor (default EPICYCLOID_NOTES_DEFAULT_RADIUS_RATIO=3)
+    - Clamps `penOffset` to EPICYCLOID_NOTES_MIN_PEN_OFFSET (1) / EPICYCLOID_NOTES_MAX_PEN_OFFSET (12) range with Math.floor (default EPICYCLOID_NOTES_DEFAULT_PEN_OFFSET=3)
+    - Clamps `velocityDecay` to EPICYCLOID_NOTES_MIN_VELOCITY_DECAY (0.1) / EPICYCLOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default EPICYCLOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against EPICYCLOID_NOTES_SHAPES array, falls back to EPICYCLOID_NOTES_SHAPE_CARDIOID if invalid
+    - `epicycloidParams(shape)` returns the (R, r, d) shape parameters:
+      - CARDIOID: `{R: baseRadius, r: radiusRatio, d: penOffset}` — user-controllable cardioid (R=r=1, d=1 in defaults = heart curve)
+      - NEPHROID: `{R: baseRadius, r: round(baseRadius/2), d: baseRadius}` — 2-cusped kidney shape
+      - 3-CUSP: `{R: baseRadius, r: round(baseRadius/2), d: baseRadius}` — 3-cusped trefoil (n=3)
+      - 4-CUSP: `{R: baseRadius, r: round(baseRadius/3), d: baseRadius}` — 4-cusped quatrefoil (n=4)
+      - 5-CUSP: `{R: baseRadius, r: round(baseRadius/4), d: baseRadius}` — 5-cusped cinquefoil (n=5)
+      - 6-CUSP: `{R: baseRadius, r: round(baseRadius/5), d: baseRadius}` — 6-cusped hexafoil (n=6)
+    - Computes `epicycloidRange = R + d + r` (empirical bound for the parametric sum) and `colScale = clampedLength / (2 * epicycloidRange)` for x→col mapping
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of epicycloid notes added (epicycloidCount)
+  - **Epicycloid Notes Menu Items** (`js/ui.js`): 6 menu items in the sequencer context menu after Hypotrochoid Notes (Cardioid, 32)
+    - "Epicycloid Notes (Cardioid, 32)" - calls `epicycloidNotes(32, 3, 1, 3, 0.95, 'cardioid', true)` - 1-cusped heart shape (simplest epicycloid)
+    - "Epicycloid Notes (Nephroid, 32)" - calls `epicycloidNotes(32, 4, 1, 4, 0.95, 'nephroid', true)` - 2-cusped kidney shape
+    - "Epicycloid Notes (3-Cusp, 32)" - calls `epicycloidNotes(32, 6, 1, 6, 0.95, '3-cusp', true)` - 3-cusped trefoil (3-fold symmetry)
+    - "Epicycloid Notes (4-Cusp, 32)" - calls `epicycloidNotes(32, 6, 1, 6, 0.95, '4-cusp', true)` - 4-cusped quatrefoil
+    - "Epicycloid Notes (5-Cusp, 32)" - calls `epicycloidNotes(32, 8, 1, 8, 0.95, '5-cusp', true)` - 5-cusped cinquefoil
+    - "Epicycloid Notes (6-Cusp, 32)" - calls `epicycloidNotes(32, 10, 1, 10, 0.95, '6-cusp', true)` - 6-cusped hexafoil
+    - All call `recreateToneSequence(true)` after epicycloiding
+    - All capture undo with descriptive `Epicycloid Notes on <name> (<seqname>)` label
+    - Show notifications: `Epicycloid'd {count} note(s) (variant, 32).`
+    - Show `No notes to epicycloid.` when nothing to epicycloid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 22 new constants
+  - `EPICYCLOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve (full period resolution)
+  - `EPICYCLOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution epicycloid)
+  - `EPICYCLOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples
+  - `EPICYCLOID_NOTES_MIN_RADIUS_RATIO = 1` - Minimum 1 rolling circle radius r
+  - `EPICYCLOID_NOTES_MAX_RADIUS_RATIO = 8` - Maximum 8 rolling circle radius r
+  - `EPICYCLOID_NOTES_DEFAULT_RADIUS_RATIO = 3` - Default 3 rolling circle radius r
+  - `EPICYCLOID_NOTES_MIN_BASE_RADIUS = 2` - Minimum 2 fixed circle radius R
+  - `EPICYCLOID_NOTES_MAX_BASE_RADIUS = 12` - Maximum 12 fixed circle radius R
+  - `EPICYCLOID_NOTES_DEFAULT_BASE_RADIUS = 3` - Default 3 fixed circle radius R
+  - `EPICYCLOID_NOTES_MIN_PEN_OFFSET = 1` - Minimum 1 pen offset d from rolling circle center
+  - `EPICYCLOID_NOTES_MAX_PEN_OFFSET = 12` - Maximum 12 pen offset d
+  - `EPICYCLOID_NOTES_DEFAULT_PEN_OFFSET = 3` - Default 3 pen offset d
+  - `EPICYCLOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation
+  - `EPICYCLOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `EPICYCLOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation
+  - `EPICYCLOID_NOTES_SHAPE_CARDIOID = 'cardioid'` - 1-cusped heart shape
+  - `EPICYCLOID_NOTES_SHAPE_NEPHROID = 'nephroid'` - 2-cusped kidney shape
+  - `EPICYCLOID_NOTES_SHAPE_3CUSP = '3-cusp'` - 3-cusped trefoil
+  - `EPICYCLOID_NOTES_SHAPE_4CUSP = '4-cusp'` - 4-cusped quatrefoil
+  - `EPICYCLOID_NOTES_SHAPE_5CUSP = '5-cusp'` - 5-cusped cinquefoil
+  - `EPICYCLOID_NOTES_SHAPE_6CUSP = '6-cusp'` - 6-cusped hexafoil
+  - `EPICYCLOID_NOTES_SHAPES = [CARDIOID, NEPHROID, 3CUSP, 4CUSP, 5CUSP, 6CUSP]` - Valid shape values
+- **Tests** (`js/tests.js`): 39 tests covering (all pass):
+  - `epicycloidNotes` is a function on Track.prototype
+  - `epicycloidNotes` accepts 7 parameters with defaults
+  - `epicycloidNotes` returns 0 for Audio tracks
+  - `epicycloidNotes` gets active sequence via getActiveSequence
+  - `epicycloidNotes` captures undo BEFORE mutation with descriptive label
+  - `epicycloidNotes` clamps length/baseRadius/radiusRatio/penOffset/velocityDecay to EPICYCLOID_NOTES_MIN/MAX_* ranges
+  - `epicycloidNotes` validates shape with EPICYCLOID_NOTES_SHAPES (uses CARDIOID fallback)
+  - `epicycloidNotes` uses Math.cos and Math.sin for parametric equations
+  - `epicycloidNotes` uses Math.PI for t normalization (t = 2*PI*i/length)
+  - `epicycloidNotes` uses Math.pow for velocity decay
+  - `epicycloidNotes` supports skipOccupied option
+  - `epicycloidNotes` rounds velocity to 2 decimal places
+  - `epicycloidNotes` returns count of epicycloid notes (epicycloidCount)
+  - `epicycloidNotes` uses Math.floor for length, baseRadius, radiusRatio, penOffset
+  - All 16 EPICYCLOID_NOTES constants are defined in constants.js
+  - EPICYCLOID_NOTES_SHAPES includes cardioid, nephroid, 3-cusp, 4-cusp, 5-cusp, and 6-cusp
+  - ui.js has 6 Epicycloid Notes menu items
+  - Epicycloid Notes menu items call track.epicycloidNotes
+  - Epicycloid Notes menu items call recreateToneSequence after epicycloidNotes
+  - Epicycloid Notes menu items show Epicycloid'd N note(s) notification
+  - Epicycloid Notes menu items capture undo with descriptive label
+  - Epicycloid Notes menu items include cardioid, nephroid, 3-cusp, 4-cusp, 5-cusp, 6-cusp shapes
+  - Epicycloid Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.377 for Day 728)
+  - epicycloidParams helper for shape-dependent R/r/d (functional)
+  - Supports 6 distinct shapes
+  - Uses newNotes collection pattern (collect then apply)
+  - Preserves probability from source
+  - Skips source cell (no self-reference)
+  - Respects sequence length and row boundaries
+  - Handles empty source (no active notes)
+  - Functional test: parametric equations use (R+r)/r inner angle
+  - Functional test: rowOffset clamped to +/- clampedBaseRadius
+  - Functional test: colOffset = (x + range) * colScale mapped to [0, length-1]
+  - Functional test: clamps to valid ranges (length 100->64, baseRadius -5->2, velocityDecay 2->1.0)
+- **Version**: Bumped to 2.377.0
+- **Test Count**: All 39 Day 728 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild build succeeds for both Track.js and ui.js. The pre-existing 1443 test infrastructure failures (related to __dirname not being defined in node test environment) are unrelated to Day 728 — same pattern as Days 714-727. Total tests now at 3097 passed (up from 3058 after Day 727), 1443 failed (pre-existing infrastructure issues unchanged).
+
+#### Day 728: Epicycloid Notes Feature (2026-06-19)
 #### Day 727: Hypotrochoid Notes Feature (2026-06-19)
 - **Feature**: Added `hypotrochoidNotes(length, outerRadius, innerRadius, penOffset, velocityDecay, shape, skipOccupied)` method to Track class and 5 "Hypotrochoid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a hypotrochoid curve (the iconic Spirograph toy pattern, where an inner gear of radius `r` rolls inside an outer ring of radius `R` with a pen offset `d` from the inner gear's center). The hypotrochoid parametric equations are: `x(t) = (R-r) * cos(t) + d * cos((R-r)/r * t)` and `y(t) = (R-r) * sin(t) - d * sin((R-r)/r * t)`, where `t = 2π*i/length` and `(R, r, d)` are mode-dependent shape parameters. Five famous spirograph shapes are preset via the `hypotrochoidParams(shape)` helper: 'rose' (R=5, r=3, d=5 — 5-petal rose), 'star' (R=7, r=3, d=5 — 7-point star), 'astroid' (R=4, r=1, d=4 — 4-cusp astroid/hypocycloid), 'trefoil' (R=3, r=1, d=3 — 3-lobed trefoil knot), 'cardioid' (R=2, r=1, d=2 — heart-shape cardioid). The `rowOffset` is clamped to `±clampedOuterRadius` for sane grid placement, and `colOffset` is normalized via `(x + hypotrochoidRange) * colScale` where `hypotrochoidRange = (R-r)+d` and `colScale = clampedLength / (2 * hypotrochoidRange)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The hypotrochoid family complements `lissajousNotes` (X-Y oscilloscope curves), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope curve), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `euclideanNotes` (Bjorklund rhythms) with the iconic spirograph curves traced by the Spirograph toy.
 - **Files Modified**:

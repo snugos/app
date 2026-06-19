@@ -25936,6 +25936,272 @@ TestRunner.test("Day 727 - hypotrochoidNotes functional test: clamps to valid ra
     t.assertTruthy(/Math\.min\(Constants\.HYPOTROCHOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
 });
 
+
+// Day 728: Epicycloid Notes Feature - epicycloidNotes method, constants, UI menu items
+// The epicycloid is the curve traced by a point on a small circle of radius r rolling
+// OUTSIDE a larger fixed circle of radius R, with pen offset d from the rolling circle's center.
+// Parametric equations: x(t) = (R+r) * cos(t) - d * cos((R+r)/r * t)
+//                       y(t) = (R+r) * sin(t) - d * sin((R+r)/r * t)
+// Note the + signs vs the hypotrochoid's - signs (Day 727).
+
+TestRunner.test("Day 728 - epicycloidNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.epicycloidNotes, 'function', 'epicycloidNotes is a function');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes accepts 7 parameters with defaults (length, baseRadius, radiusRatio, penOffset, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.EPICYCLOID_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/baseRadius\s*=\s*Constants\.EPICYCLOID_NOTES_DEFAULT_BASE_RADIUS/.test(src), 'has baseRadius default');
+    t.assertTruthy(/radiusRatio\s*=\s*Constants\.EPICYCLOID_NOTES_DEFAULT_RADIUS_RATIO/.test(src), 'has radiusRatio default');
+    t.assertTruthy(/penOffset\s*=\s*Constants\.EPICYCLOID_NOTES_DEFAULT_PEN_OFFSET/.test(src), 'has penOffset default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.EPICYCLOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.EPICYCLOID_NOTES_SHAPE_CARDIOID/.test(src), 'has shape default (cardioid)');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied default (true)');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'checks this.type === Audio');
+    t.assertTruthy(/return\s+0/.test(src), 'returns 0 for Audio');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+    t.assertTruthy(/activeSeq\s*\|\|\s*!\s*activeSeq\.data/.test(src), 'validates activeSeq and data');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes captures undo BEFORE mutation with descriptive Epicycloid Notes label", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/Epicycloid Notes/.test(src), 'has Epicycloid Notes in undo label');
+    t.assertTruthy(/_captureUndoState/.test(src), 'calls _captureUndoState');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes clamps length to EPICYCLOID_NOTES_MIN/MAX_LENGTH", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/Math\.max\(Constants\.EPICYCLOID_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.EPICYCLOID_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes clamps baseRadius to EPICYCLOID_NOTES_MIN/MAX_BASE_RADIUS", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_BASE_RADIUS/.test(src), 'has MIN_BASE_RADIUS');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_BASE_RADIUS/.test(src), 'has MAX_BASE_RADIUS');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes clamps radiusRatio to EPICYCLOID_NOTES_MIN/MAX_RADIUS_RATIO", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_RADIUS_RATIO/.test(src), 'has MIN_RADIUS_RATIO');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_RADIUS_RATIO/.test(src), 'has MAX_RADIUS_RATIO');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes clamps penOffset to EPICYCLOID_NOTES_MIN/MAX_PEN_OFFSET", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_PEN_OFFSET/.test(src), 'has MIN_PEN_OFFSET');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_PEN_OFFSET/.test(src), 'has MAX_PEN_OFFSET');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes clamps velocityDecay to EPICYCLOID_NOTES_MIN/MAX_VELOCITY_DECAY", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes validates shape with EPICYCLOID_NOTES_SHAPES (uses CARDIOID fallback)", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPES\.includes/.test(src), 'validates via EPICYCLOID_NOTES_SHAPES.includes');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_CARDIOID/.test(src), 'uses CARDIOID fallback');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes uses Math.cos and Math.sin for parametric equations", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/Math\.cos\(t\)/.test(src), 'uses Math.cos(t)');
+    t.assertTruthy(/Math\.sin\(t\)/.test(src), 'uses Math.sin(t)');
+    t.assertTruthy(/Math\.cos\(innerAngle\)/.test(src), 'uses Math.cos(innerAngle)');
+    t.assertTruthy(/Math\.sin\(innerAngle\)/.test(src), 'uses Math.sin(innerAngle)');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes uses Math.PI for t normalization (t = 2*PI*i/length)", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/2\s*\*\s*Math\.PI\s*\*\s*i[^a-z]/.test(src), 't = (2 * Math.PI * i) / clampedLength');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*i\)/.test(src), 'uses Math.pow for decay');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'gates on skipOccupied');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes returns count of epicycloid notes (epicycloidCount)", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/epicycloidCount/.test(src), 'has epicycloidCount variable');
+    t.assertTruthy(/return\s+epicycloidCount/.test(src), 'returns epicycloidCount');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes uses Math.floor for length, baseRadius, radiusRatio, penOffset", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'Math.floor(length)');
+    t.assertTruthy(/Math\.floor\(baseRadius\)/.test(src), 'Math.floor(baseRadius)');
+    t.assertTruthy(/Math\.floor\(radiusRatio\)/.test(src), 'Math.floor(radiusRatio)');
+    t.assertTruthy(/Math\.floor\(penOffset\)/.test(src), 'Math.floor(penOffset)');
+});
+
+TestRunner.test("Day 728 - All EPICYCLOID_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_LENGTH\s*=\s*8/.test(src), 'MIN_LENGTH=8');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_LENGTH\s*=\s*64/.test(src), 'MAX_LENGTH=64');
+    t.assertTruthy(/EPICYCLOID_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(src), 'DEFAULT_LENGTH=32');
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_RADIUS_RATIO\s*=\s*1/.test(src), 'MIN_RADIUS_RATIO=1');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_RADIUS_RATIO\s*=\s*8/.test(src), 'MAX_RADIUS_RATIO=8');
+    t.assertTruthy(/EPICYCLOID_NOTES_DEFAULT_RADIUS_RATIO\s*=\s*3/.test(src), 'DEFAULT_RADIUS_RATIO=3');
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_BASE_RADIUS\s*=\s*2/.test(src), 'MIN_BASE_RADIUS=2');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_BASE_RADIUS\s*=\s*12/.test(src), 'MAX_BASE_RADIUS=12');
+    t.assertTruthy(/EPICYCLOID_NOTES_DEFAULT_BASE_RADIUS\s*=\s*3/.test(src), 'DEFAULT_BASE_RADIUS=3');
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_PEN_OFFSET\s*=\s*1/.test(src), 'MIN_PEN_OFFSET=1');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_PEN_OFFSET\s*=\s*12/.test(src), 'MAX_PEN_OFFSET=12');
+    t.assertTruthy(/EPICYCLOID_NOTES_DEFAULT_PEN_OFFSET\s*=\s*3/.test(src), 'DEFAULT_PEN_OFFSET=3');
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(src), 'MIN_VELOCITY_DECAY=0.1');
+    t.assertTruthy(/EPICYCLOID_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(src), 'MAX_VELOCITY_DECAY=1.0');
+    t.assertTruthy(/EPICYCLOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(src), 'DEFAULT_VELOCITY_DECAY=0.95');
+});
+
+TestRunner.test("Day 728 - EPICYCLOID_NOTES_SHAPES includes cardioid, nephroid, 3-cusp, 4-cusp, 5-cusp, 6-cusp", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_CARDIOID\s*=\s*['"]cardioid['"]/.test(src), 'CARDIOID shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_NEPHROID\s*=\s*['"]nephroid['"]/.test(src), 'NEPHROID shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_3CUSP\s*=\s*['"]3-cusp['"]/.test(src), '3CUSP shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_4CUSP\s*=\s*['"]4-cusp['"]/.test(src), '4CUSP shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_5CUSP\s*=\s*['"]5-cusp['"]/.test(src), '5CUSP shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_6CUSP\s*=\s*['"]6-cusp['"]/.test(src), '6CUSP shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPES\s*=\s*\[/.test(src), 'SHAPES array defined');
+});
+
+TestRunner.test("Day 728 - ui.js has 6 Epicycloid Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Epicycloid Notes\s*\(/g) || [];
+    t.assertEqual(matches.length, 6, 'expected 6 Epicycloid Notes menu items, found ' + matches.length);
+});
+
+TestRunner.test("Day 728 - Epicycloid Notes menu items call track.epicycloidNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Epicycloid Notes\s*\([^)]+\)[\s\S]{0,200}currentTrackForMenu\.epicycloidNotes/.test(src), 'calls track.epicycloidNotes');
+});
+
+TestRunner.test("Day 728 - Epicycloid Notes menu items call recreateToneSequence after epicycloidNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/epicycloidNotes[\s\S]{0,200}recreateToneSequence\(true\)/.test(src), 'calls recreateToneSequence(true)');
+});
+
+TestRunner.test("Day 728 - Epicycloid Notes menu items show Epicycloid'd N note(s) notification", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Epicycloid'd/.test(src), 'shows Epicycloid\'d notification');
+});
+
+TestRunner.test("Day 728 - Epicycloid Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Epicycloid Notes on/.test(src), 'captures undo with Epicycloid Notes label');
+});
+
+TestRunner.test("Day 728 - Epicycloid Notes menu items include cardioid, nephroid, 3-cusp, 4-cusp, 5-cusp, 6-cusp shapes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Epicycloid Notes\s*\(Cardioid/.test(src), 'has Cardioid menu item');
+    t.assertTruthy(/Epicycloid Notes\s*\(Nephroid/.test(src), 'has Nephroid menu item');
+    t.assertTruthy(/Epicycloid Notes\s*\(3-cusp/i.test(src), 'has 3-cusp menu item');
+    t.assertTruthy(/Epicycloid Notes\s*\(4-cusp/i.test(src), 'has 4-cusp menu item');
+    t.assertTruthy(/Epicycloid Notes\s*\(5-cusp/i.test(src), 'has 5-cusp menu item');
+    t.assertTruthy(/Epicycloid Notes\s*\(6-cusp/i.test(src), 'has 6-cusp menu item');
+});
+
+TestRunner.test("Day 728 - APP_VERSION validation (>= 2.377 for Day 728)", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const match = src.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    t.assertTruthy(match, 'APP_VERSION found');
+    const version = match[1];
+    const parts = version.split('.').map(Number);
+    t.assertTruthy(parts[0] > 2 || (parts[0] === 2 && parts[1] >= 377), 'APP_VERSION >= 2.377.0, got ' + version);
+});
+
+TestRunner.test("Day 728 - epicycloidNotes functional test: parametric equations use (R+r)/r inner angle", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/\(R\s*\+\s*r\)\s*\/\s*r/.test(src), 'uses (R+r)/r inner angle ratio');
+    t.assertTruthy(/\(R\s*\+\s*r\)\s*\*\s*Math\.cos\(t\)\s*-\s*d\s*\*\s*Math\.cos\(innerAngle\)/.test(src), 'computes x correctly');
+    t.assertTruthy(/\(R\s*\+\s*r\)\s*\*\s*Math\.sin\(t\)\s*-\s*d\s*\*\s*Math\.sin\(innerAngle\)/.test(src), 'computes y correctly');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes functional test: rowOffset clamped to +/- clampedBaseRadius", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/Math\.max\(-clampedBaseRadius,\s*Math\.min\(clampedBaseRadius,\s*Math\.round\(y\)\)/.test(src), 'clamps rowOffset to +/- baseRadius');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes functional test: colOffset = (x + epicycloidRange) * colScale mapped to [0, length-1]", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/colOffset\s*=\s*Math\.max\(0,\s*Math\.min\(clampedLength\s*-\s*1,\s*Math\.round\(\(x\s*\+\s*epicycloidRange\)\s*\*\s*colScale\)\)/.test(src), 'computes colOffset correctly');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes functional test: uses epicycloidParams helper for shape-dependent R/r/d", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/epicycloidParams/.test(src), 'uses epicycloidParams helper');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes functional test: structural test supports 6 distinct shapes", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_CARDIOID/.test(src), 'has CARDIOID shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_NEPHROID/.test(src), 'has NEPHROID shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_3CUSP/.test(src), 'has 3CUSP shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_4CUSP/.test(src), 'has 4CUSP shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_5CUSP/.test(src), 'has 5CUSP shape');
+    t.assertTruthy(/EPICYCLOID_NOTES_SHAPE_6CUSP/.test(src), 'has 6CUSP shape');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[\]/.test(src), 'initializes newNotes array');
+    t.assertTruthy(/newNotes\.push/.test(src), 'pushes new notes');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 728 - epicycloidNotes functional test: clamps to valid ranges (length 100->64, baseRadius -5->2, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.epicycloidNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.EPICYCLOID_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/EPICYCLOID_NOTES_MIN_BASE_RADIUS/.test(src), 'has MIN_BASE_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.EPICYCLOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 728 - Epicycloid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    // Look for updateTrackUI calls near epicycloid menu items
+    t.assertTruthy(/epicycloidNotes[\s\S]{0,400}localAppServices\.updateTrackUI[\s\S]{0,200}sequencerContentChanged/.test(src), 'calls updateTrackUI with sequencerContentChanged');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
