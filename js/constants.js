@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.378.0';
+export const APP_VERSION = '2.379.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -765,6 +765,48 @@ export const CYCLOID_NOTES_SHAPES = [
     CYCLOID_NOTES_SHAPE_PROLATE,
     CYCLOID_NOTES_SHAPE_CURTATE,
     CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM
+];
+
+// ============================================
+// Involute Notes Constants (Day 730)
+// ============================================
+// The involute of a circle is the curve traced by the end of a taut string
+// as it's unwound from (or wound onto) the circle. Parametric equations:
+//   x(t) = r * (cos(t) + t * sin(t))
+//   y(t) = r * (sin(t) - t * cos(t))
+// where r is the base-circle radius and t is the unwound string length
+// in radians (also the angle in the original formulation by Huygens 1673).
+// The involute is the geometric shape of involute gear teeth — every
+// modern mechanical gear (cars, watches, industrial machinery) uses
+// the involute because it maintains constant angular velocity ratio
+// during meshing regardless of manufacturing errors or wear. The
+// involute is also the evolute of the cycloid (Day 729): one unrolls
+// the other, so they form a natural "dual" pair. Variants via t-range:
+//   standard: t in [0, 2pi] — classic unwinding spiral (opens outward)
+//   half:     t in [0, pi]  — one half of the spiral (one gear flank)
+//   two-arm:  t in [-pi, +pi] — symmetric two-flank gear-tooth profile
+//   reverse:  t in [-2pi, 0] — winding direction (mirrors standard)
+export const INVOLUTE_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the involute
+export const INVOLUTE_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution involute)
+export const INVOLUTE_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the involute
+export const INVOLUTE_NOTES_MIN_RADIUS = 1; // Minimum 1 base-circle radius r
+export const INVOLUTE_NOTES_MAX_RADIUS = 8; // Maximum 8 base-circle radius r
+export const INVOLUTE_NOTES_DEFAULT_RADIUS = 3; // Default 3 base-circle radius r
+export const INVOLUTE_NOTES_MIN_TURNS = 1; // Minimum 1 full revolution of t (2*pi*turns)
+export const INVOLUTE_NOTES_MAX_TURNS = 3; // Maximum 3 full revolutions (long spiral arm)
+export const INVOLUTE_NOTES_DEFAULT_TURNS = 1; // Default 1 full revolution (t in [0, 2pi])
+export const INVOLUTE_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const INVOLUTE_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const INVOLUTE_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const INVOLUTE_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, +2pi*turns]: unwinding spiral
+export const INVOLUTE_NOTES_SHAPE_HALF = 'half'; // t in [0, +pi*turns]: one gear-tooth flank
+export const INVOLUTE_NOTES_SHAPE_TWO_ARM = 'two-arm'; // t in [-pi*turns, +pi*turns]: symmetric profile
+export const INVOLUTE_NOTES_SHAPE_REVERSE = 'reverse'; // t in [-2pi*turns, 0]: winding direction
+export const INVOLUTE_NOTES_SHAPES = [
+    INVOLUTE_NOTES_SHAPE_STANDARD,
+    INVOLUTE_NOTES_SHAPE_HALF,
+    INVOLUTE_NOTES_SHAPE_TWO_ARM,
+    INVOLUTE_NOTES_SHAPE_REVERSE
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM
