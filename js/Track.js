@@ -7798,4 +7798,130 @@ export class Track {
 
         return involuteCount;
     }
+
+    lemniscateNotes(length = Constants.LEMNISCATE_NOTES_DEFAULT_LENGTH, radius = Constants.LEMNISCATE_NOTES_DEFAULT_RADIUS, velocityDecay = Constants.LEMNISCATE_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.LEMNISCATE_NOTES_SHAPE_HORIZONTAL, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} lemniscateNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.LEMNISCATE_NOTES_MIN_LENGTH, Math.min(Constants.LEMNISCATE_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedRadius = Math.max(Constants.LEMNISCATE_NOTES_MIN_RADIUS, Math.min(Constants.LEMNISCATE_NOTES_MAX_RADIUS, Math.floor(radius)));
+        const clampedDecay = Math.max(Constants.LEMNISCATE_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.LEMNISCATE_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.LEMNISCATE_NOTES_SHAPES.includes(shape) ? shape : Constants.LEMNISCATE_NOTES_SHAPE_HORIZONTAL;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Lemniscate Notes (${useShape}, a=${clampedRadius}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let lemniscateCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Resolve the t-range endpoints based on shape:
+        //   HORIZONTAL:  t in [0, 2*pi]      — full sideways infinity (Bernoulli 1694 default)
+        //   VERTICAL:    t in [-pi/2, 3pi/2] — rotated 90°, lobes go up/down
+        //   RIGHT_LOBE:  t in [-pi/4, +pi/4] — single lobe on the right
+        //   LEFT_LOBE:   t in [3pi/4, 5pi/4] — single lobe on the left
+        const tMin = (() => {
+            switch (useShape) {
+                case Constants.LEMNISCATE_NOTES_SHAPE_HORIZONTAL:
+                    return 0;
+                case Constants.LEMNISCATE_NOTES_SHAPE_VERTICAL:
+                    return -Math.PI / 2;
+                case Constants.LEMNISCATE_NOTES_SHAPE_RIGHT_LOBE:
+                    return -Math.PI / 4;
+                case Constants.LEMNISCATE_NOTES_SHAPE_LEFT_LOBE:
+                default:
+                    return 3 * Math.PI / 4;
+            }
+        })();
+        const tMax = (() => {
+            switch (useShape) {
+                case Constants.LEMNISCATE_NOTES_SHAPE_VERTICAL:
+                    return 3 * Math.PI / 2;
+                case Constants.LEMNISCATE_NOTES_SHAPE_RIGHT_LOBE:
+                    return Math.PI / 4;
+                case Constants.LEMNISCATE_NOTES_SHAPE_LEFT_LOBE:
+                    return 5 * Math.PI / 4;
+                case Constants.LEMNISCATE_NOTES_SHAPE_HORIZONTAL:
+                default:
+                    return 2 * Math.PI;
+            }
+        })();
+
+        // Lemniscate parametric equations (Bernoulli, 1694):
+        //   x(t) = a * cos(t) / (1 + sin^2(t))
+        //   y(t) = a * sin(t) * cos(t) / (1 + sin^2(t))
+        // The curve fits inside [-a, +a] in both x and y. x reaches ±a at t=0,π (the lobe tips),
+        // and y reaches ±a/2 at t=±π/4 (the self-intersection point at origin).
+        const lemniscateRange = clampedRadius;
+        // rowOffset clamps y to +/- clampedRadius for sane grid placement
+        // colOffset normalization: x and y both span [-lemniscateRange, +lemniscateRange],
+        // so we map to [0, clampedLength] to spread the curve across the sample count.
+        const colScale = (lemniscateRange > 0) ? (clampedLength - 1) / (2 * lemniscateRange) : 0;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // Sample the lemniscate curve at N points across the t-range
+                for (let i = 0; i < clampedLength; i++) {
+                    const t = tMin + ((tMax - tMin) * i) / Math.max(1, clampedLength - 1);
+                    // Lemniscate parametric equations
+                    const sinT = Math.sin(t);
+                    const cosT = Math.cos(t);
+                    const denom = 1 + sinT * sinT;
+                    const x = clampedRadius * cosT / denom;
+                    const y = clampedRadius * sinT * cosT / denom;
+
+                    // rowOffset: clamp y to +/- clampedRadius for sane grid placement
+                    const rowOffset = Math.max(-clampedRadius, Math.min(clampedRadius, Math.round(y)));
+                    // colOffset: map x to [0, clampedLength-1] so the curve spans the sample count
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((x + lemniscateRange) * colScale)));
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Apply velocity decay by sample index
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            lemniscateCount++;
+        }
+
+        return lemniscateCount;
+    }
 }

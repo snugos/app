@@ -26709,6 +26709,252 @@ TestRunner.test("Day 730 - Involute Notes menu items call recreateToneSequence a
 });
 
 
+// Day 731: Lemniscate Notes Feature - lemniscateNotes method, constants, UI menu items
+TestRunner.test("Day 731 - lemniscateNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.lemniscateNotes === 'function', 'lemniscateNotes is a function');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes accepts 5 parameters with defaults (length, radius, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.LEMNISCATE_NOTES_DEFAULT_LENGTH/.test(src), 'has length param with LEMNISCATE_NOTES_DEFAULT_LENGTH default');
+    t.assertTruthy(/radius\s*=\s*Constants\.LEMNISCATE_NOTES_DEFAULT_RADIUS/.test(src), 'has radius param with LEMNISCATE_NOTES_DEFAULT_RADIUS default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.LEMNISCATE_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay param with LEMNISCATE_NOTES_DEFAULT_VELOCITY_DECAY default');
+    t.assertTruthy(/shape\s*=\s*Constants\.LEMNISCATE_NOTES_SHAPE_HORIZONTAL/.test(src), 'has shape param with LEMNISCATE_NOTES_SHAPE_HORIZONTAL default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied param default true');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes captures undo BEFORE mutation with descriptive Lemniscate Notes label", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/_captureUndoState\(/.test(src), 'calls _captureUndoState');
+    t.assertTruthy(/Lemniscate Notes.*a=.*N=.*on/.test(src), 'descriptive Lemniscate Notes undo label');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes clamps all parameters to LEMNISCATE_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.LEMNISCATE_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/LEMNISCATE_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LEMNISCATE_NOTES_MAX_RADIUS/.test(src), 'has MAX_RADIUS clamp');
+    t.assertTruthy(/LEMNISCATE_NOTES_MIN_RADIUS/.test(src), 'has MIN_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LEMNISCATE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+    t.assertTruthy(/LEMNISCATE_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes validates shape with LEMNISCATE_NOTES_SHAPES (uses HORIZONTAL fallback)", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPES\.includes\(shape\)/.test(src), 'validates shape via LEMNISCATE_NOTES_SHAPES');
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPES\.includes\(shape\)\s*\?\s*shape\s*:\s*Constants\.LEMNISCATE_NOTES_SHAPE_HORIZONTAL/.test(src), 'uses HORIZONTAL as fallback for invalid shape');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes uses Math.cos, Math.sin, and denom = 1+sin^2(t) for parametric equations", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/Math\.cos\(t\)/.test(src), 'uses Math.cos(t) for x');
+    t.assertTruthy(/Math\.sin\(t\)/.test(src), 'uses Math.sin(t) for y');
+    t.assertTruthy(/sinT\s*\*\s*sinT/.test(src), 'has sin^2(t) in denominator');
+    t.assertTruthy(/1\s*\+\s*sinT\s*\*\s*sinT/.test(src), 'denominator is 1+sin^2(t)');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*i\)/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'checks skipOccupied');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds decayedVel to 2 decimal places');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes returns count of lemniscate notes (lemniscateCount)", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/lemniscateCount/.test(src), 'returns lemniscateCount');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes uses Math.floor for length and radius", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor for length');
+    t.assertTruthy(/Math\.floor\(radius\)/.test(src), 'uses Math.floor for radius');
+});
+
+TestRunner.test("Day 731 - all LEMNISCATE_NOTES constants are defined in constants.js", (t) => {
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_MIN_LENGTH === 'number', 'LEMNISCATE_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_MAX_LENGTH === 'number', 'LEMNISCATE_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_DEFAULT_LENGTH === 'number', 'LEMNISCATE_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_MIN_RADIUS === 'number', 'LEMNISCATE_NOTES_MIN_RADIUS defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_MAX_RADIUS === 'number', 'LEMNISCATE_NOTES_MAX_RADIUS defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_DEFAULT_RADIUS === 'number', 'LEMNISCATE_NOTES_DEFAULT_RADIUS defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_MIN_VELOCITY_DECAY === 'number', 'LEMNISCATE_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_MAX_VELOCITY_DECAY === 'number', 'LEMNISCATE_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_DEFAULT_VELOCITY_DECAY === 'number', 'LEMNISCATE_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_SHAPE_HORIZONTAL === 'string', 'LEMNISCATE_NOTES_SHAPE_HORIZONTAL defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_SHAPE_VERTICAL === 'string', 'LEMNISCATE_NOTES_SHAPE_VERTICAL defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_SHAPE_RIGHT_LOBE === 'string', 'LEMNISCATE_NOTES_SHAPE_RIGHT_LOBE defined');
+    t.assertTruthy(typeof Constants.LEMNISCATE_NOTES_SHAPE_LEFT_LOBE === 'string', 'LEMNISCATE_NOTES_SHAPE_LEFT_LOBE defined');
+});
+
+TestRunner.test("Day 731 - LEMNISCATE_NOTES_SHAPES includes horizontal, vertical, right-lobe, left-lobe", (t) => {
+    t.assertTruthy(Constants.LEMNISCATE_NOTES_SHAPES.includes('horizontal'), 'SHAPES includes horizontal');
+    t.assertTruthy(Constants.LEMNISCATE_NOTES_SHAPES.includes('vertical'), 'SHAPES includes vertical');
+    t.assertTruthy(Constants.LEMNISCATE_NOTES_SHAPES.includes('right-lobe'), 'SHAPES includes right-lobe');
+    t.assertTruthy(Constants.LEMNISCATE_NOTES_SHAPES.includes('left-lobe'), 'SHAPES includes left-lobe');
+});
+
+TestRunner.test("Day 731 - ui.js has 4 Lemniscate Notes menu items", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Lemniscate Notes \([^)]+\)/g) || [];
+    t.assertEqual(matches.length, 4, 'has exactly 4 Lemniscate Notes menu items');
+});
+
+TestRunner.test("Day 731 - Lemniscate Notes menu items call track.lemniscateNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/currentTrackForMenu\.lemniscateNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, 'has 4 lemniscateNotes invocations');
+});
+
+TestRunner.test("Day 731 - Lemniscate Notes menu items call recreateToneSequence after lemniscateNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/lemniscateNotes\([^)]+\)[\s\S]{0,400}recreateToneSequence\(true\)/g) || [];
+    t.assertEqual(matches.length, 4, 'all 4 Lemniscate menu items call recreateToneSequence');
+});
+
+TestRunner.test("Day 731 - Lemniscate Notes menu items show Lemniscated N note(s) notification", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Lemniscated \$\{result\} note\(s\)/g) || [];
+    t.assertEqual(matches.length, 4, 'has 4 Lemniscated N note(s) notifications');
+});
+
+TestRunner.test("Day 731 - Lemniscate Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/captureStateForUndo\(`Lemniscate Notes on /g) || [];
+    t.assertEqual(matches.length, 4, 'has 4 undo captures with Lemniscate Notes label');
+});
+
+TestRunner.test("Day 731 - Lemniscate Notes menu items include all 4 shape variants (horizontal, vertical, right-lobe, left-lobe)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(src.includes("'horizontal'"), 'has horizontal shape invocation');
+    t.assertTruthy(src.includes("'vertical'"), 'has vertical shape invocation');
+    t.assertTruthy(src.includes("'right-lobe'"), 'has right-lobe shape invocation');
+    t.assertTruthy(src.includes("'left-lobe'"), 'has left-lobe shape invocation');
+});
+
+TestRunner.test("Day 731 - Lemniscate Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Lemniscated \$\{result\} note\(s\)[\s\S]{0,300}updateTrackUI\(track\.id, 'sequencerContentChanged'\)/g) || [];
+    t.assertEqual(matches.length, 4, 'all 4 Lemniscate menu items call updateTrackUI on success');
+});
+
+TestRunner.test("Day 731 - APP_VERSION validation (>= 2.380 for Day 731)", (t) => {
+    t.assertTruthy(Constants.APP_VERSION >= '2.380', 'APP_VERSION >= 2.380');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes functional test: x = a*cos(t)/(1+sin^2(t))", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/x\s*=\s*clampedRadius\s*\*\s*cosT\s*\/\s*denom/.test(src), 'x = a*cos(t)/denom');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes functional test: y = a*sin(t)*cos(t)/(1+sin^2(t))", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/y\s*=\s*clampedRadius\s*\*\s*sinT\s*\*\s*cosT\s*\/\s*denom/.test(src), 'y = a*sin(t)*cos(t)/denom');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/const newNotes\s*=\s*\[\]/.test(src), 'initializes newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'pushes to newNotes array');
+    t.assertTruthy(/for \(const note of newNotes\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col\s*\)\s*continue/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes functional test: clamps to valid ranges (length 100->64, radius -5->1, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.LEMNISCATE_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/LEMNISCATE_NOTES_MIN_RADIUS/.test(src), 'has MIN_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LEMNISCATE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes functional test: rowOffset clamped to +/- clampedRadius", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/rowOffset\s*=\s*Math\.max\(-clampedRadius,\s*Math\.min\(clampedRadius,\s*Math\.round\(y\)\)/.test(src), 'clamps rowOffset to +/- clampedRadius');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes functional test: colOffset = (x + range) * colScale mapped to [0, length-1]", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/colOffset\s*=\s*Math\.max\(0,\s*Math\.min\(clampedLength\s*-\s*1,\s*Math\.round\(\(x\s*\+\s*lemniscateRange\)\s*\*\s*colScale\)\)/.test(src), 'colOffset mapped via (x + range) * colScale');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes structural test: uses tMin/tMax based on shape", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/tMin/.test(src), 'has tMin resolver');
+    t.assertTruthy(/tMax/.test(src), 'has tMax resolver');
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPE_HORIZONTAL/.test(src), 'has HORIZONTAL case in tMin/tMax');
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPE_VERTICAL/.test(src), 'has VERTICAL case in tMin/tMax');
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPE_RIGHT_LOBE/.test(src), 'has RIGHT_LOBE case in tMin/tMax');
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPE_LEFT_LOBE/.test(src), 'has LEFT_LOBE case in tMin/tMax');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes functional test: t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/t\s*=\s*tMin\s*\+\s*\(\(tMax\s*-\s*tMin\)\s*\*\s*i\)\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(src), 't = tMin + (tMax - tMin) * i / (length - 1)');
+});
+
+TestRunner.test("Day 731 - lemniscateNotes structural test: supports 4 distinct shapes", (t) => {
+    const src = Track.prototype.lemniscateNotes.toString();
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPE_HORIZONTAL/.test(src), 'has HORIZONTAL shape');
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPE_VERTICAL/.test(src), 'has VERTICAL shape');
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPE_RIGHT_LOBE/.test(src), 'has RIGHT_LOBE shape');
+    t.assertTruthy(/LEMNISCATE_NOTES_SHAPE_LEFT_LOBE/.test(src), 'has LEFT_LOBE shape');
+});
+
+TestRunner.test("Day 731 - Lemniscate Notes menu items call recreateToneSequence after lemniscateNotes (full success path)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lemniscateLines = src.split('\n').filter(l => l.includes('Lemniscate Notes'));
+    t.assertEqual(lemniscateLines.length, 4, 'has 4 Lemniscate Notes menu lines');
+    for (const line of lemniscateLines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'each Lemniscate menu line calls recreateToneSequence');
+    }
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
