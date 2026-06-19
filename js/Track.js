@@ -7857,7 +7857,12 @@ export class Track {
         // Lemniscate parametric equations (Bernoulli, 1694):
         //   x(t) = a * cos(t) / (1 + sin^2(t))
         //   y(t) = a * sin(t) * cos(t) / (1 + sin^2(t))
+        // The curve fits inside [-a, +a] in both x and y. x reaches ±a at t=0,π (the lobe tips),
+        // and y reaches ±a/2 at t=±π/4 (the self-intersection point at origin).
         const lemniscateRange = clampedRadius;
+        // rowOffset clamps y to +/- clampedRadius for sane grid placement
+        // colOffset normalization: x and y both span [-lemniscateRange, +lemniscateRange],
+        // so we map to [0, clampedLength] to spread the curve across the sample count.
         const colScale = (lemniscateRange > 0) ? (clampedLength - 1) / (2 * lemniscateRange) : 0;
 
         for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
