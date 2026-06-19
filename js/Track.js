@@ -7557,4 +7557,121 @@ export class Track {
 
         return epicycloidCount;
     }
+
+    cycloidNotes(length = Constants.CYCLOID_NOTES_DEFAULT_LENGTH, radius = Constants.CYCLOID_NOTES_DEFAULT_RADIUS, penOffset = Constants.CYCLOID_NOTES_DEFAULT_PEN_OFFSET, arches = Constants.CYCLOID_NOTES_DEFAULT_ARCHES, velocityDecay = Constants.CYCLOID_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.CYCLOID_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} cycloidNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedLength = Math.max(Constants.CYCLOID_NOTES_MIN_LENGTH, Math.min(Constants.CYCLOID_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedRadius = Math.max(Constants.CYCLOID_NOTES_MIN_RADIUS, Math.min(Constants.CYCLOID_NOTES_MAX_RADIUS, Math.floor(radius)));
+        const clampedPenOffset = Math.max(Constants.CYCLOID_NOTES_MIN_PEN_OFFSET, Math.min(Constants.CYCLOID_NOTES_MAX_PEN_OFFSET, Math.floor(penOffset)));
+        const clampedArches = Math.max(Constants.CYCLOID_NOTES_MIN_ARCHES, Math.min(Constants.CYCLOID_NOTES_MAX_ARCHES, Math.floor(arches)));
+        const clampedDecay = Math.max(Constants.CYCLOID_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.CYCLOID_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.CYCLOID_NOTES_SHAPES.includes(shape) ? shape : Constants.CYCLOID_NOTES_SHAPE_STANDARD;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Cycloid Notes (${useShape}, r=${clampedRadius},d=${clampedPenOffset}, arches=${clampedArches}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let cycloidCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity} to add
+
+        // Resolve the effective pen offset based on shape:
+        //   STANDARD: d = r (point on rim, classic cycloid with cusps)
+        //   PROLATE: d = r * 1.5 (point outside rim, has loops below baseline)
+        //   CURTATE: d = r * 0.5 (point inside rim, flattened humps, no cusps)
+        //   TROCHOID_CUSTOM: user-controlled d via penOffset parameter
+        const effectiveD = (() => {
+            switch (useShape) {
+                case Constants.CYCLOID_NOTES_SHAPE_STANDARD:
+                    return clampedRadius;
+                case Constants.CYCLOID_NOTES_SHAPE_PROLATE:
+                    return Math.max(1, Math.round(clampedRadius * 1.5));
+                case Constants.CYCLOID_NOTES_SHAPE_CURTATE:
+                    return Math.max(1, Math.round(clampedRadius * 0.5));
+                case Constants.CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM:
+                default:
+                    return clampedPenOffset;
+            }
+        })();
+
+        // Cycloid parametric equations (one full arch is t in [0, 2*PI]):
+        //   x(t) = r * (t - sin(t))
+        //   y(t) = r - d * cos(t)
+        // For 'arches' full arches, t ranges over [0, 2*PI * arches].
+        // y oscillates in [r - d, r + d] (range = 2d); x increases monotonically with t.
+        const tMax = 2 * Math.PI * clampedArches;
+        const yRange = 2 * effectiveD;
+        const halfYRange = effectiveD;
+        // rowOffset clamps y to +/- clampedRadius (sane grid placement)
+        // colOffset normalization: x grows from 0 to approximately r * tMax, so map to [0, clampedLength]
+        const xMaxApprox = clampedRadius * tMax;
+        const colScale = (xMaxApprox > 0) ? (clampedLength - 1) / xMaxApprox : 0;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                // Sample the cycloid curve at N points across 'arches' full arches
+                for (let i = 0; i < clampedLength; i++) {
+                    const t = (tMax * i) / Math.max(1, clampedLength - 1);
+                    // Cycloid parametric equations
+                    const x = clampedRadius * (t - Math.sin(t));
+                    const y = clampedRadius - effectiveD * Math.cos(t);
+
+                    // rowOffset: shift so y centers around 0, clamp to +/- clampedRadius
+                    // y is in [clampedRadius - effectiveD, clampedRadius + effectiveD]
+                    // y - halfYRange shifts to [-effectiveD, +effectiveD]
+                    const rowOffset = Math.max(-clampedRadius, Math.min(clampedRadius, Math.round(y - halfYRange)));
+
+                    // colOffset: map x to [0, clampedLength-1] so the curve spans the sample count
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round(x * colScale)));
+
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Apply velocity decay by sample index
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            cycloidCount++;
+        }
+
+        return cycloidCount;
+    }
 }

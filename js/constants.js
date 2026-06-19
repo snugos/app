@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.377.0';
+export const APP_VERSION = '2.378.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -726,6 +726,45 @@ export const EPICYCLOID_NOTES_SHAPES = [
     EPICYCLOID_NOTES_SHAPE_4CUSP,
     EPICYCLOID_NOTES_SHAPE_5CUSP,
     EPICYCLOID_NOTES_SHAPE_6CUSP
+];
+
+// ============================================
+// Cycloid Notes Constants (Day 729)
+// ============================================
+// The cycloid is the curve traced by a point on a circle rolling along a
+// straight line. It's the parent curve of the epicycloid/hypotrochoid family.
+// Parametric equations:
+//   x(t) = r * (t - sin(t))
+//   y(t) = r - d * cos(t)
+// where r is the rolling-circle radius and d is the pen offset from the
+// rolling circle's center. For d = r, it's a standard cycloid with cusps
+// (Galileo's brachistochrone — the fastest descent curve, also the
+// tautochrone — the equal-time curve). For d < r, curtate cycloid
+// (no cusps, flattened humps). For d > r, prolate cycloid (has loops).
+export const CYCLOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples (full arch resolution)
+export const CYCLOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples across multiple arches
+export const CYCLOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples across the curve
+export const CYCLOID_NOTES_MIN_RADIUS = 1; // Minimum 1 rolling circle radius r
+export const CYCLOID_NOTES_MAX_RADIUS = 8; // Maximum 8 rolling circle radius r
+export const CYCLOID_NOTES_DEFAULT_RADIUS = 3; // Default 3 rolling circle radius r
+export const CYCLOID_NOTES_MIN_PEN_OFFSET = 1; // Minimum 1 pen offset d from rolling circle center
+export const CYCLOID_NOTES_MAX_PEN_OFFSET = 12; // Maximum 12 pen offset d
+export const CYCLOID_NOTES_DEFAULT_PEN_OFFSET = 3; // Default 3 pen offset d (custom mode)
+export const CYCLOID_NOTES_MIN_ARCHES = 1; // Minimum 1 full arch of the cycloid
+export const CYCLOID_NOTES_MAX_ARCHES = 4; // Maximum 4 full arches (4 cusps/loops)
+export const CYCLOID_NOTES_DEFAULT_ARCHES = 2; // Default 2 full arches (classic 2-hump cycloid)
+export const CYCLOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const CYCLOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const CYCLOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const CYCLOID_NOTES_SHAPE_STANDARD = 'standard'; // d=r: point on rim, cusps (brachistochrone/tautochrone)
+export const CYCLOID_NOTES_SHAPE_PROLATE = 'prolate'; // d>r: point outside rim, has loops below baseline
+export const CYCLOID_NOTES_SHAPE_CURTATE = 'curtate'; // d<r: point inside rim, flattened humps, no cusps
+export const CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM = 'trochoid-custom'; // user-controlled d (any value)
+export const CYCLOID_NOTES_SHAPES = [
+    CYCLOID_NOTES_SHAPE_STANDARD,
+    CYCLOID_NOTES_SHAPE_PROLATE,
+    CYCLOID_NOTES_SHAPE_CURTATE,
+    CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM
 ];
 
 export const DEFAULT_TEMPO = 120; // Default tempo in BPM

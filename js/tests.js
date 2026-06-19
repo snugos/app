@@ -26202,6 +26202,251 @@ TestRunner.test("Day 728 - Epicycloid Notes menu items call localAppServices.upd
     t.assertTruthy(/epicycloidNotes[\s\S]{0,400}localAppServices\.updateTrackUI[\s\S]{0,200}sequencerContentChanged/.test(src), 'calls updateTrackUI with sequencerContentChanged');
 });
 
+// Day 729: Cycloid Notes Feature - cycloidNotes method, constants, UI menu items
+
+TestRunner.test("Day 729 - cycloidNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.cycloidNotes === 'function', 'cycloidNotes is a function');
+});
+
+TestRunner.test("Day 729 - cycloidNotes accepts 7 parameters with defaults (length, radius, penOffset, arches, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.CYCLOID_NOTES_DEFAULT_LENGTH/.test(src), 'has length param with CYCLOID_NOTES_DEFAULT_LENGTH default');
+    t.assertTruthy(/radius\s*=\s*Constants\.CYCLOID_NOTES_DEFAULT_RADIUS/.test(src), 'has radius param with CYCLOID_NOTES_DEFAULT_RADIUS default');
+    t.assertTruthy(/penOffset\s*=\s*Constants\.CYCLOID_NOTES_DEFAULT_PEN_OFFSET/.test(src), 'has penOffset param with CYCLOID_NOTES_DEFAULT_PEN_OFFSET default');
+    t.assertTruthy(/arches\s*=\s*Constants\.CYCLOID_NOTES_DEFAULT_ARCHES/.test(src), 'has arches param with CYCLOID_NOTES_DEFAULT_ARCHES default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.CYCLOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay param with CYCLOID_NOTES_DEFAULT_VELOCITY_DECAY default');
+    t.assertTruthy(/shape\s*=\s*Constants\.CYCLOID_NOTES_SHAPE_STANDARD/.test(src), 'has shape param with CYCLOID_NOTES_SHAPE_STANDARD default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied param default true');
+});
+
+TestRunner.test("Day 729 - cycloidNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 729 - cycloidNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 729 - cycloidNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/_captureUndoState\(/.test(src), 'calls _captureUndoState');
+    t.assertTruthy(/Cycloid Notes.*r=.*d=.*arches=.*N=.*on/.test(src), 'descriptive Cycloid Notes undo label');
+});
+
+TestRunner.test("Day 729 - cycloidNotes clamps all parameters to CYCLOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.CYCLOID_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CYCLOID_NOTES_MAX_RADIUS/.test(src), 'has MAX_RADIUS clamp');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_RADIUS/.test(src), 'has MIN_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CYCLOID_NOTES_MAX_PEN_OFFSET/.test(src), 'has MAX_PEN_OFFSET clamp');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_PEN_OFFSET/.test(src), 'has MIN_PEN_OFFSET clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CYCLOID_NOTES_MAX_ARCHES/.test(src), 'has MAX_ARCHES clamp');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_ARCHES/.test(src), 'has MIN_ARCHES clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CYCLOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 729 - cycloidNotes validates shape with CYCLOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/CYCLOID_NOTES_SHAPES\.includes/.test(src), 'validates shape with CYCLOID_NOTES_SHAPES');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_STANDARD/.test(src), 'uses STANDARD as fallback');
+});
+
+TestRunner.test("Day 729 - cycloidNotes uses Math.sin and Math.cos for parametric equations", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/Math\.sin\(t\)/.test(src), 'uses Math.sin(t)');
+    t.assertTruthy(/Math\.cos\(t\)/.test(src), 'uses Math.cos(t)');
+});
+
+TestRunner.test("Day 729 - cycloidNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay,\s*i\)/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 729 - cycloidNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'respects skipOccupied');
+});
+
+TestRunner.test("Day 729 - cycloidNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimals');
+});
+
+TestRunner.test("Day 729 - cycloidNotes returns count of cycloid notes (cycloidCount)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/cycloidCount/.test(src), 'tracks cycloidCount');
+    t.assertTruthy(/return\s+cycloidCount/.test(src), 'returns cycloidCount');
+});
+
+TestRunner.test("Day 729 - cycloidNotes uses Math.floor for length, radius, penOffset, arches", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor for length');
+    t.assertTruthy(/Math\.floor\(radius\)/.test(src), 'uses Math.floor for radius');
+    t.assertTruthy(/Math\.floor\(penOffset\)/.test(src), 'uses Math.floor for penOffset');
+    t.assertTruthy(/Math\.floor\(arches\)/.test(src), 'uses Math.floor for arches');
+});
+
+TestRunner.test("Day 729 - All 19 CYCLOID_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_LENGTH\s*=/.test(src), 'has CYCLOID_NOTES_MIN_LENGTH');
+    t.assertTruthy(/CYCLOID_NOTES_MAX_LENGTH\s*=/.test(src), 'has CYCLOID_NOTES_MAX_LENGTH');
+    t.assertTruthy(/CYCLOID_NOTES_DEFAULT_LENGTH\s*=/.test(src), 'has CYCLOID_NOTES_DEFAULT_LENGTH');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_RADIUS\s*=/.test(src), 'has CYCLOID_NOTES_MIN_RADIUS');
+    t.assertTruthy(/CYCLOID_NOTES_MAX_RADIUS\s*=/.test(src), 'has CYCLOID_NOTES_MAX_RADIUS');
+    t.assertTruthy(/CYCLOID_NOTES_DEFAULT_RADIUS\s*=/.test(src), 'has CYCLOID_NOTES_DEFAULT_RADIUS');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_PEN_OFFSET\s*=/.test(src), 'has CYCLOID_NOTES_MIN_PEN_OFFSET');
+    t.assertTruthy(/CYCLOID_NOTES_MAX_PEN_OFFSET\s*=/.test(src), 'has CYCLOID_NOTES_MAX_PEN_OFFSET');
+    t.assertTruthy(/CYCLOID_NOTES_DEFAULT_PEN_OFFSET\s*=/.test(src), 'has CYCLOID_NOTES_DEFAULT_PEN_OFFSET');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_ARCHES\s*=/.test(src), 'has CYCLOID_NOTES_MIN_ARCHES');
+    t.assertTruthy(/CYCLOID_NOTES_MAX_ARCHES\s*=/.test(src), 'has CYCLOID_NOTES_MAX_ARCHES');
+    t.assertTruthy(/CYCLOID_NOTES_DEFAULT_ARCHES\s*=/.test(src), 'has CYCLOID_NOTES_DEFAULT_ARCHES');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_VELOCITY_DECAY\s*=/.test(src), 'has CYCLOID_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/CYCLOID_NOTES_MAX_VELOCITY_DECAY\s*=/.test(src), 'has CYCLOID_NOTES_MAX_VELOCITY_DECAY');
+    t.assertTruthy(/CYCLOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(src), 'has CYCLOID_NOTES_DEFAULT_VELOCITY_DECAY');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_STANDARD\s*=/.test(src), 'has CYCLOID_NOTES_SHAPE_STANDARD');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_PROLATE\s*=/.test(src), 'has CYCLOID_NOTES_SHAPE_PROLATE');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_CURTATE\s*=/.test(src), 'has CYCLOID_NOTES_SHAPE_CURTATE');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM\s*=/.test(src), 'has CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM');
+});
+
+TestRunner.test("Day 729 - CYCLOID_NOTES_SHAPES includes standard, prolate, curtate, trochoid-custom", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_STANDARD/.test(src), 'has STANDARD shape');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_PROLATE/.test(src), 'has PROLATE shape');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_CURTATE/.test(src), 'has CURTATE shape');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM/.test(src), 'has TROCHOID_CUSTOM shape');
+});
+
+TestRunner.test("Day 729 - ui.js has 4 Cycloid Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/label:\s*`Cycloid Notes\s*\(/g);
+    t.assertTruthy(matches && matches.length === 4, 'has exactly 4 Cycloid Notes menu items, found ' + (matches ? matches.length : 0));
+});
+
+TestRunner.test("Day 729 - Cycloid Notes menu items call track.cycloidNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/cycloidNotes\(/.test(src), 'has cycloidNotes calls');
+});
+
+TestRunner.test("Day 729 - Cycloid Notes menu items call recreateToneSequence after cycloidNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/cycloidNotes[\s\S]{0,300}recreateToneSequence\(true\)/.test(src), 'calls recreateToneSequence(true) after cycloidNotes');
+});
+
+TestRunner.test("Day 729 - Cycloid Notes menu items show Cycloid'd N note(s) notification", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Cycloid'd\s*\$\{result\}\s*note\(s\)/.test(src), 'shows Cycloid\'d N note(s) notification');
+});
+
+TestRunner.test("Day 729 - Cycloid Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Cycloid Notes on/.test(src), 'captures undo with descriptive Cycloid Notes label');
+});
+
+TestRunner.test("Day 729 - Cycloid Notes menu items include standard, prolate, curtate, trochoid-custom", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Cycloid Notes \(Standard/.test(src), 'has Standard menu item');
+    t.assertTruthy(/Cycloid Notes \(Prolate/.test(src), 'has Prolate menu item');
+    t.assertTruthy(/Cycloid Notes \(Curtate/.test(src), 'has Curtate menu item');
+    t.assertTruthy(/Cycloid Notes \(Trochoid Custom/.test(src), 'has Trochoid Custom menu item');
+});
+
+TestRunner.test("Day 729 - Cycloid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/cycloidNotes[\s\S]{0,400}localAppServices\.updateTrackUI[\s\S]{0,200}sequencerContentChanged/.test(src), 'calls updateTrackUI with sequencerContentChanged');
+});
+
+TestRunner.test("Day 729 - APP_VERSION validation (>= 2.378 for Day 729)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    const match = src.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    t.assertTruthy(match, 'found APP_VERSION');
+    const version = match[1];
+    const parts = version.split('.').map(Number);
+    t.assertTruthy(parts[0] > 2 || (parts[0] === 2 && parts[1] >= 378), 'APP_VERSION >= 2.378.0, got ' + version);
+});
+
+TestRunner.test("Day 729 - cycloidNotes functional test: x = r * (t - sin(t))", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/x\s*=\s*clampedRadius\s*\*\s*\(\s*t\s*-\s*Math\.sin\(t\)\s*\)/.test(src), 'x = r * (t - sin(t))');
+});
+
+TestRunner.test("Day 729 - cycloidNotes functional test: y = r - d * cos(t)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/y\s*=\s*clampedRadius\s*-\s*effectiveD\s*\*\s*Math\.cos\(t\)/.test(src), 'y = r - d * cos(t)');
+});
+
+TestRunner.test("Day 729 - cycloidNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[\]/.test(src), 'initializes newNotes array');
+    t.assertTruthy(/newNotes\.push/.test(src), 'pushes new notes');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 729 - cycloidNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability');
+});
+
+TestRunner.test("Day 729 - cycloidNotes structural test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 729 - cycloidNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 729 - cycloidNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 729 - cycloidNotes functional test: clamps to valid ranges (length 100->64, radius -5->1, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.CYCLOID_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/CYCLOID_NOTES_MIN_RADIUS/.test(src), 'has MIN_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CYCLOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 729 - cycloidNotes functional test: rowOffset clamped to +/- clampedRadius", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/rowOffset\s*=\s*Math\.max\(-clampedRadius,\s*Math\.min\(clampedRadius,\s*Math\.round\(y\s*-\s*halfYRange\)\)/.test(src), 'clamps rowOffset to +/- clampedRadius');
+});
+
+TestRunner.test("Day 729 - cycloidNotes functional test: tMax = 2*PI*arches (multi-arch range)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/tMax\s*=\s*2\s*\*\s*Math\.PI\s*\*\s*clampedArches/.test(src), 'tMax = 2*PI*arches');
+});
+
+TestRunner.test("Day 729 - cycloidNotes structural test: uses effectiveD based on shape", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/effectiveD/.test(src), 'uses effectiveD for shape-dependent pen offset');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_STANDARD/.test(src), 'has STANDARD case');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_PROLATE/.test(src), 'has PROLATE case');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_CURTATE/.test(src), 'has CURTATE case');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM/.test(src), 'has TROCHOID_CUSTOM case');
+});
+
+TestRunner.test("Day 729 - cycloidNotes functional test: standard uses d=r, prolate uses d=r*1.5, curtate uses d=r*0.5", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_STANDARD[\s\S]{0,200}clampedRadius/.test(src), 'STANDARD uses clampedRadius as d');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_PROLATE[\s\S]{0,200}clampedRadius\s*\*\s*1\.5/.test(src), 'PROLATE uses d=r*1.5');
+    t.assertTruthy(/CYCLOID_NOTES_SHAPE_CURTATE[\s\S]{0,200}clampedRadius\s*\*\s*0\.5/.test(src), 'CURTATE uses d=r*0.5');
+});
+
+TestRunner.test("Day 729 - cycloidNotes functional test: t parameter = tMax*i/(length-1)", (t) => {
+    const src = Track.prototype.cycloidNotes.toString();
+    t.assertTruthy(/t\s*=\s*\(tMax\s*\*\s*i\)\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(src), 't = tMax*i/(length-1)');
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

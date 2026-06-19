@@ -1,3 +1,110 @@
+#### Day 729: Cycloid Notes Feature (2026-06-19)
+- **Feature**: Added `cycloidNotes(length, radius, penOffset, arches, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Cycloid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a cycloid curve (the parent curve of the entire rolling-circle family — the curve traced by a point on the rim of a circle of radius `r` rolling along a straight line). The cycloid parametric equations are: `x(t) = r * (t - sin(t))` and `y(t) = r - d * cos(t)`, where `t = (2π*arches) * i / (length-1)`, `r` is the rolling-circle radius, and `d` is the pen offset from the rolling circle's center. The cycloid predates the hypotrochoid by 1600 years (Galileo 1599) and is famously the **brachistochrone** (fastest descent curve under gravity, posed by Johann Bernoulli in 1696) and the **tautochrone** (equal-time curve — a bead released from any point on an inverted cycloid reaches the bottom in the same time, proved by Huygens in 1673 — this led to the first practical pendulum clock design). Four trochoid variants via the `effectiveD` resolver: 'standard' (d=r — point on rim, classic cycloid with cusps, the brachistochrone/tautochrone shape), 'prolate' (d=r*1.5 — point outside rim, has loops below baseline, sometimes called a "looping trochoid"), 'curtate' (d=r*0.5 — point inside rim, flattened humps with no cusps, sometimes called a "wavy trochoid"), 'trochoid-custom' (user-controlled d via penOffset parameter). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement, and `colOffset` is normalized via `x * colScale` where `colScale = (clampedLength - 1) / (r * tMax)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The cycloid family complements `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `lissajousNotes` (X-Y oscilloscope), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `euclideanNotes` (Bjorklund rhythms) with the foundational curve that inspired both the hypotrochoid and the epicycloid families.
+- **Files Modified**:
+  - `js/Track.js`: Added `cycloidNotes` method after `epicycloidNotes` (line ~7560, the new last method on the class)
+  - `js/constants.js`: Added 19 CYCLOID_NOTES_* constants after the EPICYCLOID_NOTES block + APP_VERSION bumped to 2.378.0
+  - `js/ui.js`: Added 4 Cycloid Notes menu items in the sequencer context menu after Epicycloid Notes (6-Cusp, 32)
+  - `js/tests.js`: Added Day 729 test block with 36 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 (re-introduced since the Day 728 fix; the same fix has been needed on many days).
+- **Feature Details**:
+  - **cycloidNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a cycloid curve computed via parametric equations. For sample `i` in 0..clampedLength-1, computes `t = (2*PI*clampedArches) * i / max(1, clampedLength-1)`, then `x = clampedRadius * (t - sin(t))` and `y = clampedRadius - effectiveD * cos(t)`. The y-component drives `rowOffset` via `Math.max(-clampedRadius, Math.min(clampedRadius, Math.round(y - effectiveD)))` (shifts y to center around 0 then clamps) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round(x * colScale)))`. Captures undo state BEFORE mutation with descriptive `Cycloid Notes (shape, r=...,d=..., arches=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to CYCLOID_NOTES_MIN_LENGTH (8) / CYCLOID_NOTES_MAX_LENGTH (64) range with Math.floor (default CYCLOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `radius` to CYCLOID_NOTES_MIN_RADIUS (1) / CYCLOID_NOTES_MAX_RADIUS (8) range with Math.floor (default CYCLOID_NOTES_DEFAULT_RADIUS=3)
+    - Clamps `penOffset` to CYCLOID_NOTES_MIN_PEN_OFFSET (1) / CYCLOID_NOTES_MAX_PEN_OFFSET (12) range with Math.floor (default CYCLOID_NOTES_DEFAULT_PEN_OFFSET=3)
+    - Clamps `arches` to CYCLOID_NOTES_MIN_ARCHES (1) / CYCLOID_NOTES_MAX_ARCHES (4) range with Math.floor (default CYCLOID_NOTES_DEFAULT_ARCHES=2)
+    - Clamps `velocityDecay` to CYCLOID_NOTES_MIN_VELOCITY_DECAY (0.1) / CYCLOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CYCLOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against CYCLOID_NOTES_SHAPES array, falls back to CYCLOID_NOTES_SHAPE_STANDARD if invalid
+    - `effectiveD` resolver returns the effective pen offset based on shape:
+      - STANDARD: `clampedRadius` — point on rim, classic cycloid with cusps (brachistochrone/tautochrone)
+      - PROLATE: `Math.max(1, Math.round(clampedRadius * 1.5))` — point outside rim, has loops below baseline
+      - CURTATE: `Math.max(1, Math.round(clampedRadius * 0.5))` — point inside rim, flattened humps, no cusps
+      - TROCHOID_CUSTOM: `clampedPenOffset` — user-controlled d (any value)
+    - Computes `tMax = 2 * PI * clampedArches` (parametric range across all arches) and `yRange = 2 * effectiveD` (y oscillation range)
+    - Computes `xMaxApprox = clampedRadius * tMax` (approximate max x value) and `colScale = (clampedLength - 1) / xMaxApprox` (when xMaxApprox > 0, else 0)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of cycloid notes added (cycloidCount)
+  - **Cycloid Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Epicycloid Notes (6-Cusp, 32)
+    - "Cycloid Notes (Standard, 2 arches)" - calls `cycloidNotes(32, 3, 3, 2, 0.95, 'standard', true)` - classic cycloid with cusps (the brachistochrone/tautochrone), 2 arches
+    - "Cycloid Notes (Prolate, 2 arches)" - calls `cycloidNotes(32, 3, 3, 2, 0.95, 'prolate', true)` - 2 arches with loops below baseline (d=r*1.5)
+    - "Cycloid Notes (Curtate, 3 arches)" - calls `cycloidNotes(32, 4, 2, 3, 0.95, 'curtate', true)` - 3 arches of flattened humps, no cusps (d=r*0.5)
+    - "Cycloid Notes (Trochoid Custom, 2 arches)" - calls `cycloidNotes(32, 3, 5, 2, 0.95, 'trochoid-custom', true)` - 2 arches with user-controlled d=5
+    - All call `recreateToneSequence(true)` after cycloiding
+    - All capture undo with descriptive `Cycloid Notes on <name> (<seqname>)` label
+    - Show notifications: `Cycloid'd {count} note(s) (variant, 2 arches).`
+    - Show `No notes to cycloid.` when nothing to cycloid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 19 new constants
+  - `CYCLOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples (full arch resolution)
+  - `CYCLOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples across multiple arches
+  - `CYCLOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples across the curve
+  - `CYCLOID_NOTES_MIN_RADIUS = 1` - Minimum 1 rolling circle radius r
+  - `CYCLOID_NOTES_MAX_RADIUS = 8` - Maximum 8 rolling circle radius r
+  - `CYCLOID_NOTES_DEFAULT_RADIUS = 3` - Default 3 rolling circle radius r
+  - `CYCLOID_NOTES_MIN_PEN_OFFSET = 1` - Minimum 1 pen offset d
+  - `CYCLOID_NOTES_MAX_PEN_OFFSET = 12` - Maximum 12 pen offset d
+  - `CYCLOID_NOTES_DEFAULT_PEN_OFFSET = 3` - Default 3 pen offset d (custom mode)
+  - `CYCLOID_NOTES_MIN_ARCHES = 1` - Minimum 1 full arch of the cycloid
+  - `CYCLOID_NOTES_MAX_ARCHES = 4` - Maximum 4 full arches (4 cusps/loops)
+  - `CYCLOID_NOTES_DEFAULT_ARCHES = 2` - Default 2 full arches (classic 2-hump cycloid)
+  - `CYCLOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% preservation at last sample
+  - `CYCLOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `CYCLOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `CYCLOID_NOTES_SHAPE_STANDARD = 'standard'` - d=r: point on rim, classic cycloid with cusps
+  - `CYCLOID_NOTES_SHAPE_PROLATE = 'prolate'` - d>r: point outside rim, has loops below baseline
+  - `CYCLOID_NOTES_SHAPE_CURTATE = 'curtate'` - d<r: point inside rim, flattened humps, no cusps
+  - `CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM = 'trochoid-custom'` - user-controlled d via penOffset parameter
+  - `CYCLOID_NOTES_SHAPES = [STANDARD, PROLATE, CURTATE, TROCHOID_CUSTOM]` - Valid shape values
+- **Tests** (`js/tests.js`): 36 tests covering (all pass):
+  - `cycloidNotes` is a function on Track.prototype
+  - `cycloidNotes` accepts 7 parameters with defaults (length, radius, penOffset, arches, velocityDecay, shape, skipOccupied)
+  - `cycloidNotes` returns 0 for Audio tracks
+  - `cycloidNotes` gets active sequence via getActiveSequence
+  - `cycloidNotes` captures undo BEFORE mutation with descriptive label
+  - `cycloidNotes` clamps all parameters to CYCLOID_NOTES_MIN/MAX_* ranges
+  - `cycloidNotes` validates shape with CYCLOID_NOTES_SHAPES (uses STANDARD fallback)
+  - `cycloidNotes` uses Math.sin and Math.cos for parametric equations
+  - `cycloidNotes` uses Math.pow for velocity decay
+  - `cycloidNotes` supports skipOccupied option
+  - `cycloidNotes` rounds velocity to 2 decimal places
+  - `cycloidNotes` returns count of cycloid notes (cycloidCount)
+  - `cycloidNotes` uses Math.floor for length, radius, penOffset, arches
+  - All 19 CYCLOID_NOTES constants are defined in constants.js
+  - CYCLOID_NOTES_SHAPES includes standard, prolate, curtate, trochoid-custom
+  - ui.js has 4 Cycloid Notes menu items
+  - Cycloid Notes menu items call track.cycloidNotes
+  - Cycloid Notes menu items call recreateToneSequence after cycloidNotes
+  - Cycloid Notes menu items show Cycloid'd N note(s) notification
+  - Cycloid Notes menu items capture undo with descriptive label
+  - Cycloid Notes menu items include standard, prolate, curtate, trochoid-custom shapes
+  - Cycloid Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.378 for Day 729)
+  - Functional test: x = r * (t - sin(t))
+  - Functional test: y = r - d * cos(t)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, radius -5->1, velocityDecay 2->1.0)
+  - Functional test: rowOffset clamped to +/- clampedRadius
+  - Functional test: tMax = 2*PI*arches (multi-arch range)
+  - Structural test: uses effectiveD based on shape
+  - Functional test: standard uses d=r, prolate uses d=r*1.5, curtate uses d=r*0.5
+  - Functional test: t parameter = tMax*i/(length-1)
+- **Version**: Bumped to 2.378.0
+- **Test Count**: All 36 Day 729 tests pass via `test-runner/run-tests.js`. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). Total tests now at 3133 passed (up from 3097 after Day 728), 1443 failed (pre-existing test infrastructure issues unchanged).
+
 #### Day 728: Epicycloid Notes Feature (2026-06-19)
 - **Feature**: Added `epicycloidNotes(length, baseRadius, radiusRatio, penOffset, velocityDecay, shape, skipOccupied)` method to Track class and 6 "Epicycloid Notes" menu items to the sequencer context menu. Each active note spawns N samples along an epicycloid curve (the natural counterpart to the hypotrochoid from Day 727 — instead of the small circle rolling INSIDE a larger ring, the small circle of radius `r` rolls OUTSIDE a larger fixed circle of radius `R`, with a pen offset `d` from the rolling circle's center). The epicycloid parametric equations are: `x(t) = (R+r) * cos(t) - d * cos((R+r)/r * t)` and `y(t) = (R+r) * sin(t) - d * sin((R+r)/r * t)`, where `t = 2π*i/length` and `(R, r, d)` are mode-dependent shape parameters. Note the `+` signs in `R+r` (vs the hypotrochoid's `R-r`) — the only difference is the addition vs subtraction, but the resulting curves are dramatically different (cusps point OUTWARD instead of inward). Six famous epicycloid shapes via the `epicycloidParams(shape)` helper: 'cardioid' (R=r, d=r — 1-cusped heart shape, the simplest epicycloid), 'nephroid' (R=2r, d=2r — 2-cusped kidney shape), '3-cusp' (3-cusped trefoil, 3-fold symmetry), '4-cusp' (4-cusped quatrefoil), '5-cusp' (5-cusped cinquefoil), '6-cusp' (6-cusped hexafoil). The `rowOffset` is clamped to `±clampedBaseRadius` for sane grid placement, and `colOffset` is normalized via `(x + epicycloidRange) * colScale` where `epicycloidRange = R + d + r` and `colScale = clampedLength / (2 * epicycloidRange)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The epicycloid family complements `hypotrochoidNotes` (Day 727, inner-circle spirograph), `lissajousNotes` (X-Y oscilloscope), `bezierNotes` (cubic Bezier), `stairNotes` (staircase), `phyllotaxisNotes` (Fermat spiral), `ricochetNotes` (billiard bounce), `waveNotes` (oscilloscope), `mosaicNotes` (tiled grid), `fanNotes` (chord strum), `splatterNotes` (random scatter), `gliderNotes` (directional trail), `rippleNotes` (concentric rings), `radialNotes` (discrete spokes), `spiralNotes` (angular sweep), `cascadeNotes` (linear 2D), `driftNotes` (column-only), `crescentNotes` (grouped arc), and `euclideanNotes` (Bjorklund rhythms) with the iconic OUTSIDE-rolling spirograph curves where cusps always point outward.
 - **Files Modified**:
