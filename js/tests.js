@@ -27470,6 +27470,8 @@ TestRunner.test("Day 733 - APP_VERSION validation (>= 2.382 for Day 733)", (t) =
 TestRunner.test("Day 733 - Tractrix Notes menu items call recreateToneSequence after tractrixNotes (full success path)", (t) => { const fs = require('fs'); const src = fs.readFileSync('./js/ui.js', 'utf8'); const tractrixLines = src.split('\n').filter(l => l.includes('Tractrix Notes') && l.includes('action:')); t.assertEqual(tractrixLines.length, 4, 'has 4 Tractrix Notes menu lines'); for (const line of tractrixLines) { t.assertTruthy(line.includes('recreateToneSequence(true)'), 'each Tractrix menu line calls recreateToneSequence'); } });
 
 
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

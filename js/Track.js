@@ -8252,4 +8252,91 @@ export class Track {
 
         return tractrixCount;
     }
+
+    catenaryNotes(length = Constants.CATENARY_NOTES_DEFAULT_LENGTH, a = Constants.CATENARY_NOTES_DEFAULT_A, xRange = Constants.CATENARY_NOTES_DEFAULT_X_RANGE, velocityDecay = Constants.CATENARY_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.CATENARY_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} catenaryNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.CATENARY_NOTES_MIN_LENGTH, Math.min(Constants.CATENARY_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.CATENARY_NOTES_MIN_A, Math.min(Constants.CATENARY_NOTES_MAX_A, Math.floor(a)));
+        const clampedXRange = Math.max(Constants.CATENARY_NOTES_MIN_X_RANGE, Math.min(Constants.CATENARY_NOTES_MAX_X_RANGE, xRange));
+        const clampedDecay = Math.max(Constants.CATENARY_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.CATENARY_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.CATENARY_NOTES_SHAPES.includes(shape) ? shape : Constants.CATENARY_NOTES_SHAPE_STANDARD;
+        const rangeFactor = (useShape === Constants.CATENARY_NOTES_SHAPE_TIGHT) ? 0.5 : 1.0;
+        const xRangeMap = {
+            [Constants.CATENARY_NOTES_SHAPE_STANDARD]: [-clampedXRange * rangeFactor, clampedXRange * rangeFactor],
+            [Constants.CATENARY_NOTES_SHAPE_ARCH]: [0, clampedXRange * rangeFactor],
+            [Constants.CATENARY_NOTES_SHAPE_HALF]: [-clampedXRange, 0],
+            [Constants.CATENARY_NOTES_SHAPE_TIGHT]: [-clampedXRange * rangeFactor, clampedXRange * rangeFactor]
+        };
+        const xEndpoints = xRangeMap[useShape] || [-clampedXRange, clampedXRange];
+        const xMin = xEndpoints[0];
+        const xMax = xEndpoints[1];
+
+        this._captureUndoState(`Catenary Notes (${useShape}, a=${clampedA}, X=${clampedXRange}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let catenaryCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+        const yMax = clampedA * Math.cosh(clampedXRange / clampedA);
+        const yRange = yMax;
+        const colScale = (clampedXRange > 0) ? (clampedLength - 1) / (clampedXRange * 2) : 0;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < clampedLength; i++) {
+                    const x = xMin + ((xMax - xMin) * i) / Math.max(1, clampedLength - 1);
+                    const coshX = Math.cosh(x / clampedA);
+                    const y = clampedA * coshX;
+                    const yDisp = (useShape === Constants.CATENARY_NOTES_SHAPE_ARCH) ? (2 * yMax - y) : y;
+
+                    const rowOffset = Math.max(-yRange, Math.min(yRange, Math.round(yDisp - clampedA)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((x + clampedXRange) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            catenaryCount++;
+        }
+
+        return catenaryCount;
+    }
 }

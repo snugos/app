@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.382.0';
+export const APP_VERSION = '2.383.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1496,4 +1496,36 @@ export const TRACTRIX_NOTES_SHAPES = [
     TRACTRIX_NOTES_SHAPE_FORWARD,
     TRACTRIX_NOTES_SHAPE_BACKWARD,
     TRACTRIX_NOTES_SHAPE_TIGHT
+];
+// Catenary curve (Huygens 1691, "catenaria" = chain): the iconic curve formed by a
+// uniform hanging chain or cable, y(x) = a * cosh(x / a), which minimizes potential
+// energy under gravity. It is the natural dual of the tractrix (Day 733): the
+// tractrix is the involute of the catenary, and the catenary is the evolute of the
+// tractrix — together they form one of the great dual pairs of classical mechanics,
+// studied jointly by Huygens, Leibniz, and the Bernoullis in 1691-1692. The catenary
+// governs the shape of suspension bridges (the roadway is approximately a parabola,
+// but the chain is exactly the catenary — the source of the "parabolic bridge" myth),
+// the Gateway Arch in St. Louis, draped power cables, spider webs, and the
+// zero-gravity shape of a rotating chain.
+export const CATENARY_NOTES_MIN_LENGTH = 8; // Minimum 8 samples (need enough to resolve both arms of the chain)
+export const CATENARY_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution catenary)
+export const CATENARY_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the chain
+export const CATENARY_NOTES_MIN_A = 1; // Minimum 1 chain scale parameter a
+export const CATENARY_NOTES_MAX_A = 8; // Maximum 8 chain scale parameter a
+export const CATENARY_NOTES_DEFAULT_A = 2; // Default 2 chain scale parameter a
+export const CATENARY_NOTES_MIN_X_RANGE = 1; // Minimum 1.0 x-domain half-width (tight chain near vertex)
+export const CATENARY_NOTES_MAX_X_RANGE = 8; // Maximum 8.0 x-domain half-width (long chain arms)
+export const CATENARY_NOTES_DEFAULT_X_RANGE = 4; // Default 4.0 x-domain half-width (well into cosh growth regime)
+export const CATENARY_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const CATENARY_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const CATENARY_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const CATENARY_NOTES_SHAPE_STANDARD = 'standard'; // x in [-X, +X]: symmetric hanging chain (Huygens 1691 default)
+export const CATENARY_NOTES_SHAPE_ARCH = 'arch'; // x in [0, +X]: rightward-only arch (Gateway Arch, inverted catenary)
+export const CATENARY_NOTES_SHAPE_HALF = 'half'; // x in [-X, 0]: leftward-only half chain (mirror of arch)
+export const CATENARY_NOTES_SHAPE_TIGHT = 'tight'; // x in [-X/2, +X/2]: tighter chain (half x-domain, more concentrated near vertex)
+export const CATENARY_NOTES_SHAPES = [
+    CATENARY_NOTES_SHAPE_STANDARD,
+    CATENARY_NOTES_SHAPE_ARCH,
+    CATENARY_NOTES_SHAPE_HALF,
+    CATENARY_NOTES_SHAPE_TIGHT
 ];

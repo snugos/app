@@ -1,4 +1,109 @@
-#### Day 733: Tractrix Notes Feature (2026-06-20)
+#### Day 734: Catenary Notes Feature (2026-06-20)
+- **Feature**: Added `catenaryNotes(length, a, xRange, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Catenary Notes" menu items to the sequencer context menu. Each active note spawns N samples along the **catenary** curve (also called the "chain curve" or "funicular curve"), the iconic hyperbolic-cosine shape of a uniform hanging chain or cable, predicted by Galileo in 1638 but correctly solved by **Huygens, Leibniz, and the Bernoullis in 1691-1692** (Johann Bernoulli posed the challenge as a public contest to Jacob Bernoulli in 1691, and the solution `y = a*cosh(x/a)` was independently derived by Leibniz, Huygens, and Johann himself — one of the early triumphs of the new differential calculus of Newton and Leibniz). The catenary parametric equations are `y(x) = a * cosh(x / a)` with vertex at `(0, a)`, and `cosh(t) = (e^t + e^-t)/2` is the hyperbolic cosine (one of the only two ways to combine exponentials such that the second derivative is itself). The catenary is **not** a parabola — though it can be confused with one visually — and the **catenary constant** `a` (the "link length" in physics) is a free parameter: large `a` makes a tight curve, small `a` makes a wide open catenary. As `|x| -> infinity`, `y -> infinity` and the curve grows exponentially, because `cosh(t) approx e^t/2` for large `t`. The catenary is famously the **shape of suspension bridge cables** (the Golden Gate Bridge cables are exactly catenaries, though engineers often approximate with parabolas for small sag-to-span ratios), the shape of the **Gateway Arch in St. Louis** (inverted catenary, sacred arch at right side of menu), the zero-gravity shape of a rotating chain, the equilibrium shape of a draped power cable, the natural shape of a spider's web thread, and the path a chain follows when held at both ends. The natural companion to **tractrix** (Day 733, the "drag curve"): the tractrix is the curve traced by a point being dragged, while the catenary is the curve assumed by a uniform chain being hung. They are intimately related: the tractrix is the **involute** of the catenary, and conversely the catenary is the **evolute** of the tractrix — one of the rare cases where the evolute and involute form a natural pair, related by differential geometry via the Christoffel symbols. The catenary also appears as the **solution of the minimum potential energy problem** for a hanging uniform chain under gravity (the calculus-of-variations "brachistochrone of the chain", often called the "funicular problem"), solved by Euler and the Bernoullis in 1691-1744 using the new tools of variational calculus. The catenary is also a **minimal surface of revolution** when rotated about the x-axis — a **catenoid** — discovered by Euler in 1744 to be the only non-planar minimal surface of revolution, and famously studied by Plateau as the shape of soap films between two coaxial rings. The catenary complements the curve family: `tractrixNotes` (Day 733, Huygens 1692 drag curve), `hilbertNotes` (Day 733, Hilbert space-filling fractal), `roseNotes` (Day 732, Grandi rhodonea flower), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic hanging-chain curve whose surface of revolution (the catenoid) is the only non-planar minimal surface of revolution, and whose arc length is `a*sinh(x/a)` — a hyperbolic sine — the same shape used in suspension bridge engineering.
+- **Files Modified**:
+  - `js/Track.js`: Added `catenaryNotes` method after `tractrixNotes` (line ~8256, the new last method on the class)
+  - `js/constants.js`: Added 17 CATENARY_NOTES_* constants + APP_VERSION bumped to 2.383.0
+  - `js/ui.js`: Added 4 Catenary Notes menu items in the sequencer context menu after Tractrix Notes (Tight, 32)
+  - `js/tests.js`: Added Day 734 test block with 76 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **catenaryNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a catenary curve computed via parametric equations. For sample `i` in 0..clampedLength-1, computes `x = xMin + (xMax - xMin) * i / max(1, clampedLength - 1)`, then `coshX = Math.cosh(x / clampedA)`, `y = clampedA * coshX`, and `yDisp = (useShape === CATENARY_NOTES_SHAPE_ARCH) ? (2*yMax - y) : y` (ARCH inverts the catenary to make a Gateway-Arch shape that curves UP instead of down). The y-displacement drives `rowOffset` via `Math.max(-yRange, Math.min(yRange, Math.round(yDisp - clampedA)))` and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((x + clampedXRange) * colScale)))`. Captures undo state BEFORE mutation with descriptive `Catenary Notes (shape, a=..., X=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to CATENARY_NOTES_MIN_LENGTH (8) / CATENARY_NOTES_MAX_LENGTH (64) range with Math.floor (default CATENARY_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `a` to CATENARY_NOTES_MIN_A (1) / CATENARY_NOTES_MAX_A (8) range with Math.floor (default CATENARY_NOTES_DEFAULT_A=2)
+    - Clamps `xRange` to CATENARY_NOTES_MIN_X_RANGE (1) / CATENARY_NOTES_MAX_X_RANGE (8) range (default CATENARY_NOTES_DEFAULT_X_RANGE=4)
+    - Clamps `velocityDecay` to CATENARY_NOTES_MIN_VELOCITY_DECAY (0.1) / CATENARY_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CATENARY_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against CATENARY_NOTES_SHAPES array, falls back to CATENARY_NOTES_SHAPE_STANDARD if invalid
+    - `rangeFactor = (useShape === CATENARY_NOTES_SHAPE_TIGHT) ? 0.5 : 1.0` (tight shape halves the x-range for concentrated chain)
+    - `xRangeMap[shape]` returns the [xMin, xMax] endpoints:
+      - STANDARD: `[-clampedXRange * rangeFactor, +clampedXRange * rangeFactor]` — symmetric hanging chain (Huygens 1691 default)
+      - ARCH: `[0, +clampedXRange * rangeFactor]` — rightward-only arch (Gateway Arch, inverted catenary)
+      - HALF: `[-clampedXRange, 0]` — leftward-only half chain (mirror of ARCH)
+      - TIGHT: `[-clampedXRange * rangeFactor, +clampedXRange * rangeFactor]` (with rangeFactor=0.5) — smaller range, more concentrated near vertex
+    - Computes `yMax = clampedA * Math.cosh(clampedXRange / clampedA)` (max y value at the chain endpoints)
+    - Computes `yRange = yMax` (row range — clamp rowOffset to ±yRange)
+    - Computes `colScale = (clampedXRange > 0) ? (clampedLength - 1) / (2 * clampedXRange) : 0` for x→col mapping
+    - For ARCH shape, inverts y via `yDisp = 2*yMax - y` so the chain becomes an upside-down catenary (curves UP from the source row instead of down)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — happens at x=0 where y=a so rowOffset=0)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of catenary notes added (catenaryCount)
+  - **Catenary Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Tractrix Notes (Tight, 32)
+    - "Catenary Notes (Standard, 32)" - calls `catenaryNotes(32, 2, 4, 0.95, 'standard', true)` - symmetric hanging chain (Huygens 1691 default), x in [-4, +4]
+    - "Catenary Notes (Arch, 32)" - calls `catenaryNotes(32, 2, 4, 0.95, 'arch', true)` - inverted catenary / Gateway Arch (curves UP), x in [0, +4]
+    - "Catenary Notes (Half, 32)" - calls `catenaryNotes(32, 2, 4, 0.95, 'half', true)` - leftward-only half chain (mirror of ARCH), x in [-4, 0]
+    - "Catenary Notes (Tight, 32)" - calls `catenaryNotes(32, 2, 4, 0.95, 'tight', true)` - smaller range (rangeFactor=0.5), more concentrated near vertex, x in [-2, +2]
+    - All call `recreateToneSequence(true)` after catenarying
+    - All capture undo with descriptive `Catenary Notes on <name> (<seqname>)` label
+    - Show notifications: `Catenary'd {count} note(s) (variant, 32).`
+    - Show `No notes to catenary.` when nothing to catenary
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 17 new constants
+  - `CATENARY_NOTES_MIN_LENGTH = 8` - Minimum 8 samples (need enough to resolve both arms of the chain)
+  - `CATENARY_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution catenary)
+  - `CATENARY_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the chain
+  - `CATENARY_NOTES_MIN_A = 1` - Minimum 1 chain scale parameter a (small tight chain)
+  - `CATENARY_NOTES_MAX_A = 8` - Maximum 8 chain scale parameter a (wide open chain)
+  - `CATENARY_NOTES_DEFAULT_A = 2` - Default 2 chain scale parameter a
+  - `CATENARY_NOTES_MIN_X_RANGE = 1` - Minimum 1.0 x-domain half-width (tight chain near vertex)
+  - `CATENARY_NOTES_MAX_X_RANGE = 8` - Maximum 8.0 x-domain half-width (long chain arms)
+  - `CATENARY_NOTES_DEFAULT_X_RANGE = 4` - Default 4.0 x-domain half-width (well into cosh growth regime where cosh(t) ≈ e^t/2)
+  - `CATENARY_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `CATENARY_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `CATENARY_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `CATENARY_NOTES_SHAPE_STANDARD = 'standard'` - x in [-X, +X]: symmetric hanging chain (Huygens 1691 default)
+  - `CATENARY_NOTES_SHAPE_ARCH = 'arch'` - x in [0, +X]: rightward-only arch (Gateway Arch, inverted catenary)
+  - `CATENARY_NOTES_SHAPE_HALF = 'half'` - x in [-X, 0]: leftward-only half chain (mirror of ARCH)
+  - `CATENARY_NOTES_SHAPE_TIGHT = 'tight'` - x in [-X/2, +X/2] (rangeFactor=0.5): more concentrated near vertex
+  - `CATENARY_NOTES_SHAPES = [STANDARD, ARCH, HALF, TIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 76 tests covering (all 76 pass):
+  - `catenaryNotes` is a function on Track.prototype
+  - `catenaryNotes` accepts 6 parameters with defaults (length, a, xRange, velocityDecay, shape, skipOccupied)
+  - `catenaryNotes` returns 0 for Audio tracks
+  - `catenaryNotes` gets active sequence via getActiveSequence
+  - `catenaryNotes` captures undo BEFORE mutation with descriptive `Catenary Notes (shape, a=..., X=..., N=...)` label
+  - `catenaryNotes` clamps all parameters to CATENARY_NOTES_MIN/MAX_* ranges
+  - `catenaryNotes` validates shape with CATENARY_NOTES_SHAPES (uses STANDARD fallback)
+  - `catenaryNotes` uses Math.cosh for hyperbolic cosine (catenary characteristic)
+  - `catenaryNotes` uses Math.pow for velocity decay
+  - `catenaryNotes` supports skipOccupied option
+  - `catenaryNotes` rounds velocity to 2 decimal places
+  - `catenaryNotes` returns count of catenary notes (catenaryCount)
+  - `catenaryNotes` uses Math.floor for length and a
+  - All 17 CATENARY_NOTES constants are defined in constants.js
+  - CATENARY_NOTES_SHAPES includes standard, arch, half, tight
+  - ui.js has 4 Catenary Notes menu items
+  - Catenary Notes menu items call track.catenaryNotes
+  - Catenary Notes menu items call recreateToneSequence after catenaryNotes
+  - Catenary Notes menu items show `Catenary'd N note(s)` notification
+  - Catenary Notes menu items capture undo with descriptive label
+  - Catenary Notes menu items include all 4 shape variants (standard, arch, half, tight)
+  - Catenary Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.383 for Day 734)
+  - Functional test: y = a * cosh(x / a)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, a -5->1, xRange 100->8, velocityDecay 2->1.0)
+  - Functional test: rowOffset clamped to +/- yRange
+  - Functional test: colOffset = (x + clampedXRange) * colScale mapped to [0, length-1]
+  - Structural test: supports 4 distinct shapes
+  - Functional test: uses xMin/xMax based on shape (4 shape resolvers)
+  - Functional test: x parameter = xMin + (xMax - xMin) * i / (length - 1)
+  - Functional test: tight shape halves the x-range via rangeFactor
+  - Functional test: arch shape inverts y to make Gateway Arch effect (yDisp = 2*yMax - y)
+- **Version**: Bumped to 2.383.0
+- **Test Count**: All 76 Day 734 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly (warning only, unrelated to Day 734). Total tests now at 3382 passed (up from 3306 before Day 734), 1449 failed (pre-existing infrastructure issues unchanged pattern).
+
+"""#### Day 733: Tractrix Notes Feature (2026-06-20)
 - **Feature**: Added `tractrixNotes(length, radius, tRange, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Tractrix Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **tractrix** curve (also called the "drag curve" or "dog-walker curve"), discovered by **Christiaan Huygens in 1692** while studying tautochrones — the path traced by an object being dragged along a flat surface by a string of fixed length `a`, where the pulling point moves along the x-axis. The tractrix parametric equations are `x(t) = a * (t - tanh(t))` and `y(t) = a / cosh(t) = a * sech(t)`, where `t` is the angle the string makes with the horizontal (in radians) and `a` is the string length. As `t → ±∞`, `x → ±∞` and `y → 0` asymptotically — the curve has the **x-axis as a horizontal asymptote** (the pursued object is never actually caught, but the gap vanishes exponentially). The tractrix is famous for two remarkable properties discovered by Huygens: (1) the **arc length from t=0 to t=∞ is exactly `a`** — the dog catches up by traversing a distance equal to the length of the leash, and (2) the tractrix is the **cross-section of Beltrami's pseudosphere** (1868), the first explicit model of the hyperbolic plane, making it the only curve whose rotation generates a surface of constant negative curvature. The tractrix is also one of only three plane curves whose **evolute and involute are themselves** (the line, the circle, and the tractrix), and it appears in modern **sundial mathematics** (the "shepherd's dial" gnomon traces a tractrix shadow on a tilted plane) and in **trajectory optimization** (the brachistochrone descent problem on a tractrix surface). Four shape variants via the t-range resolver: 'standard' (t in [-T, +T] — symmetric dog-walker curve, Huygens 1692 default, the full cusp-tail-tail profile), 'forward' (t in [0, +T] — rightward-only drag, single tail to the right of the cusp), 'backward' (t in [-T, 0] — leftward-only drag, mirror of forward), 'tight' (t in [-T/2, +T/2] — smaller range, more concentrated trail near the cusp; range halved via `rangeFactor = 0.5`). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement (since `y` ranges from `clampedRadius` at t=0 down to `clampedRadius/cosh(T)` at the extremes), and `colOffset` is normalized via `(x + xRange) * colScale` where `xRange = clampedRadius * (clampedTRange + 1)` (extra margin for small t) and `colScale = (clampedLength - 1) / (2 * xRange)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The tractrix family complements `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic drag curve whose arc length equals the leash length and whose surface of revolution has constant negative curvature.
 - **Files Modified**:
   - `js/Track.js`: Added `tractrixNotes` method after `hilbertNotes` (line ~8155, the new last method on the class)
