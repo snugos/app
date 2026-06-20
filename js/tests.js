@@ -27757,6 +27757,221 @@ TestRunner.test("Day 734 - Sierpinski Notes menu items call localAppServices.upd
 });
 
 
+
+// ============================================================
+// Day 735: Clothoid (Euler Spiral / Cornu Spiral) Notes
+// ============================================================
+TestRunner.test("Day 735 - clothoidNotes is a function on Track.prototype", (t) => { t.assertTruthy(typeof Track.prototype.clothoidNotes === 'function', 'clothoidNotes defined on Track.prototype'); });
+TestRunner.test("Day 735 - clothoidNotes accepts 5 parameters with defaults (length, sMax, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.CLOTHOID_NOTES_DEFAULT_LENGTH/.test(src), 'default length from Constants');
+    t.assertTruthy(/sMax\s*=\s*Constants\.CLOTHOID_NOTES_DEFAULT_S_MAX/.test(src), 'default sMax from Constants');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.CLOTHOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'default velocityDecay from Constants');
+    t.assertTruthy(/shape\s*=\s*Constants\.CLOTHOID_NOTES_SHAPE_STANDARD/.test(src), 'default shape from Constants');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'default skipOccupied=true');
+});
+TestRunner.test("Day 735 - clothoidNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'checks Audio type');
+    t.assertTruthy(/return\s+0/.test(src), 'returns 0 for Audio');
+});
+TestRunner.test("Day 735 - clothoidNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/this\.getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+});
+TestRunner.test("Day 735 - clothoidNotes captures undo BEFORE mutation with descriptive Clothoid Notes label", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/_captureUndoState\(/.test(src) && /Clothoid Notes \(/.test(src), 'captures undo with Clothoid Notes label');
+    t.assertTruthy(/activeSeq\.name/.test(src), 'undo label includes sequence name');
+});
+TestRunner.test("Day 735 - clothoidNotes clamps length/sMax/velocityDecay to CLOTHOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.CLOTHOID_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/CLOTHOID_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CLOTHOID_NOTES_MAX_S_MAX/.test(src), 'has MAX_S_MAX clamp');
+    t.assertTruthy(/CLOTHOID_NOTES_MIN_S_MAX/.test(src), 'has MIN_S_MAX clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CLOTHOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+    t.assertTruthy(/CLOTHOID_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 735 - clothoidNotes validates shape with CLOTHOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPES\.includes\(shape\)/.test(src), 'validates shape via CLOTHOID_NOTES_SHAPES');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPES\.includes\(shape\)\s*\?\s*shape\s*:\s*Constants\.CLOTHOID_NOTES_SHAPE_STANDARD/.test(src), 'uses STANDARD as fallback for invalid shape');
+});
+TestRunner.test("Day 735 - clothoidNotes uses Math.cos and Math.sin for Fresnel integral sampling", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.cos\(/.test(src), 'uses Math.cos for Fresnel C integral');
+    t.assertTruthy(/Math\.sin\(/.test(src), 'uses Math.sin for Fresnel S integral');
+});
+TestRunner.test("Day 735 - clothoidNotes uses Math.PI / 2 for Fresnel argument half-pi", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.PI\s*\/\s*2/.test(src), 'uses half-pi for Fresnel argument (1/2 PI u^2)');
+});
+TestRunner.test("Day 735 - clothoidNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay\s*,\s*i\)/.test(src), 'uses Math.pow(clampedDecay, i) for velocity decay');
+});
+TestRunner.test("Day 735 - clothoidNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'uses skipOccupied');
+    t.assertTruthy(/activeSeq\.data\[targetRow\]\[targetCol\]\.active/.test(src), 'checks target slot for skipOccupied');
+});
+TestRunner.test("Day 735 - clothoidNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimal places');
+});
+TestRunner.test("Day 735 - clothoidNotes returns count of clothoid notes (clothoidCount)", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/clothoidCount/.test(src), 'returns clothoidCount');
+});
+TestRunner.test("Day 735 - clothoidNotes uses Math.floor for length", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor for length');
+});
+TestRunner.test("Day 735 - All 14 CLOTHOID_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/CLOTHOID_NOTES_MIN_LENGTH\s*=\s*8/.test(src), 'CLOTHOID_NOTES_MIN_LENGTH = 8');
+    t.assertTruthy(/CLOTHOID_NOTES_MAX_LENGTH\s*=\s*64/.test(src), 'CLOTHOID_NOTES_MAX_LENGTH = 64');
+    t.assertTruthy(/CLOTHOID_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(src), 'CLOTHOID_NOTES_DEFAULT_LENGTH = 32');
+    t.assertTruthy(/CLOTHOID_NOTES_MIN_S_MAX\s*=\s*1/.test(src), 'CLOTHOID_NOTES_MIN_S_MAX = 1');
+    t.assertTruthy(/CLOTHOID_NOTES_MAX_S_MAX\s*=\s*6/.test(src), 'CLOTHOID_NOTES_MAX_S_MAX = 6');
+    t.assertTruthy(/CLOTHOID_NOTES_DEFAULT_S_MAX\s*=\s*3/.test(src), 'CLOTHOID_NOTES_DEFAULT_S_MAX = 3');
+    t.assertTruthy(/CLOTHOID_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(src), 'CLOTHOID_NOTES_MIN_VELOCITY_DECAY = 0.1');
+    t.assertTruthy(/CLOTHOID_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(src), 'CLOTHOID_NOTES_MAX_VELOCITY_DECAY = 1.0');
+    t.assertTruthy(/CLOTHOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(src), 'CLOTHOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_STANDARD\s*=\s*['"]standard['"]/.test(src), 'CLOTHOID_NOTES_SHAPE_STANDARD = standard');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_FORWARD\s*=\s*['"]forward['"]/.test(src), 'CLOTHOID_NOTES_SHAPE_FORWARD = forward');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_BACKWARD\s*=\s*['"]backward['"]/.test(src), 'CLOTHOID_NOTES_SHAPE_BACKWARD = backward');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_TIGHT\s*=\s*['"]tight['"]/.test(src), 'CLOTHOID_NOTES_SHAPE_TIGHT = tight');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPES\s*=\s*\[/.test(src), 'CLOTHOID_NOTES_SHAPES array defined');
+});
+TestRunner.test("Day 735 - CLOTHOID_NOTES_SHAPES includes standard, forward, backward, tight", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const shapesBlock = src.match(/CLOTHOID_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\];/);
+    t.assertTruthy(shapesBlock, 'CLOTHOID_NOTES_SHAPES block found');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_STANDARD/.test(shapesBlock[1]), 'includes STANDARD');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_FORWARD/.test(shapesBlock[1]), 'includes FORWARD');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_BACKWARD/.test(shapesBlock[1]), 'includes BACKWARD');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_TIGHT/.test(shapesBlock[1]), 'includes TIGHT');
+});
+TestRunner.test("Day 735 - ui.js has 4 Clothoid Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Clothoid Notes\s*\(/g) || [];
+    t.assertEqual(matches.length, 4, `expected 4 Clothoid Notes menu items, found ${matches.length}`);
+});
+TestRunner.test("Day 735 - Clothoid Notes menu items call track.clothoidNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Clothoid Notes\s*\([^)]+\)[\s\S]{0,200}currentTrackForMenu\.clothoidNotes/.test(src), 'calls track.clothoidNotes');
+});
+TestRunner.test("Day 735 - Clothoid Notes menu items call recreateToneSequence after clothoidNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/currentTrackForMenu\.clothoidNotes\([\s\S]{0,300}recreateToneSequence\(true\)/.test(src), 'calls recreateToneSequence(true)');
+});
+TestRunner.test("Day 735 - Clothoid Notes menu items show Clothoid'd N note(s) notification", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Clothoid'd/.test(src), "shows Clothoid'd notification");
+});
+TestRunner.test("Day 735 - Clothoid Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Clothoid Notes on/.test(src), 'captures undo with Clothoid Notes label');
+});
+TestRunner.test("Day 735 - Clothoid Notes menu items include all 4 shape variants (standard, forward, backward, tight)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Clothoid Notes') && l.includes('action:'));
+    const all = lines.join('\n');
+    t.assertTruthy(all.includes("'standard'"), 'includes standard shape');
+    t.assertTruthy(all.includes("'forward'"), 'includes forward shape');
+    t.assertTruthy(all.includes("'backward'"), 'includes backward shape');
+    t.assertTruthy(all.includes("'tight'"), 'includes tight shape');
+});
+TestRunner.test("Day 735 - Clothoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Clothoid Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each Clothoid Notes menu line calls updateTrackUI');
+    }
+});
+TestRunner.test("Day 735 - APP_VERSION validation (>= 2.385 for Day 735)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 385), `APP_VERSION should be >= 2.385, got ${APP_VERSION}`);
+});
+TestRunner.test("Day 735 - clothoidNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+TestRunner.test("Day 735 - clothoidNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+TestRunner.test("Day 735 - clothoidNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+TestRunner.test("Day 735 - clothoidNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: clamps to valid ranges (length 100->64, sMax 100->6, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.CLOTHOID_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/CLOTHOID_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CLOTHOID_NOTES_MAX_S_MAX/.test(src), 'has MAX_S_MAX clamp');
+    t.assertTruthy(/CLOTHOID_NOTES_MIN_S_MAX/.test(src), 'has MIN_S_MAX clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CLOTHOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 735 - clothoidNotes structural test: supports 4 distinct shapes", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_STANDARD/.test(src), 'has STANDARD shape');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_FORWARD/.test(src), 'has FORWARD shape');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_BACKWARD/.test(src), 'has BACKWARD shape');
+    t.assertTruthy(/CLOTHOID_NOTES_SHAPE_TIGHT/.test(src), 'has TIGHT shape');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: uses sMin/sMax based on shape (4 shape resolvers)", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/sRangeMap/.test(src), 'has sRangeMap resolver');
+    t.assertTruthy(/sMin\s*=\s*sEndpoints\[0\]/.test(src), 'extracts sMin from sEndpoints');
+    t.assertTruthy(/sMaxFinal\s*=\s*sEndpoints\[1\]/.test(src), 'extracts sMaxFinal from sEndpoints');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: s parameter = sMin + (sMax - sMin) * i / (length - 1)", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/sMin\s*\+\s*\(\(sMaxFinal\s*-\s*sMin\)\s*\*\s*i\)\s*\/\s*Math\.max\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(src), 'computes s linearly from sMin to sMax across samples');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: tight shape halves the s-range via rangeFactor", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/rangeFactor\s*=\s*\(useShape\s*===\s*Constants\.CLOTHOID_NOTES_SHAPE_TIGHT\)\s*\?\s*0\.5\s*:\s*1\.0/.test(src), 'tight shape halves the s-range via rangeFactor=0.5');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: uses sign-based antisymmetry for negative s", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/sign\s*=\s*\(s\s*<\s*0\)\s*\?\s*-1\s*:\s*1/.test(src), 'computes sign from s direction');
+    t.assertTruthy(/sign\s*\*\s*\(cx\s*\*\s*stepH\)/.test(src), 'applies sign to x for antisymmetry');
+    t.assertTruthy(/sign\s*\*\s*\(cy\s*\*\s*stepH\)/.test(src), 'applies sign to y for antisymmetry');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: uses Math.abs(s) for Fresnel integration bound", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/absS\s*=\s*Math\.abs\(s\)/.test(src), 'uses absS for integration bound');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: uses colScale for x->col mapping", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/colScale\s*=\s*\(clampedLength\s*-\s*1\)\s*\/\s*xRange/.test(src), 'colScale = (length-1)/xRange');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: uses rowScale for y->row mapping", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/rowScale\s*=\s*\(clampedLength\s*-\s*1\)\s*\/\s*\(\s*2\s*\*\s*yRange\s*\)/.test(src), 'rowScale = (length-1)/(2*yRange)');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: rowOffset clamped to +/- (length-1)/2", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.max\(-\(clampedLength\s*-\s*1\)\s*\/\s*2\s*,\s*Math\.min\(\(clampedLength\s*-\s*1\)\s*\/\s*2\s*,\s*Math\.round\(\(pt\.y\s*-\s*yMin\)\s*\*\s*rowScale\s*-\s*\(clampedLength\s*-\s*1\)\s*\/\s*2\)\)\)/.test(src), 'rowOffset clamped to +/- (length-1)/2 and centered around 0');
+});
+TestRunner.test("Day 735 - clothoidNotes functional test: colOffset clamped to [0, length-1]", (t) => {
+    const src = Track.prototype.clothoidNotes.toString();
+    t.assertTruthy(/Math\.max\(\s*0\s*,\s*Math\.min\(clampedLength\s*-\s*1\s*,\s*Math\.round\(\(pt\.x\s*-\s*xMin\)\s*\*\s*colScale\)\)\)/.test(src), 'colOffset clamped to [0, length-1]');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

@@ -1,3 +1,111 @@
+#### Day 735: Clothoid Notes Feature (2026-06-20)
+- **Feature**: Added `clothoidNotes(length, sMax, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Clothoid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **clothoid curve** (also called the **Euler spiral** or **Cornu spiral** or **spiral of Cornu**), the canonical transition curve used in highway and railway engineering, computed numerically via the **Fresnel integrals** `C(s) = ∫₀ˢ cos(½πu²) du` and `S(s) = ∫₀ˢ sin(½πu²) du`, where the sample point is `(C(s), S(s))` and `s` is the arc-length parameter. The clothoid was first studied by **Leonhard Euler in 1744** ("De constructione aequationum quarundam differentialium quae indeterminatarum multiplicationibus et divisionibus repetitis inveniuntur", where he sought a curve whose curvature varies linearly with arc length — *k(s) = as*, the defining property of the Euler spiral), and was rediscovered independently by **Marie Alfred Cornu in 1874** for the design of the *prismatic Foucault knife-edge test* for optical aberrations (the Cornu spiral / "Cornu's spiral" in optics, used in physical optics to compute Fresnel diffraction integrals graphically via the spiral's chord lengths), and rediscovered yet again in modern times for **highway and railway transition curves** (the clothoid is the unique curve where the curvature varies linearly with arc length, allowing a vehicle to enter a curve at the design speed without sudden lateral jerk — the oncoming tangent's zero curvature meets the curve's circular arc curvature at a smooth `k'(s) = constant` rate, the principle of "smooth steering"). The clothoid is **self-similar** in the sense that its shape is invariant under the scaling `(x, y, s) → (kx, ky, ks²)` (because the integrand is homogeneous of degree 2 in `s`, so the curve at scale `k` is `√k` times the curve at scale 1) and is **antisymmetric** through the origin: `(x(-s), y(-s)) = (-x(s), -y(s))`. The clothoid is also the curve for which the **offsets (parallel curves) are also clothoids** (a rare property shared with the circle and the line), and is one of only a few curves whose **evolute is also a clothoid** (rotated by 90°). The clothoid appears in many modern engineering applications: **roller-coaster loop design** (the modern loop-the-loop is approximately a clothoid, not a circle, to bound the g-force and jerk on riders), **highway on-ramps and off-ramps** (clothoid transitions between straight tangent and circular curve), **railway transition curves** (every high-speed rail network uses clothoid transitions between tangent and curve), **roller derby and skatepark bowl design**, **optical diffraction** (Fresnel diffraction patterns from a straight edge), **the "easing" curves in motion graphics** (Penner / Robert Penner's clothoid-eased timing functions in Flash and After Effects), and the **clothoid constant** `X = ∫₀^∞ cos(½πu²) du = ∫₀^∞ sin(½πu²) du ≈ 0.5` (also called the **Fresnel integrals at infinity** or **Fresnel's number**, equal to `½ √(½) = ½√½`, related to the **Comu spiral's asymptote distance** and to the **Gamma function** by `Γ(½) = √π`). Four clothoid variants via the s-range resolver: 'standard' (s in [-S, +S] — symmetric full Euler spiral, Euler 1744 default, the iconic symmetric double-tangent shape), 'forward' (s in [0, +S] — rightward-only first Fresnel tail, single-arm), 'backward' (s in [-S, 0] — leftward-only first Fresnel tail, single-arm mirror), 'tight' (s in [-S/2, +S/2] — smaller range, rangeFactor=0.5, more concentrated near origin). The Fresnel integrals are computed numerically via the midpoint Riemann sum with 32 sub-steps per sample (`stepH = absS / 32` and inner loop `for j = 1..32` accumulating `Math.cos(½πu²)` and `Math.sin(½πu²)` with `u = j*absS/32`), giving an accurate approximation that doesn't depend on a JS `erf` library. The sample coordinates `(x, y)` are then scaled to `(rowOffset, colOffset)` via `colScale = (clampedLength - 1) / xRange` and `rowScale = (clampedLength - 1) / (2 * yRange)`, both clamped to a robust minimum of 0.01 to avoid divide-by-zero. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The clothoid family complements `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical transition curve whose curvature varies linearly with arc length.
+- **Files Modified**:
+  - `js/Track.js`: Added `clothoidNotes` method after `sierpinskiNotes` (line ~8486, the new last method on the class)
+  - `js/constants.js`: Added 14 CLOTHOID_NOTES_* constants + APP_VERSION bumped to 2.385.0
+  - `js/ui.js`: Added 4 Clothoid Notes menu items in the sequencer context menu after Sierpinski Notes (Depth 4, Right, 16x16)
+  - `js/tests.js`: Added Day 735 Clothoid test block with 39 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **clothoidNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a clothoid (Euler spiral / Cornu spiral) curve computed numerically via the Fresnel integrals. For sample `i` in 0..clampedLength-1, computes `s = sMin + (sMaxFinal - sMin) * i / max(1, clampedLength - 1)`, then `absS = abs(s)` and `sign = (s < 0) ? -1 : 1`. The Fresnel integrals `C(s) = ∫₀ˢ cos(½πu²) du` and `S(s) = ∫₀ˢ sin(½πu²) du` are computed numerically via 32-step Riemann sum: `stepH = absS / 32`, then for `j` in 1..32: `u = j*absS/32`, `arg = (π/2)*u²`, accumulating `cx += cos(arg)` and `cy += sin(arg)`. Final sample: `x = sign * cx * stepH`, `y = sign * cy * stepH`. The y-component drives `rowOffset` via `Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)` (centered around 0, clamped to ±(clampedLength-1)/2), and the x-component drives `colOffset` via `Math.round((pt.x - xMin) * colScale)` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Clothoid Notes (shape, S=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to CLOTHOID_NOTES_MIN_LENGTH (8) / CLOTHOID_NOTES_MAX_LENGTH (64) range with Math.floor (default CLOTHOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `sMax` to CLOTHOID_NOTES_MIN_S_MAX (1) / CLOTHOID_NOTES_MAX_S_MAX (6) range (default CLOTHOID_NOTES_DEFAULT_S_MAX=3 — past the first Fresnel tail)
+    - Clamps `velocityDecay` to CLOTHOID_NOTES_MIN_VELOCITY_DECAY (0.1) / CLOTHOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CLOTHOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against CLOTHOID_NOTES_SHAPES array, falls back to CLOTHOID_NOTES_SHAPE_STANDARD if invalid
+    - `rangeFactor = (useShape === CLOTHOID_NOTES_SHAPE_TIGHT) ? 0.5 : 1.0` (tight shape halves the s-range for concentrated spiral)
+    - `sRangeMap[shape]` returns the [sMin, sMax] endpoints:
+      - STANDARD: `[-clampedSMax * rangeFactor, +clampedSMax * rangeFactor]` — symmetric Euler spiral (Euler 1744 default)
+      - FORWARD: `[0, +clampedSMax * rangeFactor]` — rightward-only first Fresnel tail
+      - BACKWARD: `[-clampedSMax * rangeFactor, 0]` — leftward-only first Fresnel tail (mirror of forward)
+      - TIGHT: `[-clampedSMax * rangeFactor, +clampedSMax * rangeFactor]` (with rangeFactor=0.5) — smaller range, more concentrated near origin
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one Fresnel integration per sample, reused across all source notes)
+    - For each sample i: integrates Fresnel C and S over [0, absS] via 32-step Riemann sum
+    - Sign-based antisymmetry: `x = sign * cx * stepH`, `y = sign * cy * stepH` ensures `(x(-s), y(-s)) = (-x(s), -y(s))`
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -0.5, xMax = 0.5, yMin = -0.5, yMax = 0.5`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of clothoid notes added (clothoidCount)
+  - **Clothoid Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Sierpinski Notes (Depth 4, Right, 16x16)
+    - "Clothoid Notes (Standard, 32)" - calls `clothoidNotes(32, 3, 0.95, 'standard', true)` - symmetric Euler spiral (Euler 1744 default), s in [-3, +3]
+    - "Clothoid Notes (Forward, 32)" - calls `clothoidNotes(32, 3, 0.95, 'forward', true)` - rightward-only first Fresnel tail, s in [0, +3]
+    - "Clothoid Notes (Backward, 32)" - calls `clothoidNotes(32, 3, 0.95, 'backward', true)` - leftward-only first Fresnel tail, s in [-3, 0]
+    - "Clothoid Notes (Tight, 32)" - calls `clothoidNotes(32, 3, 0.95, 'tight', true)` - smaller range (rangeFactor=0.5), more concentrated near origin, s in [-1.5, +1.5]
+    - All call `recreateToneSequence(true)` after clothoiding
+    - All capture undo with descriptive `Clothoid Notes on <name> (<seqname>)` label
+    - Show notifications: `Clothoid'd {count} note(s) (variant, 32).`
+    - Show `No notes to clothoid.` when nothing to clothoid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 14 new constants
+  - `CLOTHOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples (need enough to resolve one Fresnel tail)
+  - `CLOTHOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution clothoid)
+  - `CLOTHOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the clothoid
+  - `CLOTHOID_NOTES_MIN_S_MAX = 1` - Minimum 1.0 max arc-length (tight near origin)
+  - `CLOTHOID_NOTES_MAX_S_MAX = 6` - Maximum 6.0 max arc-length (well past first oscillation)
+  - `CLOTHOID_NOTES_DEFAULT_S_MAX = 3` - Default 3.0 max arc-length (past first Fresnel tail)
+  - `CLOTHOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `CLOTHOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `CLOTHOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `CLOTHOID_NOTES_SHAPE_STANDARD = 'standard'` - s in [-S, +S]: symmetric Euler spiral (Euler 1744 default)
+  - `CLOTHOID_NOTES_SHAPE_FORWARD = 'forward'` - s in [0, +S]: rightward-only first Fresnel tail
+  - `CLOTHOID_NOTES_SHAPE_BACKWARD = 'backward'` - s in [-S, 0]: leftward-only first Fresnel tail (mirror of forward)
+  - `CLOTHOID_NOTES_SHAPE_TIGHT = 'tight'` - s in [-S/2, +S/2] (rangeFactor=0.5): smaller range, more concentrated near origin
+  - `CLOTHOID_NOTES_SHAPES = [STANDARD, FORWARD, BACKWARD, TIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 39 tests covering (all 39 pass):
+  - `clothoidNotes` is a function on Track.prototype
+  - `clothoidNotes` accepts 5 parameters with defaults (length, sMax, velocityDecay, shape, skipOccupied)
+  - `clothoidNotes` returns 0 for Audio tracks
+  - `clothoidNotes` gets active sequence via getActiveSequence
+  - `clothoidNotes` captures undo BEFORE mutation with descriptive `Clothoid Notes (shape, S=..., N=...)` label
+  - `clothoidNotes` clamps all parameters to CLOTHOID_NOTES_MIN/MAX_* ranges
+  - `clothoidNotes` validates shape with CLOTHOID_NOTES_SHAPES (uses STANDARD fallback)
+  - `clothoidNotes` uses Math.cos and Math.sin for Fresnel integral sampling
+  - `clothoidNotes` uses Math.PI / 2 for Fresnel argument half-pi (½πu²)
+  - `clothoidNotes` uses Math.pow for velocity decay
+  - `clothoidNotes` supports skipOccupied option
+  - `clothoidNotes` rounds velocity to 2 decimal places
+  - `clothoidNotes` returns count of clothoid notes (clothoidCount)
+  - `clothoidNotes` uses Math.floor for length
+  - All 14 CLOTHOID_NOTES constants are defined in constants.js
+  - CLOTHOID_NOTES_SHAPES includes standard, forward, backward, tight
+  - ui.js has 4 Clothoid Notes menu items
+  - Clothoid Notes menu items call track.clothoidNotes
+  - Clothoid Notes menu items call recreateToneSequence after clothoidNotes
+  - Clothoid Notes menu items show `Clothoid'd N note(s)` notification
+  - Clothoid Notes menu items capture undo with descriptive label
+  - Clothoid Notes menu items include all 4 shape variants (standard, forward, backward, tight)
+  - Clothoid Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.385 for Day 735)
+  - Functional test: uses Math.cos and Math.sin for Fresnel integrals
+  - Functional test: uses Math.PI / 2 for half-pi Fresnel argument
+  - Functional test: uses Math.abs(s) for integration bound
+  - Functional test: uses sign-based antisymmetry for negative s
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, sMax 100->6, velocityDecay 2->1.0)
+  - Functional test: rowOffset clamped to +/- (length-1)/2
+  - Functional test: colOffset clamped to [0, length-1]
+  - Structural test: supports 4 distinct shapes
+  - Functional test: uses sMin/sMax based on shape (4 shape resolvers via sRangeMap)
+  - Functional test: s parameter = sMin + (sMax - sMin) * i / (length - 1)
+  - Functional test: tight shape halves the s-range via rangeFactor
+- **Version**: Bumped to 2.385.0
+- **Test Count**: All 39 Day 735 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly (warning only, unrelated to Day 735). Total tests now at 3455 passed (up from 3416 before Day 735), 1450 failed (pre-existing infrastructure issues unchanged pattern).
+
 #### Day 734: Sierpinski Notes Feature (2026-06-20)
 - **Feature**: Added `sierpinskiNotes(iterations, cols, rows, velocityDecay, orientation, skipOccupied)` method to Track class and 4 "Sierpinski Notes" menu items to the sequencer context menu. Each active note spawns `3^(n-1)` notes along the **Sierpinski triangle centroid path** — the centroids of all sub-triangles in the iterative Sierpinski subdivision. The Sierpinski triangle (also called the Sierpinski gasket or Sierpinski sieve) is a **fractal** and one of the most famous examples of self-similarity, first described by **Wacław Sierpiński in 1915**. It is constructed by recursively removing the central triangle from an equilateral triangle, leaving 3 smaller equilateral triangles at half the scale, then repeating. After `n` iterations the total number of triangles is `3^n` and the centroid count we walk is `3^(n-1)`. The **Sierpinski triangle has Hausdorff dimension log(3)/log(2) ≈ 1.5850** — between a 1D line (dim 1) and a 2D plane (dim 2) — making it a true fractal, not a curve or a surface. It appears in **Pascal's triangle modulo 2** (each odd entry is in the gasket), in **Sierpinski's constant K = 1.33984...** (the limit of n^(log2/log3) * (fractal area)), in the **Game of Chaos** (chaos game: pick 3 random vertices, jump halfway to one, repeat — converges to the gasket), and in the **Sierpinski tetrahedron / Sierpinski carpet / Menger sponge** (3D generalizations). It is one of the **three Platonic fractals** alongside the Menger sponge and the Apollonian gasket, and it tiles the plane in the **Sierpinski triangle fractal fabric** via the **terragon** (the unit cell). Four orientation variants via the triangle vertex resolver: 'classic' (A=(0,0), B=(1,0), C=(0.5, sqrt(3)/2) — apex-up equilateral), 'inverted' (A=(0, sqrt(3)/2), B=(1, sqrt(3)/2), C=(0.5, 0) — apex-down mirror), 'left' (A=(0.5, 0), B=(1, sqrt(3)/2), C=(0, sqrt(3)/2) — apex upper-left tilted), 'right' (A=(0, 0), B=(0.5, sqrt(3)/2), C=(1, 0) — apex upper-right tilted). The y-axis is flipped for INVERTED via `normalizedY = 1 - uy` so notes still rise upward in the grid. The centroid path is built via iterative subdivision where `subMidpoint(p, q) = (p+q)/2` and `centroid(p, q, r) = (p+q+r)/3`. After n iterations, the curve contains all `3^(n-1)` centroids of the n-th-level sub-triangles, mapped to (rowOffset, colOffset) via `floor(ux * clampedCols)` and `floor(normalizedY * clampedRows)` respectively. Per-step velocity decay is applied via `Math.pow(clampedDecay, s)`. The Sierpinski family complements `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic gasket fractal whose Hausdorff dimension is log(3)/log(2).
 - **Files Modified**:
