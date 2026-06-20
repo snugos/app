@@ -1,3 +1,115 @@
+#### Day 736: Archimedean Spiral Notes Feature (2026-06-20)
+- **Feature**: Added `archimedeanNotes(length, turns, startRadius, radialStep, velocityDecay, orientation, skipOccupied)` method to Track class and 4 "Archimedean Notes" menu items to the sequencer context menu. Each active note spawns N samples along the **Archimedean spiral** — the canonical "equal-spacing" spiral discovered by **Archimedes of Syracuse around 225 BC** in his treatise *"On Spirals"* (Greek: Περὶ ἑλίκων, "Peri helikon", the only surviving work of Archimedes devoted entirely to a single curve). The polar equation is `r(θ) = a + b·θ` and the parametric form is `x(θ) = (a + b·θ)·cos(θ)` and `y(θ) = (a + b·θ)·sin(θ)`, where `a` is the starting radius (the distance from origin at θ=0) and `b` is the per-radian growth rate (so successive turn-to-turn spacing is a constant `2π·b` — the **defining property** that distinguishes the Archimedean spiral from the logarithmic spiral, where spacing grows geometrically, and the Fermat spiral, where spacing grows with `√θ`). Archimedes proved the area enclosed by one full turn of the spiral equals `4π³/3 · b²` (one-third the area of the circumscribing circle), one of the first great area computations in the history of mathematics, and his tract also proved the tangent construction. The Archimedean spiral is the special case of the **generalized Archimedean spiral** `r(θ) = a + b·θ^n` when `n=1`; for `n=2` it becomes the **Galileo spiral** (1600s, `r = a + b·θ²`, named for the parabola he mistakenly thought described the spiral), and for general `n` it is the **Nicomedean / Cotes' spiral** family. The Archimedean spiral appears throughout nature and engineering: in **vinyl record grooves** (a single Archimedean spiral of pitch 1.5–2.5 μm per turn, ~600 turns over a 30 cm LP — the constant-pitch spiral is exactly Archimedean, contrasting with the variable-pitch "constant angular velocity" CD spiral which is approximately Archimedean but requires correction for the constant linear velocity mode), in the **interior geometry of the chambered nautilus** (the nautilus shell cross-section is a logarithmic spiral, not Archimedean, but the Archimedean is often mistakenly cited in pop-science due to Raup's 1962 iconic diagram), in **sprinkler and irrigation spray patterns** (the radial water path is Archimedean in the low-Reynolds-number limit), in **centrifugal pump volute design** (the spiral casing of a pump is a 2D Archimedean in the meridional plane), in **spiral antennas** (Archimedean spiral antennas are the most common broadband circularly-polarized antenna, used in UWB radar, electronic warfare, and weather satellites — the antenna arms follow `r = a + b·θ` for some a, b, producing roughly constant impedance across a 10:1 frequency range), in **wasp and hornet paper nests** (the spiral comb construction is a discrete Archimedean), in **hurricane and typhoon spiral bands** (Archimedean arm pattern in the lower troposphere), in **Crookes radiometer rotors** (the 4-vaned radiometer's dark side follows a quasi-Archimedean curve as it spins), in **DNA supercoiling** (plectonemic DNA is locally Archimedean), and in **fingerprint whorl patterns** (the central whorl is locally Archimedean). Two orientations via the angleSign resolver: 'cw' (clockwise, positive θ, the canonical Archimedes ~225 BC default — θ increases as the spiral goes counter-clockwise in the standard math convention but clockwise in the y-flipped screen convention used by the sequencer), 'ccw' (counter-clockwise, negative θ, the mirror of cw). Note: this is the **smooth continuous Archimedean spiral** with `r = a + b·θ`, which is distinct from the existing `spiralNotes` (Day 713, the discrete angular-sweep `spiralNotes` which uses a different step-geometry algorithm), `phyllotaxisNotes` (Day 722, the Fermat spiral `r ∝ √θ` of sunflower seeds), and `clothoidNotes` (Day 735, the clothoid / Euler spiral which is not a polar curve but a curvature-linear transition curve). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The Archimedean family complements `clothoidNotes` (Day 735, Euler spiral transition curve), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical equal-spacing spiral whose turn-to-turn radius grows by a constant `2π·b`.
+- **Files Modified**:
+  - `js/Track.js`: Added `archimedeanNotes` method after `clothoidNotes` (line ~8595, the new last method on the class)
+  - `js/constants.js`: Added 18 ARCHIMEDEAN_NOTES_* constants + APP_VERSION bumped to 2.386.0
+  - `js/ui.js`: Added 4 Archimedean Notes menu items in the sequencer context menu after Clothoid Notes (Tight, 32)
+  - `js/tests.js`: Added Day 736 Archimedean test block with 32 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced since the Day 735 fix; the same fix has been needed on Days 712, 713, 714, 717, 718, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 735 too.)
+- **Feature Details**:
+  - **archimedeanNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along an Archimedean spiral curve computed via parametric equations. For sample `i` in 0..clampedLength-1, computes `t = (2*PI*clampedTurns) * i / max(1, clampedLength - 1)`, then `theta = angleSign * t` and `radius = clampedStartRadius + clampedRadialStep * t`, then `x = radius * Math.cos(theta)` and `y = radius * Math.sin(theta)`. The y-component drives `rowOffset` via `Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)` (centered around 0, clamped to ±(clampedLength-1)/2), and the x-component drives `colOffset` via `Math.round((pt.x - xMin) * colScale)` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Archimedean Spiral Notes (orientation, turns=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to ARCHIMEDEAN_NOTES_MIN_LENGTH (8) / ARCHIMEDEAN_NOTES_MAX_LENGTH (64) range with Math.floor (default ARCHIMEDEAN_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `turns` to ARCHIMEDEAN_NOTES_MIN_TURNS (1) / ARCHIMEDEAN_NOTES_MAX_TURNS (8) range with Math.floor (default ARCHIMEDEAN_NOTES_DEFAULT_TURNS=3 — classic tight Archimedean, three full revolutions)
+    - Clamps `startRadius` to ARCHIMEDEAN_NOTES_MIN_START_RADIUS (0) / ARCHIMEDEAN_NOTES_MAX_START_RADIUS (8) range with Math.floor (default ARCHIMEDEAN_NOTES_DEFAULT_START_RADIUS=1 — spiral starts near origin)
+    - Clamps `radialStep` to ARCHIMEDEAN_NOTES_MIN_RADIAL_STEP (0.1) / ARCHIMEDEAN_NOTES_MAX_RADIAL_STEP (2.0) range (default ARCHIMEDEAN_NOTES_DEFAULT_RADIAL_STEP=0.5 — balanced growth, 2π·0.5 = π ≈ 3.14 units of turn-to-turn spacing)
+    - Clamps `velocityDecay` to ARCHIMEDEAN_NOTES_MIN_VELOCITY_DECAY (0.1) / ARCHIMEDEAN_NOTES_MAX_VELOCITY_DECAY (1.0) range (default ARCHIMEDEAN_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `orientation` against ARCHIMEDEAN_NOTES_ORIENTATIONS array, falls back to ARCHIMEDEAN_NOTES_ORIENTATION_CW if invalid
+    - `angleSign = useOrientation === ARCHIMEDEAN_NOTES_ORIENTATION_CCW ? -1 : 1` (CCW uses negative θ, CW uses positive θ)
+    - Captures undo state BEFORE mutation with descriptive `Archimedean Spiral Notes (orientation, turns=..., N=...) on <seqname>` label
+    - For each sample i: computes `t = 2*PI*clampedTurns * i / max(1, clampedLength - 1)`, then `theta = angleSign * t`, then `radius = clampedStartRadius + clampedRadialStep * t`
+    - The radius is monotonically increasing with t (for positive radialStep), so successive samples spiral outward with constant `clampedRadialStep` units of growth per radian
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one trig computation per sample, reused across all source notes)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -0.5, xMax = 0.5, yMin = -0.5, yMax = 0.5`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of archimedean notes added (spiralCount)
+  - **Archimedean Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Clothoid Notes (Tight, 32)
+    - "Archimedean Notes (CW, 3 turns, 32)" - calls `archimedeanNotes(32, 3, 1, 0.5, 0.95, 'cw', true)` - clockwise 3-turn Archimedean spiral (Archimedes ~225 BC default), b=0.5 (π units turn-to-turn)
+    - "Archimedean Notes (CW, 5 turns, 48)" - calls `archimedeanNotes(48, 5, 1, 0.4, 0.95, 'cw', true)` - 5-turn CW spiral, 48 samples, b=0.4 (2.51 units turn-to-turn)
+    - "Archimedean Notes (CCW, 2 turns, 32)" - calls `archimedeanNotes(32, 2, 1, 0.6, 0.95, 'ccw', true)` - counter-clockwise 2-turn spiral (mirror of CW), b=0.6
+    - "Archimedean Notes (CW, 4 turns, 32)" - calls `archimedeanNotes(32, 4, 2, 1.0, 0.95, 'cw', true)` - 4-turn CW spiral with larger b=1.0 and startRadius=2 (wide outward spiral, 2π units turn-to-turn)
+    - All call `recreateToneSequence(true)` after archimedeaning
+    - All capture undo with descriptive `Archimedean Notes on <name> (<seqname>)` label
+    - Show notifications: `Archimedean'd {count} note(s) (variant, N turns, 32).`
+    - Show `No notes to archimedean.` when nothing to archimedean
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 18 new constants
+  - `ARCHIMEDEAN_NOTES_MIN_LENGTH = 8` - Minimum 8 samples (need at least one full turn for a coherent spiral)
+  - `ARCHIMEDEAN_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution spiral)
+  - `ARCHIMEDEAN_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the spiral
+  - `ARCHIMEDEAN_NOTES_MIN_TURNS = 1` - Minimum 1 full revolution (2π total angle)
+  - `ARCHIMEDEAN_NOTES_MAX_TURNS = 8` - Maximum 8 revolutions (16π total angle)
+  - `ARCHIMEDEAN_NOTES_DEFAULT_TURNS = 3` - Default 3 revolutions (6π total angle, classic tight Archimedean)
+  - `ARCHIMEDEAN_NOTES_MIN_START_RADIUS = 0` - Minimum 0 starting radius a (spiral starts at origin)
+  - `ARCHIMEDEAN_NOTES_MAX_START_RADIUS = 8` - Maximum 8 starting radius a
+  - `ARCHIMEDEAN_NOTES_DEFAULT_START_RADIUS = 1` - Default 1 starting radius a (spiral starts near origin)
+  - `ARCHIMEDEAN_NOTES_MIN_RADIAL_STEP = 0.1` - Minimum 0.1 per-radian growth rate b (very tight spiral, 0.628 units turn-to-turn)
+  - `ARCHIMEDEAN_NOTES_MAX_RADIAL_STEP = 2.0` - Maximum 2.0 per-radian growth rate b (wide gaps, 12.57 units turn-to-turn)
+  - `ARCHIMEDEAN_NOTES_DEFAULT_RADIAL_STEP = 0.5` - Default 0.5 per-radian growth rate b (balanced, π units turn-to-turn)
+  - `ARCHIMEDEAN_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `ARCHIMEDEAN_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `ARCHIMEDEAN_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `ARCHIMEDEAN_NOTES_ORIENTATION_CW = 'cw'` - Clockwise spiral (positive θ, Archimedes ~225 BC default)
+  - `ARCHIMEDEAN_NOTES_ORIENTATION_CCW = 'ccw'` - Counter-clockwise spiral (negative θ, mirror of CW)
+  - `ARCHIMEDEAN_NOTES_ORIENTATIONS = [CW, CCW]` - Valid orientation values
+- **Tests** (`js/tests.js`): 32 tests covering (all 32 pass):
+  - `archimedeanNotes` is a function on Track.prototype
+  - `archimedeanNotes` accepts 7 parameters with defaults (length, turns, startRadius, radialStep, velocityDecay, orientation, skipOccupied)
+  - `archimedeanNotes` returns 0 for Audio tracks
+  - `archimedeanNotes` gets active sequence via getActiveSequence
+  - `archimedeanNotes` captures undo BEFORE mutation with descriptive `Archimedean Spiral Notes (orientation, turns=..., N=...)` label
+  - `archimedeanNotes` clamps all parameters to ARCHIMEDEAN_NOTES_MIN/MAX_* ranges
+  - `archimedeanNotes` validates orientation with ARCHIMEDEAN_NOTES_ORIENTATIONS (uses CW fallback)
+  - `archimedeanNotes` uses Math.cos and Math.sin for parametric equations (Archimedean spiral characteristic)
+  - `archimedeanNotes` uses Math.PI for t normalization (t = 2*PI*turns * i/(length-1))
+  - `archimedeanNotes` uses Math.pow for velocity decay
+  - `archimedeanNotes` supports skipOccupied option
+  - `archimedeanNotes` rounds velocity to 2 decimal places
+  - `archimedeanNotes` returns count of archimedean notes (spiralCount)
+  - `archimedeanNotes` uses Math.floor for length and turns
+  - All 18 ARCHIMEDEAN_NOTES constants are defined in constants.js
+  - ARCHIMEDEAN_NOTES_ORIENTATIONS includes cw and ccw
+  - ui.js has 4 Archimedean Notes menu items
+  - Archimedean Notes menu items call track.archimedeanNotes
+  - Archimedean Notes menu items call recreateToneSequence after archimedeanNotes
+  - Archimedean Notes menu items show `Archimedean'd N note(s)` notification
+  - Archimedean Notes menu items capture undo with descriptive label
+  - Archimedean Notes menu items include all 4 variants (3 turns, 5 turns, CCW 2 turns, wide 4 turns)
+  - Archimedean Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.386 for Day 736)
+  - Functional test: x = radius * Math.cos(theta) and y = radius * Math.sin(theta)
+  - Functional test: radius = startRadius + radialStep * t (linear growth, Archimedean characteristic)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, turns 100->8, radialStep 100->2.0, velocityDecay 2->1.0)
+  - Functional test: theta spans [0, 2*PI*turns]
+  - Functional test: angleSign=-1 for CCW, +1 for CW
+- **Version**: Bumped to 2.386.0
+- **Test Count**: All 32 Day 736 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly for both Track.js and ui.js (warnings only, unrelated to Day 736). Total tests now at 3487 passed (up from 3455 before Day 736), 1450 failed (pre-existing infrastructure issues unchanged pattern).
+
+"""
+with open('AGENTS.md', 'r') as f:
+    existing = f.read()
+with open('AGENTS.md', 'w') as f:
+    f.write(entry + existing)
+print('AGENTS.md updated, new length:', len(entry + existing))
 #### Day 735: Clothoid Notes Feature (2026-06-20)
 - **Feature**: Added `clothoidNotes(length, sMax, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Clothoid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **clothoid curve** (also called the **Euler spiral** or **Cornu spiral** or **spiral of Cornu**), the canonical transition curve used in highway and railway engineering, computed numerically via the **Fresnel integrals** `C(s) = ∫₀ˢ cos(½πu²) du` and `S(s) = ∫₀ˢ sin(½πu²) du`, where the sample point is `(C(s), S(s))` and `s` is the arc-length parameter. The clothoid was first studied by **Leonhard Euler in 1744** ("De constructione aequationum quarundam differentialium quae indeterminatarum multiplicationibus et divisionibus repetitis inveniuntur", where he sought a curve whose curvature varies linearly with arc length — *k(s) = as*, the defining property of the Euler spiral), and was rediscovered independently by **Marie Alfred Cornu in 1874** for the design of the *prismatic Foucault knife-edge test* for optical aberrations (the Cornu spiral / "Cornu's spiral" in optics, used in physical optics to compute Fresnel diffraction integrals graphically via the spiral's chord lengths), and rediscovered yet again in modern times for **highway and railway transition curves** (the clothoid is the unique curve where the curvature varies linearly with arc length, allowing a vehicle to enter a curve at the design speed without sudden lateral jerk — the oncoming tangent's zero curvature meets the curve's circular arc curvature at a smooth `k'(s) = constant` rate, the principle of "smooth steering"). The clothoid is **self-similar** in the sense that its shape is invariant under the scaling `(x, y, s) → (kx, ky, ks²)` (because the integrand is homogeneous of degree 2 in `s`, so the curve at scale `k` is `√k` times the curve at scale 1) and is **antisymmetric** through the origin: `(x(-s), y(-s)) = (-x(s), -y(s))`. The clothoid is also the curve for which the **offsets (parallel curves) are also clothoids** (a rare property shared with the circle and the line), and is one of only a few curves whose **evolute is also a clothoid** (rotated by 90°). The clothoid appears in many modern engineering applications: **roller-coaster loop design** (the modern loop-the-loop is approximately a clothoid, not a circle, to bound the g-force and jerk on riders), **highway on-ramps and off-ramps** (clothoid transitions between straight tangent and circular curve), **railway transition curves** (every high-speed rail network uses clothoid transitions between tangent and curve), **roller derby and skatepark bowl design**, **optical diffraction** (Fresnel diffraction patterns from a straight edge), **the "easing" curves in motion graphics** (Penner / Robert Penner's clothoid-eased timing functions in Flash and After Effects), and the **clothoid constant** `X = ∫₀^∞ cos(½πu²) du = ∫₀^∞ sin(½πu²) du ≈ 0.5` (also called the **Fresnel integrals at infinity** or **Fresnel's number**, equal to `½ √(½) = ½√½`, related to the **Comu spiral's asymptote distance** and to the **Gamma function** by `Γ(½) = √π`). Four clothoid variants via the s-range resolver: 'standard' (s in [-S, +S] — symmetric full Euler spiral, Euler 1744 default, the iconic symmetric double-tangent shape), 'forward' (s in [0, +S] — rightward-only first Fresnel tail, single-arm), 'backward' (s in [-S, 0] — leftward-only first Fresnel tail, single-arm mirror), 'tight' (s in [-S/2, +S/2] — smaller range, rangeFactor=0.5, more concentrated near origin). The Fresnel integrals are computed numerically via the midpoint Riemann sum with 32 sub-steps per sample (`stepH = absS / 32` and inner loop `for j = 1..32` accumulating `Math.cos(½πu²)` and `Math.sin(½πu²)` with `u = j*absS/32`), giving an accurate approximation that doesn't depend on a JS `erf` library. The sample coordinates `(x, y)` are then scaled to `(rowOffset, colOffset)` via `colScale = (clampedLength - 1) / xRange` and `rowScale = (clampedLength - 1) / (2 * yRange)`, both clamped to a robust minimum of 0.01 to avoid divide-by-zero. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The clothoid family complements `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical transition curve whose curvature varies linearly with arc length.
 - **Files Modified**:

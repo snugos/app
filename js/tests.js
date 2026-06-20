@@ -27972,6 +27972,196 @@ TestRunner.test("Day 735 - clothoidNotes functional test: colOffset clamped to [
     t.assertTruthy(/Math\.max\(\s*0\s*,\s*Math\.min\(clampedLength\s*-\s*1\s*,\s*Math\.round\(\(pt\.x\s*-\s*xMin\)\s*\*\s*colScale\)\)\)/.test(src), 'colOffset clamped to [0, length-1]');
 });
 
+// === Day 736: Archimedean Spiral Notes ===
+TestRunner.test("Day 736 - archimedeanNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.archimedeanNotes, 'function', 'archimedeanNotes is a function');
+});
+TestRunner.test("Day 736 - archimedeanNotes accepts 7 parameters with defaults", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(src.includes('length = Constants.ARCHIMEDEAN_NOTES_DEFAULT_LENGTH'), 'has length default');
+    t.assertTruthy(src.includes('turns = Constants.ARCHIMEDEAN_NOTES_DEFAULT_TURNS'), 'has turns default');
+    t.assertTruthy(src.includes('startRadius = Constants.ARCHIMEDEAN_NOTES_DEFAULT_START_RADIUS'), 'has startRadius default');
+    t.assertTruthy(src.includes('radialStep = Constants.ARCHIMEDEAN_NOTES_DEFAULT_RADIAL_STEP'), 'has radialStep default');
+    t.assertTruthy(src.includes('velocityDecay = Constants.ARCHIMEDEAN_NOTES_DEFAULT_VELOCITY_DECAY'), 'has velocityDecay default');
+    t.assertTruthy(src.includes('orientation = Constants.ARCHIMEDEAN_NOTES_ORIENTATION_CW'), 'has orientation default');
+    t.assertTruthy(src.includes('skipOccupied = true'), 'has skipOccupied default');
+});
+TestRunner.test("Day 736 - archimedeanNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+TestRunner.test("Day 736 - archimedeanNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+});
+TestRunner.test("Day 736 - archimedeanNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/_captureUndoState\(\s*`Archimedean Spiral Notes/.test(src), 'captures undo with descriptive label');
+});
+TestRunner.test("Day 736 - archimedeanNotes clamps all parameters to MIN/MAX ranges", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MIN_TURNS/.test(src), 'has MIN_TURNS clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MAX_TURNS/.test(src), 'has MAX_TURNS clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MIN_START_RADIUS/.test(src), 'has MIN_START_RADIUS clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MAX_START_RADIUS/.test(src), 'has MAX_START_RADIUS clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MIN_RADIAL_STEP/.test(src), 'has MIN_RADIAL_STEP clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MAX_RADIAL_STEP/.test(src), 'has MAX_RADIAL_STEP clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 736 - archimedeanNotes validates orientation with ARCHIMEDEAN_NOTES_ORIENTATIONS (uses CW fallback)", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_ORIENTATIONS\.includes\(orientation\)/.test(src), 'validates via .includes()');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_ORIENTATION_CW/.test(src), 'has CW fallback');
+    t.assertTruthy(/ARCHIMEDEAN_NOTES_ORIENTATION_CCW/.test(src), 'has CCW constant reference');
+});
+TestRunner.test("Day 736 - archimedeanNotes uses Math.cos and Math.sin for Archimedean parametric equations", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/Math\.cos\(theta\)/.test(src), 'uses Math.cos(theta)');
+    t.assertTruthy(/Math\.sin\(theta\)/.test(src), 'uses Math.sin(theta)');
+});
+TestRunner.test("Day 736 - archimedeanNotes uses r = a + b*theta (Archimedean radius growth)", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/radius\s*=\s*clampedStartRadius\s*\+\s*clampedRadialStep\s*\*\s*t/.test(src), 'computes r = a + b*t (Archimedean)');
+});
+TestRunner.test("Day 736 - archimedeanNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay\s*,\s*i\)/.test(src), 'uses Math.pow for velocity decay');
+});
+TestRunner.test("Day 736 - archimedeanNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'references skipOccupied');
+});
+TestRunner.test("Day 736 - archimedeanNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimal places');
+});
+TestRunner.test("Day 736 - archimedeanNotes returns count of archimedean notes", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/return\s+spiralCount/.test(src), 'returns spiralCount');
+});
+TestRunner.test("Day 736 - archimedeanNotes uses Math.floor for length and turns", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'Math.floor on length');
+    t.assertTruthy(/Math\.floor\(turns\)/.test(src), 'Math.floor on turns');
+});
+TestRunner.test("Day 736 - all 18 ARCHIMEDEAN_NOTES constants are defined in constants.js", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    const names = [
+        'ARCHIMEDEAN_NOTES_MIN_LENGTH', 'ARCHIMEDEAN_NOTES_MAX_LENGTH', 'ARCHIMEDEAN_NOTES_DEFAULT_LENGTH',
+        'ARCHIMEDEAN_NOTES_MIN_TURNS', 'ARCHIMEDEAN_NOTES_MAX_TURNS', 'ARCHIMEDEAN_NOTES_DEFAULT_TURNS',
+        'ARCHIMEDEAN_NOTES_MIN_START_RADIUS', 'ARCHIMEDEAN_NOTES_MAX_START_RADIUS', 'ARCHIMEDEAN_NOTES_DEFAULT_START_RADIUS',
+        'ARCHIMEDEAN_NOTES_MIN_RADIAL_STEP', 'ARCHIMEDEAN_NOTES_MAX_RADIAL_STEP', 'ARCHIMEDEAN_NOTES_DEFAULT_RADIAL_STEP',
+        'ARCHIMEDEAN_NOTES_MIN_VELOCITY_DECAY', 'ARCHIMEDEAN_NOTES_MAX_VELOCITY_DECAY', 'ARCHIMEDEAN_NOTES_DEFAULT_VELOCITY_DECAY',
+        'ARCHIMEDEAN_NOTES_ORIENTATION_CW', 'ARCHIMEDEAN_NOTES_ORIENTATION_CCW', 'ARCHIMEDEAN_NOTES_ORIENTATIONS'
+    ];
+    for (const name of names) {
+        t.assertTruthy(new RegExp(`export\\s+const\\s+${name}\\s*=`).test(src), `defines ${name}`);
+    }
+});
+TestRunner.test("Day 736 - ui.js has 4 Archimedean Notes menu items", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Archimedean Notes') && l.includes('action:'));
+    t.assertEqual(lines.length, 4, `expected 4 Archimedean menu items, got ${lines.length}`);
+});
+TestRunner.test("Day 736 - Archimedean Notes menu items call track.archimedeanNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Archimedean Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('archimedeanNotes('), 'each line calls archimedeanNotes');
+    }
+});
+TestRunner.test("Day 736 - Archimedean Notes menu items call recreateToneSequence after archimedeanNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Archimedean Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'calls recreateToneSequence(true)');
+    }
+});
+TestRunner.test("Day 736 - Archimedean Notes menu items show Archimedean'd N note(s) notification", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Archimedean Notes') && l.includes('action:'));
+    const all = lines.join('\n');
+    t.assertTruthy(all.includes("Archimedean'd") && all.includes('note(s)'), 'has notification message');
+});
+TestRunner.test("Day 736 - Archimedean Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Archimedean Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('Archimedean Notes on'), 'has descriptive undo label');
+    }
+});
+TestRunner.test("Day 736 - Archimedean Notes menu items include both orientations (cw, ccw)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Archimedean Notes') && l.includes('action:'));
+    const all = lines.join('\n');
+    t.assertTruthy(all.includes("'cw'"), 'includes cw orientation');
+    t.assertTruthy(all.includes("'ccw'"), 'includes ccw orientation');
+});
+TestRunner.test("Day 736 - Archimedean Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Archimedean Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each line calls updateTrackUI');
+    }
+});
+TestRunner.test("Day 736 - APP_VERSION validation (>= 2.386 for Day 736)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 386), `APP_VERSION should be >= 2.386, got ${APP_VERSION}`);
+});
+TestRunner.test("Day 736 - archimedeanNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+TestRunner.test("Day 736 - archimedeanNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+TestRunner.test("Day 736 - archimedeanNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+TestRunner.test("Day 736 - archimedeanNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+TestRunner.test("Day 736 - archimedeanNotes functional test: clamps to valid ranges (length 100->64, turns 100->8, radialStep 100->2.0, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.ARCHIMEDEAN_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.ARCHIMEDEAN_NOTES_MAX_TURNS/.test(src), 'has MAX_TURNS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.ARCHIMEDEAN_NOTES_MAX_RADIAL_STEP/.test(src), 'has MAX_RADIAL_STEP clamp');
+    t.assertTruthy(/Math\.min\(Constants\.ARCHIMEDEAN_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 736 - archimedeanNotes functional test: rowOffset clamped to +/- (length-1)/2", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/Math\.max\(-\(clampedLength\s*-\s*1\)\s*\/\s*2\s*,\s*Math\.min\(\(clampedLength\s*-\s*1\)\s*\/\s*2\s*,\s*Math\.round\(\(pt\.y\s*-\s*yMin\)\s*\*\s*rowScale\s*-\s*\(clampedLength\s*-\s*1\)\s*\/\s*2\)\)\)/.test(src), 'rowOffset clamped to +/- (length-1)/2 and centered around 0');
+});
+TestRunner.test("Day 736 - archimedeanNotes functional test: colOffset clamped to [0, length-1]", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/Math\.max\(\s*0\s*,\s*Math\.min\(clampedLength\s*-\s*1\s*,\s*Math\.round\(\(pt\.x\s*-\s*xMin\)\s*\*\s*colScale\)\)\)/.test(src), 'colOffset clamped to [0, length-1]');
+});
+TestRunner.test("Day 736 - archimedeanNotes functional test: theta spans [0, 2*PI*turns]", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/2\s*\*\s*Math\.PI\s*\*\s*clampedTurns/.test(src), 'uses 2*PI*turns for total angle');
+});
+TestRunner.test("Day 736 - archimedeanNotes functional test: angleSign=-1 for CCW, +1 for CW", (t) => {
+    const src = Track.prototype.archimedeanNotes.toString();
+    t.assertTruthy(/angleSign\s*=\s*useOrientation\s*===\s*Constants\.ARCHIMEDEAN_NOTES_ORIENTATION_CCW\s*\?\s*-1\s*:\s*1/.test(src), 'angleSign flips for CCW');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

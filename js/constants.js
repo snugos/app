@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.385.0';
+export const APP_VERSION = '2.386.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1570,4 +1570,33 @@ export const CLOTHOID_NOTES_SHAPES = [
     CLOTHOID_NOTES_SHAPE_FORWARD,
     CLOTHOID_NOTES_SHAPE_BACKWARD,
     CLOTHOID_NOTES_SHAPE_TIGHT
+];
+// Archimedean Spiral Notes — Day 736
+// Each active note spawns N samples along an Archimedean spiral — the canonical
+// "equal-spacing" spiral discovered by Archimedes of Syracuse (~225 BC) in his
+// "On Spirals". Polar form: r(θ) = a + b·θ. Parametric: x(θ) = (a + b·θ)·cos(θ),
+// y(θ) = (a + b·θ)·sin(θ). Successive turn-to-turn spacing is a constant 2π·b —
+// this is the defining property that distinguishes it from the logarithmic spiral
+// (Bernoulli, 1638; spacing grows geometrically) and the Fermat spiral
+// (phyllotaxis, Day 722; spacing grows with √θ).
+export const ARCHIMEDEAN_NOTES_MIN_LENGTH = 8; // Minimum 8 samples (need at least one full turn)
+export const ARCHIMEDEAN_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution spiral)
+export const ARCHIMEDEAN_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the spiral
+export const ARCHIMEDEAN_NOTES_MIN_TURNS = 1; // Minimum 1 full revolution (2π·turns total angle)
+export const ARCHIMEDEAN_NOTES_MAX_TURNS = 8; // Maximum 8 revolutions
+export const ARCHIMEDEAN_NOTES_DEFAULT_TURNS = 3; // Default 3 revolutions (classic tight Archimedean)
+export const ARCHIMEDEAN_NOTES_MIN_START_RADIUS = 0; // Minimum 0 starting radius a (spiral starts at origin)
+export const ARCHIMEDEAN_NOTES_MAX_START_RADIUS = 8; // Maximum 8 starting radius a
+export const ARCHIMEDEAN_NOTES_DEFAULT_START_RADIUS = 1; // Default 1 starting radius a (spiral starts near origin)
+export const ARCHIMEDEAN_NOTES_MIN_RADIAL_STEP = 0.1; // Minimum 0.1 per-radian growth rate b (very tight)
+export const ARCHIMEDEAN_NOTES_MAX_RADIAL_STEP = 2.0; // Maximum 2.0 per-radian growth rate b (wide gaps)
+export const ARCHIMEDEAN_NOTES_DEFAULT_RADIAL_STEP = 0.5; // Default 0.5 per-radian growth rate b (balanced)
+export const ARCHIMEDEAN_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const ARCHIMEDEAN_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const ARCHIMEDEAN_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const ARCHIMEDEAN_NOTES_ORIENTATION_CW = 'cw'; // Clockwise spiral (positive θ, Archimedes ~225 BC default)
+export const ARCHIMEDEAN_NOTES_ORIENTATION_CCW = 'ccw'; // Counter-clockwise spiral (negative θ, mirror)
+export const ARCHIMEDEAN_NOTES_ORIENTATIONS = [
+    ARCHIMEDEAN_NOTES_ORIENTATION_CW,
+    ARCHIMEDEAN_NOTES_ORIENTATION_CCW
 ];
