@@ -1471,3 +1471,29 @@ export const HILBERT_NOTES_ORIENTATIONS = [
     HILBERT_NOTES_ORIENTATION_INVERSE,
     HILBERT_NOTES_ORIENTATION_TRANSPOSE
 ];
+// Tractrix Notes constants — the famous "drag curve" or "dog-walker curve" discovered by Christiaan Huygens in 1692
+// while studying tautochrones. Parametric form: x(t) = a*(t - tanh(t)), y(t) = a/cosh(t) = a*sech(t).
+// Famous as the cross-section of Beltrami's pseudosphere (a model of hyperbolic geometry).
+// Arc length from t=0 to t=∞ is exactly a (Huygens' discovery).
+export const TRACTRIX_NOTES_MIN_LENGTH = 8; // Minimum 8 samples (need enough to resolve the asymptotic tail)
+export const TRACTRIX_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution tractrix)
+export const TRACTRIX_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the curve
+export const TRACTRIX_NOTES_MIN_RADIUS = 1; // Minimum 1 string length a (small tight tractrix)
+export const TRACTRIX_NOTES_MAX_RADIUS = 8; // Maximum 8 string length a (wide tractrix)
+export const TRACTRIX_NOTES_DEFAULT_RADIUS = 4; // Default 4 string length a
+export const TRACTRIX_NOTES_MIN_T_RANGE = 1; // Minimum 1.0 t range (tight curve near cusp)
+export const TRACTRIX_NOTES_MAX_T_RANGE = 6; // Maximum 6.0 t range (long asymptotic tail)
+export const TRACTRIX_NOTES_DEFAULT_T_RANGE = 3; // Default 3.0 t range (well into asymptotic regime)
+export const TRACTRIX_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const TRACTRIX_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const TRACTRIX_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const TRACTRIX_NOTES_SHAPE_STANDARD = 'standard'; // t in [-T, +T]: symmetric dog-walker curve (Huygens 1692 default)
+export const TRACTRIX_NOTES_SHAPE_FORWARD = 'forward'; // t in [0, +T]: rightward-only drag (single tail)
+export const TRACTRIX_NOTES_SHAPE_BACKWARD = 'backward'; // t in [-T, 0]: leftward-only drag (mirror of forward)
+export const TRACTRIX_NOTES_SHAPE_TIGHT = 'tight'; // t in [-T/2, +T/2]: smaller range, more concentrated trail
+export const TRACTRIX_NOTES_SHAPES = [
+    TRACTRIX_NOTES_SHAPE_STANDARD,
+    TRACTRIX_NOTES_SHAPE_FORWARD,
+    TRACTRIX_NOTES_SHAPE_BACKWARD,
+    TRACTRIX_NOTES_SHAPE_TIGHT
+];
