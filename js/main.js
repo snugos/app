@@ -1604,8 +1604,10 @@ function removeCustomDesktopBackground() {
         bgDbDeleteAudio('desktopVideo').catch(() => {});
         
         console.log("[removeCustomDesktopBackground] Custom background removed.");
+        if (typeof showSafeNotification === 'function') showSafeNotification("Custom background removed.", 2000);
     } catch (e) {
         console.error("Error removing custom desktop background:", e);
+        if (typeof showSafeNotification === 'function') showSafeNotification("Failed to remove background.", 2000);
     }
 }
 
