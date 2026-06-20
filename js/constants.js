@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.381.0';
+export const APP_VERSION = '2.382.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1450,4 +1450,30 @@ export const ROSE_NOTES_SHAPES = [
     ROSE_NOTES_SHAPE_DOUBLE,
     ROSE_NOTES_SHAPE_HALF,
     ROSE_NOTES_SHAPE_QUARTER
+];
+// Tractrix Notes constants — the famous "drag curve" or "dog-walker curve" discovered by Christiaan Huygens in 1692
+// while studying tautochrones. Parametric form: x(t) = a*(t - tanh(t)), y(t) = a/cosh(t) = a*sech(t).
+// Famous as the cross-section of Beltrami's pseudosphere (a model of hyperbolic geometry).
+// Arc length from t=0 to t=∞ is exactly a (Huygens' discovery).
+export const TRACTRIX_NOTES_MIN_LENGTH = 8; // Minimum 8 samples (need enough to resolve the asymptotic tail)
+export const TRACTRIX_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution tractrix)
+export const TRACTRIX_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the curve
+export const TRACTRIX_NOTES_MIN_RADIUS = 1; // Minimum 1 string length a (small tight tractrix)
+export const TRACTRIX_NOTES_MAX_RADIUS = 8; // Maximum 8 string length a (wide tractrix)
+export const TRACTRIX_NOTES_DEFAULT_RADIUS = 4; // Default 4 string length a
+export const TRACTRIX_NOTES_MIN_T_RANGE = 1; // Minimum 1.0 t range (tight curve near cusp)
+export const TRACTRIX_NOTES_MAX_T_RANGE = 6; // Maximum 6.0 t range (long asymptotic tail)
+export const TRACTRIX_NOTES_DEFAULT_T_RANGE = 3; // Default 3.0 t range (well into asymptotic regime)
+export const TRACTRIX_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const TRACTRIX_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const TRACTRIX_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const TRACTRIX_NOTES_SHAPE_STANDARD = 'standard'; // t in [-T, +T]: symmetric dog-walker curve (Huygens 1692 default)
+export const TRACTRIX_NOTES_SHAPE_FORWARD = 'forward'; // t in [0, +T]: rightward-only drag (single tail)
+export const TRACTRIX_NOTES_SHAPE_BACKWARD = 'backward'; // t in [-T, 0]: leftward-only drag (mirror of forward)
+export const TRACTRIX_NOTES_SHAPE_TIGHT = 'tight'; // t in [-T/2, +T/2]: smaller range, more concentrated trail
+export const TRACTRIX_NOTES_SHAPES = [
+    TRACTRIX_NOTES_SHAPE_STANDARD,
+    TRACTRIX_NOTES_SHAPE_FORWARD,
+    TRACTRIX_NOTES_SHAPE_BACKWARD,
+    TRACTRIX_NOTES_SHAPE_TIGHT
 ];

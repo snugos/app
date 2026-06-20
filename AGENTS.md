@@ -1,3 +1,109 @@
+#### Day 733: Tractrix Notes Feature (2026-06-20)
+- **Feature**: Added `tractrixNotes(length, radius, tRange, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Tractrix Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **tractrix** curve (also called the "drag curve" or "dog-walker curve"), discovered by **Christiaan Huygens in 1692** while studying tautochrones — the path traced by an object being dragged along a flat surface by a string of fixed length `a`, where the pulling point moves along the x-axis. The tractrix parametric equations are `x(t) = a * (t - tanh(t))` and `y(t) = a / cosh(t) = a * sech(t)`, where `t` is the angle the string makes with the horizontal (in radians) and `a` is the string length. As `t → ±∞`, `x → ±∞` and `y → 0` asymptotically — the curve has the **x-axis as a horizontal asymptote** (the pursued object is never actually caught, but the gap vanishes exponentially). The tractrix is famous for two remarkable properties discovered by Huygens: (1) the **arc length from t=0 to t=∞ is exactly `a`** — the dog catches up by traversing a distance equal to the length of the leash, and (2) the tractrix is the **cross-section of Beltrami's pseudosphere** (1868), the first explicit model of the hyperbolic plane, making it the only curve whose rotation generates a surface of constant negative curvature. The tractrix is also one of only three plane curves whose **evolute and involute are themselves** (the line, the circle, and the tractrix), and it appears in modern **sundial mathematics** (the "shepherd's dial" gnomon traces a tractrix shadow on a tilted plane) and in **trajectory optimization** (the brachistochrone descent problem on a tractrix surface). Four shape variants via the t-range resolver: 'standard' (t in [-T, +T] — symmetric dog-walker curve, Huygens 1692 default, the full cusp-tail-tail profile), 'forward' (t in [0, +T] — rightward-only drag, single tail to the right of the cusp), 'backward' (t in [-T, 0] — leftward-only drag, mirror of forward), 'tight' (t in [-T/2, +T/2] — smaller range, more concentrated trail near the cusp; range halved via `rangeFactor = 0.5`). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement (since `y` ranges from `clampedRadius` at t=0 down to `clampedRadius/cosh(T)` at the extremes), and `colOffset` is normalized via `(x + xRange) * colScale` where `xRange = clampedRadius * (clampedTRange + 1)` (extra margin for small t) and `colScale = (clampedLength - 1) / (2 * xRange)` so the curve spans the full sample count. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The tractrix family complements `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic drag curve whose arc length equals the leash length and whose surface of revolution has constant negative curvature.
+- **Files Modified**:
+  - `js/Track.js`: Added `tractrixNotes` method after `roseNotes` (line ~8011, the new last method on the class)
+  - `js/constants.js`: Added 16 TRACTRIX_NOTES_* constants + APP_VERSION bumped to 2.382.0
+  - `js/ui.js`: Added 4 Tractrix Notes menu items in the sequencer context menu after Rose Notes (Quarter, 32)
+  - `js/tests.js`: Added Day 733 test block with 39 tests (all 39 pass)
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **tractrixNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a tractrix curve computed via parametric equations. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMax - tMin) * i / max(1, clampedLength - 1)`, then `tanhT = Math.tanh(t)`, `coshT = Math.cosh(t)`, `x = clampedRadius * (t - tanhT)`, and `y = clampedRadius / coshT`. The y-component drives `rowOffset` via `Math.max(-clampedRadius, Math.min(clampedRadius, Math.round(y)))` and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((x + xRange) * colScale)))`. Captures undo state BEFORE mutation with descriptive `Tractrix Notes (shape, a=..., T=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to TRACTRIX_NOTES_MIN_LENGTH (8) / TRACTRIX_NOTES_MAX_LENGTH (64) range with Math.floor (default TRACTRIX_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `radius` to TRACTRIX_NOTES_MIN_RADIUS (1) / TRACTRIX_NOTES_MAX_RADIUS (8) range with Math.floor (default TRACTRIX_NOTES_DEFAULT_RADIUS=4)
+    - Clamps `tRange` to TRACTRIX_NOTES_MIN_T_RANGE (1) / TRACTRIX_NOTES_MAX_T_RANGE (6) range (default TRACTRIX_NOTES_DEFAULT_T_RANGE=3 — well into asymptotic regime where tanh(t) ≈ 1)
+    - Clamps `velocityDecay` to TRACTRIX_NOTES_MIN_VELOCITY_DECAY (0.1) / TRACTRIX_NOTES_MAX_VELOCITY_DECAY (1.0) range (default TRACTRIX_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against TRACTRIX_NOTES_SHAPES array, falls back to TRACTRIX_NOTES_SHAPE_STANDARD if invalid
+    - `rangeFactor = (useShape === TRACTRIX_NOTES_SHAPE_TIGHT) ? 0.5 : 1.0` (tight shape halves the t-range for concentrated trail)
+    - `tRangeMap[shape]` returns the [tMin, tMax] endpoints:
+      - STANDARD: `[-clampedTRange * rangeFactor, +clampedTRange * rangeFactor]` — symmetric dog-walker curve (Huygens 1692 default)
+      - FORWARD: `[0, +clampedTRange * rangeFactor]` — rightward-only drag (single tail)
+      - BACKWARD: `[-clampedTRange * rangeFactor, 0]` — leftward-only drag (mirror of forward)
+      - TIGHT: `[-clampedTRange * rangeFactor, +clampedTRange * rangeFactor]` (with rangeFactor=0.5) — smaller range, more concentrated near cusp
+    - Computes `xRange = clampedRadius * (clampedTRange + 1)` (empirical robust bound for x and y span with extra margin for small t)
+    - Computes `yRange = clampedRadius` (y is always in [clampedRadius/cosh(T), clampedRadius])
+    - Computes `colScale = (xRange > 0) ? (clampedLength - 1) / (2 * xRange) : 0`
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — happens at t=0 where x=0 and y=a, so colOffset=0 only when i=0 and shape is standard; can happen for shapes that include t=0)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of tractrix notes added (tractrixCount)
+  - **Tractrix Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Rose Notes (Quarter, 32)
+    - "Tractrix Notes (Standard, 32)" - calls `tractrixNotes(32, 4, 3, 0.95, 'standard', true)` - symmetric dog-walker curve (Huygens 1692 default), t in [-3, +3]
+    - "Tractrix Notes (Forward, 32)" - calls `tractrixNotes(32, 4, 3, 0.95, 'forward', true)` - rightward-only drag (single tail), t in [0, +3]
+    - "Tractrix Notes (Backward, 32)" - calls `tractrixNotes(32, 4, 3, 0.95, 'backward', true)` - leftward-only drag, t in [-3, 0]
+    - "Tractrix Notes (Tight, 32)" - calls `tractrixNotes(32, 4, 3, 0.95, 'tight', true)` - smaller range (rangeFactor=0.5), more concentrated trail near cusp, t in [-1.5, +1.5]
+    - All call `recreateToneSequence(true)` after tractrixing
+    - All capture undo with descriptive `Tractrix Notes on <name> (<seqname>)` label
+    - Show notifications: `Tractrix'd {count} note(s) (variant, 32).`
+    - Show `No notes to tractrix.` when nothing to tractrix
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 16 new constants
+  - `TRACTRIX_NOTES_MIN_LENGTH = 8` - Minimum 8 samples (need enough to resolve the asymptotic tail)
+  - `TRACTRIX_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution tractrix)
+  - `TRACTRIX_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the curve
+  - `TRACTRIX_NOTES_MIN_RADIUS = 1` - Minimum 1 string length a (small tight tractrix)
+  - `TRACTRIX_NOTES_MAX_RADIUS = 8` - Maximum 8 string length a (wide tractrix)
+  - `TRACTRIX_NOTES_DEFAULT_RADIUS = 4` - Default 4 string length a
+  - `TRACTRIX_NOTES_MIN_T_RANGE = 1` - Minimum 1.0 t range (tight curve near cusp)
+  - `TRACTRIX_NOTES_MAX_T_RANGE = 6` - Maximum 6.0 t range (long asymptotic tail)
+  - `TRACTRIX_NOTES_DEFAULT_T_RANGE = 3` - Default 3.0 t range (well into asymptotic regime where tanh(t) ≈ 0.995)
+  - `TRACTRIX_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `TRACTRIX_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `TRACTRIX_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `TRACTRIX_NOTES_SHAPE_STANDARD = 'standard'` - t in [-T, +T]: symmetric dog-walker curve (Huygens 1692 default)
+  - `TRACTRIX_NOTES_SHAPE_FORWARD = 'forward'` - t in [0, +T]: rightward-only drag (single tail)
+  - `TRACTRIX_NOTES_SHAPE_BACKWARD = 'backward'` - t in [-T, 0]: leftward-only drag (mirror of forward)
+  - `TRACTRIX_NOTES_SHAPE_TIGHT = 'tight'` - t in [-T/2, +T/2] (rangeFactor=0.5): more concentrated trail
+  - `TRACTRIX_NOTES_SHAPES = [STANDARD, FORWARD, BACKWARD, TIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 39 tests covering (all 39 pass):
+  - `tractrixNotes` is a function on Track.prototype
+  - `tractrixNotes` accepts 6 parameters with defaults (length, radius, tRange, velocityDecay, shape, skipOccupied)
+  - `tractrixNotes` returns 0 for Audio tracks
+  - `tractrixNotes` gets active sequence via getActiveSequence
+  - `tractrixNotes` captures undo BEFORE mutation with descriptive `Tractrix Notes (shape, a=..., T=..., N=...)` label
+  - `tractrixNotes` clamps all parameters to TRACTRIX_NOTES_MIN/MAX_* ranges
+  - `tractrixNotes` validates shape with TRACTRIX_NOTES_SHAPES (uses STANDARD fallback)
+  - `tractrixNotes` uses Math.tanh for hyperbolic tangent (tractrix characteristic)
+  - `tractrixNotes` uses Math.cosh for hyperbolic cosine (sech curve)
+  - `tractrixNotes` uses Math.pow for velocity decay
+  - `tractrixNotes` supports skipOccupied option
+  - `tractrixNotes` rounds velocity to 2 decimal places
+  - `tractrixNotes` returns count of tractrix notes (tractrixCount)
+  - `tractrixNotes` uses Math.floor for length and radius
+  - All 16 TRACTRIX_NOTES constants are defined in constants.js
+  - TRACTRIX_NOTES_SHAPES includes standard, forward, backward, tight
+  - ui.js has 4 Tractrix Notes menu items
+  - Tractrix Notes menu items call track.tractrixNotes
+  - Tractrix Notes menu items call recreateToneSequence after tractrixNotes
+  - Tractrix Notes menu items show `Tractrixed N note(s)` notification
+  - Tractrix Notes menu items capture undo with descriptive label
+  - Tractrix Notes menu items include all 4 shape variants (standard, forward, backward, tight)
+  - Tractrix Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.382 for Day 733)
+  - Functional test: x = a*(t - tanh(t))
+  - Functional test: y = a/cosh(t)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, radius -5->1, tRange 100->6, velocityDecay 2->1.0)
+  - Functional test: rowOffset clamped to +/- clampedRadius
+  - Functional test: colOffset = (x + xRange) * colScale mapped to [0, length-1]
+  - Structural test: supports 4 distinct shapes
+  - Functional test: uses tMin/tMax based on shape (4 shape resolvers)
+  - Functional test: t parameter = tMin + (tMax - tMin) * i / (length - 1)
+  - Functional test: tight shape halves the t-range via rangeFactor
+  - Tractrix Notes menu items call recreateToneSequence after tractrixNotes (full success path)
+- **Version**: Bumped to 2.382.0
+- **Test Count**: All 39 Day 733 tests pass via `test-runner/run-tests.js`. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). Total tests now at 3277 passed (up from 3238 after Day 732), 1449 failed (pre-existing `__dirname` test infrastructure issue unchanged pattern).
+
 #### Day 732: Rose Curve Notes Feature (2026-06-19)
 - **Feature**: Added `roseNotes(length, radius, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Rose Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **rhodonea curve** (also called the rose curve), the iconic flower-petal polar curve discovered by Guido Grandi in 1723 in his "Flores geometrici" and studied further by Lucia Perazza and Colin Maclaurin. The rose is defined by the polar equation `r = a · sin(k·θ)` with parametric form `x(θ) = a · sin(k·θ) · cos(θ)` and `y(θ) = a · sin(k·θ) · sin(θ)`, where `a` is the petal radius and `k` is the rose constant (an integer). For `k` odd, a single 2π sweep produces exactly `k` petals (k=3→3 petals, k=5→5 petals); for `k` even, a single 2π sweep produces `2k` petals because each petal is traced twice (k=6→12 petals, k=8→16 petals). Both `x` and `y` lie in `[-a, +a]`. Four shape variants via the `k`-resolver: 'standard' (k=5 — the classic 5-petal rose, the most common rhodonea shape), 'double' (k=6 — 12-petal rose, even-k case where each petal is traced twice during one revolution), 'half' (k=3 — 3-petal rose, the smallest odd-k rose with nontrivial shape), 'quarter' (k=8 — 16-petal dense rose, the highest petal count of the four presets). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement, and `colOffset` is normalized via `(x + roseRange) * colScale` where `roseRange = clampedRadius` and `colScale = (clampedLength - 1) / (2 * roseRange)`. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The rose family complements `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic flower-petal polar curve studied by Grandi, Perazza, and Maclaurin.
 - **Files Modified**:

@@ -8008,4 +8008,103 @@ export class Track {
 
         return roseCount;
     }
+
+    tractrixNotes(length = Constants.TRACTRIX_NOTES_DEFAULT_LENGTH, radius = Constants.TRACTRIX_NOTES_DEFAULT_RADIUS, tRange = Constants.TRACTRIX_NOTES_DEFAULT_T_RANGE, velocityDecay = Constants.TRACTRIX_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.TRACTRIX_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} tractrixNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.TRACTRIX_NOTES_MIN_LENGTH, Math.min(Constants.TRACTRIX_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedRadius = Math.max(Constants.TRACTRIX_NOTES_MIN_RADIUS, Math.min(Constants.TRACTRIX_NOTES_MAX_RADIUS, Math.floor(radius)));
+        const clampedTRange = Math.max(Constants.TRACTRIX_NOTES_MIN_T_RANGE, Math.min(Constants.TRACTRIX_NOTES_MAX_T_RANGE, tRange));
+        const clampedDecay = Math.max(Constants.TRACTRIX_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.TRACTRIX_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.TRACTRIX_NOTES_SHAPES.includes(shape) ? shape : Constants.TRACTRIX_NOTES_SHAPE_STANDARD;
+        // t-range resolver: returns the [tMin, tMax] parametric endpoints based on shape
+        // For shape 'tight', the range is halved (more concentrated trail near the cusp).
+        const rangeFactor = (useShape === Constants.TRACTRIX_NOTES_SHAPE_TIGHT) ? 0.5 : 1.0;
+        const tRangeMap = {
+            [Constants.TRACTRIX_NOTES_SHAPE_STANDARD]: [-clampedTRange * rangeFactor, clampedTRange * rangeFactor],
+            [Constants.TRACTRIX_NOTES_SHAPE_FORWARD]: [0, clampedTRange * rangeFactor],
+            [Constants.TRACTRIX_NOTES_SHAPE_BACKWARD]: [-clampedTRange * rangeFactor, 0],
+            [Constants.TRACTRIX_NOTES_SHAPE_TIGHT]: [-clampedTRange * rangeFactor, clampedTRange * rangeFactor]
+        };
+        const tEndpoints = tRangeMap[useShape] || [-clampedTRange, clampedTRange];
+        const tMin = tEndpoints[0];
+        const tMax = tEndpoints[1];
+
+        this._captureUndoState(`Tractrix Notes (${useShape}, a=${clampedRadius}, T=${clampedTRange}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let tractrixCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+        // Empirical bounds for the tractrix in the parametric range [tMin, tMax]:
+        //   x_max = clampedRadius * (|t| - tanh(|t|)) for t in [tMin, tMax]
+        //   y_max = clampedRadius (at t=0) and y_min = clampedRadius / cosh(t) (at the extremes)
+        // We use a robust bound: xRange = clampedRadius * (clampedTRange + 1) (extra margin for small t),
+        //   yRange = clampedRadius.
+        const xRange = clampedRadius * (clampedTRange + 1);
+        const yRange = clampedRadius;
+        const colScale = (xRange > 0) ? (clampedLength - 1) / (2 * xRange) : 0;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < clampedLength; i++) {
+                    const t = tMin + ((tMax - tMin) * i) / Math.max(1, clampedLength - 1);
+                    // Tractrix parametric equations (Huygens 1692, "drag curve"):
+                    //   x(t) = a * (t - tanh(t))   — hyperbolic tangent
+                    //   y(t) = a / cosh(t)         — hyperbolic secant (sech)
+                    const tanhT = Math.tanh(t);
+                    const coshT = Math.cosh(t);
+                    const x = clampedRadius * (t - tanhT);
+                    const y = clampedRadius / coshT;
+
+                    const rowOffset = Math.max(-clampedRadius, Math.min(clampedRadius, Math.round(y)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((x + xRange) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Apply velocity decay by sample index
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            tractrixCount++;
+        }
+
+        return tractrixCount;
+    }
 }
