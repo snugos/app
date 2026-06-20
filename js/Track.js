@@ -8686,4 +8686,98 @@ export class Track {
 
         return spiralCount;
     }
+    logarithmicNotes(length = Constants.LOGARITHMIC_NOTES_DEFAULT_LENGTH, turns = Constants.LOGARITHMIC_NOTES_DEFAULT_TURNS, startRadius = Constants.LOGARITHMIC_NOTES_DEFAULT_START_RADIUS, growthRate = Constants.LOGARITHMIC_NOTES_DEFAULT_GROWTH_RATE, velocityDecay = Constants.LOGARITHMIC_NOTES_DEFAULT_VELOCITY_DECAY, orientation = Constants.LOGARITHMIC_NOTES_ORIENTATION_CW, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} logarithmicNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.LOGARITHMIC_NOTES_MIN_LENGTH, Math.min(Constants.LOGARITHMIC_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedTurns = Math.max(Constants.LOGARITHMIC_NOTES_MIN_TURNS, Math.min(Constants.LOGARITHMIC_NOTES_MAX_TURNS, Math.floor(turns)));
+        const clampedStartRadius = Math.max(Constants.LOGARITHMIC_NOTES_MIN_START_RADIUS, Math.min(Constants.LOGARITHMIC_NOTES_MAX_START_RADIUS, startRadius));
+        const clampedGrowthRate = Math.max(Constants.LOGARITHMIC_NOTES_MIN_GROWTH_RATE, Math.min(Constants.LOGARITHMIC_NOTES_MAX_GROWTH_RATE, growthRate));
+        const clampedDecay = Math.max(Constants.LOGARITHMIC_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.LOGARITHMIC_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useOrientation = Constants.LOGARITHMIC_NOTES_ORIENTATIONS.includes(orientation) ? orientation : Constants.LOGARITHMIC_NOTES_ORIENTATION_CW;
+        const angleSign = useOrientation === Constants.LOGARITHMIC_NOTES_ORIENTATION_CCW ? -1 : 1;
+
+        this._captureUndoState(`Logarithmic Spiral Notes (${useOrientation}, turns=${clampedTurns}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let spiralCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        for (let i = 0; i < clampedLength; i++) {
+            const t = (2 * Math.PI * clampedTurns) * i / Math.max(1, clampedLength - 1);
+            const theta = angleSign * t;
+            const radius = clampedStartRadius * Math.exp(clampedGrowthRate * t);
+            const x = radius * Math.cos(theta);
+            const y = radius * Math.sin(theta);
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -0.5; xMax = 0.5; yMin = -0.5; yMax = 0.5; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < clampedLength; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            spiralCount++;
+        }
+
+        return spiralCount;
+    }
 }
