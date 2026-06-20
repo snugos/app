@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.386.0';
+export const APP_VERSION = '2.387.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1599,4 +1599,33 @@ export const ARCHIMEDEAN_NOTES_ORIENTATION_CCW = 'ccw'; // Counter-clockwise spi
 export const ARCHIMEDEAN_NOTES_ORIENTATIONS = [
     ARCHIMEDEAN_NOTES_ORIENTATION_CW,
     ARCHIMEDEAN_NOTES_ORIENTATION_CCW
+];
+// (Day 737: Logarithmic spiral, r = a * exp(b*theta), geometric growth — the "spira mirabilis")
+// The logarithmic spiral is the natural complement to the Archimedean spiral (Day 736,
+// linear growth r = a + b*theta). For the Archimedean spiral, turn-to-turn spacing is
+// constant (2*pi*b). For the logarithmic spiral, turn-to-turn spacing grows by the same
+// factor (exp(2*pi*b)), giving the "self-similar" property that successive rotations
+// about the origin by 2*pi scale the curve by a constant factor. This self-similarity
+// is the defining geometric property that makes it the "spira mirabilis" (marvelous
+// spiral) of Jacob Bernoulli 1691.
+export const LOGARITHMIC_NOTES_MIN_LENGTH = 8; // Minimum 8 samples (need enough to resolve one full cycle)
+export const LOGARITHMIC_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution logarithmic)
+export const LOGARITHMIC_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the curve
+export const LOGARITHMIC_NOTES_MIN_TURNS = 1; // Minimum 1 full revolution (2*pi*turns total angle)
+export const LOGARITHMIC_NOTES_MAX_TURNS = 5; // Maximum 5 revolutions (since exp() grows fast, small N suffices)
+export const LOGARITHMIC_NOTES_DEFAULT_TURNS = 3; // Default 3 revolutions (classic tight logarithmic)
+export const LOGARITHMIC_NOTES_MIN_START_RADIUS = 1; // Minimum 1 starting radius a (must be > 0 for log behavior)
+export const LOGARITHMIC_NOTES_MAX_START_RADIUS = 8; // Maximum 8 starting radius a
+export const LOGARITHMIC_NOTES_DEFAULT_START_RADIUS = 1; // Default 1 starting radius a (spiral starts at r=1)
+export const LOGARITHMIC_NOTES_MIN_GROWTH_RATE = 0.05; // Minimum 0.05 per-radian growth rate b (very tight, near-circle)
+export const LOGARITHMIC_NOTES_MAX_GROWTH_RATE = 0.5; // Maximum 0.5 per-radian growth rate b (very wide gaps, exp(pi) ≈ 23x per turn)
+export const LOGARITHMIC_NOTES_DEFAULT_GROWTH_RATE = 0.15; // Default 0.15 per-radian growth rate b (balanced, exp(2*pi*0.15) ≈ 2.57x per turn)
+export const LOGARITHMIC_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const LOGARITHMIC_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const LOGARITHMIC_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const LOGARITHMIC_NOTES_ORIENTATION_CW = 'cw'; // Clockwise spiral (positive theta, Bernoulli 1691 default)
+export const LOGARITHMIC_NOTES_ORIENTATION_CCW = 'ccw'; // Counter-clockwise spiral (negative theta, mirror)
+export const LOGARITHMIC_NOTES_ORIENTATIONS = [
+    LOGARITHMIC_NOTES_ORIENTATION_CW,
+    LOGARITHMIC_NOTES_ORIENTATION_CCW
 ];

@@ -28162,6 +28162,206 @@ TestRunner.test("Day 736 - archimedeanNotes functional test: angleSign=-1 for CC
     t.assertTruthy(/angleSign\s*=\s*useOrientation\s*===\s*Constants\.ARCHIMEDEAN_NOTES_ORIENTATION_CCW\s*\?\s*-1\s*:\s*1/.test(src), 'angleSign flips for CCW');
 });
 
+// === Day 737: Logarithmic Spiral Notes ===
+TestRunner.test("Day 737 - logarithmicNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.logarithmicNotes, 'function', 'logarithmicNotes is a function');
+});
+TestRunner.test("Day 737 - logarithmicNotes accepts 7 parameters with defaults", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(src.includes('length = Constants.LOGARITHMIC_NOTES_DEFAULT_LENGTH'), 'has length default');
+    t.assertTruthy(src.includes('turns = Constants.LOGARITHMIC_NOTES_DEFAULT_TURNS'), 'has turns default');
+    t.assertTruthy(src.includes('startRadius = Constants.LOGARITHMIC_NOTES_DEFAULT_START_RADIUS'), 'has startRadius default');
+    t.assertTruthy(src.includes('growthRate = Constants.LOGARITHMIC_NOTES_DEFAULT_GROWTH_RATE'), 'has growthRate default');
+    t.assertTruthy(src.includes('velocityDecay = Constants.LOGARITHMIC_NOTES_DEFAULT_VELOCITY_DECAY'), 'has velocityDecay default');
+    t.assertTruthy(src.includes('orientation = Constants.LOGARITHMIC_NOTES_ORIENTATION_CW'), 'has orientation default');
+    t.assertTruthy(src.includes('skipOccupied = true'), 'has skipOccupied default');
+});
+TestRunner.test("Day 737 - logarithmicNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+TestRunner.test("Day 737 - logarithmicNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+});
+TestRunner.test("Day 737 - logarithmicNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/_captureUndoState\(\s*`Logarithmic Spiral Notes/.test(src), 'captures undo with descriptive label');
+});
+TestRunner.test("Day 737 - logarithmicNotes clamps all parameters to MIN/MAX ranges", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/LOGARITHMIC_NOTES_MIN_LENGTH/.test(src), 'has MIN_LENGTH clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MIN_TURNS/.test(src), 'has MIN_TURNS clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MAX_TURNS/.test(src), 'has MAX_TURNS clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MIN_START_RADIUS/.test(src), 'has MIN_START_RADIUS clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MAX_START_RADIUS/.test(src), 'has MAX_START_RADIUS clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MIN_GROWTH_RATE/.test(src), 'has MIN_GROWTH_RATE clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MAX_GROWTH_RATE/.test(src), 'has MAX_GROWTH_RATE clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+    t.assertTruthy(/LOGARITHMIC_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 737 - logarithmicNotes validates orientation with LOGARITHMIC_NOTES_ORIENTATIONS (uses CW fallback)", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/LOGARITHMIC_NOTES_ORIENTATIONS\.includes\(orientation\)/.test(src), 'validates via .includes()');
+    t.assertTruthy(/LOGARITHMIC_NOTES_ORIENTATION_CW/.test(src), 'has CW fallback');
+    t.assertTruthy(/LOGARITHMIC_NOTES_ORIENTATION_CCW/.test(src), 'has CCW constant reference');
+});
+TestRunner.test("Day 737 - logarithmicNotes uses Math.cos and Math.sin for logarithmic parametric equations", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/Math\.cos\(theta\)/.test(src), 'uses Math.cos(theta)');
+    t.assertTruthy(/Math\.sin\(theta\)/.test(src), 'uses Math.sin(theta)');
+});
+TestRunner.test("Day 737 - logarithmicNotes uses r = a * exp(b*theta) (logarithmic radius growth, characteristic)", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/clampedStartRadius\s*\*\s*Math\.exp\(clampedGrowthRate\s*\*\s*t\)/.test(src), 'computes r = a * exp(b*t) (logarithmic spiral characteristic)');
+});
+TestRunner.test("Day 737 - logarithmicNotes uses Math.exp for exponential growth (logarithmic characteristic)", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/Math\.exp\(/.test(src), 'uses Math.exp for exponential growth');
+});
+TestRunner.test("Day 737 - logarithmicNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay\s*,\s*i\)/.test(src), 'uses Math.pow for velocity decay');
+});
+TestRunner.test("Day 737 - logarithmicNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'references skipOccupied');
+});
+TestRunner.test("Day 737 - logarithmicNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimal places');
+});
+TestRunner.test("Day 737 - logarithmicNotes returns count of logarithmic notes (spiralCount)", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/return\s+spiralCount/.test(src), 'returns spiralCount');
+});
+TestRunner.test("Day 737 - logarithmicNotes uses Math.floor for length and turns", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'Math.floor on length');
+    t.assertTruthy(/Math\.floor\(turns\)/.test(src), 'Math.floor on turns');
+});
+TestRunner.test("Day 737 - all 18 LOGARITHMIC_NOTES constants are defined in constants.js", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    const names = [
+        'LOGARITHMIC_NOTES_MIN_LENGTH', 'LOGARITHMIC_NOTES_MAX_LENGTH', 'LOGARITHMIC_NOTES_DEFAULT_LENGTH',
+        'LOGARITHMIC_NOTES_MIN_TURNS', 'LOGARITHMIC_NOTES_MAX_TURNS', 'LOGARITHMIC_NOTES_DEFAULT_TURNS',
+        'LOGARITHMIC_NOTES_MIN_START_RADIUS', 'LOGARITHMIC_NOTES_MAX_START_RADIUS', 'LOGARITHMIC_NOTES_DEFAULT_START_RADIUS',
+        'LOGARITHMIC_NOTES_MIN_GROWTH_RATE', 'LOGARITHMIC_NOTES_MAX_GROWTH_RATE', 'LOGARITHMIC_NOTES_DEFAULT_GROWTH_RATE',
+        'LOGARITHMIC_NOTES_MIN_VELOCITY_DECAY', 'LOGARITHMIC_NOTES_MAX_VELOCITY_DECAY', 'LOGARITHMIC_NOTES_DEFAULT_VELOCITY_DECAY',
+        'LOGARITHMIC_NOTES_ORIENTATION_CW', 'LOGARITHMIC_NOTES_ORIENTATION_CCW', 'LOGARITHMIC_NOTES_ORIENTATIONS'
+    ];
+    for (const name of names) {
+        t.assertTruthy(new RegExp(`export\\s+const\\s+${name}\\s*=`).test(src), `defines ${name}`);
+    }
+});
+TestRunner.test("Day 737 - ui.js has 4 Logarithmic Notes menu items", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Logarithmic Notes') && l.includes('action:'));
+    t.assertEqual(lines.length, 4, `expected 4 Logarithmic menu items, got ${lines.length}`);
+});
+TestRunner.test("Day 737 - Logarithmic Notes menu items call track.logarithmicNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Logarithmic Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('logarithmicNotes('), 'each line calls logarithmicNotes');
+    }
+});
+TestRunner.test("Day 737 - Logarithmic Notes menu items call recreateToneSequence after logarithmicNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Logarithmic Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'calls recreateToneSequence(true)');
+    }
+});
+TestRunner.test("Day 737 - Logarithmic Notes menu items show Logarithmic'd N note(s) notification", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Logarithmic Notes') && l.includes('action:'));
+    const all = lines.join('\n');
+    t.assertTruthy(all.includes("Logarithmic'd") && all.includes('note(s)'), 'has notification message');
+});
+TestRunner.test("Day 737 - Logarithmic Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Logarithmic Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('Logarithmic Notes on'), 'has descriptive undo label');
+    }
+});
+TestRunner.test("Day 737 - Logarithmic Notes menu items include both orientations (cw, ccw)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Logarithmic Notes') && l.includes('action:'));
+    const all = lines.join('\n');
+    t.assertTruthy(all.includes("'cw'"), 'includes cw orientation');
+    t.assertTruthy(all.includes("'ccw'"), 'includes ccw orientation');
+});
+TestRunner.test("Day 737 - Logarithmic Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Logarithmic Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each line calls updateTrackUI');
+    }
+});
+TestRunner.test("Day 737 - APP_VERSION validation (>= 2.387 for Day 737)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 387), `APP_VERSION should be >= 2.387, got ${APP_VERSION}`);
+});
+TestRunner.test("Day 737 - logarithmicNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+TestRunner.test("Day 737 - logarithmicNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+TestRunner.test("Day 737 - logarithmicNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+TestRunner.test("Day 737 - logarithmicNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+TestRunner.test("Day 737 - logarithmicNotes functional test: clamps to valid ranges (length 100->64, turns 100->5, growthRate 100->0.5, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.LOGARITHMIC_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LOGARITHMIC_NOTES_MAX_TURNS/.test(src), 'has MAX_TURNS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LOGARITHMIC_NOTES_MAX_GROWTH_RATE/.test(src), 'has MAX_GROWTH_RATE clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LOGARITHMIC_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 737 - logarithmicNotes functional test: rowOffset clamped to +/- (length-1)/2", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/Math\.max\(-\(clampedLength\s*-\s*1\)\s*\/\s*2\s*,\s*Math\.min\(\(clampedLength\s*-\s*1\)\s*\/\s*2\s*,\s*Math\.round\(\(pt\.y\s*-\s*yMin\)\s*\*\s*rowScale\s*-\s*\(clampedLength\s*-\s*1\)\s*\/\s*2\)\)\)/.test(src), 'rowOffset clamped to +/- (length-1)/2 and centered around 0');
+});
+TestRunner.test("Day 737 - logarithmicNotes functional test: colOffset clamped to [0, length-1]", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/Math\.max\(\s*0\s*,\s*Math\.min\(clampedLength\s*-\s*1\s*,\s*Math\.round\(\(pt\.x\s*-\s*xMin\)\s*\*\s*colScale\)\)\)/.test(src), 'colOffset clamped to [0, length-1]');
+});
+TestRunner.test("Day 737 - logarithmicNotes functional test: theta spans [0, 2*PI*turns]", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/2\s*\*\s*Math\.PI\s*\*\s*clampedTurns/.test(src), 'uses 2*PI*turns for total angle');
+});
+TestRunner.test("Day 737 - logarithmicNotes functional test: angleSign=-1 for CCW, +1 for CW", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    t.assertTruthy(/angleSign\s*=\s*useOrientation\s*===\s*Constants\.LOGARITHMIC_NOTES_ORIENTATION_CCW\s*\?\s*-1\s*:\s*1/.test(src), 'angleSign flips for CCW');
+});
+TestRunner.test("Day 737 - logarithmicNotes functional test: radius grows geometrically (exponential, not linear)", (t) => {
+    const src = Track.prototype.logarithmicNotes.toString();
+    // Verify it does NOT use linear growth (the Archimedean pattern: startRadius + radialStep * t)
+    t.assertTruthy(!/radius\s*=\s*clampedStartRadius\s*\+\s*clampedGrowthRate/.test(src), 'does NOT use linear growth (Archimedean pattern)');
+    t.assertTruthy(/Math\.exp\(clampedGrowthRate\s*\*\s*t\)/.test(src), 'uses Math.exp for exponential growth');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
