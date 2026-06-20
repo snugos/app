@@ -8339,4 +8339,146 @@ export class Track {
 
         return catenaryCount;
     }
+
+    sierpinskiNotes(iterations = Constants.SIERPINSKI_NOTES_DEFAULT_ITERATIONS, cols = Constants.SIERPINSKI_NOTES_DEFAULT_SIZE, rows = Constants.SIERPINSKI_NOTES_DEFAULT_SIZE, velocityDecay = Constants.SIERPINSKI_NOTES_DEFAULT_VELOCITY_DECAY, orientation = Constants.SIERPINSKI_NOTES_ORIENTATION_CLASSIC, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} sierpinskiNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedIter = Math.max(Constants.SIERPINSKI_NOTES_MIN_ITERATIONS, Math.min(Constants.SIERPINSKI_NOTES_MAX_ITERATIONS, Math.floor(iterations)));
+        const clampedCols = Math.max(Constants.SIERPINSKI_NOTES_MIN_SIZE, Math.min(Constants.SIERPINSKI_NOTES_MAX_SIZE, Math.floor(cols)));
+        const clampedRows = Math.max(Constants.SIERPINSKI_NOTES_MIN_SIZE, Math.min(Constants.SIERPINSKI_NOTES_MAX_SIZE, Math.floor(rows)));
+        const clampedDecay = Math.max(Constants.SIERPINSKI_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.SIERPINSKI_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useOrientation = Constants.SIERPINSKI_NOTES_ORIENTATIONS.includes(orientation) ? orientation : Constants.SIERPINSKI_NOTES_ORIENTATION_CLASSIC;
+
+        // Build the Sierpinski centroid path. At depth 1 the equilateral triangle has 3
+        // vertices; its single centroid is the average of those vertices. At depth 2 we
+        // recurse into the 3 sub-triangles and take 3 centroids. Total centroids at depth n
+        // is 3^(n-1). We work in unit-triangle coordinates [0, 1]^2 where the base triangle
+        // has vertices A=(0,0), B=(1,0), C=(0.5, sqrt(3)/2) for CLASSIC.
+        const totalCentroids = Math.pow(3, clampedIter - 1);
+        if (totalCentroids < 1) return 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Sierpinski Notes (${useOrientation}, depth=${clampedIter}, ${clampedCols}x${clampedRows}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let sierpinskiCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        // Vertex sets for the four orientations, expressed in unit-triangle space.
+        // CLASSIC:    A=(0,0),        B=(1,0),        C=(0.5, sqrt(3)/2)
+        // INVERTED:   A=(0,sqrt(3)/2), B=(1,sqrt(3)/2), C=(0.5, 0)
+        // LEFT:       A=(0.5,0),      B=(1,sqrt(3)/2), C=(0,sqrt(3)/2)
+        // RIGHT:      A=(0,0),        B=(0.5,sqrt(3)/2), C=(1,0)
+        const SQRT3_OVER_2 = Math.sqrt(3) / 2;
+        let triA, triB, triC;
+        switch (useOrientation) {
+            case Constants.SIERPINSKI_NOTES_ORIENTATION_INVERTED:
+                triA = [0, SQRT3_OVER_2];
+                triB = [1, SQRT3_OVER_2];
+                triC = [0.5, 0];
+                break;
+            case Constants.SIERPINSKI_NOTES_ORIENTATION_LEFT:
+                triA = [0.5, 0];
+                triB = [1, SQRT3_OVER_2];
+                triC = [0, SQRT3_OVER_2];
+                break;
+            case Constants.SIERPINSKI_NOTES_ORIENTATION_RIGHT:
+                triA = [0, 0];
+                triB = [0.5, SQRT3_OVER_2];
+                triC = [1, 0];
+                break;
+            case Constants.SIERPINSKI_NOTES_ORIENTATION_CLASSIC:
+            default:
+                triA = [0, 0];
+                triB = [1, 0];
+                triC = [0.5, SQRT3_OVER_2];
+                break;
+        }
+
+        // Iteratively subdivide the triangle, recording the centroid of every sub-triangle.
+        const subMidpoint = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+        const centroid = (p, q, r) => [(p[0] + q[0] + r[0]) / 3, (p[1] + q[1] + r[1]) / 3];
+        let triangles = [[triA, triB, triC]];
+        const curve = [];
+        for (let it = 1; it <= clampedIter; it++) {
+            const newCentroids = [];
+            const nextTriangles = [];
+            for (const tri of triangles) {
+                const [p1, p2, p3] = tri;
+                const m12 = subMidpoint(p1, p2);
+                const m23 = subMidpoint(p2, p3);
+                const m13 = subMidpoint(p1, p3);
+                newCentroids.push(centroid(p1, m12, m13));
+                newCentroids.push(centroid(m12, p2, m23));
+                newCentroids.push(centroid(m13, m23, p3));
+                nextTriangles.push([p1, m12, m13]);
+                nextTriangles.push([m12, p2, m23]);
+                nextTriangles.push([m13, m23, p3]);
+            }
+            for (const c of newCentroids) curve.push(c);
+            triangles = nextTriangles;
+        }
+
+        // Map unit-triangle coordinates to grid (col, row) offsets.
+        for (let s = 0; s < curve.length; s++) {
+            const [ux, uy] = curve[s];
+            const normalizedY = useOrientation === Constants.SIERPINSKI_NOTES_ORIENTATION_INVERTED ? (1 - uy) : uy;
+            const gridX = Math.min(clampedCols - 1, Math.max(0, Math.floor(ux * clampedCols)));
+            const gridY = Math.min(clampedRows - 1, Math.max(0, Math.floor(normalizedY * clampedRows)));
+            curve[s] = { rowOffset: gridY, colOffset: gridX };
+        }
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let s = 0; s < curve.length; s++) {
+                    const c = curve[s];
+                    const targetRow = rowIndex + c.rowOffset;
+                    const targetCol = col + c.colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, s)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            sierpinskiCount++;
+        }
+
+        return sierpinskiCount;
+    }
 }

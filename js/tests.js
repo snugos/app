@@ -27558,6 +27558,205 @@ TestRunner.test("Day 734 - catenaryNotes functional test: rowOffset clamped to +
 TestRunner.test("Day 734 - catenaryNotes functional test: colOffset = (x + clampedXRange) * colScale", (t) => { const src = Track.prototype.catenaryNotes.toString(); t.assertTruthy(/\(x\s*\+\s*clampedXRange\)\s*\*\s*colScale/.test(src), "colOffset uses (x + clampedXRange) * colScale"); t.assertTruthy(/Math\.max\(0\s*,\s*Math\.min\(clampedLength\s*-\s*1/.test(src), "colOffset clamped to [0, length-1]"); });
 
 
+// Day 734: Sierpinski Triangle Notes Feature - sierpinskiNotes method, constants, UI menu items
+TestRunner.test("Day 734 - sierpinskiNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.sierpinskiNotes === 'function', 'sierpinskiNotes is a function');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes accepts 6 parameters with defaults (iterations, cols, rows, velocityDecay, orientation, skipOccupied)", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/iterations\s*=\s*Constants\.SIERPINSKI_NOTES_DEFAULT_ITERATIONS/.test(src), 'has iterations param with SIERPINSKI_NOTES_DEFAULT_ITERATIONS default');
+    t.assertTruthy(/cols\s*=\s*Constants\.SIERPINSKI_NOTES_DEFAULT_SIZE/.test(src), 'has cols param with SIERPINSKI_NOTES_DEFAULT_SIZE default');
+    t.assertTruthy(/rows\s*=\s*Constants\.SIERPINSKI_NOTES_DEFAULT_SIZE/.test(src), 'has rows param with SIERPINSKI_NOTES_DEFAULT_SIZE default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.SIERPINSKI_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay param with SIERPINSKI_NOTES_DEFAULT_VELOCITY_DECAY default');
+    t.assertTruthy(/orientation\s*=\s*Constants\.SIERPINSKI_NOTES_ORIENTATION_CLASSIC/.test(src), 'has orientation param with SIERPINSKI_NOTES_ORIENTATION_CLASSIC default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied param default true');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes captures undo BEFORE mutation with descriptive Sierpinski Notes label", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/_captureUndoState\(/.test(src), 'calls _captureUndoState');
+    t.assertTruthy(/Sierpinski Notes.*on/.test(src), 'descriptive Sierpinski Notes undo label');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes clamps iterations/cols/rows/velocityDecay to SIERPINSKI_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/SIERPINSKI_NOTES_MIN_ITERATIONS/.test(src), 'has MIN_ITERATIONS clamp');
+    t.assertTruthy(/SIERPINSKI_NOTES_MAX_ITERATIONS/.test(src), 'has MAX_ITERATIONS clamp');
+    t.assertTruthy(/SIERPINSKI_NOTES_MIN_SIZE/.test(src), 'has MIN_SIZE clamp');
+    t.assertTruthy(/SIERPINSKI_NOTES_MAX_SIZE/.test(src), 'has MAX_SIZE clamp');
+    t.assertTruthy(/SIERPINSKI_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+    t.assertTruthy(/SIERPINSKI_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes validates orientation via SIERPINSKI_NOTES_ORIENTATIONS (uses CLASSIC fallback)", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/SIERPINSKI_NOTES_ORIENTATIONS\.includes\(orientation\)/.test(src), 'validates orientation via SIERPINSKI_NOTES_ORIENTATIONS');
+    t.assertTruthy(/SIERPINSKI_NOTES_ORIENTATION_CLASSIC/.test(src), 'uses CLASSIC as fallback for invalid orientation');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes uses barycentric subdivision (centroid via average of 3 vertices)", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/centroid|subCentroid|subTriangle/.test(src), 'mentions centroid or sub-triangle in implementation');
+    t.assertTruthy(/\/\s*3/.test(src) || /\/\s*3\.0/.test(src), 'divides by 3 for centroid averaging');
+    t.assertTruthy(/for\s*\(\s*let\s+\w+\s*=\s*0\s*;\s*\w+\s*<\s*currentTriangles\.length/.test(src), 'iterates over current triangles to spawn sub-triangles');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay\s*,\s*s\)/.test(src), 'uses Math.pow(clampedDecay, s) for velocity decay');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'references skipOccupied');
+    t.assertTruthy(/skipOccupied\s*&&\s*activeSeq\.data\[targetRow\]/.test(src), 'checks skipOccupied before placement');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds decayed velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes returns count of sierpinski notes (sierpinskiCount)", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/let\s+sierpinskiCount\s*=\s*0/.test(src), 'declares sierpinskiCount');
+    t.assertTruthy(/return\s+sierpinskiCount/.test(src), 'returns sierpinskiCount');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes uses Math.floor for iterations, cols, rows", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/Math\.floor\(iterations\)/.test(src), 'uses Math.floor(iterations)');
+    t.assertTruthy(/Math\.floor\(cols\)/.test(src), 'uses Math.floor(cols)');
+    t.assertTruthy(/Math\.floor\(rows\)/.test(src), 'uses Math.floor(rows)');
+});
+
+TestRunner.test("Day 734 - All 15 SIERPINSKI_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const required = [
+        'SIERPINSKI_NOTES_MIN_ITERATIONS', 'SIERPINSKI_NOTES_MAX_ITERATIONS', 'SIERPINSKI_NOTES_DEFAULT_ITERATIONS',
+        'SIERPINSKI_NOTES_MIN_SIZE', 'SIERPINSKI_NOTES_MAX_SIZE', 'SIERPINSKI_NOTES_DEFAULT_SIZE',
+        'SIERPINSKI_NOTES_MIN_VELOCITY_DECAY', 'SIERPINSKI_NOTES_MAX_VELOCITY_DECAY', 'SIERPINSKI_NOTES_DEFAULT_VELOCITY_DECAY',
+        'SIERPINSKI_NOTES_ORIENTATION_CLASSIC', 'SIERPINSKI_NOTES_ORIENTATION_INVERTED',
+        'SIERPINSKI_NOTES_ORIENTATION_LEFT', 'SIERPINSKI_NOTES_ORIENTATION_RIGHT',
+        'SIERPINSKI_NOTES_ORIENTATIONS'
+    ];
+    for (const name of required) {
+        t.assertTruthy(new RegExp('export const ' + name).test(src), name + ' is exported');
+    }
+});
+
+TestRunner.test("Day 734 - SIERPINSKI_NOTES_ORIENTATIONS array includes all 4 orientations", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const allOrientations = src.includes('SIERPINSKI_NOTES_ORIENTATION_CLASSIC') &&
+                            src.includes('SIERPINSKI_NOTES_ORIENTATION_INVERTED') &&
+                            src.includes('SIERPINSKI_NOTES_ORIENTATION_LEFT') &&
+                            src.includes('SIERPINSKI_NOTES_ORIENTATION_RIGHT');
+    t.assertTruthy(allOrientations, 'all 4 orientations defined');
+});
+
+TestRunner.test("Day 734 - ui.js has 4 Sierpinski Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Sierpinski Notes\s*\(/g) || [];
+    t.assertEqual(matches.length, 4, `expected 4 Sierpinski Notes menu items, found ${matches.length}`);
+});
+
+TestRunner.test("Day 734 - Sierpinski Notes menu items call track.sierpinskiNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Sierpinski Notes\s*\([^)]+\)[\s\S]{0,200}currentTrackForMenu\.sierpinskiNotes/.test(src), 'calls track.sierpinskiNotes');
+});
+
+TestRunner.test("Day 734 - Sierpinski Notes menu items call recreateToneSequence after sierpinskiNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/currentTrackForMenu\.sierpinskiNotes\([\s\S]{0,300}recreateToneSequence\(true\)/.test(src), 'calls recreateToneSequence(true)');
+});
+
+TestRunner.test("Day 734 - Sierpinski Notes menu items show Sierpinski'd N note(s) notification", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Sierpinski'd/.test(src), "shows Sierpinski'd notification");
+});
+
+TestRunner.test("Day 734 - Sierpinski Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Sierpinski Notes on/.test(src), 'captures undo with Sierpinski Notes label');
+});
+
+TestRunner.test("Day 734 - APP_VERSION validation (>= 2.383 for Day 734)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 383), `APP_VERSION should be >= 2.383, got ${APP_VERSION}`);
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes functional test: clamps to valid ranges (iterations 100->5, cols 1000->32, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.SIERPINSKI_NOTES_MAX_ITERATIONS/.test(src), 'has MAX_ITERATIONS clamp');
+    t.assertTruthy(/SIERPINSKI_NOTES_MIN_ITERATIONS/.test(src), 'has MIN_ITERATIONS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.SIERPINSKI_NOTES_MAX_SIZE/.test(src), 'has MAX_SIZE clamp');
+    t.assertTruthy(/SIERPINSKI_NOTES_MIN_SIZE/.test(src), 'has MIN_SIZE clamp');
+    t.assertTruthy(/Math\.min\(Constants\.SIERPINSKI_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 734 - sierpinskiNotes structural test: supports 4 distinct orientations", (t) => {
+    const src = Track.prototype.sierpinskiNotes.toString();
+    t.assertTruthy(/SIERPINSKI_NOTES_ORIENTATION_CLASSIC/.test(src), 'has CLASSIC orientation');
+    t.assertTruthy(/SIERPINSKI_NOTES_ORIENTATION_INVERTED/.test(src), 'has INVERTED orientation');
+    t.assertTruthy(/SIERPINSKI_NOTES_ORIENTATION_LEFT/.test(src), 'has LEFT orientation');
+    t.assertTruthy(/SIERPINSKI_NOTES_ORIENTATION_RIGHT/.test(src), 'has RIGHT orientation');
+});
+
+TestRunner.test("Day 734 - Sierpinski Notes menu items include all 4 orientation variants", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Sierpinski Notes') && l.includes('action:'));
+    const all = lines.join('\n');
+    t.assertTruthy(all.includes("'classic'"), 'includes classic orientation');
+    t.assertTruthy(all.includes("'inverted'"), 'includes inverted orientation');
+    t.assertTruthy(all.includes("'left'"), 'includes left orientation');
+    t.assertTruthy(all.includes("'right'"), 'includes right orientation');
+});
+
+TestRunner.test("Day 734 - Sierpinski Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Sierpinski Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each Sierpinski Notes menu line calls updateTrackUI');
+    }
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

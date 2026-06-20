@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.383.0';
+export const APP_VERSION = '2.384.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1528,4 +1528,23 @@ export const CATENARY_NOTES_SHAPES = [
     CATENARY_NOTES_SHAPE_ARCH,
     CATENARY_NOTES_SHAPE_HALF,
     CATENARY_NOTES_SHAPE_TIGHT
+];
+export const SIERPINSKI_NOTES_MIN_ITERATIONS = 1; // Minimum 1 iteration (single equilateral triangle, 3 points)
+export const SIERPINSKI_NOTES_MAX_ITERATIONS = 5; // Maximum 5 iterations (3^5 = 243 triangle centroids)
+export const SIERPINSKI_NOTES_DEFAULT_ITERATIONS = 3; // Default 3 iterations (27 centroids, balanced detail)
+export const SIERPINSKI_NOTES_MIN_SIZE = 2; // Minimum 2x2 grid extent
+export const SIERPINSKI_NOTES_MAX_SIZE = 32; // Maximum 32x32 grid extent
+export const SIERPINSKI_NOTES_DEFAULT_SIZE = 8; // Default 8x8 grid extent
+export const SIERPINSKI_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation
+export const SIERPINSKI_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const SIERPINSKI_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per step
+export const SIERPINSKI_NOTES_ORIENTATION_CLASSIC = 'classic'; // Pointing-up equilateral triangle (apex at top)
+export const SIERPINSKI_NOTES_ORIENTATION_INVERTED = 'inverted'; // Pointing-down (apex at bottom, mirror of classic)
+export const SIERPINSKI_NOTES_ORIENTATION_LEFT = 'left'; // Tilted left (apex at upper-left)
+export const SIERPINSKI_NOTES_ORIENTATION_RIGHT = 'right'; // Tilted right (apex at upper-right)
+export const SIERPINSKI_NOTES_ORIENTATIONS = [
+    SIERPINSKI_NOTES_ORIENTATION_CLASSIC,
+    SIERPINSKI_NOTES_ORIENTATION_INVERTED,
+    SIERPINSKI_NOTES_ORIENTATION_LEFT,
+    SIERPINSKI_NOTES_ORIENTATION_RIGHT
 ];
