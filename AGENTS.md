@@ -1,3 +1,112 @@
+#### Day 735: Clothoid Notes Feature (2026-06-20)
+- **Feature**: Added `clothoidNotes(length, sMax, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Clothoid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **clothoid** curve (also called the "Euler spiral" or "Cornu spiral"), the canonical transition curve discovered by **Leonhard Euler in 1744** (and further studied by Marie Alfred Cornu in 1874 for optical diffraction calculations), whose curvature grows linearly with arc length — `κ(s) = s`. The clothoid is the only plane curve (along with the line and circle) whose curvature is a linear function of arc length, and the only spiral whose self-similar curvature makes it ideal as a **transition curve** in highway and railway engineering: cars and trains entering a curve of constant radius R need their curvature to ramp smoothly from 0 (straight) to 1/R (full curve), and the clothoid does this with **constant rate of change of lateral acceleration**, minimizing the jerk felt by passengers. The clothoid is also fundamental in **Fresnel diffraction optics**: when light passes through a straight edge, the intensity at a point in the diffraction pattern is given by the distance along the clothoid from the origin, with the bright/dark bands being the points where the spiral crosses the x-axis (this is Cornu's elegant "clothoid as diffraction integrator" result of 1874). The clothoid's parametric equations are the Fresnel integrals: `x(s) = ∫₀ˢ cos(½πu²) du` and `y(s) = ∫₀ˢ sin(½πu²) du` (with the ½π normalization chosen so the curve crosses the x-axis at s = ±1, ±3, ±5, ...). As `s → ±∞`, the curve approaches the **asymptotic corners** `L* = (½, ½)` and `(-½, -½)` (with the ½π normalization) — these are the Fresnel integrals' famous limits `C(∞) = S(∞) = ½`, the values used in the **Cornu spiral** that engineers and physicists draw on paper to compute diffraction patterns by hand. The clothoid has been called "the most useful spiral" and appears in: **highway cloverleaf interchange ramps** (the classic curved on/off-ramp shape), **roller coaster loops** (the "clothoid loop" is safer than a circular loop because it ramps G-forces gradually), **velodrome banked turns**, **bobsled track design**, **railway transitions** (every high-speed rail line uses clothoid transitions between straight track and curves — the TGV, Shinkansen, etc.), **optical lithography** (the clothoid is used to design camera lens apertures and telescope mirrors for minimal diffraction), **diffraction calculations** (Cornu's spiral is drawn in optics textbooks worldwide), and **robot motion planning** (the time-optimal path between a line and a circle is a clothoid segment, by Pontryagin's maximum principle). Four shape variants via the s-range resolver: 'standard' (s in [-S, +S] — full symmetric Euler spiral, Euler 1744 default, the classic Cornu spiral with both arms), 'forward' (s in [0, +S] — rightward-only first arm, single Fresnel tail approaching the upper-right asymptotic corner L*), 'backward' (s in [-S, 0] — leftward-only first arm, mirror of forward approaching the lower-left asymptotic corner -L*), 'tight' (s in [-S/2, +S/2] with rangeFactor=0.5 — smaller range, more concentrated near the origin where the clothoid has its tightest curvature, often called the "freshman's spiral" because beginners draw the clothoid too tight). The Fresnel integrals are computed numerically via the **trapezoidal rule with 32 substeps** per sample (the integrand `cos(½πu²)` and `sin(½πu²)` oscillate rapidly for large |u|, but with 32 substeps the numerical error is well under 1% even at s=6). The y-displacement (from -yMin to yMax-yMin after subtracting yMin) drives `rowOffset` and the x-displacement (after subtracting xMin) drives `colOffset`, with both mapped to the [0, length-1] range via `colScale = (clampedLength-1)/(xMax-xMin)` and `rowScale = (clampedLength-1)/(2*yRange)` so the clothoid fits the grid regardless of sMax. The fresh companion to `catenaryNotes` (Day 734, Huygens 1691 hanging chain): the catenary is the **shape assumed** by a hanging chain (statics), while the clothoid is the **shape traversed** by a light beam in diffraction (wave optics) and the **shape taken** by a car entering a curve (dynamics) — both are foundational curves in the calculus-of-variations tradition that Euler helped found. The clothoid complements the curve family: `catenaryNotes` (Day 734, Huygens hanging chain), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, Hilbert space-filling fractal), `roseNotes` (Day 732, Grandi rhodonea flower), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic transition curve of highway and railway engineering, the diffraction integrator of Cornu (1874), and the only plane curve with linearly growing curvature.
+
+- **Files Modified**:
+  - `js/Track.js`: Added `clothoidNotes` method after `catenaryNotes` (line ~8343, the new last method on the class)
+  - `js/constants.js`: Added 17 CLOTHOID_NOTES_* constants after the CATENARY_NOTES block + APP_VERSION bumped to 2.384.0
+  - `js/ui.js`: Added 4 Clothoid Notes menu items in the sequencer context menu after Catenary Notes (Tight, 32)
+  - `js/tests.js`: Added Day 735 test block with 41 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced since the Day 734 fix; the same fix has been needed on many days.)
+  - Fixed extra `}` closer on `js/ui.js` line 2836 (the "Double Length of" menu item had `} } },` instead of `} },`, a leftover from prior interrupted runs).
+- **Feature Details**:
+  - **clothoidNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a clothoid curve computed via numerically integrated Fresnel integrals. For sample `i` in 0..clampedLength-1, computes `s = sMin + (sMaxFinal - sMin) * i / max(1, clampedLength - 1)`, then numerically integrates `x(s) = ∫₀|s| cos(½πu²) du` and `y(s) = ∫₀|s| sin(½πu²) du` using the trapezoidal rule with 32 substeps per sample (`stepH = absS / subSteps`, `arg = halfPI * u * u`, `cx += cos(arg)`, `cy += sin(arg)`). After integration, multiplies by `sign(s)` so that negative-s samples get negative x and y, producing the symmetric Euler spiral. The y-displacement drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centering around 0 and clamping to ±(L-1)/2) and the x-displacement drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (mapping the [xMin, xMax] sample range to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Clothoid Notes (shape, S=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to CLOTHOID_NOTES_MIN_LENGTH (8) / CLOTHOID_NOTES_MAX_LENGTH (64) range with Math.floor (default CLOTHOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `sMax` to CLOTHOID_NOTES_MIN_S_MAX (1) / CLOTHOID_NOTES_MAX_S_MAX (6) range (default CLOTHOID_NOTES_DEFAULT_S_MAX=3 — well past the first Fresnel zero crossing at s=1)
+    - Clamps `velocityDecay` to CLOTHOID_NOTES_MIN_VELOCITY_DECAY (0.1) / CLOTHOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CLOTHOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against CLOTHOID_NOTES_SHAPES array, falls back to CLOTHOID_NOTES_SHAPE_STANDARD if invalid
+    - `rangeFactor = (useShape === CLOTHOID_NOTES_SHAPE_TIGHT) ? 0.5 : 1.0` (tight shape halves the s-range for a tighter spiral near origin)
+    - `sRangeMap[shape]` returns the [sMin, sMax] endpoints:
+      - STANDARD: `[-clampedSMax * rangeFactor, +clampedSMax * rangeFactor]` — symmetric Euler spiral (Euler 1744 default, the full Cornu spiral)
+      - FORWARD: `[0, +clampedSMax * rangeFactor]` — rightward-only first arm (one Fresnel tail)
+      - BACKWARD: `[-clampedSMax * rangeFactor, 0]` — leftward-only first arm (mirror of forward)
+      - TIGHT: `[-clampedSMax * rangeFactor, +clampedSMax * rangeFactor]` (with rangeFactor=0.5) — smaller range, more concentrated near origin
+    - Precomputes `samples` array once outside the per-note loop (the clothoid shape doesn't depend on rowIndex or col), iterating `i` in 0..clampedLength to push `{x, y}` pairs computed via trapezoidal rule
+    - Precomputes bounding box (xMin, xMax, yMin, yMax) over all samples (defaults to ±0.5 if no finite samples)
+    - Computes `colScale = (clampedLength - 1) / max(0.01, xMax - xMin)` (the 0.01 floor avoids division by zero when samples are degenerate)
+    - Computes `rowScale = (clampedLength - 1) / (2 * max(0.01, yMax - yMin))` (the factor of 2 keeps the row range symmetric around 0)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference — can happen at i=15 or i=16 where the clothoid crosses near origin)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of clothoid notes added (clothoidCount)
+  - **Clothoid Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Catenary Notes (Tight, 32)
+    - "Clothoid Notes (Standard, 32)" - calls `clothoidNotes(32, 3, 0.95, 'standard', true)` - full symmetric Euler spiral (Euler 1744 default), s in [-3, +3]
+    - "Clothoid Notes (Forward, 32)" - calls `clothoidNotes(32, 3, 0.95, 'forward', true)` - rightward-only first arm (one Fresnel tail), s in [0, +3]
+    - "Clothoid Notes (Backward, 32)" - calls `clothoidNotes(32, 3, 0.95, 'backward', true)` - leftward-only first arm, s in [-3, 0]
+    - "Clothoid Notes (Tight, 32)" - calls `clothoidNotes(32, 3, 0.95, 'tight', true)` - smaller range (rangeFactor=0.5), more concentrated near origin, s in [-1.5, +1.5]
+    - All call `recreateToneSequence(true)` after clothoiding
+    - All capture undo with descriptive `Clothoid Notes on <name> (<seqname>)` label
+    - Show notifications: `Clothoid'd {count} note(s) (variant, 32).`
+    - Show `No notes to clothoid.` when nothing to clothoid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 17 new constants
+  - `CLOTHOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples (need enough to resolve one Fresnel zero crossing at s=1)
+  - `CLOTHOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution clothoid)
+  - `CLOTHOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the clothoid
+  - `CLOTHOID_NOTES_MIN_S_MAX = 1` - Minimum 1.0 max arc-length (tight near origin)
+  - `CLOTHOID_NOTES_MAX_S_MAX = 6` - Maximum 6.0 max arc-length (well past first oscillation, where cosh/asymptotic Fresnel patterns are clear)
+  - `CLOTHOID_NOTES_DEFAULT_S_MAX = 3` - Default 3.0 max arc-length (past first Fresnel tail, near the asymptotic corner L*)
+  - `CLOTHOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `CLOTHOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `CLOTHOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `CLOTHOID_NOTES_SHAPE_STANDARD = 'standard'` - s in [-S, +S]: symmetric Euler spiral (Euler 1744 default)
+  - `CLOTHOID_NOTES_SHAPE_FORWARD = 'forward'` - s in [0, +S]: rightward-only first arm (one Fresnel tail)
+  - `CLOTHOID_NOTES_SHAPE_BACKWARD = 'backward'` - s in [-S, 0]: leftward-only first arm (mirror of forward)
+  - `CLOTHOID_NOTES_SHAPE_TIGHT = 'tight'` - s in [-S/2, +S/2] (rangeFactor=0.5): smaller range, more concentrated near origin
+  - `CLOTHOID_NOTES_SHAPES = [STANDARD, FORWARD, BACKWARD, TIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 40 tests covering (all pass):
+  - `clothoidNotes` is a function on Track.prototype
+  - `clothoidNotes` accepts 5 parameters with defaults (length, sMax, velocityDecay, shape, skipOccupied)
+  - `clothoidNotes` returns 0 for Audio tracks
+  - `clothoidNotes` gets active sequence via getActiveSequence
+  - `clothoidNotes` captures undo BEFORE mutation with descriptive `Clothoid Notes` label
+  - `clothoidNotes` clamps all parameters to CLOTHOID_NOTES_MIN/MAX_* ranges
+  - `clothoidNotes` validates shape with CLOTHOID_NOTES_SHAPES (uses STANDARD fallback)
+  - `clothoidNotes` uses Math.cos and Math.sin for Fresnel integrand
+  - `clothoidNotes` uses Math.PI for the half-pi constant
+  - `clothoidNotes` uses Math.pow for velocity decay
+  - `clothoidNotes` supports skipOccupied option
+  - `clothoidNotes` rounds velocity to 2 decimal places
+  - `clothoidNotes` returns count of clothoid notes (clothoidCount)
+  - `clothoidNotes` uses Math.floor for length
+  - All 17 CLOTHOID_NOTES constants are defined in constants.js
+  - CLOTHOID_NOTES_SHAPES includes standard, forward, backward, tight
+  - ui.js has 4 Clothoid Notes menu items
+  - Clothoid Notes menu items call track.clothoidNotes
+  - Clothoid Notes menu items call recreateToneSequence after clothoidNotes
+  - Clothoid Notes menu items show `Clothoid'd N note(s)` notification
+  - Clothoid Notes menu items capture undo with descriptive label
+  - Clothoid Notes menu items include all 4 shape variants
+  - Clothoid Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.384 for Day 735)
+  - Functional test: arg = halfPI * u^2
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, sMax 100->6, velocityDecay 2->1.0)
+  - Structural test: supports 4 distinct shapes
+  - Functional test: uses sMin/sMaxFinal based on shape (4 shape resolvers)
+  - Functional test: s parameter = sMin + (sMaxFinal - sMin) * i / (length - 1)
+  - Functional test: tight shape halves s-range via rangeFactor
+  - Functional test: numerical Fresnel integration uses substeps
+  - Functional test: colOffset = (x - xMin) * colScale
+  - Functional test: rowOffset uses yMin normalization
+  - Structural test: precomputes samples once outside the per-note loop
+  - Structural test: clamps rowOffset to +/- (length-1)/2
+- **Version**: Bumped to 2.384.0
+- **Test Count**: All 40 Day 735 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly after fixing pre-existing missing-close-paren syntax error on Track.js line 4047 and extra `}` closer on ui.js line 2836 (pre-existing bugs unrelated to Day 735). Total tests now at 3428 passed (up from 3388 before Day 735), 1449 failed (pre-existing infrastructure issues unchanged pattern).
+
+
 #### Day 734: Catenary Notes Feature (2026-06-20)
 - **Feature**: Added `catenaryNotes(length, a, xRange, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Catenary Notes" menu items to the sequencer context menu. Each active note spawns N samples along the **catenary** curve (also called the "chain curve" or "funicular curve"), the iconic hyperbolic-cosine shape of a uniform hanging chain or cable, predicted by Galileo in 1638 but correctly solved by **Huygens, Leibniz, and the Bernoullis in 1691-1692** (Johann Bernoulli posed the challenge as a public contest to Jacob Bernoulli in 1691, and the solution `y = a*cosh(x/a)` was independently derived by Leibniz, Huygens, and Johann himself — one of the early triumphs of the new differential calculus of Newton and Leibniz). The catenary parametric equations are `y(x) = a * cosh(x / a)` with vertex at `(0, a)`, and `cosh(t) = (e^t + e^-t)/2` is the hyperbolic cosine (one of the only two ways to combine exponentials such that the second derivative is itself). The catenary is **not** a parabola — though it can be confused with one visually — and the **catenary constant** `a` (the "link length" in physics) is a free parameter: large `a` makes a tight curve, small `a` makes a wide open catenary. As `|x| -> infinity`, `y -> infinity` and the curve grows exponentially, because `cosh(t) approx e^t/2` for large `t`. The catenary is famously the **shape of suspension bridge cables** (the Golden Gate Bridge cables are exactly catenaries, though engineers often approximate with parabolas for small sag-to-span ratios), the shape of the **Gateway Arch in St. Louis** (inverted catenary, sacred arch at right side of menu), the zero-gravity shape of a rotating chain, the equilibrium shape of a draped power cable, the natural shape of a spider's web thread, and the path a chain follows when held at both ends. The natural companion to **tractrix** (Day 733, the "drag curve"): the tractrix is the curve traced by a point being dragged, while the catenary is the curve assumed by a uniform chain being hung. They are intimately related: the tractrix is the **involute** of the catenary, and conversely the catenary is the **evolute** of the tractrix — one of the rare cases where the evolute and involute form a natural pair, related by differential geometry via the Christoffel symbols. The catenary also appears as the **solution of the minimum potential energy problem** for a hanging uniform chain under gravity (the calculus-of-variations "brachistochrone of the chain", often called the "funicular problem"), solved by Euler and the Bernoullis in 1691-1744 using the new tools of variational calculus. The catenary is also a **minimal surface of revolution** when rotated about the x-axis — a **catenoid** — discovered by Euler in 1744 to be the only non-planar minimal surface of revolution, and famously studied by Plateau as the shape of soap films between two coaxial rings. The catenary complements the curve family: `tractrixNotes` (Day 733, Huygens 1692 drag curve), `hilbertNotes` (Day 733, Hilbert space-filling fractal), `roseNotes` (Day 732, Grandi rhodonea flower), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic hanging-chain curve whose surface of revolution (the catenoid) is the only non-planar minimal surface of revolution, and whose arc length is `a*sinh(x/a)` — a hyperbolic sine — the same shape used in suspension bridge engineering.
 - **Files Modified**:

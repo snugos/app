@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.383.0';
+export const APP_VERSION = '2.385.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1528,4 +1528,28 @@ export const CATENARY_NOTES_SHAPES = [
     CATENARY_NOTES_SHAPE_ARCH,
     CATENARY_NOTES_SHAPE_HALF,
     CATENARY_NOTES_SHAPE_TIGHT
+];
+
+// Clothoid (Euler Spiral / Cornu Spiral) Notes — Day 735
+// Each active note spawns N samples along a clothoid curve, the canonical
+// transition curve used in highway/railway engineering, computed via
+// Fresnel integrals: x(s) = ∫₀ˢ cos(½πu²) du and y(s) = ∫₀ˢ sin(½πu²) du.
+export const CLOTHOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples (need enough to resolve one arm)
+export const CLOTHOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution clothoid)
+export const CLOTHOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the clothoid
+export const CLOTHOID_NOTES_MIN_S_MAX = 1; // Minimum 1.0 max arc-length (tight near origin)
+export const CLOTHOID_NOTES_MAX_S_MAX = 6; // Maximum 6.0 max arc-length (well past first oscillation)
+export const CLOTHOID_NOTES_DEFAULT_S_MAX = 3; // Default 3.0 max arc-length (past first Fresnel tail)
+export const CLOTHOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const CLOTHOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const CLOTHOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const CLOTHOID_NOTES_SHAPE_STANDARD = 'standard'; // s in [-S, +S]: symmetric Euler spiral (Euler 1744 default)
+export const CLOTHOID_NOTES_SHAPE_FORWARD = 'forward'; // s in [0, +S]: rightward-only first arm (one Fresnel tail)
+export const CLOTHOID_NOTES_SHAPE_BACKWARD = 'backward'; // s in [-S, 0]: leftward-only first arm (mirror of forward)
+export const CLOTHOID_NOTES_SHAPE_TIGHT = 'tight'; // s in [-S/2, +S/2] (rangeFactor=0.5): smaller range, more concentrated near origin
+export const CLOTHOID_NOTES_SHAPES = [
+    CLOTHOID_NOTES_SHAPE_STANDARD,
+    CLOTHOID_NOTES_SHAPE_FORWARD,
+    CLOTHOID_NOTES_SHAPE_BACKWARD,
+    CLOTHOID_NOTES_SHAPE_TIGHT
 ];
