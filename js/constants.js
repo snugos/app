@@ -1451,6 +1451,26 @@ export const ROSE_NOTES_SHAPES = [
     ROSE_NOTES_SHAPE_HALF,
     ROSE_NOTES_SHAPE_QUARTER
 ];
+// Day 733: Hilbert Curve Notes - Hilbert curve is a 2D space-filling fractal that visits every cell of a 2^n × 2^n grid exactly once. Invented by David Hilbert in 1891, it's a continuous self-avoiding curve that preserves spatial locality better than other space-filling curves. Used in image processing (dithering, compression), cache-friendly traversal (Z-order), procedural generation, and mathematical visualizations. The curve recursively subdivides the grid into 4 quadrants, visiting them in a U-shape pattern. For each source note, we trace a Hilbert curve of order N through an N×N grid and place notes along that path, producing fractal/spiral patterns that fill 2D space evenly. Order 1 = U-shape of 4 cells, Order 2 = 16 cells in a tighter U, Order 3 = 64 cells, etc. Orientations: forward (natural Hilbert), reverse (back along curve), inverse (rotate 180°), transpose (transpose axes).
+export const HILBERT_NOTES_MIN_ORDER = 1; // Minimum Hilbert curve order (1 = 2x2 = 4 cells, simple U)
+export const HILBERT_NOTES_MAX_ORDER = 5; // Maximum Hilbert curve order (5 = 32x32 = 1024 cells, complex)
+export const HILBERT_NOTES_DEFAULT_ORDER = 3; // Default order 3 (8x8 = 64 cells, balanced detail)
+export const HILBERT_NOTES_MIN_SIZE = 2; // Minimum 2x2 grid size (smallest non-trivial Hilbert)
+export const HILBERT_NOTES_MAX_SIZE = 32; // Maximum 32x32 grid (largest supported)
+export const HILBERT_NOTES_DEFAULT_SIZE = 8; // Default 8x8 grid (matches default order=3)
+export const HILBERT_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation
+export const HILBERT_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const HILBERT_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% preservation per step (gentle decay)
+export const HILBERT_NOTES_ORIENTATION_FORWARD = 'forward'; // Natural Hilbert curve traversal (U-shape outward)
+export const HILBERT_NOTES_ORIENTATION_REVERSE = 'reverse'; // Backwards along curve (mirrored U-shape)
+export const HILBERT_NOTES_ORIENTATION_INVERSE = 'inverse'; // Rotated 180° (still forward but inverted)
+export const HILBERT_NOTES_ORIENTATION_TRANSPOSE = 'transpose'; // Transpose axes (swap x/y)
+export const HILBERT_NOTES_ORIENTATIONS = [
+    HILBERT_NOTES_ORIENTATION_FORWARD,
+    HILBERT_NOTES_ORIENTATION_REVERSE,
+    HILBERT_NOTES_ORIENTATION_INVERSE,
+    HILBERT_NOTES_ORIENTATION_TRANSPOSE
+];
 // Tractrix Notes constants — the famous "drag curve" or "dog-walker curve" discovered by Christiaan Huygens in 1692
 // while studying tautochrones. Parametric form: x(t) = a*(t - tanh(t)), y(t) = a/cosh(t) = a*sech(t).
 // Famous as the cross-section of Beltrami's pseudosphere (a model of hyperbolic geometry).
