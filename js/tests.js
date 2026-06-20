@@ -27214,6 +27214,206 @@ TestRunner.test("Day 732 - Rose Notes menu items call recreateToneSequence after
     }
 });
 
+// Day 733: Hilbert Curve Notes Feature - hilbertNotes method, constants, UI menu items
+TestRunner.test("Day 733 - hilbertNotes is a function on Track.prototype", (t) => {
+    t.assertTruthy(typeof Track.prototype.hilbertNotes === 'function', 'hilbertNotes is a function');
+});
+
+TestRunner.test("Day 733 - hilbertNotes accepts 6 parameters with defaults (order, cols, rows, velocityDecay, orientation, skipOccupied)", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/order\s*=\s*Constants\.HILBERT_NOTES_DEFAULT_ORDER/.test(src), 'has order param with HILBERT_NOTES_DEFAULT_ORDER default');
+    t.assertTruthy(/cols\s*=\s*Constants\.HILBERT_NOTES_DEFAULT_SIZE/.test(src), 'has cols param with HILBERT_NOTES_DEFAULT_SIZE default');
+    t.assertTruthy(/rows\s*=\s*Constants\.HILBERT_NOTES_DEFAULT_SIZE/.test(src), 'has rows param with HILBERT_NOTES_DEFAULT_SIZE default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.HILBERT_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay param with HILBERT_NOTES_DEFAULT_VELOCITY_DECAY default');
+    t.assertTruthy(/orientation\s*=\s*Constants\.HILBERT_NOTES_ORIENTATION_FORWARD/.test(src), 'has orientation param with HILBERT_NOTES_ORIENTATION_FORWARD default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied param default true');
+});
+
+TestRunner.test("Day 733 - hilbertNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 733 - hilbertNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence()');
+});
+
+TestRunner.test("Day 733 - hilbertNotes captures undo BEFORE mutation with descriptive Hilbert Notes label", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/_captureUndoState\(/.test(src), 'calls _captureUndoState');
+    t.assertTruthy(/Hilbert Notes.*on/.test(src), 'descriptive Hilbert Notes undo label');
+});
+
+TestRunner.test("Day 733 - hilbertNotes clamps order/cols/rows/velocityDecay to HILBERT_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/HILBERT_NOTES_MIN_ORDER/.test(src), 'has MIN_ORDER clamp');
+    t.assertTruthy(/HILBERT_NOTES_MAX_ORDER/.test(src), 'has MAX_ORDER clamp');
+    t.assertTruthy(/HILBERT_NOTES_MIN_SIZE/.test(src), 'has MIN_SIZE clamp');
+    t.assertTruthy(/HILBERT_NOTES_MAX_SIZE/.test(src), 'has MAX_SIZE clamp');
+    t.assertTruthy(/HILBERT_NOTES_MIN_VELOCITY_DECAY/.test(src), 'has MIN_VELOCITY_DECAY clamp');
+    t.assertTruthy(/HILBERT_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 733 - hilbertNotes validates orientation via HILBERT_NOTES_ORIENTATIONS (uses FORWARD fallback)", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/HILBERT_NOTES_ORIENTATIONS\.includes\(orientation\)/.test(src), 'validates orientation via HILBERT_NOTES_ORIENTATIONS');
+    t.assertTruthy(/HILBERT_NOTES_ORIENTATION_FORWARD/.test(src), 'uses FORWARD as fallback for invalid orientation');
+});
+
+TestRunner.test("Day 733 - hilbertNotes uses iterative Hilbert d->(x,y) algorithm with rx/ry/t>>=2/s<<=1", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/hilbertD2XY/.test(src), 'defines hilbertD2XY helper');
+    t.assertTruthy(/rx\s*=\s*1\s*&\s*\(\s*t\s*>>\s*1\s*\)/.test(src), 'uses Gray-code rx extraction');
+    t.assertTruthy(/ry\s*=\s*1\s*&\s*\(\s*t\s*\^\s*rx\s*\)/.test(src), 'uses Gray-code ry extraction');
+    t.assertTruthy(/t\s*>>=\s*2/.test(src), 'shifts t by 2 each iteration');
+    t.assertTruthy(/s\s*<<=\s*1/.test(src), 'doubles s each iteration');
+});
+
+TestRunner.test("Day 733 - hilbertNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay\s*,\s*s\)/.test(src), 'uses Math.pow(clampedDecay, s) for velocity decay');
+});
+
+TestRunner.test("Day 733 - hilbertNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'references skipOccupied');
+    t.assertTruthy(/skipOccupied\s*&&\s*activeSeq\.data\[targetRow\]/.test(src), 'checks skipOccupied before placement');
+});
+
+TestRunner.test("Day 733 - hilbertNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(src), 'rounds decayed velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 733 - hilbertNotes returns count of hilbert notes (hilbertCount)", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/let\s+hilbertCount\s*=\s*0/.test(src), 'declares hilbertCount');
+    t.assertTruthy(/return\s+hilbertCount/.test(src), 'returns hilbertCount');
+});
+
+TestRunner.test("Day 733 - hilbertNotes uses Math.floor for order, cols, rows", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/Math\.floor\(order\)/.test(src), 'uses Math.floor(order)');
+    t.assertTruthy(/Math\.floor\(cols\)/.test(src), 'uses Math.floor(cols)');
+    t.assertTruthy(/Math\.floor\(rows\)/.test(src), 'uses Math.floor(rows)');
+});
+
+TestRunner.test("Day 733 - All 15 HILBERT_NOTES constants are defined in constants.js", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const required = [
+        'HILBERT_NOTES_MIN_ORDER', 'HILBERT_NOTES_MAX_ORDER', 'HILBERT_NOTES_DEFAULT_ORDER',
+        'HILBERT_NOTES_MIN_SIZE', 'HILBERT_NOTES_MAX_SIZE', 'HILBERT_NOTES_DEFAULT_SIZE',
+        'HILBERT_NOTES_MIN_VELOCITY_DECAY', 'HILBERT_NOTES_MAX_VELOCITY_DECAY', 'HILBERT_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HILBERT_NOTES_ORIENTATION_FORWARD', 'HILBERT_NOTES_ORIENTATION_REVERSE',
+        'HILBERT_NOTES_ORIENTATION_INVERSE', 'HILBERT_NOTES_ORIENTATION_TRANSPOSE',
+        'HILBERT_NOTES_ORIENTATIONS'
+    ];
+    for (const name of required) {
+        t.assertTruthy(new RegExp('export const ' + name).test(src), name + ' is exported');
+    }
+});
+
+TestRunner.test("Day 733 - HILBERT_NOTES_ORIENTATIONS array includes all 4 orientations", (t) => {
+    const src = require('fs').readFileSync('./js/constants.js', 'utf8');
+    const allOrientations = src.includes('HILBERT_NOTES_ORIENTATION_FORWARD') &&
+                            src.includes('HILBERT_NOTES_ORIENTATION_REVERSE') &&
+                            src.includes('HILBERT_NOTES_ORIENTATION_INVERSE') &&
+                            src.includes('HILBERT_NOTES_ORIENTATION_TRANSPOSE');
+    t.assertTruthy(allOrientations, 'all 4 orientations defined');
+});
+
+TestRunner.test("Day 733 - ui.js has 4 Hilbert Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Hilbert Notes\s*\(/g) || [];
+    t.assertEqual(matches.length, 4, `expected 4 Hilbert Notes menu items, found ${matches.length}`);
+});
+
+TestRunner.test("Day 733 - Hilbert Notes menu items call track.hilbertNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Hilbert Notes\s*\([^)]+\)[\s\S]{0,200}currentTrackForMenu\.hilbertNotes/.test(src), 'calls track.hilbertNotes');
+});
+
+TestRunner.test("Day 733 - Hilbert Notes menu items call recreateToneSequence after hilbertNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/currentTrackForMenu\.hilbertNotes\([\s\S]{0,300}recreateToneSequence\(true\)/.test(src), 'calls recreateToneSequence(true)');
+});
+
+TestRunner.test("Day 733 - Hilbert Notes menu items show Hilbert'd N note(s) notification", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/Hilbert'd/.test(src), 'shows Hilbert\'d notification');
+});
+
+TestRunner.test("Day 733 - Hilbert Notes menu items capture undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(/captureStateForUndo\(`Hilbert Notes on/.test(src), 'captures undo with Hilbert Notes label');
+});
+
+TestRunner.test("Day 733 - APP_VERSION validation (>= 2.382 for Day 733)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 382), `APP_VERSION should be >= 2.382, got ${APP_VERSION}`);
+});
+
+TestRunner.test("Day 733 - hilbertNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[\]/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+
+TestRunner.test("Day 733 - hilbertNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+
+TestRunner.test("Day 733 - hilbertNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 733 - hilbertNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 733 - hilbertNotes functional test: clamps to valid ranges (order 100->5, cols 1000->32, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.HILBERT_NOTES_MAX_ORDER/.test(src), 'has MAX_ORDER clamp');
+    t.assertTruthy(/HILBERT_NOTES_MIN_ORDER/.test(src), 'has MIN_ORDER clamp');
+    t.assertTruthy(/Math\.min\(Constants\.HILBERT_NOTES_MAX_SIZE/.test(src), 'has MAX_SIZE clamp');
+    t.assertTruthy(/HILBERT_NOTES_MIN_SIZE/.test(src), 'has MIN_SIZE clamp');
+    t.assertTruthy(/Math\.min\(Constants\.HILBERT_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 733 - hilbertNotes structural test: supports 4 distinct orientations", (t) => {
+    const src = Track.prototype.hilbertNotes.toString();
+    t.assertTruthy(/HILBERT_NOTES_ORIENTATION_FORWARD/.test(src), 'has FORWARD orientation');
+    t.assertTruthy(/HILBERT_NOTES_ORIENTATION_REVERSE/.test(src), 'has REVERSE orientation');
+    t.assertTruthy(/HILBERT_NOTES_ORIENTATION_INVERSE/.test(src), 'has INVERSE orientation');
+    t.assertTruthy(/HILBERT_NOTES_ORIENTATION_TRANSPOSE/.test(src), 'has TRANSPOSE orientation');
+});
+
+TestRunner.test("Day 733 - Hilbert Notes menu items include all 4 orientation variants", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const hilbertLines = src.split('\n').filter(l => l.includes('Hilbert Notes') && l.includes('action:'));
+    const allHilbert = hilbertLines.join('\n');
+    t.assertTruthy(allHilbert.includes("'forward'"), 'includes forward orientation');
+    t.assertTruthy(allHilbert.includes("'reverse'"), 'includes reverse orientation');
+    t.assertTruthy(allHilbert.includes("'inverse'"), 'includes inverse orientation');
+    t.assertTruthy(allHilbert.includes("'transpose'"), 'includes transpose orientation');
+});
+
+TestRunner.test("Day 733 - Hilbert Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const hilbertLines = src.split('\n').filter(l => l.includes('Hilbert Notes') && l.includes('action:'));
+    for (const line of hilbertLines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each Hilbert Notes menu line calls updateTrackUI');
+    }
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

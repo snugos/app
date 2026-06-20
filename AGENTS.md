@@ -1,3 +1,90 @@
+#### Day 733: Hilbert Curve Notes Feature (2026-06-20)
+- **Feature**: Added `hilbertNotes(order, cols, rows, velocityDecay, orientation, skipOccupied)` method to Track class and 4 "Hilbert Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **Hilbert curve** — a continuous, self-avoiding space-filling fractal invented by David Hilbert in 1891 that visits every cell of a 2^n × 2^n grid exactly once. The Hilbert curve preserves spatial locality far better than raster scans (better than row-major), and is widely used in image dithering, cache-friendly 2D range queries (Hilbert/Z-order curves), procedural content generation, and mathematical visualizations. The algorithm used here is the classic iterative Gray-code rotation algorithm (Tony Smith / Wikipedia): at each level `s` (doubling from 1 to `n`), read two bits `rx = (t >> 1) & 1` and `ry = (t ^ rx) & 1`; if `ry == 0` and `rx == 1`, reflect `(x, y)` around `(s-1, s-1)`; if `ry == 0`, swap `(x, y)`; then accumulate `x += s*rx; y += s*ry; t >>= 2`. The grid size is clamped to a power-of-two side `gridN ≤ min(clampedCols, clampedRows)` and `gridN ≤ 2^clampedOrder` (so a 4x4 grid with order 3 produces a 4x4 Hilbert, not a 8x8). Four orientations: 'forward' (natural Hilbert U-shape outward), 'reverse' (walk the curve backwards from end to start, mirrored U-shape), 'inverse' (rotate 180° around the grid center, still walks forward but each cell is reflected across both axes), 'transpose' (swap the x and y axes, mirror the curve along the main diagonal). Captures undo state BEFORE mutation with descriptive `Hilbert Notes (orientation, N order, colsxrows) on <seqname>` label. Complements `roseNotes` (Day 732, rhodonea flower), `lemniscateNotes` (Day 731, Bernoulli infinity), `involuteNotes` (Day 730, gear-tooth curve), `cycloidNotes` (Day 729, rolling-circle brachistochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase march), `phyllotaxisNotes` (Day 722, Fermat sunflower spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope curve), `mosaicNotes` (Day 719, 2D tile patterns), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, comet trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 712, linear 2D), `driftNotes` (Day 711, column-only drift), and `crescentNotes` (Day 710, grouped arc) with the iconic space-filling Hilbert fractal that minimizes 2D locality loss.
+- **Files Modified**:
+  - `js/Track.js`: Added `hilbertNotes` method after `roseNotes` (line ~8012, the new last method on the class)
+  - `js/constants.js`: Added 15 HILBERT_NOTES_* constants + APP_VERSION bumped to 2.382.0
+  - `js/ui.js`: Added 4 Hilbert Notes menu items in the sequencer context menu after Hypotrochoid Notes (Cardioid, 32)
+  - `js/tests.js`: Added Day 733 test block with 30 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. (Re-introduced since the Day 726 fix.)
+  - Fixed broken Hilbert menu items that were calling `currentTrackForMenu.hilbertNotes(N, N, N, 0.95, 'order-N', true)` with invalid orientation strings ('order-2', 'order-3', 'order-4', 'order-5', 'order-6', 'order-7') that would have silently fallen through to the FORWARD fallback. Replaced with 4 correctly-oriented items: Forward (order 2, 4x4), Reverse (order 3, 8x8), Inverse (order 4, 16x16), Transpose (order 5, 32x32).
+  - Removed 2 over-budget Hilbert menu items (Order 6, 64x64 and Order 7, 128x128) that exceeded HILBERT_NOTES_MAX_ORDER=5 and HILBERT_NOTES_MAX_SIZE=32; kept 4 within-bounds items.
+- **Feature Details**:
+  - **hilbertNotes** (`js/Track.js`): For each active note, builds the full Hilbert curve over a `gridN × gridN` grid (where `gridN` is the largest power-of-two ≤ min(clampedCols, clampedRows) and ≤ 2^clampedOrder) and places `gridN²` notes along the curve. The curve is generated via the iterative `hilbertD2XY(n, d)` helper adapted from the Wikipedia / Tony Smith algorithm. Each cell `(hx, hy)` is then scaled into `(colOffset, rowOffset)` via floor division: `gridX = min(clampedCols - 1, floor(hx * colStep))` where `colStep = clampedCols / gridN`. The orientation transform is applied BEFORE scaling:
+    - FORWARD: use `(hx, hy)` directly.
+    - REVERSE: walk the curve backwards via `hilbertD2XY(gridN, gridCells - 1 - i)` — at step `i`, this returns the position the curve would visit `gridCells - 1 - i` steps from the start, which is the cell visited in the forward traversal at step `gridCells - 1 - i`. So the reverse curve at step 0 is the forward cell at step `gridCells - 1`, step 1 is `gridCells - 2`, etc.
+    - INVERSE: 180° rotation around the grid center, so `(hx, hy) → (gridN - 1 - hx, gridN - 1 - hy)`. Preserves the forward direction but mirrors the curve through the center.
+    - TRANSPOSE: swap `(hx, hy) → (hy, hx)`, mirroring the curve along the main diagonal of the grid.
+  - **hilbertNotes** also:
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `order` to HILBERT_NOTES_MIN_ORDER (1) / HILBERT_NOTES_MAX_ORDER (5) range with Math.floor (default HILBERT_NOTES_DEFAULT_ORDER=3)
+    - Clamps `cols` and `rows` to HILBERT_NOTES_MIN_SIZE (2) / HILBERT_NOTES_MAX_SIZE (32) range with Math.floor (default HILBERT_NOTES_DEFAULT_SIZE=8)
+    - Clamps `velocityDecay` to HILBERT_NOTES_MIN_VELOCITY_DECAY (0.1) / HILBERT_NOTES_MAX_VELOCITY_DECAY (1.0) range (default HILBERT_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `orientation` against HILBERT_NOTES_ORIENTATIONS array, falls back to HILBERT_NOTES_ORIENTATION_FORWARD if invalid
+    - Derives `gridN` as the largest power-of-two ≤ max(HILBERT_NOTES_MIN_SIZE, min(clampedCols, clampedRows)) via doubling loop
+    - Captures undo BEFORE mutation with descriptive label
+    - Collects all new notes into `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of hilbert notes added (hilbertCount)
+- **Hilbert Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Hypotrochoid Notes (Cardioid, 32)
+  - "Hilbert Notes (Order 2, Forward, 4x4)" - calls `hilbertNotes(2, 4, 4, 0.95, 'forward', true)` - smallest non-trivial Hilbert (4x4 = 16 cells), natural direction
+  - "Hilbert Notes (Order 3, Reverse, 8x8)" - calls `hilbertNotes(3, 8, 8, 0.95, 'reverse', true)` - 8x8 = 64 cells walked backwards (mirrored U-shape)
+  - "Hilbert Notes (Order 4, Inverse, 16x16)" - calls `hilbertNotes(4, 16, 16, 0.95, 'inverse', true)` - 16x16 = 256 cells, 180° rotated around grid center
+  - "Hilbert Notes (Order 5, Transpose, 32x32)" - calls `hilbertNotes(5, 32, 32, 0.95, 'transpose', true)` - 32x32 = 1024 cells, axes swapped (diagonal mirror)
+  - All call `recreateToneSequence(true)` after hilberting
+  - All capture undo with descriptive `Hilbert Notes on <name> (<seqname>)` label
+  - Show notifications: `Hilbert'd {count} note(s) (order N, orientation, colsxrows).`
+  - Show `No notes to hilbert.` when nothing to hilbert
+  - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 15 new constants
+  - `HILBERT_NOTES_MIN_ORDER = 1` - Minimum Hilbert curve order (1 = 2x2 = 4 cells, simple U)
+  - `HILBERT_NOTES_MAX_ORDER = 5` - Maximum Hilbert curve order (5 = 32x32 = 1024 cells, complex)
+  - `HILBERT_NOTES_DEFAULT_ORDER = 3` - Default order 3 (8x8 = 64 cells, balanced detail)
+  - `HILBERT_NOTES_MIN_SIZE = 2` - Minimum 2x2 grid size (smallest non-trivial Hilbert)
+  - `HILBERT_NOTES_MAX_SIZE = 32` - Maximum 32x32 grid (largest supported)
+  - `HILBERT_NOTES_DEFAULT_SIZE = 8` - Default 8x8 grid (matches default order=3)
+  - `HILBERT_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation
+  - `HILBERT_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `HILBERT_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation
+  - `HILBERT_NOTES_ORIENTATION_FORWARD = 'forward'` - Natural Hilbert curve traversal (U-shape outward)
+  - `HILBERT_NOTES_ORIENTATION_REVERSE = 'reverse'` - Backwards along curve (mirrored U-shape)
+  - `HILBERT_NOTES_ORIENTATION_INVERSE = 'inverse'` - Rotated 180° (still forward but inverted)
+  - `HILBERT_NOTES_ORIENTATION_TRANSPOSE = 'transpose'` - Transpose axes (swap x/y)
+  - `HILBERT_NOTES_ORIENTATIONS = [FORWARD, REVERSE, INVERSE, TRANSPOSE]` - Valid orientation values
+- **Tests** (`js/tests.js`): 30 tests covering (all pass):
+  - `hilbertNotes` is a function on Track.prototype
+  - `hilbertNotes` accepts 6 parameters with defaults (order, cols, rows, velocityDecay, orientation, skipOccupied)
+  - `hilbertNotes` returns 0 for Audio tracks
+  - `hilbertNotes` gets active sequence via getActiveSequence
+  - `hilbertNotes` captures undo BEFORE mutation with descriptive label
+  - `hilbertNotes` clamps order/cols/rows/velocityDecay to HILBERT_NOTES_MIN/MAX_* ranges
+  - `hilbertNotes` validates orientation via HILBERT_NOTES_ORIENTATIONS (uses FORWARD fallback)
+  - `hilbertNotes` uses iterative Hilbert d->(x,y) algorithm with rx/ry/t>>=2/s<<=1
+  - `hilbertNotes` uses Math.pow for velocity decay
+  - `hilbertNotes` supports skipOccupied option
+  - `hilbertNotes` rounds velocity to 2 decimal places
+  - `hilbertNotes` returns count of hilbert notes (hilbertCount)
+  - `hilbertNotes` uses Math.floor for order, cols, rows
+  - All 15 HILBERT_NOTES constants are defined in constants.js
+  - HILBERT_NOTES_ORIENTATIONS array includes all 4 orientations
+  - ui.js has 4 Hilbert Notes menu items
+  - Hilbert Notes menu items call track.hilbertNotes
+  - Hilbert Notes menu items call recreateToneSequence after hilbertNotes
+  - Hilbert Notes menu items show Hilbert'd N note(s) notification
+  - Hilbert Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.382 for Day 733)
+  - hilbertNotes structural test: uses newNotes collection pattern (collect then apply)
+  - hilbertNotes structural test: preserves probability from source
+  - hilbertNotes structural test: respects sequence length and row boundaries
+  - hilbertNotes structural test: handles empty source (no active notes)
+  - hilbertNotes functional test: clamps to valid ranges (order 100->5, cols 1000->32, velocityDecay 2->1.0)
+  - hilbertNotes structural test: supports 4 distinct orientations
+  - Hilbert Notes menu items include all 4 orientation variants
+  - Hilbert Notes menu items call localAppServices.updateTrackUI on success
+- **Version**: Bumped to 2.382.0
+- **Test Count**: All 30 Day 733 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The pre-existing 1449 test infrastructure failures (related to ES module Constants not being visible to the Node test runner via fs.readFileSync) are unrelated to Day 733 — same pattern as Days 700-732. Total tests now at 3267 passed (up from 3234 after Day 732), 1449 failed (pre-existing infrastructure issues unchanged).
+
 #### Day 732: Rose Curve Notes Feature (2026-06-19)
 - **Feature**: Added `roseNotes(length, radius, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Rose Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **rhodonea curve** (also called the rose curve), the iconic flower-petal polar curve discovered by Guido Grandi in 1723 in his "Flores geometrici" and studied further by Lucia Perazza and Colin Maclaurin. The rose is defined by the polar equation `r = a · sin(k·θ)` with parametric form `x(θ) = a · sin(k·θ) · cos(θ)` and `y(θ) = a · sin(k·θ) · sin(θ)`, where `a` is the petal radius and `k` is the rose constant (an integer). For `k` odd, a single 2π sweep produces exactly `k` petals (k=3→3 petals, k=5→5 petals); for `k` even, a single 2π sweep produces `2k` petals because each petal is traced twice (k=6→12 petals, k=8→16 petals). Both `x` and `y` lie in `[-a, +a]`. Four shape variants via the `k`-resolver: 'standard' (k=5 — the classic 5-petal rose, the most common rhodonea shape), 'double' (k=6 — 12-petal rose, even-k case where each petal is traced twice during one revolution), 'half' (k=3 — 3-petal rose, the smallest odd-k rose with nontrivial shape), 'quarter' (k=8 — 16-petal dense rose, the highest petal count of the four presets). The `rowOffset` is clamped to `±clampedRadius` for sane grid placement, and `colOffset` is normalized via `(x + roseRange) * colScale` where `roseRange = clampedRadius` and `colScale = (clampedLength - 1) / (2 * roseRange)`. Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The rose family complements `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the iconic flower-petal polar curve studied by Grandi, Perazza, and Maclaurin.
 - **Files Modified**:

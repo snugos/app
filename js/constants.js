@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.381.0';
+export const APP_VERSION = '2.382.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1450,4 +1450,24 @@ export const ROSE_NOTES_SHAPES = [
     ROSE_NOTES_SHAPE_DOUBLE,
     ROSE_NOTES_SHAPE_HALF,
     ROSE_NOTES_SHAPE_QUARTER
+];
+// Day 733: Hilbert Curve Notes - Hilbert curve is a 2D space-filling fractal that visits every cell of a 2^n × 2^n grid exactly once. Invented by David Hilbert in 1891, it's a continuous self-avoiding curve that preserves spatial locality better than other space-filling curves. Used in image processing (dithering, compression), cache-friendly traversal (Z-order), procedural generation, and mathematical visualizations. The curve recursively subdivides the grid into 4 quadrants, visiting them in a U-shape pattern. For each source note, we trace a Hilbert curve of order N through an N×N grid and place notes along that path, producing fractal/spiral patterns that fill 2D space evenly. Order 1 = U-shape of 4 cells, Order 2 = 16 cells in a tighter U, Order 3 = 64 cells, etc. Orientations: forward (natural Hilbert), reverse (back along curve), inverse (rotate 180°), transpose (transpose axes).
+export const HILBERT_NOTES_MIN_ORDER = 1; // Minimum Hilbert curve order (1 = 2x2 = 4 cells, simple U)
+export const HILBERT_NOTES_MAX_ORDER = 5; // Maximum Hilbert curve order (5 = 32x32 = 1024 cells, complex)
+export const HILBERT_NOTES_DEFAULT_ORDER = 3; // Default order 3 (8x8 = 64 cells, balanced detail)
+export const HILBERT_NOTES_MIN_SIZE = 2; // Minimum 2x2 grid size (smallest non-trivial Hilbert)
+export const HILBERT_NOTES_MAX_SIZE = 32; // Maximum 32x32 grid (largest supported)
+export const HILBERT_NOTES_DEFAULT_SIZE = 8; // Default 8x8 grid (matches default order=3)
+export const HILBERT_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation
+export const HILBERT_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const HILBERT_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% preservation per step (gentle decay)
+export const HILBERT_NOTES_ORIENTATION_FORWARD = 'forward'; // Natural Hilbert curve traversal (U-shape outward)
+export const HILBERT_NOTES_ORIENTATION_REVERSE = 'reverse'; // Backwards along curve (mirrored U-shape)
+export const HILBERT_NOTES_ORIENTATION_INVERSE = 'inverse'; // Rotated 180° (still forward but inverted)
+export const HILBERT_NOTES_ORIENTATION_TRANSPOSE = 'transpose'; // Transpose axes (swap x/y)
+export const HILBERT_NOTES_ORIENTATIONS = [
+    HILBERT_NOTES_ORIENTATION_FORWARD,
+    HILBERT_NOTES_ORIENTATION_REVERSE,
+    HILBERT_NOTES_ORIENTATION_INVERSE,
+    HILBERT_NOTES_ORIENTATION_TRANSPOSE
 ];

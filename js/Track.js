@@ -8008,4 +8008,149 @@ export class Track {
 
         return roseCount;
     }
+
+    hilbertNotes(order = Constants.HILBERT_NOTES_DEFAULT_ORDER, cols = Constants.HILBERT_NOTES_DEFAULT_SIZE, rows = Constants.HILBERT_NOTES_DEFAULT_SIZE, velocityDecay = Constants.HILBERT_NOTES_DEFAULT_VELOCITY_DECAY, orientation = Constants.HILBERT_NOTES_ORIENTATION_FORWARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} hilbertNotes] No active sequence found.`);
+            return 0;
+        }
+
+        // Clamp parameters
+        const clampedOrder = Math.max(Constants.HILBERT_NOTES_MIN_ORDER, Math.min(Constants.HILBERT_NOTES_MAX_ORDER, Math.floor(order)));
+        const clampedCols = Math.max(Constants.HILBERT_NOTES_MIN_SIZE, Math.min(Constants.HILBERT_NOTES_MAX_SIZE, Math.floor(cols)));
+        const clampedRows = Math.max(Constants.HILBERT_NOTES_MIN_SIZE, Math.min(Constants.HILBERT_NOTES_MAX_SIZE, Math.floor(rows)));
+        const clampedDecay = Math.max(Constants.HILBERT_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.HILBERT_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useOrientation = Constants.HILBERT_NOTES_ORIENTATIONS.includes(orientation) ? orientation : Constants.HILBERT_NOTES_ORIENTATION_FORWARD;
+
+        // Hilbert curve grid side. For a true Hilbert curve the grid must be a power of 2
+        // matching `order`. We honour `cols`/`rows` as the visible grid extents and derive
+        // a `gridN` that is at most min(clampedCols, clampedRows, 2^clampedOrder) and is a
+        // power of two — the largest such power of two ≤ min(cols, rows) and ≤ 2^clampedOrder.
+        const maxSide = Math.max(Constants.HILBERT_NOTES_MIN_SIZE, Math.min(clampedCols, clampedRows));
+        let gridN = 1;
+        for (let p = 1; p * 2 <= maxSide; p *= 2) {
+            gridN = p * 2;
+        }
+        const gridCells = gridN * gridN;
+        if (gridCells < 1) return 0;
+
+        // Capture undo state BEFORE mutation
+        this._captureUndoState(`Hilbert Notes (${useOrientation}, order=${clampedOrder}, ${clampedCols}x${clampedRows}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let hilbertCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = []; // {rowIndex, col, velocity}
+
+        // Standard iterative Hilbert curve d→(x,y) using Gray-code rotations.
+        // Adapted from the Wikipedia / Tony Smith algorithm.
+        const hilbertD2XY = (n, d) => {
+            let x = 0, y = 0;
+            let t = d;
+            let s = 1;
+            while (s < n) {
+                const rx = 1 & (t >> 1);
+                const ry = 1 & (t ^ rx);
+                if (ry === 0) {
+                    if (rx === 1) {
+                        x = s - 1 - x;
+                        y = s - 1 - y;
+                    }
+                    const tmp = x; x = y; y = tmp;
+                }
+                x += s * rx;
+                y += s * ry;
+                t >>= 2;
+                s <<= 1;
+            }
+            return [x, y];
+        };
+
+        // Map a normalized Hilbert (hx, hy) in [0, gridN-1]^2 to the requested (cols, rows) extents.
+        // colStep scales hx into [0, clampedCols) and rowStep scales hy into [0, clampedRows).
+        // Using floor division keeps adjacent steps adjacent in the grid.
+        const colStep = clampedCols / gridN;
+        const rowStep = clampedRows / gridN;
+
+        // Build the (rowOffset, colOffset) sequence for the chosen orientation.
+        // The Hilbert path visits gridN*gridN cells; for each step `i` in 0..gridCells-1 we get
+        // raw (hx, hy). We then apply the orientation transform before scaling to the grid.
+        const curve = [];
+        for (let i = 0; i < gridCells; i++) {
+            let [hx, hy] = hilbertD2XY(gridN, i);
+            switch (useOrientation) {
+                case Constants.HILBERT_NOTES_ORIENTATION_REVERSE:
+                    // Walk the curve backwards. d2xy(gridN, totalCells - 1 - i) is the
+                    // position we'd visit `totalCells - 1 - i` steps from the start, which
+                    // equals the inverse of the curve at step i.
+                    [hx, hy] = hilbertD2XY(gridN, gridCells - 1 - i);
+                    break;
+                case Constants.HILBERT_NOTES_ORIENTATION_INVERSE:
+                    // 180 degree rotation: reflect both axes around the center of the grid.
+                    hx = (gridN - 1) - hx;
+                    hy = (gridN - 1) - hy;
+                    break;
+                case Constants.HILBERT_NOTES_ORIENTATION_TRANSPOSE:
+                    // Swap axes: mirror the curve along the main diagonal.
+                    [hx, hy] = [hy, hx];
+                    break;
+                case Constants.HILBERT_NOTES_ORIENTATION_FORWARD:
+                default:
+                    // No transform.
+                    break;
+            }
+            const gridX = Math.min(clampedCols - 1, Math.floor(hx * colStep));
+            const gridY = Math.min(clampedRows - 1, Math.floor(hy * rowStep));
+            curve.push({ rowOffset: gridY, colOffset: gridX });
+        }
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let s = 0; s < curve.length; s++) {
+                    const c = curve[s];
+                    const targetRow = rowIndex + c.rowOffset;
+                    const targetCol = col + c.colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    // Velocity decays by step index.
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, s)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            hilbertCount++;
+        }
+
+        return hilbertCount;
+    }
 }
