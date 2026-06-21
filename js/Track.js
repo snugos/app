@@ -4044,7 +4044,7 @@ export class Track {
             const data = audioBuffer.getChannelData(0);
             let peakAmplitude = 0;
             for (let i = 0; i < data.length; i++) {
-                const abs = Math.abs(data[i]);
+                const abs = Math.abs(data[i];
                 if (abs > peakAmplitude) peakAmplitude = abs;
             }
 
@@ -9214,6 +9214,7 @@ export class Track {
 
         return conchoidCount;
     }
+
     cardioidNotes(length = Constants.CARDIOID_NOTES_DEFAULT_LENGTH, scale = Constants.CARDIOID_NOTES_DEFAULT_SCALE, velocityDecay = Constants.CARDIOID_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.CARDIOID_NOTES_SHAPE_UP, skipOccupied = true) {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();
