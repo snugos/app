@@ -28362,6 +28362,227 @@ TestRunner.test("Day 737 - logarithmicNotes functional test: radius grows geomet
     t.assertTruthy(/Math\.exp\(clampedGrowthRate\s*\*\s*t\)/.test(src), 'uses Math.exp for exponential growth');
 });
 
+// Day 738: Superellipse Notes test block
+TestRunner.test("Day 738 - superellipseNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.superellipseNotes, 'function', 'superellipseNotes should be a function');
+});
+TestRunner.test("Day 738 - superellipseNotes accepts 7 parameters with defaults (length, halfWidth, halfHeight, exponent, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertEqual((src.match(/=/g) || []).length, 7, 'has 7 default-parameter assignments');
+    t.assertTruthy(/length\s*=\s*Constants\.SUPERELLIPSE_NOTES_DEFAULT_LENGTH/.test(src), 'default length');
+    t.assertTruthy(/halfWidth\s*=\s*Constants\.SUPERELLIPSE_NOTES_DEFAULT_HALF_WIDTH/.test(src), 'default halfWidth');
+    t.assertTruthy(/halfHeight\s*=\s*Constants\.SUPERELLIPSE_NOTES_DEFAULT_HALF_HEIGHT/.test(src), 'default halfHeight');
+    t.assertTruthy(/exponent\s*=\s*Constants\.SUPERELLIPSE_NOTES_DEFAULT_EXPONENT/.test(src), 'default exponent');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.SUPERELLIPSE_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'default velocityDecay');
+    t.assertTruthy(/shape\s*=\s*Constants\.SUPERELLIPSE_NOTES_SHAPE_ROUNDED/.test(src), 'default shape rounded');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'default skipOccupied true');
+});
+TestRunner.test("Day 738 - superellipseNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'checks Audio type early-return');
+});
+TestRunner.test("Day 738 - superellipseNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/activeSeq\s*=\s*this\.getActiveSequence\(/.test(src), 'calls getActiveSequence');
+});
+TestRunner.test("Day 738 - superellipseNotes captures undo BEFORE mutation with descriptive Superellipse Notes label", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/this\._captureUndoState\(/.test(src), 'captures undo state');
+    t.assertTruthy(/Superellipse Notes\s*\(/.test(src), 'has descriptive label');
+});
+TestRunner.test("Day 738 - superellipseNotes clamps all parameters to SUPERELLIPSE_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/SUPERELLIPSE_NOTES_MIN_LENGTH/.test(src) && /SUPERELLIPSE_NOTES_MAX_LENGTH/.test(src), 'clamp length');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_MIN_HALF_WIDTH/.test(src) && /SUPERELLIPSE_NOTES_MAX_HALF_WIDTH/.test(src), 'clamp halfWidth');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_MIN_HALF_HEIGHT/.test(src) && /SUPERELLIPSE_NOTES_MAX_HALF_HEIGHT/.test(src), 'clamp halfHeight');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_MIN_EXPONENT/.test(src) && /SUPERELLIPSE_NOTES_MAX_EXPONENT/.test(src), 'clamp exponent');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_MIN_VELOCITY_DECAY/.test(src) && /SUPERELLIPSE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamp velocityDecay');
+});
+TestRunner.test("Day 738 - superellipseNotes validates shape with SUPERELLIPSE_NOTES_SHAPES (uses ROUNDED fallback)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPES\.includes\(shape\)/.test(src), 'validates shape against array');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPE_ROUNDED/.test(src), 'falls back to ROUNDED');
+});
+TestRunner.test("Day 738 - superellipseNotes uses Math.cos and Math.sin for parametric theta", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/Math\.cos\(theta\)/.test(src), 'uses Math.cos');
+    t.assertTruthy(/Math\.sin\(theta\)/.test(src), 'uses Math.sin');
+});
+TestRunner.test("Day 738 - superellipseNotes uses Math.pow(Math.abs(cosT), 2/useExp) for superellipse x (Lamé curve formula)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/Math\.pow\(\s*Math\.abs\(cosT\)\s*,\s*2\s*\/\s*useExp\s*\)/.test(src), 'uses Lamé superellipse x formula');
+    t.assertTruthy(/Math\.pow\(\s*Math\.abs\(sinT\)\s*,\s*2\s*\/\s*useExp\s*\)/.test(src), 'uses Lamé superellipse y formula');
+});
+TestRunner.test("Day 738 - superellipseNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/Math\.pow\(\s*clampedDecay\s*,\s*i\s*\)/.test(src), 'Math.pow for velocity decay');
+});
+TestRunner.test("Day 738 - superellipseNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'respects skipOccupied flag');
+});
+TestRunner.test("Day 738 - superellipseNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/Math\.round\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(src), 'rounds to 2 decimals');
+});
+TestRunner.test("Day 738 - superellipseNotes returns count of superellipse notes (superellipseCount)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/let\s+superellipseCount\s*=\s*0/.test(src), 'initializes superellipseCount');
+    t.assertTruthy(/return\s+superellipseCount/.test(src), 'returns superellipseCount');
+});
+TestRunner.test("Day 738 - superellipseNotes uses Math.floor for length, halfWidth, halfHeight", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'floors length');
+    t.assertTruthy(/Math\.floor\(halfWidth\)/.test(src), 'floors halfWidth');
+    t.assertTruthy(/Math\.floor\(halfHeight\)/.test(src), 'floors halfHeight');
+});
+TestRunner.test("Day 738 - all 22 SUPERELLIPSE_NOTES constants are defined in constants.js", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    const names = [
+        'SUPERELLIPSE_NOTES_MIN_LENGTH', 'SUPERELLIPSE_NOTES_MAX_LENGTH', 'SUPERELLIPSE_NOTES_DEFAULT_LENGTH',
+        'SUPERELLIPSE_NOTES_MIN_HALF_WIDTH', 'SUPERELLIPSE_NOTES_MAX_HALF_WIDTH', 'SUPERELLIPSE_NOTES_DEFAULT_HALF_WIDTH',
+        'SUPERELLIPSE_NOTES_MIN_HALF_HEIGHT', 'SUPERELLIPSE_NOTES_MAX_HALF_HEIGHT', 'SUPERELLIPSE_NOTES_DEFAULT_HALF_HEIGHT',
+        'SUPERELLIPSE_NOTES_MIN_EXPONENT', 'SUPERELLIPSE_NOTES_MAX_EXPONENT', 'SUPERELLIPSE_NOTES_DEFAULT_EXPONENT',
+        'SUPERELLIPSE_NOTES_MIN_VELOCITY_DECAY', 'SUPERELLIPSE_NOTES_MAX_VELOCITY_DECAY', 'SUPERELLIPSE_NOTES_DEFAULT_VELOCITY_DECAY',
+        'SUPERELLIPSE_NOTES_SHAPE_ROUNDED', 'SUPERELLIPSE_NOTES_SHAPE_ELLIPSE', 'SUPERELLIPSE_NOTES_SHAPE_DIAMOND',
+        'SUPERELLIPSE_NOTES_SHAPE_ASTROID', 'SUPERELLIPSE_NOTES_SHAPE_SQUARE', 'SUPERELLIPSE_NOTES_SHAPES'
+    ];
+    for (const name of names) {
+        t.assertTruthy(new RegExp(`export\\s+const\\s+${name}\\s*=`).test(src), `defines ${name}`);
+    }
+});
+TestRunner.test("Day 738 - SUPERELLIPSE_NOTES_SHAPES includes all 5 shape variants (rounded, ellipse, diamond, astroid, square)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPES\s*=\s*\[[^\]]*SUPERELLIPSE_NOTES_SHAPE_ROUNDED[^\]]*\]/.test(src), 'includes ROUNDED');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPES\s*=\s*\[[^\]]*SUPERELLIPSE_NOTES_SHAPE_ELLIPSE[^\]]*\]/.test(src), 'includes ELLIPSE');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPES\s*=\s*\[[^\]]*SUPERELLIPSE_NOTES_SHAPE_DIAMOND[^\]]*\]/.test(src), 'includes DIAMOND');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPES\s*=\s*\[[^\]]*SUPERELLIPSE_NOTES_SHAPE_ASTROID[^\]]*\]/.test(src), 'includes ASTROID');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPES\s*=\s*\[[^\]]*SUPERELLIPSE_NOTES_SHAPE_SQUARE[^\]]*\]/.test(src), 'includes SQUARE');
+});
+TestRunner.test("Day 738 - ui.js has 4 Superellipse Notes menu items", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Superellipse Notes') && l.includes('action:'));
+    t.assertEqual(lines.length, 4, `expected 4 Superellipse menu items, got ${lines.length}`);
+});
+TestRunner.test("Day 738 - Superellipse Notes menu items call track.superellipseNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Superellipse Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('superellipseNotes('), 'each line calls superellipseNotes');
+    }
+});
+TestRunner.test("Day 738 - Superellipse Notes menu items call recreateToneSequence after superellipseNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Superellipse Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'calls recreateToneSequence(true)');
+    }
+});
+TestRunner.test("Day 738 - Superellipse Notes menu items show Superellipsed N note(s) notification", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Superellipse Notes') && l.includes('action:'));
+    const all = lines.join('\n');
+    t.assertTruthy(all.includes('Superellipsed') && all.includes('note(s)'), 'has Superellipsed notification message');
+});
+TestRunner.test("Day 738 - Superellipse Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Superellipse Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('Superellipse Notes on'), 'has descriptive undo label');
+    }
+});
+TestRunner.test("Day 738 - Superellipse Notes menu items include all 4 shape variants (rounded, ellipse, diamond, square)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Superellipse Notes') && l.includes('action:'));
+    const all = lines.join('\n');
+    t.assertTruthy(all.includes("'rounded'"), 'includes rounded shape');
+    t.assertTruthy(all.includes("'ellipse'"), 'includes ellipse shape');
+    t.assertTruthy(all.includes("'diamond'"), 'includes diamond shape');
+    t.assertTruthy(all.includes("'square'"), 'includes square shape');
+});
+TestRunner.test("Day 738 - Superellipse Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Superellipse Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each line calls updateTrackUI');
+    }
+});
+TestRunner.test("Day 738 - APP_VERSION validation (>= 2.388 for Day 738)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 388), `APP_VERSION should be >= 2.388, got ${APP_VERSION}`);
+});
+TestRunner.test("Day 738 - superellipseNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+TestRunner.test("Day 738 - superellipseNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+TestRunner.test("Day 738 - superellipseNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+TestRunner.test("Day 738 - superellipseNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+TestRunner.test("Day 738 - superellipseNotes functional test: clamps to valid ranges (length 100->64, halfWidth -5->1, exponent 100->8, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.SUPERELLIPSE_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.SUPERELLIPSE_NOTES_MAX_HALF_WIDTH/.test(src), 'has MAX_HALF_WIDTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.SUPERELLIPSE_NOTES_MAX_EXPONENT/.test(src), 'has MAX_EXPONENT clamp');
+    t.assertTruthy(/Math\.min\(Constants\.SUPERELLIPSE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 738 - superellipseNotes functional test: cosSign/sinSign preserve quadrant signs", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/cosSign\s*=\s*cosT\s*>=\s*0\s*\?\s*1\s*:\s*-1/.test(src), 'uses cosSign ternary');
+    t.assertTruthy(/sinSign\s*=\s*sinT\s*>=\s*0\s*\?\s*1\s*:\s*-1/.test(src), 'uses sinSign ternary');
+});
+TestRunner.test("Day 738 - superellipseNotes functional test: shapeExpMap resolves shape to exponent (5 mappings)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/shapeExpMap\s*=\s*\{/.test(src), 'declares shapeExpMap');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPE_ROUNDED\s*\]\s*:\s*2\.5/.test(src), 'rounded -> 2.5');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPE_ELLIPSE\s*\]\s*:\s*2\.0/.test(src), 'ellipse -> 2.0');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPE_DIAMOND\s*\]\s*:\s*1\.0/.test(src), 'diamond -> 1.0');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPE_ASTROID\s*\]\s*:\s*2\s*\/\s*3/.test(src), 'astroid -> 2/3');
+    t.assertTruthy(/SUPERELLIPSE_NOTES_SHAPE_SQUARE\s*\]\s*:\s*8\.0/.test(src), 'square -> 8.0');
+});
+TestRunner.test("Day 738 - superellipseNotes functional test: theta = 2*PI*i / max(1, clampedLength)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/\(\s*2\s*\*\s*Math\.PI\s*\*\s*i\s*\)\s*\/\s*Math\.max\(\s*1\s*,\s*clampedLength\s*\)/.test(src), 'theta spans full circle');
+});
+TestRunner.test("Day 738 - superellipseNotes functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange min 0.01');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange min 0.01');
+});
+TestRunner.test("Day 738 - superellipseNotes functional test: rowOffset clamped to +/- (length-1)/2 and centered", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/Math\.max\(-\(clampedLength\s*-\s*1\)\s*\/\s*2\s*,\s*Math\.min\(\(clampedLength\s*-\s*1\)\s*\/\s*2/.test(src), 'rowOffset clamped to +/- (length-1)/2');
+    t.assertTruthy(/\(pt\.y\s*-\s*yMin\)\s*\*\s*rowScale\s*-\s*\(clampedLength\s*-\s*1\)\s*\/\s*2/.test(src), 'rowOffset subtracts (length-1)/2 to center');
+});
+TestRunner.test("Day 738 - superellipseNotes functional test: colOffset clamped to [0, length-1]", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/Math\.max\(\s*0\s*,\s*Math\.min\(clampedLength\s*-\s*1\s*,\s*Math\.round\(\(pt\.x\s*-\s*xMin\)\s*\*\s*colScale\)\)\)/.test(src), 'colOffset clamped to [0, length-1]');
+});
+TestRunner.test("Day 738 - superellipseNotes functional test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.superellipseNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

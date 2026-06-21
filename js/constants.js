@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.387.0';
+export const APP_VERSION = '2.388.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1628,4 +1628,33 @@ export const LOGARITHMIC_NOTES_ORIENTATION_CCW = 'ccw'; // Counter-clockwise spi
 export const LOGARITHMIC_NOTES_ORIENTATIONS = [
     LOGARITHMIC_NOTES_ORIENTATION_CW,
     LOGARITHMIC_NOTES_ORIENTATION_CCW
+];
+
+// Superellipse Notes (Day 738) - Lamé curves, the "rounded rectangle" curve of Piet Hein
+export const SUPERELLIPSE_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve
+export const SUPERELLIPSE_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution superellipse)
+export const SUPERELLIPSE_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the superellipse
+export const SUPERELLIPSE_NOTES_MIN_HALF_WIDTH = 1; // Minimum 1 half-width a
+export const SUPERELLIPSE_NOTES_MAX_HALF_WIDTH = 8; // Maximum 8 half-width a
+export const SUPERELLIPSE_NOTES_DEFAULT_HALF_WIDTH = 4; // Default 4 half-width a
+export const SUPERELLIPSE_NOTES_MIN_HALF_HEIGHT = 1; // Minimum 1 half-height b
+export const SUPERELLIPSE_NOTES_MAX_HALF_HEIGHT = 8; // Maximum 8 half-height b
+export const SUPERELLIPSE_NOTES_DEFAULT_HALF_HEIGHT = 4; // Default 4 half-height b
+export const SUPERELLIPSE_NOTES_MIN_EXPONENT = 0.5; // Minimum 0.5 exponent n (astroid-like, concave diamond)
+export const SUPERELLIPSE_NOTES_MAX_EXPONENT = 8; // Maximum 8 exponent n (approaching square)
+export const SUPERELLIPSE_NOTES_DEFAULT_EXPONENT = 2.5; // Default 2.5 exponent (Sergels Torg / Piet Hein rounded square)
+export const SUPERELLIPSE_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const SUPERELLIPSE_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const SUPERELLIPSE_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const SUPERELLIPSE_NOTES_SHAPE_ROUNDED = 'rounded'; // n=2.5: classic rounded square (Piet Hein 1959 Sergels Torg)
+export const SUPERELLIPSE_NOTES_SHAPE_ELLIPSE = 'ellipse'; // n=2: classic ellipse (the only "regular" superellipse)
+export const SUPERELLIPSE_NOTES_SHAPE_DIAMOND = 'diamond'; // n=1: rhombus / diamond (Lamé 1818)
+export const SUPERELLIPSE_NOTES_SHAPE_ASTROID = 'astroid'; // n=2/3: concave 4-cusp star (the only non-convex case)
+export const SUPERELLIPSE_NOTES_SHAPE_SQUARE = 'square'; // n=8: nearly square (approaching the limit case)
+export const SUPERELLIPSE_NOTES_SHAPES = [
+    SUPERELLIPSE_NOTES_SHAPE_ROUNDED,
+    SUPERELLIPSE_NOTES_SHAPE_ELLIPSE,
+    SUPERELLIPSE_NOTES_SHAPE_DIAMOND,
+    SUPERELLIPSE_NOTES_SHAPE_ASTROID,
+    SUPERELLIPSE_NOTES_SHAPE_SQUARE
 ];

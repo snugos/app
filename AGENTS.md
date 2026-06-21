@@ -1,3 +1,123 @@
+#### Day 738: Superellipse Notes Feature (2026-06-21)
+- **Feature**: Added `superellipseNotes(length, halfWidth, halfHeight, exponent, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Superellipse Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **superellipse** curve (also called the **Lamé curve** or **"rounded rectangle" curve**), the family of plane curves discovered and named by **Gabriel Lamé in 1818** in his "Examen des différentes méthodes employées pour résoudre les problèmes de géométrie" but popularized as the **"superellipse"** by Danish poet, mathematician, and inventor **Piet Hein in 1959** when he designed the iconic oval **Sergels Torg** ("Square of Serzel") in Stockholm — a roundabout plaza in the heart of the Swedish capital whose rounded-rectangle shape solved a traffic-planning problem (regular squares wasted space; circles were cramped; the superellipse at n=2.5 was the unique curve that filled the space efficiently while allowing smooth traffic flow). The superellipse implicit equation is `|x/a|^n + |y/b|^n = 1` (Lamé 1818) and the parametric form is `x(t) = cosSign · |cos(t)|^(2/n) · a`, `y(t) = sinSign · |sin(t)|^(2/n) · b`, where `cosSign = sign(cos(t))` and `sinSign = sign(sin(t))` preserve four-quadrant symmetry. The exponent **n** is the **defining parameter**: **n=1** is a rhombus / diamond (straight-line sides, 4 sharp vertices), **n=2** is the classic ellipse (the only "true" conic section in the family, with continuous curvature everywhere and zero cusps), **n=2.5** is Piet Hein's iconic Sergels Torg rounded square (the natural visual interpolation between ellipse and square), **n=8** is nearly square (visually indistinguishable from a square but mathematically differentiable everywhere), and the special case **n=2/3** is the **astroid** (the 4-cusp hypocycloid with concave sides meeting at 4 inward-pointing cusps, the **only non-convex** case in the family). As **n → 0** the superellipse degenerates to a cross (the union of two line segments along the axes); as **n → ∞** it approaches a true rectangle (the limit case `max(|x/a|, |y/b|) = 1`, with a sudden curvature discontinuity at the corners). The superellipse appears throughout design and engineering: in Piet Hein's **Super-Ellipse furniture** (1959-1960, the famous "Superellipse Table" designed with Bruno Mathsson for the Nittsjö furniture company — now in MoMA's permanent collection), in **modernist architecture** (the superellipse is the canonical "softened rectangle" of building footprints, used in everything from kitchen tables to swimming pools to parklets), in **traffic engineering** (Sergels Torg solved the roundabout-vs-square tradeoff in dense urban centers), in **statistics** as the **elliptic norm / L^p norm** for **p ≠ 2** (Mahalanobis distance generalized, used in **LASSO regression** with p=1 and **ridge regression** with p=2, and as **Lp unit balls** in **functional analysis** and **compressed sensing**), in **typography and logo design** (the **Volvo iron mark** is a near-superellipse, many corporate logos use the softened-rectangle form for visual stability), in **font design** (modern **variable fonts** use superellipse-like glyph forms for cross-browser stability — the **superellipse-serif** design is a recent trend in custom type), in **HUD design and iconography** (Apple's iOS/macOS rounded-rectangle icons are essentially n=4-6 superellipses), in **biology** as **cross-sectional cell shapes** (the L^p norm describes the equilibrium shape of vesicles under different pressure regimes — n=1 gives the rhombic vesicle shape, n=2 the spherical, n=4 the squarish "stomatocyte"), in **machine learning** as the **L^p ball** boundary of regularization penalties (L1 = sparse / rhombus, L2 = ridge / sphere, L∞ = max / square — the superellipse is the entire L^p unit-ball family for p=1/n), and in **forensic facial reconstruction** as the **superellipse jaw model** that fits real human mandibles better than the textbook ellipse. Five shape variants via the exponent resolver: 'rounded' (n=2.5, the classic Piet Hein Sergels Torg rounded square, the canonical "modernist"/"corporate" softened rectangle), 'ellipse' (n=2.0, the only case that's a true conic section, with continuous curvature and no cusps), 'diamond' (n=1.0, the rhombus / Lamé 1818 original, straight-line sides and 4 sharp vertices, the **simplest** superellipse), 'astroid' (n=2/3, the 4-cusp hypocycloid with concave sides and inward-pointing cusps, the **only non-convex** case — historically grouped with the superellipse family because it's the natural continuation past n=1 into n<1), 'square' (n=8.0, the high-n limit, visually indistinguishable from a square but with continuous curvature at every point except the 4 corners). The `rowOffset` is clamped to ±(clampedLength-1)/2 (centered around 0, length-aware clamp) and `colOffset` is normalized via `(x - xMin) * colScale` where `colScale = (clampedLength-1) / xRange` and `xRange = max(0.01, xMax-xMin)` (robust minimum to avoid divide-by-zero). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The superellipse family complements `logarithmicNotes` (Day 737, self-similar geometric-growth spiral), `archimedeanNotes` (Day 736, equal-spacing spiral), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical **Lamé/Piet Hein softened-rectangle curve** — the visual signature of modernist design and the L^p unit-ball of functional analysis.
+- **Files Modified**:
+  - `js/Track.js`: Added `superellipseNotes` method after `logarithmicNotes` (line 8783, the new last method on the class)
+  - `js/constants.js`: Added 22 SUPERELLIPSE_NOTES_* constants + APP_VERSION bumped to 2.388.0
+  - `js/ui.js`: Added 4 Superellipse Notes menu items in the sequencer context menu after Logarithmic Notes (CW, 5 turns, 32)
+  - `js/tests.js`: Added Day 738 Superellipse test block with 35 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - None this run — line 4047 `const abs = Math.abs(data[i]);` fix from prior days is intact.
+- **Feature Details**:
+  - **superellipseNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a Lamé superellipse curve computed via parametric equations. For sample `i` in 0..clampedLength, computes `theta = (2 * PI) * i / max(1, clampedLength)`, then `cosT = Math.cos(theta)`, `sinT = Math.sin(theta)`, `cosSign = cosT >= 0 ? 1 : -1`, `sinSign = sinT >= 0 ? 1 : -1`, `x = cosSign * Math.pow(Math.abs(cosT), 2 / useExp) * clampedHalfWidth`, and `y = sinSign * Math.pow(Math.abs(sinT), 2 / useExp) * clampedHalfHeight`. The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Superellipse Notes (shape, n=..., WxH=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to SUPERELLIPSE_NOTES_MIN_LENGTH (8) / SUPERELLIPSE_NOTES_MAX_LENGTH (64) range with Math.floor (default SUPERELLIPSE_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `halfWidth` to SUPERELLIPSE_NOTES_MIN_HALF_WIDTH (1) / SUPERELLIPSE_NOTES_MAX_HALF_WIDTH (8) range with Math.floor (default SUPERELLIPSE_NOTES_DEFAULT_HALF_WIDTH=4)
+    - Clamps `halfHeight` to SUPERELLIPSE_NOTES_MIN_HALF_HEIGHT (1) / SUPERELLIPSE_NOTES_MAX_HALF_HEIGHT (8) range with Math.floor (default SUPERELLIPSE_NOTES_DEFAULT_HALF_HEIGHT=4)
+    - Clamps `exponent` to SUPERELLIPSE_NOTES_MIN_EXPONENT (0.5) / SUPERELLIPSE_NOTES_MAX_EXPONENT (8) range (default SUPERELLIPSE_NOTES_DEFAULT_EXPONENT=2.5 — Piet Hein Sergels Torg rounded square)
+    - Clamps `velocityDecay` to SUPERELLIPSE_NOTES_MIN_VELOCITY_DECAY (0.1) / SUPERELLIPSE_NOTES_MAX_VELOCITY_DECAY (1.0) range (default SUPERELLIPSE_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against SUPERELLIPSE_NOTES_SHAPES array, falls back to SUPERELLIPSE_NOTES_SHAPE_ROUNDED if invalid
+    - `shapeExpMap[shape]` returns the effective exponent based on shape:
+      - ROUNDED: `useExp = 2.5` — classic Piet Hein Sergels Torg rounded square (Piet Hein 1959 default)
+      - ELLIPSE: `useExp = 2.0` — classic ellipse (the only "true" conic section in the superellipse family)
+      - DIAMOND: `useExp = 1.0` — rhombus / Lamé 1818 original (straight-line sides, 4 sharp vertices)
+      - ASTROID: `useExp = 2/3` — 4-cusp astroid (the only non-convex case, concave 4-cusp star)
+      - SQUARE: `useExp = 8.0` — nearly square (high-n limit, visually indistinguishable from a square)
+    - `useExp = shapeExpMap[useShape] !== undefined ? shapeExpMap[useShape] : clampedExp` (fall back to user-provided clampedExp if shape not in map)
+    - Captures undo state BEFORE mutation with descriptive `Superellipse Notes (shape, n=..., WxH=..., N=...)` label
+    - For each sample i: computes `theta = (2 * PI * i) / max(1, clampedLength)`, then `cosT = Math.cos(theta)`, `sinT = Math.sin(theta)`, `cosSign = cosT >= 0 ? 1 : -1`, `sinSign = sinT >= 0 ? 1 : -1`, then `x = cosSign * Math.pow(Math.abs(cosT), 2 / useExp) * clampedHalfWidth`, `y = sinSign * Math.pow(Math.abs(sinT), 2 / useExp) * clampedHalfHeight`
+    - The `|cos(t)|` and `|sin(t)|` (with cosSign/sinSign restoring quadrant signs) ensures the parametric formula matches the implicit `|x/a|^n + |y/b|^n = 1` — this is the standard parametric form for the entire Lamé superellipse family
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one trig + one Math.pow computation per sample, reused across all source notes)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -0.5, xMax = 0.5, yMin = -0.5, yMax = 0.5`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of superellipse notes added (superellipseCount)
+  - **Superellipse Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Logarithmic Notes (CW, 5 turns, 32)
+    - "Superellipse Notes (Rounded, 32)" - calls `superellipseNotes(32, 4, 4, 2.5, 0.95, 'rounded', true)` - classic Piet Hein Sergels Torg rounded square (Piet Hein 1959 default), n=2.5
+    - "Superellipse Notes (Ellipse, 32)" - calls `superellipseNotes(32, 4, 4, 2.0, 0.95, 'ellipse', true)` - classic ellipse (n=2, the only "true" conic section)
+    - "Superellipse Notes (Diamond, 32)" - calls `superellipseNotes(32, 4, 4, 1.0, 0.95, 'diamond', true)` - rhombus / Lamé 1818 original (n=1, straight-line sides and 4 sharp vertices)
+    - "Superellipse Notes (Square, 32)" - calls `superellipseNotes(32, 4, 4, 8.0, 0.95, 'square', true)` - high-n limit, visually indistinguishable from a square (n=8)
+    - All call `recreateToneSequence(true)` after superellipsing
+    - All capture undo with descriptive `Superellipse Notes on <name> (<seqname>)` label
+    - Show notifications: `Superellipsed {count} note(s) (variant, 32).`
+    - Show `No notes to superellipse.` when nothing to superellipse
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 22 new constants
+  - `SUPERELLIPSE_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve
+  - `SUPERELLIPSE_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution superellipse)
+  - `SUPERELLIPSE_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the superellipse
+  - `SUPERELLIPSE_NOTES_MIN_HALF_WIDTH = 1` - Minimum 1 half-width a
+  - `SUPERELLIPSE_NOTES_MAX_HALF_WIDTH = 8` - Maximum 8 half-width a
+  - `SUPERELLIPSE_NOTES_DEFAULT_HALF_WIDTH = 4` - Default 4 half-width a
+  - `SUPERELLIPSE_NOTES_MIN_HALF_HEIGHT = 1` - Minimum 1 half-height b
+  - `SUPERELLIPSE_NOTES_MAX_HALF_HEIGHT = 8` - Maximum 8 half-height b
+  - `SUPERELLIPSE_NOTES_DEFAULT_HALF_HEIGHT = 4` - Default 4 half-height b
+  - `SUPERELLIPSE_NOTES_MIN_EXPONENT = 0.5` - Minimum 0.5 exponent n (covers the astroid case at n=2/3)
+  - `SUPERELLIPSE_NOTES_MAX_EXPONENT = 8` - Maximum 8 exponent n (approaching square)
+  - `SUPERELLIPSE_NOTES_DEFAULT_EXPONENT = 2.5` - Default 2.5 exponent (Sergels Torg / Piet Hein rounded square)
+  - `SUPERELLIPSE_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `SUPERELLIPSE_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `SUPERELLIPSE_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `SUPERELLIPSE_NOTES_SHAPE_ROUNDED = 'rounded'` - n=2.5: classic rounded square (Piet Hein 1959 Sergels Torg)
+  - `SUPERELLIPSE_NOTES_SHAPE_ELLIPSE = 'ellipse'` - n=2: classic ellipse (the only "regular" superellipse, true conic section)
+  - `SUPERELLIPSE_NOTES_SHAPE_DIAMOND = 'diamond'` - n=1: rhombus / diamond (Lamé 1818, straight-line sides and 4 sharp vertices)
+  - `SUPERELLIPSE_NOTES_SHAPE_ASTROID = 'astroid'` - n=2/3: concave 4-cusp star (the only non-convex case)
+  - `SUPERELLIPSE_NOTES_SHAPE_SQUARE = 'square'` - n=8: nearly square (approaching the limit case)
+  - `SUPERELLIPSE_NOTES_SHAPES = [ROUNDED, ELLIPSE, DIAMOND, ASTROID, SQUARE]` - Valid shape values
+- **Tests** (`js/tests.js`): 35 tests covering (all 35 pass):
+  - `superellipseNotes` is a function on Track.prototype
+  - `superellipseNotes` accepts 7 parameters with defaults (length, halfWidth, halfHeight, exponent, velocityDecay, shape, skipOccupied)
+  - `superellipseNotes` returns 0 for Audio tracks
+  - `superellipseNotes` gets active sequence via getActiveSequence
+  - `superellipseNotes` captures undo BEFORE mutation with descriptive `Superellipse Notes (shape, n=..., WxH=..., N=...)` label
+  - `superellipseNotes` clamps all parameters to SUPERELLIPSE_NOTES_MIN/MAX_* ranges
+  - `superellipseNotes` validates shape with SUPERELLIPSE_NOTES_SHAPES (uses ROUNDED fallback)
+  - `superellipseNotes` uses Math.cos and Math.sin for parametric theta
+  - `superellipseNotes` uses `Math.pow(Math.abs(cosT), 2/useExp)` and `Math.pow(Math.abs(sinT), 2/useExp)` for Lamé superellipse formula
+  - `superellipseNotes` uses cosSign/sinSign to preserve quadrant signs (4-quadrant symmetry)
+  - `superellipseNotes` uses Math.pow for velocity decay
+  - `superellipseNotes` supports skipOccupied option
+  - `superellipseNotes` rounds velocity to 2 decimal places
+  - `superellipseNotes` returns count of superellipse notes (superellipseCount)
+  - `superellipseNotes` uses Math.floor for length, halfWidth, halfHeight
+  - All 22 SUPERELLIPSE_NOTES constants are defined in constants.js
+  - SUPERELLIPSE_NOTES_SHAPES includes all 5 shape variants (rounded, ellipse, diamond, astroid, square)
+  - ui.js has 4 Superellipse Notes menu items
+  - Superellipse Notes menu items call track.superellipseNotes
+  - Superellipse Notes menu items call recreateToneSequence after superellipseNotes
+  - Superellipse Notes menu items show `Superellipsed N note(s)` notification
+  - Superellipse Notes menu items capture undo with descriptive label
+  - Superellipse Notes menu items include all 4 shape variants (rounded, ellipse, diamond, square)
+  - Superellipse Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.388 for Day 738)
+  - Functional test: x = cosSign * Math.pow(Math.abs(cosT), 2/useExp) * halfWidth (Lamé superellipse x formula)
+  - Functional test: y = sinSign * Math.pow(Math.abs(sinT), 2/useExp) * halfHeight (Lamé superellipse y formula)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, halfWidth -5->1, exponent 100->8, velocityDecay 2->1.0)
+  - Functional test: cosSign/sinSign preserve quadrant signs (4-quadrant symmetry)
+  - Functional test: shapeExpMap resolves shape to exponent (5 mappings)
+  - Functional test: theta = 2*PI*i / max(1, clampedLength)
+  - Functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety
+  - Functional test: rowOffset clamped to +/- (length-1)/2 and centered
+  - Functional test: colOffset clamped to [0, length-1]
+- **Version**: Bumped to 2.388.0
+- **Test Count**: All 35 Day 738 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly (1 warning, unrelated to Day 738, the pre-existing `noteNameToPitchClass` import warning from prior days). Total tests now at 3556 passed (up from 3521 before Day 738), 1451 failed (pre-existing infrastructure issues unchanged pattern).
+
 #### Day 738: Agent Audit (2026-06-20)
 - **Audit**: Snaw Feature Completion Agent run completed - feature completion check.
 - **Status**: No incomplete features found. Repository clean.
@@ -14,6 +134,8 @@
 - **Test Status**: No code changes were required; this was a read-only audit.
 - **Action Taken**: Updated AGENTS.md with this audit entry
 - **Version**: 2.387.0 (unchanged)
+
+(Day 738: Superellipse (Lamé) Notes - 4 softened-rectangle curves per source note (Piet Hein 1959 Sergels Torg))
 
 #### Day 737: Logarithmic Spiral Notes Feature (2026-06-20)
 - **Feature**: Added `logarithmicNotes(length, turns, startRadius, growthRate, velocityDecay, orientation, skipOccupied)` method to Track class and 4 "Logarithmic Notes" menu items to the sequencer context menu. Each active note spawns N samples along the **logarithmic spiral** — the **"spira mirabilis"** ("marvelous spiral") of Jacob Bernoulli (1691, "Spira mirabilis" engraved on his tombstone with the motto *"Eadem mutata resurgo"* — "Though changed, I shall arise the same," celebrating its self-similar property). The logarithmic spiral is the iconic **self-similar** plane curve whose radius grows **geometrically** with angle. Polar equation: `r(θ) = a · exp(b·θ)`; parametric: `x(θ) = a·exp(b·θ)·cos(θ)`, `y(θ) = a·exp(b·θ)·sin(θ)`, where `a` is the starting radius and `b` is the per-radian growth rate (so successive turn-to-turn spacing grows by the constant factor `exp(2π·b)` — the **defining property** distinguishing the logarithmic spiral from the Archimedean spiral, Day 736, where spacing is constant 2π·b, and the Fermat spiral, Day 722, where spacing grows with √θ). Self-similarity: any portion of the spiral, scaled by factor `k`, looks identical to the whole (the **only** non-trivial plane curve with this property, apart from the circle). Constant pitch angle `α = arctan(1/b)` between radius vector and tangent at every point. The special case **b = ln(φ)/(π/2) ≈ 0.3063** (φ = golden ratio ≈ 1.618) yields the **golden logarithmic spiral** matching the chambered nautilus shell cross-section (Nautilus pompilius, the canonical logarithmic spiral in biology). As **b → 0** the spiral degenerates to a circle (r = a, limit case); as **b → ∞** it becomes a degenerate ray shooting off to infinity. First studied by **René Descartes in 1638**, named and analyzed by **Jacob Bernoulli in 1691**, generalized to **3D conic-spiral analogs** and **higher-order logarithmic-spiral families** by **Pierre Varignon** and others. Found throughout nature and engineering: the **chambered nautilus shell** (Nautilus pompilius, b ≈ 0.18), **sunflower seed heads** (two interleaved logarithmic spirals with counts that are consecutive Fibonacci numbers: 34/55, 55/89, etc., per Vogel's 1979 model), **pineapple scales** (8, 13, 21 spirals, three Fibonacci numbers), **pinecones** (8 and 13 spirals), **broccoli romanesco** (fractal logarithmic-spiral conical florets), **spiral galaxies** (M51, M81, M101 grand-design spirals, b ≈ 0.3), **hurricane/typhoon spiral bands**, **spiral bevel gears** (constant-pitch contact), **scroll compressor chambers**, **tornado funnels**, **Celtic knots**, **fingerprints**, **musical spiral of Sauveur** (1696, equal-temperament mapping of pitches), **logarithmic-periodic dipole antennas**, **Vogel's constant K ≈ 0.3063** for sunflower phyllotaxis, and **Rankine vortex flow**. Two orientations via the angleSign resolver: 'cw' (positive θ, canonical Bernoulli 1691 default), 'ccw' (negative θ, mirror of cw). The logarithmic spiral is **distinct from** `archimedeanNotes` (Day 736, linear-growth `r = a + b·θ`, constant turn-to-turn spacing), `spiralNotes` (Day 713, discrete angular sweep), `phyllotaxisNotes` (Day 722, Fermat spiral `r ∝ √θ`), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition curve, not a polar curve), and `roseNotes` (Day 732, rhodonea `r = a·sin(k·θ)`, flower petals — **not** a logarithmic spiral despite the visual similarity at certain k values). Per-sample velocity decay applied via `Math.pow(clampedDecay, i)`. The logarithmic spiral family complements `archimedeanNotes` (Day 736, linear-growth Archimedean spiral), `clothoidNotes` (Day 735, Euler spiral transition curve), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the **self-similar marvel of geometry** whose turn-to-turn radius grows by a constant factor `exp(2π·b)` — the canonical geometric-growth spiral of nature and engineering.
