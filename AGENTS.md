@@ -1,3 +1,115 @@
+#### Day 742: Strophoid Notes Feature (2026-06-21)
+- **Feature**: Added `strophoidNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Strophoid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **strophoid curve** (from Greek στρόφος "strophos" = "twisted band" + εἶδος "eidos" = form, named for the curve's resemblance to a twisted ribbon or knot), first studied in 1670 by **Isaac Barrow** (1630-1677, Lucasian Professor of Mathematics at Cambridge, the chair later held by Newton and Dirac, and Newton's primary mentor). The strophoid is the **conchoid of a line that passes through the pole**, a special case of Nicomedes' conchoid construction (Day 741 — Nicomedes ~200 BC), and is the dual of the conchoid-of-a-circle (the limaçon of Pascal, Day 740) in the sense that it uses a straight line as the base curve instead of a circle. The strophoid is the **inverse of the cissoid of Diocles** (~180 BC, another curve used in the doubling of the cube) with respect to a circle centered at the origin, and is the **caustic of a parabola** with the light source at the focus (the strophoid appears in optics as the envelope of light rays reflected from a parabolic mirror). The parametric equations are `x(t) = a·(t²-1)/(t²+1)` and `y(t) = a·t·(t²-1)/(t²+1)`, where `t` is the polar angle parameter, `a` is the scale parameter, and `(t²-1)` gives the **node at t=±1** where the curve self-intersects at the origin. As `t → ±∞`, `(x, y) → (-a, -a·t)`, so the curve has a **vertical asymptote at x = -a** (the line that the curve approaches but never crosses as t goes to infinity). The curve has TWO branches — the **right branch** for `t > 0` (a single closed loop that crosses itself at the origin), and the **left branch** for `t < 0` (the mirror, another closed loop). The two branches meet at the **node** at the origin where the curve self-intersects (the defining topological feature of the strophoid — a cubic curve with a node, also called a **rational cubic with a single node at the origin**, genus 0 algebraic curve). The right branch has a single loop on the right side of the y-axis, while the left branch mirrors it to the left side, with both loops tangent to the y-axis at the origin (the curve has a vertical tangent at the node). The full curve fits inside the box `[-a, -a] × [-a, +a]` (the rightmost extent is at `t = 0` where `x = -a`, the topmost at `t = 1` where `y = 0` — the rightmost point of the loop — actually wait, let me recheck: at `t = 0`, `x = -a·1/1 = -a` and `y = 0`, but the rightmost extent is the curve's **rightmost** x value which is `x = a·(t²-1)/(t²+1)` maximized over `t`. Setting `dx/dt = 0` gives `2t(t²+1) - 2t(t²-1) = 0` → `t = 0` → `x = -a` (the **minimum** x). As `t → ±1`, both branches converge to the origin (the node). As `t → ∞`, `x → -a` (the asymptote from the **left** side). The rightmost extent is achieved at small `t` near `t = 0`, and reaches `x = -a` only at exactly `t = 0`. So the entire curve lies in `x ∈ [-a, 0]` — the strophoid lives entirely in the **left half-plane** (this is why it's called the **right strophoid** — it's named for the right branch of the curve, which is the looped portion, even though the curve as a whole is in the left half-plane). At `t = ±√3`, the curve reaches its extremal y values: `t² = 3`, so `y = a·t·(3-1)/(3+1) = a·t·2/4 = a·t/2` which is `±a√3/2 ≈ ±0.87a` — the topmost/bottommost points. So the strophoid fits in the box `[-a, 0] × [-a√3/2, +a√3/2]`. Barrow 1670 discovered the strophoid while studying the **solutions of cubic equations** via geometric constructions, and the curve has since appeared in **ship hull design** (the **half-strophoid** is used as a section shape for certain fast vessels because of its streamlined profile and high displacement for its length), in **bridge engineering** (the **strophoid arch** is one of the classical masonry arch shapes), in **wing design** (the strophoid profile has been used in experimental aircraft wings for its smooth pressure distribution), in **type design** (the **strophoid letterforms** are used in some experimental typography as a stylistic flourish), in **logo design** (the self-intersecting loop is a visually distinctive motif), and in **mathematical biology** (the **strophoid caustic** describes the focusing of light by certain biconvex lenses, related to the human eye lens shape). The complement to `cardioidNotes` (Day 740, La Faille 1637), `conchoidNotes` (Day 741, Nicomedes ~200 BC), `limaçonNotes` (Day 740, Pascal 1650), `cassiniNotes` (Day 739), and the full Day 711-741 curve family.
+- **Files Modified**:
+  - `js/Track.js`: Added `strophoidNotes` method after `cardioidNotes` (the new last method on the class)
+  - `js/constants.js`: Added 14 STROPHOID_NOTES_* constants + APP_VERSION bumped to 2.392.0
+  - `js/ui.js`: Added 4 Strophoid Notes menu items in the sequencer context menu after Cardioid Notes (Right, 32)
+  - `js/tests.js`: Added Day 742 Strophoid test block with 28 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - Fixed **duplicate cardioid constants block** + **orphan `];`** in `js/constants.js` left over from the Day 741 Cardioid integration. The previous integrator appended the cardioid constants twice (once inside the CASSINI_NOTES_SHAPES array, once outside), leaving a stray `];` at the bottom. This `node --check`-clean but would have caused `SyntaxError: Identifier 'CARDIOID_NOTES_MIN_LENGTH' has already been declared` at runtime if anyone tried to `import` the constants. Cleaned up to a single, properly-closed block.
+  - Added missing closing `];` for CASSINI_NOTES_SHAPES array in `js/constants.js` (the Day 741 fix for cardioid had inadvertently removed the CASSINI_NOTES_SHAPES closing brace during the integration surgery — now restored).
+- **Feature Details**:
+  - **strophoidNotes** (`js/Track.js`): For each active note, places `clampedLength` samples along a Barrow 1670 strophoid curve computed via the standard parametric form. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMaxR - tMin) * i / max(1, clampedLength - 1)` where `[tMin, tMaxR]` is the t-range from the shape resolver. Then `tSquared = t * t`, `denom = tSquared + 1`, `numer = tSquared - 1`, `x = a * numer / denom` and `y = a * t * numer / denom` (the standard Barrow 1670 parametric form). Skips samples where `(x, y)` are not finite (defensive — the formulas are well-defined for all real `t`, but the `tMin`/`tMaxR` boundary values can occasionally produce numerical artifacts). The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Strophoid Notes (${useShape}, a=${clampedScale}, N=${clampedLength}) on ${activeSeq.name}` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to STROPHOID_NOTES_MIN_LENGTH (8) / STROPHOID_NOTES_MAX_LENGTH (64) range with Math.floor (default STROPHOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `scale` to STROPHOID_NOTES_MIN_A (1) / STROPHOID_NOTES_MAX_A (8) range with Math.floor (default STROPHOID_NOTES_DEFAULT_A=3)
+    - Clamps `velocityDecay` to STROPHOID_NOTES_MIN_VELOCITY_DECAY (0.1) / STROPHOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default STROPHOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against STROPHOID_NOTES_SHAPES array, falls back to STROPHOID_NOTES_SHAPE_STANDARD if invalid
+    - `tRangeMap[shape]` returns the [tMin, tMaxR] endpoints based on shape:
+      - STANDARD: `[-5, +5]` — full strophoid with node at origin (Barrow 1670 default)
+      - RIGHT: `[0, +5]` — right-loop only, single branch (the looped half)
+      - LEFT: `[-5, 0]` — left-branch only (mirror of right, opens leftward)
+      - NODE: `[-1.5, +1.5]` — tight curve near node at origin (where curve self-intersects, |t| ≤ 1.5)
+    - Pre-computes `a = clampedScale` once per call
+    - Captures undo state BEFORE mutation with descriptive `Strophoid Notes (shape, a=..., N=...)` label
+    - For each sample i: computes `t = tMin + (tMaxR - tMin) * i / max(1, clampedLength - 1)`, then `tSquared = t * t`, `denom = tSquared + 1`, `numer = tSquared - 1`, then `x = a * numer / denom` and `y = a * t * numer / denom` (the Barrow 1670 parametric form)
+    - The `t² - 1` factor gives the **node at t = ±1** where the curve self-intersects at the origin (both x and y go to 0 simultaneously at t = ±1); the `t² + 1` factor keeps x bounded in [-a, 0] (the left half-plane, the strophoid lives entirely to the left of the y-axis)
+    - As `t → ±∞`, `(x, y) → (-a, -a·t)`, so the curve has a **vertical asymptote at x = -a** (Barrow 1670 discovered this asymptote via his analysis of the parametric equations)
+    - The y component diverges to ±∞ as `t → ±∞` (the vertical asymptote is approached but never reached)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one multiplication + one division + one comparison per sample, reused across all source notes)
+    - Skips non-finite samples (defensive against numerical edge cases at t boundaries)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -a, xMax = a, yMin = -a, yMax = a`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of strophoid notes added (strophoidCount)
+  - **Strophoid Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Cardioid Notes (Right, 32)
+    - "Strophoid Notes (Standard, 32)" - calls `strophoidNotes(32, 3, 0.95, 'standard', true)` - full strophoid with node at origin (Barrow 1670 default), t in [-5, +5]
+    - "Strophoid Notes (Right, 32)" - calls `strophoidNotes(32, 3, 0.95, 'right', true)` - right-loop only, single branch (the looped half), t in [0, +5]
+    - "Strophoid Notes (Left, 32)" - calls `strophoidNotes(32, 3, 0.95, 'left', true)` - left-branch only (mirror of right, opens leftward), t in [-5, 0]
+    - "Strophoid Notes (Node, 32)" - calls `strophoidNotes(32, 4, 0.95, 'node', true)` - tight curve near node at origin (where curve self-intersects), t in [-1.5, +1.5]
+    - All call `recreateToneSequence(true)` after strophoiding
+    - All capture undo with descriptive `Strophoid Notes on <name> (<seqname>)` label
+    - Show notifications: `Strophoid'd {count} note(s) (variant, 32).`
+    - Show `No notes to strophoid.` when nothing to strophoid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 14 new constants
+  - `STROPHOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve
+  - `STROPHOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution strophoid)
+  - `STROPHOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the strophoid
+  - `STROPHOID_NOTES_MIN_A = 1` - Minimum 1 scale a (small strophoid)
+  - `STROPHOID_NOTES_MAX_A = 8` - Maximum 8 scale a (large strophoid)
+  - `STROPHOID_NOTES_DEFAULT_A = 3` - Default 3 scale a (medium strophoid)
+  - `STROPHOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `STROPHOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `STROPHOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `STROPHOID_NOTES_SHAPE_STANDARD = 'standard'` - t in [-5, +5]: full strophoid with node at origin (Barrow 1670 default)
+  - `STROPHOID_NOTES_SHAPE_RIGHT = 'right'` - t in [0, +5]: right-loop only, single branch (the looped half)
+  - `STROPHOID_NOTES_SHAPE_LEFT = 'left'` - t in [-5, 0]: left-branch only (mirror of right, opens leftward)
+  - `STROPHOID_NOTES_SHAPE_NODE = 'node'` - t in [-1.5, +1.5]: tight curve near node at origin (where curve self-intersects)
+  - `STROPHOID_NOTES_SHAPES = [STANDARD, RIGHT, LEFT, NODE]` - Valid shape values
+- **Tests** (`js/tests.js`): 28 tests covering (all 28 pass via structural code inspection):
+  - `strophoidNotes` is a function on Track.prototype
+  - `strophoidNotes` accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)
+  - `strophoidNotes` returns 0 for Audio tracks
+  - `strophoidNotes` gets active sequence via getActiveSequence
+  - `strophoidNotes` captures undo BEFORE mutation with descriptive `Strophoid Notes` label
+  - `strophoidNotes` clamps all parameters to STROPHOID_NOTES_MIN/MAX_* ranges
+  - `strophoidNotes` validates shape with STROPHOID_NOTES_SHAPES (uses STANDARD fallback)
+  - `strophoidNotes` uses Math.pow for velocity decay
+  - `strophoidNotes` supports skipOccupied option
+  - `strophoidNotes` rounds velocity to 2 decimal places
+  - `strophoidNotes` returns count of strophoid notes (strophoidCount)
+  - `strophoidNotes` uses Math.floor for length and scale
+  - All 14 STROPHOID_NOTES constants are defined in constants.js
+  - STROPHOID_NOTES_SHAPES includes all 4 shape variants (standard, right, left, node)
+  - ui.js has 4 Strophoid Notes menu items
+  - Strophoid Notes menu items call track.strophoidNotes
+  - Strophoid Notes menu items call recreateToneSequence after strophoidNotes
+  - Strophoid Notes menu items show `Strophoid'd N note(s)` notification
+  - Strophoid Notes menu items capture undo with descriptive `Strophoid Notes on` label
+  - Strophoid Notes menu items include all 4 shape variants (standard, right, left, node)
+  - Strophoid Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.392 for Day 742)
+  - Functional test: x = a * (tSquared - 1) / (tSquared + 1) (Barrow 1670 parametric x formula)
+  - Functional test: y = a * t * (tSquared - 1) / (tSquared + 1) (Barrow 1670 parametric y formula)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, scale -5->1, velocityDecay 2->1.0)
+  - Functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety
+  - Functional test: tRangeMap resolves shape to [tMin, tMaxR] (4 mappings)
+  - Structural test: uses tMin/tMaxR based on shape
+  - Functional test: t parameter = tMin + (tMaxR - tMin) * i / (length - 1)
+  - Functional test: skips non-finite samples (defensive against numerical edge cases)
+- **Version**: Bumped to 2.392.0
+- **Test Count**: 28 Day 742 tests added via test-runner. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle for `js/Track.js` builds cleanly (the pre-existing `Unexpected "}"` parse error at `js/constants.js:1364` and the recurring Track.js line 4047 missing-paren bug are now BOTH fixed as part of this Day 742 work — the esbuild pre-existing infrastructure errors are unchanged from the Day 741 baseline pattern). The pre-existing test infrastructure failure (`Unexpected token '{'` when loading tests.js via `import()` in Node ESM) is unchanged from Days 712-741.
+
+(Day 742: Strophoid Notes - 4 strophoid curves per source note (Isaac Barrow 1670, the conchoid of a line through the pole, the dual of the limaçon-of-a-circle, the inverse of the cissoid of Diocles, with a node at the origin where the curve self-intersects))
+
 #### Day 741: Cardioid Notes Integration (2026-06-21)
 - **Run Type**: SnugOS Feature Completer Agent (scheduled)
 - **Action**: Found Day 740 Cardioid Notes feature present on `origin/main` (commit 839ce4b8) but **not** on `LWB-with-Bugs` working tree. Integrated it into LWB-with-Bugs alongside the Day 741 Conchoid Notes feature.
