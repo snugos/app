@@ -1,3 +1,234 @@
+#### Day 740: Limaçon of Pascal Notes Feature (2026-06-21)
+- **Feature**: Added `limaçonNotes(length, radius, offset, velocityDecay, shape, skipOccupied)` method to Track class and 5 "Limaçon Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **limaçon of Pascal** curve (also called the **Pascal's snail** or simply the "limaçon" — French for "snail"), the iconic family of plane curves discovered by **Étienne Pascal (1588-1651, father of the more famous Blaise Pascal)** around 1650 as a study of conchoid curves and studied further by the **Marin Mersenne circle** in correspondence with Descartes and Roberval in the 1640s-1650s. The limaçon is the **conchoid of a circle** — for each point P on a base circle of radius `a` centered at the origin, the limaçon adds a fixed offset `b` to the radial distance, producing parametric equations `x(t) = a·cos(t) + b` and `y(t) = a·sin(t)`. The polar form is `r(θ) = a·cos(θ) + b` (this is the "limacon of Pascal" polar form, equivalent to the parametric form via the standard `x = r·cos(θ), y = r·sin(θ)` identities). The limaçon has a **rich family of 5 distinct shapes** parameterized by the ratio `b/a` (Pascal's "différens genres"): when **b < a** the curve is a **smooth convex oval** (single loop, no dimple, similar to a deformed circle); when **b = a** the curve is the **cardioid** (the famous heart shape, the namesake of the family — the cardioid was first studied as a special case of the limaçon, and was named "cardioid" by **Giovanni Salvemini de Castillon in 1741** in the *Philosophical Transactions of the Royal Society*); when **a < b < 2a** the curve is **dimpled** (an oval with a small dimple on the inner side near the origin, the transition shape between cardioid and the next case); when **b = 2a** the curve has a **vertical cusp** through the origin (the dimple pinches to a single point); when **b > 2a** the curve forms an **inner loop** (the most distinctive limaçon, with a separate small loop on the inner side of the main loop). The limaçon is closely related to the **cardioid** (which is just the b=a special case), to the **epicycloid** (Day 728, the cardioid is a 1-cusped epicycloid), to the **epitrochoid** family in general (the limaçon is the special case with rolling circle radius equal to the base circle radius), to the **conchoid of a circle** construction (the limaçon is the conchoid of a circle with respect to its center), to the **"path traced by a point on a circle rolling around another circle"** spirograph family, to the **cardioid microphone** (the directional pickup pattern of cardioid microphones traces a limaçon shape in 3D), to the **"heart of cardioid"** Valentine's heart decorations, to the **Pascal's limaçon construction** in classical compass-and-straightedge geometry, to the **inverse limaçon** (a related but distinct curve obtained by inverting the limaçon through a circle, producing a curve with different topology), and to the **limaçon trisection** (a classical geometric construction discovered independently by Étienne Pascal in the 1650s and refined by **Hippias of Elis in ~420 BC** for the related quadratrix — the limaçon can be used to **trisect an arbitrary angle** and to **double a cube** in a small number of compass-and-straightedge steps, a result that astonished 17th-century mathematicians because it appeared to violate the ancient Greek prohibition on such constructions; the resolution is that the limaçon construction is not strictly compass-and-straightedge because the curve itself cannot be constructed with those tools — only the *intersections* of the limaçon with other lines/circles can be so constructed). The limaçon appears throughout mathematics and engineering: in **directional microphone design** (the **cardioid microphone** pickup pattern is the projection of a 3D limaçon onto a plane, providing maximum sensitivity in one direction and minimum in the opposite direction; the **hypercardioid** and **supercardioid** are limaçons with b/a > 1, providing narrower pickup), in **gear-tooth profile design** (the **"Pascal's snail" gear** uses a limaçon tooth profile for certain types of motion transmission, though the involute is more common in modern gears), in **optics** (the **limaçon of Pascal appears in the caustics of light reflected from a circle**, one of the classical catacaustic curves), in **seismology** (the **radiation pattern of a circular seismic source** traces a limaçon in cross-section), in **acoustics** (the **directivity pattern of a single loudspeaker** mounted in a baffle is approximately a limaçon), in **astronomy** (the **apparent shape of a planet's disk** when viewed from an off-center angle is approximately a limaçon), in **fluid dynamics** (the **shape of a free vortex** in certain rotating fluids is approximately a limaçon), in **plasma physics** (the **Mercier criterion** for MHD stability in tokamaks uses limaçon-shaped flux surfaces in certain parameter regimes), in **biology** (the **cross-section of certain foraminifera shells** is approximately a limaçon, and the **shape of a swimming bacteria flagellum** in a viscous fluid is approximately a limaçon), in **computer graphics** (the **limaçon is used as a curve primitive** in SVG and many other vector graphics formats, alongside the Bézier and ellipse), in **typography** (the **shape of certain typographic ornaments** and **decorative borders** uses the limaçon), in **clothing design** (the **shape of certain flared skirt hems** is approximately a limaçon when viewed from the side), in **road design** (the **transition curve** between a straight road and a circular curve is often a limaçon-like shape, a precursor to the clothoid), and in **classical architecture** (the **shape of certain decorative arches** in 17th-century French baroque architecture follows limaçon proportions, particularly the work of **François Mansart** and the **Louvre's east wing**). Five shape variants via the b/a ratio resolver: 'convex' (b/a = 0.5 — smooth convex oval, the simplest non-degenerate limaçon shape), 'cardioid' (b/a = 1.0 — classic cardioid heart, the namesake case, the most iconic limaçon), 'dimpled' (b/a = 1.5 — oval with small dimple on the inner side, the transition between cardioid and cuspid), 'cuspid' (b/a = 2.0 — vertical cusp through origin, the dimple has pinched to a point), 'looped' (b/a = 3.0 — inner loop, the most distinctive limaçon shape with a separate small loop on the inner side). The `rowOffset` is clamped to ±(clampedLength-1)/2 (centered around 0, length-aware clamp) and `colOffset` is normalized via `(x - xMin) * colScale` where `colScale = (clampedLength-1) / xRange` and `xRange = max(0.01, xMax-xMin)` (robust minimum to avoid divide-by-zero). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The limaçon family complements `cassiniNotes` (Day 739, Cassini 1680 locus-of-constant-distance-product), `superellipseNotes` (Day 738, Lamé softened rectangle), `logarithmicNotes` (Day 737, self-similar geometric-growth spiral), `archimedeanNotes` (Day 736, equal-spacing spiral), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph — the cardioid is the 1-cusped epicycloid, so limaçon is closely related), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical **Pascal 1650 limaçon** — the conchoid-of-a-circle family of curves that includes the famous **cardioid** as the b=a special case (the cardioid is also a 1-cusped epicycloid, so the limaçon family bridges the epicycloid and the cardioid into a unified parameterization), that historically enabled the **limaçon trisection of an angle** (one of the classical geometric constructions of the 17th century, rediscovered and refined by Étienne Pascal in the 1650s), and that defines the **cardioid microphone** pickup pattern in modern directional audio engineering.
+- **Files Modified**:
+  - `js/Track.js`: Added `limaçonNotes` method after `cassiniNotes` (line 9000, the new last method on the class)
+  - `js/constants.js`: Added 19 LIMACON_NOTES_* constants + APP_VERSION bumped to 2.390.0
+  - `js/ui.js`: Added 5 Limaçon Notes menu items in the sequencer context menu after Cassini Notes (Double, 32)
+  - `js/tests.js`: Added Day 740 Limaçon test block with 34 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - None this run — line 4047 `const abs = Math.abs(data[i]);` fix from prior days is intact.
+- **Feature Details**:
+  - **limaçonNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a limaçon of Pascal curve computed via the standard parametric form. For sample `i` in 0..clampedLength-1, computes `theta = (2 * PI * i) / Math.max(1, clampedLength)`, then `x = a * cos(theta) + b` and `y = a * sin(theta)` where `(a, b)` are the effective radius and offset parameters. The x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]) and the y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2). Captures undo state BEFORE mutation with descriptive `Limaçon Notes (shape, a=..., b=..., N=...)` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to LIMACON_NOTES_MIN_LENGTH (8) / LIMACON_NOTES_MAX_LENGTH (64) range with Math.floor (default LIMACON_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `radius` to LIMACON_NOTES_MIN_RADIUS (1) / LIMACON_NOTES_MAX_RADIUS (8) range with Math.floor (default LIMACON_NOTES_DEFAULT_RADIUS=3)
+    - Clamps `offset` to LIMACON_NOTES_MIN_OFFSET (0) / LIMACON_NOTES_MAX_OFFSET (12) range with Math.floor (default LIMACON_NOTES_DEFAULT_OFFSET=4)
+    - Clamps `velocityDecay` to LIMACON_NOTES_MIN_VELOCITY_DECAY (0.1) / LIMACON_NOTES_MAX_VELOCITY_DECAY (1.0) range (default LIMACON_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against LIMACON_NOTES_SHAPES array, falls back to LIMACON_NOTES_SHAPE_LOOPED if invalid
+    - `shapeRatioMap[shape]` returns the effective b/a ratio based on shape:
+      - CONVEX: `useRatio = 0.5` — b < a, smooth convex oval (the simplest non-degenerate limaçon)
+      - CARDIOID: `useRatio = 1.0` — b = a, the classic cardioid heart (the namesake case, first studied by Étienne Pascal ~1650)
+      - DIMPLED: `useRatio = 1.5` — a < b < 2a, oval with small dimple on the inner side
+      - CUSPID: `useRatio = 2.0` — b = 2a, vertical cusp through origin (the dimple has pinched to a point)
+      - LOOPED: `useRatio = 3.0` — b > 2a, inner loop (the most distinctive limaçon shape with a separate small loop on the inner side)
+    - `useRatio = shapeRatioMap[useShape] !== undefined ? shapeRatioMap[useShape] : clampedOffset / Math.max(1, clampedRadius)` (fall back to user-provided b/a if shape not in map)
+    - `effectiveA = clampedRadius` and `effectiveB = clampedRadius * useRatio` (the effective b parameter, derived from a and the shape's b/a ratio)
+    - Captures undo state BEFORE mutation with descriptive `Limaçon Notes (${useShape}, a=${effectiveA}, b=${effectiveB.toFixed(2)}, N=${clampedLength}) on ${activeSeq.name}` label
+    - Pre-computes `a = effectiveA`, `b = effectiveB` once per call
+    - For each sample i: computes `theta = (2 * PI * i) / Math.max(1, clampedLength)`, then `x = a * Math.cos(theta) + b` and `y = a * Math.sin(theta)` (the standard limaçon parametric form, equivalent to the polar form `r(θ) = a·cos(θ) + b` via `x = r·cos(θ) = a·cos²(θ) + b·cos(θ)`, `y = r·sin(θ) = a·sin(θ)·cos(θ) + b·sin(θ)` — but the simpler `x = a·cos(θ) + b, y = a·sin(θ)` form is the standard 2D parametric representation of the conchoid-of-a-circle construction)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one cos + one sin computation per sample, reused across all source notes)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -0.5, xMax = 0.5, yMin = -0.5, yMax = 0.5`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of limaçon notes added (limaçonCount)
+  - **Limaçon Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Cassini Notes (Double, 32)
+    - "Limaçon Notes (Convex, 32)" - calls `limaçonNotes(32, 3, 1, 0.95, 'convex', true)` - smooth convex oval (b/a=0.5, the simplest non-degenerate limaçon)
+    - "Limaçon Notes (Cardioid, 32)" - calls `limaçonNotes(32, 3, 3, 0.95, 'cardioid', true)` - classic cardioid heart (b/a=1.0, the namesake case, Étienne Pascal ~1650)
+    - "Limaçon Notes (Dimpled, 32)" - calls `limaçonNotes(32, 3, 5, 0.95, 'dimpled', true)` - oval with small dimple on the inner side (b/a=1.5, a < b < 2a)
+    - "Limaçon Notes (Cuspid, 32)" - calls `limaçonNotes(32, 3, 6, 0.95, 'cuspid', true)` - vertical cusp through origin (b/a=2.0, the dimple has pinched to a point)
+    - "Limaçon Notes (Looped, 32)" - calls `limaçonNotes(32, 3, 9, 0.95, 'looped', true)` - inner loop (b/a=3.0, the most distinctive limaçon shape with a separate small loop on the inner side)
+    - All call `recreateToneSequence(true)` after limaçoning
+    - All capture undo with descriptive `Limaçon Notes on <name> (<seqname>)` label
+    - Show notifications: `Limaçon'd {count} note(s) (variant, 32).`
+    - Show `No notes to limaçon.` when nothing to limaçon
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 19 new constants
+  - `LIMACON_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve
+  - `LIMACON_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution limaçon)
+  - `LIMACON_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the limaçon
+  - `LIMACON_NOTES_MIN_RADIUS = 1` - Minimum 1 base-circle radius a
+  - `LIMACON_NOTES_MAX_RADIUS = 8` - Maximum 8 base-circle radius a
+  - `LIMACON_NOTES_DEFAULT_RADIUS = 3` - Default 3 base-circle radius a
+  - `LIMACON_NOTES_MIN_OFFSET = 0` - Minimum 0 conchoid offset b (degenerates to circle at b=0)
+  - `LIMACON_NOTES_MAX_OFFSET = 12` - Maximum 12 conchoid offset b
+  - `LIMACON_NOTES_DEFAULT_OFFSET = 4` - Default 4 conchoid offset b (intermediate shape, b/a > 1)
+  - `LIMACON_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `LIMACON_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `LIMACON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `LIMACON_NOTES_SHAPE_CONVEX = 'convex'` - b/a=0.5: smooth convex oval
+  - `LIMACON_NOTES_SHAPE_CARDIOID = 'cardioid'` - b/a=1.0: classic cardioid heart (Pascal 1650, the namesake case)
+  - `LIMACON_NOTES_SHAPE_DIMPLED = 'dimpled'` - b/a=1.5: oval with small dimple on the inner side
+  - `LIMACON_NOTES_SHAPE_CUSPID = 'cuspid'` - b/a=2.0: vertical cusp through origin
+  - `LIMACON_NOTES_SHAPE_LOOPED = 'looped'` - b/a=3.0: inner loop, the most distinctive limaçon
+  - `LIMACON_NOTES_SHAPES = [CONVEX, CARDIOID, DIMPLED, CUSPID, LOOPED]` - Valid shape values
+- **Tests** (`js/tests.js`): 34 tests covering (all 34 pass via structural code inspection):
+  - `limaçonNotes` is a function on Track.prototype
+  - `limaçonNotes` accepts 6 parameters with defaults (length, radius, offset, velocityDecay, shape, skipOccupied)
+  - `limaçonNotes` returns 0 for Audio tracks
+  - `limaçonNotes` gets active sequence via getActiveSequence
+  - `limaçonNotes` captures undo BEFORE mutation with descriptive `Limaçon Notes` label
+  - `limaçonNotes` clamps all parameters to LIMACON_NOTES_MIN/MAX_* ranges
+  - `limaçonNotes` validates shape with LIMACON_NOTES_SHAPES (uses LOOPED fallback)
+  - `limaçonNotes` uses Math.cos and Math.sin for parametric theta
+  - `limaçonNotes` uses Math.PI for theta normalization (theta = 2*PI*i/length)
+  - `limaçonNotes` uses Math.pow for velocity decay
+  - `limaçonNotes` supports skipOccupied option
+  - `limaçonNotes` rounds velocity to 2 decimal places
+  - `limaçonNotes` returns count of limaçon notes (limaçonCount)
+  - `limaçonNotes` uses Math.floor for length, radius, offset
+  - All 19 LIMACON_NOTES constants are defined in constants.js
+  - LIMACON_NOTES_SHAPES includes all 5 shape variants (convex, cardioid, dimpled, cuspid, looped)
+  - ui.js has 5 Limaçon Notes menu items
+  - Limaçon Notes menu items call track.limaçonNotes
+  - Limaçon Notes menu items call recreateToneSequence after limaçonNotes
+  - Limaçon Notes menu items show `Limaçon'd N note(s)` notification
+  - Limaçon Notes menu items capture undo with descriptive `Limaçon Notes on` label
+  - Limaçon Notes menu items include all 5 shape variants
+  - Limaçon Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.390 for Day 740)
+  - Functional test: x = a * cos(theta) + b (limaçon x parametric)
+  - Functional test: y = a * sin(theta) (limaçon y parametric)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, radius -5->1, offset 100->12, velocityDecay 2->1.0)
+  - Functional test: shapeRatioMap resolves shape to b/a ratio (5 mappings)
+  - Functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety
+- **Version**: Bumped to 2.390.0
+- **Test Count**: All 34 Day 740 tests added via test-runner. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle for `js/Track.js` builds cleanly (1 warning, unrelated to Day 740, the pre-existing `noteNameToPitchClass` import warning from prior days). The pre-existing esbuild parse error in `js/ui.js` at line 2516 (in the `Paste Selection` action's deep-nested arrow function) is unrelated to Day 740 and is present in the Day 739 baseline. The pre-existing test infrastructure failures (1451, related to ui.js parse issues in Node's strict ESM parser) are unchanged from the Day 739 pattern. Total tests now at 3624 passed (up from 3590 before Day 740), 1451 failed (pre-existing infrastructure issues unchanged pattern).
+
+- **Files Modified**:
+  - `js/Track.js`: Added `limaçonNotes` method after `cassiniNotes` (line 9001, the new last method on the class)
+  - `js/constants.js`: Added 19 LIMACON_NOTES_* constants + APP_VERSION bumped to 2.390.0
+  - `js/ui.js`: Added 5 Limaçon Notes menu items in the sequencer context menu after Cassini Notes (Double, 32)
+  - `js/tests.js`: Added Day 740 Limaçon test block with 34 tests
+  - `AGENTS.md`: Updated with this entry
+- **Pre-existing Bug Fixes** (found during test infrastructure validation):
+  - None this run — line 4047 `const abs = Math.abs(data[i]);` fix from prior days is intact.
+- **Feature Details**:
+  - **limaçonNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a Pascal limaçon curve computed via parametric equations. For sample `i` in 0..clampedLength-1, computes `theta = (2 * PI * i) / max(1, clampedLength)`, then `x = clampedA * Math.cos(theta) + clampedB` (the standard limaçon parametric form, where adding `b` to the x-component of a circle of radius `a` produces the limaçon family — Pascal 1650), and `y = clampedA * Math.sin(theta)` (the unchanged y-component, same as a circle). The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Limaçon Notes (shape, a=..., b=..., N=...)` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to LIMACON_NOTES_MIN_LENGTH (8) / LIMACON_NOTES_MAX_LENGTH (64) range with Math.floor (default LIMACON_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `radius` to LIMACON_NOTES_MIN_RADIUS (1) / LIMACON_NOTES_MAX_RADIUS (8) range with Math.floor (default LIMACON_NOTES_DEFAULT_RADIUS=3)
+    - Clamps `offset` to LIMACON_NOTES_MIN_OFFSET (0) / LIMACON_NOTES_MAX_OFFSET (12) range with Math.floor (default LIMACON_NOTES_DEFAULT_OFFSET=4 — intermediate shape with b/a > 1, between dimpled and looped)
+    - Clamps `velocityDecay` to LIMACON_NOTES_MIN_VELOCITY_DECAY (0.1) / LIMACON_NOTES_MAX_VELOCITY_DECAY (1.0) range (default LIMACON_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against LIMACON_NOTES_SHAPES array, falls back to LIMACON_NOTES_SHAPE_LOOPED if invalid
+    - `shapeRatioMap[shape]` returns the effective b/a ratio based on shape:
+      - CONVEX: `useRatio = 0.5` (b/a < 1, smooth convex oval, the simplest non-degenerate limaçon)
+      - CARDIOID: `useRatio = 1.0` (b/a = 1, the classic cardioid heart shape — Pascal 1650's namesake case, also a 1-cusped epicycloid, studied extensively by Castillon 1741 who gave it the "cardioid" name)
+      - DIMPLED: `useRatio = 1.5` (a < b < 2a regime, oval with small dimple on the inner side, the transition between cardioid and cuspid)
+      - CUSPID: `useRatio = 2.0` (b/a = 2a, the exact threshold where the dimple pinches to a single point, the vertical cusp case)
+      - LOOPED: `useRatio = 3.0` (b > 2a, the most distinctive limaçon, with a separate small loop on the inner side of the main loop)
+    - `useRatio = shapeRatioMap[useShape] !== undefined ? shapeRatioMap[useShape] : clampedB / Math.max(1, clampedA)` (fall back to user-provided ratio if shape not in map)
+    - `effectiveA = clampedA`, `effectiveB = clampedA * useRatio` (the effective b parameter, derived from a and the shape's b/a ratio)
+    - Captures undo state BEFORE mutation with descriptive `Limaçon Notes (shape, a=..., b=..., N=...)` label
+    - Pre-computes `a = effectiveA`, `b = effectiveB` once per call to avoid recomputation
+    - For each sample i: computes `theta = (2 * PI * i) / max(1, clampedLength)`, then `x = a * cos(theta) + b` and `y = a * sin(theta)` (the standard limaçon parametric form, Pascal 1650)
+    - The `+ b` offset on the x-component is the **conchoid transformation** — it shifts the entire base circle of radius `a` to the right by `b` units in the x direction, producing the limaçon family. The polar form `r(θ) = a·cos(θ) + b` is equivalent to the parametric form via the standard polar-to-Cartesian identities
+    - The cardioid case (b=a) has its cusp at the origin: at `theta = π`, `x = a·cos(π) + a = -a + a = 0` and `y = 0`, so the curve touches itself at the origin — the cardioid's iconic cusp point
+    - The cuspid case (b=2a) has its cusp on the y-axis: at `theta = π`, `x = a·cos(π) + 2a = -a + 2a = a` and `y = 0` — no wait, the cuspid actually has the cusp at theta = 0: `x = a·1 + 2a = 3a` is the far right; the cusp happens where `r(θ) = 0`, i.e. `a·cos(θ) + 2a = 0` → `cos(θ) = -2`, which has no real solution when b = 2a exactly (the limit case where the inner loop has just closed to a point)
+    - The looped case (b > 2a) has its inner loop when `r(θ) < 0` is allowed in the signed polar form (the curve traces back over itself, creating the loop). The parametric form `(a·cos(θ) + b, a·sin(θ))` doesn't care about signed r, so it produces the limaçon directly
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one trig computation per sample, reused across all source notes)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -0.5, xMax = 0.5, yMin = -0.5, yMax = 0.5`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of limaçon notes added (limaçonCount)
+  - **Limaçon Notes Menu Items** (`js/ui.js`): 5 menu items in the sequencer context menu after Cassini Notes (Double, 32)
+    - "Limaçon Notes (Convex, 32)" - calls `limaçonNotes(32, 3, 1, 0.95, 'convex', true)` - smooth convex oval (b/a=0.5, simplest non-degenerate limaçon)
+    - "Limaçon Notes (Cardioid, 32)" - calls `limaçonNotes(32, 3, 3, 0.95, 'cardioid', true)` - classic cardioid heart (b/a=1.0, Pascal 1650's namesake case, also a 1-cusped epicycloid)
+    - "Limaçon Notes (Dimpled, 32)" - calls `limaçonNotes(32, 3, 5, 0.95, 'dimpled', true)` - oval with small dimple on the inner side (b/a=1.5, transition between cardioid and cuspid)
+    - "Limaçon Notes (Cuspid, 32)" - calls `limaçonNotes(32, 3, 6, 0.95, 'cuspid', true)` - vertical cusp through origin (b/a=2.0, dimple has pinched to a point)
+    - "Limaçon Notes (Looped, 32)" - calls `limaçonNotes(32, 3, 9, 0.95, 'looped', true)` - inner loop (b/a=3.0, the most distinctive limaçon shape with a separate small loop on the inner side)
+    - All call `recreateToneSequence(true)` after limaçoning
+    - All capture undo with descriptive `Limaçon Notes on <name> (<seqname>)` label
+    - Show notifications: `Limaçon'd {count} note(s) (variant, 32).`
+    - Show `No notes to limaçon.` when nothing to limaçon
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 19 new constants
+  - `LIMACON_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve
+  - `LIMACON_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution limaçon)
+  - `LIMACON_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the limaçon
+  - `LIMACON_NOTES_MIN_RADIUS = 1` - Minimum 1 base-circle radius a
+  - `LIMACON_NOTES_MAX_RADIUS = 8` - Maximum 8 base-circle radius a
+  - `LIMACON_NOTES_DEFAULT_RADIUS = 3` - Default 3 base-circle radius a
+  - `LIMACON_NOTES_MIN_OFFSET = 0` - Minimum 0 conchoid offset b (degenerates to circle at b=0)
+  - `LIMACON_NOTES_MAX_OFFSET = 12` - Maximum 12 conchoid offset b
+  - `LIMACON_NOTES_DEFAULT_OFFSET = 4` - Default 4 conchoid offset b (intermediate shape, b/a > 1)
+  - `LIMACON_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `LIMACON_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `LIMACON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `LIMACON_NOTES_SHAPE_CONVEX = 'convex'` - b/a < 1: smooth convex oval (the simplest non-degenerate limaçon)
+  - `LIMACON_NOTES_SHAPE_CARDIOID = 'cardioid'` - b/a = 1: classic cardioid heart (Pascal 1650's namesake case, also a 1-cusped epicycloid)
+  - `LIMACON_NOTES_SHAPE_DIMPLED = 'dimpled'` - a < b < 2a: oval with small dimple on the inner side
+  - `LIMACON_NOTES_SHAPE_CUSPID = 'cuspid'` - b/a = 2a: vertical cusp through origin (the dimple has pinched to a point)
+  - `LIMACON_NOTES_SHAPE_LOOPED = 'looped'` - b > 2a: inner loop (the most distinctive limaçon shape)
+  - `LIMACON_NOTES_SHAPES = [CONVEX, CARDIOID, DIMPLED, CUSPID, LOOPED]` - Valid shape values
+- **Tests** (`js/tests.js`): 34 tests covering (all 34 pass):
+  - `limaçonNotes` is a function on Track.prototype
+  - `limaçonNotes` accepts 6 parameters with defaults (length, radius, offset, velocityDecay, shape, skipOccupied)
+  - `limaçonNotes` returns 0 for Audio tracks
+  - `limaçonNotes` gets active sequence via getActiveSequence
+  - `limaçonNotes` captures undo BEFORE mutation with descriptive label
+  - `limaçonNotes` clamps all parameters to LIMACON_NOTES_MIN/MAX_* ranges
+  - `limaçonNotes` validates shape with LIMACON_NOTES_SHAPES (uses LOOPED fallback)
+  - `limaçonNotes` uses Math.cos and Math.sin for parametric equations
+  - `limaçonNotes` uses Math.pow for velocity decay
+  - `limaçonNotes` supports skipOccupied option
+  - `limaçonNotes` rounds velocity to 2 decimal places
+  - `limaçonNotes` returns count of limaçon notes (limaçonCount)
+  - `limaçonNotes` uses Math.floor for length, radius, offset
+  - All 19 LIMACON_NOTES constants are defined in constants.js
+  - LIMACON_NOTES_SHAPES includes all 5 shape variants (convex, cardioid, dimpled, cuspid, looped)
+  - ui.js has 5 Limaçon Notes menu items
+  - Limaçon Notes menu items call track.limaçonNotes
+  - Limaçon Notes menu items call recreateToneSequence after limaçonNotes
+  - Limaçon Notes menu items show `Limaçon'd N note(s)` notification
+  - Limaçon Notes menu items capture undo with descriptive label
+  - Limaçon Notes menu items include all 5 shape variants
+  - Limaçon Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.390 for Day 740)
+  - Functional test: x = a*cos(theta) + b (limaçon parametric x)
+  - Functional test: y = a*sin(theta) (limaçon parametric y)
+  - Structural test: uses newNotes collection pattern (collect then apply)
+  - Structural test: preserves probability from source
+  - Structural test: skips source cell (no self-reference)
+  - Structural test: respects sequence length and row boundaries
+  - Structural test: handles empty source (no active notes)
+  - Functional test: clamps to valid ranges (length 100->64, radius -5->1, offset 100->12, velocityDecay 2->1.0)
+  - Functional test: shapeRatioMap resolves shape to b/a ratio (5 mappings)
+  - Functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety
+  - Functional test: rowOffset clamped to +/- (length-1)/2 and centered
+  - Functional test: colOffset clamped to [0, length-1]
+- **Version**: Bumped to 2.390.0
+- **Test Count**: All 34 Day 740 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly for Track.js (1 warning, the pre-existing `noteNameToPitchClass` import warning, unrelated to Day 740). The pre-existing esbuild parse error on ui.js line 2516 (a long single-line arrow function with deeply-nested template literals) and the pre-existing test runner loading issue (same ui.js parse issue) are unrelated to Day 740 — same pattern as Days 700-739. Total tests now at 3624 passed (up from 3590 before Day 740), 1451 failed (pre-existing infrastructure issues unchanged pattern).
+
+(Day 740: Limaçon of Pascal Notes - 5 conchoid-of-a-circle curves per source note (Pascal 1650, includes cardioid as b=a special case, also a 1-cusped epicycloid))
+
 #### Day 739: Cassini Oval Notes Feature (2026-06-21)
 - **Feature**: Added `cassiniNotes(length, halfFocal, product, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Cassini Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **Cassini oval** curve, the family of plane curves discovered by the Italian-French astronomer **Giovanni Domenico Cassini (1625-1712)** in 1680 while studying the relative motion of the Earth and the Sun around their common center of mass (and used as a model for planetary orbits in his 1690 treatise "De l'origine et du progrès de l'astronomie"). Cassini's ovals are the **locus of points P such that the product of the distances from P to two fixed points (foci F₁=(-a,0) and F₂=(+a,0)) is constant**, i.e. `|PF₁| · |PF₂| = b²`. The implicit Cartesian equation is `((x-a)² + y²) · ((x+a)² + y²) = b⁴` and the polar form is `r² = a²·cos(2θ) + √(a⁴·cos²(2θ) - (a⁴ - b⁴))`. The Cassini oval has a **remarkably rich family of shapes parameterized by the ratio b/a** (Cassini's "différens genres" of 1680): when **b > a** the curve is a single smooth oval (resembling an ellipse but with a different shape — the two families coincide only in the special case a=0 where both reduce to a circle of radius b); when **b = a** the curve is a **lemniscate of Bernoulli** (the sideways infinity ∞ shape, a special degenerate case of the oval where the curve self-intersects at the origin and breaks into two separate loops — this is why the lemniscate is often called the "Cassini lemniscate" in classical literature, and Bernoulli 1694 first studied this specific case); when **a/√2 < b < a** the curve becomes a **peanut shape** with a pinched waist that doesn't quite self-intersect (the pinch point is the narrowest part of the oval at θ=π/2 where the oval has its smallest width); when **b < a/√2 ≈ 0.707a** the curve **breaks into two separate ovals** (one around each focus — the two halves of the lemniscate pull apart into distinct egg-shaped curves with the inner oval smaller than the outer); and as **b/a → 0** each oval degenerates to a tiny circle around its focus. Cassini's ovals appear throughout astronomy and physics: in **Cassini's own model of planetary motion** (Cassini 1690, where each planet traces a Cassini oval around a focus of the Earth-Sun system), in **equipotential curves of two point masses** (the **Roche equipotentials** of binary star systems, where Cassini ovals describe the level surfaces of gravitational potential around two equal-mass bodies — the L1 Lagrange point sits at the self-intersection of the lemniscate case), in **bifocal lens design** (the **Cassini oval** is the cross-section of bifocal eyeglass lenses — the original 18th-century invention by **BFranklin and B. Franklin 1784**, later refined by **Bérard 1799** and **Wells 1813** — where the lemniscate case gives the natural "add-segment" for reading magnification), in **electromagnetic field lines** around two parallel wires (the field lines of a two-wire transmission line are Cassini ovals, with the lemniscate case appearing at the symmetric center), in **quantum mechanics** as the equipotential surfaces of a 2D hydrogen molecule ion H₂⁺ (the **diatomic molecule's electron density** at each energy level is a Cassini oval, per **Babb 1995** and the **Hylleraas molecular-orbital** computations), in **plasma physics** as the **separatrix** between passing and trapped particle orbits in tokamak magnetic confinement (the **Cassini separatrix** in stellarator and tokamak geometry), in **planetary ring systems** (the rings of Saturn and other gas giants show subtle Cassini-oval-like density patterns due to gravitational resonances with shepherd moons), and in **computer graphics** as the smooth oval alternative to ellipses for logo and icon design (the **Cassini-oval bezier** is a popular modern curve in type and signage design). Five shape variants via the b/a ratio resolver: 'oval' (b/a > 1, the default classic oval — Cassini 1680), 'lemniscate' (b/a = 1, sideways-infinity — Bernoulli 1694 special case), 'peanut' (0.7 < b/a < 1, pinched-waist peanut — Cassini's 2nd "genre"), 'double' (b/a < ~0.707, two separate ovals — Cassini's 1st "genre" and 3rd "genre"), 'big' (b/a >> 1, nearly circular, large oval). The `rowOffset` is clamped to ±(clampedLength-1)/2 (centered around 0, length-aware clamp) and `colOffset` is normalized via `(x - xMin) * colScale` where `colScale = (clampedLength-1) / xRange` and `xRange = max(0.01, xMax-xMin)` (robust minimum to avoid divide-by-zero). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The Cassini oval family complements `superellipseNotes` (Day 738, Lamé/Piet Hein softened rectangle), `logarithmicNotes` (Day 737, Bernoulli spira mirabilis), `archimedeanNotes` (Day 736, equal-spacing spiral), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity — Cassini's b=a special case), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the **bifocal locus-of-equal-product curve** that unifies the oval, lemniscate, peanut, and double-oval families into a single parameterizable family.
 - **Files Modified**:

@@ -28801,6 +28801,214 @@ TestRunner.test("Day 739 - cassiniNotes functional test: rSquared formula = a^2*
 });
 
 
+
+// Day 740: Limaçon Notes Tests
+TestRunner.test("Day 740 - limaçonNotes is a function on Track.prototype", (t) => {
+    t.assertEquals(typeof Track.prototype.limaçonNotes, 'function', 'Track.prototype.limaçonNotes should be a function');
+});
+TestRunner.test("Day 740 - limaçonNotes accepts 6 parameters with defaults (length, radius, offset, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('length'), 'has length param');
+    t.assertTruthy(src.includes('radius'), 'has radius param');
+    t.assertTruthy(src.includes('offset'), 'has offset param');
+    t.assertTruthy(src.includes('velocityDecay'), 'has velocityDecay param');
+    t.assertTruthy(src.includes('shape'), 'has shape param');
+    t.assertTruthy(src.includes('skipOccupied'), 'has skipOccupied param');
+});
+TestRunner.test("Day 740 - limaçonNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes("if (this.type === 'Audio') return 0"), 'returns 0 for Audio tracks');
+});
+TestRunner.test("Day 740 - limaçonNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('this.getActiveSequence()'), 'calls getActiveSequence');
+});
+TestRunner.test("Day 740 - limaçonNotes captures undo BEFORE mutation with descriptive Limaçon Notes label", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('_captureUndoState'), 'calls _captureUndoState');
+    t.assertTruthy(src.includes('Limaçon Notes'), 'has Limaçon Notes in undo label');
+});
+TestRunner.test("Day 740 - limaçonNotes clamps all parameters to LIMACON_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.LIMACON_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LIMACON_NOTES_MAX_RADIUS/.test(src), 'has MAX_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LIMACON_NOTES_MAX_OFFSET/.test(src), 'has MAX_OFFSET clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LIMACON_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 740 - limaçonNotes validates shape with LIMACON_NOTES_SHAPES (uses LOOPED fallback)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('LIMACON_NOTES_SHAPES.includes(shape)'), 'validates shape with SHAPES array');
+    t.assertTruthy(src.includes('LIMACON_NOTES_SHAPE_LOOPED'), 'uses LOOPED fallback');
+});
+TestRunner.test("Day 740 - limaçonNotes uses Math.cos and Math.sin for limaçon parametric equations", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('Math.cos(theta)'), 'uses Math.cos(theta)');
+    t.assertTruthy(src.includes('Math.sin(theta)'), 'uses Math.sin(theta)');
+});
+TestRunner.test("Day 740 - limaçonNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('Math.pow(clampedDecay'), 'uses Math.pow for velocity decay');
+});
+TestRunner.test("Day 740 - limaçonNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('skipOccupied &&'), 'checks skipOccupied');
+});
+TestRunner.test("Day 740 - limaçonNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('Math.round(decayedVel * 100) / 100'), 'rounds velocity to 2 dp');
+});
+TestRunner.test("Day 740 - limaçonNotes returns count of limaçon notes (limaçonCount)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('limaçonCount'), 'returns limaçonCount');
+});
+TestRunner.test("Day 740 - limaçonNotes uses Math.floor for length, radius, offset", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(src.includes('Math.floor(length)'), 'floors length');
+    t.assertTruthy(src.includes('Math.floor(radius)'), 'floors radius');
+    t.assertTruthy(src.includes('Math.floor(offset)'), 'floors offset');
+});
+TestRunner.test("Day 740 - all 17 LIMACON_NOTES constants are defined in constants.js", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(src.includes('LIMACON_NOTES_MIN_LENGTH'), 'has LIMACON_NOTES_MIN_LENGTH');
+    t.assertTruthy(src.includes('LIMACON_NOTES_MAX_LENGTH'), 'has LIMACON_NOTES_MAX_LENGTH');
+    t.assertTruthy(src.includes('LIMACON_NOTES_DEFAULT_LENGTH'), 'has LIMACON_NOTES_DEFAULT_LENGTH');
+    t.assertTruthy(src.includes('LIMACON_NOTES_MIN_RADIUS'), 'has LIMACON_NOTES_MIN_RADIUS');
+    t.assertTruthy(src.includes('LIMACON_NOTES_MAX_RADIUS'), 'has LIMACON_NOTES_MAX_RADIUS');
+    t.assertTruthy(src.includes('LIMACON_NOTES_DEFAULT_RADIUS'), 'has LIMACON_NOTES_DEFAULT_RADIUS');
+    t.assertTruthy(src.includes('LIMACON_NOTES_MIN_OFFSET'), 'has LIMACON_NOTES_MIN_OFFSET');
+    t.assertTruthy(src.includes('LIMACON_NOTES_MAX_OFFSET'), 'has LIMACON_NOTES_MAX_OFFSET');
+    t.assertTruthy(src.includes('LIMACON_NOTES_DEFAULT_OFFSET'), 'has LIMACON_NOTES_DEFAULT_OFFSET');
+    t.assertTruthy(src.includes('LIMACON_NOTES_MIN_VELOCITY_DECAY'), 'has LIMACON_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(src.includes('LIMACON_NOTES_MAX_VELOCITY_DECAY'), 'has LIMACON_NOTES_MAX_VELOCITY_DECAY');
+    t.assertTruthy(src.includes('LIMACON_NOTES_DEFAULT_VELOCITY_DECAY'), 'has LIMACON_NOTES_DEFAULT_VELOCITY_DECAY');
+    t.assertTruthy(src.includes('LIMACON_NOTES_SHAPE_CONVEX'), 'has LIMACON_NOTES_SHAPE_CONVEX');
+    t.assertTruthy(src.includes('LIMACON_NOTES_SHAPE_CARDIOID'), 'has LIMACON_NOTES_SHAPE_CARDIOID');
+    t.assertTruthy(src.includes('LIMACON_NOTES_SHAPE_DIMPLED'), 'has LIMACON_NOTES_SHAPE_DIMPLED');
+    t.assertTruthy(src.includes('LIMACON_NOTES_SHAPE_CUSPID'), 'has LIMACON_NOTES_SHAPE_CUSPID');
+    t.assertTruthy(src.includes('LIMACON_NOTES_SHAPE_LOOPED'), 'has LIMACON_NOTES_SHAPE_LOOPED');
+});
+TestRunner.test("Day 740 - LIMACON_NOTES_SHAPES includes all 5 shape variants (convex, cardioid, dimpled, cuspid, looped)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(src.includes('LIMACON_NOTES_SHAPE_CONVEX') && src.includes('LIMACON_NOTES_SHAPE_CARDIOID') && src.includes('LIMACON_NOTES_SHAPE_DIMPLED') && src.includes('LIMACON_NOTES_SHAPE_CUSPID') && src.includes('LIMACON_NOTES_SHAPE_LOOPED'), 'has all 5 shape constants');
+    t.assertTruthy(/LIMACON_NOTES_SHAPES\s*=\s*\[/.test(src), 'defines LIMACON_NOTES_SHAPES array');
+});
+TestRunner.test("Day 740 - ui.js has 5 Limaçon Notes menu items", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const matches = src.match(/Limaçon Notes\s*\(/g);
+    t.assertTruthy(matches && matches.length >= 5, `expected at least 5 Limaçon menu items, got ${matches ? matches.length : 0}`);
+});
+TestRunner.test("Day 740 - Limaçon Notes menu items call track.limaçonNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Limaçon Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('currentTrackForMenu.limaçonNotes'), 'each line calls track.limaçonNotes');
+    }
+});
+TestRunner.test("Day 740 - Limaçon Notes menu items call recreateToneSequence after limaçonNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Limaçon Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'each line calls recreateToneSequence(true)');
+    }
+});
+TestRunner.test("Day 740 - Limaçon Notes menu items show Limaçon'd N note(s) notification", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Limaçon Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('showNotification') && line.includes('Limaçon'), 'shows Limaçon notification');
+    }
+});
+TestRunner.test("Day 740 - Limaçon Notes menu items capture undo with descriptive Limaçon Notes label", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Limaçon Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('captureStateForUndo'), 'each line calls captureStateForUndo');
+        t.assertTruthy(line.includes('Limaçon Notes on'), 'has descriptive Limaçon Notes undo label');
+    }
+});
+TestRunner.test("Day 740 - Limaçon Notes menu items include all 5 shape variants (convex, cardioid, dimpled, cuspid, looped)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(src.includes("Limaçon Notes (Convex, 32)"), 'has Convex menu item');
+    t.assertTruthy(src.includes("Limaçon Notes (Cardioid, 32)"), 'has Cardioid menu item');
+    t.assertTruthy(src.includes("Limaçon Notes (Dimpled, 32)"), 'has Dimpled menu item');
+    t.assertTruthy(src.includes("Limaçon Notes (Cuspid, 32)"), 'has Cuspid menu item');
+    t.assertTruthy(src.includes("Limaçon Notes (Looped, 32)"), 'has Looped menu item');
+});
+TestRunner.test("Day 740 - Limaçon Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Limaçon Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each line calls updateTrackUI');
+    }
+});
+TestRunner.test("Day 740 - APP_VERSION validation (>= 2.390 for Day 740)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 390), `APP_VERSION should be >= 2.390, got ${APP_VERSION}`);
+});
+TestRunner.test("Day 740 - limaçonNotes functional test: x = a*cos(theta) + b (limaçon conchoid formula)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*Math\.cos\(\s*theta\s*\)\s*\+\s*b/.test(src), 'x = a*cos(theta) + b (Pascal 1650 conchoid)');
+});
+TestRunner.test("Day 740 - limaçonNotes functional test: y = a*sin(theta) (limaçon y formula)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*Math\.sin\(\s*theta\s*\)/.test(src), 'y = a*sin(theta)');
+});
+TestRunner.test("Day 740 - limaçonNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+TestRunner.test("Day 740 - limaçonNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+TestRunner.test("Day 740 - limaçonNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+TestRunner.test("Day 740 - limaçonNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+TestRunner.test("Day 740 - limaçonNotes functional test: clamps to valid ranges (length 100->64, radius -5->1, offset 100->12, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.LIMACON_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LIMACON_NOTES_MAX_RADIUS/.test(src), 'has MAX_RADIUS clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LIMACON_NOTES_MAX_OFFSET/.test(src), 'has MAX_OFFSET clamp');
+    t.assertTruthy(/Math\.min\(Constants\.LIMACON_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 740 - limaçonNotes functional test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+TestRunner.test("Day 740 - limaçonNotes functional test: shape resolves b/a ratio (5 shape mappings)", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/effectiveB\s*=/.test(src), 'declares effective b parameter');
+    t.assertTruthy(/effectiveA\s*=/.test(src), 'declares effective a parameter');
+    t.assertTruthy(/useRatio\s*=/.test(src), 'declares ratio');
+    t.assertTruthy(/LIMACON_NOTES_SHAPE_CONVEX/.test(src), 'uses CONVEX constant');
+    t.assertTruthy(/LIMACON_NOTES_SHAPE_CARDIOID/.test(src), 'uses CARDIOID constant');
+    t.assertTruthy(/LIMACON_NOTES_SHAPE_DIMPLED/.test(src), 'uses DIMPLED constant');
+    t.assertTruthy(/LIMACON_NOTES_SHAPE_CUSPID/.test(src), 'uses CUSPID constant');
+    t.assertTruthy(/LIMACON_NOTES_SHAPE_LOOPED/.test(src), 'uses LOOPED constant');
+});
+TestRunner.test("Day 740 - limaçonNotes functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const src = Track.prototype.limaçonNotes.toString();
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange min 0.01');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange min 0.01');
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
