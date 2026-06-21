@@ -57942,3 +57942,175 @@ TestRunner.test("Day 742 - APP_VERSION validation (>= 2.392 for Day 742)", (t) =
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.392\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.392.0');
 });
+
+// Day 743: Witch of Agnesi (Versiera) Notes test block — Maria Gaetana Agnesi 1748
+TestRunner.test("Day 743 - witchNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.witchNotes, 'function', 'witchNotes should be a function');
+});
+
+TestRunner.test("Day 743 - witchNotes accepts 5 parameters with defaults (length, a, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertEqual((src.match(/=/g) || []).length, 5, 'has 5 default-parameter assignments');
+    t.assertTruthy(/length\s*=\s*Constants\.WITCH_NOTES_DEFAULT_LENGTH/.test(src), 'default length');
+    t.assertTruthy(/scale\s*=\s*Constants\.WITCH_NOTES_DEFAULT_A/.test(src), 'default a');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.WITCH_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'default velocityDecay');
+    t.assertTruthy(/shape\s*=\s*Constants\.WITCH_NOTES_SHAPE_STANDARD/.test(src), 'default shape standard');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'default skipOccupied true');
+});
+
+TestRunner.test("Day 743 - witchNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'checks Audio type early-return');
+});
+
+TestRunner.test("Day 743 - witchNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/activeSeq\s*=\s*this\.getActiveSequence\(/.test(src), 'calls getActiveSequence');
+});
+
+TestRunner.test("Day 743 - witchNotes captures undo BEFORE mutation with descriptive Witch Notes label", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/this\._captureUndoState\(/.test(src), 'captures undo state');
+    t.assertTruthy(/Witch Notes\s*\(/.test(src), 'has descriptive label');
+});
+
+TestRunner.test("Day 743 - witchNotes clamps all parameters to WITCH_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/WITCH_NOTES_MIN_LENGTH/.test(src) && /WITCH_NOTES_MAX_LENGTH/.test(src), 'clamp length');
+    t.assertTruthy(/WITCH_NOTES_MIN_A/.test(src) && /WITCH_NOTES_MAX_A/.test(src), 'clamp a');
+    t.assertTruthy(/WITCH_NOTES_MIN_VELOCITY_DECAY/.test(src) && /WITCH_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamp velocityDecay');
+});
+
+TestRunner.test("Day 743 - witchNotes validates shape with WITCH_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/WITCH_NOTES_SHAPES\.includes\(shape\)/.test(src), 'validates shape against WITCH_NOTES_SHAPES');
+});
+
+TestRunner.test("Day 743 - witchNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/Math\.pow\(\s*clampedDecay\s*,\s*i\s*\)/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 743 - witchNotes uses Math.floor for length and scale", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/Math\.floor\(\s*length\s*\)/.test(src), 'Math.floor on length');
+    t.assertTruthy(/Math\.floor\(\s*scale\s*\)/.test(src), 'Math.floor on scale');
+});
+
+TestRunner.test("Day 743 - witchNotes uses Agnesi 1748 parametric x = a*cos(t), y = a*sin(t)*cos^2(t)", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/cosT\s*=\s*Math\.cos\(\s*t\s*\)/.test(src), 'cosT = Math.cos(t)');
+    t.assertTruthy(/sinT\s*=\s*Math\.sin\(\s*t\s*\)/.test(src), 'sinT = Math.sin(t)');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT/.test(src), 'x = a*cos(t) (Agnesi 1748 x parametric)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*\*\s*cosT\s*\*\s*cosT/.test(src), 'y = a*sin(t)*cos^2(t) (Agnesi 1748 y parametric)');
+});
+
+TestRunner.test("Day 743 - witchNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[\]/.test(src), 'declares newNotes array');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+
+TestRunner.test("Day 743 - witchNotes preserves probability from source", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability');
+});
+
+TestRunner.test("Day 743 - witchNotes skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 743 - witchNotes respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 743 - witchNotes handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 743 - witchNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange min 0.01');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange min 0.01');
+});
+
+TestRunner.test("Day 743 - witchNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/Math\.round\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 743 - witchNotes returns count of witch notes (witchCount)", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/let\s+witchCount\s*=\s*0/.test(src), 'declares witchCount');
+    t.assertTruthy(/return\s+witchCount\s*;/.test(src), 'returns witchCount');
+});
+
+TestRunner.test("Day 743 - witchNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const src = Track.prototype.witchNotes.toString();
+    t.assertTruthy(/tRangeMap/.test(src), 'declares tRangeMap');
+    t.assertTruthy(/WITCH_NOTES_SHAPE_STANDARD/.test(src), 'uses WITCH_NOTES_SHAPE_STANDARD');
+    t.assertTruthy(/WITCH_NOTES_SHAPE_INVERTED/.test(src), 'uses WITCH_NOTES_SHAPE_INVERTED');
+    t.assertTruthy(/WITCH_NOTES_SHAPE_UPPER/.test(src), 'uses WITCH_NOTES_SHAPE_UPPER');
+    t.assertTruthy(/WITCH_NOTES_SHAPE_RIGHT/.test(src), 'uses WITCH_NOTES_SHAPE_RIGHT');
+});
+
+TestRunner.test("Day 743 - All 14 WITCH_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/WITCH_NOTES_MIN_LENGTH\s*=/.test(cSrc), 'WITCH_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(/WITCH_NOTES_MAX_LENGTH\s*=/.test(cSrc), 'WITCH_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(/WITCH_NOTES_DEFAULT_LENGTH\s*=/.test(cSrc), 'WITCH_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(/WITCH_NOTES_MIN_A\s*=/.test(cSrc), 'WITCH_NOTES_MIN_A defined');
+    t.assertTruthy(/WITCH_NOTES_MAX_A\s*=/.test(cSrc), 'WITCH_NOTES_MAX_A defined');
+    t.assertTruthy(/WITCH_NOTES_DEFAULT_A\s*=/.test(cSrc), 'WITCH_NOTES_DEFAULT_A defined');
+    t.assertTruthy(/WITCH_NOTES_MIN_VELOCITY_DECAY\s*=/.test(cSrc), 'WITCH_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(/WITCH_NOTES_MAX_VELOCITY_DECAY\s*=/.test(cSrc), 'WITCH_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(/WITCH_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(cSrc), 'WITCH_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(/WITCH_NOTES_SHAPE_STANDARD\s*=/.test(cSrc), 'WITCH_NOTES_SHAPE_STANDARD defined');
+    t.assertTruthy(/WITCH_NOTES_SHAPE_INVERTED\s*=/.test(cSrc), 'WITCH_NOTES_SHAPE_INVERTED defined');
+    t.assertTruthy(/WITCH_NOTES_SHAPE_UPPER\s*=/.test(cSrc), 'WITCH_NOTES_SHAPE_UPPER defined');
+    t.assertTruthy(/WITCH_NOTES_SHAPE_RIGHT\s*=/.test(cSrc), 'WITCH_NOTES_SHAPE_RIGHT defined');
+    t.assertTruthy(/WITCH_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'WITCH_NOTES_SHAPES array defined');
+});
+
+TestRunner.test("Day 743 - WITCH_NOTES_SHAPES includes all 4 shape variants (standard, inverted, upper, right)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/WITCH_NOTES_SHAPES\s*=\s*\[[\s\S]*?STANDARD[\s\S]*?INVERTED[\s\S]*?UPPER[\s\S]*?RIGHT[\s\S]*?\]/.test(cSrc), 'all 4 shapes in WITCH_NOTES_SHAPES array');
+});
+
+TestRunner.test("Day 743 - ui.js has 4 Witch of Agnesi Notes menu items", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Witch of Agnesi Notes \(Standard/.test(uiSrc), 'Standard menu item exists');
+    t.assertTruthy(/Witch of Agnesi Notes \(Inverted/.test(uiSrc), 'Inverted menu item exists');
+    t.assertTruthy(/Witch of Agnesi Notes \(Upper/.test(uiSrc), 'Upper menu item exists');
+    t.assertTruthy(/Witch of Agnesi Notes \(Right/.test(uiSrc), 'Right menu item exists');
+});
+
+TestRunner.test("Day 743 - Witch Notes menu items call track.witchNotes", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uiSrc.match(/currentTrackForMenu\.witchNotes/g) || [];
+    t.assertEqual(matches.length, 4, '4 witchNotes calls in ui.js');
+});
+
+TestRunner.test("Day 743 - Witch Notes menu items call recreateToneSequence after witchNotes", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/currentTrackForMenu\.witchNotes\([^)]*\)[^}]*recreateToneSequence/.test(uiSrc), 'calls recreateToneSequence after witchNotes');
+});
+
+TestRunner.test("Day 743 - Witch Notes menu items show 'Witched N note(s)' notification", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Witched/.test(uiSrc), 'notification format used');
+});
+
+TestRunner.test("Day 743 - Witch Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/localAppServices\.updateTrackUI\(\s*track\.id\s*,\s*['"]sequencerContentChanged['"]\)/.test(uiSrc), 'calls updateTrackUI');
+});
+
+TestRunner.test("Day 743 - APP_VERSION validation (>= 2.393 for Day 743)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.393\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.393.0');
+});

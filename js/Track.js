@@ -9431,4 +9431,112 @@ export class Track {
 
         return strophoidCount;
     }
+
+    witchNotes(length = Constants.WITCH_NOTES_DEFAULT_LENGTH, scale = Constants.WITCH_NOTES_DEFAULT_A, velocityDecay = Constants.WITCH_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.WITCH_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} witchNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.WITCH_NOTES_MIN_LENGTH, Math.min(Constants.WITCH_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedScale = Math.max(Constants.WITCH_NOTES_MIN_A, Math.min(Constants.WITCH_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.WITCH_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.WITCH_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.WITCH_NOTES_SHAPES.includes(shape) ? shape : Constants.WITCH_NOTES_SHAPE_STANDARD;
+
+        // Maria Gaetana Agnesi 1748 witch of Agnesi (versiera):
+        // x(t) = a·cos(t), y(t) = a·sin(t)·cos²(t), t ∈ [-π/2, +π/2].
+        // The bell-shaped cubic with peak at (0, a) and asymptote y=0 as |x|→∞.
+        // 4 shapes via the t-range resolver (in 3π/2 increments).
+        const tRangeMap = {
+            [Constants.WITCH_NOTES_SHAPE_STANDARD]: [-Math.PI / 2, Math.PI / 2],
+            [Constants.WITCH_NOTES_SHAPE_INVERTED]: [Math.PI / 2, 3 * Math.PI / 2],
+            [Constants.WITCH_NOTES_SHAPE_UPPER]: [0, Math.PI],
+            [Constants.WITCH_NOTES_SHAPE_RIGHT]: [-Math.PI / 4, Math.PI / 4]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.WITCH_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Witch Notes (${useShape}, a=${clampedScale}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let witchCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedScale;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const x = a * cosT;
+            const y = a * sinT * cosT * cosT;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            witchCount++;
+        }
+
+        return witchCount;
+    }
 }
