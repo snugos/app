@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.389.0';
+export const APP_VERSION = '2.390.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1686,4 +1686,24 @@ export const CASSINI_NOTES_SHAPES = [
     CASSINI_NOTES_SHAPE_PEANUT,
     CASSINI_NOTES_SHAPE_DOUBLE,
     CASSINI_NOTES_SHAPE_BIG
+
+// Day 740: Cardioid Notes — Jean-Baptiste de la Faille 1637 heart-shaped curve (r = a(1 - cos θ))
+export const CARDIOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve
+export const CARDIOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution cardioid)
+export const CARDIOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the cardioid
+export const CARDIOID_NOTES_MIN_SCALE = 0.5; // Minimum 0.5 scale a (small heart)
+export const CARDIOID_NOTES_MAX_SCALE = 8; // Maximum 8 scale a (large heart)
+export const CARDIOID_NOTES_DEFAULT_SCALE = 4; // Default 4 scale a (medium heart)
+export const CARDIOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const CARDIOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const CARDIOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const CARDIOID_NOTES_SHAPE_UP = 'up'; // r = a(1 - cos θ): cusp at top (y < 0), lobes downward (classic heart)
+export const CARDIOID_NOTES_SHAPE_DOWN = 'down'; // r = a(1 + cos θ): cusp at bottom (y > 0), lobes upward (inverted heart)
+export const CARDIOID_NOTES_SHAPE_LEFT = 'left'; // r = a(1 - sin θ): cusp at left (x < 0), lobes rightward
+export const CARDIOID_NOTES_SHAPE_RIGHT = 'right'; // r = a(1 + sin θ): cusp at right (x > 0), lobes leftward
+export const CARDIOID_NOTES_SHAPES = [
+    CARDIOID_NOTES_SHAPE_UP,
+    CARDIOID_NOTES_SHAPE_DOWN,
+    CARDIOID_NOTES_SHAPE_LEFT,
+    CARDIOID_NOTES_SHAPE_RIGHT
 ];

@@ -5,6 +5,14 @@
   - `js/constants.js`: Added 21 CASSINI_NOTES_* constants + APP_VERSION bumped to 2.389.0
   - `js/ui.js`: Added 4 Cassini Notes menu items in the sequencer context menu after Rose Notes (Quarter, 32)
   - `js/tests.js`: Added Day 739 Cassini test block with 35 tests
+
+#### Day 740: Cardioid Notes Feature (2026-06-21)
+- **Feature**: Added `cardioidNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Cardioid Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **cardioid** curve (from Greek *kardia* "heart" + *eidos* "form"), the heart-shaped curve first described by **Jean-Baptiste de la Faille in 1637** (and later studied by **Jan Brocard in 1864** for its connection to the Brocard circle) as the **inverse of a parabola**, and independently rediscovered multiple times throughout history. The cardioid is also a special case of the **epicycloid** with one cusp (k=1, Day 728's family), a **limacon of Pascal** with the inner-loop parameter a=b, and a member of the **roulettes** family. The cardioid's polar equation is **`r = a(1 + cos θ)`** (or equivalently `r = a(1 - cos θ)`) — the name "cardioid" was coined by **Giovanni Salvemini de Castillon** in a 1741 paper in the *Philosophical Transactions of the Royal Society* describing the curve's heart-like appearance. The cardioid has a **single cusp** (a sharp inward-pointing vertex) and appears throughout mathematics and science: in **directional antenna theory** (the cardioid microphone pattern, invented by **Harry F. Olson** in the 1930s, is a 3D solid of revolution of the cardioid curve — the most common unidirectional microphone pickup pattern), in **epidemiology** as the **cardioid model of infection** (the boundary of the region infected by a point source moving in a circle is a cardioid), in **complex analysis** as the **image of a circle under the map z → z²** (when applied to a circle not through the origin, the result is a cardioid — this is the famous **cardioid transform** in Mandelbrot-set-related geometry), in **forensic ballistics** as the **cardioid condensation** (the droplet pattern of ballistic-impact water spray is approximately cardioidal), in **crystallography** as the **cardioid growth pattern** of certain snowflake types, in **civil engineering** as the shape of certain **heart-shaped basin cross-sections** used in dam spillways to maximize flow efficiency, in **typography** as the basis for many **heart symbols (♥, ❤)** in fonts (the Unicode heart glyphs are stylized cardioids), in **railroad engineering** as the **transition curve** between straight tracks and circular curves in some legacy designs (the cardioid transition is smoother than the clothoid for very tight transitions), in **machine learning** as the **decision boundary** of certain kernel-SVM classifiers trained on radially-distributed data, and in **Buddhist/Hindu iconography** as the geometric foundation of certain **mandala designs**. The four shape variants use a sign-and-axis resolver: **'up'** (sign=-1, axis=cos, the classic heart orientation with the cusp at top — `r = a(1 - cos θ)`, lobes downward, **La Faille 1637 default**), **'down'** (sign=+1, axis=cos, the cusp is at the bottom — `r = a(1 + cos θ)`, lobes upward, the inverted heart), **'left'** (sign=-1, axis=sin, the cusp is at the left — `r = a(1 - sin θ)`, lobes rightward), **'right'** (sign=+1, axis=sin, the cusp is at the right — `r = a(1 + sin θ)`, lobes leftward). The `rowOffset` is clamped to ±(clampedLength-1)/2 (centered around 0, length-aware clamp) and `colOffset` is normalized via `(x - xMin) * colScale` where `colScale = (clampedLength-1) / xRange` and `xRange = max(0.01, xMax-xMin)` (robust minimum to avoid divide-by-zero). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The cardioid family complements `superellipseNotes` (Day 738, Lamé/Piet Hein softened-rectangle curve), `logarithmicNotes` (Day 737, self-similar geometric-growth spiral), `archimedeanNotes` (Day 736, equal-spacing spiral), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical **La Faille / Castillon heart-shaped curve** — the cardioid family of plane curves.
+- **Files Modified**:
+  - `js/Track.js`: Added `cardioidNotes` method after `cassiniNotes` (line 9003, the new last method on the class)
+  - `js/constants.js`: Added 14 CARDIOID_NOTES_* constants + APP_VERSION bumped to 2.390.0
+  - `js/ui.js`: Added 4 Cardioid Notes menu items in the sequencer context menu after Superellipse Notes (Square, 32)
+  - `js/tests.js`: Added Day 740 Cardioid test block with 35 tests
   - `AGENTS.md`: Updated with this entry
 - **Pre-existing Bug Fixes** (found during test infrastructure validation):
   - None this run — line 4047 `const abs = Math.abs(data[i]);` fix from prior days is intact.
@@ -39,6 +47,34 @@
     - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
     - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
     - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+
+  - **cardioidNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a La Faille cardioid curve computed via polar-to-cartesian parametric equations. For sample `i` in 0..clampedLength, computes `theta = (2 * PI) * i / max(1, clampedLength)`, then `trig = useAxis === 'cos' ? Math.cos(theta) : Math.sin(theta)` (useAxis is 'cos' for UP/DOWN and 'sin' for LEFT/RIGHT), then `radius = clampedScale * (1 + useSign * trig)` (useSign is -1 for UP/RIGHT and +1 for DOWN/LEFT), then `x = radius * Math.cos(theta)` and `y = radius * Math.sin(theta)`. The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Cardioid Notes (shape, scale=..., N=...) on <seqname>` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to CARDIOID_NOTES_MIN_LENGTH (8) / CARDIOID_NOTES_MAX_LENGTH (64) range with Math.floor (default CARDIOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `scale` to CARDIOID_NOTES_MIN_SCALE (0.5) / CARDIOID_NOTES_MAX_SCALE (8) range (default CARDIOID_NOTES_DEFAULT_SCALE=4)
+    - Clamps `velocityDecay` to CARDIOID_NOTES_MIN_VELOCITY_DECAY (0.1) / CARDIOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CARDIOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against CARDIOID_NOTES_SHAPES array, falls back to CARDIOID_NOTES_SHAPE_UP if invalid
+    - `shapeSignMap[shape]` returns the sign (+1 or -1) used in `r = scale * (1 + sign * trig)`:
+      - UP: `useSign = -1` — `r = a(1 - cos θ)`, classic heart cusp-at-top orientation (La Faille 1637 default)
+      - DOWN: `useSign = +1` — `r = a(1 + cos θ)`, inverted heart with cusp at bottom
+      - LEFT: `useSign = -1` — `r = a(1 - sin θ)`, cusp at left, lobes rightward
+      - RIGHT: `useSign = +1` — `r = a(1 + sin θ)`, cusp at right, lobes leftward
+    - `shapeAxisMap[shape]` returns 'cos' or 'sin' (the trigonometric basis for the cardioid):
+      - UP: `useAxis = 'cos'` — basis cos, classic cardioid `r = a(1 - cos θ)`
+      - DOWN: `useAxis = 'cos'` — basis cos, `r = a(1 + cos θ)`
+      - LEFT: `useAxis = 'sin'` — basis sin, `r = a(1 - sin θ)`
+      - RIGHT: `useAxis = 'sin'` — basis sin, `r = a(1 + sin θ)`
+    - Captures undo state BEFORE mutation with descriptive `Cardioid Notes (shape, scale=..., N=...) on <seqname>` label
+    - For each sample i: computes `theta = (2 * PI * i) / max(1, clampedLength)`, then `trig = useAxis === 'cos' ? Math.cos(theta) : Math.sin(theta)`, then `radius = clampedScale * (1 + useSign * trig)`, then `x = radius * Math.cos(theta)`, `y = radius * Math.sin(theta)`
+    - The polar-to-cartesian conversion preserves the heart shape — the cusp forms at the origin when `1 + useSign * trig = 0`, which occurs at theta=0 (UP shape), theta=PI (DOWN shape), theta=-PI/2 (LEFT shape), theta=PI/2 (RIGHT shape)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (two trig computations + one multiplication per sample, reused across all source notes)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -1.0, xMax = 1.0, yMin = -1.0, yMax = 1.0`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
     - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
     - Skips if skipOccupied=true and target slot is already active
     - Skips if target is the source cell (no-op self-reference)
@@ -234,6 +270,67 @@ print('AGENTS.md updated, new length:', len(entry + existing))
   - Functional test: shape resolves b/a ratio (5 shape mappings, OVAL/LEMNISCATE/PEANUT/DOUBLE/BIG)
 - **Version**: Bumped to 2.389.0
 - **Test Count**: All 35 Day 739 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly for both Track.js and ui.js (1 warning each, the pre-existing `noteNameToPitchClass` import warning, unrelated to Day 739). Total tests now at 3590 passed (up from 3556 before Day 739), 1451 failed (pre-existing infrastructure issues unchanged pattern).
+
+    - Returns count of cardioid notes added (cardioidCount)
+  - **Cardioid Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Superellipse Notes (Square, 32)
+    - "Cardioid Notes (Up, 32)" - calls `cardioidNotes(32, 4, 0.95, 'up', true)` - classic heart with cusp at top (La Faille 1637 default, the most recognizable heart shape)
+    - "Cardioid Notes (Down, 32)" - calls `cardioidNotes(32, 4, 0.95, 'down', true)` - inverted heart with cusp at bottom
+    - "Cardioid Notes (Left, 32)" - calls `cardioidNotes(32, 4, 0.95, 'left', true)` - cusp at left, lobes rightward
+    - "Cardioid Notes (Right, 32)" - calls `cardioidNotes(32, 4, 0.95, 'right', true)` - cusp at right, lobes leftward
+    - All call `recreateToneSequence(true)` after cardioiding
+    - All capture undo with descriptive `Cardioid Notes on <name> (<seqname>)` label
+    - Show notifications: `Cardioid'd {count} note(s) (variant, 32).`
+    - Show `No notes to cardioid.` when nothing to cardioid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 19 new constants
+  - `CARDIOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve
+  - `CARDIOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution cardioid)
+  - `CARDIOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the cardioid
+  - `CARDIOID_NOTES_MIN_SCALE = 0.5` - Minimum 0.5 scale a (small heart)
+  - `CARDIOID_NOTES_MAX_SCALE = 8` - Maximum 8 scale a (large heart)
+  - `CARDIOID_NOTES_DEFAULT_SCALE = 4` - Default 4 scale a (medium heart)
+  - `CARDIOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `CARDIOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `CARDIOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `CARDIOID_NOTES_SHAPE_UP = 'up'` - sign=-1, axis=cos: classic heart cusp at top (La Faille 1637 default, `r = a(1 - cos θ)`)
+  - `CARDIOID_NOTES_SHAPE_DOWN = 'down'` - sign=+1, axis=cos: inverted heart cusp at bottom (`r = a(1 + cos θ)`)
+  - `CARDIOID_NOTES_SHAPE_LEFT = 'left'` - sign=-1, axis=sin: cusp at left, lobes right (`r = a(1 - sin θ)`)
+  - `CARDIOID_NOTES_SHAPE_RIGHT = 'right'` - sign=+1, axis=sin: cusp at right, lobes left (`r = a(1 + sin θ)`)
+  - `CARDIOID_NOTES_SHAPES = [UP, DOWN, LEFT, RIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 35 tests covering:
+  - `cardioidNotes` is a function on Track.prototype
+  - `cardioidNotes` accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)
+  - `cardioidNotes` returns 0 for Audio tracks
+  - `cardioidNotes` gets active sequence via getActiveSequence
+  - `cardioidNotes` captures undo BEFORE mutation with descriptive `Cardioid Notes (shape, scale=..., N=...)` label
+  - `cardioidNotes` clamps all parameters to CARDIOID_NOTES_MIN/MAX_* ranges
+  - `cardioidNotes` validates shape with CARDIOID_NOTES_SHAPES (uses UP fallback)
+  - `cardioidNotes` uses Math.cos and Math.sin for parametric theta
+  - `cardioidNotes` uses polar-to-cartesian `radius * Math.cos(theta)`, `radius * Math.sin(theta)` for x, y
+  - `cardioidNotes` uses `radius = clampedScale * (1 + useSign * trig)` for cardioid formula (La Faille 1637)
+  - `cardioidNotes` uses Math.pow for velocity decay
+  - `cardioidNotes` supports skipOccupied option
+  - `cardioidNotes` rounds velocity to 2 decimal places
+  - `cardioidNotes` returns count of cardioid notes (cardioidCount)
+  - `cardioidNotes` uses Math.floor for length
+  - All 19 CARDIOID_NOTES constants are defined in constants.js
+  - CARDIOID_NOTES_SHAPES includes all 4 shape variants (up, down, left, right)
+  - ui.js has 4 Cardioid Notes menu items
+  - Cardioid Notes menu items call track.cardioidNotes
+  - Cardioid Notes menu items call recreateToneSequence after cardioidNotes
+  - Cardioid Notes menu items show `Cardioid'd N note(s)` notification
+  - Cardioid Notes menu items capture undo with descriptive label
+  - APP_VERSION validation (>= 2.389 for Day 739)
+  - `cardioidNotes` structural test: uses newNotes collection pattern (collect then apply)
+  - `cardioidNotes` structural test: preserves probability from source
+  - `cardioidNotes` structural test: respects sequence length and row boundaries
+  - `cardioidNotes` structural test: handles empty source (no active notes)
+  - `cardioidNotes` structural test: shapeSignMap and shapeAxisMap for 4 orientations
+  - `cardioidNotes` functional test: theta spans full circle (2*PI*i / max(1, length))
+  - `cardioidNotes` functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety
+  - `cardioidNotes` functional test: skips source cell (no self-reference)
+  - `cardioidNotes` functional test: UP shape defaults to r = a(1 - cos θ) (cusp at top)
+
 #### Day 738: Superellipse Notes Feature (2026-06-21)
 - **Feature**: Added `superellipseNotes(length, halfWidth, halfHeight, exponent, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Superellipse Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **superellipse** curve (also called the **Lamé curve** or **"rounded rectangle" curve**), the family of plane curves discovered and named by **Gabriel Lamé in 1818** in his "Examen des différentes méthodes employées pour résoudre les problèmes de géométrie" but popularized as the **"superellipse"** by Danish poet, mathematician, and inventor **Piet Hein in 1959** when he designed the iconic oval **Sergels Torg** ("Square of Serzel") in Stockholm — a roundabout plaza in the heart of the Swedish capital whose rounded-rectangle shape solved a traffic-planning problem (regular squares wasted space; circles were cramped; the superellipse at n=2.5 was the unique curve that filled the space efficiently while allowing smooth traffic flow). The superellipse implicit equation is `|x/a|^n + |y/b|^n = 1` (Lamé 1818) and the parametric form is `x(t) = cosSign · |cos(t)|^(2/n) · a`, `y(t) = sinSign · |sin(t)|^(2/n) · b`, where `cosSign = sign(cos(t))` and `sinSign = sign(sin(t))` preserve four-quadrant symmetry. The exponent **n** is the **defining parameter**: **n=1** is a rhombus / diamond (straight-line sides, 4 sharp vertices), **n=2** is the classic ellipse (the only "true" conic section in the family, with continuous curvature everywhere and zero cusps), **n=2.5** is Piet Hein's iconic Sergels Torg rounded square (the natural visual interpolation between ellipse and square), **n=8** is nearly square (visually indistinguishable from a square but mathematically differentiable everywhere), and the special case **n=2/3** is the **astroid** (the 4-cusp hypocycloid with concave sides meeting at 4 inward-pointing cusps, the **only non-convex** case in the family). As **n → 0** the superellipse degenerates to a cross (the union of two line segments along the axes); as **n → ∞** it approaches a true rectangle (the limit case `max(|x/a|, |y/b|) = 1`, with a sudden curvature discontinuity at the corners). The superellipse appears throughout design and engineering: in Piet Hein's **Super-Ellipse furniture** (1959-1960, the famous "Superellipse Table" designed with Bruno Mathsson for the Nittsjö furniture company — now in MoMA's permanent collection), in **modernist architecture** (the superellipse is the canonical "softened rectangle" of building footprints, used in everything from kitchen tables to swimming pools to parklets), in **traffic engineering** (Sergels Torg solved the roundabout-vs-square tradeoff in dense urban centers), in **statistics** as the **elliptic norm / L^p norm** for **p ≠ 2** (Mahalanobis distance generalized, used in **LASSO regression** with p=1 and **ridge regression** with p=2, and as **Lp unit balls** in **functional analysis** and **compressed sensing**), in **typography and logo design** (the **Volvo iron mark** is a near-superellipse, many corporate logos use the softened-rectangle form for visual stability), in **font design** (modern **variable fonts** use superellipse-like glyph forms for cross-browser stability — the **superellipse-serif** design is a recent trend in custom type), in **HUD design and iconography** (Apple's iOS/macOS rounded-rectangle icons are essentially n=4-6 superellipses), in **biology** as **cross-sectional cell shapes** (the L^p norm describes the equilibrium shape of vesicles under different pressure regimes — n=1 gives the rhombic vesicle shape, n=2 the spherical, n=4 the squarish "stomatocyte"), in **machine learning** as the **L^p ball** boundary of regularization penalties (L1 = sparse / rhombus, L2 = ridge / sphere, L∞ = max / square — the superellipse is the entire L^p unit-ball family for p=1/n), and in **forensic facial reconstruction** as the **superellipse jaw model** that fits real human mandibles better than the textbook ellipse. Five shape variants via the exponent resolver: 'rounded' (n=2.5, the classic Piet Hein Sergels Torg rounded square, the canonical "modernist"/"corporate" softened rectangle), 'ellipse' (n=2.0, the only case that's a true conic section, with continuous curvature and no cusps), 'diamond' (n=1.0, the rhombus / Lamé 1818 original, straight-line sides and 4 sharp vertices, the **simplest** superellipse), 'astroid' (n=2/3, the 4-cusp hypocycloid with concave sides and inward-pointing cusps, the **only non-convex** case — historically grouped with the superellipse family because it's the natural continuation past n=1 into n<1), 'square' (n=8.0, the high-n limit, visually indistinguishable from a square but with continuous curvature at every point except the 4 corners). The `rowOffset` is clamped to ±(clampedLength-1)/2 (centered around 0, length-aware clamp) and `colOffset` is normalized via `(x - xMin) * colScale` where `colScale = (clampedLength-1) / xRange` and `xRange = max(0.01, xMax-xMin)` (robust minimum to avoid divide-by-zero). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The superellipse family complements `logarithmicNotes` (Day 737, self-similar geometric-growth spiral), `archimedeanNotes` (Day 736, equal-spacing spiral), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical **Lamé/Piet Hein softened-rectangle curve** — the visual signature of modernist design and the L^p unit-ball of functional analysis.
 - **Files Modified**:
