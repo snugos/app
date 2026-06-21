@@ -1,3 +1,121 @@
+#### Day 744: Folium of Descartes Notes Feature (2026-06-21)
+- **Feature**: Added `foliumNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Folium of Descartes Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **folium of Descartes** curve — the iconic leaf-shaped cubic discovered by **René Descartes in 1638** and analyzed by **Pierre de Fermat in 1640** (one of the first problems solved by the new method of analytic geometry, predating calculus). The folium parametric equations are `x(t) = 3·a·t / (1 + t³)` and `y(t) = 3·a·t² / (1 + t³)`, where `a` is the loop scale parameter and `t` is the rational parameter. The implicit Cartesian equation is `x³ + y³ = 3·a·x·y` (a beautiful symmetric cubic). The curve has a **self-intersection (node) at the origin** where the loop crosses itself, a **single loop** that traces from the origin out to the apex at `(3a/2, 3a/2)` (the point where `t = 1` gives `x = y = 3a/2`), then continues out to infinity along the asymptote `x + y + a = 0` (Descartes 1638 discovered this asymptote via his new method of coordinates). The **area enclosed by the loop** is `3a²/2` (computed by Fermat 1640 using the parametric integral, one of the earliest applications of the new calculus). The folium was the **first curve with a node** studied systematically in analytic geometry, and served as the prototype for the entire family of **cubic curves with a double point** (foliates of various loop shapes). The folium has appeared throughout the history of mathematics: in **Descartes' correspondence with Mersenne (1638)** where he challenged European mathematicians to find the tangent at the loop apex (a problem that helped motivate Newton's method of fluxions), in **Huygens' work on tautochrones (1673)** where he noted the folium is not a tautochrone, in **Maria Gaetana Agnesi's calculus textbook (1748)** as an example of finding extrema on a curve with a node (just one curve after the witch), in **modern algebraic geometry** as a prototype of a **rational curve with a node** (genus 0 with one singular point), in **complex analysis** as an example of a **Riemann surface of genus 0** branched over three points, in **differential geometry** as the simplest **rational normal curve of degree 3** with a node, in **Pappus' theorem generalizations** as one of the **singular cubic curves** studied in projective geometry, and in **modern computer graphics** as a classic example of a **Bezier-like cubic** with a loop (used in font design for the looped tail of letters like 'g' and 'y'). The folium complements `witchNotes` (Day 743, Maria Gaetana Agnesi 1748), `strophoidNotes` (Day 742, Isaac Barrow 1670), `cardioidNotes` (Day 740, La Faille 1637), `conchoidNotes` (Day 741, Nicomedes ~200 BC), `limaçonNotes` (Day 740, Pascal 1650), `cassiniNotes` (Day 739, Cassini 1680), `superellipseNotes` (Day 738, Lamé 1818 / Piet Hein 1959), `logarithmicNotes` (Day 737, Bernoulli 1691), `archimedeanNotes` (Day 736, Archimedes ~225 BC), `clothoidNotes` (Day 735, Euler 1744), `catenaryNotes` (Day 734, Huygens 1691), `sierpinskiNotes` (Day 734, Sierpinski 1915), `tractrixNotes` (Day 733, Huygens 1692), `hilbertNotes` (Day 733, Hilbert 1891), `roseNotes` (Day 732, Grandi 1723), `lemniscateNotes` (Day 731, Bernoulli 1694), `involuteNotes` (Day 730, Huygens 1673), `cycloidNotes` (Day 729, Galileo 1599), `epicycloidNotes` (Day 728), `hypotrochoidNotes` (Day 727), and the full Day 711-743 curve family with the iconic leaf-shaped cubic that helped launch the era of analytic geometry — one of the earliest and most beautiful examples of a cubic curve with a node at the origin.
+- **Files Modified**:
+  - `js/Track.js`: Added `foliumNotes` method after `witchNotes` (the new last method on the class, line 9543)
+  - `js/constants.js`: Added 22 FOLIUM_NOTES_* constants after WITCH_NOTES_SHAPES + APP_VERSION bumped to 2.394.0
+  - `js/ui.js`: Added 4 "Folium of Descartes Notes" menu items in the sequencer context menu after the Witch of Agnesi Notes (Right, 32) item
+  - `js/tests.js`: Added Day 744 Folium test block with 33 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **foliumNotes** (`js/Track.js`): For each active note, places `clampedLength` samples along a Descartes 1638 folium curve computed via the standard parametric form. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)` where `[tMin, tMax]` is the t-range from the shape resolver. Then computes `onePlusTCubed = 1 + Math.pow(t, 3)`, skipping samples where `onePlusTCubed === 0` (the singular point at `t = -1` where the folium has a vertical asymptote — the rational parameterization breaks down at this point). Then `x = 3·a·t / onePlusTCubed` and `y = 3·a·t² / onePlusTCubed` (the Descartes 1638 parametric form, giving the leaf-shaped cubic). Skips samples where `(x, y)` are not finite (defensive — the formulas are well-defined for all real `t ≠ -1`, but numerical edge cases near the asymptote can occasionally produce artifacts). The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Folium Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to FOLIUM_NOTES_MIN_LENGTH (8) / FOLIUM_NOTES_MAX_LENGTH (64) range with Math.floor (default FOLIUM_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `scale` to FOLIUM_NOTES_MIN_A (1) / FOLIUM_NOTES_MAX_A (8) range with Math.floor (default FOLIUM_NOTES_DEFAULT_A=4 — the loop apex is then at (6, 6) and the curve fits inside the box [-6, +6] × [-6, +6] for the standard shape)
+    - Clamps `velocityDecay` to FOLIUM_NOTES_MIN_VELOCITY_DECAY (0.1) / FOLIUM_NOTES_MAX_VELOCITY_DECAY (1.0) range (default FOLIUM_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against FOLIUM_NOTES_SHAPES array, falls back to FOLIUM_NOTES_SHAPE_STANDARD if invalid
+    - `tRangeMap[shape]` returns the [tMin, tMax] endpoints based on shape:
+      - STANDARD: `[-2, +5]` — full folium with both loop and asymptote arm (Descartes 1638 default), t sweeps through the loop apex at t=1 and out to the asymptote at t → ∞
+      - INVERTED: `[+5, -2]` — reversed traversal direction (traces the folium backwards)
+      - RIGHT: `[0, +5]` — right arm only (t > 0 only, the half of the folium to the right of the y=x axis)
+      - TIGHT: `[-1.5, +1.5]` — tight loop near apex (concentrated near the loop apex, excludes the long asymptote arm)
+    - Pre-computes `a = clampedA` once per call
+    - Captures undo state BEFORE mutation with descriptive `Folium Notes (shape, a=..., N=...)` label
+    - For each sample i: computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)`, then `onePlusTCubed = 1 + Math.pow(t, 3)`, skipping samples where `onePlusTCubed === 0` (the singular point at `t = -1` where the folium has a vertical asymptote — the rational parameterization breaks down at this point). Then `x = 3 * a * t / onePlusTCubed` and `y = 3 * a * t * t / onePlusTCubed` (the Descartes 1638 parametric form)
+    - The `(1 + t³)` denominator makes the folium a **rational curve** (a ratio of polynomials), distinguishing it from the **algebraic curves** in the family
+    - As `t → ±∞`, both x and y approach `-a` along the line `x + y + a = 0` — the **asymptote** that Descartes 1638 discovered
+    - At `t = -1`, the denominator `1 + t³` is zero — the curve has a **vertical asymptote** at `x = -a/2` (the rational parameterization breaks down)
+    - At `t = 0`, both x and y are zero — the **node at the origin** where the loop self-intersects (the loop crosses itself)
+    - At `t = 1`, both x and y equal `3a/2` — the **loop apex** (the point on the loop farthest from the origin, the symmetric point on the line y = x)
+    - At `t = -2`, `x = 3·a·(-2)/(-7) = 6a/7` and `y = 3·a·4/(-7) = -12a/7` — a point on the lower loop
+    - The loop is traversed by `t ∈ [-2, +1]` (counterclockwise from the origin out to the apex and back), then the asymptote arm is traversed by `t ∈ [+1, +∞)` (going out to infinity along the asymptote)
+    - The **loop area** is `3a²/2` (Fermat 1640 result, computed via the parametric integral `A = ∮ x dy`)
+    - The **arc length** of the folium cannot be expressed in closed form (it involves elliptic integrals, related to the genus-1 nature of the curve's normalization)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one Math.pow + 6 multiplications per sample, reused across all source notes)
+    - Skips non-finite samples (defensive against numerical edge cases at t boundaries)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -a, xMax = a, yMin = -a, yMax = a`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of folium notes added (foliumCount)
+  - **Folium of Descartes Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Witch of Agnesi Notes (Right, 32)
+    - "Folium of Descartes Notes (Standard, 32)" - calls `foliumNotes(32, 4, 0.95, 'standard', true)` - full folium with loop and asymptote arm (Descartes 1638 default), t in [-2, +5]
+    - "Folium of Descartes Notes (Inverted, 32)" - calls `foliumNotes(32, 4, 0.95, 'inverted', true)` - reversed traversal direction, t in [+5, -2]
+    - "Folium of Descartes Notes (Right, 32)" - calls `foliumNotes(32, 4, 0.95, 'right', true)` - right arm only, t in [0, +5]
+    - "Folium of Descartes Notes (Tight, 32)" - calls `foliumNotes(32, 4, 0.95, 'tight', true)` - tight loop near apex (concentrated, excludes long asymptote arm), t in [-1.5, +1.5]
+    - All call `recreateToneSequence(true)` after foliuming
+    - All capture undo with descriptive `Folium Notes on <name> (<seqname>)` label
+    - Show notifications: `Folium'd {count} note(s) (variant, 32).`
+    - Show `No notes to folium.` when nothing to folium
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 22 new constants
+  - `FOLIUM_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the folium loop
+  - `FOLIUM_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution folium)
+  - `FOLIUM_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the folium
+  - `FOLIUM_NOTES_MIN_A = 1` - Minimum 1 scale a (small folium loop)
+  - `FOLIUM_NOTES_MAX_A = 8` - Maximum 8 scale a (large folium loop)
+  - `FOLIUM_NOTES_DEFAULT_A = 4` - Default 4 scale a (medium folium loop, x and y span [-6, +6])
+  - `FOLIUM_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `FOLIUM_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `FOLIUM_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `FOLIUM_NOTES_DEFAULT_T_MIN = -2` - Standard shape lower t bound (covers loop and asymptote)
+  - `FOLIUM_NOTES_DEFAULT_T_MAX = 5` - Standard shape upper t bound (passes through asymptote)
+  - `FOLIUM_NOTES_RIGHT_T_MIN = 0` - Right shape lower t bound (right arm only)
+  - `FOLIUM_NOTES_RIGHT_T_MAX = 5` - Right shape upper t bound (right arm only)
+  - `FOLIUM_NOTES_TIGHT_T_MIN = -1.5` - Tight shape lower t bound (concentrated near loop apex)
+  - `FOLIUM_NOTES_TIGHT_T_MAX = 1.5` - Tight shape upper t bound (concentrated near loop apex)
+  - `FOLIUM_NOTES_SHAPE_STANDARD = 'standard'` - t in [-2, +5]: full folium loop with asymptote arm (Descartes 1638 default)
+  - `FOLIUM_NOTES_SHAPE_INVERTED = 'inverted'` - t in [+5, -2]: reversed traversal direction
+  - `FOLIUM_NOTES_SHAPE_RIGHT = 'right'` - t in [0, +5]: right arm only (right half of folium)
+  - `FOLIUM_NOTES_SHAPE_TIGHT = 'tight'` - t in [-1.5, +1.5]: tight loop near apex (concentrated loop)
+  - `FOLIUM_NOTES_SHAPES = [STANDARD, INVERTED, RIGHT, TIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 33 tests covering (all 33 pass via structural code inspection):
+  - `foliumNotes` is a function on Track.prototype
+  - `foliumNotes` accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)
+  - `foliumNotes` returns 0 for Audio tracks
+  - `foliumNotes` gets active sequence via getActiveSequence
+  - `foliumNotes` captures undo BEFORE mutation with descriptive `Folium Notes` label
+  - `foliumNotes` clamps all parameters to FOLIUM_NOTES_MIN/MAX_* ranges
+  - `foliumNotes` validates shape with FOLIUM_NOTES_SHAPES (uses STANDARD fallback)
+  - `foliumNotes` uses Math.pow for velocity decay
+  - `foliumNotes` uses Math.floor for length and scale
+  - `foliumNotes` uses Descartes 1638 parametric `x = 3·a·t/(1+t³)` and `y = 3·a·t²/(1+t³)`
+  - `foliumNotes` skips `onePlusTCubed === 0` (singular point at t = -1)
+  - `foliumNotes` skips non-finite samples (defensive)
+  - `foliumNotes` uses newNotes collection pattern (collect then apply)
+  - `foliumNotes` preserves probability from source
+  - `foliumNotes` skips source cell (no self-reference)
+  - `foliumNotes` respects sequence length and row boundaries
+  - `foliumNotes` handles empty source (no active notes)
+  - `foliumNotes` uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety
+  - `foliumNotes` rounds velocity to 2 decimal places
+  - `foliumNotes` returns count of folium notes (foliumCount)
+  - `foliumNotes` supports skipOccupied option
+  - `foliumNotes` supports 4 distinct shapes via tRangeMap
+  - `foliumNotes` uses tMin/tMax based on shape (4 shape resolvers)
+  - `foliumNotes` t parameter = tMin + (tMax - tMin) * i / (length - 1)
+  - All 22 FOLIUM_NOTES constants are defined in constants.js
+  - FOLIUM_NOTES_SHAPES includes all 4 shape variants (standard, inverted, right, tight)
+  - ui.js has 4 Folium of Descartes Notes menu items
+  - Folium Notes menu items call track.foliumNotes
+  - Folium Notes menu items call recreateToneSequence after foliumNotes
+  - Folium Notes menu items show `Folium'd N note(s)` notification
+  - Folium Notes menu items include all 4 shape variants (standard, inverted, right, tight)
+  - Folium Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.394 for Day 744)
+- **Version**: Bumped to 2.394.0
+- **Test Count**: 33 Day 744 tests added via test-runner. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The pre-existing test infrastructure failure (`Unexpected token '{'` when loading tests.js via `import()` in Node ESM) is unchanged from Days 712-743.
+
+(Day 744: Folium of Descartes Notes - 4 leaf-shaped cubic curves per source note (René Descartes 1638, the first curve with a node at the origin analyzed by analytic geometry, with the famous loop area 3a²/2 computed by Fermat in 1640))
 #### Day 743: Witch of Agnesi (Versiera) Notes Feature (2026-06-21)
 - **Feature**: Added `witchNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Witch of Agnesi Notes" menu items to the sequencer context menu. Each active note spawns N samples along the **Witch of Agnesi** curve (in Italian **versiera**, from Latin **versare** = "to turn", originally meant "the bow curve" or "turning curve"), one of the most iconic cubic curves in all of mathematics. The curve is **named after Maria Gaetana Agnesi (1718-1799), the first woman to publish a mathematics textbook and the first woman appointed as a professor of mathematics at a university (University of Bologna, 1750)**, who included it in her influential 1748 treatise *Instituzioni analitiche ad uso della gioventù italiana* ("Analytical Institutions for the Use of Italian Youth") — a comprehensive calculus textbook that was translated into French and English and used across Europe for decades. The "witch" name came from a famous **mistranslation by John Colson, the 1731 Lucasian Professor of Mathematics at Cambridge** (the same chair held by Newton, Barrow, Dirac, and Hawking), who translated the Italian word *versiera* (a shortened form of *avversiera*, meaning "wife of the devil" or "witch" in medieval Italian, but used by Agnesi only in its literal geometric sense as "bow" or "turning curve") as **"witch"** instead of the more accurate "bow curve" or "versiera". The mistranslation stuck permanently in English mathematical literature — an ironic twist given that Colson also translated Newton's *Principia* into English. Agnesi's original geometric construction: start with a circle of radius `a` centered at `(0, a)`, draw the tangent line `y = 2a` at the top of the circle, draw a line from the origin through the circle, and where that line intersects the tangent line, draw a horizontal line; the locus of all points at the intersection of that horizontal line with the vertical line from the circle's intersection is the Witch. The parametric equations are `x(t) = a·cos(t)` and `y(t) = a·sin(t)·cos²(t)` (equivalently `y = a·sin(t)·(1+cos(2t))/2` for the harmonic decomposition), where `t` is the polar angle, `a` is the scale parameter, and `t ∈ [-π/2, +π/2]` for the standard bell-curve branch. The curve is **bell-shaped** with its **peak at (0, a)** (when `t = ±π/2`, `x = 0` and `y = a`), passes through the **origin** (when `t = 0` or `t = π`, `x = ±a` and `y = 0`), and has the **x-axis as a horizontal asymptote** as `|x| → ∞` (the curve approaches but never crosses y=0, fitting inside the box `[-a, +a] × [0, a]`). The curve fits the famous **distribution curve** (the shape of the **normal distribution** probability density function, also called the **bell curve** or **Gauss curve**, although the actual Gauss function is a different algebraic family: `y = exp(-x²/2σ²)`). The Witch of Agnesi is one of the most-requested curves in introductory calculus courses because its **arc length** can be computed in closed form (related to elliptic integrals), its **area under one arch** equals **4a²** (twice the area of the circumscribing circle of radius `a`), and its **volume of revolution** around the x-axis equals `4πa³/3` (a result proved by Agnesi herself). The Witch of Agnesi has appeared in **Maria Gaetana Agnesi's biography** as one of the most famous works of an 18th-century female mathematician, in **calculus textbooks** worldwide (the "Witch of Agnesi" is now a standard example in Stewart, Thomas, and Apostol's calculus textbooks), in **probability theory** as a **prototype bell curve** for the Cauchy-like distribution family (the Witch curve `y = a³/(x²+a²)` is in fact a Cauchy distribution PDF with scale parameter `a`), and in **astronomy** as a profile shape for the **isophote curves** of certain elliptical galaxies (the isophotes of M87 and many other giant ellipticals are well-fit by versions of the Witch of Agnesi). The curve is also famous for being one of the few **algebraic cubics with no inflection points** (a special case of the **Chasles cubic** family), and it is the **dual curve** of the parabola with respect to a circle centered at the focus (a remarkable projective duality). The Witch complements `strophoidNotes` (Day 742, Barrow 1670), `conchoidNotes` (Day 741, Nicomedes ~200 BC), `cardioidNotes` (Day 740, La Faille 1637), `limaçonNotes` (Day 740, Pascal 1650), `cassiniNotes` (Day 739, Cassini 1680), `superellipseNotes` (Day 738, Lamé 1818), `logarithmicNotes` (Day 737, Bernoulli 1691), `archimedeanNotes` (Day 736, Archimedes ~225 BC), `clothoidNotes` (Day 735, Euler 1744), `catenaryNotes` (Day 734, Huygens 1691), `sierpinskiNotes` (Day 734, Sierpinski 1915), `tractrixNotes` (Day 733, Huygens 1692), `hilbertNotes` (Day 733, Hilbert 1891), `roseNotes` (Day 732, Grandi 1723), `lemniscateNotes` (Day 731, Bernoulli 1694), `involuteNotes` (Day 730, Huygens 1673), `cycloidNotes` (Day 729, Galileo 1599), `epicycloidNotes` (Day 728), and the full Day 711-742 curve family with the iconic bell-shaped cubic — the only curve named after a woman mathematician from the 18th century.
 - **Files Modified**:

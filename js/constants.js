@@ -1795,4 +1795,30 @@ export const WITCH_NOTES_SHAPES = [
     WITCH_NOTES_SHAPE_RIGHT
 ];
 
-export const APP_VERSION = '2.393.0';
+export const FOLIUM_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the folium loop
+export const FOLIUM_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution folium)
+export const FOLIUM_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the folium
+export const FOLIUM_NOTES_MIN_A = 1; // Minimum 1 scale a (small folium loop)
+export const FOLIUM_NOTES_MAX_A = 8; // Maximum 8 scale a (large folium loop)
+export const FOLIUM_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium folium loop, x and y in [0, 4])
+export const FOLIUM_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const FOLIUM_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const FOLIUM_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const FOLIUM_NOTES_DEFAULT_T_MIN = -2; // Standard shape lower t bound (covers loop and asymptote)
+export const FOLIUM_NOTES_DEFAULT_T_MAX = 5; // Standard shape upper t bound (passes through asymptote)
+export const FOLIUM_NOTES_RIGHT_T_MIN = 0; // Right shape lower t bound (right arm only)
+export const FOLIUM_NOTES_RIGHT_T_MAX = 5; // Right shape upper t bound (right arm only)
+export const FOLIUM_NOTES_TIGHT_T_MIN = -1.5; // Tight shape lower t bound (concentrated near loop apex)
+export const FOLIUM_NOTES_TIGHT_T_MAX = 1.5; // Tight shape upper t bound (concentrated near loop apex)
+export const FOLIUM_NOTES_SHAPE_STANDARD = 'standard'; // t in [-2, +5]: full folium loop with asymptote arm (Descartes 1638 default)
+export const FOLIUM_NOTES_SHAPE_INVERTED = 'inverted'; // t in [+5, -2]: reversed traversal direction
+export const FOLIUM_NOTES_SHAPE_RIGHT = 'right'; // t in [0, +5]: right arm only (right half of folium)
+export const FOLIUM_NOTES_SHAPE_TIGHT = 'tight'; // t in [-1.5, +1.5]: tight loop near apex (concentrated loop)
+export const FOLIUM_NOTES_SHAPES = [
+    FOLIUM_NOTES_SHAPE_STANDARD,
+    FOLIUM_NOTES_SHAPE_INVERTED,
+    FOLIUM_NOTES_SHAPE_RIGHT,
+    FOLIUM_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.394.0';

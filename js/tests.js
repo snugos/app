@@ -58114,3 +58114,191 @@ TestRunner.test("Day 743 - APP_VERSION validation (>= 2.393 for Day 743)", (t) =
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.393\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.393.0');
 });
+// Day 744: Folium of Descartes Notes test block — René Descartes 1638 (famous leaf-shaped cubic x³ + y³ = 3axy)
+TestRunner.test("Day 744 - foliumNotes is a function on Track.prototype", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes\s*\(/.test(src), 'foliumNotes method defined');
+});
+
+TestRunner.test("Day 744 - foliumNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes\s*\(\s*length\s*=\s*Constants\.FOLIUM_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/scale\s*=\s*Constants\.FOLIUM_NOTES_DEFAULT_A/.test(src), 'has scale default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.FOLIUM_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.FOLIUM_NOTES_SHAPE_STANDARD/.test(src), 'has shape default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied default');
+});
+
+TestRunner.test("Day 744 - foliumNotes returns 0 for Audio tracks", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,400}if\s*\(\s*this\.type\s*===\s*['"]Audio['"]\s*\)\s*return\s*0/.test(src), 'Audio return 0');
+});
+
+TestRunner.test("Day 744 - foliumNotes gets active sequence via getActiveSequence", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,600}getActiveSequence\s*\(\s*\)/.test(src), 'getActiveSequence used');
+});
+
+TestRunner.test("Day 744 - foliumNotes captures undo BEFORE mutation with descriptive Folium Notes label", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,1500}_captureUndoState\s*\(\s*`Folium Notes/.test(src), 'undo captured with Folium label');
+});
+
+TestRunner.test("Day 744 - foliumNotes clamps all parameters to FOLIUM_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/FOLIUM_NOTES_MIN_LENGTH[\s\S]{0,80}FOLIUM_NOTES_MAX_LENGTH/.test(src), 'clamped length');
+    t.assertTruthy(/FOLIUM_NOTES_MIN_A[\s\S]{0,80}FOLIUM_NOTES_MAX_A/.test(src), 'clamped scale a');
+    t.assertTruthy(/FOLIUM_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,80}FOLIUM_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamped velocityDecay');
+});
+
+TestRunner.test("Day 744 - foliumNotes validates shape with FOLIUM_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/FOLIUM_NOTES_SHAPES\.includes/.test(src), 'shape validated via FOLIUM_NOTES_SHAPES');
+    t.assertTruthy(/FOLIUM_NOTES_SHAPE_STANDARD/.test(src), 'STANDARD fallback present');
+});
+
+TestRunner.test("Day 744 - foliumNotes uses Math.pow for velocity decay", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,3000}Math\.pow\s*\(\s*clampedDecay\s*,\s*i\s*\)/.test(src), 'Math.pow used for velocity decay');
+});
+
+TestRunner.test("Day 744 - foliumNotes uses Math.floor for length and scale", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.floor\s*\(\s*length\s*\)/.test(src), 'Math.floor for length');
+    t.assertTruthy(/Math\.floor\s*\(\s*scale\s*\)/.test(src), 'Math.floor for scale');
+});
+
+TestRunner.test("Day 744 - foliumNotes uses Descartes 1638 parametric x = 3*a*t/(1+t^3), y = 3*a*t^2/(1+t^3)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/1\s*\+\s*Math\.pow\s*\(\s*t\s*,\s*3\s*\)/.test(src), '1+t^3 denominator present');
+    t.assertTruthy(/3\s*\*\s*a\s*\*\s*t\s*\/\s*onePlusTCubed/.test(src), 'x = 3at/(1+t^3) parametric present');
+    t.assertTruthy(/3\s*\*\s*a\s*\*\s*t\s*\*\s*t\s*\/\s*onePlusTCubed/.test(src), 'y = 3at^2/(1+t^3) parametric present');
+});
+
+TestRunner.test("Day 744 - foliumNotes skips onePlusTCubed = 0 (singular point at t = -1)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/onePlusTCubed\s*===\s*0\s*\)\s*continue/.test(src), 'skip t=-1 singular point');
+});
+
+TestRunner.test("Day 744 - foliumNotes skips non-finite samples (defensive)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,2500}!\s*isFinite\s*\(\s*x\s*\)\s*\|\|\s*!\s*isFinite\s*\(\s*y\s*\)/.test(src), 'non-finite check present');
+});
+
+TestRunner.test("Day 744 - foliumNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,3500}const\s+newNotes\s*=\s*\[\][\s\S]{0,2500}newNotes\.push[\s\S]{0,1500}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(src), 'collect-then-apply pattern present');
+});
+
+TestRunner.test("Day 744 - foliumNotes preserves probability from source", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,3500}probability:\s*stepData\.probability/.test(src), 'probability preserved');
+});
+
+TestRunner.test("Day 744 - foliumNotes skips source cell (no self-reference)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,3000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col\s*\)\s*continue/.test(src), 'skip source cell');
+});
+
+TestRunner.test("Day 744 - foliumNotes respects sequence length and row boundaries", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'row boundary check');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'col boundary check');
+});
+
+TestRunner.test("Day 744 - foliumNotes handles empty source (no active notes)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,3000}stepData\.active/.test(src), 'active check on stepData');
+});
+
+TestRunner.test("Day 744 - foliumNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange robust minimum');
+    t.assertTruthy(/Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange robust minimum');
+});
+
+TestRunner.test("Day 744 - foliumNotes rounds velocity to 2 decimal places", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/velocity:\s*Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(src), 'velocity rounded to 2 decimals');
+});
+
+TestRunner.test("Day 744 - foliumNotes returns count of folium notes (foliumCount)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,4500}foliumCount\+\+/.test(src), 'foliumCount incremented');
+    t.assertTruthy(/return\s+foliumCount/.test(src), 'returns foliumCount');
+});
+
+TestRunner.test("Day 744 - foliumNotes supports skipOccupied option", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/if\s*\(\s*skipOccupied\s*&&/.test(src), 'skipOccupied honored');
+});
+
+TestRunner.test("Day 744 - foliumNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/FOLIUM_NOTES_SHAPE_STANDARD[\s\S]{0,400}FOLIUM_NOTES_SHAPE_INVERTED[\s\S]{0,400}FOLIUM_NOTES_SHAPE_RIGHT[\s\S]{0,400}FOLIUM_NOTES_SHAPE_TIGHT/.test(src), 'all 4 shapes in tRangeMap');
+});
+
+TestRunner.test("Day 744 - foliumNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/FOLIUM_NOTES_DEFAULT_T_MIN[\s\S]{0,200}FOLIUM_NOTES_DEFAULT_T_MAX/.test(src), 'standard t-range');
+    t.assertTruthy(/FOLIUM_NOTES_RIGHT_T_MIN[\s\S]{0,200}FOLIUM_NOTES_RIGHT_T_MAX/.test(src), 'right t-range');
+    t.assertTruthy(/FOLIUM_NOTES_TIGHT_T_MIN[\s\S]{0,200}FOLIUM_NOTES_TIGHT_T_MAX/.test(src), 'tight t-range');
+});
+
+TestRunner.test("Day 744 - foliumNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/foliumNotes[\s\S]{0,2500}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(src), 't parameterization correct');
+});
+
+TestRunner.test("Day 744 - All 22 FOLIUM_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const names = ['MIN_LENGTH','MAX_LENGTH','DEFAULT_LENGTH','MIN_A','MAX_A','DEFAULT_A','MIN_VELOCITY_DECAY','MAX_VELOCITY_DECAY','DEFAULT_VELOCITY_DECAY','DEFAULT_T_MIN','DEFAULT_T_MAX','RIGHT_T_MIN','RIGHT_T_MAX','TIGHT_T_MIN','TIGHT_T_MAX','SHAPE_STANDARD','SHAPE_INVERTED','SHAPE_RIGHT','SHAPE_TIGHT','SHAPES'];
+    for (const n of names) {
+        t.assertTruthy(new RegExp(`FOLIUM_NOTES_${n}\\s*=`).test(cSrc), `FOLIUM_NOTES_${n} defined`);
+    }
+});
+
+TestRunner.test("Day 744 - FOLIUM_NOTES_SHAPES includes all 4 shape variants (standard, inverted, right, tight)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/FOLIUM_NOTES_SHAPES\s*=\s*\[[\s\S]*FOLIUM_NOTES_SHAPE_STANDARD[\s\S]*FOLIUM_NOTES_SHAPE_INVERTED[\s\S]*FOLIUM_NOTES_SHAPE_RIGHT[\s\S]*FOLIUM_NOTES_SHAPE_TIGHT[\s\S]*\]/.test(cSrc), 'all 4 shapes in SHAPES array');
+});
+
+TestRunner.test("Day 744 - ui.js has 4 Folium of Descartes Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/Folium of Descartes Notes/g) || []).length === 4, 'exactly 4 Folium menu items');
+});
+
+TestRunner.test("Day 744 - Folium Notes menu items call track.foliumNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/currentTrackForMenu\.foliumNotes/g) || []).length === 4, '4 calls to foliumNotes');
+});
+
+TestRunner.test("Day 744 - Folium Notes menu items call recreateToneSequence after foliumNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.foliumNotes[\s\S]{0,300}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls follow foliumNotes with recreateToneSequence');
+});
+
+TestRunner.test("Day 744 - Folium Notes menu items show 'Folium\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/Folium'd \$\{result\} note/g) || []).length >= 1, 'Folium\\'d notification present');
+});
+
+TestRunner.test("Day 744 - Folium Notes menu items include all 4 shape variants (standard, inverted, right, tight)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Folium of Descartes Notes \(Standard/.test(uSrc), 'Standard shape menu item');
+    t.assertTruthy(/Folium of Descartes Notes \(Inverted/.test(uSrc), 'Inverted shape menu item');
+    t.assertTruthy(/Folium of Descartes Notes \(Right/.test(uSrc), 'Right shape menu item');
+    t.assertTruthy(/Folium of Descartes Notes \(Tight/.test(uSrc), 'Tight shape menu item');
+});
+
+TestRunner.test("Day 744 - Folium Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/foliumNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 744 - APP_VERSION validation (>= 2.394 for Day 744)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.394\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.394.0');
+});
