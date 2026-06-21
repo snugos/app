@@ -28583,6 +28583,224 @@ TestRunner.test("Day 738 - superellipseNotes functional test: skips source cell 
     t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
 });
 
+// Day 739: Cassini Oval Notes test block
+TestRunner.test("Day 739 - cassiniNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.cassiniNotes, 'function', 'cassiniNotes should be a function');
+});
+TestRunner.test("Day 739 - cassiniNotes accepts 6 parameters with defaults (length, halfFocal, product, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/cassiniNotes\s*\(\s*length\s*=\s*Constants\.CASSINI_NOTES_DEFAULT_LENGTH\s*,\s*halfFocal\s*=\s*Constants\.CASSINI_NOTES_DEFAULT_HALF_FOCAL\s*,\s*product\s*=\s*Constants\.CASSINI_NOTES_DEFAULT_PRODUCT\s*,\s*velocityDecay\s*=\s*Constants\.CASSINI_NOTES_DEFAULT_VELOCITY_DECAY\s*,\s*shape\s*=\s*Constants\.CASSINI_NOTES_SHAPE_OVAL\s*,\s*skipOccupied\s*=\s*true\s*\)/.test(src), 'has expected default parameter signature');
+    t.assertTruthy(/length\s*=\s*Constants\.CASSINI_NOTES_DEFAULT_LENGTH/.test(src), 'default length');
+    t.assertTruthy(/halfFocal\s*=\s*Constants\.CASSINI_NOTES_DEFAULT_HALF_FOCAL/.test(src), 'default halfFocal');
+    t.assertTruthy(/product\s*=\s*Constants\.CASSINI_NOTES_DEFAULT_PRODUCT/.test(src), 'default product');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.CASSINI_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'default velocityDecay');
+    t.assertTruthy(/shape\s*=\s*Constants\.CASSINI_NOTES_SHAPE_OVAL/.test(src), 'default shape oval');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'default skipOccupied true');
+});
+TestRunner.test("Day 739 - cassiniNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'checks Audio type early-return');
+});
+TestRunner.test("Day 739 - cassiniNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/activeSeq\s*=\s*this\.getActiveSequence\(/.test(src), 'calls getActiveSequence');
+});
+TestRunner.test("Day 739 - cassiniNotes captures undo BEFORE mutation with descriptive Cassini Notes label", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/this\._captureUndoState\(/.test(src), 'captures undo state');
+    t.assertTruthy(/Cassini Notes\s*\(/.test(src), 'has descriptive label');
+});
+TestRunner.test("Day 739 - cassiniNotes clamps all parameters to CASSINI_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/CASSINI_NOTES_MIN_LENGTH/.test(src) && /CASSINI_NOTES_MAX_LENGTH/.test(src), 'clamp length');
+    t.assertTruthy(/CASSINI_NOTES_MIN_HALF_FOCAL/.test(src) && /CASSINI_NOTES_MAX_HALF_FOCAL/.test(src), 'clamp halfFocal');
+    t.assertTruthy(/CASSINI_NOTES_MIN_PRODUCT/.test(src) && /CASSINI_NOTES_MAX_PRODUCT/.test(src), 'clamp product');
+    t.assertTruthy(/CASSINI_NOTES_MIN_VELOCITY_DECAY/.test(src) && /CASSINI_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamp velocityDecay');
+});
+TestRunner.test("Day 739 - cassiniNotes validates shape with CASSINI_NOTES_SHAPES (uses OVAL fallback)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/CASSINI_NOTES_SHAPES\.includes\(shape\)/.test(src), 'validates shape against array');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_OVAL/.test(src), 'falls back to OVAL');
+});
+TestRunner.test("Day 739 - cassiniNotes uses Math.cos and Math.sin for polar parametric equations", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/Math\.cos\(theta\)/.test(src), 'uses Math.cos');
+    t.assertTruthy(/Math\.sin\(theta\)/.test(src), 'uses Math.sin');
+});
+TestRunner.test("Day 739 - cassiniNotes uses Math.sqrt for Cassini polar radius r^2 = a^2*cos(2t) + sqrt(...)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/Math\.sqrt\(/.test(src), 'uses Math.sqrt for r^2');
+    t.assertTruthy(/aSquared\s*\*\s*cosTwoTheta/.test(src) || /aSquared\s*\*\s*Math\.cos\(\s*2\s*\*\s*theta\s*\)/.test(src), 'computes a^2*cos(2*theta)');
+    t.assertTruthy(/aFourth\s*=/.test(src), 'computes a^4 via aFourth');
+    t.assertTruthy(/bFourth\s*=/.test(src), 'computes b^4 via bFourth');
+});
+TestRunner.test("Day 739 - cassiniNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/Math\.pow\(\s*clampedDecay\s*,\s*i\s*\)/.test(src), 'Math.pow for velocity decay');
+});
+TestRunner.test("Day 739 - cassiniNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'respects skipOccupied flag');
+});
+TestRunner.test("Day 739 - cassiniNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/Math\.round\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(src), 'rounds to 2 decimals');
+});
+TestRunner.test("Day 739 - cassiniNotes returns count of cassini notes (cassiniCount)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/let\s+cassiniCount\s*=\s*0/.test(src), 'initializes cassiniCount');
+    t.assertTruthy(/return\s+cassiniCount/.test(src), 'returns cassiniCount');
+});
+TestRunner.test("Day 739 - cassiniNotes uses Math.floor for length, halfFocal, product", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'floors length');
+    t.assertTruthy(/Math\.floor\(halfFocal\)/.test(src), 'floors halfFocal');
+    t.assertTruthy(/Math\.floor\(product\)/.test(src), 'floors product');
+});
+TestRunner.test("Day 739 - all 21 CASSINI_NOTES constants are defined in constants.js", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    const names = [
+        'CASSINI_NOTES_MIN_LENGTH', 'CASSINI_NOTES_MAX_LENGTH', 'CASSINI_NOTES_DEFAULT_LENGTH',
+        'CASSINI_NOTES_MIN_HALF_FOCAL', 'CASSINI_NOTES_MAX_HALF_FOCAL', 'CASSINI_NOTES_DEFAULT_HALF_FOCAL',
+        'CASSINI_NOTES_MIN_PRODUCT', 'CASSINI_NOTES_MAX_PRODUCT', 'CASSINI_NOTES_DEFAULT_PRODUCT',
+        'CASSINI_NOTES_MIN_RATIO', 'CASSINI_NOTES_MAX_RATIO', 'CASSINI_NOTES_DEFAULT_RATIO',
+        'CASSINI_NOTES_MIN_VELOCITY_DECAY', 'CASSINI_NOTES_MAX_VELOCITY_DECAY', 'CASSINI_NOTES_DEFAULT_VELOCITY_DECAY',
+        'CASSINI_NOTES_SHAPE_OVAL', 'CASSINI_NOTES_SHAPE_LEMNISCATE', 'CASSINI_NOTES_SHAPE_PEANUT',
+        'CASSINI_NOTES_SHAPE_DOUBLE', 'CASSINI_NOTES_SHAPE_BIG', 'CASSINI_NOTES_SHAPES'
+    ];
+    for (const name of names) {
+        t.assertTruthy(src.includes('export const ' + name), name + ' is defined in constants.js');
+    }
+});
+TestRunner.test("Day 739 - CASSINI_NOTES_SHAPES includes all 5 shape variants (oval, lemniscate, peanut, double, big)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/constants.js', 'utf8');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_OVAL\s*=\s*['"]oval['"]/.test(src), 'OVAL = oval');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_LEMNISCATE\s*=\s*['"]lemniscate['"]/.test(src), 'LEMNISCATE = lemniscate');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_PEANUT\s*=\s*['"]peanut['"]/.test(src), 'PEANUT = peanut');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_DOUBLE\s*=\s*['"]double['"]/.test(src), 'DOUBLE = double');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_BIG\s*=\s*['"]big['"]/.test(src), 'BIG = big');
+});
+TestRunner.test("Day 739 - ui.js has 4 Cassini Notes menu items", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Cassini Notes') && l.includes('label:'));
+    t.assertEqual(lines.length, 4, 'has 4 Cassini Notes menu items');
+});
+TestRunner.test("Day 739 - Cassini Notes menu items call track.cassiniNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Cassini Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('currentTrackForMenu.cassiniNotes('), 'each line calls cassiniNotes');
+    }
+});
+TestRunner.test("Day 739 - Cassini Notes menu items call recreateToneSequence after cassiniNotes", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Cassini Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('recreateToneSequence(true)'), 'each line calls recreateToneSequence');
+    }
+});
+TestRunner.test("Day 739 - Cassini Notes menu items show Cassini'd N note(s) notification", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Cassini Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('Cassini') && line.includes('showNotification'), 'shows Cassini notification');
+    }
+});
+TestRunner.test("Day 739 - Cassini Notes menu items capture undo with descriptive label", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Cassini Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('captureStateForUndo'), 'each line calls captureStateForUndo');
+        t.assertTruthy(line.includes('Cassini Notes on ${currentTrackForMenu.name}'), 'has descriptive Cassini Notes undo label');
+    }
+});
+TestRunner.test("Day 739 - Cassini Notes menu items include all 4 shape variants (oval, lemniscate, peanut, double)", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    t.assertTruthy(src.includes("Cassini Notes (Oval, 32)"), 'has Oval menu item');
+    t.assertTruthy(src.includes("Cassini Notes (Lemniscate, 32)"), 'has Lemniscate menu item');
+    t.assertTruthy(src.includes("Cassini Notes (Peanut, 32)"), 'has Peanut menu item');
+    t.assertTruthy(src.includes("Cassini Notes (Double, 32)"), 'has Double menu item');
+});
+TestRunner.test("Day 739 - Cassini Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const fs = require('fs');
+    const src = fs.readFileSync('./js/ui.js', 'utf8');
+    const lines = src.split('\n').filter(l => l.includes('Cassini Notes') && l.includes('action:'));
+    for (const line of lines) {
+        t.assertTruthy(line.includes('localAppServices.updateTrackUI'), 'each line calls updateTrackUI');
+    }
+});
+TestRunner.test("Day 739 - APP_VERSION validation (>= 2.389 for Day 739)", (t) => {
+    const versionParts = APP_VERSION.split('.').map(Number);
+    t.assertTruthy(versionParts[0] >= 2 && (versionParts[0] > 2 || versionParts[1] >= 389), `APP_VERSION should be >= 2.389, got ${APP_VERSION}`);
+});
+TestRunner.test("Day 739 - cassiniNotes functional test: x = sqrt(r^2) * cos(theta) and y = sqrt(r^2) * sin(theta)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/const\s+r\s*=\s*Math\.sqrt\(rSquared\)/.test(src), 'declares r = sqrt(rSquared)');
+    t.assertTruthy(/x\s*:\s*r\s*\*\s*Math\.cos\(theta\)/.test(src), 'x = r * cos(theta)');
+    t.assertTruthy(/y\s*:\s*r\s*\*\s*Math\.sin\(theta\)/.test(src), 'y = r * sin(theta)');
+});
+TestRunner.test("Day 739 - cassiniNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+TestRunner.test("Day 739 - cassiniNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+TestRunner.test("Day 739 - cassiniNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+TestRunner.test("Day 739 - cassiniNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+TestRunner.test("Day 739 - cassiniNotes functional test: clamps to valid ranges (length 100->64, halfFocal -5->1, product 100->8, velocityDecay 2->1.0)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.CASSINI_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CASSINI_NOTES_MAX_HALF_FOCAL/.test(src), 'has MAX_HALF_FOCAL clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CASSINI_NOTES_MAX_PRODUCT/.test(src), 'has MAX_PRODUCT clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CASSINI_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+TestRunner.test("Day 739 - cassiniNotes functional test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+TestRunner.test("Day 739 - cassiniNotes functional test: shape resolves b/a ratio (5 shape mappings)", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/useB\s*=|effectiveB\s*=/.test(src), 'declares effective b parameter');
+    t.assertTruthy(/useA\s*=|effectiveA\s*=/.test(src), 'declares effective a parameter');
+    t.assertTruthy(/useRatio\s*=/.test(src), 'declares ratio');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_OVAL/.test(src), 'uses OVAL constant');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_LEMNISCATE/.test(src), 'uses LEMNISCATE constant');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_PEANUT/.test(src), 'uses PEANUT constant');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_DOUBLE/.test(src), 'uses DOUBLE constant');
+    t.assertTruthy(/CASSINI_NOTES_SHAPE_BIG/.test(src), 'uses BIG constant');
+});
+TestRunner.test("Day 739 - cassiniNotes functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange min 0.01');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange min 0.01');
+});
+TestRunner.test("Day 739 - cassiniNotes functional test: rSquared formula = a^2*cos(2θ) + sqrt(a^4*cos^2(2θ) - (a^4 - b^4))", (t) => {
+    const src = Track.prototype.cassiniNotes.toString();
+    t.assertTruthy(/aSquared\s*\*\s*cosTwoTheta\s*\+\s*Math\.sqrt\(|useA\s*\*\s*useA\s*\*\s*Math\.cos\(\s*2\s*\*\s*theta\s*\)\s*\+\s*Math\.sqrt\(/.test(src), 'rSquared = a^2*cos(2θ) + sqrt(...)');
+    t.assertTruthy(/aFourth\s*\*\s*cosTwoTheta\s*\*\s*cosTwoTheta|useA\s*\*\s*useA\s*\*\s*useA\s*\*\s*useA\s*\*\s*Math\.cos\(\s*2\s*\*\s*theta\s*\)\s*\*\s*Math\.cos\(\s*2\s*\*\s*theta\s*\)/.test(src), 'has a^4 * cos^2(2θ)');
+    t.assertTruthy(/aFourth\s*-\s*bFourth|useA\s*\*\s*useA\s*\*\s*useA\s*\*\s*useA\s*-\s*useB\s*\*\s*useB\s*\*\s*useB\s*\*\s*useB/.test(src), 'has (a^4 - b^4)');
+});
+
+
 export async function runTests() {
     return await TestRunner.runAll();
 }

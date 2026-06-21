@@ -8884,4 +8884,119 @@ export class Track {
 
         return superellipseCount;
     }
+    cassiniNotes(length = Constants.CASSINI_NOTES_DEFAULT_LENGTH, halfFocal = Constants.CASSINI_NOTES_DEFAULT_HALF_FOCAL, product = Constants.CASSINI_NOTES_DEFAULT_PRODUCT, velocityDecay = Constants.CASSINI_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.CASSINI_NOTES_SHAPE_OVAL, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} cassiniNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.CASSINI_NOTES_MIN_LENGTH, Math.min(Constants.CASSINI_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.CASSINI_NOTES_MIN_HALF_FOCAL, Math.min(Constants.CASSINI_NOTES_MAX_HALF_FOCAL, Math.floor(halfFocal)));
+        const clampedB = Math.max(Constants.CASSINI_NOTES_MIN_PRODUCT, Math.min(Constants.CASSINI_NOTES_MAX_PRODUCT, Math.floor(product)));
+        const clampedDecay = Math.max(Constants.CASSINI_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.CASSINI_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.CASSINI_NOTES_SHAPES.includes(shape) ? shape : Constants.CASSINI_NOTES_SHAPE_OVAL;
+
+        const shapeRatioMap = {
+            [Constants.CASSINI_NOTES_SHAPE_OVAL]: clampedB / Math.max(1, clampedA),
+            [Constants.CASSINI_NOTES_SHAPE_LEMNISCATE]: 1.0,
+            [Constants.CASSINI_NOTES_SHAPE_PEANUT]: 0.85,
+            [Constants.CASSINI_NOTES_SHAPE_DOUBLE]: 0.65,
+            [Constants.CASSINI_NOTES_SHAPE_BIG]: 1.6
+        };
+        let useRatio = shapeRatioMap[useShape] !== undefined ? shapeRatioMap[useShape] : clampedB / Math.max(1, clampedA);
+        useRatio = Math.max(Constants.CASSINI_NOTES_MIN_RATIO, Math.min(Constants.CASSINI_NOTES_MAX_RATIO, useRatio));
+        const effectiveA = clampedA;
+        const effectiveB = clampedA * useRatio;
+
+        this._captureUndoState(`Cassini Notes (${useShape}, a=${effectiveA}, b=${effectiveB.toFixed(2)}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let cassiniCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = effectiveA;
+        const b = effectiveB;
+        const aSquared = a * a;
+        const bSquared = b * b;
+        const aFourth = aSquared * aSquared;
+        const bFourth = bSquared * bSquared;
+        const a4 = aFourth;
+        const b4 = bFourth;
+        const diff = aFourth - bFourth;
+        for (let i = 0; i < clampedLength; i++) {
+            const theta = (2 * Math.PI * i) / Math.max(1, clampedLength);
+            const cosTwoTheta = Math.cos(2 * theta);
+            const inner = aFourth * cosTwoTheta * cosTwoTheta - diff;
+            if (inner < 0) continue;
+            const rSquared = aSquared * cosTwoTheta + Math.sqrt(inner);
+            if (rSquared < 0) continue;
+            const r = Math.sqrt(rSquared);
+            samples.push({ x: r * Math.cos(theta), y: r * Math.sin(theta) });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -0.5; xMax = 0.5; yMin = -0.5; yMax = 0.5; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            cassiniCount++;
+        }
+
+        return cassiniCount;
+    }
 }

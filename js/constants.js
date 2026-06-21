@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.388.0';
+export const APP_VERSION = '2.389.0';
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)
@@ -1657,4 +1657,33 @@ export const SUPERELLIPSE_NOTES_SHAPES = [
     SUPERELLIPSE_NOTES_SHAPE_DIAMOND,
     SUPERELLIPSE_NOTES_SHAPE_ASTROID,
     SUPERELLIPSE_NOTES_SHAPE_SQUARE
+];
+
+// Cassini Oval Notes (Day 739) - Cassini 1680 ovals, "peanut" shape when b<a, lemniscate at b=a
+export const CASSINI_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the oval
+export const CASSINI_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution Cassini oval)
+export const CASSINI_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the oval
+export const CASSINI_NOTES_MIN_HALF_FOCAL = 1; // Minimum 1 half-focal-distance a (foci at (±a, 0))
+export const CASSINI_NOTES_MAX_HALF_FOCAL = 8; // Maximum 8 half-focal-distance a
+export const CASSINI_NOTES_DEFAULT_HALF_FOCAL = 3; // Default 3 half-focal-distance a
+export const CASSINI_NOTES_MIN_PRODUCT = 1; // Minimum 1 product of distances b (small tight curve)
+export const CASSINI_NOTES_MAX_PRODUCT = 8; // Maximum 8 product of distances b (large oval)
+export const CASSINI_NOTES_DEFAULT_PRODUCT = 4; // Default 4 product of distances b
+export const CASSINI_NOTES_MIN_RATIO = 0.6; // Minimum 0.6 b/a ratio (single peanut)
+export const CASSINI_NOTES_MAX_RATIO = 1.6; // Maximum 1.6 b/a ratio (two separated ovals)
+export const CASSINI_NOTES_DEFAULT_RATIO = 1.2; // Default 1.2 b/a ratio (oval)
+export const CASSINI_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const CASSINI_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const CASSINI_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const CASSINI_NOTES_SHAPE_OVAL = 'oval'; // b/a > 1: smooth oval, single connected loop
+export const CASSINI_NOTES_SHAPE_LEMNISCATE = 'lemniscate'; // b/a = 1: sideways infinity (Cassini-Bernoulli lemniscate)
+export const CASSINI_NOTES_SHAPE_PEANUT = 'peanut'; // 0.7 < b/a < 1: pinched waist, peanut shape
+export const CASSINI_NOTES_SHAPE_DOUBLE = 'double'; // b/a < ~0.707: two separated ovals
+export const CASSINI_NOTES_SHAPE_BIG = 'big'; // b/a >> 1: nearly circular, large
+export const CASSINI_NOTES_SHAPES = [
+    CASSINI_NOTES_SHAPE_OVAL,
+    CASSINI_NOTES_SHAPE_LEMNISCATE,
+    CASSINI_NOTES_SHAPE_PEANUT,
+    CASSINI_NOTES_SHAPE_DOUBLE,
+    CASSINI_NOTES_SHAPE_BIG
 ];
