@@ -1600,8 +1600,11 @@ function removeCustomDesktopBackground() {
             videoBg.style.display = 'none';
         }
         
-        // Remove from db if exists
-        bgDbDeleteAudio('desktopVideo').catch(() => {});
+        // Remove from db if exists (capture so we can surface a warning if it fails)
+        bgDbDeleteAudio('desktopVideo').catch((dbErr) => {
+            console.warn("[removeCustomDesktopBackground] IndexedDB delete failed (localStorage still cleared):", dbErr);
+            if (typeof showSafeNotification === 'function') showSafeNotification("Background cleared (local storage); IDB cleanup failed.", 3000);
+        });
         
         console.log("[removeCustomDesktopBackground] Custom background removed.");
         if (typeof showSafeNotification === 'function') showSafeNotification("Custom background removed.", 2000);
@@ -1662,9 +1665,15 @@ async function restoreDesktopBackground() {
             if (videoBlob) {
                 const objectUrl = URL.createObjectURL(videoBlob);
                 applyDesktopBackground(objectUrl, 'video');
+            } else {
+                console.warn("[restoreDesktopBackground] bgType='video' but no video blob in IndexedDB; clearing stale marker.");
+                localStorage.removeItem(DESKTOP_BG_TYPE_KEY);
+                if (typeof showSafeNotification === 'function') showSafeNotification("Stored video background missing; cleared.", 3000);
             }
         } catch (e) {
             console.warn("Could not restore video background:", e);
+            if (typeof showSafeNotification === 'function') showSafeNotification("Could not restore video background; cleared.", 3000);
+            localStorage.removeItem(DESKTOP_BG_TYPE_KEY);
         }
     } else if (bgType === 'image' || !bgType) {
         const imageUrl = localStorage.getItem(DESKTOP_BACKGROUND_KEY);
