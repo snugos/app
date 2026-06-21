@@ -57676,7 +57676,7 @@ TestRunner.test("Day 741 - all 19 CONCHOID_NOTES constants are defined in consta
     t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_STANDARD\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_STANDARD defined');
     t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_CUSPIDAL\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_CUSPIDAL defined');
     t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_LOOPED\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_LOOPED defined');
-    t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_ASYMPTOTIC\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_ASYMPTOTIC defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_NODE\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_NODE defined');
     t.assertTruthy(/export const CONCHOID_NOTES_SHAPES\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPES defined');
 });
 
@@ -57685,7 +57685,7 @@ TestRunner.test("Day 741 - CONCHOID_NOTES_SHAPES includes all 4 shape variants (
     t.assertTruthy(/CONCHOID_NOTES_SHAPE_STANDARD/.test(src), 'uses CONCHOID_NOTES_SHAPE_STANDARD');
     t.assertTruthy(/CONCHOID_NOTES_SHAPE_CUSPIDAL/.test(src), 'uses CONCHOID_NOTES_SHAPE_CUSPIDAL');
     t.assertTruthy(/CONCHOID_NOTES_SHAPE_LOOPED/.test(src), 'uses CONCHOID_NOTES_SHAPE_LOOPED');
-    t.assertTruthy(/CONCHOID_NOTES_SHAPE_ASYMPTOTIC/.test(src), 'uses CONCHOID_NOTES_SHAPE_ASYMPTOTIC');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_NODE/.test(src), 'uses CONCHOID_NOTES_SHAPE_NODE');
 });
 
 TestRunner.test("Day 741 - ui.js has 4 Conchoid Notes menu items", (t) => {
@@ -57776,7 +57776,7 @@ TestRunner.test("Day 741 - conchoidNotes functional test: shapeRatioMap resolves
     t.assertTruthy(/CONCHOID_NOTES_SHAPE_STANDARD[\s\S]{0,40}:\s*0\.5/.test(src), 'STANDARD maps to 0.5');
     t.assertTruthy(/CONCHOID_NOTES_SHAPE_CUSPIDAL[\s\S]{0,40}:\s*1\.0/.test(src), 'CUSPIDAL maps to 1.0');
     t.assertTruthy(/CONCHOID_NOTES_SHAPE_LOOPED[\s\S]{0,40}:\s*1\.6/.test(src), 'LOOPED maps to 1.6');
-    t.assertTruthy(/CONCHOID_NOTES_SHAPE_ASYMPTOTIC[\s\S]{0,40}:\s*0\.2/.test(src), 'ASYMPTOTIC maps to 0.2');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_NODE[\s\S]{0,40}:\s*0\.2/.test(src), 'NODE maps to 0.2');
 });
 
 TestRunner.test("Day 741 - conchoidNotes functional test: includes all 4 menu shape variants in ui.js", (t) => {
@@ -57791,3 +57791,154 @@ TestRunner.test("Day 741 - conchoidNotes functional test: includes all 4 menu sh
 export async function runTests() {
     return await TestRunner.runAll();
 }
+
+// Day 742: Strophoid Notes test block — Isaac Barrow 1670 (conchoid of a line through the pole)
+TestRunner.test("Day 742 - strophoidNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.strophoidNotes, 'function', 'strophoidNotes should be a function');
+});
+TestRunner.test("Day 742 - strophoidNotes accepts 5 parameters with defaults (length, a, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertEqual((src.match(/=/g) || []).length, 5, 'has 5 default-parameter assignments');
+    t.assertTruthy(/length\s*=\s*Constants\.STROPHOID_NOTES_DEFAULT_LENGTH/.test(src), 'default length');
+    t.assertTruthy(/scale\s*=\s*Constants\.STROPHOID_NOTES_DEFAULT_A/.test(src), 'default a');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.STROPHOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'default velocityDecay');
+    t.assertTruthy(/shape\s*=\s*Constants\.STROPHOID_NOTES_SHAPE_STANDARD/.test(src), 'default shape standard');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'default skipOccupied true');
+});
+TestRunner.test("Day 742 - strophoidNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'checks Audio type early-return');
+});
+TestRunner.test("Day 742 - strophoidNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/activeSeq\s*=\s*this\.getActiveSequence\(/.test(src), 'calls getActiveSequence');
+});
+TestRunner.test("Day 742 - strophoidNotes captures undo BEFORE mutation with descriptive Strophoid Notes label", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/this\._captureUndoState\(/.test(src), 'captures undo state');
+    t.assertTruthy(/Strophoid Notes\s*\(/.test(src), 'has descriptive label');
+});
+TestRunner.test("Day 742 - strophoidNotes clamps all parameters to STROPHOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/STROPHOID_NOTES_MIN_LENGTH/.test(src) && /STROPHOID_NOTES_MAX_LENGTH/.test(src), 'clamp length');
+    t.assertTruthy(/STROPHOID_NOTES_MIN_A/.test(src) && /STROPHOID_NOTES_MAX_A/.test(src), 'clamp a');
+    t.assertTruthy(/STROPHOID_NOTES_MIN_VELOCITY_DECAY/.test(src) && /STROPHOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamp velocityDecay');
+});
+TestRunner.test("Day 742 - strophoidNotes validates shape with STROPHOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/STROPHOID_NOTES_SHAPES\.includes\(shape\)/.test(src), 'validates shape against STROPHOID_NOTES_SHAPES');
+});
+TestRunner.test("Day 742 - strophoidNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/Math\.pow\(\s*clampedDecay\s*,\s*i\s*\)/.test(src), 'uses Math.pow for velocity decay');
+});
+TestRunner.test("Day 742 - strophoidNotes uses Math.floor for length and scale", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/Math\.floor\(\s*length\s*\)/.test(src), 'Math.floor on length');
+    t.assertTruthy(/Math\.floor\(\s*scale\s*\)/.test(src), 'Math.floor on scale');
+});
+TestRunner.test("Day 742 - strophoidNotes uses Barrow 1670 parametric x = a*(t^2-1)/(t^2+1) and y = a*t*(t^2-1)/(t^2+1)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/tSquared\s*=\s*t\s*\*\s*t/.test(src), 'computes tSquared = t*t');
+    t.assertTruthy(/denom\s*=\s*tSquared\s*\+\s*1/.test(src), 'denom = t^2+1');
+    t.assertTruthy(/numer\s*=\s*tSquared\s*-\s*1/.test(src), 'numer = t^2-1 (the node factor)');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*numer\s*\/\s*denom/.test(src), 'x = a*(t^2-1)/(t^2+1)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*t\s*\*\s*numer\s*\/\s*denom/.test(src), 'y = a*t*(t^2-1)/(t^2+1)');
+});
+TestRunner.test("Day 742 - strophoidNotes skips non-finite samples (defensive)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/!isFinite\(\s*x\s*\)\s*\|\|\s*!isFinite\(\s*y\s*\)/.test(src), 'skips non-finite x or y');
+});
+TestRunner.test("Day 742 - strophoidNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[\]/.test(src), 'declares newNotes array');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'iterates newNotes to apply');
+});
+TestRunner.test("Day 742 - strophoidNotes preserves probability from source", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability');
+});
+TestRunner.test("Day 742 - strophoidNotes skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+TestRunner.test("Day 742 - strophoidNotes respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+TestRunner.test("Day 742 - strophoidNotes handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+TestRunner.test("Day 742 - strophoidNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange min 0.01');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange min 0.01');
+});
+TestRunner.test("Day 742 - strophoidNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/Math\.round\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimal places');
+});
+TestRunner.test("Day 742 - strophoidNotes returns count of strophoid notes (strophoidCount)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/let\s+strophoidCount\s*=\s*0/.test(src), 'declares strophoidCount');
+    t.assertTruthy(/return\s+strophoidCount\s*;/.test(src), 'returns strophoidCount');
+});
+TestRunner.test("Day 742 - strophoidNotes supports 4 distinct shapes via tRangeMap (4 mappings)", (t) => {
+    const src = Track.prototype.strophoidNotes.toString();
+    t.assertTruthy(/tRangeMap/.test(src), 'declares tRangeMap');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPE_STANDARD[\s\S]{0,40}:\s*\[-tMax,\s*\+tMax\]/.test(src), 'STANDARD maps to [-tMax, +tMax]');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPE_RIGHT[\s\S]{0,40}:\s*\[0,\s*\+tMax\]/.test(src), 'RIGHT maps to [0, +tMax]');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPE_LEFT[\s\S]{0,40}:\s*\[-tMax,\s*0\]/.test(src), 'LEFT maps to [-tMax, 0]');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPE_NODE[\s\S]{0,40}:\s*\[-1\.5,\s*\+1\.5\]/.test(src), 'NODE maps to [-1.5, +1.5]');
+});
+TestRunner.test("Day 742 - All 14 STROPHOID_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/STROPHOID_NOTES_MIN_LENGTH\s*=/.test(cSrc), 'STROPHOID_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(/STROPHOID_NOTES_MAX_LENGTH\s*=/.test(cSrc), 'STROPHOID_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(/STROPHOID_NOTES_DEFAULT_LENGTH\s*=/.test(cSrc), 'STROPHOID_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(/STROPHOID_NOTES_MIN_A\s*=/.test(cSrc), 'STROPHOID_NOTES_MIN_A defined');
+    t.assertTruthy(/STROPHOID_NOTES_MAX_A\s*=/.test(cSrc), 'STROPHOID_NOTES_MAX_A defined');
+    t.assertTruthy(/STROPHOID_NOTES_DEFAULT_A\s*=/.test(cSrc), 'STROPHOID_NOTES_DEFAULT_A defined');
+    t.assertTruthy(/STROPHOID_NOTES_MIN_VELOCITY_DECAY\s*=/.test(cSrc), 'STROPHOID_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(/STROPHOID_NOTES_MAX_VELOCITY_DECAY\s*=/.test(cSrc), 'STROPHOID_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(/STROPHOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(cSrc), 'STROPHOID_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPE_STANDARD\s*=/.test(cSrc), 'STROPHOID_NOTES_SHAPE_STANDARD defined');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPE_RIGHT\s*=/.test(cSrc), 'STROPHOID_NOTES_SHAPE_RIGHT defined');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPE_LEFT\s*=/.test(cSrc), 'STROPHOID_NOTES_SHAPE_LEFT defined');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPE_NODE\s*=/.test(cSrc), 'STROPHOID_NOTES_SHAPE_NODE defined');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'STROPHOID_NOTES_SHAPES array defined');
+});
+TestRunner.test("Day 742 - STROPHOID_NOTES_SHAPES includes all 4 shape variants (standard, right, left, node)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/STROPHOID_NOTES_SHAPES\s*=\s*\[[\s\S]*?STANDARD[\s\S]*?RIGHT[\s\S]*?LEFT[\s\S]*?NODE[\s\S]*?\]/.test(cSrc), 'all 4 shapes in STROPHOID_NOTES_SHAPES array');
+});
+TestRunner.test("Day 742 - ui.js has 4 Strophoid Notes menu items", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Strophoid Notes \(Standard/.test(uiSrc), 'Standard menu item exists');
+    t.assertTruthy(/Strophoid Notes \(Right/.test(uiSrc), 'Right menu item exists');
+    t.assertTruthy(/Strophoid Notes \(Left/.test(uiSrc), 'Left menu item exists');
+    t.assertTruthy(/Strophoid Notes \(Node/.test(uiSrc), 'Asymptotic menu item exists');
+});
+TestRunner.test("Day 742 - Strophoid Notes menu items call track.strophoidNotes", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uiSrc.match(/currentTrackForMenu\.strophoidNotes/g) || [];
+    t.assertEqual(matches.length, 4, '4 strophoidNotes calls in ui.js');
+});
+TestRunner.test("Day 742 - Strophoid Notes menu items call recreateToneSequence after strophoidNotes", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/currentTrackForMenu\.strophoidNotes\([^)]*\)[\s\S]{0,200}recreateToneSequence/.test(uiSrc), 'calls recreateToneSequence after strophoidNotes');
+});
+TestRunner.test("Day 742 - Strophoid Notes menu items show 'Strophoid\\'d N note(s)' notification", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Strophoid'd \$\{result\} note\(s\)/.test(uiSrc), 'notification format used');
+});
+TestRunner.test("Day 742 - Strophoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/localAppServices\.updateTrackUI\(\s*track\.id\s*,\s*['"]sequencerContentChanged['"]\)/.test(uiSrc), 'calls updateTrackUI');
+});
+TestRunner.test("Day 742 - APP_VERSION validation (>= 2.392 for Day 742)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.392\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.392.0');
+});
