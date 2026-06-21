@@ -754,9 +754,9 @@ export const EPICYCLOID_NOTES_SHAPES = [
     EPICYCLOID_NOTES_SHAPE_6CUSP
 ];
 
-// ============================================
+// ============================================================
 // Cycloid Notes Constants (Day 729)
-// ============================================
+// ============================================================
 // The cycloid is the curve traced by a point on a circle rolling along a
 // straight line. It's the parent curve of the epicycloid/hypotrochoid family.
 // Parametric equations:
@@ -793,9 +793,9 @@ export const CYCLOID_NOTES_SHAPES = [
     CYCLOID_NOTES_SHAPE_TROCHOID_CUSTOM
 ];
 
-// ============================================
+// ============================================================
 // Involute Notes Constants (Day 730)
-// ============================================
+// ============================================================
 // The involute of a circle is the curve traced by the end of a taut string
 // as it's unwound from (or wound onto) the circle. Parametric equations:
 //   x(t) = r * (cos(t) + t * sin(t))
@@ -1240,9 +1240,9 @@ export const AUTOMATION_LANE_COLORS = [
     '#f368e0', '#ff9f43', '#54a0ff', '#5f27cd', '#c8d6e5'
 ];
 
-// ============================================
+// ============================================================
 // Audio Recording Constants
-// ============================================
+// ============================================================
 // Recording quality and format
 export const RECORDING_SAMPLE_RATE = 44100; // Standard audio sample rate
 export const RECORDING_NUM_CHANNELS = 1; // Mono recording (1 = mono, 2 = stereo)
@@ -1275,10 +1275,9 @@ export const DEFAULT_MONITORING_VOLUME = DEFAULT_RECORDING_MONITORING_VOLUME;
 export const MAX_RECORDING_LENGTH_SECONDS = 600; // 10 minute max recording
 export const MIN_RECORDING_LENGTH_SECONDS = 0.1; // Minimum 100ms recording
 
-// ============================================
+// ============================================================
 // Track Template Constants
-// ============================================
-export const MAX_TRACK_TEMPLATES = 32; // Maximum number of saved track templates
+// =====================================export const MAX_TRACK_TEMPLATES = 32; // Maximum number of saved track templates
 export const DEFAULT_TEMPLATE_NAME_PREFIX = 'Template'; // Default name for new templates
 export const TRACK_TEMPLATE_COLORS = TRACK_COLORS; // Templates can use same color palette as tracks
 export const DEFAULT_TRACK_TEMPLATE_COLOR = '#54a0ff'; // Default template color (blue)
@@ -1314,33 +1313,29 @@ export const MIDI_IMPORT_SNAP_TO_GRID = true; // Snap imported notes to 16th gri
 export const MIDI_IMPORT_VELOCITY_SCALE = 1 / 127; // Scale MIDI velocity (127) to app velocity (0-1)
 
 
-// ============================================
+// ============================================================
 // SnugWindow Window Constants
-// ============================================
-export const DEFAULT_WINDOW_MIN_WIDTH = 150; // Minimum window width in pixels
+// =====================================export const DEFAULT_WINDOW_MIN_WIDTH = 150; // Minimum window width in pixels
 export const DEFAULT_WINDOW_MIN_HEIGHT = 100; // Minimum window height in pixels
 export const DEFAULT_WINDOW_WIDTH = 350; // Default window width in pixels
 export const DEFAULT_WINDOW_HEIGHT = 250; // Default window height in pixels
 export const TASKBAR_HEIGHT = 30; // Taskbar height in pixels
 
-// ============================================
+// ============================================================
 // Context Menu Constants
-// ============================================
-export const CONTEXT_MENU_ITEM_HEIGHT = 28; // Height of each context menu item in pixels
+// =====================================export const CONTEXT_MENU_ITEM_HEIGHT = 28; // Height of each context menu item in pixels
 export const CONTEXT_MENU_MAX_WIDTH = 300; // Maximum width of context menu in pixels
 
-// ============================================
+// ============================================================
 // Drop Zone Constants
-// ============================================
-export const DROP_ZONE_MIN_WIDTH = 80; // Minimum drop zone width in pixels
+// =====================================export const DROP_ZONE_MIN_WIDTH = 80; // Minimum drop zone width in pixels
 export const DROP_ZONE_MIN_HEIGHT = 60; // Minimum drop zone height in pixels
 export const DROP_ZONE_DEFAULT_HEIGHT = 50; // Default drop zone height in pixels
 export const DROP_ZONE_BORDER_RADIUS = 4; // Border radius in pixels
 
-// ============================================
+// ============================================================
 // Sequencer Grid Constants
-// ============================================
-export const GRID_STEP_LABELS = {
+// =====================================export const GRID_STEP_LABELS = {
     labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16']
 };
 export const STEP_LABELS_SIXTEENTHS = {
@@ -1353,10 +1348,9 @@ export const KEYBOARD_SHORTCUTS_HELP_WIDTH = 600; // Modal width in pixels
 export const KEYBOARD_SHORTCUTS_HELP_HEIGHT = 500; // Modal height in pixels
 export const MIDI_LEARN_SHORTCUT_KEY = 'k'; // Keyboard shortcut to toggle MIDI Learn mode
 
-// ============================================
+// ============================================================
 // MIDI Learn Constants
-// ============================================
-export const MIDI_LEARN_MIN_CC = 0; // CC number range
+// =====================================export const MIDI_LEARN_MIN_CC = 0; // CC number range
 export const MIDI_LEARN_MAX_CC = 127;
 export const MIDI_LEARN_MIN_CHANNEL = 0; // 0-indexed (MIDI channel 1)
 export const MIDI_LEARN_MAX_CHANNEL = 15; // 0-indexed (MIDI channel 16)
@@ -1388,9 +1382,9 @@ export const DEFAULT_MIDI_LEARN_MAPPING = {
     max: 1           // Input range max
 };
 
-// ============================================
+// ============================================================
 // Keyboard Shortcuts Registry
-// ============================================
+// ============================================================
 // Central registry of all keyboard shortcuts for documentation and UI generation
 export const KEYBOARD_SHORTCUTS = {
     // Playback Controls
@@ -1439,10 +1433,9 @@ export const KEYBOARD_SHORTCUT_CATEGORIES = [
     'Computer Keyboard Piano'
 ];
 
-// ============================================
+// ============================================================
 // Effect Preset Constants
-// ============================================
-export const MAX_EFFECT_PRESETS = 64; // Maximum number of saved effect presets per effect type
+// =====================================export const MAX_EFFECT_PRESETS = 64; // Maximum number of saved effect presets per effect type
 export const DEFAULT_PRESET_NAME_PREFIX = 'Preset'; // Default name for new presets
 export const DEFAULT_EFFECT_PRESET = {
     name: DEFAULT_PRESET_NAME_PREFIX,
@@ -1712,4 +1705,24 @@ export const CASSINI_NOTES_SHAPES = [
     CASSINI_NOTES_SHAPE_PEANUT,
     CASSINI_NOTES_SHAPE_DOUBLE,
     CASSINI_NOTES_SHAPE_BIG
+
+// Day 740: Cardioid Notes — Jean-Baptiste de la Faille 1637 heart-shaped curve (r = a(1 - cos θ))
+export const CARDIOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve
+export const CARDIOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution cardioid)
+export const CARDIOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the cardioid
+export const CARDIOID_NOTES_MIN_SCALE = 0.5; // Minimum 0.5 scale a (small heart)
+export const CARDIOID_NOTES_MAX_SCALE = 8; // Maximum 8 scale a (large heart)
+export const CARDIOID_NOTES_DEFAULT_SCALE = 4; // Default 4 scale a (medium heart)
+export const CARDIOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const CARDIOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const CARDIOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const CARDIOID_NOTES_SHAPE_UP = 'up'; // r = a(1 - cos θ): cusp at top (y < 0), lobes downward (classic heart)
+export const CARDIOID_NOTES_SHAPE_DOWN = 'down'; // r = a(1 + cos θ): cusp at bottom (y > 0), lobes upward (inverted heart)
+export const CARDIOID_NOTES_SHAPE_LEFT = 'left'; // r = a(1 - sin θ): cusp at left (x < 0), lobes rightward
+export const CARDIOID_NOTES_SHAPE_RIGHT = 'right'; // r = a(1 + sin θ): cusp at right (x > 0), lobes leftward
+export const CARDIOID_NOTES_SHAPES = [
+    CARDIOID_NOTES_SHAPE_UP,
+    CARDIOID_NOTES_SHAPE_DOWN,
+    CARDIOID_NOTES_SHAPE_LEFT,
+    CARDIOID_NOTES_SHAPE_RIGHT
 ];
